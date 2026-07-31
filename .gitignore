@@ -1,0 +1,29 @@
+### Maven Build Output ###
+target/
+*.jar
+*.war
+*.ear
+
+### IntelliJ IDEA ###
+.idea/
+*.iml
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+### VS Code ###
+.vscode/
+
+### Mac OS / Misc ###
+.DS_Store
+*.log

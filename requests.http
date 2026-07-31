@@ -1,0 +1,38 @@
+### 1. Salvează un Job Nou (POST)
+POST http://localhost:8080/api/v1/jobs
+Content-Type: application/json
+X-User-Id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+
+{
+  "companyName": "Google",
+  "jobTitle": "Junior Backend Developer",
+  "jobUrl": "https://careers.google.com/jobs/123",
+  "rawDescription": "Căutăm un Junior Backend Developer pasionat de Java 21, Spring Boot și baze de date PostgreSQL. Experiență cu Docker și AWS reprezintă un plus."
+}
+
+### 2. Încărcare CV PDF (POST Multipart)
+POST http://localhost:8080/api/v1/resumes
+X-User-Id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="cv_alex.pdf"
+Content-Type: application/pdf
+
+< ./sample_cv.pdf
+--WebAppBoundary--
+
+### 3. Creează o Aplicație & Calculează Match Score (POST)
+POST http://localhost:8080/api/v1/applications
+Content-Type: application/json
+X-User-Id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+
+{
+  "jobId": "1f82e7c5-e8ae-44c4-aec9-72cc8b431acd",
+  "resumeId": "e9002a06-b07d-460b-a82a-e23fdb3fbefb",
+  "notes": "Am aplicat direct pe portalul oficial Google Careers."
+}
+
+### 4. Generează Raportul AI Gap Analysis & Planul de Acțiune (POST)
+# Înlocuiește applicationId cu ID-ul aplicației create (ex: df125b2e-940b-4fa3-baf5-56014eef7317)
+POST http://localhost:8080/api/v1/applications/df125b2e-940b-4fa3-baf5-56014eef7317/analysis
