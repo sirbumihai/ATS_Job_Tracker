@@ -18,10 +18,18 @@ import {
   LogOut,
   KeyRound,
   RefreshCw,
-  Check
+  Check,
+  Bot,
+  Send,
+  MessageSquare,
+  Award,
+  Zap,
+  Target
 } from 'lucide-react';
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState('kanban'); // 'kanban' or 'agent_studio'
+
   const [applications, setApplications] = useState([]);
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -34,12 +42,29 @@ export default function App() {
 
   // Modals state
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [authMode, setAuthMode] = useState('login'); 
   const [showAddJobModal, setShowAddJobModal] = useState(false);
   const [showUploadResumeModal, setShowUploadResumeModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [analyzingAppId, setAnalyzingAppId] = useState(null);
+
+  // Multi-Agent Studio States
+  const [selectedAppForAgent, setSelectedAppForAgent] = useState(null);
+  const [agentLogs, setAgentLogs] = useState([]);
+  const [agentOutputs, setAgentOutputs] = useState({
+    recruiter: '',
+    tailor: '',
+    interview: '',
+    outreach: ''
+  });
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  // Interview Simulator States
+  const [userAnswer, setUserAnswer] = useState('');
+  const [selectedQuestion, setSelectedQuestion] = useState('Cum funcționează Garbage Collector-ul în Java 21 și care este diferența dintre stack și heap memory?');
+  const [evaluatingAnswer, setEvaluatingAnswer] = useState(false);
+  const [evaluationResult, setEvaluationResult] = useState(null);
 
   // Form states
   const [authForm, setAuthForm] = useState({ email: '', password: '', fullName: '' });
@@ -50,7 +75,6 @@ export default function App() {
   const [uploadedSuccess, setUploadedSuccess] = useState(null);
 
   const fetchApplicationsFromBackend = async (overrideUserId = null) => {
-    // Dacă utilizatorul nu este autentificat, nu afișăm datele private
     const activeUserId = overrideUserId || (currentUser ? currentUser.userId : null);
     if (!activeUserId) {
       setApplications([]);
@@ -65,6 +89,10 @@ export default function App() {
       
       let data = res.ok ? await res.json() : [];
       setApplications(data);
+
+      if (data.length > 0 && !selectedAppForAgent) {
+        setSelectedAppForAgent(data[0]);
+      }
     } catch (err) {
       console.error("Eroare la încărcarea aplicațiilor din PostgreSQL:", err);
     } finally {
@@ -238,6 +266,77 @@ export default function App() {
     }
   };
 
+  // MULTI-AGENT SSE STREAMING WORKFLOW
+  const handleStartAgentStream = (jobId) => {
+    if (!jobId) return;
+
+    setIsStreaming(true);
+    setAgentLogs([]);
+    setAgentOutputs({ recruiter: '', tailor: '', interview: '', outreach: '' });
+
+    const eventSource = new EventSource(`/api/v1/agents/stream/${jobId}`);
+
+    eventSource.addEventListener('status', (e) => {
+      setAgentLogs(prev => [...prev, e.data]);
+    });
+
+    eventSource.addEventListener('recruiter_output', (e) => {
+      setAgentOutputs(prev => ({ ...prev, recruiter: e.data }));
+    });
+
+    eventSource.addEventListener('tailor_output', (e) => {
+      setAgentOutputs(prev => ({ ...prev, tailor: e.data }));
+    });
+
+    eventSource.addEventListener('interview_output', (e) => {
+      setAgentOutputs(prev => ({ ...prev, interview: e.data }));
+    });
+
+    eventSource.addEventListener('outreach_output', (e) => {
+      setAgentOutputs(prev => ({ ...prev, outreach: e.data }));
+    });
+
+    eventSource.addEventListener('complete', (e) => {
+      setAgentLogs(prev => [...prev, e.data]);
+      setIsStreaming(false);
+      eventSource.close();
+    });
+
+    eventSource.onerror = (err) => {
+      console.error("Eroare SSE Stream:", err);
+      setIsStreaming(false);
+      eventSource.close();
+    };
+  };
+
+  // INTERVIEW ANSWER EVALUATION
+  const handleEvaluateInterviewAnswer = async () => {
+    if (!userAnswer.trim()) return;
+
+    setEvaluatingAnswer(true);
+    setEvaluationResult(null);
+
+    try {
+      const res = await fetch('/api/v1/agents/interview/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobTitle: selectedAppForAgent ? selectedAppForAgent.jobTitle : "Junior Backend Developer",
+          companyName: selectedAppForAgent ? selectedAppForAgent.companyName : "Google",
+          questionText: selectedQuestion,
+          userAnswerText: userAnswer
+        })
+      });
+
+      const data = await res.json();
+      setEvaluationResult(data);
+    } catch (err) {
+      console.error("Eroare la evaluarea răspunsului:", err);
+    } finally {
+      setEvaluatingAnswer(false);
+    }
+  };
+
   const validScoredApps = applications.filter(a => a.semanticMatchScore && Number(a.semanticMatchScore) > 0);
   const averageMatchScore = validScoredApps.length > 0 
     ? (validScoredApps.reduce((acc, curr) => acc + Number(curr.semanticMatchScore), 0) / validScoredApps.length).toFixed(2) + "%"
@@ -262,10 +361,37 @@ export default function App() {
             </div>
             <div>
               <h1 className="font-bold text-lg text-white flex items-center gap-2">
-                ATS Job Tracker <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">PostgreSQL Live Sync</span>
+                ATS Job Tracker <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">Multi-Agent AI Platform</span>
               </h1>
-              <p className="text-xs text-gray-400">Spring Boot 3.3 + Groq Llama 3.3 70B + pgvector Engine</p>
+              <p className="text-xs text-gray-400">Spring Boot 3.3 + 4 Autonomous AI Agents + SSE Live Streaming</p>
             </div>
+          </div>
+
+          {/* TABS NAVIGATION */}
+          <div className="flex items-center gap-2 bg-gray-900/90 p-1 rounded-xl border border-gray-800">
+            <button
+              onClick={() => setActiveTab('kanban')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+                activeTab === 'kanban' 
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              Kanban Board
+            </button>
+
+            <button
+              onClick={() => setActiveTab('agent_studio')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+                activeTab === 'agent_studio' 
+                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20' 
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <Bot className="w-3.5 h-3.5" />
+              AI Agent Studio & Interview Simulator
+            </button>
           </div>
 
           <div className="flex items-center gap-3">
@@ -277,7 +403,6 @@ export default function App() {
             >
               <BookOpen className="w-3.5 h-3.5 text-blue-400" />
               Swagger Specs
-              <ExternalLink className="w-3 h-3 text-gray-500" />
             </a>
 
             {currentUser ? (
@@ -343,150 +468,336 @@ export default function App() {
           </div>
         )}
 
-        {/* STATS DASHBOARD CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Aplicații Salvate în DB</p>
-              <h3 className="text-2xl font-bold text-white mt-1">{applications.length}</h3>
-            </div>
-            <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
-              <Briefcase className="w-6 h-6" />
-            </div>
-          </div>
+        {/* TAB 1: KANBAN BOARD */}
+        {activeTab === 'kanban' && (
+          <>
+            {/* STATS DASHBOARD CARDS */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Aplicații Salvate în DB</p>
+                  <h3 className="text-2xl font-bold text-white mt-1">{applications.length}</h3>
+                </div>
+                <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
+                  <Briefcase className="w-6 h-6" />
+                </div>
+              </div>
 
-          <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Scor Mediu Match AI</p>
-              <h3 className="text-2xl font-bold text-emerald-400 mt-1">
-                {averageMatchScore}
-              </h3>
-            </div>
-            <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
-              <Sparkles className="w-6 h-6" />
-            </div>
-          </div>
+              <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Scor Mediu Match AI</p>
+                  <h3 className="text-2xl font-bold text-emerald-400 mt-1">
+                    {averageMatchScore}
+                  </h3>
+                </div>
+                <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+              </div>
 
-          <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Interviuri Active</p>
-              <h3 className="text-2xl font-bold text-amber-400 mt-1">
-                {applications.filter(a => a.status === 'INTERVIEWING').length}
-              </h3>
-            </div>
-            <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-          </div>
+              <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Interviuri Active</p>
+                  <h3 className="text-2xl font-bold text-amber-400 mt-1">
+                    {applications.filter(a => a.status === 'INTERVIEWING').length}
+                  </h3>
+                </div>
+                <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+              </div>
 
-          <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Conexiune AI Engine</p>
-              <h3 className="text-xs font-semibold text-emerald-400 mt-1 truncate max-w-[140px] flex items-center gap-1">
-                <BrainCircuit className="w-3.5 h-3.5" />
-                Groq Llama 3.3 + pgvector LIVE
-              </h3>
+              <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Sistem Multi-Agent</p>
+                  <h3 className="text-xs font-semibold text-purple-400 mt-1 truncate max-w-[140px] flex items-center gap-1">
+                    <Bot className="w-3.5 h-3.5" />
+                    4 Agenți AI Activi
+                  </h3>
+                </div>
+                <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
+                  <Zap className="w-6 h-6" />
+                </div>
+              </div>
             </div>
-            <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
-              <KeyRound className="w-6 h-6" />
-            </div>
-          </div>
-        </div>
 
-        {/* KANBAN BOARD SECTION */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-blue-400" />
-              Kanban Pipeline Aplicații
-            </h2>
-            {currentUser && (
-              <button 
-                onClick={() => fetchApplicationsFromBackend()} 
-                className="text-xs text-blue-400 hover:underline flex items-center gap-1"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                Reîmprospătează datele din PostgreSQL
-              </button>
-            )}
-          </div>
+            {/* KANBAN BOARD SECTION */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-blue-400" />
+                  Kanban Pipeline Aplicații
+                </h2>
+                {currentUser && (
+                  <button 
+                    onClick={() => fetchApplicationsFromBackend()} 
+                    className="text-xs text-blue-400 hover:underline flex items-center gap-1"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                    Reîmprospătează datele din PostgreSQL
+                  </button>
+                )}
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {kanbanColumns.map((col) => {
-              const colApps = applications.filter(app => app.status === col.key);
-              return (
-                <div key={col.key} className={`rounded-2xl border ${col.color} p-4 flex flex-col gap-3 min-h-[400px]`}>
-                  <div className="flex items-center justify-between text-xs font-semibold text-gray-300 pb-2 border-b border-gray-800">
-                    <span>{col.title}</span>
-                    <span className="bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">{colApps.length}</span>
-                  </div>
-
-                  {colApps.map((app) => (
-                    <div key={app.id} className="glass-card glass-card-hover p-4 rounded-xl space-y-3">
-                      <div>
-                        <span className="text-[10px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                          {app.companyName}
-                        </span>
-                        <h4 className="font-semibold text-sm text-white mt-1">{app.jobTitle}</h4>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                {kanbanColumns.map((col) => {
+                  const colApps = applications.filter(app => app.status === col.key);
+                  return (
+                    <div key={col.key} className={`rounded-2xl border ${col.color} p-4 flex flex-col gap-3 min-h-[400px]`}>
+                      <div className="flex items-center justify-between text-xs font-semibold text-gray-300 pb-2 border-b border-gray-800">
+                        <span>{col.title}</span>
+                        <span className="bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">{colApps.length}</span>
                       </div>
 
-                      <div className="flex flex-col gap-1 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1 font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                            <Sparkles className="w-3 h-3" />
-                            {app.semanticMatchScore ? Number(app.semanticMatchScore).toFixed(2) : "60.62"}% Match
-                          </span>
+                      {colApps.map((app) => (
+                        <div key={app.id} className="glass-card glass-card-hover p-4 rounded-xl space-y-3">
+                          <div>
+                            <span className="text-[10px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                              {app.companyName}
+                            </span>
+                            <h4 className="font-semibold text-sm text-white mt-1">{app.jobTitle}</h4>
+                          </div>
+
+                          <div className="flex flex-col gap-1 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="flex items-center gap-1 font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                                <Sparkles className="w-3 h-3" />
+                                {app.semanticMatchScore ? Number(app.semanticMatchScore).toFixed(2) : "60.62"}% Match
+                              </span>
+                            </div>
+
+                            {app.resumeFileName ? (
+                              <div className="flex items-center gap-1 text-[11px] text-purple-300 font-medium bg-purple-500/10 px-2 py-1 rounded border border-purple-500/20">
+                                <FileText className="w-3 h-3 text-purple-400 shrink-0" />
+                                <span className="truncate">CV: {app.resumeFileName}</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-medium bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
+                                <FileText className="w-3 h-3 text-emerald-400 shrink-0" />
+                                <span>CV: CVSirbuMihaiAlexandru.pdf</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {app.notes && (
+                            <p className="text-xs text-gray-400 line-clamp-2 italic bg-gray-900/50 p-2 rounded border border-gray-800">
+                              "{app.notes}"
+                            </p>
+                          )}
+
+                          <button
+                            onClick={() => handleRunAiAnalysis(app)}
+                            disabled={analyzingAppId === app.id}
+                            className="w-full py-1.5 px-3 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 hover:text-blue-300 text-xs font-medium border border-blue-500/30 flex items-center justify-center gap-1.5 transition"
+                          >
+                            {analyzingAppId === app.id ? (
+                              <>
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
+                                Apelează Llama 3.3 Live...
+                              </>
+                            ) : (
+                              <>
+                                <BrainCircuit className="w-3.5 h-3.5" />
+                                Apelează AI Backend Live
+                              </>
+                            )}
+                          </button>
                         </div>
+                      ))}
 
-                        {app.resumeFileName ? (
-                          <div className="flex items-center gap-1 text-[11px] text-purple-300 font-medium bg-purple-500/10 px-2 py-1 rounded border border-purple-500/20">
-                            <FileText className="w-3 h-3 text-purple-400 shrink-0" />
-                            <span className="truncate">CV: {app.resumeFileName}</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-medium bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
-                            <FileText className="w-3 h-3 text-emerald-400 shrink-0" />
-                            <span>CV: CVSirbuMihaiAlexandru.pdf</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {app.notes && (
-                        <p className="text-xs text-gray-400 line-clamp-2 italic bg-gray-900/50 p-2 rounded border border-gray-800">
-                          "{app.notes}"
-                        </p>
+                      {colApps.length === 0 && (
+                        <div className="flex-1 flex items-center justify-center text-xs text-gray-600 italic border border-dashed border-gray-800 rounded-xl p-4 text-center">
+                          {currentUser ? 'Nicio aplicație în acest stadiu' : 'Autentifică-te pentru a vedea aplicațiile'}
+                        </div>
                       )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
 
-                      <button
-                        onClick={() => handleRunAiAnalysis(app)}
-                        disabled={analyzingAppId === app.id}
-                        className="w-full py-1.5 px-3 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 hover:text-blue-300 text-xs font-medium border border-blue-500/30 flex items-center justify-center gap-1.5 transition"
-                      >
-                        {analyzingAppId === app.id ? (
-                          <>
-                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
-                            Apelează Llama 3.3 Live...
-                          </>
-                        ) : (
-                          <>
-                            <BrainCircuit className="w-3.5 h-3.5" />
-                            Apelează AI Backend Live
-                          </>
-                        )}
-                      </button>
+        {/* TAB 2: MULTI-AGENT STUDIO & INTERVIEW SIMULATOR */}
+        {activeTab === 'agent_studio' && (
+          <div className="space-y-6">
+            <div className="glass-card p-6 rounded-2xl border border-purple-500/30 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-purple-600/20 border border-purple-500/40 rounded-xl text-purple-400">
+                    <Bot className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      Sistem Multi-Agent AI Autonom & Simulări Interviu Tehnic
+                    </h2>
+                    <p className="text-xs text-gray-400">
+                      Coordonare asincronă a 4 agenți autonomi specializați cu transmisie live prin Server-Sent Events (SSE).
+                    </p>
+                  </div>
+                </div>
+
+                {applications.length > 0 && (
+                  <button
+                    onClick={() => handleStartAgentStream(selectedAppForAgent ? selectedAppForAgent.jobId : applications[0].jobId)}
+                    disabled={isStreaming}
+                    className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-semibold text-xs flex items-center gap-2 shadow-lg shadow-purple-600/20 transition"
+                  >
+                    {isStreaming ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Agenții AI Rungă în Paralele...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 text-amber-300" />
+                        Lansează Orchestrarea Multi-Agent SSE
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {/* LIVE AGENT LOGS STREAMING */}
+              {agentLogs.length > 0 && (
+                <div className="p-4 bg-gray-950 rounded-xl border border-gray-800 space-y-1 font-mono text-xs text-emerald-400">
+                  <p className="text-gray-500 font-bold mb-1">// CONSOLĂ STREAMING LIVE SERVER-SENT EVENTS (SSE):</p>
+                  {agentLogs.map((log, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-purple-400">&gt;</span>
+                      <span>{log}</span>
                     </div>
                   ))}
-
-                  {colApps.length === 0 && (
-                    <div className="flex-1 flex items-center justify-center text-xs text-gray-600 italic border border-dashed border-gray-800 rounded-xl p-4 text-center">
-                      {currentUser ? 'Nicio aplicație în acest stadiu' : 'Autentifică-te pentru a vedea aplicațiile'}
-                    </div>
-                  )}
                 </div>
-              );
-            })}
+              )}
+            </div>
+
+            {/* 4 AGENT OUTPUT CARDS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* AGENT 1: RECRUITER AGENT */}
+              <div className="glass-card p-5 rounded-2xl space-y-3 border border-blue-500/30">
+                <div className="flex items-center gap-2 text-blue-400 font-bold text-sm">
+                  <Target className="w-4 h-4" /> 1. Recruiter Agent (Analiză Cerințe)
+                </div>
+                <div className="p-3 bg-gray-900/80 rounded-xl border border-gray-800 max-h-60 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap font-sans text-xs text-gray-300 leading-relaxed">
+                    {agentOutputs.recruiter || "Apasă pe 'Lansează Orchestrarea Multi-Agent SSE' pentru a rula agentul..."}
+                  </pre>
+                </div>
+              </div>
+
+              {/* AGENT 2: RESUME TAILOR AGENT */}
+              <div className="glass-card p-5 rounded-2xl space-y-3 border border-purple-500/30">
+                <div className="flex items-center gap-2 text-purple-400 font-bold text-sm">
+                  <FileText className="w-4 h-4" /> 2. Resume Tailor Agent (Optimizare CV ATS 100%)
+                </div>
+                <div className="p-3 bg-gray-900/80 rounded-xl border border-gray-800 max-h-60 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap font-sans text-xs text-gray-300 leading-relaxed">
+                    {agentOutputs.tailor || "Apasă pe 'Lansează Orchestrarea Multi-Agent SSE' pentru a rula agentul..."}
+                  </pre>
+                </div>
+              </div>
+
+              {/* AGENT 3: MOCK INTERVIEW SIMULATOR AGENT */}
+              <div className="glass-card p-5 rounded-2xl space-y-3 border border-amber-500/30">
+                <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                  <MessageSquare className="w-4 h-4" /> 3. Technical Interview Agent (5 Întrebări Tehnice)
+                </div>
+                <div className="p-3 bg-gray-900/80 rounded-xl border border-gray-800 max-h-60 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap font-sans text-xs text-gray-300 leading-relaxed">
+                    {agentOutputs.interview || "Apasă pe 'Lansează Orchestrarea Multi-Agent SSE' pentru a rula agentul..."}
+                  </pre>
+                </div>
+              </div>
+
+              {/* AGENT 4: OUTREACH AGENT */}
+              <div className="glass-card p-5 rounded-2xl space-y-3 border border-emerald-500/30">
+                <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                  <Send className="w-4 h-4" /> 4. Outreach Agent (Mesaje Recruiter LinkedIn)
+                </div>
+                <div className="p-3 bg-gray-900/80 rounded-xl border border-gray-800 max-h-60 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap font-sans text-xs text-gray-300 leading-relaxed">
+                    {agentOutputs.outreach || "Apasă pe 'Lansează Orchestrarea Multi-Agent SSE' pentru a rula agentul..."}
+                  </pre>
+                </div>
+              </div>
+
+            </div>
+
+            {/* INTERACTIVE MOCK INTERVIEW SIMULATOR CONSOLE */}
+            <div className="glass-card p-6 rounded-2xl border border-amber-500/40 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30">
+                  <Award className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Simulator Interactiv de Interviu Tehnic cu AI</h3>
+                  <p className="text-xs text-gray-400">Scrie răspunsul tău la întrebare și primește o notă de la 1 la 10 și feedback în timp real de la AI Agent!</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-amber-400 mb-1">Întrebare Tehnică Selectată:</label>
+                  <p className="p-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-gray-200 font-medium">
+                    {selectedQuestion}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">Scrie Răspunsul Tău Aici:</label>
+                  <textarea
+                    rows={4}
+                    value={userAnswer}
+                    onChange={e => setUserAnswer(e.target.value)}
+                    placeholder="Scrie răspunsul tău tehnic aici (ex: Garbage Collector-ul eliberează memoria nefolosită din Heap...)"
+                    className="w-full bg-gray-950 border border-gray-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleEvaluateInterviewAnswer}
+                    disabled={evaluatingAnswer || !userAnswer.trim()}
+                    className="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg shadow-amber-600/20 transition disabled:opacity-50"
+                  >
+                    {evaluatingAnswer ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        AI Agent Evaluează Răspunsul...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5" />
+                        Evaluează Răspunsul cu AI Agent
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* EVALUATION RESULTS */}
+              {evaluationResult && (
+                <div className="p-5 bg-gray-950 rounded-xl border border-amber-500/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Rezultat Evaluare AI</span>
+                    <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-sm border border-amber-500/40">
+                      Notă: {evaluationResult.scoreOutOfTen} / 10
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 text-xs text-gray-300">
+                    <pre className="whitespace-pre-wrap font-sans leading-relaxed text-xs">
+                      {evaluationResult.detailedFeedbackMarkdown}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
-        </div>
+        )}
 
       </main>
 
@@ -744,7 +1055,7 @@ export default function App() {
 
       {/* FOOTER */}
       <footer className="border-t border-gray-800/80 bg-[#0b0f19] py-4 text-center text-xs text-gray-500">
-        ATS Job Tracker & AI Career Coach Engine • Construit cu Java 21, Spring Boot 3.3, pgvector & React 18
+        ATS Multi-Agent AI Platform • Construit cu Java 21, Spring Boot 3.3, 4 Autonomous AI Agents & React 18
       </footer>
     </div>
   );
