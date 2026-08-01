@@ -3,6 +3,8 @@ spring:
     name: ats-job-tracker
 
   ai:
+    groq:
+      api-key: ${SPRING_AI_GROQ_API_KEY:${SPRING_AI_OPENAI_API_KEY:demo-dummy-key-for-local-dev}}
     openai:
       api-key: ${SPRING_AI_OPENAI_API_KEY:demo-dummy-key-for-local-dev}
       chat:

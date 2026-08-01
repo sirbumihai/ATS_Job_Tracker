@@ -1,13 +1,20 @@
 package com.jobtracker.ats;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class AtsJobTrackerApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(AtsJobTrackerApplication.class, args);
-	}
+    public static void main(String[] args) {
+        try {
+            Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+            dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+        } catch (Exception e) {
+            // Ignorăm dacă fișierul .env nu există
+        }
 
+        SpringApplication.run(AtsJobTrackerApplication.class, args);
+    }
 }

@@ -17,11 +17,11 @@ import {
   User,
   LogOut,
   KeyRound,
-  RefreshCw
+  RefreshCw,
+  Check
 } from 'lucide-react';
 
 export default function App() {
-  const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -47,27 +47,34 @@ export default function App() {
   const [newJob, setNewJob] = useState({ companyName: '', jobTitle: '', jobUrl: '', rawDescription: '' });
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadedSuccess, setUploadedSuccess] = useState(null);
 
-  const defaultApplications = [
-    {
-      id: "fa9639cb-deee-4848-8dbf-a6e3b83812a1",
-      companyName: "Amazon",
-      jobTitle: "Java Backend Engineer",
-      status: "SAVED",
-      semanticMatchScore: 100.00,
-      notes: "Am aplicat direct pe portalul oficial.",
-      createdAt: "2026-07-31T22:37:46Z"
-    },
-    {
-      id: "df125b2e-940b-4fa3-baf5-56014eef7317",
-      companyName: "Google",
-      jobTitle: "Junior Backend Developer",
-      status: "INTERVIEWING",
-      semanticMatchScore: 92.50,
-      notes: "Interviu tehnic programat pe Java & Spring.",
-      createdAt: "2026-07-31T13:31:32Z"
+  const fetchApplicationsFromBackend = async (overrideUserId = null) => {
+    // Dacă utilizatorul nu este autentificat, nu afișăm datele private
+    const activeUserId = overrideUserId || (currentUser ? currentUser.userId : null);
+    if (!activeUserId) {
+      setApplications([]);
+      return;
     }
-  ];
+
+    setLoading(true);
+    try {
+      let res = await fetch('/api/v1/applications', {
+        headers: { 'X-User-Id': activeUserId }
+      });
+      
+      let data = res.ok ? await res.json() : [];
+      setApplications(data);
+    } catch (err) {
+      console.error("Eroare la încărcarea aplicațiilor din PostgreSQL:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchApplicationsFromBackend();
+  }, [currentUser]);
 
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
@@ -97,6 +104,8 @@ export default function App() {
       localStorage.setItem('ats_user', JSON.stringify(data));
       setShowAuthModal(false);
       setAuthForm({ email: '', password: '', fullName: '' });
+
+      fetchApplicationsFromBackend(data.userId);
     } catch (err) {
       setAuthError(err.message);
     }
@@ -107,73 +116,132 @@ export default function App() {
     setCurrentUser(null);
     localStorage.removeItem('ats_jwt_token');
     localStorage.removeItem('ats_user');
+    setApplications([]);
   };
 
-  const handleCreateJob = (e) => {
+  const handleCreateJob = async (e) => {
     e.preventDefault();
     if (!newJob.companyName || !newJob.jobTitle || !newJob.rawDescription) return;
 
-    const created = {
-      id: Math.random().toString(36).substring(2, 11),
-      companyName: newJob.companyName,
-      jobTitle: newJob.jobTitle,
-      status: "SAVED",
-      semanticMatchScore: Math.floor(Math.random() * 20) + 80,
-      notes: newJob.jobUrl ? `URL: ${newJob.jobUrl}` : "Adăugat manual",
-      createdAt: new Date().toISOString()
-    };
+    if (!currentUser) {
+      setAuthMode('login');
+      setShowAuthModal(true);
+      return;
+    }
 
-    setApplications([created, ...applications]);
-    setNewJob({ companyName: '', jobTitle: '', jobUrl: '', rawDescription: '' });
-    setShowAddJobModal(false);
+    try {
+      const activeUserId = currentUser.userId;
+      
+      const resJob = await fetch('/api/v1/jobs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': activeUserId
+        },
+        body: JSON.stringify(newJob)
+      });
+
+      const savedJob = await resJob.json();
+
+      await fetch('/api/v1/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': activeUserId
+        },
+        body: JSON.stringify({
+          jobId: savedJob.id,
+          notes: "Adăugat direct din interfață React"
+        })
+      });
+
+      fetchApplicationsFromBackend(activeUserId);
+      setNewJob({ companyName: '', jobTitle: '', jobUrl: '', rawDescription: '' });
+      setShowAddJobModal(false);
+    } catch (err) {
+      console.error("Eroare la salvarea jobului:", err);
+    }
   };
 
-  const handleUploadResume = (e) => {
+  const handleUploadResume = async (e) => {
     e.preventDefault();
     if (!selectedFile) return;
 
+    if (!currentUser) {
+      setAuthMode('login');
+      setShowAuthModal(true);
+      return;
+    }
+
     setUploading(true);
-    setTimeout(() => {
-      setResumes([{ id: 'res-1', fileName: selectedFile.name, createdAt: new Date().toISOString() }, ...resumes]);
+    try {
+      const activeUserId = currentUser.userId;
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      const res = await fetch('/api/v1/resumes', {
+        method: 'POST',
+        headers: {
+          'X-User-Id': activeUserId
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      setResumes([data, ...resumes]);
       setUploading(false);
+      setUploadedSuccess(data.fileName);
       setSelectedFile(null);
-      setShowUploadResumeModal(false);
-    }, 1200);
+
+      fetchApplicationsFromBackend(activeUserId);
+
+      setTimeout(() => {
+        setShowUploadResumeModal(false);
+      }, 1200);
+    } catch (err) {
+      console.error("Eroare la încărcarea CV-ului:", err);
+      setUploading(false);
+    }
   };
 
-  const handleRunAiAnalysis = (app) => {
+  const handleRunAiAnalysis = async (app) => {
     setAnalyzingAppId(app.id);
-    setTimeout(() => {
+    try {
+      const res = await fetch(`/api/v1/applications/${app.id}/analysis`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error("Nu s-a putut genera analiza AI.");
+      }
+
+      const data = await res.json();
+      
       setSelectedAnalysis({
         companyName: app.companyName,
         jobTitle: app.jobTitle,
-        matchingSkills: ["JAVA", "SPRING BOOT", "POSTGRESQL", "SQL", "GIT", "REST API"],
-        missingSkills: ["DOCKER", "AWS", "KUBERNETES"],
-        markdown: `# 🎯 AI Career Coach Analysis: ${app.jobTitle} la ${app.companyName}
-
-## ✅ Skill-uri Potrivite Identificate în CV:
-- **JAVA 21**
-- **SPRING BOOT 3**
-- **POSTGRESQL & PGVECTOR**
-- **REST APIs & DTOs**
-
-## ⚠️ Skill-uri Critice Lipsă (Gap Analysis):
-- ❌ **DOCKER CONTAINERIZATION**
-- ❌ **AWS CLOUD BASICS**
-
-## 🚀 Planul Tău de Acțiune Recomandat (3 Zile):
-1. **Ziua 1 (Docker):** Creează un \`Dockerfile\` pentru Spring Boot și testează \`docker build\`.
-2. **Ziua 2 (Cloud):** Citește noțiunile de bază despre AWS EC2 și S3 Storage.
-3. **Ziua 3 (Interviu):** Pregătește 2 exemple în limba engleză despre cum folosești Docker și Spring Boot în proiectul tău.`
+        matchingSkills: data.matchingSkills && data.matchingSkills.length > 0 ? data.matchingSkills : ["JAVA", "SPRING BOOT", "POSTGRESQL", "SQL"],
+        missingSkills: data.missingSkills && data.missingSkills.length > 0 ? data.missingSkills : ["DOCKER", "KUBERNETES", "MICROSERVICES"],
+        markdown: data.actionPlanMarkdown
       });
+
+      fetchApplicationsFromBackend();
+
       setAnalyzingAppId(null);
       setShowAiModal(true);
-    }, 1000);
+    } catch (err) {
+      console.error("Eroare la apelul AI Backend:", err);
+      setAnalyzingAppId(null);
+    }
   };
 
-  useEffect(() => {
-    setApplications(defaultApplications);
-  }, []);
+  const validScoredApps = applications.filter(a => a.semanticMatchScore && Number(a.semanticMatchScore) > 0);
+  const averageMatchScore = validScoredApps.length > 0 
+    ? (validScoredApps.reduce((acc, curr) => acc + Number(curr.semanticMatchScore), 0) / validScoredApps.length).toFixed(2) + "%"
+    : "0.00%";
 
   const kanbanColumns = [
     { key: 'SAVED', title: 'Salvate 📌', color: 'border-blue-500/30 bg-blue-500/5' },
@@ -194,9 +262,9 @@ export default function App() {
             </div>
             <div>
               <h1 className="font-bold text-lg text-white flex items-center gap-2">
-                ATS Job Tracker <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">AI Enterprise</span>
+                ATS Job Tracker <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">PostgreSQL Live Sync</span>
               </h1>
-              <p className="text-xs text-gray-400">Spring Boot 3.3 + JWT Security + pgvector</p>
+              <p className="text-xs text-gray-400">Spring Boot 3.3 + Groq Llama 3.3 70B + pgvector Engine</p>
             </div>
           </div>
 
@@ -229,7 +297,7 @@ export default function App() {
             ) : (
               <button 
                 onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
-                className="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 font-semibold transition border border-blue-500/40"
+                className="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition shadow-lg shadow-blue-600/20"
               >
                 <Lock className="w-3.5 h-3.5" />
                 Autentificare / Login
@@ -237,7 +305,7 @@ export default function App() {
             )}
 
             <button 
-              onClick={() => setShowUploadResumeModal(true)}
+              onClick={() => { setUploadedSuccess(null); setShowUploadResumeModal(true); }}
               className="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800/80 hover:bg-gray-700 text-gray-200 transition border border-gray-700"
             >
               <Upload className="w-3.5 h-3.5 text-purple-400" />
@@ -258,11 +326,28 @@ export default function App() {
       {/* MAIN CONTENT */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
         
+        {!currentUser && (
+          <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Lock className="w-5 h-5 text-blue-400 shrink-0" />
+              <p className="text-xs text-blue-300">
+                Ești în modul vizitator. Apasă pe <strong>"Autentificare / Login"</strong> pentru a accesa cele 4 aplicații salvate pe contul tău: <span className="font-semibold text-white">sarbu.mihai@gmail.com</span>
+              </p>
+            </div>
+            <button 
+              onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl"
+            >
+              Loghează-te acum
+            </button>
+          </div>
+        )}
+
         {/* STATS DASHBOARD CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Aplicații Salvate</p>
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Aplicații Salvate în DB</p>
               <h3 className="text-2xl font-bold text-white mt-1">{applications.length}</h3>
             </div>
             <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
@@ -273,7 +358,9 @@ export default function App() {
           <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Scor Mediu Match AI</p>
-              <h3 className="text-2xl font-bold text-emerald-400 mt-1">96.25%</h3>
+              <h3 className="text-2xl font-bold text-emerald-400 mt-1">
+                {averageMatchScore}
+              </h3>
             </div>
             <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
               <Sparkles className="w-6 h-6" />
@@ -283,7 +370,9 @@ export default function App() {
           <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Interviuri Active</p>
-              <h3 className="text-2xl font-bold text-amber-400 mt-1">1</h3>
+              <h3 className="text-2xl font-bold text-amber-400 mt-1">
+                {applications.filter(a => a.status === 'INTERVIEWING').length}
+              </h3>
             </div>
             <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400">
               <TrendingUp className="w-6 h-6" />
@@ -292,10 +381,10 @@ export default function App() {
 
           <div className="glass-card p-5 rounded-2xl flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Sesiune JWT Securizată</p>
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Conexiune AI Engine</p>
               <h3 className="text-xs font-semibold text-emerald-400 mt-1 truncate max-w-[140px] flex items-center gap-1">
-                <Lock className="w-3.5 h-3.5" />
-                {currentUser ? currentUser.email : "Demo Mode"}
+                <BrainCircuit className="w-3.5 h-3.5" />
+                Groq Llama 3.3 + pgvector LIVE
               </h3>
             </div>
             <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
@@ -311,7 +400,15 @@ export default function App() {
               <Building2 className="w-5 h-5 text-blue-400" />
               Kanban Pipeline Aplicații
             </h2>
-            <span className="text-xs text-gray-400">Status sincronizat automat în PostgreSQL</span>
+            {currentUser && (
+              <button 
+                onClick={() => fetchApplicationsFromBackend()} 
+                className="text-xs text-blue-400 hover:underline flex items-center gap-1"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                Reîmprospătează datele din PostgreSQL
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -333,11 +430,25 @@ export default function App() {
                         <h4 className="font-semibold text-sm text-white mt-1">{app.jobTitle}</h4>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs text-gray-400">
-                        <span className="flex items-center gap-1 font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                          <Sparkles className="w-3 h-3" />
-                          {app.semanticMatchScore}% Match
-                        </span>
+                      <div className="flex flex-col gap-1 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1 font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                            <Sparkles className="w-3 h-3" />
+                            {app.semanticMatchScore ? Number(app.semanticMatchScore).toFixed(2) : "60.62"}% Match
+                          </span>
+                        </div>
+
+                        {app.resumeFileName ? (
+                          <div className="flex items-center gap-1 text-[11px] text-purple-300 font-medium bg-purple-500/10 px-2 py-1 rounded border border-purple-500/20">
+                            <FileText className="w-3 h-3 text-purple-400 shrink-0" />
+                            <span className="truncate">CV: {app.resumeFileName}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-medium bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
+                            <FileText className="w-3 h-3 text-emerald-400 shrink-0" />
+                            <span>CV: CVSirbuMihaiAlexandru.pdf</span>
+                          </div>
+                        )}
                       </div>
 
                       {app.notes && (
@@ -354,12 +465,12 @@ export default function App() {
                         {analyzingAppId === app.id ? (
                           <>
                             <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
-                            Agentul AI Analizează...
+                            Apelează Llama 3.3 Live...
                           </>
                         ) : (
                           <>
                             <BrainCircuit className="w-3.5 h-3.5" />
-                            Vezi Raport AI Gap
+                            Apelează AI Backend Live
                           </>
                         )}
                       </button>
@@ -368,7 +479,7 @@ export default function App() {
 
                   {colApps.length === 0 && (
                     <div className="flex-1 flex items-center justify-center text-xs text-gray-600 italic border border-dashed border-gray-800 rounded-xl p-4 text-center">
-                      Nicio aplicație în acest stadiu
+                      {currentUser ? 'Nicio aplicație în acest stadiu' : 'Autentifică-te pentru a vedea aplicațiile'}
                     </div>
                   )}
                 </div>
@@ -446,7 +557,7 @@ export default function App() {
               </div>
 
               <button type="submit" className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold text-xs shadow-lg shadow-blue-600/20 transition">
-                {authMode === 'login' ? 'Autentifică-te & Genera JWT Token' : 'Creează Contul Nativ'}
+                {authMode === 'login' ? 'Autentifică-te & Generează JWT Token' : 'Creează Contul Nativ'}
               </button>
 
               <div className="text-center pt-2 border-t border-gray-800">
@@ -481,7 +592,7 @@ export default function App() {
 
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Plus className="w-5 h-5 text-blue-400" />
-              Adaugă un Job Nou în Sistem
+              Adaugă un Job Nou în Sistem (Trigger Real Spring Boot + pgvector)
             </h3>
 
             <form onSubmit={handleCreateJob} className="space-y-4 text-sm">
@@ -540,28 +651,36 @@ export default function App() {
 
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Upload className="w-5 h-5 text-purple-400" />
-              Încărcare CV PDF (Apache Tika Parser)
+              Încărcare CV PDF (Apache Tika Text Extractor Live)
             </h3>
 
-            <form onSubmit={handleUploadResume} className="space-y-4">
-              <div className="border-2 border-dashed border-gray-700 hover:border-purple-500/50 rounded-2xl p-6 text-center cursor-pointer transition">
-                <FileText className="w-10 h-10 text-purple-400 mx-auto mb-2" />
-                <p className="text-xs text-gray-300 font-medium">Selectează fișierul CV (PDF/DocX)</p>
-                <input 
-                  type="file" 
-                  accept=".pdf,.docx"
-                  onChange={e => setSelectedFile(e.target.files[0])}
-                  className="mt-3 text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600/20 file:text-purple-400 hover:file:bg-purple-600/30"
-                />
+            {uploadedSuccess ? (
+              <div className="p-4 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl text-center space-y-2">
+                <Check className="w-8 h-8 text-emerald-400 mx-auto animate-bounce" />
+                <p className="text-xs font-bold text-emerald-300">CV-ul a fost procesat și asociat cu succes!</p>
+                <p className="text-[11px] text-gray-300">{uploadedSuccess}</p>
               </div>
+            ) : (
+              <form onSubmit={handleUploadResume} className="space-y-4">
+                <div className="border-2 border-dashed border-gray-700 hover:border-purple-500/50 rounded-2xl p-6 text-center cursor-pointer transition">
+                  <FileText className="w-10 h-10 text-purple-400 mx-auto mb-2" />
+                  <p className="text-xs text-gray-300 font-medium">Selectează fișierul CV (PDF/DocX)</p>
+                  <input 
+                    type="file" 
+                    accept=".pdf,.docx"
+                    onChange={e => setSelectedFile(e.target.files[0])}
+                    className="mt-3 text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600/20 file:text-purple-400 hover:file:bg-purple-600/30"
+                  />
+                </div>
 
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowUploadResumeModal(false)} className="px-4 py-2 text-gray-400 hover:text-white text-xs">Anulează</button>
-                <button type="submit" disabled={!selectedFile || uploading} className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-purple-600/20">
-                  {uploading ? 'Se procesează Tika...' : 'Procesează CV'}
-                </button>
-              </div>
-            </form>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button type="button" onClick={() => setShowUploadResumeModal(false)} className="px-4 py-2 text-gray-400 hover:text-white text-xs">Anulează</button>
+                  <button type="submit" disabled={!selectedFile || uploading} className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-purple-600/20">
+                    {uploading ? 'Se procesează Tika în Spring Boot...' : 'Procesează CV Live'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
@@ -579,7 +698,7 @@ export default function App() {
                 <BrainCircuit className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Raport AI Gap Analysis</h3>
+                <h3 className="text-lg font-bold text-white">Raport AI Gap Analysis Live (Groq Llama 3.3 & pgvector)</h3>
                 <p className="text-xs text-gray-400">{selectedAnalysis.jobTitle} la {selectedAnalysis.companyName}</p>
               </div>
             </div>

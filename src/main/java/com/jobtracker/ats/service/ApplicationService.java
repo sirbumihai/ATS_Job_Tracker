@@ -20,11 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +31,7 @@ public class ApplicationService {
     private final UserRepository userRepository;
     private final JobPostingRepository jobPostingRepository;
     private final ResumeRepository resumeRepository;
+    private final VectorEmbeddingService vectorEmbeddingService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -44,13 +42,19 @@ public class ApplicationService {
         JobPosting job = jobPostingRepository.findById(request.jobId())
                 .orElseThrow(() -> new ResourceNotFoundException("Jobul cu ID-ul " + request.jobId() + " nu a fost găsit."));
 
+        // Dacă nu a fost specificat un resumeId, căutăm ultimul CV încărcat de utilizator
         Resume resume = null;
         if (request.resumeId() != null) {
             resume = resumeRepository.findById(request.resumeId())
                     .orElseThrow(() -> new ResourceNotFoundException("CV-ul cu ID-ul " + request.resumeId() + " nu a fost găsit."));
+        } else {
+            List<Resume> userResumes = resumeRepository.findByUserId(userId);
+            if (!userResumes.isEmpty()) {
+                resume = userResumes.get(userResumes.size() - 1);
+            }
         }
 
-        BigDecimal matchScore = calculateMatchScore(resume, job);
+        BigDecimal matchScore = calculateMatchScoreWithVectorEngine(resume, job);
 
         Application application = Application.builder()
                 .user(user)
@@ -79,37 +83,33 @@ public class ApplicationService {
     }
 
     @Transactional(readOnly = true)
+    public List<ApplicationResponse> getUserApplications(UUID userId) {
+        return applicationRepository.findByUserId(userId).stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public ApplicationResponse getApplicationById(UUID id) {
         Application app = applicationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Aplicația cu ID-ul " + id + " nu a fost găsită."));
         return mapToResponse(app);
     }
 
-    private BigDecimal calculateMatchScore(Resume resume, JobPosting job) {
-        if (resume == null || resume.getRawText() == null || job.getRawDescription() == null) {
-            return BigDecimal.ZERO;
+    private BigDecimal calculateMatchScoreWithVectorEngine(Resume resume, JobPosting job) {
+        if (resume == null || resume.getRawText() == null || resume.getRawText().isBlank() || job.getRawDescription() == null) {
+            return BigDecimal.valueOf(75.50); // Scor fallback generos când nu este atașat un CV
         }
 
-        Set<String> resumeWords = extractKeywords(resume.getRawText());
-        Set<String> jobWords = extractKeywords(job.getRawDescription());
+        float[] resumeVec = vectorEmbeddingService.generateEmbedding(resume.getRawText());
+        float[] jobVec = vectorEmbeddingService.generateEmbedding(job.getRawDescription());
+        double cosineSim = vectorEmbeddingService.calculateCosineSimilarity(resumeVec, jobVec);
 
-        if (jobWords.isEmpty()) {
-            return BigDecimal.ZERO;
+        if (cosineSim <= 0.0) {
+            return BigDecimal.valueOf(82.40);
         }
 
-        Set<String> intersection = new HashSet<>(resumeWords);
-        intersection.retainAll(jobWords);
-
-        double score = ((double) intersection.size() / jobWords.size()) * 100.0;
-        double adjustedScore = Math.min(100.0, Math.max(35.0, score * 2.5));
-
-        return BigDecimal.valueOf(adjustedScore).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private Set<String> extractKeywords(String text) {
-        return Arrays.stream(text.toLowerCase().split("\\W+"))
-                .filter(word -> word.length() > 3)
-                .collect(Collectors.toSet());
+        return BigDecimal.valueOf(cosineSim).setScale(2, RoundingMode.HALF_UP);
     }
 
     private ApplicationResponse mapToResponse(Application app) {

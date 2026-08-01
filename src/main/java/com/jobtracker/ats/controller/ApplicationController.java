@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -26,6 +27,14 @@ public class ApplicationController {
 
         ApplicationResponse response = applicationService.createApplication(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ApplicationResponse>> getUserApplications(
+            @RequestHeader("X-User-Id") UUID userId) {
+
+        List<ApplicationResponse> applications = applicationService.getUserApplications(userId);
+        return ResponseEntity.ok(applications);
     }
 
     @PatchMapping("/{id}/status")

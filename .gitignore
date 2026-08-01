@@ -1,3 +1,8 @@
+### Environment Secrets ###
+.env
+.env.local
+*.env
+
 ### Maven Build Output ###
 target/
 *.jar

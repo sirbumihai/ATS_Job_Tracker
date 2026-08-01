@@ -23,6 +23,8 @@ services:
     container_name: ats_backend_api
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ats_db
       SPRING_DATASOURCE_USERNAME: ats_user
