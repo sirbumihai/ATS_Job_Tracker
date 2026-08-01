@@ -3,6 +3,7 @@ package com.jobtracker.ats.service;
 import com.jobtracker.ats.dto.CreateApplicationRequest;
 import com.jobtracker.ats.dto.ApplicationResponse;
 import com.jobtracker.ats.entity.Application;
+import com.jobtracker.ats.entity.Application.ApplicationStatus;
 import com.jobtracker.ats.entity.JobPosting;
 import com.jobtracker.ats.entity.Resume;
 import com.jobtracker.ats.entity.User;
@@ -55,17 +56,26 @@ public class ApplicationService {
                 .user(user)
                 .jobPosting(job)
                 .resume(resume)
-                .status(Application.ApplicationStatus.SAVED)
+                .status(ApplicationStatus.SAVED)
                 .semanticMatchScore(matchScore)
                 .notes(request.notes())
                 .build();
 
         Application savedApp = applicationRepository.saveAndFlush(application);
 
-        // Publicăm evenimentul asincron pentru ca Agentul AI să ruleze în fundal!
         eventPublisher.publishEvent(new ApplicationCreatedEvent(savedApp.getId()));
 
         return mapToResponse(savedApp);
+    }
+
+    @Transactional
+    public ApplicationResponse updateApplicationStatus(UUID id, ApplicationStatus newStatus) {
+        Application app = applicationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Aplicația cu ID-ul " + id + " nu a fost găsită."));
+
+        app.setStatus(newStatus);
+        Application updated = applicationRepository.saveAndFlush(app);
+        return mapToResponse(updated);
     }
 
     @Transactional(readOnly = true)
