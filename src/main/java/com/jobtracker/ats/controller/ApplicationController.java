@@ -51,4 +51,10 @@ public class ApplicationController {
         ApplicationResponse response = applicationService.getApplicationById(id);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteApplication(@PathVariable UUID id) {
+        applicationService.deleteApplication(id);
+        return ResponseEntity.noContent().build();
+    }
 }

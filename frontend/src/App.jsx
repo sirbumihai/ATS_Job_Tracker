@@ -3,10 +3,11 @@ import Navbar from './components/Navbar';
 import StatsDashboard from './components/StatsDashboard';
 import KanbanBoard from './components/KanbanBoard';
 import AgentStudio from './components/AgentStudio';
+import CvStudio from './components/CvStudio';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('kanban'); // 'kanban' or 'agent_studio'
+  const [activeTab, setActiveTab] = useState('kanban'); // 'kanban', 'agent_studio', or 'cv_studio'
 
   const [applications, setApplications] = useState([]);
   const [resumes, setResumes] = useState([]);
@@ -40,7 +41,7 @@ export default function App() {
 
   // Interview Simulator States
   const [userAnswer, setUserAnswer] = useState('');
-  const [selectedQuestion, setSelectedQuestion] = useState('Cum funcționează Garbage Collector-ul în Java 21 și care este diferența dintre stack și heap memory?');
+  const [selectedQuestion, setSelectedQuestion] = useState('1. Cum funcționează Garbage Collector-ul în Java 21 și care este diferența dintre stack și heap memory?');
   const [evaluatingAnswer, setEvaluatingAnswer] = useState(false);
   const [evaluationResult, setEvaluationResult] = useState(null);
 
@@ -125,6 +126,34 @@ export default function App() {
     setApplications([]);
   };
 
+  const handleUpdateStatus = async (appId, newStatus) => {
+    try {
+      const res = await fetch(`/api/v1/applications/${appId}/status?status=${newStatus}`, {
+        method: 'PATCH'
+      });
+
+      if (res.ok) {
+        fetchApplicationsFromBackend();
+      }
+    } catch (err) {
+      console.error("Eroare la schimbarea stării aplicației:", err);
+    }
+  };
+
+  const handleDeleteApplication = async (appId) => {
+    try {
+      const res = await fetch(`/api/v1/applications/${appId}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        fetchApplicationsFromBackend();
+      }
+    } catch (err) {
+      console.error("Eroare la ștergerea aplicației:", err);
+    }
+  };
+
   const handleCreateJob = async (e) => {
     e.preventDefault();
     if (!newJob.companyName || !newJob.jobTitle || !newJob.rawDescription) return;
@@ -157,7 +186,7 @@ export default function App() {
         },
         body: JSON.stringify({
           jobId: savedJob.id,
-          notes: "Adăugat direct din interfață React"
+          notes: ""
         })
       });
 
@@ -166,6 +195,51 @@ export default function App() {
       setShowAddJobModal(false);
     } catch (err) {
       console.error("Eroare la salvarea jobului:", err);
+    }
+  };
+
+  const handleImportWebJob = async (webJob) => {
+    if (!currentUser) {
+      setAuthMode('login');
+      setShowAuthModal(true);
+      return;
+    }
+
+    try {
+      const activeUserId = currentUser.userId;
+      
+      const resJob = await fetch('/api/v1/jobs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': activeUserId
+        },
+        body: JSON.stringify({
+          companyName: webJob.companyName,
+          jobTitle: webJob.jobTitle,
+          jobUrl: 'https://linkedin.com',
+          rawDescription: webJob.rawDescription
+        })
+      });
+
+      const savedJob = await resJob.json();
+
+      await fetch('/api/v1/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': activeUserId
+        },
+        body: JSON.stringify({
+          jobId: savedJob.id,
+          notes: ""
+        })
+      });
+
+      fetchApplicationsFromBackend(activeUserId);
+      setActiveTab('kanban');
+    } catch (err) {
+      console.error("Eroare la importul jobului de pe net:", err);
     }
   };
 
@@ -268,10 +342,6 @@ export default function App() {
 
     eventSource.addEventListener('interview_output', (e) => {
       setAgentOutputs(prev => ({ ...prev, interview: e.data }));
-    });
-
-    eventSource.addEventListener('outreach_output', (e) => {
-      setAgentOutputs(prev => ({ ...prev, outreach: e.data }));
     });
 
     eventSource.addEventListener('complete', (e) => {
@@ -381,9 +451,10 @@ export default function App() {
               applications={applications}
               currentUser={currentUser}
               loading={loading}
-              onRefresh={() => fetchApplicationsFromBackend()}
               onRunAiAnalysis={handleRunAiAnalysis}
               analyzingAppId={analyzingAppId}
+              onUpdateStatus={handleUpdateStatus}
+              onDeleteApplication={handleDeleteApplication}
             />
           </>
         )}
@@ -397,12 +468,21 @@ export default function App() {
             agentLogs={agentLogs}
             agentOutputs={agentOutputs}
             selectedQuestion={selectedQuestion}
+            setSelectedQuestion={setSelectedQuestion}
             userAnswer={userAnswer}
             setUserAnswer={setUserAnswer}
             evaluatingAnswer={evaluatingAnswer}
             evaluationResult={evaluationResult}
             onStartStream={handleStartAgentStream}
             onEvaluateAnswer={handleEvaluateInterviewAnswer}
+            onImportJob={handleImportWebJob}
+          />
+        )}
+
+        {/* TAB 3: DEDICATED CV TAILOR & ATS OPTIMIZER STUDIO */}
+        {activeTab === 'cv_studio' && (
+          <CvStudio 
+            applications={applications}
           />
         )}
 

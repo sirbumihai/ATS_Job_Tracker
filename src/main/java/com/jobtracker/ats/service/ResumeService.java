@@ -48,14 +48,15 @@ public class ResumeService {
     }
 
     private ResumeResponse mapToResponse(Resume resume) {
-        String snippet = resume.getRawText().length() > 200 
+        String snippet = resume.getRawText() != null && resume.getRawText().length() > 200 
                 ? resume.getRawText().substring(0, 200) + "..." 
-                : resume.getRawText();
+                : (resume.getRawText() != null ? resume.getRawText() : "");
 
         return new ResumeResponse(
                 resume.getId(),
                 resume.getFileName(),
                 snippet,
+                resume.getRawText() != null ? resume.getRawText() : "",
                 resume.getCreatedAt()
         );
     }

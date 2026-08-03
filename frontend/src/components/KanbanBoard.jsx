@@ -6,20 +6,25 @@ import {
   BrainCircuit, 
   RefreshCw,
   Search,
-  Filter
+  Filter,
+  GripVertical,
+  Trash2
 } from 'lucide-react';
 
 export default function KanbanBoard({ 
   applications, 
   currentUser, 
   loading, 
-  onRefresh, 
   onRunAiAnalysis, 
-  analyzingAppId 
+  analyzingAppId,
+  onUpdateStatus,
+  onDeleteApplication
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterScore, setFilterScore] = useState('ALL');
   const [mobileSelectedColumn, setMobileSelectedColumn] = useState('SAVED');
+  const [draggedAppId, setDraggedAppId] = useState(null);
+  const [dragOverColumnKey, setDragOverColumnKey] = useState(null);
 
   const kanbanColumns = [
     { key: 'SAVED', title: 'Salvate 📌', color: 'border-blue-500/30 bg-blue-500/5' },
@@ -38,9 +43,31 @@ export default function KanbanBoard({
     return matchesSearch;
   });
 
-  const getCompanyInitial = (company) => {
-    if (!company) return 'J';
-    return company.charAt(0).toUpperCase();
+  // DRAG AND DROP HANDLERS (TRELLO STYLE)
+  const handleDragStart = (e, appId) => {
+    e.dataTransfer.setData('text/plain', appId);
+    setDraggedAppId(appId);
+  };
+
+  const handleDragOver = (e, columnKey) => {
+    e.preventDefault();
+    if (dragOverColumnKey !== columnKey) {
+      setDragOverColumnKey(columnKey);
+    }
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, targetColumnKey) => {
+    e.preventDefault();
+    const appId = e.dataTransfer.getData('text/plain') || draggedAppId;
+    if (appId && onUpdateStatus) {
+      onUpdateStatus(appId, targetColumnKey);
+    }
+    setDraggedAppId(null);
+    setDragOverColumnKey(null);
   };
 
   return (
@@ -90,21 +117,15 @@ export default function KanbanBoard({
         </div>
       )}
 
-      {/* HEADER WITH REFRESH */}
+      {/* HEADER WITH DRAG INSTRUCTION */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2.5 tracking-tight">
-          <Building2 className="w-5 h-5 text-blue-400" />
-          Pipeline Aplicații
-        </h2>
-        {currentUser && (
-          <button 
-            onClick={onRefresh} 
-            className="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1.5 transition"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Reîmprospătează DB
-          </button>
-        )}
+        <div>
+          <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2.5 tracking-tight">
+            <Building2 className="w-5 h-5 text-blue-400" />
+            Pipeline Aplicații (Drag & Drop Trello Style)
+          </h2>
+          <p className="text-[11px] text-gray-400">💡 Ține apăsat pe orice card de job pentru a-l trage în altă categorie!</p>
+        </div>
       </div>
 
       {/* MOBILE COLUMN TAB SELECTOR (MOBILE ONLY < md) */}
@@ -128,18 +149,22 @@ export default function KanbanBoard({
         })}
       </div>
 
-      {/* KANBAN GRID (DESKTOP: FULL GRID, MOBILE: SINGLE ACTIVE COLUMN) */}
+      {/* KANBAN GRID WITH TRELLO-STYLE DRAG & DROP AND DELETE BUTTON */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3 sm:gap-4">
         {kanbanColumns.map((col) => {
           const colApps = filteredApplications.filter(app => app.status === col.key);
           const isMobileVisible = mobileSelectedColumn === col.key;
+          const isDragOver = dragOverColumnKey === col.key;
 
           return (
             <div 
               key={col.key} 
-              className={`rounded-2xl border ${col.color} p-3.5 sm:p-4 flex flex-col gap-3 min-h-[380px] backdrop-blur-md ${
-                isMobileVisible ? 'flex' : 'hidden md:flex'
-              }`}
+              onDragOver={(e) => handleDragOver(e, col.key)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, col.key)}
+              className={`rounded-2xl border transition-all duration-200 p-3.5 sm:p-4 flex flex-col gap-3 min-h-[420px] backdrop-blur-md ${col.color} ${
+                isDragOver ? 'ring-2 ring-purple-500 scale-[1.01] bg-purple-900/20' : ''
+              } ${isMobileVisible ? 'flex' : 'hidden md:flex'}`}
             >
               <div className="flex items-center justify-between text-xs font-bold text-gray-200 pb-2 border-b border-gray-800/80">
                 <span>{col.title}</span>
@@ -148,20 +173,40 @@ export default function KanbanBoard({
 
               {colApps.map((app) => {
                 const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 60.62;
+                const isBeingDragged = draggedAppId === app.id;
+
                 return (
-                  <div key={app.id} className="glass-card glass-card-hover p-3.5 sm:p-4 rounded-xl space-y-3 relative group border-gray-800/80">
+                  <div 
+                    key={app.id}
+                    draggable={true}
+                    onDragStart={(e) => handleDragStart(e, app.id)}
+                    className={`glass-card glass-card-hover p-3.5 sm:p-4 rounded-xl space-y-3 relative group border-gray-800/80 cursor-grab active:cursor-grabbing transition-all ${
+                      isBeingDragged ? 'opacity-40 scale-95 border-purple-500' : ''
+                    }`}
+                  >
                     
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center font-black text-xs text-white shadow-md shrink-0">
-                          {getCompanyInitial(app.companyName)}
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-[10px] font-extrabold tracking-wider uppercase text-blue-400 block truncate">
-                            {app.companyName}
-                          </span>
-                          <h4 className="font-extrabold text-xs text-white leading-tight mt-0.5 line-clamp-1">{app.jobTitle}</h4>
-                        </div>
+                    {/* CARD TITLE, DRAG HANDLE & DELETE BUTTON */}
+                    <div className="flex items-start justify-between gap-1">
+                      <div>
+                        <span className="text-[10px] font-extrabold tracking-wider uppercase text-blue-400 block">
+                          {app.companyName}
+                        </span>
+                        <h4 className="font-extrabold text-xs text-white leading-tight mt-0.5">{app.jobTitle}</h4>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm(`Sigur dorești să ștergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
+                              onDeleteApplication && onDeleteApplication(app.id);
+                            }
+                          }}
+                          title="Șterge acest job"
+                          className="p-1 rounded-lg hover:bg-rose-500/20 text-gray-500 hover:text-rose-400 transition"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        <GripVertical className="w-4 h-4 text-gray-500 group-hover:text-gray-300 shrink-0" />
                       </div>
                     </div>
 
@@ -172,7 +217,7 @@ export default function KanbanBoard({
                           <Sparkles className="w-3 h-3 text-amber-300" />
                           {score.toFixed(2)}% Match
                         </span>
-                        <span className="text-[9px] text-gray-500 font-semibold">pgvector</span>
+                        <span className="text-[9px] text-gray-500 font-semibold">Multi-Criteria AI</span>
                       </div>
                       <div className="w-full bg-gray-950 h-1.5 rounded-full overflow-hidden border border-gray-800">
                         <div 
@@ -193,12 +238,6 @@ export default function KanbanBoard({
                         <FileText className="w-3 h-3 text-emerald-400 shrink-0" />
                         <span className="truncate">CV: CVSirbuMihaiAlexandru.pdf</span>
                       </div>
-                    )}
-
-                    {app.notes && (
-                      <p className="text-[11px] text-gray-400 line-clamp-2 italic bg-gray-950/60 p-2 rounded-lg border border-gray-800/80">
-                        "{app.notes}"
-                      </p>
                     )}
 
                     <button
@@ -224,7 +263,7 @@ export default function KanbanBoard({
 
               {colApps.length === 0 && (
                 <div className="flex-1 flex items-center justify-center text-xs text-gray-500 italic border border-dashed border-gray-800 rounded-xl p-4 text-center">
-                  {currentUser ? 'Nicio aplicație în acest stadiu' : 'Autentifică-te pentru a vedea aplicațiile'}
+                  {currentUser ? 'Plasează (drag & drop) un job aici' : 'Autentifică-te pentru a muta aplicațiile'}
                 </div>
               )}
             </div>

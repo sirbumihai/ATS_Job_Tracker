@@ -7,5 +7,6 @@ public record ResumeResponse(
     UUID id,
     String fileName,
     String rawTextSnippet,
+    String rawText,
     OffsetDateTime createdAt
 ) {}

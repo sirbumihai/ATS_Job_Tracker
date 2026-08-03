@@ -3,7 +3,6 @@ import {
   BrainCircuit, 
   Building2, 
   Bot, 
-  BookOpen, 
   User, 
   LogOut, 
   Lock, 
@@ -11,7 +10,8 @@ import {
   Plus,
   ShieldCheck,
   Menu,
-  X
+  X,
+  FileText
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -39,50 +39,52 @@ export default function Navbar({
               ATS AI <span className="gradient-text">Career Coach</span>
             </h1>
             <p className="hidden sm:flex text-[11px] text-gray-400 font-semibold items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Enterprise Spring Boot 3.3 & React 18
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Spring Boot 3.3 • React 18
             </p>
           </div>
         </div>
 
-        {/* DESKTOP TABS NAVIGATION */}
+        {/* DESKTOP TABS NAVIGATION (3 TABS) */}
         <div className="hidden md:flex items-center gap-1.5 bg-gray-900/90 p-1.5 rounded-2xl border border-gray-800 shadow-inner">
           <button
             onClick={() => setActiveTab('kanban')}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all duration-300 ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-300 ${
               activeTab === 'kanban' 
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/25 scale-[1.02]' 
                 : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
-            Kanban Board
+            Kanban
           </button>
 
           <button
             onClick={() => setActiveTab('agent_studio')}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all duration-300 ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-300 ${
               activeTab === 'agent_studio' 
                 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-600/25 scale-[1.02]' 
                 : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
             }`}
           >
             <Bot className="w-3.5 h-3.5 text-amber-300" />
-            AI Agent Studio & Interview Simulator
+            AI Agents
+          </button>
+
+          <button
+            onClick={() => setActiveTab('cv_studio')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-300 ${
+              activeTab === 'cv_studio' 
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/25 scale-[1.02]' 
+                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5 text-emerald-400" />
+            Studio CV & Match 100%
           </button>
         </div>
 
         {/* DESKTOP ACTIONS */}
         <div className="hidden lg:flex items-center gap-2.5">
-          <a 
-            href="http://localhost:8080/swagger-ui.html" 
-            target="_blank" 
-            rel="noreferrer"
-            className="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-900/80 hover:bg-gray-800 text-gray-300 transition border border-gray-800 font-semibold"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-blue-400" />
-            Swagger
-          </a>
-
           {currentUser ? (
             <div className="flex items-center gap-2 pl-2 border-l border-gray-800">
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900/90 rounded-xl border border-gray-800 text-xs">
@@ -145,10 +147,10 @@ export default function Navbar({
       {/* MOBILE MENU DRAWER */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-gray-800 bg-[#0f172a] p-4 space-y-3">
-          <div className="flex gap-2 p-1 bg-gray-900 rounded-xl border border-gray-800">
+          <div className="flex gap-1.5 p-1 bg-gray-900 rounded-xl border border-gray-800 overflow-x-auto">
             <button
               onClick={() => { setActiveTab('kanban'); setMobileMenuOpen(false); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 shrink-0 ${
                 activeTab === 'kanban' ? 'bg-blue-600 text-white' : 'text-gray-400'
               }`}
             >
@@ -157,12 +159,21 @@ export default function Navbar({
             </button>
             <button
               onClick={() => { setActiveTab('agent_studio'); setMobileMenuOpen(false); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 shrink-0 ${
                 activeTab === 'agent_studio' ? 'bg-purple-600 text-white' : 'text-gray-400'
               }`}
             >
               <Bot className="w-3.5 h-3.5" />
               AI Studio
+            </button>
+            <button
+              onClick={() => { setActiveTab('cv_studio'); setMobileMenuOpen(false); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 shrink-0 ${
+                activeTab === 'cv_studio' ? 'bg-emerald-600 text-white' : 'text-gray-400'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Studio CV
             </button>
           </div>
 

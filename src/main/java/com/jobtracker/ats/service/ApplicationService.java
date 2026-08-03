@@ -14,6 +14,7 @@ import com.jobtracker.ats.repository.JobPostingRepository;
 import com.jobtracker.ats.repository.ResumeRepository;
 import com.jobtracker.ats.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
@@ -34,6 +36,11 @@ public class ApplicationService {
     private final VectorEmbeddingService vectorEmbeddingService;
     private final ApplicationEventPublisher eventPublisher;
 
+    private static final List<String> TECH_KEYWORDS = List.of(
+            "java", "spring", "spring boot", "postgresql", "sql", "docker", "git", "rest", 
+            "microservices", "kubernetes", "junit", "mockito", "hibernate", "jpa", "python", "aws"
+    );
+
     @Transactional
     public ApplicationResponse createApplication(UUID userId, CreateApplicationRequest request) {
         User user = userRepository.findById(userId)
@@ -42,7 +49,6 @@ public class ApplicationService {
         JobPosting job = jobPostingRepository.findById(request.jobId())
                 .orElseThrow(() -> new ResourceNotFoundException("Jobul cu ID-ul " + request.jobId() + " nu a fost găsit."));
 
-        // Dacă nu a fost specificat un resumeId, căutăm ultimul CV încărcat de utilizator
         Resume resume = null;
         if (request.resumeId() != null) {
             resume = resumeRepository.findById(request.resumeId())
@@ -54,7 +60,7 @@ public class ApplicationService {
             }
         }
 
-        BigDecimal matchScore = calculateMatchScoreWithVectorEngine(resume, job);
+        BigDecimal matchScore = calculateMultiCriteriaMatchScore(resume, job);
 
         Application application = Application.builder()
                 .user(user)
@@ -96,20 +102,63 @@ public class ApplicationService {
         return mapToResponse(app);
     }
 
-    private BigDecimal calculateMatchScoreWithVectorEngine(Resume resume, JobPosting job) {
+    @Transactional
+    public void deleteApplication(UUID id) {
+        if (!applicationRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Aplicația cu ID-ul " + id + " nu a fost găsită.");
+        }
+        applicationRepository.deleteById(id);
+    }
+
+    public BigDecimal calculateMultiCriteriaMatchScore(Resume resume, JobPosting job) {
         if (resume == null || resume.getRawText() == null || resume.getRawText().isBlank() || job.getRawDescription() == null) {
-            return BigDecimal.valueOf(75.50); // Scor fallback generos când nu este atașat un CV
+            return BigDecimal.valueOf(78.50);
         }
 
+        String cvText = resume.getRawText().toLowerCase();
+        String jobText = job.getRawDescription().toLowerCase();
+
+        // 1. Vector Cosine Similarity (Pondere 40%)
         float[] resumeVec = vectorEmbeddingService.generateEmbedding(resume.getRawText());
         float[] jobVec = vectorEmbeddingService.generateEmbedding(job.getRawDescription());
-        double cosineSim = vectorEmbeddingService.calculateCosineSimilarity(resumeVec, jobVec);
+        double vectorSimilarity = vectorEmbeddingService.calculateCosineSimilarity(resumeVec, jobVec);
 
-        if (cosineSim <= 0.0) {
-            return BigDecimal.valueOf(82.40);
+        // 2. Tech Stack Keyword Matching (Pondere 30%)
+        int matchedTech = 0;
+        int totalRequiredTech = 0;
+
+        for (String tech : TECH_KEYWORDS) {
+            if (jobText.contains(tech)) {
+                totalRequiredTech++;
+                if (cvText.contains(tech)) {
+                    matchedTech++;
+                }
+            }
+        }
+        double techScore = totalRequiredTech > 0 ? ((double) matchedTech / totalRequiredTech) * 100.0 : 85.0;
+
+        // 3. Seniority & Experience Level Match (Pondere 20%)
+        double expScore = 80.0;
+        boolean isJuniorJob = jobText.contains("junior") || jobText.contains("entry") || jobText.contains("intern");
+        boolean cvHasJuniorExp = cvText.contains("java") || cvText.contains("spring") || cvText.contains("proiect");
+        if (isJuniorJob && cvHasJuniorExp) {
+            expScore = 95.0;
         }
 
-        return BigDecimal.valueOf(cosineSim).setScale(2, RoundingMode.HALF_UP);
+        // 4. Key Responsibilities Highlights Match (Pondere 10%)
+        double responsibilitiesScore = (cvText.contains("api") || cvText.contains("backend") || cvText.contains("database")) ? 90.0 : 70.0;
+
+        // Calcul Scored Ponderat Multi-Criterial
+        double finalWeightedScore = (vectorSimilarity * 0.40) + (techScore * 0.30) + (expScore * 0.20) + (responsibilitiesScore * 0.10);
+
+        log.info("🧠 [MULTI-CRITERIA MATCH ENGINE] Vector: {}%, Tech: {}%, Exp: {}%, Resp: {}% -> FINAL: {}%",
+                String.format("%.2f", vectorSimilarity),
+                String.format("%.2f", techScore),
+                String.format("%.2f", expScore),
+                String.format("%.2f", responsibilitiesScore),
+                String.format("%.2f", finalWeightedScore));
+
+        return BigDecimal.valueOf(finalWeightedScore).setScale(2, RoundingMode.HALF_UP);
     }
 
     private ApplicationResponse mapToResponse(Application app) {
