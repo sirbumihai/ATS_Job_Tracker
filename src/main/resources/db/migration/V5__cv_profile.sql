@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS cv_profile (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    full_name VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(100),
+    location VARCHAR(255),
+    linkedin VARCHAR(255),
+    github VARCHAR(255),
+    summary TEXT,
+    skills_languages TEXT,
+    skills_frameworks TEXT,
+    skills_databases TEXT,
+    skills_devops TEXT,
+    work_experience_json TEXT,
+    projects_json TEXT,
+    education_json TEXT,
+    language_preference VARCHAR(10) DEFAULT 'EN',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_cv_profile_user UNIQUE (user_id)
+);
