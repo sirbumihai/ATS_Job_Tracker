@@ -1,5 +1,6 @@
 package com.jobtracker.ats.service;
 
+import com.jobtracker.ats.dto.CvProfileDto;
 import com.jobtracker.ats.dto.ResumeResponse;
 import com.jobtracker.ats.entity.Resume;
 import com.jobtracker.ats.entity.User;
@@ -20,6 +21,7 @@ public class ResumeService {
     private final ResumeRepository resumeRepository;
     private final UserRepository userRepository;
     private final TextExtractionService textExtractionService;
+    private final CvProfileService cvProfileService;
 
     @Transactional
     public ResumeResponse uploadResume(UUID userId, MultipartFile file) {
@@ -37,17 +39,21 @@ public class ResumeService {
 
         Resume savedResume = resumeRepository.saveAndFlush(resume);
 
-        return mapToResponse(savedResume);
+        // PARSE RAW TEXT INTO STRUCTURED CV PROFILE AND SAVE TO POSTGRESQL DB
+        CvProfileDto parsedProfile = cvProfileService.parseAndSaveResumeText(userId, extractedText);
+
+        return mapToResponse(savedResume, parsedProfile);
     }
 
     @Transactional(readOnly = true)
     public ResumeResponse getResumeById(UUID id) {
         Resume resume = resumeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("CV-ul cu ID-ul " + id + " nu a fost gasit."));
-        return mapToResponse(resume);
+        CvProfileDto profile = cvProfileService.getCvProfileByUserId(resume.getUser().getId());
+        return mapToResponse(resume, profile);
     }
 
-    private ResumeResponse mapToResponse(Resume resume) {
+    private ResumeResponse mapToResponse(Resume resume, CvProfileDto parsedProfile) {
         String snippet = resume.getRawText() != null && resume.getRawText().length() > 200 
                 ? resume.getRawText().substring(0, 200) + "..." 
                 : (resume.getRawText() != null ? resume.getRawText() : "");
@@ -57,6 +63,7 @@ public class ResumeService {
                 resume.getFileName(),
                 snippet,
                 resume.getRawText() != null ? resume.getRawText() : "",
+                parsedProfile,
                 resume.getCreatedAt()
         );
     }

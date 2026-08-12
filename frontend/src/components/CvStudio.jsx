@@ -48,7 +48,7 @@ export default function CvStudio({ applications = [], currentUser }) {
     }
   });
 
-  const [languagePref, setLanguagePref] = useState('EN'); // 'EN' (Engleza) or 'RO' (Romana)
+  const [languagePref, setLanguagePref] = useState('EN');
   const [selectedJobId, setSelectedJobId] = useState(applications.length > 0 ? applications[0].id : '');
   const [customJobDescription, setCustomJobDescription] = useState('');
   
@@ -65,6 +65,37 @@ export default function CvStudio({ applications = [], currentUser }) {
 
   const selectedApp = applications.find(a => a.id === selectedJobId) || (applications.length > 0 ? applications[0] : null);
 
+  // HELPER FUNCTION TO PARSE TEXT FALLBACK IN FRONTEND
+  const parseRawResumeText = (text) => {
+    if (!text) return {};
+    
+    const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    const email = emailMatch ? emailMatch[1] : "";
+
+    const phoneMatch = text.match(/(\+?\d{1,4}[\s-]?\(?\d{2,4}\)?[\s-]?\d{3,4}[\s-]?\d{3,4})/);
+    const phone = phoneMatch ? phoneMatch[1] : "";
+
+    const linkedinMatch = text.match(/(linkedin\.com\/in\/[a-zA-Z0-9_-]+)/i);
+    const linkedin = linkedinMatch ? linkedinMatch[1] : "";
+
+    const githubMatch = text.match(/(github\.com\/[a-zA-Z0-9_-]+)/i);
+    const github = githubMatch ? githubMatch[1] : "";
+
+    let summary = "";
+    const summaryMatch = text.match(/(?:PROFESSIONAL SUMMARY|SUMMARY|PROFILE)\s*\n+([\s\S]*?)(?=\n+[A-Z\s]{4,}|\n+EDUCATION|\n+EXPERIENCE|\n+PROJECTS|\n+TECHNICAL SKILLS|$)/i);
+    if (summaryMatch) {
+      summary = summaryMatch[1].trim();
+    } else {
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      const nonHeaderLines = lines.filter(l => !l.includes('@') && !l.includes('linkedin.com') && !l.includes('github.com') && !l.match(/^\(?\+?\d/));
+      if (nonHeaderLines.length > 1) {
+        summary = nonHeaderLines.slice(1, 4).join(' ');
+      }
+    }
+
+    return { email, phone, linkedin, github, summary };
+  };
+
   // LOAD PERSISTED CV FROM DATABASE ON MOUNT
   const fetchCvFromDatabase = async () => {
     if (!activeUserId) return;
@@ -76,8 +107,8 @@ export default function CvStudio({ applications = [], currentUser }) {
         const data = await res.json();
         if (data) {
           setCvSections({
-            fullName: data.fullName || "",
-            email: data.email || "",
+            fullName: data.fullName || (currentUser ? currentUser.fullName : ""),
+            email: data.email || (currentUser ? currentUser.email : ""),
             phone: data.phone || "",
             location: data.location || "",
             linkedin: data.linkedin || "",
@@ -153,7 +184,7 @@ export default function CvStudio({ applications = [], currentUser }) {
     }
   };
 
-  // DYNAMIC WORK EXPERIENCE HANDLERS (ADAUGARE FARA HARDCODARI)
+  // DYNAMIC WORK EXPERIENCE HANDLERS
   const handleAddWorkExperience = () => {
     const newExp = {
       id: Date.now(),
@@ -176,7 +207,7 @@ export default function CvStudio({ applications = [], currentUser }) {
     }));
   };
 
-  // DYNAMIC PROJECTS HANDLERS (ADAUGARE FARA HARDCODARI)
+  // DYNAMIC PROJECTS HANDLERS
   const handleAddProject = () => {
     const newProj = {
       id: Date.now(),
@@ -197,7 +228,7 @@ export default function CvStudio({ applications = [], currentUser }) {
     }));
   };
 
-  // UPLOAD PDF CV & CONVERT TO MD + DYNAMIC EXTRACTION
+  // UPLOAD PDF CV & CONVERT TO MD + AI AUTOMATED SECTION EXTRACTION
   const handleFileUploadPdf = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -223,18 +254,46 @@ export default function CvStudio({ applications = [], currentUser }) {
       if (res.ok) {
         const data = await res.json();
         const rawText = data.rawText || data.rawTextSnippet || "";
-
-        // Convert extracted raw text into Markdown (.md)
         const mdText = `# CV Extras: ${file.name}\n\n${rawText}`;
         setExtractedMarkdown(mdText);
 
-        setParsedPdfSuccess(`CV-ul "${file.name}" a fost extras de Apache Tika in format .md si populat dinamic!`);
+        if (data.parsedProfile) {
+          const p = data.parsedProfile;
+          const safeParse = (str, fallback) => {
+            try { return str ? (typeof str === 'string' ? JSON.parse(str) : str) : fallback; } catch (e) { return fallback; }
+          };
 
-        // DYNAMIC EXTRACTION FROM ACTUAL PDF TEXT (NO HARDCODED VALUES)
-        setCvSections(prev => ({
-          ...prev,
-          summary: rawText.length > 500 ? rawText.substring(0, 500) + "..." : rawText,
-        }));
+          setCvSections({
+            fullName: p.fullName || (currentUser ? currentUser.fullName : ""),
+            email: p.email || (currentUser ? currentUser.email : ""),
+            phone: p.phone || "",
+            location: p.location || "",
+            linkedin: p.linkedin || "",
+            github: p.github || "",
+            summary: p.summary || "",
+            workExperience: safeParse(p.workExperienceJson, []),
+            projects: safeParse(p.projectsJson, []),
+            skills: {
+              languages: p.skillsLanguages || "",
+              frameworks: p.skillsFrameworks || "",
+              databases: p.skillsDatabases || "",
+              devops: p.skillsDevops || ""
+            },
+            education: safeParse(p.educationJson, { school: "", degree: "", period: "", location: "" })
+          });
+        } else {
+          const parsed = parseRawResumeText(rawText);
+          setCvSections(prev => ({
+            ...prev,
+            email: parsed.email || prev.email,
+            phone: parsed.phone || prev.phone,
+            linkedin: parsed.linkedin || prev.linkedin,
+            github: parsed.github || prev.github,
+            summary: parsed.summary || prev.summary
+          }));
+        }
+
+        setParsedPdfSuccess(`CV-ul "${file.name}" a fost citit de Apache Tika, analizat de AI si populat in toate sectiunile!`);
       }
     } catch (err) {
       console.error("Eroare la parsarea PDF-ului:", err);
@@ -336,8 +395,8 @@ export default function CvStudio({ applications = [], currentUser }) {
           </div>
         </div>
         ${finalSummary ? `<div class="section-title">Professional Summary</div><p>${finalSummary}</p>` : ''}
-        ${finalWorkExp.length > 0 ? `<div class="section-title">Work Experience</div>${finalWorkExp.map(exp => `<div class="experience-header"><span>${exp.company}</span><span>${exp.location}</span></div><div class="experience-subheader"><span>${exp.role}</span><span>${exp.period}</span></div><ul>${exp.bullets.map(b => `<li>${b}</li>`).join('')}</ul>`).join('')}` : ''}
-        ${finalProjects.length > 0 ? `<div class="section-title">Personal Projects</div>${finalProjects.map(proj => `<div class="experience-header"><span>${proj.title}</span><span>2024 - 2026</span></div><ul>${proj.bullets.map(b => `<li>${b}</li>`).join('')}</ul>`).join('')}` : ''}
+        ${finalWorkExp.length > 0 ? `<div class="section-title">Work Experience</div>${finalWorkExp.map(exp => `<div class="experience-header"><span>${exp.company}</span><span>${exp.location}</span></div><div class="experience-subheader"><span>${exp.role}</span><span>${exp.period}</span></div><ul>${exp.bullets ? exp.bullets.map(b => `<li>${b}</li>`).join('') : ''}</ul>`).join('')}` : ''}
+        ${finalProjects.length > 0 ? `<div class="section-title">Personal Projects</div>${finalProjects.map(proj => `<div class="experience-header"><span>${proj.title}</span><span>2024 - 2026</span></div><ul>${proj.bullets ? proj.bullets.map(b => `<li>${b}</li>`).join('') : ''}</ul>`).join('')}` : ''}
         <div class="section-title">Technical Skills</div>
         <div class="skills-grid">
           <div class="skills-row"><div class="skills-label">Languages:</div><div class="skills-value">${finalSkills.languages || 'Java'}</div></div>
@@ -487,11 +546,44 @@ export default function CvStudio({ applications = [], currentUser }) {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div>
+                <label className="block text-[11px] font-bold text-gray-400 mb-1">Locatie (Oras, Tara):</label>
+                <input 
+                  type="text" 
+                  placeholder="ex: Bucuresti, Romania"
+                  value={cvSections.location}
+                  onChange={e => setCvSections({...cvSections, location: e.target.value})}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-gray-400 mb-1">LinkedIn:</label>
+                <input 
+                  type="text" 
+                  placeholder="ex: linkedin.com/in/profil"
+                  value={cvSections.linkedin}
+                  onChange={e => setCvSections({...cvSections, linkedin: e.target.value})}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-gray-400 mb-1">GitHub:</label>
+                <input 
+                  type="text" 
+                  placeholder="ex: github.com/username"
+                  value={cvSections.github}
+                  onChange={e => setCvSections({...cvSections, github: e.target.value})}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+            </div>
+
             {/* SUMMARY */}
             <div>
               <label className="block text-[11px] font-bold text-purple-400 mb-1">Professional Summary / Profil:</label>
               <textarea 
-                rows={3}
+                rows={4}
                 placeholder="Introdu profilul profesional..."
                 value={cvSections.summary}
                 onChange={e => setCvSections({...cvSections, summary: e.target.value})}
@@ -499,7 +591,7 @@ export default function CvStudio({ applications = [], currentUser }) {
               />
             </div>
 
-            {/* WORK EXPERIENCE SECTION (DYNAMIC ADD/DELETE) */}
+            {/* WORK EXPERIENCE SECTION */}
             <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-blue-400 flex items-center gap-1.5 uppercase">
@@ -526,7 +618,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                       <input 
                         type="text" 
                         placeholder="Nume Companie / Rol"
-                        value={exp.company}
+                        value={exp.company || exp.role}
                         onChange={e => {
                           const updated = [...cvSections.workExperience];
                           updated[expIdx].company = e.target.value;
@@ -557,7 +649,7 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                   <div className="space-y-1">
                     <label className="block text-[10px] font-semibold text-gray-400">Bullet-uri Responsabilitati Activitate:</label>
-                    {exp.bullets.map((b, bIdx) => (
+                    {exp.bullets && exp.bullets.map((b, bIdx) => (
                       <input 
                         key={bIdx}
                         type="text" 
@@ -576,7 +668,7 @@ export default function CvStudio({ applications = [], currentUser }) {
               ))}
             </div>
 
-            {/* DYNAMIC PERSONAL PROJECTS SECTION (DYNAMIC ADD/DELETE) */}
+            {/* DYNAMIC PERSONAL PROJECTS SECTION */}
             <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-amber-400 flex items-center gap-1.5 uppercase">
@@ -621,7 +713,7 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                   <div className="space-y-1">
                     <label className="block text-[10px] font-semibold text-gray-400">Gloante Proiect (Metoda XYZ):</label>
-                    {proj.bullets.map((b, bIdx) => (
+                    {proj.bullets && proj.bullets.map((b, bIdx) => (
                       <input 
                         key={bIdx}
                         type="text" 

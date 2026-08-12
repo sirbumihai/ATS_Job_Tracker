@@ -8,5 +8,6 @@ public record ResumeResponse(
     String fileName,
     String rawTextSnippet,
     String rawText,
+    CvProfileDto parsedProfile,
     OffsetDateTime createdAt
 ) {}
