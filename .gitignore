@@ -3,6 +3,9 @@
 .env.local
 *.env
 
+### AI Agent Configs ###
+.agents/
+
 ### Maven Build Output ###
 target/
 *.jar
