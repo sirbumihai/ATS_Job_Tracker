@@ -23,7 +23,7 @@ public class JobPostingService {
     @Transactional
     public JobResponse createJob(UUID userId, CreateJobRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilizatorul cu ID-ul " + userId + " nu a fost găsit."));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilizatorul cu ID-ul " + userId + " nu a fost gasit."));
 
         JobPosting jobPosting = JobPosting.builder()
                 .user(user)
@@ -41,7 +41,7 @@ public class JobPostingService {
     @Transactional(readOnly = true)
     public JobResponse getJobById(UUID jobId) {
         JobPosting job = jobPostingRepository.findById(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Jobul cu ID-ul " + jobId + " nu a fost găsit."));
+                .orElseThrow(() -> new ResourceNotFoundException("Jobul cu ID-ul " + jobId + " nu a fost gasit."));
         
         return mapToResponse(job);
     }

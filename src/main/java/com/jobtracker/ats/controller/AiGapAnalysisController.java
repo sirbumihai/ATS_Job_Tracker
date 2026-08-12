@@ -17,13 +17,13 @@ public class AiGapAnalysisController {
 
     @PostMapping
     public ResponseEntity<AiGapAnalysisResponse> generateAnalysis(@PathVariable UUID applicationId) {
-        AiGapAnalysisResponse response = aiGapAnalysisService.generateAnalysis(applicationId);
+        AiGapAnalysisResponse response = aiGapAnalysisService.generateGapAnalysis(applicationId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
     public ResponseEntity<AiGapAnalysisResponse> getAnalysis(@PathVariable UUID applicationId) {
-        AiGapAnalysisResponse response = aiGapAnalysisService.getAnalysisByApplicationId(applicationId);
+        AiGapAnalysisResponse response = aiGapAnalysisService.generateGapAnalysis(applicationId);
         return ResponseEntity.ok(response);
     }
 }

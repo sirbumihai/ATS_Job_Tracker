@@ -29,7 +29,7 @@ public class CvProfileService {
     @Transactional
     public CvProfileDto saveOrUpdateCvProfile(UUID userId, CvProfileDto dto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilizatorul nu a fost găsit."));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilizatorul nu a fost gasit."));
 
         CvProfile profile = cvProfileRepository.findByUserId(userId)
                 .orElse(CvProfile.builder().user(user).build());

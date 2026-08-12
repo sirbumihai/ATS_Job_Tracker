@@ -24,7 +24,7 @@ public class ResumeService {
     @Transactional
     public ResumeResponse uploadResume(UUID userId, MultipartFile file) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilizatorul cu ID-ul " + userId + " nu a fost găsit."));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilizatorul cu ID-ul " + userId + " nu a fost gasit."));
 
         String extractedText = textExtractionService.extractText(file);
 
@@ -43,7 +43,7 @@ public class ResumeService {
     @Transactional(readOnly = true)
     public ResumeResponse getResumeById(UUID id) {
         Resume resume = resumeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("CV-ul cu ID-ul " + id + " nu a fost găsit."));
+                .orElseThrow(() -> new ResourceNotFoundException("CV-ul cu ID-ul " + id + " nu a fost gasit."));
         return mapToResponse(resume);
     }
 

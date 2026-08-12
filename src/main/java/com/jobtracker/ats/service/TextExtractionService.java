@@ -13,19 +13,19 @@ public class TextExtractionService {
 
     public String extractText(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Fișierul încărcat nu poate fi gol.");
+            throw new IllegalArgumentException("Fisierul incarcat nu poate fi gol.");
         }
 
         try {
             String extractedText = tika.parseToString(file.getInputStream());
             if (extractedText == null || extractedText.isBlank()) {
-                throw new IllegalStateException("Nu s-a putut extrage text din fișierul încărcat.");
+                throw new IllegalStateException("Nu s-a putut extrage text din fisierul incarcat.");
             }
             return extractedText.trim();
         } catch (IOException e) {
-            throw new RuntimeException("Eroare la procesarea fișierului: " + e.getMessage(), e);
+            throw new RuntimeException("Eroare la procesarea fisierului: " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new RuntimeException("Formatul fișierului nu este suportat sau fișierul este corupt.", e);
+            throw new RuntimeException("Formatul fisierului nu este suportat sau fisierul este corupt.", e);
         }
     }
 }

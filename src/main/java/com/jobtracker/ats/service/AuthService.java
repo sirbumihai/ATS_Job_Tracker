@@ -23,7 +23,7 @@ public class AuthService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Adresa de email este deja înregistrată în sistem.");
+            throw new IllegalArgumentException("Adresa de email este deja inregistrata in sistem.");
         }
 
         User user = User.builder()

@@ -1,13 +1,12 @@
 package com.jobtracker.ats.service;
 
-import com.jobtracker.ats.dto.CreateApplicationRequest;
 import com.jobtracker.ats.dto.ApplicationResponse;
+import com.jobtracker.ats.dto.CreateApplicationRequest;
 import com.jobtracker.ats.entity.Application;
 import com.jobtracker.ats.entity.Application.ApplicationStatus;
 import com.jobtracker.ats.entity.JobPosting;
 import com.jobtracker.ats.entity.Resume;
 import com.jobtracker.ats.entity.User;
-import com.jobtracker.ats.event.ApplicationCreatedEvent;
 import com.jobtracker.ats.exception.ResourceNotFoundException;
 import com.jobtracker.ats.repository.ApplicationRepository;
 import com.jobtracker.ats.repository.JobPostingRepository;
@@ -15,12 +14,12 @@ import com.jobtracker.ats.repository.ResumeRepository;
 import com.jobtracker.ats.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,33 +33,19 @@ public class ApplicationService {
     private final JobPostingRepository jobPostingRepository;
     private final ResumeRepository resumeRepository;
     private final VectorEmbeddingService vectorEmbeddingService;
-    private final ApplicationEventPublisher eventPublisher;
-
-    private static final List<String> TECH_KEYWORDS = List.of(
-            "java", "spring", "spring boot", "postgresql", "sql", "docker", "git", "rest", 
-            "microservices", "kubernetes", "junit", "mockito", "hibernate", "jpa", "python", "aws"
-    );
 
     @Transactional
     public ApplicationResponse createApplication(UUID userId, CreateApplicationRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilizatorul cu ID-ul " + userId + " nu a fost găsit."));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilizatorul cu ID-ul " + userId + " nu a fost gasit."));
 
         JobPosting job = jobPostingRepository.findById(request.jobId())
-                .orElseThrow(() -> new ResourceNotFoundException("Jobul cu ID-ul " + request.jobId() + " nu a fost găsit."));
+                .orElseThrow(() -> new ResourceNotFoundException("Jobul cu ID-ul " + request.jobId() + " nu a fost gasit."));
 
-        Resume resume = null;
-        if (request.resumeId() != null) {
-            resume = resumeRepository.findById(request.resumeId())
-                    .orElseThrow(() -> new ResourceNotFoundException("CV-ul cu ID-ul " + request.resumeId() + " nu a fost găsit."));
-        } else {
-            List<Resume> userResumes = resumeRepository.findByUserId(userId);
-            if (!userResumes.isEmpty()) {
-                resume = userResumes.get(userResumes.size() - 1);
-            }
-        }
+        List<Resume> userResumes = resumeRepository.findByUserIdOrderByCreatedAtAsc(userId);
+        Resume resume = userResumes.isEmpty() ? null : userResumes.getLast();
 
-        BigDecimal matchScore = calculateMultiCriteriaMatchScore(resume, job);
+        BigDecimal matchScore = calculateMultiCriteriaMatchScore(job, resume);
 
         Application application = Application.builder()
                 .user(user)
@@ -69,93 +54,87 @@ public class ApplicationService {
                 .status(ApplicationStatus.SAVED)
                 .semanticMatchScore(matchScore)
                 .notes(request.notes())
+                .appliedDate(LocalDate.now())
                 .build();
 
-        Application savedApp = applicationRepository.saveAndFlush(application);
-
-        eventPublisher.publishEvent(new ApplicationCreatedEvent(savedApp.getId()));
-
+        Application savedApp = applicationRepository.save(application);
         return mapToResponse(savedApp);
-    }
-
-    @Transactional
-    public ApplicationResponse updateApplicationStatus(UUID id, ApplicationStatus newStatus) {
-        Application app = applicationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Aplicația cu ID-ul " + id + " nu a fost găsită."));
-
-        app.setStatus(newStatus);
-        Application updated = applicationRepository.saveAndFlush(app);
-        return mapToResponse(updated);
     }
 
     @Transactional(readOnly = true)
     public List<ApplicationResponse> getUserApplications(UUID userId) {
-        return applicationRepository.findByUserId(userId).stream()
+        return applicationRepository.findByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public ApplicationResponse getApplicationById(UUID id) {
-        Application app = applicationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Aplicația cu ID-ul " + id + " nu a fost găsită."));
+    public ApplicationResponse getApplicationById(UUID applicationId) {
+        Application app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Aplicatia cu ID-ul " + applicationId + " nu a fost gasita."));
         return mapToResponse(app);
     }
 
     @Transactional
-    public void deleteApplication(UUID id) {
-        if (!applicationRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Aplicația cu ID-ul " + id + " nu a fost găsită.");
+    public ApplicationResponse updateApplicationStatus(UUID applicationId, ApplicationStatus status) {
+        Application app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Aplicatia cu ID-ul " + applicationId + " nu a fost gasita."));
+
+        app.setStatus(status);
+
+        if (app.getResume() != null) {
+            BigDecimal updatedScore = calculateMultiCriteriaMatchScore(app.getJobPosting(), app.getResume());
+            app.setSemanticMatchScore(updatedScore);
         }
-        applicationRepository.deleteById(id);
+
+        Application updatedApp = applicationRepository.save(app);
+        return mapToResponse(updatedApp);
     }
 
-    public BigDecimal calculateMultiCriteriaMatchScore(Resume resume, JobPosting job) {
-        if (resume == null || resume.getRawText() == null || resume.getRawText().isBlank() || job.getRawDescription() == null) {
-            return BigDecimal.valueOf(78.50);
+    @Transactional
+    public void deleteApplication(UUID applicationId) {
+        Application app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Aplicatia cu ID-ul " + applicationId + " nu a fost gasita."));
+        applicationRepository.delete(app);
+        log.info("[APPLICATION SERVICE] Aplicatia cu ID-ul {} a fost starsa cu succes.", applicationId);
+    }
+
+    public BigDecimal calculateMultiCriteriaMatchScore(JobPosting job, Resume resume) {
+        if (resume == null || resume.getRawText() == null || resume.getRawText().isBlank() || job == null || job.getRawDescription() == null || job.getRawDescription().isBlank()) {
+            throw new ResourceNotFoundException("Nu s-a gasit niciun CV valid sau descriere de job pentru calcularea scorului ATS.");
         }
 
-        String cvText = resume.getRawText().toLowerCase();
         String jobText = job.getRawDescription().toLowerCase();
+        String cvText = resume.getRawText().toLowerCase();
 
-        // 1. Vector Cosine Similarity (Pondere 40%)
-        float[] resumeVec = vectorEmbeddingService.generateEmbedding(resume.getRawText());
-        float[] jobVec = vectorEmbeddingService.generateEmbedding(job.getRawDescription());
-        double vectorSimilarity = vectorEmbeddingService.calculateCosineSimilarity(resumeVec, jobVec);
+        // 1. Vector Cosine Similarity (Pondere 50%)
+        float[] jobVector = vectorEmbeddingService.generateEmbedding(job.getRawDescription());
+        float[] cvVector = vectorEmbeddingService.generateEmbedding(resume.getRawText());
+        double vectorSimilarity = vectorEmbeddingService.calculateCosineSimilarity(jobVector, cvVector);
 
-        // 2. Tech Stack Keyword Matching (Pondere 30%)
-        int matchedTech = 0;
-        int totalRequiredTech = 0;
+        // 2. Extragere si Match Dinamic de Termeni Fara Cuvinte Hardcodate (Pondere 50%)
+        String[] jobWords = jobText.split("\\W+");
+        int totalUniqueWords = 0;
+        int matchedWords = 0;
 
-        for (String tech : TECH_KEYWORDS) {
-            if (jobText.contains(tech)) {
-                totalRequiredTech++;
-                if (cvText.contains(tech)) {
-                    matchedTech++;
+        for (String word : jobWords) {
+            if (word.length() > 3) {
+                totalUniqueWords++;
+                if (cvText.contains(word)) {
+                    matchedWords++;
                 }
             }
         }
-        double techScore = totalRequiredTech > 0 ? ((double) matchedTech / totalRequiredTech) * 100.0 : 85.0;
 
-        // 3. Seniority & Experience Level Match (Pondere 20%)
-        double expScore = 80.0;
-        boolean isJuniorJob = jobText.contains("junior") || jobText.contains("entry") || jobText.contains("intern");
-        boolean cvHasJuniorExp = cvText.contains("java") || cvText.contains("spring") || cvText.contains("proiect");
-        if (isJuniorJob && cvHasJuniorExp) {
-            expScore = 95.0;
-        }
+        double termCoverageScore = totalUniqueWords > 0 ? ((double) matchedWords / totalUniqueWords) * 100.0 : vectorSimilarity;
 
-        // 4. Key Responsibilities Highlights Match (Pondere 10%)
-        double responsibilitiesScore = (cvText.contains("api") || cvText.contains("backend") || cvText.contains("database")) ? 90.0 : 70.0;
+        // Calcul Scored Ponderat Multi-Criterial Dinamic
+        double finalWeightedScore = (vectorSimilarity * 0.50) + (termCoverageScore * 0.50);
 
-        // Calcul Scored Ponderat Multi-Criterial
-        double finalWeightedScore = (vectorSimilarity * 0.40) + (techScore * 0.30) + (expScore * 0.20) + (responsibilitiesScore * 0.10);
-
-        log.info("🧠 [MULTI-CRITERIA MATCH ENGINE] Vector: {}%, Tech: {}%, Exp: {}%, Resp: {}% -> FINAL: {}%",
+        log.info("[MULTI-CRITERIA MATCH ENGINE] Vector Cosine: {}%, Term Coverage: {}% -> FINAL: {}%",
                 String.format("%.2f", vectorSimilarity),
-                String.format("%.2f", techScore),
-                String.format("%.2f", expScore),
-                String.format("%.2f", responsibilitiesScore),
+                String.format("%.2f", termCoverageScore),
                 String.format("%.2f", finalWeightedScore));
 
         return BigDecimal.valueOf(finalWeightedScore).setScale(2, RoundingMode.HALF_UP);

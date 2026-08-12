@@ -12,11 +12,12 @@ import java.util.UUID;
 @Repository
 public interface ResumeRepository extends JpaRepository<Resume, UUID> {
     List<Resume> findByUserId(UUID userId);
+    List<Resume> findByUserIdOrderByCreatedAtAsc(UUID userId);
 
     @Query(value = """
         SELECT (1.0 - (r.text_embedding <=> j.description_embedding)) * 100.0
         FROM resumes r, job_postings j
         WHERE r.id = :resumeId AND j.id = :jobId
         """, nativeQuery = true)
-    Double calculateCosineSimilarityMatch(@Param("resumeId") UUID resumeId, @Param("jobId") UUID jobId);
+    Double calculateCosineSimilarity(@Param("resumeId") UUID resumeId, @Param("jobId") UUID jobId);
 }

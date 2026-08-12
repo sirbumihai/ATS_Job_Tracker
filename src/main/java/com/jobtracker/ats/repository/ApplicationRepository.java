@@ -11,5 +11,6 @@ import java.util.UUID;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, UUID> {
     List<Application> findByUserId(UUID userId);
+    List<Application> findByUserIdOrderByCreatedAtDesc(UUID userId);
     Optional<Application> findByUserIdAndJobPostingId(UUID userId, UUID jobId);
 }

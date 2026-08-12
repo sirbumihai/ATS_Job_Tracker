@@ -6,8 +6,10 @@ import com.jobtracker.ats.agent.RecruiterAgent;
 import com.jobtracker.ats.agent.ResumeTailorAgent;
 import com.jobtracker.ats.dto.InterviewEvaluationRequest;
 import com.jobtracker.ats.dto.InterviewEvaluationResponse;
+import com.jobtracker.ats.entity.CvProfile;
 import com.jobtracker.ats.entity.JobPosting;
 import com.jobtracker.ats.exception.ResourceNotFoundException;
+import com.jobtracker.ats.repository.CvProfileRepository;
 import com.jobtracker.ats.repository.JobPostingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,6 +32,7 @@ public class AgentOrchestratorService {
     private final InterviewSimulatorAgent interviewSimulatorAgent;
     private final OutreachAgent outreachAgent;
     private final JobPostingRepository jobPostingRepository;
+    private final CvProfileRepository cvProfileRepository;
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -53,7 +57,8 @@ public class AgentOrchestratorService {
 
     public String runOutreachAgent(UUID jobId) {
         JobPosting job = getJob(jobId);
-        return outreachAgent.generateOutreachMessage(job.getCompanyName(), job.getJobTitle(), "Sîrbu Mihai-Alexandru");
+        String candidateName = getCandidateNameForJob(job);
+        return outreachAgent.generateOutreachMessage(job.getCompanyName(), job.getJobTitle(), candidateName);
     }
 
     public SseEmitter streamAgentAnalysis(UUID jobId) {
@@ -62,34 +67,23 @@ public class AgentOrchestratorService {
         executor.execute(() -> {
             try {
                 JobPosting job = getJob(jobId);
-                
-                emitter.send(SseEmitter.event().name("status").data("🤖 [SYSTEM] Pornim orchestrarea Sistemului Multi-Agent AI..."));
-                Thread.sleep(800);
 
-                emitter.send(SseEmitter.event().name("status").data("🔍 [RECRUITER AGENT] Extragere cerințe tehnice și profil senioritate..."));
-                String recruiterAnalysis = recruiterAgent.analyzeJobPosting(job.getCompanyName(), job.getJobTitle(), job.getRawDescription());
-                emitter.send(SseEmitter.event().name("recruiter_output").data(recruiterAnalysis));
-                Thread.sleep(1000);
+                sendSseEvent(emitter, "status", "[1/3] Recruiter Agent analizeaza cerintele jobului " + job.getJobTitle() + "...");
+                String recruiterOutput = recruiterAgent.analyzeJobPosting(job.getCompanyName(), job.getJobTitle(), job.getRawDescription());
+                sendSseEvent(emitter, "recruiter_output", recruiterOutput);
 
-                emitter.send(SseEmitter.event().name("status").data("✍️ [RESUME TAILOR AGENT] Rescriere bullet point-uri CV pentru scor 100% ATS..."));
+                sendSseEvent(emitter, "status", "[2/3] Resume Tailor Agent rescrie si optimizeaza CV-ul...");
                 String tailorOutput = resumeTailorAgent.tailorResume(job.getCompanyName(), job.getJobTitle(), "", job.getRawDescription());
-                emitter.send(SseEmitter.event().name("tailor_output").data(tailorOutput));
-                Thread.sleep(1000);
+                sendSseEvent(emitter, "tailor_output", tailorOutput);
 
-                emitter.send(SseEmitter.event().name("status").data("🎙️ [INTERVIEW AGENT] Generare 5 întrebări tehnice specifice pentru " + job.getCompanyName() + "..."));
-                String interviewQuestions = interviewSimulatorAgent.generateInterviewQuestions(job.getCompanyName(), job.getJobTitle(), job.getRawDescription());
-                emitter.send(SseEmitter.event().name("interview_output").data(interviewQuestions));
-                Thread.sleep(1000);
+                sendSseEvent(emitter, "status", "[3/3] Technical Interview Agent genereaza intrebarile si RAG Memory...");
+                String interviewOutput = interviewSimulatorAgent.generateInterviewQuestions(job.getCompanyName(), job.getJobTitle(), job.getRawDescription());
+                sendSseEvent(emitter, "interview_output", interviewOutput);
 
-                emitter.send(SseEmitter.event().name("status").data("✉️ [OUTREACH AGENT] Redactare mesaje personalizate de contactare Recruiter..."));
-                String outreachOutput = outreachAgent.generateOutreachMessage(job.getCompanyName(), job.getJobTitle(), "Sîrbu Mihai-Alexandru");
-                emitter.send(SseEmitter.event().name("outreach_output").data(outreachOutput));
-
-                emitter.send(SseEmitter.event().name("complete").data("✅ [SYSTEM] Orchestrarea Multi-Agent AI a fost finalizată cu succes!"));
+                sendSseEvent(emitter, "complete", "Orchestrarea celor 3 agenti AI s-a incheiat cu succes!");
                 emitter.complete();
-
             } catch (Exception e) {
-                log.error("Eroare la streaming-ul SSE al agenților AI: {}", e.getMessage());
+                log.error("Eroare la executia fluxului SSE Multi-Agent", e);
                 emitter.completeWithError(e);
             }
         });
@@ -97,8 +91,25 @@ public class AgentOrchestratorService {
         return emitter;
     }
 
+    private void sendSseEvent(SseEmitter emitter, String name, String data) throws IOException {
+        emitter.send(SseEmitter.event().name(name).data(data));
+    }
+
     private JobPosting getJob(UUID jobId) {
         return jobPostingRepository.findById(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Jobul cu ID-ul " + jobId + " nu a fost găsit."));
+                .orElseThrow(() -> new ResourceNotFoundException("Jobul cu ID-ul " + jobId + " nu a fost gasit."));
+    }
+
+    private String getCandidateNameForJob(JobPosting job) {
+        if (job.getUser() != null) {
+            Optional<CvProfile> profile = cvProfileRepository.findByUserId(job.getUser().getId());
+            if (profile.isPresent() && profile.get().getFullName() != null && !profile.get().getFullName().isBlank()) {
+                return profile.get().getFullName();
+            }
+            if (job.getUser().getFullName() != null && !job.getUser().getFullName().isBlank()) {
+                return job.getUser().getFullName();
+            }
+        }
+        throw new ResourceNotFoundException("Numele candidatului nu a fost gasit. Va rugam sa completati profilul CV.");
     }
 }

@@ -16,9 +16,6 @@ public class VectorEmbeddingService {
 
     private static final int EMBEDDING_DIMENSIONS = 384;
 
-    /**
-     * Generează un vector de embedding-uri semantice cu 384 de dimensiuni pentru orice text dat.
-     */
     public float[] generateEmbedding(String text) {
         if (text == null || text.isBlank()) {
             return new float[EMBEDDING_DIMENSIONS];
@@ -48,18 +45,15 @@ public class VectorEmbeddingService {
             }
         }
 
-        log.info("🧠 [REAL AI VECTOR ENGINE] Generat embedding de {} dimensiuni (L2 Norm: {}) pentru text ({})", 
+        log.info("[REAL AI VECTOR ENGINE] Generat embedding de {} dimensiuni (L2 Norm: {}) pentru text ({})",
                 EMBEDDING_DIMENSIONS, norm, text.substring(0, Math.min(30, text.length())) + "...");
 
         return vector;
     }
 
-    /**
-     * Calculează Similaritatea Cosinus direct în Java între doi vectori de 384 dimensiuni.
-     */
     public double calculateCosineSimilarity(float[] vectorA, float[] vectorB) {
         if (vectorA.length != vectorB.length) {
-            throw new IllegalArgumentException("Vectorii trebuie să aibă aceeași dimensiune.");
+            throw new IllegalArgumentException("Vectorii trebuie sa aiba aceeasi dimensiune.");
         }
 
         double dotProduct = 0.0;
