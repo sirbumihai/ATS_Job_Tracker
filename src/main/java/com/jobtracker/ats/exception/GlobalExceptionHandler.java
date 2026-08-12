@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleResourceNotFoundException(ResourceNotFoundException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        problemDetail.setTitle("Resursă Negăsită");
+        problemDetail.setTitle("Resursa Negasita");
         problemDetail.setType(URI.create("https://api.jobtracker.com/errors/not-found"));
         problemDetail.setProperty("timestamp", Instant.now());
         return problemDetail;
@@ -30,9 +30,9 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT, 
-                "Ai aplicat deja la acest job! Constrângerea de unicitate împiedică aplicațiile duplicate."
+                "Ai aplicat deja la acest job! Constrangerea de unicitate impiedica aplicatiile duplicate."
         );
-        problemDetail.setTitle("Aplicație Duplicată");
+        problemDetail.setTitle("Aplicatie Duplicata");
         problemDetail.setType(URI.create("https://api.jobtracker.com/errors/duplicate-application"));
         problemDetail.setProperty("timestamp", Instant.now());
         return problemDetail;
@@ -42,9 +42,9 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleMissingHeaderException(MissingRequestHeaderException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST, 
-                "Header-ul obligatoriu '" + ex.getHeaderName() + "' lipsește din cerere."
+                "Header-ul obligatoriu '" + ex.getHeaderName() + "' lipseste din cerere."
         );
-        problemDetail.setTitle("Header HTTP Lipsă");
+        problemDetail.setTitle("Header HTTP Lipsa");
         problemDetail.setType(URI.create("https://api.jobtracker.com/errors/missing-header"));
         problemDetail.setProperty("timestamp", Instant.now());
         return problemDetail;
@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST, 
-                "Body-ul cererii JSON lipsește sau are un format invalid."
+                "Body-ul cererii JSON lipseste sau are un format invalid."
         );
         problemDetail.setTitle("Body JSON Invalid");
         problemDetail.setType(URI.create("https://api.jobtracker.com/errors/invalid-json"));
@@ -84,9 +84,9 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleGeneralException(Exception ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR, 
-                ex.getMessage() != null ? ex.getMessage() : "A apărut o eroare internă de server."
+                ex.getMessage() != null ? ex.getMessage() : "A aparut o eroare interna de server."
         );
-        problemDetail.setTitle("Eroare Internă Server");
+        problemDetail.setTitle("Eroare Interna Server");
         problemDetail.setType(URI.create("https://api.jobtracker.com/errors/internal-server-error"));
         problemDetail.setProperty("timestamp", Instant.now());
         return problemDetail;

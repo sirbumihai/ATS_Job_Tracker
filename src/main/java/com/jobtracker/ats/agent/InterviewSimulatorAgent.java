@@ -22,51 +22,49 @@ public class InterviewSimulatorAgent {
     private final InterviewKnowledgeRepository knowledgeRepository;
 
     public String generateInterviewQuestions(String companyName, String jobTitle, String jobDescription) {
-        log.info("🤖 [INTERVIEW AGENT] Generăm 5 întrebări de interviu tehnic pentru {} la {}", jobTitle, companyName);
+        log.info("[INTERVIEW AGENT] Generam 5 intrebari de interviu tehnic pentru {} la {}", jobTitle, companyName);
 
-        String questions = String.format("""
-                # Simularea de Interviu Tehnic: %s la %s
+        String systemPrompt = """
+                Esti un Intervievator Tehnic Senior de Elita.
+                Sarcina ta este sa generezi 5 intrebari de interviu tehnic relevante bazate pe cerintele jobului.
 
-                ## Întrebarea 1 (Concepte Core Java & Memorie):
-                Cum funcționează Garbage Collector-ul în Java 21 și care este diferența dintre stack memory și heap memory?
+                REGULA STRICTA: FARA DIACRITICE, FARA EMOTICOANE SAU EMOJI-URI in tot textul generat.
+                Raspunde profesional in limba romana cu urmatoarele 5 intrebari:
 
-                ## Întrebarea 2 (Spring Boot & Tranzacții):
-                Ce se întâmplă când adaugi adnotația @Transactional pe o metodă și cum gestionează Spring tranzacțiile de baze de date?
+                Simularea de Interviu Tehnic: [Titlu Job] la [Companie]
 
-                ## Întrebarea 3 (Baze de Date & Optimizare Vectorială):
-                Cum optimizezi o interogare SQL lentă într-o bază de date PostgreSQL și ce rol au indecșii HNSW din pgvector?
+                Intrebarea 1 (Core Java & Memorie):
+                Intrebarea 2 (Spring Boot & Tranzactii):
+                Intrebarea 3 (Baze de Date & Optimizare Vectoriala):
+                Intrebarea 4 (Securitate & JWT):
+                Intrebarea 5 (Arhitectura & Docker):
+                """;
 
-                ## Întrebarea 4 (Securitate & JWT):
-                De ce folosim autentificare stateless cu token-uri JWT în loc de sesiuni pe server într-o arhitectură REST API?
+        String userPrompt = String.format("COMPANIE: %s\nTITLU JOB: %s\n\nDESCRIERE JOB:\n%s", companyName, jobTitle, jobDescription);
 
-                ## Întrebarea 5 (Arhitectură & Docker):
-                Care este diferența dintre un container Docker și o mașină virtuală (VM) și cum funcționează Docker Layer Caching?
-                """, jobTitle, companyName);
-
-        // Salvare în memorie vectorială RAG (Retrieval-Augmented Generation)
         try {
             if (knowledgeRepository.count() == 0) {
                 knowledgeRepository.save(InterviewKnowledge.builder()
                         .topic("Core Java & Memorie")
-                        .questionText("Cum funcționează Garbage Collector-ul în Java 21?")
-                        .idealAnswerText("Garbage Collector eliberează obiectele nefolosite din Heap. În Java 21, ZGC și G1 sunt optimizate pentru pauze sub 1ms.")
+                        .questionText("Cum functioneaza Garbage Collector-ul in Java 21?")
+                        .idealAnswerText("Garbage Collector elibereaza obiectele nefolosite din Heap. In Java 21, ZGC si G1 sunt optimizate pentru pauze sub 1ms.")
                         .build());
             }
         } catch (Exception e) {
-            log.warn("Notă RAG Memory Init: {}", e.getMessage());
+            log.warn("Nota RAG Memory Init: {}", e.getMessage());
         }
 
-        return questions;
+        return llmService.generateCompletion(systemPrompt, userPrompt);
     }
 
     public InterviewEvaluationResponse evaluateUserAnswer(InterviewEvaluationRequest request) {
-        log.info("🤖 [INTERVIEW AGENT + RAG VECTOR SEARCH] Evaluăm răspunsul la întrebarea: {}", request.questionText());
+        log.info("[INTERVIEW AGENT + RAG VECTOR SEARCH] Evaluam raspunsul la intrebarea: {}", request.questionText());
 
         float[] questionVector = vectorEmbeddingService.generateEmbedding(request.questionText());
         float[] answerVector = vectorEmbeddingService.generateEmbedding(request.userAnswerText());
         double similarityScore = vectorEmbeddingService.calculateCosineSimilarity(questionVector, answerVector);
 
-        log.info("🧠 [RAG VECTOR SIMILARITY] Scor de similaritate răspuns vs întrebare: {}%", String.format("%.2f", similarityScore));
+        log.info("[RAG VECTOR SIMILARITY] Scor de similaritate raspuns vs intrebare: {}%", String.format("%.2f", similarityScore));
 
         int score = 8;
         if (similarityScore > 50.0) {
@@ -76,24 +74,24 @@ public class InterviewSimulatorAgent {
         }
 
         String feedback = String.format("""
-                # Evaluare Răspuns Interviu Tehnic (Scor Vectorial pgvector: %.2f%%)
+                Evaluare Raspuns Interviu Tehnic (Scor Vectorial pgvector: %.2f%%)
 
-                ## Puncte Forte ale Răspunsului Tău:
-                - Ai explicat conceptele tehnice cu acuratețe.
-                - Ai folosit terminologia adecvată din ecosistemul Spring Boot / Java.
+                Puncte Forte ale Raspunsului Tau:
+                - Ai explicat conceptele tehnice cu acuratete.
+                - Ai folosit terminologia adecvata din ecosistemul Spring Boot / Java.
 
-                ## Sugestii de Îmbunătățire:
-                - Poți adăuga detalii despre cazurile particulare de performanță în producție.
+                Sugestii de Imbunatatire:
+                - Poti adauga detalii despre cazurile particulare de performanta in productie.
 
-                ## Model de Răspuns Ideal (Din Memoria RAG Vectorială):
-                Răspunsul ideal la această întrebare trebuie să fie structurat folosind metoda STAR (Situation, Task, Action, Result) și să evidențieze bunele practici din Spring Boot 3.3 și PostgreSQL pgvector.
+                Model de Raspuns Ideal (Din Memoria RAG Vectoriala):
+                Raspunsul ideal la aceasta intrebare trebuie sa fie structurat folosind metoda STAR (Situation, Task, Action, Result) si sa evidentieze bunele practici din Spring Boot 3.3 si PostgreSQL pgvector.
                 """, similarityScore);
 
         return new InterviewEvaluationResponse(
                 score,
                 feedback,
-                List.of("Cunoștințe teoretice solide", "Terminologie tehnică adecvată", "Similaritate vectorială bună"),
-                List.of("Adăugarea de exemple de optimizare a memoriei în producție")
+                List.of("Cunostinte teoretice solide", "Terminologie tehnica adecvata", "Similaritate mecanic-vectoriala buna"),
+                List.of("Adaugarea de exemple de optimizare a memoriei in productie")
         );
     }
 }

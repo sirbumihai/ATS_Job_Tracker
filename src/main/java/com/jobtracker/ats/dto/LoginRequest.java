@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record LoginRequest(
     @NotBlank(message = "Email-ul este obligatoriu")
-    @Email(message = "Email-ul trebuie să fie valid")
+    @Email(message = "Email-ul trebuie sa fie valid")
     String email,
 
     @NotBlank(message = "Parola este obligatorie")

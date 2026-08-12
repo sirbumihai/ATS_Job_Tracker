@@ -16,7 +16,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("AI-Powered Job Tracker & ATS Matcher API")
                         .version("1.0.0")
-                        .description("Sistem Backend Enterprise pentru gestionarea aplicațiilor la joburi, parsarea CV-urilor PDF cu Apache Tika, căutare semantică cu PostgreSQL pgvector și analiza asincronă AI Gap.")
+                        .description("Sistem Backend Enterprise pentru gestionarea aplicatiilor la joburi, parsarea CV-urilor PDF cu Apache Tika, cautare semantica cu PostgreSQL pgvector si analiza asincrona AI Gap.")
                         .contact(new Contact()
                                 .name("Alexandru Sîrbu")
                                 .email("sarbumihai0@gmail.com")

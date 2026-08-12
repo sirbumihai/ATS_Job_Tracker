@@ -18,12 +18,12 @@ public class ApplicationEventListener {
     @Async("asyncExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleApplicationCreated(ApplicationCreatedEvent event) {
-        log.info("⚡ [BACKGROUND ASYNC WORKER] Procesăm analiza AI Gap pentru aplicația ID: {}", event.applicationId());
+        log.info("[BACKGROUND ASYNC WORKER] Procesam analiza AI Gap pentru aplicatia ID: {}", event.applicationId());
         try {
             aiGapAnalysisService.generateAnalysis(event.applicationId());
-            log.info("✅ [BACKGROUND ASYNC WORKER] Analiza AI Gap a fost salvată cu succes!");
+            log.info("[BACKGROUND ASYNC WORKER] Analiza AI Gap a fost salvata cu succes!");
         } catch (Exception e) {
-            log.error("❌ [BACKGROUND ASYNC WORKER] Eroare la generarea analizei AI: {}", e.getMessage(), e);
+            log.error("[BACKGROUND ASYNC WORKER] Eroare la generarea analizei AI: {}", e.getMessage(), e);
         }
     }
 }

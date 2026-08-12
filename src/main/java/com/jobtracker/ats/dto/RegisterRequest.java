@@ -6,11 +6,11 @@ import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
     @NotBlank(message = "Email-ul este obligatoriu")
-    @Email(message = "Email-ul trebuie să fie valid")
+    @Email(message = "Email-ul trebuie sa fie valid")
     String email,
 
     @NotBlank(message = "Parola este obligatorie")
-    @Size(min = 6, message = "Parola trebuie să aibă cel puțin 6 caractere")
+    @Size(min = 6, message = "Parola trebuie sa aibă cel putin 6 caractere")
     String password,
 
     @NotBlank(message = "Numele complet este obligatoriu")

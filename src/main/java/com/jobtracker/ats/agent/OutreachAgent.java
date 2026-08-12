@@ -13,27 +13,23 @@ public class OutreachAgent {
     private final OpenAiLlmService llmService;
 
     public String generateOutreachMessage(String companyName, String jobTitle, String candidateName) {
-        log.info("🤖 [OUTREACH AGENT] Generăm mesaj personalizat de conectare pentru {} - {}", companyName, jobTitle);
+        log.info("[OUTREACH AGENT] Generam mesaj personalizat de conectare pentru {} - {}", companyName, jobTitle);
 
-        return String.format("""
-                # Mesaje Personalizate de Contact Recruiter
+        String systemPrompt = """
+                Esti un Expert in Communication Strategy si Cold Outreach pe LinkedIn.
+                Sarcina ta este sa generezi 2 variante profesionale de mesaje de contactare pentru recruiteri (LinkedIn si Cold Email).
 
-                ## Varianta 1: Mesaj Conectare LinkedIn (Sub 300 Caractere)
-                Buna ziua! Am observat oportunitatea de %s la %s si consider ca experienta mea cu Java 21, Spring Boot si arhitecturi de baze de date se potriveste excelent cerintelor echipei dumneavoastra. Mi-ar face mare placere sa ne conectam!
+                REGULA STRICTA: FARA DIACRITICE, FARA EMOTICOANE SAU EMOJI-URI in tot textul generat.
+                Raspunde profesional in limba romana cu urmatoarele 2 variante:
 
-                ## Varianta 2: Email Cold Outreach Către Technical Recruiter / Engineering Manager
-                Subiect: Candidatură %s - %s
+                Mesaje Personalizate de Contact Recruiter
 
-                Bună ziua,
+                Varianta 1: Mesaj Conectare LinkedIn (Sub 300 Caractere)
+                Varianta 2: Email Cold Outreach Catre Technical Recruiter / Engineering Manager
+                """;
 
-                Vă scriu pentru a-mi exprima interesul ferm față de poziția de %s în cadrul echipei %s.
+        String userPrompt = String.format("COMPANIE: %s\nTITLU JOB: %s\nNUME CANDIDAT: %s", companyName, jobTitle, candidateName);
 
-                Dețin o pregătire solidă în dezvoltarea de servicii REST backend scalabile utilizând Java 21, Spring Boot 3.3, PostgreSQL și Docker. Recent, am proiectat o platformă ATS cu căutare semantică vectorială (pgvector) și integrare LLM.
-
-                Aș fi încântat să stabilim o scurtă discuție pentru a vă prezenta modul în care pot aduce valoare imediată proiectelor dumneavoastră.
-
-                Cu stima,
-                %s
-                """, jobTitle, companyName, jobTitle, candidateName, jobTitle, companyName, candidateName);
+        return llmService.generateCompletion(systemPrompt, userPrompt);
     }
 }
