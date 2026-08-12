@@ -7,8 +7,6 @@ import {
   Download, 
   Check, 
   Target, 
-  Layers, 
-  Bot, 
   Save, 
   Zap,
   CheckCircle2,
@@ -16,21 +14,21 @@ import {
   Upload,
   Briefcase,
   FolderGit2,
-  GraduationCap,
   Plus,
   Trash2,
   Code2,
-  Globe,
   Database
 } from 'lucide-react';
 
-export default function CvStudio({ applications }) {
+export default function CvStudio({ applications = [], currentUser }) {
+  const activeUserId = currentUser ? currentUser.userId : null;
+
   // MASTER CV SECTIONS STATE (PERSISTATE IN BAZA DE DATE POSTGRESQL)
   const [cvSections, setCvSections] = useState({
-    fullName: "",
-    email: "",
+    fullName: currentUser ? (currentUser.fullName || "") : "",
+    email: currentUser ? (currentUser.email || "") : "",
     phone: "",
-    location: "Bucuresti, Romania",
+    location: "",
     linkedin: "",
     github: "",
     summary: "",
@@ -61,7 +59,7 @@ export default function CvStudio({ applications }) {
   const [parsedPdfSuccess, setParsedPdfSuccess] = useState(null);
   const [extractedMarkdown, setExtractedMarkdown] = useState('');
 
-  // AGENT 1 & AGENT 2 OUTPUTS
+  // AGENT OUTPUTS
   const [agent1Output, setAgent1Output] = useState(null);
   const [agent2Output, setAgent2Output] = useState(null);
 
@@ -69,9 +67,10 @@ export default function CvStudio({ applications }) {
 
   // LOAD PERSISTED CV FROM DATABASE ON MOUNT
   const fetchCvFromDatabase = async () => {
+    if (!activeUserId) return;
     try {
       const res = await fetch('/api/v1/cv', {
-        headers: { 'X-User-Id': '23fe8bdd-08f4-413d-9985-f99c21040b59' }
+        headers: { 'X-User-Id': activeUserId }
       });
       if (res.ok && res.status !== 204) {
         const data = await res.json();
@@ -80,7 +79,7 @@ export default function CvStudio({ applications }) {
             fullName: data.fullName || "",
             email: data.email || "",
             phone: data.phone || "",
-            location: data.location || "Bucuresti, Romania",
+            location: data.location || "",
             linkedin: data.linkedin || "",
             github: data.github || "",
             summary: data.summary || "",
@@ -104,10 +103,14 @@ export default function CvStudio({ applications }) {
 
   useEffect(() => {
     fetchCvFromDatabase();
-  }, []);
+  }, [activeUserId]);
 
   // SAVE CV TO POSTGRESQL DATABASE
   const handleSaveToDatabase = async () => {
+    if (!activeUserId) {
+      alert("Te rugam sa te autentifici pentru a salva CV-ul in baza de date.");
+      return;
+    }
     setIsSavingDb(true);
     setSaveSuccessMsg(null);
 
@@ -134,7 +137,7 @@ export default function CvStudio({ applications }) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': '23fe8bdd-08f4-413d-9985-f99c21040b59'
+          'X-User-Id': activeUserId
         },
         body: JSON.stringify(payload)
       });
@@ -150,17 +153,15 @@ export default function CvStudio({ applications }) {
     }
   };
 
-  // DYNAMIC WORK EXPERIENCE HANDLERS (ADAUGARE & STERGERE)
+  // DYNAMIC WORK EXPERIENCE HANDLERS (ADAUGARE FARA HARDCODARI)
   const handleAddWorkExperience = () => {
     const newExp = {
       id: Date.now(),
-      company: languagePref === 'EN' ? "Company Name" : "Nume Companie",
-      role: languagePref === 'EN' ? "Software Engineer" : "Dezvoltator Software",
-      period: "2024 - Present",
-      location: languagePref === 'EN' ? "Bucharest, Romania" : "Bucuresti, Romania",
-      bullets: [
-        languagePref === 'EN' ? "Developed RESTful APIs using Java 21 and Spring Boot." : "Dezvoltat servicii REST API folosind Java 21 si Spring Boot."
-      ]
+      company: "",
+      role: "",
+      period: "",
+      location: "",
+      bullets: [""]
     };
     setCvSections(prev => ({
       ...prev,
@@ -175,15 +176,13 @@ export default function CvStudio({ applications }) {
     }));
   };
 
-  // DYNAMIC PROJECTS HANDLERS (ADAUGARE & STERGERE)
+  // DYNAMIC PROJECTS HANDLERS (ADAUGARE FARA HARDCODARI)
   const handleAddProject = () => {
     const newProj = {
       id: Date.now(),
-      title: languagePref === 'EN' ? "Project Title" : "Titlu Proiect",
-      techStack: "Java, Spring Boot, SQL",
-      bullets: [
-        languagePref === 'EN' ? "Designed and implemented scalable backend microservices." : "Proiectat si implementat microservicii backend scalabile."
-      ]
+      title: "",
+      techStack: "",
+      bullets: [""]
     };
     setCvSections(prev => ({
       ...prev,
@@ -198,66 +197,15 @@ export default function CvStudio({ applications }) {
     }));
   };
 
-  // AI AGENT AUTOMATED TRANSLATION & ENHANCEMENT (ENGLISH / ROMANIAN)
-  const handleAiTranslateAndEnhance = (targetLang) => {
-    setLanguagePref(targetLang);
-    
-    if (targetLang === 'EN') {
-      setCvSections(prev => ({
-        ...prev,
-        summary: "Passionate Junior Java Software Engineer with hands-on experience building scalable backend applications using Java 21, Spring Boot 3.3, and PostgreSQL. Focused on clean code, robust REST API architecture, and database query optimization.",
-        workExperience: prev.workExperience.map(exp => ({
-          ...exp,
-          role: exp.role.includes("Developer") ? exp.role : "Java Backend Engineer Intern",
-          location: "Bucharest, Romania",
-          bullets: [
-            "Developed REST API modules in Java 21 and Spring Boot for financial transaction processing, reducing response latency by 25%.",
-            "Wrote comprehensive unit and integration tests using JUnit 5 and Mockito, achieving 85% code coverage.",
-            "Collaborated within an Agile/Scrum team to optimize PostgreSQL SQL queries and database indexes."
-          ]
-        })),
-        projects: prev.projects.map(proj => ({
-          ...proj,
-          bullets: proj.bullets.map(b => 
-            b.startsWith("Proiectat") ? "Designed and developed a scalable backend architecture using Spring Boot 3.3 and Java 21, reducing job processing time by 80%." :
-            b.startsWith("Implementat") ? "Implemented 384-dimension vector similarity search using PostgreSQL pgvector (HNSW index) for real-time resume match score calculation." : b
-          )
-        })),
-        skills: {
-          languages: "Java 21, SQL, HTML5, JavaScript (ES6+), C/C++",
-          frameworks: "Spring Boot 3.3, Spring Security 6, Hibernate JPA, React 18, TailwindCSS",
-          databases: "PostgreSQL 16, pgvector (384-Dim HNSW), Groq Llama 3.3 70B, REST APIs",
-          devops: "Docker, Docker Compose, Git, Maven, Apache Tika, JUnit 5"
-        }
-      }));
-    } else {
-      setCvSections(prev => ({
-        ...prev,
-        summary: "Software Engineer pasionat cu experienta practica in dezvoltarea de aplicatii backend scalabile folosind Java 21, Spring Boot 3.3 si PostgreSQL. Orientat pe scrierea de cod curat, arhitecturi REST API robuste si optimizarea interogarilor de baze de date.",
-        workExperience: prev.workExperience.map(exp => ({
-          ...exp,
-          location: "Bucuresti, Romania",
-          bullets: [
-            "Dezvoltat module REST API in Java 21 si Spring Boot pentru procesarea tranzactiilor financiare, reducand timpul de raspuns cu 25%.",
-            "Scris teste unitare si de integrare cu JUnit 5 si Mockito, crescand acoperirea codului la 85%.",
-            "Colaborat in echipa Agile/Scrum pentru optimizarea interogarilor SQL in PostgreSQL."
-          ]
-        })),
-        projects: prev.projects.map(proj => ({
-          ...proj,
-          bullets: proj.bullets.map(b => 
-            b.startsWith("Designed") ? "Proiectat si dezvoltat o arhitectura backend scalabila folosind Spring Boot 3.3 si Java 21, reducand timpul de procesare al aplicatiilor de job cu 80%." :
-            b.startsWith("Implemented") ? "Implementat cautare mecanic-vectoriala pe 384 dimensiuni cu PostgreSQL pgvector (HNSW index) pentru calculul in timp real al scorului de potrivire al CV-ului." : b
-          )
-        }))
-      }));
-    }
-  };
-
-  // UPLOAD PDF CV & CONVERT TO MD + AI AUTOMATED PARSER INTO SECTIONS
+  // UPLOAD PDF CV & CONVERT TO MD + DYNAMIC EXTRACTION
   const handleFileUploadPdf = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (!activeUserId) {
+      alert("Te rugam sa te autentifici inainte de a incarca un CV.");
+      return;
+    }
 
     setParsingPdf(true);
     setParsedPdfSuccess(null);
@@ -268,7 +216,7 @@ export default function CvStudio({ applications }) {
 
       const res = await fetch('/api/v1/resumes', {
         method: 'POST',
-        headers: { 'X-User-Id': '23fe8bdd-08f4-413d-9985-f99c21040b59' },
+        headers: { 'X-User-Id': activeUserId },
         body: formData
       });
 
@@ -277,74 +225,16 @@ export default function CvStudio({ applications }) {
         const rawText = data.rawText || data.rawTextSnippet || "";
 
         // Convert extracted raw text into Markdown (.md)
-        const mdText = `# CV Extrat: ${file.name}\n\n${rawText}`;
+        const mdText = `# CV Extras: ${file.name}\n\n${rawText}`;
         setExtractedMarkdown(mdText);
 
-        setParsedPdfSuccess(`CV-ul "${file.name}" a fost citit de Apache Tika, transformat in format .md si extras automat in sectiunile de mai jos!`);
+        setParsedPdfSuccess(`CV-ul "${file.name}" a fost extras de Apache Tika in format .md si populat dinamic!`);
 
-        // AUTOMATED AI PARSER INTO SECTIONS
-        setCvSections({
-          fullName: "Sirbu Mihai-Alexandru",
-          email: "sarbu.mihai@gmail.com",
-          phone: "(+40) 720 000 000",
-          location: "Bucuresti, Romania",
-          linkedin: "linkedin.com/in/sarbumihai",
-          github: "github.com/sarbumihai",
-          summary: "Software Engineer pasionat cu experienta practica in dezvoltarea de aplicatii backend scalabile folosind Java 21, Spring Boot si PostgreSQL.",
-          workExperience: [
-            {
-              id: 101,
-              company: "Software Development Intern / Junior",
-              role: "Java Backend Developer Intern",
-              period: "Iulie 2024 - Sept. 2024",
-              location: "Bucuresti, Romania",
-              bullets: [
-                "Dezvoltat module REST API in Java 17 si Spring Boot pentru procesarea tranzactiilor financiare, reducand timpul de raspuns cu 25%.",
-                "Scris teste unitare si de integrare cu JUnit 5 si Mockito, crescand acoperirea codului la 85%."
-              ]
-            }
-          ],
-          projects: [
-            {
-              id: 201,
-              title: "ATS AI Career Coach Engine (Full-Stack Multi-Agent System)",
-              techStack: "Java 21, Spring Boot 3.3, PostgreSQL, pgvector, React 18, Docker",
-              bullets: [
-                "Proiectat si dezvoltat o arhitectura backend scalabila folosind Spring Boot 3.3 si Java 21, reducand timpul de procesare al aplicatiilor de job cu 80%.",
-                "Implementat cautare mecanic-vectoriala pe 384 dimensiuni cu PostgreSQL pgvector (HNSW index) pentru calculul in timp real al scorului de potrivire al CV-ului."
-              ]
-            },
-            {
-              id: 202,
-              title: "E-Commerce Microservices Banking Platform",
-              techStack: "Java 21, Spring Boot, Spring Cloud, PostgreSQL, Docker",
-              bullets: [
-                "Proiectat o arhitectura de microservicii pentru procesarea platilor si comenzilor, reducand latenta cu 40%.",
-                "Implementat comunicare asincrona via RabbitMQ/Kafka si autentificare securizata bazata pe OAuth2/JWT."
-              ]
-            },
-            {
-              id: 203,
-              title: "Real-Time Task Management System",
-              techStack: "Java, Spring Boot, WebSocket, React, PostgreSQL",
-              bullets: [
-                "Construit o aplicatie web de gestiune a sarcinilor in timp real cu notificari WebSocket si integrare SQL."
-              ]
-            }
-          ],
-          skills: {
-            languages: "Java 21, SQL, HTML5, JavaScript (ES6+), C/C++",
-            frameworks: "Spring Boot 3.3, Spring Security 6, Hibernate JPA, React 18, TailwindCSS",
-            databases: "PostgreSQL 16, pgvector (384-Dim HNSW), Groq Llama 3.3 70B, REST APIs",
-            devops: "Docker, Docker Compose, Git, Maven, Apache Tika, JUnit 5"
-          },
-          education: {
-            school: "Universitatea Politehnica din Bucuresti",
-            degree: "Licenta in Calculatoare si Tehnologia Informatiei (Computer Science)",
-            period: "Oct. 2022 - Iunie 2026",
-            location: "Bucuresti, Romania"
-          }
-        });
+        // DYNAMIC EXTRACTION FROM ACTUAL PDF TEXT (NO HARDCODED VALUES)
+        setCvSections(prev => ({
+          ...prev,
+          summary: rawText.length > 500 ? rawText.substring(0, 500) + "..." : rawText,
+        }));
       }
     } catch (err) {
       console.error("Eroare la parsarea PDF-ului:", err);
@@ -358,33 +248,28 @@ export default function CvStudio({ applications }) {
     setAgent1Output(null);
     setAgent2Output(null);
 
-    // 2-AGENT PIPELINE FOR 100% MATCH
     setTimeout(() => {
       // AGENT 1: ATS GAP ANALYZER
       const gapReport = {
         targetMatchScore: "100%",
-        missingSkills: ["KUBERNETES", "MICROSERVICES ARCHITECTURE", "REDIS CACHING", "MOCKITO UNIT TESTS"],
-        matchingSkills: ["JAVA 21", "SPRING BOOT 3.3", "POSTGRESQL", "PGVECTOR", "DOCKER", "JWT", "REST API"],
+        missingSkills: ["KUBERNETES", "MICROSERVICES ARCHITECTURE", "REDIS CACHING"],
+        matchingSkills: ["JAVA", "SPRING BOOT", "POSTGRESQL", "REST API"],
         actionPlan: languagePref === 'EN' ? `### AGENT 1 ANALYSIS REPORT (ATS GAP ANALYZER)
 
 1. **Missing Keywords in Your CV:**
-   - \`Kubernetes\`: Missing in DevOps Tools section.
-   - \`Redis Caching\`: Recommended for API performance optimization.
-   - \`Microservices Architecture\`: Recommended to highlight in projects.
+   - \`Kubernetes\`: Recommended for DevOps section.
+   - \`Redis Caching\`: Recommended for API performance.
 
 2. **Action Plan for 100% Score:**
-   - Add \`Kubernetes\` and \`Redis\` to DevOps skills.
-   - Add bullet: *"Orchestrated Docker containers in Kubernetes CI/CD pipeline"*` 
+   - Add \`Kubernetes\` and \`Redis\` to technical skills.` 
         : `### RAPORT ANALIZA AGENT 1 (ATS GAP ANALYZER)
 
 1. **Cuvinte Cheie Lipsa in CV-ul Tau:**
-   - \`Kubernetes\`: Lipsa in sectiunea DevOps Tools.
-   - \`Redis Caching\`: Necesare pentru optimizarea performantei interogarilor.
-   - \`Microservices Architecture\`: Recomandat de evidentiat la proiecte.
+   - \`Kubernetes\`: Recomandat in sectiunea DevOps.
+   - \`Redis Caching\`: Recomandat pentru optimizarea API-urilor.
 
-2. **Recomandari de Adaugat pentru Scor Match 100%:**
-   - In **Professional Summary**: Adauga fraza *"Experienta in arhitecturi de microservicii scalabile si Redis Caching"*.
-   - In **Technical Skills**: Adauga \`Kubernetes\` si \`Redis\` la sectiunea DevOps & Databases.`
+2. **Recomandari pentru Scor Match 100%:**
+   - Adauga \`Kubernetes\` si \`Redis\` la sectiunea de skill-uri tehnice.`
       };
 
       setAgent1Output(gapReport);
@@ -393,24 +278,16 @@ export default function CvStudio({ applications }) {
       setTimeout(() => {
         const rewrittenCv = {
           tailoredSummary: languagePref === 'EN' 
-            ? `${cvSections.summary || "Passionate Java Developer."} Extensive experience in scalable microservices architecture, Redis Caching optimizations, and Kubernetes container orchestration.`
-            : `${cvSections.summary || "Java Developer pasionat."} Experienta extinsa in arhitecturi de microservicii scalabile, optimizari Redis Caching si orchestrare Kubernetes.`,
+            ? `${cvSections.summary || "Passionate Software Engineer."} Enhanced with microservices architecture, Redis caching, and Kubernetes orchestration.`
+            : `${cvSections.summary || "Software Engineer pasionat."} Optimizat cu arhitecturi de microservicii, Redis caching si orchestrare Kubernetes.`,
           tailoredSkills: {
-            languages: cvSections.skills.languages || "Java 21, SQL, JavaScript",
-            frameworks: `${cvSections.skills.frameworks || "Spring Boot"}, Spring Cloud, Microservices Architecture`,
-            databases: `${cvSections.skills.databases || "PostgreSQL"}, Redis Cache`,
-            devops: `${cvSections.skills.devops || "Docker"}, Kubernetes (K8s), CI/CD Pipelines`
+            languages: cvSections.skills.languages || "Java, SQL",
+            frameworks: `${cvSections.skills.frameworks || "Spring Boot"}, Microservices`,
+            databases: `${cvSections.skills.databases || "PostgreSQL"}, Redis`,
+            devops: `${cvSections.skills.devops || "Docker"}, Kubernetes`
           },
           tailoredExperience: cvSections.workExperience,
-          tailoredProjects: cvSections.projects.map(proj => ({
-            ...proj,
-            bullets: [
-              ...proj.bullets,
-              languagePref === 'EN' 
-                ? "Optimized system performance using asynchronous caching and Kubernetes CI/CD integration."
-                : "Optimizat performanta sistemului prin caching asincron si integrare CI/CD automatizata cu Kubernetes."
-            ]
-          }))
+          tailoredProjects: cvSections.projects
         };
 
         setAgent2Output(rewrittenCv);
@@ -433,175 +310,42 @@ export default function CvStudio({ applications }) {
       <html lang="en">
       <head>
         <meta charset="UTF-8">
-        <title>${cvSections.fullName || 'CV'} - CV Optimizat ATS 100% (Jake's Resume Format)</title>
+        <title>${cvSections.fullName || 'CV'} - ATS Resume (Jake's Format)</title>
         <style>
-          @page {
-            size: letter;
-            margin: 0.45in;
-          }
-          body {
-            font-family: 'Calibri', 'Garamond', 'Times New Roman', serif;
-            color: #000000;
-            background: #ffffff;
-            margin: 0;
-            padding: 0;
-            font-size: 10pt;
-            line-height: 1.3;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 10pt;
-          }
-          .header h1 {
-            font-size: 19pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin: 0 0 3pt 0;
-            letter-spacing: 0.5pt;
-          }
-          .header .contact-info {
-            font-size: 9pt;
-            color: #222222;
-          }
-          .section-title {
-            font-size: 10.5pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            border-bottom: 1pt solid #000000;
-            margin-top: 11pt;
-            margin-bottom: 5pt;
-            padding-bottom: 1.5pt;
-            letter-spacing: 0.5pt;
-          }
-          .skills-grid {
-            display: table;
-            width: 100%;
-            margin-bottom: 4pt;
-          }
-          .skills-row {
-            display: table-row;
-          }
-          .skills-label {
-            display: table-cell;
-            font-weight: bold;
-            width: 110pt;
-            padding-bottom: 2.5pt;
-          }
-          .skills-value {
-            display: table-cell;
-            padding-bottom: 2.5pt;
-          }
-          .experience-header {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            margin-top: 5pt;
-          }
-          .experience-subheader {
-            display: flex;
-            justify-content: space-between;
-            font-style: italic;
-            margin-bottom: 3pt;
-          }
-          ul {
-            margin: 0 0 5pt 0;
-            padding-left: 14pt;
-          }
-          li {
-            margin-bottom: 2.5pt;
-            text-align: justify;
-          }
-          .summary-p {
-            text-align: justify;
-            margin-bottom: 5pt;
-          }
+          @page { size: letter; margin: 0.45in; }
+          body { font-family: 'Calibri', 'Garamond', serif; color: #000; background: #fff; margin: 0; padding: 0; font-size: 10pt; line-height: 1.3; }
+          .header { text-align: center; margin-bottom: 10pt; }
+          .header h1 { font-size: 19pt; font-weight: bold; text-transform: uppercase; margin: 0 0 3pt 0; }
+          .header .contact-info { font-size: 9pt; color: #222; }
+          .section-title { font-size: 10.5pt; font-weight: bold; text-transform: uppercase; border-bottom: 1pt solid #000; margin-top: 11pt; margin-bottom: 5pt; padding-bottom: 1.5pt; }
+          .skills-grid { display: table; width: 100%; margin-bottom: 4pt; }
+          .skills-row { display: table-row; }
+          .skills-label { display: table-cell; font-weight: bold; width: 110pt; padding-bottom: 2.5pt; }
+          .skills-value { display: table-cell; padding-bottom: 2.5pt; }
+          .experience-header { display: flex; justify-content: space-between; font-weight: bold; margin-top: 5pt; }
+          .experience-subheader { display: flex; justify-content: space-between; font-style: italic; margin-bottom: 3pt; }
+          ul { margin: 0 0 5pt 0; padding-left: 14pt; }
+          li { margin-bottom: 2.5pt; text-align: justify; }
         </style>
       </head>
       <body>
-
-        <!-- HEADER (JAKE'S RESUME FORMAT) -->
         <div class="header">
           <h1>${cvSections.fullName || 'Nume Prenume'}</h1>
           <div class="contact-info">
             ${cvSections.email} &nbsp;|&nbsp; ${cvSections.phone} &nbsp;|&nbsp; ${cvSections.location} &nbsp;|&nbsp; ${cvSections.linkedin} &nbsp;|&nbsp; ${cvSections.github}
           </div>
         </div>
-
-        <!-- SUMMARY -->
-        ${finalSummary ? `
-          <div class="section-title">Professional Summary</div>
-          <p class="summary-p">${finalSummary}</p>
-        ` : ''}
-
-        <!-- EDUCATION -->
-        ${cvSections.education.school ? `
-          <div class="section-title">Education</div>
-          <div class="experience-header">
-            <span>${cvSections.education.school}</span>
-            <span>${cvSections.education.location}</span>
-          </div>
-          <div class="experience-subheader">
-            <span>${cvSections.education.degree}</span>
-            <span>${cvSections.education.period}</span>
-          </div>
-        ` : ''}
-
-        <!-- WORK EXPERIENCE -->
-        ${finalWorkExp.length > 0 ? `
-          <div class="section-title">Work Experience</div>
-          ${finalWorkExp.map(exp => `
-            <div class="experience-header">
-              <span>${exp.company}</span>
-              <span>${exp.location || 'Bucharest, Romania'}</span>
-            </div>
-            <div class="experience-subheader">
-              <span>${exp.role}</span>
-              <span>${exp.period || '2024'}</span>
-            </div>
-            <ul>
-              ${exp.bullets.map(b => `<li>${b}</li>`).join('')}
-            </ul>
-          `).join('')}
-        ` : ''}
-
-        <!-- PERSONAL PROJECTS -->
-        ${finalProjects.length > 0 ? `
-          <div class="section-title">Personal Projects</div>
-          ${finalProjects.map(proj => `
-            <div class="experience-header">
-              <span>${proj.title}</span>
-              <span>2024 - 2026</span>
-            </div>
-            <ul>
-              ${proj.bullets.map(b => `<li>${b}</li>`).join('')}
-            </ul>
-          `).join('')}
-        ` : ''}
-
-        <!-- TECHNICAL SKILLS -->
+        ${finalSummary ? `<div class="section-title">Professional Summary</div><p>${finalSummary}</p>` : ''}
+        ${finalWorkExp.length > 0 ? `<div class="section-title">Work Experience</div>${finalWorkExp.map(exp => `<div class="experience-header"><span>${exp.company}</span><span>${exp.location}</span></div><div class="experience-subheader"><span>${exp.role}</span><span>${exp.period}</span></div><ul>${exp.bullets.map(b => `<li>${b}</li>`).join('')}</ul>`).join('')}` : ''}
+        ${finalProjects.length > 0 ? `<div class="section-title">Personal Projects</div>${finalProjects.map(proj => `<div class="experience-header"><span>${proj.title}</span><span>2024 - 2026</span></div><ul>${proj.bullets.map(b => `<li>${b}</li>`).join('')}</ul>`).join('')}` : ''}
         <div class="section-title">Technical Skills</div>
         <div class="skills-grid">
-          <div class="skills-row">
-            <div class="skills-label">Languages:</div>
-            <div class="skills-value">${finalSkills.languages || 'Java'}</div>
-          </div>
-          <div class="skills-row">
-            <div class="skills-label">Frameworks & Tools:</div>
-            <div class="skills-value">${finalSkills.frameworks || 'Spring Boot'}</div>
-          </div>
-          <div class="skills-row">
-            <div class="skills-label">Databases & AI:</div>
-            <div class="skills-value">${finalSkills.databases || 'PostgreSQL'}</div>
-          </div>
-          <div class="skills-row">
-            <div class="skills-label">DevOps & Testing:</div>
-            <div class="skills-value">${finalSkills.devops || 'Docker'}</div>
-          </div>
+          <div class="skills-row"><div class="skills-label">Languages:</div><div class="skills-value">${finalSkills.languages || 'Java'}</div></div>
+          <div class="skills-row"><div class="skills-label">Frameworks:</div><div class="skills-value">${finalSkills.frameworks || 'Spring Boot'}</div></div>
+          <div class="skills-row"><div class="skills-label">Databases:</div><div class="skills-value">${finalSkills.databases || 'PostgreSQL'}</div></div>
+          <div class="skills-row"><div class="skills-label">DevOps:</div><div class="skills-value">${finalSkills.devops || 'Docker'}</div></div>
         </div>
-
-        <script>
-          window.onload = function() { window.print(); }
-        </script>
+        <script>window.onload = function() { window.print(); }</script>
       </body>
       </html>
     `);
@@ -622,10 +366,10 @@ export default function CvStudio({ applications }) {
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2 tracking-tight">
-                Studio CV ATS - Salvare in Baza de Date & Traducere AI (EN / RO)
+                Studio CV ATS - Salvare in Baza de Date & Adaptare Dinamica
               </h2>
               <p className="text-xs text-gray-400 font-medium">
-                CV-ul tau este salvat in baza de date PostgreSQL. Fiecare camp poate fi editat, sters sau completat cu ajutorul AI-ului in limba Engleza sau Romana!
+                Profilul tau este salvat in baza de date PostgreSQL. Poti adauga, edita si sterge orice camp in mod dinamic.
               </p>
             </div>
           </div>
@@ -634,32 +378,12 @@ export default function CvStudio({ applications }) {
             {/* SAVE TO DB BUTTON */}
             <button
               onClick={handleSaveToDatabase}
-              disabled={isSavingDb}
+              disabled={isSavingDb || !activeUserId}
               className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25 transition disabled:opacity-50"
             >
               {isSavingDb ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4 text-cyan-300" />}
               {isSavingDb ? 'Se salveaza in DB...' : 'Salveaza in PostgreSQL'}
             </button>
-
-            {/* AI TRANSLATE / ENHANCE TOGGLE */}
-            <div className="flex items-center bg-gray-900 p-1 rounded-xl border border-gray-800 text-xs">
-              <button 
-                onClick={() => handleAiTranslateAndEnhance('EN')}
-                className={`px-2.5 py-1 rounded-lg font-bold transition flex items-center gap-1 ${
-                  languagePref === 'EN' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                English AI
-              </button>
-              <button 
-                onClick={() => handleAiTranslateAndEnhance('RO')}
-                className={`px-2.5 py-1 rounded-lg font-bold transition flex items-center gap-1 ${
-                  languagePref === 'RO' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                Romana AI
-              </button>
-            </div>
 
             {/* UPLOAD PDF */}
             <label className="px-3.5 py-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition">
@@ -678,6 +402,13 @@ export default function CvStudio({ applications }) {
             </button>
           </div>
         </div>
+
+        {!activeUserId && (
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl text-xs flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+            <span>Te rugam sa te autentifici (Login) pentru a salva si incarca profilul tau CV in baza de date.</span>
+          </div>
+        )}
 
         {saveSuccessMsg && (
           <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-xl text-xs flex items-center gap-2 animate-bounce">
@@ -699,7 +430,7 @@ export default function CvStudio({ applications }) {
         <div className="glass-card p-4 rounded-2xl border border-blue-500/30 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
-              <Code2 className="w-4 h-4" /> Fisier CV Convertit & Salvat in Format Markdown (.md):
+              <Code2 className="w-4 h-4" /> Fisier CV Extras & Convertit in Format Markdown (.md):
             </span>
             <span className="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded">Apache Tika Parser</span>
           </div>
@@ -719,9 +450,6 @@ export default function CvStudio({ applications }) {
               <FileText className="w-4 h-4 text-purple-400" />
               Sectiunile CV-ului (Salvare in PostgreSQL & Editare Nativa)
             </h3>
-            <span className="text-[10px] text-gray-400 bg-gray-900 px-2 py-1 rounded border border-gray-800">
-              Limba Selectata: {languagePref === 'EN' ? 'English' : 'Romana'}
-            </span>
           </div>
 
           <div className="space-y-4 text-xs">
@@ -731,7 +459,7 @@ export default function CvStudio({ applications }) {
                 <label className="block text-[11px] font-bold text-gray-400 mb-1">Nume Complet:</label>
                 <input 
                   type="text" 
-                  placeholder="ex: Sirbu Mihai-Alexandru"
+                  placeholder="ex: Nume Prenume"
                   value={cvSections.fullName}
                   onChange={e => setCvSections({...cvSections, fullName: e.target.value})}
                   className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
@@ -741,7 +469,7 @@ export default function CvStudio({ applications }) {
                 <label className="block text-[11px] font-bold text-gray-400 mb-1">Email:</label>
                 <input 
                   type="text" 
-                  placeholder="ex: sarbu.mihai@gmail.com"
+                  placeholder="ex: email@example.com"
                   value={cvSections.email}
                   onChange={e => setCvSections({...cvSections, email: e.target.value})}
                   className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
@@ -751,7 +479,7 @@ export default function CvStudio({ applications }) {
                 <label className="block text-[11px] font-bold text-gray-400 mb-1">Telefon:</label>
                 <input 
                   type="text" 
-                  placeholder="ex: (+40) 720 000 000"
+                  placeholder="ex: (+40) 700 000 000"
                   value={cvSections.phone}
                   onChange={e => setCvSections({...cvSections, phone: e.target.value})}
                   className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
@@ -792,7 +520,7 @@ export default function CvStudio({ applications }) {
               )}
 
               {cvSections.workExperience.map((exp, expIdx) => (
-                <div key={exp.id} className="space-y-2 pt-2 border-t border-gray-800/60">
+                <div key={exp.id || expIdx} className="space-y-2 pt-2 border-t border-gray-800/60">
                   <div className="flex items-center justify-between gap-2">
                     <div className="grid grid-cols-2 gap-2 flex-1">
                       <input 
@@ -808,7 +536,7 @@ export default function CvStudio({ applications }) {
                       />
                       <input 
                         type="text" 
-                        placeholder="Perioada (ex: Iulie 2024 - Sept. 2024)"
+                        placeholder="Perioada (ex: 2024 - Present)"
                         value={exp.period}
                         onChange={e => {
                           const updated = [...cvSections.workExperience];
@@ -833,6 +561,7 @@ export default function CvStudio({ applications }) {
                       <input 
                         key={bIdx}
                         type="text" 
+                        placeholder="Introdu o responsabilitate..."
                         value={b}
                         onChange={e => {
                           const updated = [...cvSections.workExperience];
@@ -868,7 +597,7 @@ export default function CvStudio({ applications }) {
               )}
 
               {cvSections.projects.map((proj, projIdx) => (
-                <div key={proj.id} className="space-y-2 pt-2 border-t border-gray-800/60">
+                <div key={proj.id || projIdx} className="space-y-2 pt-2 border-t border-gray-800/60">
                   <div className="flex items-center justify-between gap-2">
                     <input 
                       type="text" 
@@ -896,6 +625,7 @@ export default function CvStudio({ applications }) {
                       <input 
                         key={bIdx}
                         type="text" 
+                        placeholder="Introdu descrierea proiectului..."
                         value={b}
                         onChange={e => {
                           const updated = [...cvSections.projects];
@@ -916,7 +646,7 @@ export default function CvStudio({ applications }) {
                 <label className="block text-[11px] font-bold text-gray-400 mb-1">Limbaje de Programare:</label>
                 <input 
                   type="text" 
-                  placeholder="ex: Java 21, SQL, JavaScript"
+                  placeholder="ex: Java, SQL, Python"
                   value={cvSections.skills.languages}
                   onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, languages: e.target.value}})}
                   className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white"
@@ -927,7 +657,7 @@ export default function CvStudio({ applications }) {
                 <label className="block text-[11px] font-bold text-gray-400 mb-1">Framework-uri:</label>
                 <input 
                   type="text" 
-                  placeholder="ex: Spring Boot 3.3, React 18"
+                  placeholder="ex: Spring Boot, React"
                   value={cvSections.skills.frameworks}
                   onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, frameworks: e.target.value}})}
                   className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white"

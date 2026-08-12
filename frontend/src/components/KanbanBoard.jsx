@@ -172,7 +172,7 @@ export default function KanbanBoard({
               </div>
 
               {colApps.map((app) => {
-                const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 60.62;
+                const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
                 const isBeingDragged = draggedAppId === app.id;
 
                 return (
@@ -234,9 +234,9 @@ export default function KanbanBoard({
                         <span className="truncate">CV: {app.resumeFileName}</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20 min-w-0">
-                        <FileText className="w-3 h-3 text-emerald-400 shrink-0" />
-                        <span className="truncate">CV: CVSirbuMihaiAlexandru.pdf</span>
+                      <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-amber-400 font-semibold bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 min-w-0">
+                        <FileText className="w-3 h-3 text-amber-400 shrink-0" />
+                        <span className="truncate">Niciun CV asociat</span>
                       </div>
                     )}
 

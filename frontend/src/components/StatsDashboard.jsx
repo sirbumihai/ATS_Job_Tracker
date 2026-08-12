@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, Sparkles, TrendingUp, Bot, Zap } from 'lucide-react';
+import { Briefcase, Sparkles, TrendingUp, Database } from 'lucide-react';
 
 export default function StatsDashboard({ applications = [] }) {
   const applicationsCount = applications.length;
@@ -49,14 +49,14 @@ export default function StatsDashboard({ applications = [] }) {
       <div className="glass-card glass-card-hover p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between relative overflow-hidden">
         <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
         <div>
-          <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Dual-Agent AI Engine</p>
+          <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Baza de Date CV</p>
           <h3 className="text-xs font-black text-purple-400 mt-1 truncate flex items-center gap-1">
-            <Bot className="w-3.5 h-3.5 text-pink-400" />
-            2 Agenti AI Activi
+            <Database className="w-3.5 h-3.5 text-cyan-400" />
+            PostgreSQL DB Conectat
           </h3>
         </div>
         <div className="p-2.5 sm:p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl sm:rounded-2xl text-purple-400 glow-purple mt-2 sm:mt-0 self-end sm:self-auto">
-          <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
+          <Database className="w-5 h-5 sm:w-6 sm:h-6" />
         </div>
       </div>
     </div>
