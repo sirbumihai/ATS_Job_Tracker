@@ -27,11 +27,11 @@ export default function KanbanBoard({
   const [dragOverColumnKey, setDragOverColumnKey] = useState(null);
 
   const kanbanColumns = [
-    { key: 'SAVED', title: 'Salvate 📌', color: 'border-blue-500/30 bg-blue-500/5' },
-    { key: 'APPLIED', title: 'Aplicat 📩', color: 'border-purple-500/30 bg-purple-500/5' },
-    { key: 'INTERVIEWING', title: 'Interviu 🎙️', color: 'border-amber-500/30 bg-amber-500/5' },
-    { key: 'OFFER_RECEIVED', title: 'Ofertă 🎉', color: 'border-emerald-500/30 bg-emerald-500/5' },
-    { key: 'REJECTED', title: 'Respins ❌', color: 'border-rose-500/30 bg-rose-500/5' },
+    { key: 'SAVED', title: 'Salvate', color: 'border-blue-500/30 bg-blue-500/5' },
+    { key: 'APPLIED', title: 'Aplicat', color: 'border-purple-500/30 bg-purple-500/5' },
+    { key: 'INTERVIEWING', title: 'Interviu', color: 'border-amber-500/30 bg-amber-500/5' },
+    { key: 'OFFER_RECEIVED', title: 'Oferta', color: 'border-emerald-500/30 bg-emerald-500/5' },
+    { key: 'REJECTED', title: 'Respins', color: 'border-rose-500/30 bg-rose-500/5' },
   ];
 
   const filteredApplications = applications.filter(app => {
@@ -79,7 +79,7 @@ export default function KanbanBoard({
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input 
               type="text"
-              placeholder="Caută companie sau job..."
+              placeholder="Cauta companie sau job..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full bg-gray-950 border border-gray-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition"
@@ -122,9 +122,9 @@ export default function KanbanBoard({
         <div>
           <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2.5 tracking-tight">
             <Building2 className="w-5 h-5 text-blue-400" />
-            Pipeline Aplicații (Drag & Drop Trello Style)
+            Pipeline Aplicatii (Drag & Drop Trello Style)
           </h2>
-          <p className="text-[11px] text-gray-400">💡 Ține apăsat pe orice card de job pentru a-l trage în altă categorie!</p>
+          <p className="text-[11px] text-gray-400">Tine apasat pe orice card de job pentru a-l trage in alta categorie!</p>
         </div>
       </div>
 
@@ -197,11 +197,11 @@ export default function KanbanBoard({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (window.confirm(`Sigur dorești să ștergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
+                            if (window.confirm(`Sigur doresti sa stergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
                               onDeleteApplication && onDeleteApplication(app.id);
                             }
                           }}
-                          title="Șterge acest job"
+                          title="Sterge acest job"
                           className="p-1 rounded-lg hover:bg-rose-500/20 text-gray-500 hover:text-rose-400 transition"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -253,7 +253,7 @@ export default function KanbanBoard({
                       ) : (
                         <>
                           <BrainCircuit className="w-3.5 h-3.5 text-purple-400" />
-                          Apelează AI Backend Live
+                          Apeleaza AI Backend Live
                         </>
                       )}
                     </button>
@@ -263,7 +263,7 @@ export default function KanbanBoard({
 
               {colApps.length === 0 && (
                 <div className="flex-1 flex items-center justify-center text-xs text-gray-500 italic border border-dashed border-gray-800 rounded-xl p-4 text-center">
-                  {currentUser ? 'Plasează (drag & drop) un job aici' : 'Autentifică-te pentru a muta aplicațiile'}
+                  {currentUser ? 'Plaseaza (drag & drop) un job aici' : 'Autentifica-te pentru a muta aplicatiile'}
                 </div>
               )}
             </div>

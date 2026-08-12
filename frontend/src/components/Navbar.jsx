@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
   BrainCircuit, 
   Building2, 
-  Bot, 
   User, 
   LogOut, 
   Lock, 
@@ -44,7 +43,7 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* DESKTOP TABS NAVIGATION (3 TABS) */}
+        {/* DESKTOP TABS NAVIGATION (2 TABS) */}
         <div className="hidden md:flex items-center gap-1.5 bg-gray-900/90 p-1.5 rounded-2xl border border-gray-800 shadow-inner">
           <button
             onClick={() => setActiveTab('kanban')}
@@ -56,18 +55,6 @@ export default function Navbar({
           >
             <Building2 className="w-3.5 h-3.5" />
             Kanban
-          </button>
-
-          <button
-            onClick={() => setActiveTab('agent_studio')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-300 ${
-              activeTab === 'agent_studio' 
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-600/25 scale-[1.02]' 
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
-            }`}
-          >
-            <Bot className="w-3.5 h-3.5 text-amber-300" />
-            AI Agents
           </button>
 
           <button
@@ -122,7 +109,7 @@ export default function Navbar({
             className="text-xs flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-extrabold shadow-lg shadow-purple-600/25 transition"
           >
             <Plus className="w-4 h-4" />
-            Adaugă Job
+            Adauga Job
           </button>
         </div>
 
@@ -156,15 +143,6 @@ export default function Navbar({
             >
               <Building2 className="w-3.5 h-3.5" />
               Kanban
-            </button>
-            <button
-              onClick={() => { setActiveTab('agent_studio'); setMobileMenuOpen(false); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 shrink-0 ${
-                activeTab === 'agent_studio' ? 'bg-purple-600 text-white' : 'text-gray-400'
-              }`}
-            >
-              <Bot className="w-3.5 h-3.5" />
-              AI Studio
             </button>
             <button
               onClick={() => { setActiveTab('cv_studio'); setMobileMenuOpen(false); }}

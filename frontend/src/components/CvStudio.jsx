@@ -25,12 +25,12 @@ import {
 } from 'lucide-react';
 
 export default function CvStudio({ applications }) {
-  // MASTER CV SECTIONS STATE (PERSIȘTATE ÎN BAZA DE DATE POSTGRESQL)
+  // MASTER CV SECTIONS STATE (PERSISTATE IN BAZA DE DATE POSTGRESQL)
   const [cvSections, setCvSections] = useState({
     fullName: "",
     email: "",
     phone: "",
-    location: "București, România",
+    location: "Bucuresti, Romania",
     linkedin: "",
     github: "",
     summary: "",
@@ -50,7 +50,7 @@ export default function CvStudio({ applications }) {
     }
   });
 
-  const [languagePref, setLanguagePref] = useState('EN'); // 'EN' (Engleză) or 'RO' (Română)
+  const [languagePref, setLanguagePref] = useState('EN'); // 'EN' (Engleza) or 'RO' (Romana)
   const [selectedJobId, setSelectedJobId] = useState(applications.length > 0 ? applications[0].id : '');
   const [customJobDescription, setCustomJobDescription] = useState('');
   
@@ -80,7 +80,7 @@ export default function CvStudio({ applications }) {
             fullName: data.fullName || "",
             email: data.email || "",
             phone: data.phone || "",
-            location: data.location || "București, România",
+            location: data.location || "Bucuresti, Romania",
             linkedin: data.linkedin || "",
             github: data.github || "",
             summary: data.summary || "",
@@ -140,11 +140,11 @@ export default function CvStudio({ applications }) {
       });
 
       if (res.ok) {
-        setSaveSuccessMsg("CV-ul și toate modificările au fost salvate cu succes în PostgreSQL!");
+        setSaveSuccessMsg("CV-ul si toate modificarile au fost salvate cu succes in PostgreSQL!");
         setTimeout(() => setSaveSuccessMsg(null), 4000);
       }
     } catch (err) {
-      console.error("Eroare la salvarea în baza de date:", err);
+      console.error("Eroare la salvarea in baza de date:", err);
     } finally {
       setIsSavingDb(false);
     }
@@ -157,9 +157,9 @@ export default function CvStudio({ applications }) {
       company: languagePref === 'EN' ? "Company Name" : "Nume Companie",
       role: languagePref === 'EN' ? "Software Engineer" : "Dezvoltator Software",
       period: "2024 - Present",
-      location: languagePref === 'EN' ? "Bucharest, Romania" : "București, România",
+      location: languagePref === 'EN' ? "Bucharest, Romania" : "Bucuresti, Romania",
       bullets: [
-        languagePref === 'EN' ? "Developed RESTful APIs using Java 21 and Spring Boot." : "Dezvoltat servicii REST API folosind Java 21 și Spring Boot."
+        languagePref === 'EN' ? "Developed RESTful APIs using Java 21 and Spring Boot." : "Dezvoltat servicii REST API folosind Java 21 si Spring Boot."
       ]
     };
     setCvSections(prev => ({
@@ -182,7 +182,7 @@ export default function CvStudio({ applications }) {
       title: languagePref === 'EN' ? "Project Title" : "Titlu Proiect",
       techStack: "Java, Spring Boot, SQL",
       bullets: [
-        languagePref === 'EN' ? "Designed and implemented scalable backend microservices." : "Proiectat și implementat microservicii backend scalabile."
+        languagePref === 'EN' ? "Designed and implemented scalable backend microservices." : "Proiectat si implementat microservicii backend scalabile."
       ]
     };
     setCvSections(prev => ({
@@ -233,21 +233,21 @@ export default function CvStudio({ applications }) {
     } else {
       setCvSections(prev => ({
         ...prev,
-        summary: "Software Engineer pasionat cu experiență practică în dezvoltarea de aplicații backend scalabile folosind Java 21, Spring Boot 3.3 și PostgreSQL. Orientat pe scrierea de cod curat, arhitecturi REST API robuste și optimizarea interogărilor de baze de date.",
+        summary: "Software Engineer pasionat cu experienta practica in dezvoltarea de aplicatii backend scalabile folosind Java 21, Spring Boot 3.3 si PostgreSQL. Orientat pe scrierea de cod curat, arhitecturi REST API robuste si optimizarea interogarilor de baze de date.",
         workExperience: prev.workExperience.map(exp => ({
           ...exp,
-          location: "București, România",
+          location: "Bucuresti, Romania",
           bullets: [
-            "Dezvoltat module REST API în Java 21 și Spring Boot pentru procesarea tranzacțiilor financiare, reducând timpul de răspuns cu 25%.",
-            "Scris teste unitare și de integrare cu JUnit 5 și Mockito, crescând acoperirea codului la 85%.",
-            "Colaborat în echipă Agile/Scrum pentru optimizarea interogărilor SQL în PostgreSQL."
+            "Dezvoltat module REST API in Java 21 si Spring Boot pentru procesarea tranzactiilor financiare, reducand timpul de raspuns cu 25%.",
+            "Scris teste unitare si de integrare cu JUnit 5 si Mockito, crescand acoperirea codului la 85%.",
+            "Colaborat in echipa Agile/Scrum pentru optimizarea interogarilor SQL in PostgreSQL."
           ]
         })),
         projects: prev.projects.map(proj => ({
           ...proj,
           bullets: proj.bullets.map(b => 
-            b.startsWith("Designed") ? "Proiectat și dezvoltat o arhitectură backend scalabilă folosind Spring Boot 3.3 și Java 21, reducând timpul de procesare al aplicațiilor de job cu 80%." :
-            b.startsWith("Implemented") ? "Implementat căutare vectorială pe 384 dimensiuni cu PostgreSQL pgvector (HNSW index) pentru calculul în timp real al scorului de potrivire al CV-ului." : b
+            b.startsWith("Designed") ? "Proiectat si dezvoltat o arhitectura backend scalabila folosind Spring Boot 3.3 si Java 21, reducand timpul de procesare al aplicatiilor de job cu 80%." :
+            b.startsWith("Implemented") ? "Implementat cautare mecanic-vectoriala pe 384 dimensiuni cu PostgreSQL pgvector (HNSW index) pentru calculul in timp real al scorului de potrivire al CV-ului." : b
           )
         }))
       }));
@@ -280,27 +280,27 @@ export default function CvStudio({ applications }) {
         const mdText = `# CV Extrat: ${file.name}\n\n${rawText}`;
         setExtractedMarkdown(mdText);
 
-        setParsedPdfSuccess(`CV-ul "${file.name}" a fost citit de Apache Tika, transformat în format .md și extras automat în secțiunile de mai jos!`);
+        setParsedPdfSuccess(`CV-ul "${file.name}" a fost citit de Apache Tika, transformat in format .md si extras automat in sectiunile de mai jos!`);
 
         // AUTOMATED AI PARSER INTO SECTIONS
         setCvSections({
-          fullName: "Sîrbu Mihai-Alexandru",
+          fullName: "Sirbu Mihai-Alexandru",
           email: "sarbu.mihai@gmail.com",
           phone: "(+40) 720 000 000",
-          location: "București, România",
+          location: "Bucuresti, Romania",
           linkedin: "linkedin.com/in/sarbumihai",
           github: "github.com/sarbumihai",
-          summary: "Software Engineer pasionat cu experiență practică în dezvoltarea de aplicații backend scalabile folosind Java 21, Spring Boot și PostgreSQL.",
+          summary: "Software Engineer pasionat cu experienta practica in dezvoltarea de aplicatii backend scalabile folosind Java 21, Spring Boot si PostgreSQL.",
           workExperience: [
             {
               id: 101,
               company: "Software Development Intern / Junior",
               role: "Java Backend Developer Intern",
-              period: "Iulie 2024 – Sept. 2024",
-              location: "București, România",
+              period: "Iulie 2024 - Sept. 2024",
+              location: "Bucuresti, Romania",
               bullets: [
-                "Dezvoltat module REST API în Java 17 și Spring Boot pentru procesarea tranzacțiilor financiare, reducând timpul de răspuns cu 25%.",
-                "Scris teste unitare și de integrare cu JUnit 5 și Mockito, crescând acoperirea codului la 85%."
+                "Dezvoltat module REST API in Java 17 si Spring Boot pentru procesarea tranzactiilor financiare, reducand timpul de raspuns cu 25%.",
+                "Scris teste unitare si de integrare cu JUnit 5 si Mockito, crescand acoperirea codului la 85%."
               ]
             }
           ],
@@ -310,8 +310,8 @@ export default function CvStudio({ applications }) {
               title: "ATS AI Career Coach Engine (Full-Stack Multi-Agent System)",
               techStack: "Java 21, Spring Boot 3.3, PostgreSQL, pgvector, React 18, Docker",
               bullets: [
-                "Proiectat și dezvoltat o arhitectură backend scalabilă folosind Spring Boot 3.3 și Java 21, reducând timpul de procesare al aplicațiilor de job cu 80%.",
-                "Implementat căutare vectorială pe 384 dimensiuni cu PostgreSQL pgvector (HNSW index) pentru calculul în timp real al scorului de potrivire al CV-ului."
+                "Proiectat si dezvoltat o arhitectura backend scalabila folosind Spring Boot 3.3 si Java 21, reducand timpul de procesare al aplicatiilor de job cu 80%.",
+                "Implementat cautare mecanic-vectoriala pe 384 dimensiuni cu PostgreSQL pgvector (HNSW index) pentru calculul in timp real al scorului de potrivire al CV-ului."
               ]
             },
             {
@@ -319,8 +319,8 @@ export default function CvStudio({ applications }) {
               title: "E-Commerce Microservices Banking Platform",
               techStack: "Java 21, Spring Boot, Spring Cloud, PostgreSQL, Docker",
               bullets: [
-                "Proiectat o arhitectură de microservicii pentru procesarea plăților și comenzilor, reducând latența cu 40%.",
-                "Implementat comunicare asincronă via RabbitMQ/Kafka și autentificare securizată bazată pe OAuth2/JWT."
+                "Proiectat o arhitectura de microservicii pentru procesarea platilor si comenzilor, reducand latenta cu 40%.",
+                "Implementat comunicare asincrona via RabbitMQ/Kafka si autentificare securizata bazata pe OAuth2/JWT."
               ]
             },
             {
@@ -328,7 +328,7 @@ export default function CvStudio({ applications }) {
               title: "Real-Time Task Management System",
               techStack: "Java, Spring Boot, WebSocket, React, PostgreSQL",
               bullets: [
-                "Construit o aplicație web de gestiune a sarcinilor în timp real cu notificări WebSocket și integrare SQL."
+                "Construit o aplicatie web de gestiune a sarcinilor in timp real cu notificari WebSocket si integrare SQL."
               ]
             }
           ],
@@ -339,10 +339,10 @@ export default function CvStudio({ applications }) {
             devops: "Docker, Docker Compose, Git, Maven, Apache Tika, JUnit 5"
           },
           education: {
-            school: "Universitatea Politehnica din București",
-            degree: "Licență în Calculatoare și Tehnologia Informației (Computer Science)",
-            period: "Oct. 2022 – Iunie 2026",
-            location: "București, România"
+            school: "Universitatea Politehnica din Bucuresti",
+            degree: "Licenta in Calculatoare si Tehnologia Informatiei (Computer Science)",
+            period: "Oct. 2022 - Iunie 2026",
+            location: "Bucuresti, Romania"
           }
         });
       }
@@ -375,16 +375,16 @@ export default function CvStudio({ applications }) {
 2. **Action Plan for 100% Score:**
    - Add \`Kubernetes\` and \`Redis\` to DevOps skills.
    - Add bullet: *"Orchestrated Docker containers in Kubernetes CI/CD pipeline"*` 
-        : `### RAPORT ANALIZĂ AGENT 1 (ATS GAP ANALYZER)
+        : `### RAPORT ANALIZA AGENT 1 (ATS GAP ANALYZER)
 
-1. **Cuvinte Cheie Lipsă în CV-ul Tău:**
-   - \`Kubernetes\`: Lipsă în secțiunea DevOps Tools.
-   - \`Redis Caching\`: Necesar pentru optimizarea performanței interogărilor.
-   - \`Microservices Architecture\`: Recomandat de evidențiat la proiecte.
+1. **Cuvinte Cheie Lipsa in CV-ul Tau:**
+   - \`Kubernetes\`: Lipsa in sectiunea DevOps Tools.
+   - \`Redis Caching\`: Necesare pentru optimizarea performantei interogarilor.
+   - \`Microservices Architecture\`: Recomandat de evidentiat la proiecte.
 
-2. **Recomandări de Adăugat pentru Scor Match 100%:**
-   - În **Professional Summary**: Adaugă fraza *"Experiență în arhitecturi de microservicii scalabile și Redis Caching"*.
-   - În **Technical Skills**: Adaugă \`Kubernetes\` și \`Redis\` la secțiunea DevOps & Databases.`
+2. **Recomandari de Adaugat pentru Scor Match 100%:**
+   - In **Professional Summary**: Adauga fraza *"Experienta in arhitecturi de microservicii scalabile si Redis Caching"*.
+   - In **Technical Skills**: Adauga \`Kubernetes\` si \`Redis\` la sectiunea DevOps & Databases.`
       };
 
       setAgent1Output(gapReport);
@@ -394,7 +394,7 @@ export default function CvStudio({ applications }) {
         const rewrittenCv = {
           tailoredSummary: languagePref === 'EN' 
             ? `${cvSections.summary || "Passionate Java Developer."} Extensive experience in scalable microservices architecture, Redis Caching optimizations, and Kubernetes container orchestration.`
-            : `${cvSections.summary || "Java Developer pasionat."} Experiență extinsă în arhitecturi de microservicii scalabile, optimizări Redis Caching și orchestrare Kubernetes.`,
+            : `${cvSections.summary || "Java Developer pasionat."} Experienta extinsa in arhitecturi de microservicii scalabile, optimizari Redis Caching si orchestrare Kubernetes.`,
           tailoredSkills: {
             languages: cvSections.skills.languages || "Java 21, SQL, JavaScript",
             frameworks: `${cvSections.skills.frameworks || "Spring Boot"}, Spring Cloud, Microservices Architecture`,
@@ -408,7 +408,7 @@ export default function CvStudio({ applications }) {
               ...proj.bullets,
               languagePref === 'EN' 
                 ? "Optimized system performance using asynchronous caching and Kubernetes CI/CD integration."
-                : "Optimizat performanța sistemului prin caching asincron și integrare CI/CD automatizată cu Kubernetes."
+                : "Optimizat performanta sistemului prin caching asincron si integrare CI/CD automatizata cu Kubernetes."
             ]
           }))
         };
@@ -622,10 +622,10 @@ export default function CvStudio({ applications }) {
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2 tracking-tight">
-                Studio CV ATS - Salvare în Baza de Date & Traducere AI (EN / RO)
+                Studio CV ATS - Salvare in Baza de Date & Traducere AI (EN / RO)
               </h2>
               <p className="text-xs text-gray-400 font-medium">
-                CV-ul tău este salvat în baza de date PostgreSQL. Fiecare câmp poate fi editat, șters sau completat cu ajutorul AI-ului în limba Engleză 🇬🇧 sau Română 🇷🇴!
+                CV-ul tau este salvat in baza de date PostgreSQL. Fiecare camp poate fi editat, sters sau completat cu ajutorul AI-ului in limba Engleza sau Romana!
               </p>
             </div>
           </div>
@@ -638,7 +638,7 @@ export default function CvStudio({ applications }) {
               className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25 transition disabled:opacity-50"
             >
               {isSavingDb ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4 text-cyan-300" />}
-              {isSavingDb ? 'Se salvează în DB...' : 'Salvează în PostgreSQL'}
+              {isSavingDb ? 'Se salveaza in DB...' : 'Salveaza in PostgreSQL'}
             </button>
 
             {/* AI TRANSLATE / ENHANCE TOGGLE */}
@@ -649,7 +649,7 @@ export default function CvStudio({ applications }) {
                   languagePref === 'EN' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
-                🇬🇧 English AI
+                English AI
               </button>
               <button 
                 onClick={() => handleAiTranslateAndEnhance('RO')}
@@ -657,14 +657,14 @@ export default function CvStudio({ applications }) {
                   languagePref === 'RO' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
-                🇷🇴 Română AI
+                Romana AI
               </button>
             </div>
 
             {/* UPLOAD PDF */}
             <label className="px-3.5 py-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition">
               <Upload className="w-4 h-4 text-purple-400" />
-              {parsingPdf ? 'Se procesează PDF...' : 'Încarcă CV PDF'}
+              {parsingPdf ? 'Se proceseaza PDF...' : 'Incarca CV PDF'}
               <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
             </label>
 
@@ -674,7 +674,7 @@ export default function CvStudio({ applications }) {
               className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition"
             >
               <Download className="w-4 h-4" />
-              Descarcă PDF (Jake's Resume)
+              Descarca PDF (Jake's Resume)
             </button>
           </div>
         </div>
@@ -699,7 +699,7 @@ export default function CvStudio({ applications }) {
         <div className="glass-card p-4 rounded-2xl border border-blue-500/30 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
-              <Code2 className="w-4 h-4" /> Fișier CV Convertit & Salvat în Format Markdown (.md):
+              <Code2 className="w-4 h-4" /> Fisier CV Convertit & Salvat in Format Markdown (.md):
             </span>
             <span className="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded">Apache Tika Parser</span>
           </div>
@@ -717,10 +717,10 @@ export default function CvStudio({ applications }) {
           <div className="flex items-center justify-between border-b border-gray-800 pb-3">
             <h3 className="text-sm font-black text-white flex items-center gap-2">
               <FileText className="w-4 h-4 text-purple-400" />
-              Secțiunile CV-ului (Salvare în PostgreSQL & Editare Nativă)
+              Sectiunile CV-ului (Salvare in PostgreSQL & Editare Nativa)
             </h3>
             <span className="text-[10px] text-gray-400 bg-gray-900 px-2 py-1 rounded border border-gray-800">
-              Limbă Selectată: {languagePref === 'EN' ? 'English 🇬🇧' : 'Română 🇷🇴'}
+              Limba Selectata: {languagePref === 'EN' ? 'English' : 'Romana'}
             </span>
           </div>
 
@@ -731,7 +731,7 @@ export default function CvStudio({ applications }) {
                 <label className="block text-[11px] font-bold text-gray-400 mb-1">Nume Complet:</label>
                 <input 
                   type="text" 
-                  placeholder="ex: Sîrbu Mihai-Alexandru"
+                  placeholder="ex: Sirbu Mihai-Alexandru"
                   value={cvSections.fullName}
                   onChange={e => setCvSections({...cvSections, fullName: e.target.value})}
                   className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
@@ -775,19 +775,19 @@ export default function CvStudio({ applications }) {
             <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-blue-400 flex items-center gap-1.5 uppercase">
-                  <Briefcase className="w-4 h-4" /> 1. Experiență Profesională (Work Experience)
+                  <Briefcase className="w-4 h-4" /> 1. Experienta Profesionala (Work Experience)
                 </span>
                 <button 
                   onClick={handleAddWorkExperience}
                   className="px-2.5 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg text-[10px] font-bold border border-blue-500/30 flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Adaugă Experiență Nouă
+                  <Plus className="w-3 h-3" /> Adauga Experienta Noua
                 </button>
               </div>
 
               {cvSections.workExperience.length === 0 && (
                 <p className="text-[11px] text-gray-500 italic text-center py-2">
-                  Nicio experiență adăugată. Încarcă un PDF CV sau apasă pe "+ Adaugă Experiență Nouă".
+                  Nicio experienta adaugata. Incarca un PDF CV sau apasa pe "+ Adauga Experienta Noua".
                 </p>
               )}
 
@@ -808,7 +808,7 @@ export default function CvStudio({ applications }) {
                       />
                       <input 
                         type="text" 
-                        placeholder="Perioadă (ex: Iulie 2024 - Sept. 2024)"
+                        placeholder="Perioada (ex: Iulie 2024 - Sept. 2024)"
                         value={exp.period}
                         onChange={e => {
                           const updated = [...cvSections.workExperience];
@@ -821,14 +821,14 @@ export default function CvStudio({ applications }) {
                     <button 
                       onClick={() => handleDeleteWorkExperience(exp.id)}
                       className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg shrink-0"
-                      title="Șterge Experiență"
+                      title="Sterge Experienta"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-semibold text-gray-400">Bullet-uri Responsabilități Activitate:</label>
+                    <label className="block text-[10px] font-semibold text-gray-400">Bullet-uri Responsabilitati Activitate:</label>
                     {exp.bullets.map((b, bIdx) => (
                       <input 
                         key={bIdx}
@@ -857,13 +857,13 @@ export default function CvStudio({ applications }) {
                   onClick={handleAddProject}
                   className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-[10px] font-bold border border-amber-500/30 flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Adaugă Proiect Nou
+                  <Plus className="w-3 h-3" /> Adauga Proiect Nou
                 </button>
               </div>
 
               {cvSections.projects.length === 0 && (
                 <p className="text-[11px] text-gray-500 italic text-center py-2">
-                  Niciun proiect adăugat. Încarcă un PDF CV sau apasă pe "+ Adaugă Proiect Nou".
+                  Niciun proiect adaugat. Incarca un PDF CV sau apasa pe "+ Adauga Proiect Nou".
                 </p>
               )}
 
@@ -884,14 +884,14 @@ export default function CvStudio({ applications }) {
                     <button 
                       onClick={() => handleDeleteProject(proj.id)}
                       className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg shrink-0"
-                      title="Șterge Proiect"
+                      title="Sterge Proiect"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-semibold text-gray-400">Gloanțe Proiect (Metoda XYZ):</label>
+                    <label className="block text-[10px] font-semibold text-gray-400">Gloante Proiect (Metoda XYZ):</label>
                     {proj.bullets.map((b, bIdx) => (
                       <input 
                         key={bIdx}
@@ -943,12 +943,12 @@ export default function CvStudio({ applications }) {
           <div className="space-y-3">
             <h3 className="text-sm font-black text-white flex items-center gap-2">
               <Target className="w-4 h-4 text-blue-400" />
-              Alege Jobul Țintă pentru Match 100%
+              Alege Jobul Tinta pentru Match 100%
             </h3>
 
             {applications.length > 0 && (
               <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-1">Selectează din Kanban:</label>
+                <label className="block text-[11px] font-bold text-gray-400 mb-1">Selecteaza din Kanban:</label>
                 <select 
                   value={selectedJobId}
                   onChange={e => setSelectedJobId(e.target.value)}
@@ -964,12 +964,12 @@ export default function CvStudio({ applications }) {
             )}
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 mb-1">Sau Lipește Cerințele Unui Job Nou:</label>
+              <label className="block text-[11px] font-bold text-gray-400 mb-1">Sau Lipeste Cerintele Unui Job Nou:</label>
               <textarea 
                 rows={5}
                 value={customJobDescription}
                 onChange={e => setCustomJobDescription(e.target.value)}
-                placeholder="Lipește descrierea jobului de pe LinkedIn aici..."
+                placeholder="Lipeste descrierea jobului de pe LinkedIn aici..."
                 className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
               />
             </div>
@@ -983,12 +983,12 @@ export default function CvStudio({ applications }) {
             {isAnalyzing ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                Pipeline-ul de 2 Agenți AI Adaptează CV-ul...
+                Pipeline-ul de 2 Agenti AI Adapteaza CV-ul...
               </>
             ) : (
               <>
                 <Zap className="w-4 h-4 text-amber-300" />
-                Rulează Pipeline-ul AI (Match 100%)
+                Ruleaza Pipeline-ul AI (Match 100%)
               </>
             )}
           </button>
@@ -1004,7 +1004,7 @@ export default function CvStudio({ applications }) {
           <div className="glass-card p-5 rounded-2xl border border-blue-500/30 space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-black text-blue-400 flex items-center gap-2 uppercase tracking-wider">
-                <Target className="w-4 h-4" /> Agent 1: ATS Gap Analyzer (Analiză Diferențe)
+                <Target className="w-4 h-4" /> Agent 1: ATS Gap Analyzer (Analiza Diferente)
               </h4>
               {agent1Output && (
                 <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-extrabold text-xs border border-blue-500/40">
@@ -1029,7 +1029,7 @@ export default function CvStudio({ applications }) {
 
                   <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl space-y-1">
                     <span className="text-[11px] font-extrabold text-rose-400 flex items-center gap-1">
-                      <AlertTriangle className="w-3.5 h-3.5" /> Recomandat de adăugat:
+                      <AlertTriangle className="w-3.5 h-3.5" /> Recomandat de adaugat:
                     </span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {agent1Output.missingSkills.map(s => (
@@ -1048,7 +1048,7 @@ export default function CvStudio({ applications }) {
             ) : (
               <div className="p-8 text-center text-xs text-gray-500 italic">
                 <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-400" />
-                Agent 1 analizează diferențele dintre CV și cerințele jobului...
+                Agent 1 analizeaza diferentele dintre CV si cerintele jobului...
               </div>
             )}
           </div>
@@ -1064,7 +1064,7 @@ export default function CvStudio({ applications }) {
                   onClick={handleDownloadTailoredJakesPdf}
                   className="px-3 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-extrabold text-xs flex items-center gap-1 shadow-md"
                 >
-                  <Download className="w-3.5 h-3.5" /> Descarcă PDF Optimizat 100%
+                  <Download className="w-3.5 h-3.5" /> Descarca PDF Optimizat 100%
                 </button>
               )}
             </div>
@@ -1077,7 +1077,7 @@ export default function CvStudio({ applications }) {
                 </div>
 
                 <div className="p-3.5 bg-gray-950/80 rounded-xl border border-gray-800 max-h-44 overflow-y-auto space-y-1.5">
-                  <span className="text-[11px] font-extrabold text-amber-400">Gloanțe Proiecte Re-scrise (Metoda XYZ):</span>
+                  <span className="text-[11px] font-extrabold text-amber-400">Gloante Proiecte Re-scrise (Metoda XYZ):</span>
                   {agent2Output.tailoredProjects.length > 0 && agent2Output.tailoredProjects[0].bullets.map((b, idx) => (
                     <p key={idx} className="text-[11px] text-gray-300 flex items-start gap-1.5">
                       <span className="text-purple-400">•</span>
@@ -1091,10 +1091,10 @@ export default function CvStudio({ applications }) {
                 {isAnalyzing ? (
                   <>
                     <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-purple-400" />
-                    Agent 2 rescrie secțiunile CV-ului pentru a obține scorul de 100%...
+                    Agent 2 rescrie sectiunile CV-ului pentru a obtine scorul de 100%...
                   </>
                 ) : (
-                  "Apasă pe 'Rulează Pipeline-ul AI' pentru a genera noul CV optimizat."
+                  "Apasa pe 'Ruleaza Pipeline-ul AI' pentru a genera noul CV optimizat."
                 )}
               </div>
             )}

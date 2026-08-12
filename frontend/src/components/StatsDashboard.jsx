@@ -1,13 +1,20 @@
 import React from 'react';
 import { Briefcase, Sparkles, TrendingUp, Bot, Zap } from 'lucide-react';
 
-export default function StatsDashboard({ applicationsCount, averageMatchScore, interviewingCount }) {
+export default function StatsDashboard({ applications = [] }) {
+  const applicationsCount = applications.length;
+  const interviewingCount = applications.filter(a => a.status === 'INTERVIEWING').length;
+  const scores = applications.map(a => Number(a.semanticMatchScore || 0)).filter(s => s > 0);
+  const averageMatchScore = scores.length > 0 
+    ? (scores.reduce((acc, curr) => acc + curr, 0) / scores.length).toFixed(1) + '%' 
+    : '0.0%';
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       <div className="glass-card glass-card-hover p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between relative overflow-hidden">
         <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
         <div>
-          <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Aplicații Salvate</p>
+          <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Aplicatii Salvate</p>
           <h3 className="text-2xl sm:text-3xl font-black text-white mt-0.5 sm:mt-1">{applicationsCount}</h3>
         </div>
         <div className="p-2.5 sm:p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl sm:rounded-2xl text-blue-400 glow-blue mt-2 sm:mt-0 self-end sm:self-auto">
@@ -19,7 +26,7 @@ export default function StatsDashboard({ applicationsCount, averageMatchScore, i
         <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
         <div>
           <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Scor Mediu Match</p>
-          <h3 className="text-2xl sm:text-3xl font-black gradient-text-emerald mt-0.5 sm:mt-1">
+          <h3 className="text-2xl sm:text-3xl font-black text-emerald-400 mt-0.5 sm:mt-1">
             {averageMatchScore}
           </h3>
         </div>
@@ -42,10 +49,10 @@ export default function StatsDashboard({ applicationsCount, averageMatchScore, i
       <div className="glass-card glass-card-hover p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between relative overflow-hidden">
         <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
         <div>
-          <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Multi-Agent AI</p>
+          <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Dual-Agent AI Engine</p>
           <h3 className="text-xs font-black text-purple-400 mt-1 truncate flex items-center gap-1">
             <Bot className="w-3.5 h-3.5 text-pink-400" />
-            4 Agenți Activi
+            2 Agenti AI Activi
           </h3>
         </div>
         <div className="p-2.5 sm:p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl sm:rounded-2xl text-purple-400 glow-purple mt-2 sm:mt-0 self-end sm:self-auto">

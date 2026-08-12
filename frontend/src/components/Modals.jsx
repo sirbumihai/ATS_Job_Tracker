@@ -11,8 +11,8 @@ import {
   CheckCircle2 
 } from 'lucide-react';
 
-export function AuthModal({ show, onClose, authMode, setAuthMode, authForm, setAuthForm, authError, onSubmit }) {
-  if (!show) return null;
+export function AuthModal({ isOpen, onClose, authMode, setAuthMode, authForm, setAuthForm, authError, onSubmit }) {
+  if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="glass-card w-full max-w-md rounded-2xl p-5 sm:p-6 space-y-4 relative border border-gray-700 my-auto">
@@ -26,7 +26,7 @@ export function AuthModal({ show, onClose, authMode, setAuthMode, authForm, setA
           </div>
           <div>
             <h3 className="text-base sm:text-lg font-bold text-white">
-              {authMode === 'login' ? 'Autentificare Utilizator' : 'Înregistrare Cont Nou'}
+              {authMode === 'login' ? 'Autentificare Utilizator' : 'Inregistrare Cont Nou'}
             </h3>
             <p className="text-xs text-gray-400">Spring Security 6 + Token-uri JWT</p>
           </div>
@@ -46,7 +46,7 @@ export function AuthModal({ show, onClose, authMode, setAuthMode, authForm, setA
               <input 
                 type="text" 
                 required
-                placeholder="Alexandru Sîrbu"
+                placeholder="Alexandru Sirbu"
                 value={authForm.fullName}
                 onChange={e => setAuthForm({...authForm, fullName: e.target.value})}
                 className="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
@@ -55,7 +55,7 @@ export function AuthModal({ show, onClose, authMode, setAuthMode, authForm, setA
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1">Adresă Email</label>
+            <label className="block text-xs font-semibold text-gray-400 mb-1">Adresa Email</label>
             <input 
               type="email" 
               required
@@ -67,7 +67,7 @@ export function AuthModal({ show, onClose, authMode, setAuthMode, authForm, setA
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1">Parolă</label>
+            <label className="block text-xs font-semibold text-gray-400 mb-1">Parola</label>
             <input 
               type="password" 
               required
@@ -79,7 +79,7 @@ export function AuthModal({ show, onClose, authMode, setAuthMode, authForm, setA
           </div>
 
           <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-blue-600/20 transition">
-            {authMode === 'login' ? 'Autentifică-te & Generează JWT Token' : 'Creează Contul Nativ'}
+            {authMode === 'login' ? 'Autentifica-te & Genereaza JWT Token' : 'Creeaza Contul Nativ'}
           </button>
 
           <div className="text-center pt-2 border-t border-gray-800">
@@ -87,14 +87,14 @@ export function AuthModal({ show, onClose, authMode, setAuthMode, authForm, setA
               <p className="text-xs text-gray-400">
                 Nu ai un cont?{' '}
                 <button type="button" onClick={() => setAuthMode('register')} className="text-blue-400 font-bold hover:underline">
-                  Înregistrează-te acum
+                  Inregistreaza-te acum
                 </button>
               </p>
             ) : (
               <p className="text-xs text-gray-400">
                 Ai deja cont?{' '}
                 <button type="button" onClick={() => setAuthMode('login')} className="text-blue-400 font-bold hover:underline">
-                  Autentifică-te
+                  Autentifica-te
                 </button>
               </p>
             )}
@@ -105,8 +105,8 @@ export function AuthModal({ show, onClose, authMode, setAuthMode, authForm, setA
   );
 }
 
-export function AddJobModal({ show, onClose, newJob, setNewJob, onSubmit }) {
-  if (!show) return null;
+export function AddJobModal({ isOpen, onClose, newJob, setNewJob, onSubmit }) {
+  if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="glass-card w-full max-w-lg rounded-2xl p-5 sm:p-6 space-y-4 relative border border-gray-700 my-auto">
@@ -116,7 +116,7 @@ export function AddJobModal({ show, onClose, newJob, setNewJob, onSubmit }) {
 
         <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
           <Plus className="w-5 h-5 text-blue-400" />
-          Adaugă un Job Nou în Sistem
+          Adauga un Job Nou in Sistem
         </h3>
 
         <form onSubmit={onSubmit} className="space-y-3.5 text-sm">
@@ -149,7 +149,7 @@ export function AddJobModal({ show, onClose, newJob, setNewJob, onSubmit }) {
             <textarea 
               required
               rows={4}
-              placeholder="Lipește descrierea jobului aici..."
+              placeholder="Lipeste descrierea jobului aici..."
               value={newJob.rawDescription}
               onChange={e => setNewJob({...newJob, rawDescription: e.target.value})}
               className="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
@@ -157,8 +157,8 @@ export function AddJobModal({ show, onClose, newJob, setNewJob, onSubmit }) {
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-gray-400 hover:text-white text-xs">Anulează</button>
-            <button type="submit" className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-600/20">Salvează Jobul</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-gray-400 hover:text-white text-xs">Anuleaza</button>
+            <button type="submit" className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-600/20">Salveaza Jobul</button>
           </div>
         </form>
       </div>
@@ -166,8 +166,8 @@ export function AddJobModal({ show, onClose, newJob, setNewJob, onSubmit }) {
   );
 }
 
-export function UploadResumeModal({ show, onClose, selectedFile, setSelectedFile, uploading, uploadedSuccess, onSubmit }) {
-  if (!show) return null;
+export function UploadResumeModal({ isOpen, onClose, selectedFile, setSelectedFile, uploading, uploadedSuccess, onSubmit }) {
+  if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="glass-card w-full max-w-md rounded-2xl p-5 sm:p-6 space-y-4 relative border border-gray-700 my-auto">
@@ -177,20 +177,20 @@ export function UploadResumeModal({ show, onClose, selectedFile, setSelectedFile
 
         <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
           <Upload className="w-5 h-5 text-purple-400" />
-          Încărcare CV PDF (Apache Tika Live)
+          Incarcare CV PDF (Apache Tika Live)
         </h3>
 
         {uploadedSuccess ? (
           <div className="p-4 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl text-center space-y-2">
             <Check className="w-8 h-8 text-emerald-400 mx-auto animate-bounce" />
-            <p className="text-xs font-bold text-emerald-300">CV-ul a fost procesat și asociat cu succes!</p>
+            <p className="text-xs font-bold text-emerald-300">CV-ul a fost procesat si asociat cu succes!</p>
             <p className="text-[11px] text-gray-300">{uploadedSuccess}</p>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="border-2 border-dashed border-gray-700 hover:border-purple-500/50 rounded-2xl p-6 text-center cursor-pointer transition">
               <FileText className="w-10 h-10 text-purple-400 mx-auto mb-2" />
-              <p className="text-xs text-gray-300 font-medium">Selectează fișierul CV (PDF/DocX)</p>
+              <p className="text-xs text-gray-300 font-medium">Selecteaza fisierul CV (PDF/DocX)</p>
               <input 
                 type="file" 
                 accept=".pdf,.docx"
@@ -200,9 +200,9 @@ export function UploadResumeModal({ show, onClose, selectedFile, setSelectedFile
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <button type="button" onClick={onClose} className="px-4 py-2 text-gray-400 hover:text-white text-xs">Anulează</button>
+              <button type="button" onClick={onClose} className="px-4 py-2 text-gray-400 hover:text-white text-xs">Anuleaza</button>
               <button type="submit" disabled={!selectedFile || uploading} className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-purple-600/20">
-                {uploading ? 'Se procesează Tika în Spring Boot...' : 'Procesează CV Live'}
+                {uploading ? 'Se proceseaza Tika in Spring Boot...' : 'Proceseaza CV Live'}
               </button>
             </div>
           </form>
@@ -212,8 +212,8 @@ export function UploadResumeModal({ show, onClose, selectedFile, setSelectedFile
   );
 }
 
-export function AiReportModal({ show, onClose, selectedAnalysis }) {
-  if (!show || !selectedAnalysis) return null;
+export function AiReportModal({ isOpen, onClose, analysis }) {
+  if (!isOpen || !analysis) return null;
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="glass-card w-full max-w-2xl max-h-[85vh] rounded-2xl p-5 sm:p-6 space-y-4 relative border border-gray-700 flex flex-col my-auto">
@@ -227,7 +227,7 @@ export function AiReportModal({ show, onClose, selectedAnalysis }) {
           </div>
           <div>
             <h3 className="text-base sm:text-lg font-black text-white">Raport AI Gap Analysis Live (Groq Llama 3.3 & pgvector)</h3>
-            <p className="text-xs text-gray-400">{selectedAnalysis.jobTitle} la {selectedAnalysis.companyName}</p>
+            <p className="text-xs text-gray-400">{analysis.jobTitle} la {analysis.companyName}</p>
           </div>
         </div>
 
@@ -238,7 +238,7 @@ export function AiReportModal({ show, onClose, selectedAnalysis }) {
                 <CheckCircle2 className="w-4 h-4" /> Skill-uri Potrivite:
               </span>
               <div className="flex flex-wrap gap-1 mt-1.5">
-                {selectedAnalysis.matchingSkills.map(s => (
+                {analysis.matchingSkills.map(s => (
                   <span key={s} className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">{s}</span>
                 ))}
               </div>
@@ -246,10 +246,10 @@ export function AiReportModal({ show, onClose, selectedAnalysis }) {
 
             <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl space-y-1">
               <span className="text-xs font-extrabold text-rose-400 flex items-center gap-1">
-                <AlertTriangle className="w-4 h-4" /> Skill-uri Lipsă (Gap):
+                <AlertTriangle className="w-4 h-4" /> Skill-uri Lipsa (Gap):
               </span>
               <div className="flex flex-wrap gap-1 mt-1.5">
-                {selectedAnalysis.missingSkills.map(s => (
+                {analysis.missingSkills.map(s => (
                   <span key={s} className="text-[10px] font-bold bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded">{s}</span>
                 ))}
               </div>
@@ -258,13 +258,13 @@ export function AiReportModal({ show, onClose, selectedAnalysis }) {
 
           <div className="p-4 bg-gray-950 rounded-xl border border-gray-800 space-y-2">
             <pre className="whitespace-pre-wrap font-sans text-xs text-gray-300 leading-relaxed">
-              {selectedAnalysis.markdown}
+              {analysis.cleanReportText || analysis.actionPlanMarkdown}
             </pre>
           </div>
         </div>
 
         <div className="flex justify-end pt-2 border-t border-gray-800">
-          <button onClick={onClose} className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-bold">Închide Raportul</button>
+          <button onClick={onClose} className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-bold">Inchide Raportul</button>
         </div>
       </div>
     </div>
