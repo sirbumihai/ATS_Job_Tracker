@@ -99,7 +99,7 @@ class JobPostingServiceTest {
                 () -> jobPostingService.createJob(userId, request)
         );
 
-        assertTrue(exception.getMessage().contains("nu a fost găsit"));
+        assertTrue(exception.getMessage().contains("nu a fost gasit"));
         verify(jobPostingRepository, never()).saveAndFlush(any());
     }
 }
