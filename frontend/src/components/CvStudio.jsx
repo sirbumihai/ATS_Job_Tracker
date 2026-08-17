@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import html2pdf from 'html2pdf.js';
 import { 
   FileText, 
   Sparkles, 
@@ -34,6 +35,7 @@ import {
 
 export default function CvStudio({ applications = [], currentUser }) {
   const activeUserId = currentUser ? currentUser.userId : null;
+  const previewRef = useRef(null);
 
   // MASTER CV SECTIONS STATE (PERSISTATE IN BAZA DE DATE POSTGRESQL)
   const [cvSections, setCvSections] = useState({
@@ -62,6 +64,7 @@ export default function CvStudio({ applications = [], currentUser }) {
   
   const [isSavingDb, setIsSavingDb] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState(null);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [parsingPdf, setParsingPdf] = useState(false);
   const [parsedPdfSuccess, setParsedPdfSuccess] = useState(null);
@@ -236,7 +239,7 @@ export default function CvStudio({ applications = [], currentUser }) {
   };
 
   const handleMoveEducation = (eduIdx, direction) => {
-    const updated = [...cvSections.education];
+    const updated = [...normalizeEducation(cvSections.education)];
     const targetIdx = eduIdx + direction;
     if (targetIdx < 0 || targetIdx >= updated.length) return;
     const temp = updated[eduIdx];
@@ -463,102 +466,39 @@ export default function CvStudio({ applications = [], currentUser }) {
     }, 1500);
   };
 
-  // JAKE'S RESUME PDF GENERATOR
-  const handleDownloadTailoredJakesPdf = () => {
-    const finalSummary = agent2Output ? agent2Output.tailoredSummary : cvSections.summary;
-    const finalSkills = agent2Output ? agent2Output.tailoredSkills : cvSections.skills;
-    const finalWorkExp = agent2Output ? agent2Output.tailoredExperience : cvSections.workExperience;
-    const finalProjects = agent2Output ? agent2Output.tailoredProjects : cvSections.projects;
-    const finalEducation = normalizeEducation(cvSections.education);
+  // DIRECT PDF DOWNLOAD HANDLER (NO NEW TAB, DOWNLOADS DIRECTLY)
+  const handleDownloadDirectPdf = async () => {
+    const element = previewRef.current || document.getElementById('cv-preview-sheet');
+    if (!element) {
+      alert("Nu s-a putut gasi fisa CV-ului pentru generarea PDF.");
+      return;
+    }
 
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <title>${cvSections.fullName || 'CV'} - ATS Resume (Jake's Format)</title>
-        <style>
-          @page { size: letter; margin: 0.45in; }
-          body { font-family: 'Calibri', 'Garamond', serif; color: #000; background: #fff; margin: 0; padding: 0; font-size: 10pt; line-height: 1.3; }
-          .header { text-align: center; margin-bottom: 10pt; }
-          .header h1 { font-size: 19pt; font-weight: bold; text-transform: uppercase; margin: 0 0 3pt 0; letter-spacing: 0.5pt; }
-          .header .contact-info { font-size: 9pt; color: #222; }
-          .section-title { font-size: 10.5pt; font-weight: bold; text-transform: uppercase; border-bottom: 1pt solid #000; margin-top: 11pt; margin-bottom: 5pt; padding-bottom: 1.5pt; letter-spacing: 0.5pt; }
-          .skills-grid { display: table; width: 100%; margin-bottom: 4pt; }
-          .skills-row { display: table-row; }
-          .skills-label { display: table-cell; font-weight: bold; width: 110pt; padding-bottom: 2.5pt; }
-          .skills-value { display: table-cell; padding-bottom: 2.5pt; }
-          .experience-header { display: flex; justify-content: space-between; font-weight: bold; margin-top: 5pt; }
-          .experience-subheader { display: flex; justify-content: space-between; font-style: italic; margin-bottom: 3pt; }
-          ul { margin: 0 0 5pt 0; padding-left: 14pt; }
-          li { margin-bottom: 2.5pt; text-align: justify; }
-          .summary-p { text-align: justify; margin-bottom: 5pt; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>${cvSections.fullName || 'Nume Prenume'}</h1>
-          <div class="contact-info">
-            ${[cvSections.email, cvSections.phone, cvSections.location, cvSections.linkedin, cvSections.github].filter(Boolean).join(' &nbsp;|&nbsp; ')}
-          </div>
-        </div>
-        ${finalSummary ? `<div class="section-title">Professional Summary</div><p class="summary-p">${finalSummary}</p>` : ''}
-        ${finalEducation.length > 0 ? `
-          <div class="section-title">Education</div>
-          ${finalEducation.map(edu => `
-            <div class="experience-header">
-              <span>${edu.school || ''}</span>
-              <span>${edu.location || ''}</span>
-            </div>
-            <div class="experience-subheader">
-              <span>${edu.degree || ''}</span>
-              <span>${edu.period || ''}</span>
-            </div>
-          `).join('')}
-        ` : ''}
-        ${finalWorkExp.length > 0 ? `
-          <div class="section-title">Work Experience</div>
-          ${finalWorkExp.map(exp => `
-            <div class="experience-header">
-              <span>${exp.company || exp.role}</span>
-              <span>${exp.location || ''}</span>
-            </div>
-            <div class="experience-subheader">
-              <span>${exp.role || ''}</span>
-              <span>${exp.period || ''}</span>
-            </div>
-            <ul>
-              ${exp.bullets ? exp.bullets.filter(Boolean).map(b => `<li>${b}</li>`).join('') : ''}
-            </ul>
-          `).join('')}
-        ` : ''}
-        ${finalProjects.length > 0 ? `
-          <div class="section-title">Personal Projects</div>
-          ${finalProjects.map(proj => `
-            <div class="experience-header">
-              <span>${proj.title || ''}</span>
-              <span>${proj.techStack ? `${proj.techStack}` : ''}</span>
-            </div>
-            <ul>
-              ${proj.bullets ? proj.bullets.filter(Boolean).map(b => `<li>${b}</li>`).join('') : ''}
-            </ul>
-          `).join('')}
-        ` : ''}
-        ${(finalSkills.languages || finalSkills.frameworks || finalSkills.databases || finalSkills.devops) ? `
-          <div class="section-title">Technical Skills</div>
-          <div class="skills-grid">
-            ${finalSkills.languages ? `<div class="skills-row"><div class="skills-label">Languages:</div><div class="skills-value">${finalSkills.languages}</div></div>` : ''}
-            ${finalSkills.frameworks ? `<div class="skills-row"><div class="skills-label">Frameworks:</div><div class="skills-value">${finalSkills.frameworks}</div></div>` : ''}
-            ${finalSkills.databases ? `<div class="skills-row"><div class="skills-label">Databases:</div><div class="skills-value">${finalSkills.databases}</div></div>` : ''}
-            ${finalSkills.devops ? `<div class="skills-row"><div class="skills-label">DevOps & Tools:</div><div class="skills-value">${finalSkills.devops}</div></div>` : ''}
-          </div>
-        ` : ''}
-        <script>window.onload = function() { window.print(); }</script>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
+    setIsDownloadingPdf(true);
+
+    try {
+      const sanitizedName = (cvSections.fullName || 'CV').trim().replace(/[^a-zA-Z0-9-_]/g, '_');
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: `${sanitizedName}_Resume_ATS.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 3, 
+          useCORS: true, 
+          letterRendering: true,
+          scrollY: 0,
+          scrollX: 0
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+    } catch (err) {
+      console.error("Eroare la generarea directa a PDF-ului:", err);
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   const eduList = normalizeEducation(cvSections.education);
@@ -577,10 +517,10 @@ export default function CvStudio({ applications = [], currentUser }) {
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2 tracking-tight">
-                Studio CV ATS - Editor Complet, Live Preview & Generare PDF
+                Studio CV ATS - Editor Complet, Live Preview & Descarcare Directa PDF
               </h2>
               <p className="text-xs text-gray-400 font-medium">
-                Poti edita, adauga, sterge si reordona orice camp din CV si vezi modificarile in timp real in panoul de Live Preview.
+                Editeaza, adauga, sterge sau reordoneaza orice sectiune si descarca PDF-ul direct printr-un singur click.
               </p>
             </div>
           </div>
@@ -637,13 +577,14 @@ export default function CvStudio({ applications = [], currentUser }) {
               <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
             </label>
 
-            {/* DOWNLOAD PDF */}
+            {/* DIRECT DOWNLOAD PDF */}
             <button
-              onClick={handleDownloadTailoredJakesPdf}
-              className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/25 transition"
+              onClick={handleDownloadDirectPdf}
+              disabled={isDownloadingPdf}
+              className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/25 transition disabled:opacity-60"
             >
-              <Download className="w-3.5 h-3.5" />
-              Descarca PDF
+              {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              {isDownloadingPdf ? 'Se genereaza PDF...' : 'Descarca PDF Direct'}
             </button>
           </div>
         </div>
@@ -1227,7 +1168,7 @@ export default function CvStudio({ applications = [], currentUser }) {
           </div>
         )}
 
-        {/* ================= RIGHT COLUMN: LIVE CV DOCUMENT PREVIEW ================= */}
+        {/* ================= RIGHT COLUMN: LIVE CV DOCUMENT PREVIEW (A4 STANDARDIZAT) ================= */}
         {(viewMode === 'split' || viewMode === 'preview') && (
           <div className={`${viewMode === 'split' ? 'lg:col-span-5' : 'w-full'} space-y-4`}>
             
@@ -1235,146 +1176,153 @@ export default function CvStudio({ applications = [], currentUser }) {
             <div className="glass-card p-3 rounded-2xl border border-gray-800 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                <span className="font-extrabold text-white">Live CV Document Preview</span>
-                <span className="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded border border-gray-800">
-                  Jake's Resume ATS Format
-                </span>
+                <span className="font-extrabold text-white">Live CV Document Preview (A4 ATS)</span>
               </div>
 
               <button
-                onClick={handleDownloadTailoredJakesPdf}
-                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow transition"
+                onClick={handleDownloadDirectPdf}
+                disabled={isDownloadingPdf}
+                className="px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold text-[11px] flex items-center gap-1.5 shadow transition disabled:opacity-60"
               >
-                <Download className="w-3.5 h-3.5" />
-                Descarca PDF
+                {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                {isDownloadingPdf ? 'Se descarca...' : 'Descarca PDF'}
               </button>
             </div>
 
-            {/* A4 WHITE PAPER CONTAINER */}
-            <div className="bg-white text-black p-6 sm:p-8 rounded-2xl shadow-2xl border border-gray-300 font-serif leading-tight text-[11px] selection:bg-blue-200 selection:text-black max-h-[85vh] overflow-y-auto">
+            {/* A4 CANVAS CONTAINER */}
+            <div className="bg-gray-950/70 p-3 sm:p-5 rounded-2xl border border-gray-800/80 overflow-y-auto max-h-[85vh] flex justify-center shadow-inner">
               
-              {/* HEADER (NAME + CONTACT LINKS) */}
-              <div className="text-center pb-2">
-                <h1 className="text-lg sm:text-xl font-bold uppercase tracking-wider text-black font-sans">
-                  {cvSections.fullName || 'Nume Prenume'}
-                </h1>
-                <div className="text-[9px] sm:text-[10px] text-gray-700 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 mt-1 font-sans">
-                  {cvSections.email && <span>{cvSections.email}</span>}
-                  {cvSections.phone && <span>• {cvSections.phone}</span>}
-                  {cvSections.location && <span>• {cvSections.location}</span>}
-                  {cvSections.linkedin && <span>• {cvSections.linkedin}</span>}
-                  {cvSections.github && <span>• {cvSections.github}</span>}
-                </div>
-              </div>
-
-              {/* SUMMARY */}
-              {cvSections.summary && (
-                <div className="mt-3">
-                  <h2 className="text-[11px] font-bold uppercase tracking-wider border-b border-black pb-0.5 font-sans">
-                    Professional Summary
-                  </h2>
-                  <p className="text-[10px] text-gray-800 text-justify mt-1 leading-normal font-sans">
-                    {cvSections.summary}
-                  </p>
-                </div>
-              )}
-
-              {/* EDUCATION */}
-              {eduList.length > 0 && (
-                <div className="mt-3">
-                  <h2 className="text-[11px] font-bold uppercase tracking-wider border-b border-black pb-0.5 font-sans">
-                    Education
-                  </h2>
-                  {eduList.map((edu, idx) => (
-                    <div key={idx} className="mt-1.5">
-                      <div className="flex justify-between font-bold text-[10.5px] text-black">
-                        <span>{edu.school || 'Universitate / Scoala'}</span>
-                        <span>{edu.location || ''}</span>
-                      </div>
-                      <div className="flex justify-between italic text-[10px] text-gray-700">
-                        <span>{edu.degree || 'Diploma / Specializare'}</span>
-                        <span>{edu.period || ''}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* WORK EXPERIENCE */}
-              {cvSections.workExperience.length > 0 && (
-                <div className="mt-3">
-                  <h2 className="text-[11px] font-bold uppercase tracking-wider border-b border-black pb-0.5 font-sans">
-                    Work Experience
-                  </h2>
-                  {cvSections.workExperience.map((exp, idx) => (
-                    <div key={idx} className="mt-1.5">
-                      <div className="flex justify-between font-bold text-[10.5px] text-black">
-                        <span>{exp.company || 'Companie'}</span>
-                        <span>{exp.location || ''}</span>
-                      </div>
-                      <div className="flex justify-between italic text-[10px] text-gray-700">
-                        <span>{exp.role || 'Rol'}</span>
-                        <span>{exp.period || ''}</span>
-                      </div>
-                      {exp.bullets && exp.bullets.length > 0 && (
-                        <ul className="list-disc pl-4 text-[10px] text-gray-800 mt-1 space-y-0.5 text-justify">
-                          {exp.bullets.filter(Boolean).map((b, bIdx) => (
-                            <li key={bIdx}>{b}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* PERSONAL PROJECTS */}
-              {cvSections.projects.length > 0 && (
-                <div className="mt-3">
-                  <h2 className="text-[11px] font-bold uppercase tracking-wider border-b border-black pb-0.5 font-sans">
-                    Personal Projects
-                  </h2>
-                  {cvSections.projects.map((proj, idx) => (
-                    <div key={idx} className="mt-1.5">
-                      <div className="flex justify-between font-bold text-[10.5px] text-black">
-                        <span>{proj.title || 'Titlu Proiect'}</span>
-                        <span className="font-normal text-[9.5px] italic text-gray-600">{proj.techStack || ''}</span>
-                      </div>
-                      {proj.bullets && proj.bullets.length > 0 && (
-                        <ul className="list-disc pl-4 text-[10px] text-gray-800 mt-1 space-y-0.5 text-justify">
-                          {proj.bullets.filter(Boolean).map((b, bIdx) => (
-                            <li key={bIdx}>{b}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* TECHNICAL SKILLS */}
-              {(cvSections.skills.languages || cvSections.skills.frameworks || cvSections.skills.databases || cvSections.skills.devops) && (
-                <div className="mt-3">
-                  <h2 className="text-[11px] font-bold uppercase tracking-wider border-b border-black pb-0.5 font-sans">
-                    Technical Skills
-                  </h2>
-                  <div className="mt-1 text-[10px] text-gray-800 space-y-0.5">
-                    {cvSections.skills.languages && (
-                      <p><span className="font-bold">Languages:</span> {cvSections.skills.languages}</p>
-                    )}
-                    {cvSections.skills.frameworks && (
-                      <p><span className="font-bold">Frameworks:</span> {cvSections.skills.frameworks}</p>
-                    )}
-                    {cvSections.skills.databases && (
-                      <p><span className="font-bold">Databases:</span> {cvSections.skills.databases}</p>
-                    )}
-                    {cvSections.skills.devops && (
-                      <p><span className="font-bold">DevOps & Tools:</span> {cvSections.skills.devops}</p>
-                    )}
+              {/* EXACT A4 WHITE PAPER SHEET (210mm x 297mm PROPORTION) */}
+              <div 
+                ref={previewRef}
+                id="cv-preview-sheet" 
+                className="bg-white text-black font-serif shadow-2xl rounded-sm border border-gray-300 w-full max-w-[210mm] min-h-[297mm] p-6 sm:p-8 text-[10.5pt] leading-[1.3] box-border select-text"
+                style={{ fontFamily: "'Times New Roman', Times, serif" }}
+              >
+                
+                {/* HEADER (NAME + CONTACT LINKS) */}
+                <div className="text-center pb-1">
+                  <h1 className="text-xl font-bold uppercase tracking-wider text-black" style={{ letterSpacing: '1px' }}>
+                    {cvSections.fullName || 'Nume Prenume'}
+                  </h1>
+                  <div className="text-[9pt] text-gray-800 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 mt-1 font-sans">
+                    {cvSections.email && <span>{cvSections.email}</span>}
+                    {cvSections.phone && <span>| {cvSections.phone}</span>}
+                    {cvSections.location && <span>| {cvSections.location}</span>}
+                    {cvSections.linkedin && <span>| {cvSections.linkedin}</span>}
+                    {cvSections.github && <span>| {cvSections.github}</span>}
                   </div>
                 </div>
-              )}
 
+                {/* SUMMARY */}
+                {cvSections.summary && (
+                  <div className="mt-2.5">
+                    <h2 className="text-[10pt] font-bold uppercase tracking-wider border-b border-black pb-0.5" style={{ letterSpacing: '0.5px' }}>
+                      Professional Summary
+                    </h2>
+                    <p className="text-[9.5pt] text-black text-justify mt-1 leading-normal font-sans">
+                      {cvSections.summary}
+                    </p>
+                  </div>
+                )}
+
+                {/* EDUCATION */}
+                {eduList.length > 0 && (
+                  <div className="mt-2.5">
+                    <h2 className="text-[10pt] font-bold uppercase tracking-wider border-b border-black pb-0.5" style={{ letterSpacing: '0.5px' }}>
+                      Education
+                    </h2>
+                    {eduList.map((edu, idx) => (
+                      <div key={idx} className="mt-1">
+                        <div className="flex justify-between font-bold text-[10pt] text-black">
+                          <span>{edu.school || 'Universitate / Scoala'}</span>
+                          <span>{edu.location || ''}</span>
+                        </div>
+                        <div className="flex justify-between italic text-[9pt] text-gray-800">
+                          <span>{edu.degree || 'Diploma / Specializare'}</span>
+                          <span>{edu.period || ''}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* WORK EXPERIENCE */}
+                {cvSections.workExperience.length > 0 && (
+                  <div className="mt-2.5">
+                    <h2 className="text-[10pt] font-bold uppercase tracking-wider border-b border-black pb-0.5" style={{ letterSpacing: '0.5px' }}>
+                      Work Experience
+                    </h2>
+                    {cvSections.workExperience.map((exp, idx) => (
+                      <div key={idx} className="mt-1">
+                        <div className="flex justify-between font-bold text-[10pt] text-black">
+                          <span>{exp.company || 'Companie'}</span>
+                          <span>{exp.location || ''}</span>
+                        </div>
+                        <div className="flex justify-between italic text-[9pt] text-gray-800">
+                          <span>{exp.role || 'Rol'}</span>
+                          <span>{exp.period || ''}</span>
+                        </div>
+                        {exp.bullets && exp.bullets.length > 0 && (
+                          <ul className="list-disc pl-4 text-[9pt] text-black mt-0.5 space-y-0.5 text-justify">
+                            {exp.bullets.filter(Boolean).map((b, bIdx) => (
+                              <li key={bIdx}>{b}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* PERSONAL PROJECTS */}
+                {cvSections.projects.length > 0 && (
+                  <div className="mt-2.5">
+                    <h2 className="text-[10pt] font-bold uppercase tracking-wider border-b border-black pb-0.5" style={{ letterSpacing: '0.5px' }}>
+                      Personal Projects
+                    </h2>
+                    {cvSections.projects.map((proj, idx) => (
+                      <div key={idx} className="mt-1">
+                        <div className="flex justify-between font-bold text-[10pt] text-black">
+                          <span>{proj.title || 'Titlu Proiect'}</span>
+                          <span className="font-normal text-[9pt] italic text-gray-700">{proj.techStack || ''}</span>
+                        </div>
+                        {proj.bullets && proj.bullets.length > 0 && (
+                          <ul className="list-disc pl-4 text-[9pt] text-black mt-0.5 space-y-0.5 text-justify">
+                            {proj.bullets.filter(Boolean).map((b, bIdx) => (
+                              <li key={bIdx}>{b}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* TECHNICAL SKILLS */}
+                {(cvSections.skills.languages || cvSections.skills.frameworks || cvSections.skills.databases || cvSections.skills.devops) && (
+                  <div className="mt-2.5">
+                    <h2 className="text-[10pt] font-bold uppercase tracking-wider border-b border-black pb-0.5" style={{ letterSpacing: '0.5px' }}>
+                      Technical Skills
+                    </h2>
+                    <div className="mt-1 text-[9pt] text-black space-y-0.5">
+                      {cvSections.skills.languages && (
+                        <p><span className="font-bold">Languages:</span> {cvSections.skills.languages}</p>
+                      )}
+                      {cvSections.skills.frameworks && (
+                        <p><span className="font-bold">Frameworks:</span> {cvSections.skills.frameworks}</p>
+                      )}
+                      {cvSections.skills.databases && (
+                        <p><span className="font-bold">Databases:</span> {cvSections.skills.databases}</p>
+                      )}
+                      {cvSections.skills.devops && (
+                        <p><span className="font-bold">DevOps & Tools:</span> {cvSections.skills.devops}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              </div>
             </div>
 
             {/* TARGET JOB AI OPTIMIZATION ACCORDION */}
@@ -1490,7 +1438,7 @@ export default function CvStudio({ applications = [], currentUser }) {
               </h4>
               {agent2Output && (
                 <button 
-                  onClick={handleDownloadTailoredJakesPdf}
+                  onClick={handleDownloadDirectPdf}
                   className="px-3 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-extrabold text-xs flex items-center gap-1 shadow-md"
                 >
                   <Download className="w-3.5 h-3.5" /> Descarca PDF Optimizat 100%
