@@ -9,6 +9,7 @@ import org.springframework.web.client.RestClient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -18,20 +19,21 @@ public class OpenAiLlmService {
     private final String apiKey;
     private final String defaultModel;
 
-    // LISTA DE MODELE ACTIVE PE GROQCLOUD CU FALLBACK AUTOMAT IN CAZ DE DECOMMISSIONING
-    private static final List<String> FALLBACK_MODELS = List.of(
-            "llama-3.1-8b-instant",
-            "llama-3.3-70b-specdec",
-            "qwen-2.5-32b",
-            "llama-3.2-11b-vision-preview",
-            "llama3-70b-8192",
-            "llama3-8b-8192"
+    // LISTA DE MODELE ACTIVE REALE PE GROQCLOUD (ACTUALIZATE DUPA DECOMMISSIONING-UL LLAMA DIN AUGUST 2026)
+    private static final List<String> ACTIVE_GROQ_MODELS = List.of(
+            "openai/gpt-oss-120b",
+            "qwen/qwen3.6-27b",
+            "openai/gpt-oss-20b",
+            "groq/compound",
+            "groq/compound-mini"
     );
+
+    private static final Pattern THINK_TAG_PATTERN = Pattern.compile("<think>[\\s\\S]*?</think>", Pattern.CASE_INSENSITIVE);
 
     public OpenAiLlmService(
             RestClient.Builder restClientBuilder,
             @Value("${spring.ai.groq.api-key:${SPRING_AI_GROQ_API_KEY:}}") String apiKey,
-            @Value("${spring.ai.groq.model:${SPRING_AI_GROQ_MODEL:llama-3.1-8b-instant}}") String defaultModel) {
+            @Value("${spring.ai.groq.model:${SPRING_AI_GROQ_MODEL:openai/gpt-oss-120b}}") String defaultModel) {
         this.restClient = restClientBuilder.build();
         this.apiKey = apiKey;
         this.defaultModel = defaultModel;
@@ -48,7 +50,7 @@ public class OpenAiLlmService {
         if (defaultModel != null && !defaultModel.isBlank()) {
             modelsToTry.add(defaultModel);
         }
-        for (String m : FALLBACK_MODELS) {
+        for (String m : ACTIVE_GROQ_MODELS) {
             if (!modelsToTry.contains(m)) {
                 modelsToTry.add(m);
             }
@@ -64,7 +66,7 @@ public class OpenAiLlmService {
                                 Map.of("role", "system", "content", systemPrompt),
                                 Map.of("role", "user", "content", userPrompt)
                         ),
-                        "temperature", 0.2
+                        "temperature", 0.1
                 );
 
                 @SuppressWarnings("unchecked")
@@ -84,12 +86,16 @@ public class OpenAiLlmService {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
                         String content = (String) message.get("content");
-                        log.info("[GROQ LLM SUCCESS] Raspuns primit cu succes de la modelul Groq: {}", modelName);
-                        return content;
+                        if (content != null) {
+                            // Strip <think>...</think> if reasoning tags are present
+                            content = THINK_TAG_PATTERN.matcher(content).replaceAll("").trim();
+                            log.info("[GROQ LLM SUCCESS] Raspuns valid primit cu succes de la modelul activ Groq: {}", modelName);
+                            return content;
+                        }
                     }
                 }
             } catch (Exception e) {
-                log.warn("[GROQ LLM RETRY] Modelul {} nu a putut fi apelat ({}), se incearca urmatorul model fallback...", modelName, e.getMessage());
+                log.warn("[GROQ LLM RETRY] Modelul {} nu a putut fi apelat ({}), se incearca urmatorul model activ...", modelName, e.getMessage());
                 lastException = e;
             }
         }
