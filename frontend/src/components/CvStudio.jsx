@@ -20,7 +20,16 @@ import {
   Code2,
   Database,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Eye,
+  Columns,
+  Maximize2,
+  ExternalLink,
+  Mail,
+  Phone,
+  MapPin,
+  Linkedin,
+  Github
 } from 'lucide-react';
 
 export default function CvStudio({ applications = [], currentUser }) {
@@ -43,14 +52,10 @@ export default function CvStudio({ applications = [], currentUser }) {
       databases: "",
       devops: ""
     },
-    education: {
-      school: "",
-      degree: "",
-      period: "",
-      location: ""
-    }
+    education: []
   });
 
+  const [viewMode, setViewMode] = useState('split'); // 'split' | 'editor' | 'preview'
   const [languagePref, setLanguagePref] = useState('EN');
   const [selectedJobId, setSelectedJobId] = useState(applications.length > 0 ? applications[0].id : '');
   const [customJobDescription, setCustomJobDescription] = useState('');
@@ -67,6 +72,27 @@ export default function CvStudio({ applications = [], currentUser }) {
   const [agent2Output, setAgent2Output] = useState(null);
 
   const selectedApp = applications.find(a => a.id === selectedJobId) || (applications.length > 0 ? applications[0] : null);
+
+  // HELPER TO NORMALIZE EDUCATION AS ARRAY
+  const normalizeEducation = (edu) => {
+    if (!edu) return [];
+    if (Array.isArray(edu)) return edu;
+    if (typeof edu === 'object') {
+      if (edu.school || edu.degree || edu.period || edu.location) {
+        return [{ id: edu.id || Date.now(), ...edu }];
+      }
+      return [];
+    }
+    if (typeof edu === 'string') {
+      try {
+        const parsed = JSON.parse(edu);
+        return normalizeEducation(parsed);
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  };
 
   // HELPER FUNCTION TO PARSE TEXT FALLBACK IN FRONTEND
   const parseRawResumeText = (text) => {
@@ -125,7 +151,7 @@ export default function CvStudio({ applications = [], currentUser }) {
               databases: data.skillsDatabases || "",
               devops: data.skillsDevops || ""
             },
-            education: data.educationJson ? JSON.parse(data.educationJson) : { school: "", degree: "", period: "", location: "" }
+            education: normalizeEducation(data.educationJson)
           });
           if (data.languagePreference) setLanguagePref(data.languagePreference);
         }
@@ -185,6 +211,38 @@ export default function CvStudio({ applications = [], currentUser }) {
     } finally {
       setIsSavingDb(false);
     }
+  };
+
+  // EDUCATION DYNAMIC HANDLERS (ADD, DELETE, MOVE)
+  const handleAddEducation = () => {
+    const newEdu = {
+      id: Date.now(),
+      school: "",
+      degree: "",
+      period: "",
+      location: ""
+    };
+    setCvSections(prev => ({
+      ...prev,
+      education: [...(prev.education || []), newEdu]
+    }));
+  };
+
+  const handleDeleteEducation = (id) => {
+    setCvSections(prev => ({
+      ...prev,
+      education: prev.education.filter(e => e.id !== id)
+    }));
+  };
+
+  const handleMoveEducation = (eduIdx, direction) => {
+    const updated = [...cvSections.education];
+    const targetIdx = eduIdx + direction;
+    if (targetIdx < 0 || targetIdx >= updated.length) return;
+    const temp = updated[eduIdx];
+    updated[eduIdx] = updated[targetIdx];
+    updated[targetIdx] = temp;
+    setCvSections({ ...cvSections, education: updated });
   };
 
   // WORK EXPERIENCE DYNAMIC HANDLERS (ADD, DELETE, BULLETS, MOVE)
@@ -328,7 +386,7 @@ export default function CvStudio({ applications = [], currentUser }) {
               databases: p.skillsDatabases || "",
               devops: p.skillsDevops || ""
             },
-            education: safeParse(p.educationJson, { school: "", degree: "", period: "", location: "" })
+            education: normalizeEducation(p.educationJson)
           });
         } else {
           const parsed = parseRawResumeText(rawText);
@@ -411,7 +469,7 @@ export default function CvStudio({ applications = [], currentUser }) {
     const finalSkills = agent2Output ? agent2Output.tailoredSkills : cvSections.skills;
     const finalWorkExp = agent2Output ? agent2Output.tailoredExperience : cvSections.workExperience;
     const finalProjects = agent2Output ? agent2Output.tailoredProjects : cvSections.projects;
-    const edu = cvSections.education || {};
+    const finalEducation = normalizeEducation(cvSections.education);
 
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
@@ -424,9 +482,9 @@ export default function CvStudio({ applications = [], currentUser }) {
           @page { size: letter; margin: 0.45in; }
           body { font-family: 'Calibri', 'Garamond', serif; color: #000; background: #fff; margin: 0; padding: 0; font-size: 10pt; line-height: 1.3; }
           .header { text-align: center; margin-bottom: 10pt; }
-          .header h1 { font-size: 19pt; font-weight: bold; text-transform: uppercase; margin: 0 0 3pt 0; }
+          .header h1 { font-size: 19pt; font-weight: bold; text-transform: uppercase; margin: 0 0 3pt 0; letter-spacing: 0.5pt; }
           .header .contact-info { font-size: 9pt; color: #222; }
-          .section-title { font-size: 10.5pt; font-weight: bold; text-transform: uppercase; border-bottom: 1pt solid #000; margin-top: 11pt; margin-bottom: 5pt; padding-bottom: 1.5pt; }
+          .section-title { font-size: 10.5pt; font-weight: bold; text-transform: uppercase; border-bottom: 1pt solid #000; margin-top: 11pt; margin-bottom: 5pt; padding-bottom: 1.5pt; letter-spacing: 0.5pt; }
           .skills-grid { display: table; width: 100%; margin-bottom: 4pt; }
           .skills-row { display: table-row; }
           .skills-label { display: table-cell; font-weight: bold; width: 110pt; padding-bottom: 2.5pt; }
@@ -435,42 +493,75 @@ export default function CvStudio({ applications = [], currentUser }) {
           .experience-subheader { display: flex; justify-content: space-between; font-style: italic; margin-bottom: 3pt; }
           ul { margin: 0 0 5pt 0; padding-left: 14pt; }
           li { margin-bottom: 2.5pt; text-align: justify; }
+          .summary-p { text-align: justify; margin-bottom: 5pt; }
         </style>
       </head>
       <body>
         <div class="header">
           <h1>${cvSections.fullName || 'Nume Prenume'}</h1>
           <div class="contact-info">
-            ${cvSections.email || ''} &nbsp;|&nbsp; ${cvSections.phone || ''} &nbsp;|&nbsp; ${cvSections.location || ''} &nbsp;|&nbsp; ${cvSections.linkedin || ''} &nbsp;|&nbsp; ${cvSections.github || ''}
+            ${[cvSections.email, cvSections.phone, cvSections.location, cvSections.linkedin, cvSections.github].filter(Boolean).join(' &nbsp;|&nbsp; ')}
           </div>
         </div>
-        ${finalSummary ? `<div class="section-title">Professional Summary</div><p>${finalSummary}</p>` : ''}
-        ${(edu.school || edu.degree) ? `
+        ${finalSummary ? `<div class="section-title">Professional Summary</div><p class="summary-p">${finalSummary}</p>` : ''}
+        ${finalEducation.length > 0 ? `
           <div class="section-title">Education</div>
-          <div class="experience-header">
-            <span>${edu.school || ''}</span>
-            <span>${edu.location || ''}</span>
-          </div>
-          <div class="experience-subheader">
-            <span>${edu.degree || ''}</span>
-            <span>${edu.period || ''}</span>
+          ${finalEducation.map(edu => `
+            <div class="experience-header">
+              <span>${edu.school || ''}</span>
+              <span>${edu.location || ''}</span>
+            </div>
+            <div class="experience-subheader">
+              <span>${edu.degree || ''}</span>
+              <span>${edu.period || ''}</span>
+            </div>
+          `).join('')}
+        ` : ''}
+        ${finalWorkExp.length > 0 ? `
+          <div class="section-title">Work Experience</div>
+          ${finalWorkExp.map(exp => `
+            <div class="experience-header">
+              <span>${exp.company || exp.role}</span>
+              <span>${exp.location || ''}</span>
+            </div>
+            <div class="experience-subheader">
+              <span>${exp.role || ''}</span>
+              <span>${exp.period || ''}</span>
+            </div>
+            <ul>
+              ${exp.bullets ? exp.bullets.filter(Boolean).map(b => `<li>${b}</li>`).join('') : ''}
+            </ul>
+          `).join('')}
+        ` : ''}
+        ${finalProjects.length > 0 ? `
+          <div class="section-title">Personal Projects</div>
+          ${finalProjects.map(proj => `
+            <div class="experience-header">
+              <span>${proj.title || ''}</span>
+              <span>${proj.techStack ? `${proj.techStack}` : ''}</span>
+            </div>
+            <ul>
+              ${proj.bullets ? proj.bullets.filter(Boolean).map(b => `<li>${b}</li>`).join('') : ''}
+            </ul>
+          `).join('')}
+        ` : ''}
+        ${(finalSkills.languages || finalSkills.frameworks || finalSkills.databases || finalSkills.devops) ? `
+          <div class="section-title">Technical Skills</div>
+          <div class="skills-grid">
+            ${finalSkills.languages ? `<div class="skills-row"><div class="skills-label">Languages:</div><div class="skills-value">${finalSkills.languages}</div></div>` : ''}
+            ${finalSkills.frameworks ? `<div class="skills-row"><div class="skills-label">Frameworks:</div><div class="skills-value">${finalSkills.frameworks}</div></div>` : ''}
+            ${finalSkills.databases ? `<div class="skills-row"><div class="skills-label">Databases:</div><div class="skills-value">${finalSkills.databases}</div></div>` : ''}
+            ${finalSkills.devops ? `<div class="skills-row"><div class="skills-label">DevOps & Tools:</div><div class="skills-value">${finalSkills.devops}</div></div>` : ''}
           </div>
         ` : ''}
-        ${finalWorkExp.length > 0 ? `<div class="section-title">Work Experience</div>${finalWorkExp.map(exp => `<div class="experience-header"><span>${exp.company || exp.role}</span><span>${exp.location || ''}</span></div><div class="experience-subheader"><span>${exp.role || ''}</span><span>${exp.period || ''}</span></div><ul>${exp.bullets ? exp.bullets.map(b => `<li>${b}</li>`).join('') : ''}</ul>`).join('')}` : ''}
-        ${finalProjects.length > 0 ? `<div class="section-title">Personal Projects</div>${finalProjects.map(proj => `<div class="experience-header"><span>${proj.title || ''}</span><span>2024 - 2026</span></div><ul>${proj.bullets ? proj.bullets.map(b => `<li>${b}</li>`).join('') : ''}</ul>`).join('')}` : ''}
-        <div class="section-title">Technical Skills</div>
-        <div class="skills-grid">
-          <div class="skills-row"><div class="skills-label">Languages:</div><div class="skills-value">${finalSkills.languages || 'Java'}</div></div>
-          <div class="skills-row"><div class="skills-label">Frameworks:</div><div class="skills-value">${finalSkills.frameworks || 'Spring Boot'}</div></div>
-          <div class="skills-row"><div class="skills-label">Databases:</div><div class="skills-value">${finalSkills.databases || 'PostgreSQL'}</div></div>
-          <div class="skills-row"><div class="skills-label">DevOps:</div><div class="skills-value">${finalSkills.devops || 'Docker'}</div></div>
-        </div>
         <script>window.onload = function() { window.print(); }</script>
       </body>
       </html>
     `);
     printWindow.document.close();
   };
+
+  const eduList = normalizeEducation(cvSections.education);
 
   return (
     <div className="space-y-6">
@@ -486,39 +577,73 @@ export default function CvStudio({ applications = [], currentUser }) {
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2 tracking-tight">
-                Studio CV ATS - Editor Complet, Salvare in PostgreSQL & Generare PDF
+                Studio CV ATS - Editor Complet, Live Preview & Generare PDF
               </h2>
               <p className="text-xs text-gray-400 font-medium">
-                Poti edita, adauga, sterge, reordona si salva orice camp si secțiune din CV (Experienta, Proiecte, Educatie, Skills).
+                Poti edita, adauga, sterge si reordona orice camp din CV si vezi modificarile in timp real in panoul de Live Preview.
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {/* VIEW MODE TOGGLE BUTTONS */}
+            <div className="flex items-center bg-gray-900/90 p-1 rounded-xl border border-gray-800 text-xs">
+              <button
+                onClick={() => setViewMode('split')}
+                className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+                  viewMode === 'split' ? 'bg-purple-600 text-white shadow' : 'text-gray-400 hover:text-white'
+                }`}
+                title="Editor si Live Preview alaturate"
+              >
+                <Columns className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Split View</span>
+              </button>
+              <button
+                onClick={() => setViewMode('editor')}
+                className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+                  viewMode === 'editor' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'
+                }`}
+                title="Doar Editor"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Doar Editor</span>
+              </button>
+              <button
+                onClick={() => setViewMode('preview')}
+                className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+                  viewMode === 'preview' ? 'bg-emerald-600 text-white shadow' : 'text-gray-400 hover:text-white'
+                }`}
+                title="Doar Live Preview"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Live Preview</span>
+              </button>
+            </div>
+
             {/* SAVE TO DB BUTTON */}
             <button
               onClick={handleSaveToDatabase}
               disabled={isSavingDb || !activeUserId}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25 transition disabled:opacity-50"
+              className="px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-blue-600/25 transition disabled:opacity-50"
             >
-              {isSavingDb ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4 text-cyan-300" />}
-              {isSavingDb ? 'Se salveaza in DB...' : 'Salveaza in PostgreSQL'}
+              {isSavingDb ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5 text-cyan-300" />}
+              {isSavingDb ? 'Se salveaza...' : 'Salveaza in DB'}
             </button>
 
             {/* UPLOAD PDF */}
-            <label className="px-3.5 py-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition">
-              <Upload className="w-4 h-4 text-purple-400" />
-              {parsingPdf ? 'Se proceseaza PDF...' : 'Incarca CV PDF'}
+            <label className="px-3.5 py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition">
+              <Upload className="w-3.5 h-3.5 text-purple-400" />
+              {parsingPdf ? 'Se proceseaza...' : 'Incarca CV PDF'}
               <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
             </label>
 
             {/* DOWNLOAD PDF */}
             <button
               onClick={handleDownloadTailoredJakesPdf}
-              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition"
+              className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/25 transition"
             >
-              <Download className="w-4 h-4" />
-              Descarca PDF (Jake's Resume)
+              <Download className="w-3.5 h-3.5" />
+              Descarca PDF
             </button>
           </div>
         </div>
@@ -560,463 +685,747 @@ export default function CvStudio({ applications = [], currentUser }) {
         </div>
       )}
 
-      {/* SECTION 1: MASTER CV EDITOR WITH DYNAMIC WORK EXPERIENCE, PROJECTS & EDUCATION */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* MAIN CONTAINER: SPLIT VIEW (EDITOR ON LEFT, LIVE PREVIEW ON RIGHT) */}
+      <div className={`grid gap-6 ${
+        viewMode === 'split' ? 'grid-cols-1 lg:grid-cols-12' : 'grid-cols-1'
+      }`}>
         
-        {/* LEFT COLUMN: EDITABLE SECTIONS */}
-        <div className="lg:col-span-2 glass-card p-5 rounded-2xl border border-gray-800 space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-            <h3 className="text-sm font-black text-white flex items-center gap-2">
-              <FileText className="w-4 h-4 text-purple-400" />
-              Sectiunile CV-ului (Salvare in PostgreSQL & Editare Nativa)
-            </h3>
-          </div>
-
-          <div className="space-y-4 text-xs">
-            {/* CONTACT DETAILS */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-1">Nume Complet:</label>
-                <input 
-                  type="text" 
-                  placeholder="ex: Nume Prenume"
-                  value={cvSections.fullName}
-                  onChange={e => setCvSections({...cvSections, fullName: e.target.value})}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-1">Email:</label>
-                <input 
-                  type="text" 
-                  placeholder="ex: email@example.com"
-                  value={cvSections.email}
-                  onChange={e => setCvSections({...cvSections, email: e.target.value})}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-1">Telefon:</label>
-                <input 
-                  type="text" 
-                  placeholder="ex: (+40) 700 000 000"
-                  value={cvSections.phone}
-                  onChange={e => setCvSections({...cvSections, phone: e.target.value})}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                />
-              </div>
+        {/* ================= LEFT COLUMN: FULL CRUD CV EDITOR ================= */}
+        {(viewMode === 'split' || viewMode === 'editor') && (
+          <div className={`${viewMode === 'split' ? 'lg:col-span-7' : 'w-full'} glass-card p-5 rounded-2xl border border-gray-800 space-y-5`}>
+            
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <h3 className="text-sm font-black text-white flex items-center gap-2">
+                <FileText className="w-4 h-4 text-purple-400" />
+                Editor Sectiuni CV (Editare, Stergere, Mutare & Salvare)
+              </h3>
+              <span className="text-[10px] text-gray-400 bg-gray-900 px-2 py-1 rounded border border-gray-800">
+                PostgreSQL Dynamic Sync
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-1">Locatie (Oras, Tara):</label>
-                <input 
-                  type="text" 
-                  placeholder="ex: Bucuresti, Romania"
-                  value={cvSections.location}
-                  onChange={e => setCvSections({...cvSections, location: e.target.value})}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-1">LinkedIn:</label>
-                <input 
-                  type="text" 
-                  placeholder="ex: linkedin.com/in/profil"
-                  value={cvSections.linkedin}
-                  onChange={e => setCvSections({...cvSections, linkedin: e.target.value})}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-1">GitHub:</label>
-                <input 
-                  type="text" 
-                  placeholder="ex: github.com/username"
-                  value={cvSections.github}
-                  onChange={e => setCvSections({...cvSections, github: e.target.value})}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                />
-              </div>
-            </div>
-
-            {/* SUMMARY */}
-            <div>
-              <label className="block text-[11px] font-bold text-purple-400 mb-1">Professional Summary / Profil:</label>
-              <textarea 
-                rows={4}
-                placeholder="Introdu profilul profesional..."
-                value={cvSections.summary}
-                onChange={e => setCvSections({...cvSections, summary: e.target.value})}
-                className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
-              />
-            </div>
-
-            {/* EDUCATION SECTION EDITOR */}
-            <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5 uppercase">
-                  <GraduationCap className="w-4 h-4" /> 1. Educatie si Studii (Education)
+            <div className="space-y-4 text-xs">
+              
+              {/* SECTION: CONTACT DETAILS */}
+              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
+                <span className="text-xs font-black text-purple-400 uppercase tracking-wider block">
+                  Date de Contact & Antet
                 </span>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Nume Complet:</label>
+                    <input 
+                      type="text" 
+                      placeholder="ex: Nume Prenume"
+                      value={cvSections.fullName}
+                      onChange={e => setCvSections({...cvSections, fullName: e.target.value})}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Email:</label>
+                    <input 
+                      type="text" 
+                      placeholder="ex: email@example.com"
+                      value={cvSections.email}
+                      onChange={e => setCvSections({...cvSections, email: e.target.value})}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Telefon:</label>
+                    <input 
+                      type="text" 
+                      placeholder="ex: (+40) 700 000 000"
+                      value={cvSections.phone}
+                      onChange={e => setCvSections({...cvSections, phone: e.target.value})}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Locatie (Oras, Tara):</label>
+                    <input 
+                      type="text" 
+                      placeholder="ex: Bucuresti, Romania"
+                      value={cvSections.location}
+                      onChange={e => setCvSections({...cvSections, location: e.target.value})}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 mb-1">LinkedIn:</label>
+                    <input 
+                      type="text" 
+                      placeholder="ex: linkedin.com/in/profil"
+                      value={cvSections.linkedin}
+                      onChange={e => setCvSections({...cvSections, linkedin: e.target.value})}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 mb-1">GitHub:</label>
+                    <input 
+                      type="text" 
+                      placeholder="ex: github.com/username"
+                      value={cvSections.github}
+                      onChange={e => setCvSections({...cvSections, github: e.target.value})}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[10px] font-semibold text-gray-400 mb-1">Institutie / Universitate:</label>
-                  <input 
-                    type="text" 
-                    placeholder="ex: Universitatea Politehnica din Bucuresti"
-                    value={cvSections.education ? cvSections.education.school || "" : ""}
-                    onChange={e => setCvSections({
-                      ...cvSections, 
-                      education: { ...cvSections.education, school: e.target.value }
-                    })}
-                    className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                  />
+              {/* SECTION: PROFESSIONAL SUMMARY */}
+              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-purple-400 uppercase tracking-wider">
+                    Professional Summary / Profil Profesional
+                  </span>
+                  {cvSections.summary && (
+                    <button
+                      onClick={() => setCvSections({ ...cvSections, summary: "" })}
+                      className="text-[10px] text-gray-400 hover:text-rose-400 transition"
+                    >
+                      Goleste Sumar
+                    </button>
+                  )}
                 </div>
-
-                <div>
-                  <label className="block text-[10px] font-semibold text-gray-400 mb-1">Diploma / Specializare:</label>
-                  <input 
-                    type="text" 
-                    placeholder="ex: Licenta in Calculatoare si Tehnologia Informatiei"
-                    value={cvSections.education ? cvSections.education.degree || "" : ""}
-                    onChange={e => setCvSections({
-                      ...cvSections, 
-                      education: { ...cvSections.education, degree: e.target.value }
-                    })}
-                    className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-semibold text-gray-400 mb-1">Perioada de Studii:</label>
-                  <input 
-                    type="text" 
-                    placeholder="ex: Octombrie 2022 - Iulie 2026"
-                    value={cvSections.education ? cvSections.education.period || "" : ""}
-                    onChange={e => setCvSections({
-                      ...cvSections, 
-                      education: { ...cvSections.education, period: e.target.value }
-                    })}
-                    className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-semibold text-gray-400 mb-1">Locatie Universitate:</label>
-                  <input 
-                    type="text" 
-                    placeholder="ex: Bucuresti, Romania"
-                    value={cvSections.education ? cvSections.education.location || "" : ""}
-                    onChange={e => setCvSections({
-                      ...cvSections, 
-                      education: { ...cvSections.education, location: e.target.value }
-                    })}
-                    className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* WORK EXPERIENCE SECTION WITH BULLETS & REORDERING */}
-            <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-blue-400 flex items-center gap-1.5 uppercase">
-                  <Briefcase className="w-4 h-4" /> 2. Experienta Profesionala (Work Experience)
-                </span>
-                <button 
-                  onClick={handleAddWorkExperience}
-                  className="px-2.5 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg text-[10px] font-bold border border-blue-500/30 flex items-center gap-1"
-                >
-                  <Plus className="w-3 h-3" /> Adauga Experienta Noua
-                </button>
+                <textarea 
+                  rows={4}
+                  placeholder="Introdu profilul profesional..."
+                  value={cvSections.summary}
+                  onChange={e => setCvSections({...cvSections, summary: e.target.value})}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
+                />
               </div>
 
-              {cvSections.workExperience.length === 0 && (
-                <p className="text-[11px] text-gray-500 italic text-center py-2">
-                  Nicio experienta adaugata. Incarca un PDF CV sau apasa pe "+ Adauga Experienta Noua".
-                </p>
-              )}
+              {/* SECTION 1: EDUCATION EDITOR (WITH ADD, DELETE, MOVE) */}
+              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5 uppercase">
+                    <GraduationCap className="w-4 h-4" /> 1. Educatie si Studii (Education)
+                  </span>
+                  <button 
+                    onClick={handleAddEducation}
+                    className="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-lg text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1 transition"
+                  >
+                    <Plus className="w-3 h-3" /> Adauga Educatie Noua
+                  </button>
+                </div>
 
-              {cvSections.workExperience.map((exp, expIdx) => (
-                <div key={exp.id || expIdx} className="space-y-2.5 p-3 bg-gray-900/50 rounded-xl border border-gray-800/80">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="grid grid-cols-2 gap-2 flex-1">
+                {eduList.length === 0 && (
+                  <p className="text-[11px] text-gray-500 italic text-center py-2">
+                    Nicio institutie adaugata. Apasa pe "+ Adauga Educatie Noua" sau incarca un CV PDF.
+                  </p>
+                )}
+
+                {eduList.map((edu, eduIdx) => (
+                  <div key={edu.id || eduIdx} className="space-y-2 p-3 bg-gray-900/50 rounded-xl border border-gray-800/80">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold text-emerald-300">
+                        Diploma / Scoala #{eduIdx + 1}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => handleMoveEducation(eduIdx, -1)}
+                          disabled={eduIdx === 0}
+                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
+                          title="Muta mai sus"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleMoveEducation(eduIdx, 1)}
+                          disabled={eduIdx === eduList.length - 1}
+                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
+                          title="Muta mai jos"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteEducation(edu.id)}
+                          className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg shrink-0 ml-1"
+                          title="Sterge Educatie"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Institutie / Universitate:</label>
+                        <input 
+                          type="text" 
+                          placeholder="ex: Universitatea Politehnica din Bucuresti"
+                          value={edu.school || ""}
+                          onChange={e => {
+                            const updated = [...eduList];
+                            updated[eduIdx].school = e.target.value;
+                            setCvSections({ ...cvSections, education: updated });
+                          }}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Diploma / Specializare:</label>
+                        <input 
+                          type="text" 
+                          placeholder="ex: Bachelor of Computer Science & Engineering"
+                          value={edu.degree || ""}
+                          onChange={e => {
+                            const updated = [...eduList];
+                            updated[eduIdx].degree = e.target.value;
+                            setCvSections({ ...cvSections, education: updated });
+                          }}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Perioada de Studii:</label>
+                        <input 
+                          type="text" 
+                          placeholder="ex: Octombrie 2022 - Iulie 2026"
+                          value={edu.period || ""}
+                          onChange={e => {
+                            const updated = [...eduList];
+                            updated[eduIdx].period = e.target.value;
+                            setCvSections({ ...cvSections, education: updated });
+                          }}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Locatie Universitate:</label>
+                        <input 
+                          type="text" 
+                          placeholder="ex: Bucuresti, Romania"
+                          value={edu.location || ""}
+                          onChange={e => {
+                            const updated = [...eduList];
+                            updated[eduIdx].location = e.target.value;
+                            setCvSections({ ...cvSections, education: updated });
+                          }}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* SECTION 2: WORK EXPERIENCE EDITOR */}
+              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-blue-400 flex items-center gap-1.5 uppercase">
+                    <Briefcase className="w-4 h-4" /> 2. Experienta Profesionala (Work Experience)
+                  </span>
+                  <button 
+                    onClick={handleAddWorkExperience}
+                    className="px-2.5 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg text-[10px] font-bold border border-blue-500/30 flex items-center gap-1 transition"
+                  >
+                    <Plus className="w-3 h-3" /> Adauga Experienta Noua
+                  </button>
+                </div>
+
+                {cvSections.workExperience.length === 0 && (
+                  <p className="text-[11px] text-gray-500 italic text-center py-2">
+                    Nicio experienta adaugata. Apasa pe "+ Adauga Experienta Noua" sau incarca un CV PDF.
+                  </p>
+                )}
+
+                {cvSections.workExperience.map((exp, expIdx) => (
+                  <div key={exp.id || expIdx} className="space-y-2.5 p-3 bg-gray-900/50 rounded-xl border border-gray-800/80">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="grid grid-cols-2 gap-2 flex-1">
+                        <input 
+                          type="text" 
+                          placeholder="Nume Companie"
+                          value={exp.company || ""}
+                          onChange={e => {
+                            const updated = [...cvSections.workExperience];
+                            updated[expIdx].company = e.target.value;
+                            setCvSections({...cvSections, workExperience: updated});
+                          }}
+                          className="bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs font-bold text-white"
+                        />
+                        <input 
+                          type="text" 
+                          placeholder="Rol / Titlu Job"
+                          value={exp.role || ""}
+                          onChange={e => {
+                            const updated = [...cvSections.workExperience];
+                            updated[expIdx].role = e.target.value;
+                            setCvSections({...cvSections, workExperience: updated});
+                          }}
+                          className="bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => handleMoveWorkExperience(expIdx, -1)}
+                          disabled={expIdx === 0}
+                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
+                          title="Muta mai sus"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleMoveWorkExperience(expIdx, 1)}
+                          disabled={expIdx === cvSections.workExperience.length - 1}
+                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
+                          title="Muta mai jos"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteWorkExperience(exp.id)}
+                          className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg shrink-0 ml-1"
+                          title="Sterge Experienta"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
                       <input 
                         type="text" 
-                        placeholder="Nume Companie / Rol"
-                        value={exp.company || exp.role || ""}
-                        onChange={e => {
-                          const updated = [...cvSections.workExperience];
-                          updated[expIdx].company = e.target.value;
-                          setCvSections({...cvSections, workExperience: updated});
-                        }}
-                        className="bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs font-bold text-white"
-                      />
-                      <input 
-                        type="text" 
-                        placeholder="Perioada (ex: 2024 - Present)"
+                        placeholder="Perioada (ex: Iunie 2025 - August 2025)"
                         value={exp.period || ""}
                         onChange={e => {
                           const updated = [...cvSections.workExperience];
                           updated[expIdx].period = e.target.value;
                           setCvSections({...cvSections, workExperience: updated});
                         }}
-                        className="bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
+                        className="bg-gray-950 border border-gray-800 rounded-lg p-1.5 text-xs text-gray-300"
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="Locatie (ex: Bucuresti, Romania)"
+                        value={exp.location || ""}
+                        onChange={e => {
+                          const updated = [...cvSections.workExperience];
+                          updated[expIdx].location = e.target.value;
+                          setCvSections({...cvSections, workExperience: updated});
+                        }}
+                        className="bg-gray-950 border border-gray-800 rounded-lg p-1.5 text-xs text-gray-300"
                       />
                     </div>
-                    
-                    <div className="flex items-center gap-1">
-                      <button 
-                        onClick={() => handleMoveWorkExperience(expIdx, -1)}
-                        disabled={expIdx === 0}
-                        className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
-                        title="Muta mai sus"
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleMoveWorkExperience(expIdx, 1)}
-                        disabled={expIdx === cvSections.workExperience.length - 1}
-                        className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
-                        title="Muta mai jos"
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteWorkExperience(exp.id)}
-                        className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg shrink-0 ml-1"
-                        title="Sterge Experienta"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
 
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-[10px] font-semibold text-gray-400">Bullet-uri Responsabilitati Activitate:</label>
-                      <button 
-                        onClick={() => handleAddWorkBullet(expIdx)}
-                        className="text-[10px] text-blue-400 hover:underline flex items-center gap-0.5 font-bold"
-                      >
-                        <Plus className="w-3 h-3" /> Adauga Bullet
-                      </button>
-                    </div>
-                    {exp.bullets && exp.bullets.map((b, bIdx) => (
-                      <div key={bIdx} className="flex items-center gap-1.5">
-                        <input 
-                          type="text" 
-                          placeholder="Introdu o responsabilitate..."
-                          value={b}
-                          onChange={e => {
-                            const updated = [...cvSections.workExperience];
-                            updated[expIdx].bullets[bIdx] = e.target.value;
-                            setCvSections({...cvSections, workExperience: updated});
-                          }}
-                          className="flex-1 bg-gray-950 border border-gray-800 rounded-lg p-1.5 text-xs text-gray-300"
-                        />
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[10px] font-semibold text-gray-400">Bullet-uri Responsabilitati:</label>
                         <button 
-                          onClick={() => handleDeleteWorkBullet(expIdx, bIdx)}
-                          className="p-1 text-gray-500 hover:text-rose-400"
-                          title="Sterge bullet"
+                          onClick={() => handleAddWorkBullet(expIdx)}
+                          className="text-[10px] text-blue-400 hover:underline flex items-center gap-0.5 font-bold"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Plus className="w-3 h-3" /> Adauga Bullet
                         </button>
                       </div>
-                    ))}
+                      {exp.bullets && exp.bullets.map((b, bIdx) => (
+                        <div key={bIdx} className="flex items-center gap-1.5">
+                          <input 
+                            type="text" 
+                            placeholder="Introdu o responsabilitate..."
+                            value={b}
+                            onChange={e => {
+                              const updated = [...cvSections.workExperience];
+                              updated[expIdx].bullets[bIdx] = e.target.value;
+                              setCvSections({...cvSections, workExperience: updated});
+                            }}
+                            className="flex-1 bg-gray-950 border border-gray-800 rounded-lg p-1.5 text-xs text-gray-300"
+                          />
+                          <button 
+                            onClick={() => handleDeleteWorkBullet(expIdx, bIdx)}
+                            className="p-1 text-gray-500 hover:text-rose-400"
+                            title="Sterge bullet"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            {/* DYNAMIC PERSONAL PROJECTS SECTION WITH BULLETS & REORDERING */}
-            <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-amber-400 flex items-center gap-1.5 uppercase">
-                  <FolderGit2 className="w-4 h-4" /> 3. Proiecte Personale (Personal Projects)
-                </span>
-                <button 
-                  onClick={handleAddProject}
-                  className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-[10px] font-bold border border-amber-500/30 flex items-center gap-1"
-                >
-                  <Plus className="w-3 h-3" /> Adauga Proiect Nou
-                </button>
+                ))}
               </div>
 
-              {cvSections.projects.length === 0 && (
-                <p className="text-[11px] text-gray-500 italic text-center py-2">
-                  Niciun proiect adaugat. Incarca un PDF CV sau apasa pe "+ Adauga Proiect Nou".
-                </p>
-              )}
+              {/* SECTION 3: PERSONAL PROJECTS EDITOR */}
+              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-amber-400 flex items-center gap-1.5 uppercase">
+                    <FolderGit2 className="w-4 h-4" /> 3. Proiecte Personale (Personal Projects)
+                  </span>
+                  <button 
+                    onClick={handleAddProject}
+                    className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-[10px] font-bold border border-amber-500/30 flex items-center gap-1 transition"
+                  >
+                    <Plus className="w-3 h-3" /> Adauga Proiect Nou
+                  </button>
+                </div>
 
-              {cvSections.projects.map((proj, projIdx) => (
-                <div key={proj.id || projIdx} className="space-y-2.5 p-3 bg-gray-900/50 rounded-xl border border-gray-800/80">
-                  <div className="flex items-center justify-between gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Titlu Proiect din CV"
-                      value={proj.title || ""}
-                      onChange={e => {
-                        const updated = [...cvSections.projects];
-                        updated[projIdx].title = e.target.value;
-                        setCvSections({...cvSections, projects: updated});
-                      }}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs font-bold text-white"
-                    />
-                    
-                    <div className="flex items-center gap-1">
-                      <button 
-                        onClick={() => handleMoveProject(projIdx, -1)}
-                        disabled={projIdx === 0}
-                        className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
-                        title="Muta mai sus"
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleMoveProject(projIdx, 1)}
-                        disabled={projIdx === cvSections.projects.length - 1}
-                        className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
-                        title="Muta mai jos"
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteProject(proj.id)}
-                        className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg shrink-0 ml-1"
-                        title="Sterge Proiect"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
+                {cvSections.projects.length === 0 && (
+                  <p className="text-[11px] text-gray-500 italic text-center py-2">
+                    Niciun proiect adaugat. Apasa pe "+ Adauga Proiect Nou" sau incarca un CV PDF.
+                  </p>
+                )}
 
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-[10px] font-semibold text-gray-400">Gloante Proiect (Metoda XYZ):</label>
-                      <button 
-                        onClick={() => handleAddProjectBullet(projIdx)}
-                        className="text-[10px] text-amber-400 hover:underline flex items-center gap-0.5 font-bold"
-                      >
-                        <Plus className="w-3 h-3" /> Adauga Bullet
-                      </button>
-                    </div>
-                    {proj.bullets && proj.bullets.map((b, bIdx) => (
-                      <div key={bIdx} className="flex items-center gap-1.5">
+                {cvSections.projects.map((proj, projIdx) => (
+                  <div key={proj.id || projIdx} className="space-y-2.5 p-3 bg-gray-900/50 rounded-xl border border-gray-800/80">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="grid grid-cols-2 gap-2 flex-1">
                         <input 
                           type="text" 
-                          placeholder="Introdu descrierea proiectului..."
-                          value={b}
+                          placeholder="Titlu Proiect"
+                          value={proj.title || ""}
                           onChange={e => {
                             const updated = [...cvSections.projects];
-                            updated[projIdx].bullets[bIdx] = e.target.value;
+                            updated[projIdx].title = e.target.value;
                             setCvSections({...cvSections, projects: updated});
                           }}
-                          className="flex-1 bg-gray-950 border border-gray-800 rounded-lg p-1.5 text-xs text-gray-300"
+                          className="bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs font-bold text-white"
                         />
+                        <input 
+                          type="text" 
+                          placeholder="Stack Tehnologic (ex: Python, PyTorch, React)"
+                          value={proj.techStack || ""}
+                          onChange={e => {
+                            const updated = [...cvSections.projects];
+                            updated[projIdx].techStack = e.target.value;
+                            setCvSections({...cvSections, projects: updated});
+                          }}
+                          className="bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
                         <button 
-                          onClick={() => handleDeleteProjectBullet(projIdx, bIdx)}
-                          className="p-1 text-gray-500 hover:text-rose-400"
-                          title="Sterge bullet"
+                          onClick={() => handleMoveProject(projIdx, -1)}
+                          disabled={projIdx === 0}
+                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
+                          title="Muta mai sus"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleMoveProject(projIdx, 1)}
+                          disabled={projIdx === cvSections.projects.length - 1}
+                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
+                          title="Muta mai jos"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteProject(proj.id)}
+                          className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg shrink-0 ml-1"
+                          title="Sterge Proiect"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                    ))}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[10px] font-semibold text-gray-400">Gloante Proiect (Metoda XYZ):</label>
+                        <button 
+                          onClick={() => handleAddProjectBullet(projIdx)}
+                          className="text-[10px] text-amber-400 hover:underline flex items-center gap-0.5 font-bold"
+                        >
+                          <Plus className="w-3 h-3" /> Adauga Bullet
+                        </button>
+                      </div>
+                      {proj.bullets && proj.bullets.map((b, bIdx) => (
+                        <div key={bIdx} className="flex items-center gap-1.5">
+                          <input 
+                            type="text" 
+                            placeholder="Introdu descrierea proiectului..."
+                            value={b}
+                            onChange={e => {
+                              const updated = [...cvSections.projects];
+                              updated[projIdx].bullets[bIdx] = e.target.value;
+                              setCvSections({...cvSections, projects: updated});
+                            }}
+                            className="flex-1 bg-gray-950 border border-gray-800 rounded-lg p-1.5 text-xs text-gray-300"
+                          />
+                          <button 
+                            onClick={() => handleDeleteProjectBullet(projIdx, bIdx)}
+                            className="p-1 text-gray-500 hover:text-rose-400"
+                            title="Sterge bullet"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* SECTION 4: TECHNICAL SKILLS EDITOR */}
+              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
+                <span className="text-xs font-black text-cyan-400 uppercase tracking-wider block">
+                  4. Abilitati Tehnice (Technical Skills)
+                </span>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Limbaje de Programare:</label>
+                    <input 
+                      type="text" 
+                      placeholder="ex: Java, TypeScript, Python, SQL"
+                      value={cvSections.skills.languages}
+                      onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, languages: e.target.value}})}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Framework-uri & Biblioteci:</label>
+                    <input 
+                      type="text" 
+                      placeholder="ex: Spring Boot, React, Next.js, PyTorch"
+                      value={cvSections.skills.frameworks}
+                      onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, frameworks: e.target.value}})}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Baze de Date & AI:</label>
+                    <input 
+                      type="text" 
+                      placeholder="ex: PostgreSQL, MySQL, Supabase, pgvector"
+                      value={cvSections.skills.databases}
+                      onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, databases: e.target.value}})}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 mb-1">DevOps, Tools & Tehnologii:</label>
+                    <input 
+                      type="text" 
+                      placeholder="ex: Docker, Linux, Git, REST API"
+                      value={cvSections.skills.devops}
+                      onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, devops: e.target.value}})}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* TECHNICAL SKILLS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-1">Limbaje de Programare:</label>
-                <input 
-                  type="text" 
-                  placeholder="ex: Java, SQL, Python"
-                  value={cvSections.skills.languages}
-                  onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, languages: e.target.value}})}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white"
-                />
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-1">Framework-uri:</label>
-                <input 
-                  type="text" 
-                  placeholder="ex: Spring Boot, React"
-                  value={cvSections.skills.frameworks}
-                  onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, frameworks: e.target.value}})}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white"
-                />
-              </div>
             </div>
-
           </div>
-        </div>
+        )}
 
-        {/* RIGHT COLUMN: TARGET JOB & AI TRIGGER */}
-        <div className="glass-card p-5 rounded-2xl border border-purple-500/30 space-y-4 flex flex-col justify-between">
-          <div className="space-y-3">
-            <h3 className="text-sm font-black text-white flex items-center gap-2">
-              <Target className="w-4 h-4 text-blue-400" />
-              Alege Jobul Tinta pentru Match 100%
-            </h3>
+        {/* ================= RIGHT COLUMN: LIVE CV DOCUMENT PREVIEW ================= */}
+        {(viewMode === 'split' || viewMode === 'preview') && (
+          <div className={`${viewMode === 'split' ? 'lg:col-span-5' : 'w-full'} space-y-4`}>
+            
+            {/* PREVIEW TOP BAR */}
+            <div className="glass-card p-3 rounded-2xl border border-gray-800 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                <span className="font-extrabold text-white">Live CV Document Preview</span>
+                <span className="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded border border-gray-800">
+                  Jake's Resume ATS Format
+                </span>
+              </div>
 
-            {applications.length > 0 && (
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-1">Selecteaza din Kanban:</label>
-                <select 
-                  value={selectedJobId}
-                  onChange={e => setSelectedJobId(e.target.value)}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
-                >
-                  {applications.map(app => (
-                    <option key={app.id} value={app.id}>
-                      {app.jobTitle} la {app.companyName}
-                    </option>
+              <button
+                onClick={handleDownloadTailoredJakesPdf}
+                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow transition"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Descarca PDF
+              </button>
+            </div>
+
+            {/* A4 WHITE PAPER CONTAINER */}
+            <div className="bg-white text-black p-6 sm:p-8 rounded-2xl shadow-2xl border border-gray-300 font-serif leading-tight text-[11px] selection:bg-blue-200 selection:text-black max-h-[85vh] overflow-y-auto">
+              
+              {/* HEADER (NAME + CONTACT LINKS) */}
+              <div className="text-center pb-2">
+                <h1 className="text-lg sm:text-xl font-bold uppercase tracking-wider text-black font-sans">
+                  {cvSections.fullName || 'Nume Prenume'}
+                </h1>
+                <div className="text-[9px] sm:text-[10px] text-gray-700 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 mt-1 font-sans">
+                  {cvSections.email && <span>{cvSections.email}</span>}
+                  {cvSections.phone && <span>• {cvSections.phone}</span>}
+                  {cvSections.location && <span>• {cvSections.location}</span>}
+                  {cvSections.linkedin && <span>• {cvSections.linkedin}</span>}
+                  {cvSections.github && <span>• {cvSections.github}</span>}
+                </div>
+              </div>
+
+              {/* SUMMARY */}
+              {cvSections.summary && (
+                <div className="mt-3">
+                  <h2 className="text-[11px] font-bold uppercase tracking-wider border-b border-black pb-0.5 font-sans">
+                    Professional Summary
+                  </h2>
+                  <p className="text-[10px] text-gray-800 text-justify mt-1 leading-normal font-sans">
+                    {cvSections.summary}
+                  </p>
+                </div>
+              )}
+
+              {/* EDUCATION */}
+              {eduList.length > 0 && (
+                <div className="mt-3">
+                  <h2 className="text-[11px] font-bold uppercase tracking-wider border-b border-black pb-0.5 font-sans">
+                    Education
+                  </h2>
+                  {eduList.map((edu, idx) => (
+                    <div key={idx} className="mt-1.5">
+                      <div className="flex justify-between font-bold text-[10.5px] text-black">
+                        <span>{edu.school || 'Universitate / Scoala'}</span>
+                        <span>{edu.location || ''}</span>
+                      </div>
+                      <div className="flex justify-between italic text-[10px] text-gray-700">
+                        <span>{edu.degree || 'Diploma / Specializare'}</span>
+                        <span>{edu.period || ''}</span>
+                      </div>
+                    </div>
                   ))}
-                </select>
-              </div>
-            )}
+                </div>
+              )}
 
-            <div>
-              <label className="block text-[11px] font-bold text-gray-400 mb-1">Sau Lipeste Cerintele Unui Job Nou:</label>
-              <textarea 
-                rows={5}
-                value={customJobDescription}
-                onChange={e => setCustomJobDescription(e.target.value)}
-                placeholder="Lipeste descrierea jobului de pe LinkedIn aici..."
-                className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
-              />
+              {/* WORK EXPERIENCE */}
+              {cvSections.workExperience.length > 0 && (
+                <div className="mt-3">
+                  <h2 className="text-[11px] font-bold uppercase tracking-wider border-b border-black pb-0.5 font-sans">
+                    Work Experience
+                  </h2>
+                  {cvSections.workExperience.map((exp, idx) => (
+                    <div key={idx} className="mt-1.5">
+                      <div className="flex justify-between font-bold text-[10.5px] text-black">
+                        <span>{exp.company || 'Companie'}</span>
+                        <span>{exp.location || ''}</span>
+                      </div>
+                      <div className="flex justify-between italic text-[10px] text-gray-700">
+                        <span>{exp.role || 'Rol'}</span>
+                        <span>{exp.period || ''}</span>
+                      </div>
+                      {exp.bullets && exp.bullets.length > 0 && (
+                        <ul className="list-disc pl-4 text-[10px] text-gray-800 mt-1 space-y-0.5 text-justify">
+                          {exp.bullets.filter(Boolean).map((b, bIdx) => (
+                            <li key={bIdx}>{b}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* PERSONAL PROJECTS */}
+              {cvSections.projects.length > 0 && (
+                <div className="mt-3">
+                  <h2 className="text-[11px] font-bold uppercase tracking-wider border-b border-black pb-0.5 font-sans">
+                    Personal Projects
+                  </h2>
+                  {cvSections.projects.map((proj, idx) => (
+                    <div key={idx} className="mt-1.5">
+                      <div className="flex justify-between font-bold text-[10.5px] text-black">
+                        <span>{proj.title || 'Titlu Proiect'}</span>
+                        <span className="font-normal text-[9.5px] italic text-gray-600">{proj.techStack || ''}</span>
+                      </div>
+                      {proj.bullets && proj.bullets.length > 0 && (
+                        <ul className="list-disc pl-4 text-[10px] text-gray-800 mt-1 space-y-0.5 text-justify">
+                          {proj.bullets.filter(Boolean).map((b, bIdx) => (
+                            <li key={bIdx}>{b}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* TECHNICAL SKILLS */}
+              {(cvSections.skills.languages || cvSections.skills.frameworks || cvSections.skills.databases || cvSections.skills.devops) && (
+                <div className="mt-3">
+                  <h2 className="text-[11px] font-bold uppercase tracking-wider border-b border-black pb-0.5 font-sans">
+                    Technical Skills
+                  </h2>
+                  <div className="mt-1 text-[10px] text-gray-800 space-y-0.5">
+                    {cvSections.skills.languages && (
+                      <p><span className="font-bold">Languages:</span> {cvSections.skills.languages}</p>
+                    )}
+                    {cvSections.skills.frameworks && (
+                      <p><span className="font-bold">Frameworks:</span> {cvSections.skills.frameworks}</p>
+                    )}
+                    {cvSections.skills.databases && (
+                      <p><span className="font-bold">Databases:</span> {cvSections.skills.databases}</p>
+                    )}
+                    {cvSections.skills.devops && (
+                      <p><span className="font-bold">DevOps & Tools:</span> {cvSections.skills.devops}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
             </div>
-          </div>
 
-          <button
-            onClick={handleRunTwoAgentPipeline}
-            disabled={isAnalyzing}
-            className="w-full py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition scale-[1.01]"
-          >
-            {isAnalyzing ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Pipeline-ul de 2 Agenti AI Adapteaza CV-ul...
-              </>
-            ) : (
-              <>
-                <Zap className="w-4 h-4 text-amber-300" />
-                Ruleaza Pipeline-ul AI (Match 100%)
-              </>
-            )}
-          </button>
-        </div>
+            {/* TARGET JOB AI OPTIMIZATION ACCORDION */}
+            <div className="glass-card p-4 rounded-2xl border border-purple-500/30 space-y-3">
+              <h4 className="text-xs font-black text-white flex items-center gap-2">
+                <Target className="w-4 h-4 text-blue-400" />
+                Optimizare AI ATS Match 100% pentru un Job Tinta
+              </h4>
+              
+              {applications.length > 0 && (
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 mb-1">Selecteaza jobul din pipeline:</label>
+                  <select 
+                    value={selectedJobId}
+                    onChange={e => setSelectedJobId(e.target.value)}
+                    className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                  >
+                    {applications.map(app => (
+                      <option key={app.id} value={app.id}>
+                        {app.jobTitle} la {app.companyName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <button
+                onClick={handleRunTwoAgentPipeline}
+                disabled={isAnalyzing}
+                className="w-full py-2.5 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Analiza AI in desfasurare...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 text-amber-300" />
+                    Ruleaza Analiza AI Match 100%
+                  </>
+                )}
+              </button>
+            </div>
+
+          </div>
+        )}
 
       </div>
 
-      {/* SECTION 2: DUAL AGENT PIPELINE OUTPUT CARDS */}
+      {/* SECTION: DUAL AGENT PIPELINE OUTPUT CARDS */}
       {(agent1Output || agent2Output || isAnalyzing) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
@@ -1114,7 +1523,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                     Agent 2 rescrie sectiunile CV-ului pentru a obtine scorul de 100%...
                   </>
                 ) : (
-                  "Apasa pe 'Ruleaza Pipeline-ul AI' pentru a genera noul CV optimizat."
+                  "Apasa pe 'Ruleaza Analiza AI Match 100%' pentru a genera noul CV optimizat."
                 )}
               </div>
             )}
