@@ -466,7 +466,7 @@ export default function CvStudio({ applications = [], currentUser }) {
     }, 1500);
   };
 
-  // DIRECT PDF DOWNLOAD HANDLER (NO NEW TAB, DOWNLOADS DIRECTLY)
+  // DIRECT 1-PAGE PDF DOWNLOAD HANDLER (CLEAN A4, NO BORDERS, NO MULTI-PAGE OVERFLOW)
   const handleDownloadDirectPdf = async () => {
     const element = previewRef.current || document.getElementById('cv-preview-sheet');
     if (!element) {
@@ -477,20 +477,21 @@ export default function CvStudio({ applications = [], currentUser }) {
     setIsDownloadingPdf(true);
 
     try {
-      const sanitizedName = (cvSections.fullName || 'CV').trim().replace(/[^a-zA-Z0-9-_]/g, '_');
+      const sanitizedName = (cvSections.fullName || 'CV').trim().replace(/\s+/g, '_');
+      
       const opt = {
-        margin: [8, 8, 8, 8],
+        margin: [0, 0, 0, 0],
         filename: `${sanitizedName}_Resume_ATS.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
-          scale: 3, 
+          scale: 2.5, 
           useCORS: true, 
           letterRendering: true,
+          backgroundColor: '#ffffff',
           scrollY: 0,
           scrollX: 0
         },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
       await html2pdf().set(opt).from(element).save();
@@ -520,7 +521,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                 Studio CV ATS - Editor Complet, Live Preview & Descarcare Directa PDF
               </h2>
               <p className="text-xs text-gray-400 font-medium">
-                Editeaza, adauga, sterge sau reordoneaza orice sectiune si descarca PDF-ul direct printr-un singur click.
+                Editeaza, adauga, sterge sau reordoneaza orice sectiune si descarca PDF-ul direct pe o singura pagina A4 curata.
               </p>
             </div>
           </div>
@@ -990,7 +991,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                             className="p-1 text-gray-500 hover:text-rose-400"
                             title="Sterge bullet"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       ))}
@@ -1168,7 +1169,7 @@ export default function CvStudio({ applications = [], currentUser }) {
           </div>
         )}
 
-        {/* ================= RIGHT COLUMN: LIVE CV DOCUMENT PREVIEW (A4 STANDARDIZAT) ================= */}
+        {/* ================= RIGHT COLUMN: LIVE CV DOCUMENT PREVIEW (FULL WHITE PAPER SHEET) ================= */}
         {(viewMode === 'split' || viewMode === 'preview') && (
           <div className={`${viewMode === 'split' ? 'lg:col-span-5' : 'w-full'} space-y-4`}>
             
@@ -1189,23 +1190,52 @@ export default function CvStudio({ applications = [], currentUser }) {
               </button>
             </div>
 
-            {/* A4 CANVAS CONTAINER */}
-            <div className="bg-gray-950/70 p-3 sm:p-5 rounded-2xl border border-gray-800/80 overflow-y-auto max-h-[85vh] flex justify-center shadow-inner">
+            {/* A4 CANVAS WORKBENCH */}
+            <div className="w-full bg-slate-900/60 p-3 sm:p-5 rounded-2xl border border-gray-800/80 overflow-y-auto max-h-[88vh] shadow-inner">
               
-              {/* EXACT A4 WHITE PAPER SHEET (210mm x 297mm PROPORTION) */}
+              {/* EXACT A4 WHITE PAPER SHEET (ENCLOSES 100% OF CONTENT NATURALLY, NEVER CUTS OFF) */}
               <div 
                 ref={previewRef}
                 id="cv-preview-sheet" 
-                className="bg-white text-black font-serif shadow-2xl rounded-sm border border-gray-300 w-full max-w-[210mm] min-h-[297mm] p-6 sm:p-8 text-[10.5pt] leading-[1.3] box-border select-text"
-                style={{ fontFamily: "'Times New Roman', Times, serif" }}
+                className="mx-auto w-full max-w-[210mm] bg-white text-black select-text shadow-2xl rounded-sm"
+                style={{ 
+                  fontFamily: "'Times New Roman', Times, serif",
+                  backgroundColor: '#ffffff',
+                  color: '#000000',
+                  padding: '12mm 15mm',
+                  minHeight: '297mm',
+                  height: 'fit-content',
+                  boxSizing: 'border-box',
+                  display: 'block',
+                  overflow: 'hidden'
+                }}
               >
                 
                 {/* HEADER (NAME + CONTACT LINKS) */}
-                <div className="text-center pb-1">
-                  <h1 className="text-xl font-bold uppercase tracking-wider text-black" style={{ letterSpacing: '1px' }}>
+                <div style={{ textAlign: 'center', paddingBottom: '2px' }}>
+                  <h1 style={{ 
+                    fontSize: '18pt', 
+                    fontWeight: 'bold', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '1px', 
+                    color: '#000000', 
+                    fontFamily: 'Arial, Helvetica, sans-serif',
+                    lineHeight: '1.2',
+                    margin: 0
+                  }}>
                     {cvSections.fullName || 'Nume Prenume'}
                   </h1>
-                  <div className="text-[9pt] text-gray-800 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 mt-1 font-sans">
+                  <div style={{ 
+                    fontSize: '8.5pt', 
+                    color: '#222222', 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '4px 6px', 
+                    marginTop: '4px',
+                    fontFamily: 'Arial, Helvetica, sans-serif'
+                  }}>
                     {cvSections.email && <span>{cvSections.email}</span>}
                     {cvSections.phone && <span>| {cvSections.phone}</span>}
                     {cvSections.location && <span>| {cvSections.location}</span>}
@@ -1216,11 +1246,20 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                 {/* SUMMARY */}
                 {cvSections.summary && (
-                  <div className="mt-2.5">
-                    <h2 className="text-[10pt] font-bold uppercase tracking-wider border-b border-black pb-0.5" style={{ letterSpacing: '0.5px' }}>
+                  <div style={{ marginTop: '12px', marginBottom: '4px' }}>
+                    <div style={{ 
+                      fontWeight: 'bold', 
+                      fontSize: '9.5pt', 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '0.8px', 
+                      color: '#000000', 
+                      fontFamily: 'Arial, Helvetica, sans-serif',
+                      lineHeight: '1.2'
+                    }}>
                       Professional Summary
-                    </h2>
-                    <p className="text-[9.5pt] text-black text-justify mt-1 leading-normal font-sans">
+                    </div>
+                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
+                    <p style={{ fontSize: '9pt', color: '#000000', textAlign: 'justify', lineHeight: '1.35', fontFamily: 'Arial, Helvetica, sans-serif', margin: 0 }}>
                       {cvSections.summary}
                     </p>
                   </div>
@@ -1228,17 +1267,26 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                 {/* EDUCATION */}
                 {eduList.length > 0 && (
-                  <div className="mt-2.5">
-                    <h2 className="text-[10pt] font-bold uppercase tracking-wider border-b border-black pb-0.5" style={{ letterSpacing: '0.5px' }}>
+                  <div style={{ marginTop: '12px', marginBottom: '4px' }}>
+                    <div style={{ 
+                      fontWeight: 'bold', 
+                      fontSize: '9.5pt', 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '0.8px', 
+                      color: '#000000', 
+                      fontFamily: 'Arial, Helvetica, sans-serif',
+                      lineHeight: '1.2'
+                    }}>
                       Education
-                    </h2>
+                    </div>
+                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
                     {eduList.map((edu, idx) => (
-                      <div key={idx} className="mt-1">
-                        <div className="flex justify-between font-bold text-[10pt] text-black">
+                      <div key={idx} style={{ marginTop: idx > 0 ? '5px' : '2px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
                           <span>{edu.school || 'Universitate / Scoala'}</span>
                           <span>{edu.location || ''}</span>
                         </div>
-                        <div className="flex justify-between italic text-[9pt] text-gray-800">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontStyle: 'italic', fontSize: '8.5pt', color: '#222222' }}>
                           <span>{edu.degree || 'Diploma / Specializare'}</span>
                           <span>{edu.period || ''}</span>
                         </div>
@@ -1249,26 +1297,38 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                 {/* WORK EXPERIENCE */}
                 {cvSections.workExperience.length > 0 && (
-                  <div className="mt-2.5">
-                    <h2 className="text-[10pt] font-bold uppercase tracking-wider border-b border-black pb-0.5" style={{ letterSpacing: '0.5px' }}>
+                  <div style={{ marginTop: '12px', marginBottom: '4px' }}>
+                    <div style={{ 
+                      fontWeight: 'bold', 
+                      fontSize: '9.5pt', 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '0.8px', 
+                      color: '#000000', 
+                      fontFamily: 'Arial, Helvetica, sans-serif',
+                      lineHeight: '1.2'
+                    }}>
                       Work Experience
-                    </h2>
+                    </div>
+                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
                     {cvSections.workExperience.map((exp, idx) => (
-                      <div key={idx} className="mt-1">
-                        <div className="flex justify-between font-bold text-[10pt] text-black">
+                      <div key={idx} style={{ marginTop: idx > 0 ? '6px' : '2px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
                           <span>{exp.company || 'Companie'}</span>
                           <span>{exp.location || ''}</span>
                         </div>
-                        <div className="flex justify-between italic text-[9pt] text-gray-800">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontStyle: 'italic', fontSize: '8.5pt', color: '#222222' }}>
                           <span>{exp.role || 'Rol'}</span>
                           <span>{exp.period || ''}</span>
                         </div>
                         {exp.bullets && exp.bullets.length > 0 && (
-                          <ul className="list-disc pl-4 text-[9pt] text-black mt-0.5 space-y-0.5 text-justify">
+                          <div style={{ marginTop: '3px' }}>
                             {exp.bullets.filter(Boolean).map((b, bIdx) => (
-                              <li key={bIdx}>{b}</li>
+                              <div key={bIdx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '2px' }}>
+                                <span style={{ display: 'inline-block', width: '14px', fontSize: '9pt', lineHeight: '1.3', color: '#000000', flexShrink: 0, textAlign: 'center' }}>•</span>
+                                <span style={{ flex: 1, fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}>{b}</span>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -1277,22 +1337,34 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                 {/* PERSONAL PROJECTS */}
                 {cvSections.projects.length > 0 && (
-                  <div className="mt-2.5">
-                    <h2 className="text-[10pt] font-bold uppercase tracking-wider border-b border-black pb-0.5" style={{ letterSpacing: '0.5px' }}>
+                  <div style={{ marginTop: '12px', marginBottom: '4px' }}>
+                    <div style={{ 
+                      fontWeight: 'bold', 
+                      fontSize: '9.5pt', 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '0.8px', 
+                      color: '#000000', 
+                      fontFamily: 'Arial, Helvetica, sans-serif',
+                      lineHeight: '1.2'
+                    }}>
                       Personal Projects
-                    </h2>
+                    </div>
+                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
                     {cvSections.projects.map((proj, idx) => (
-                      <div key={idx} className="mt-1">
-                        <div className="flex justify-between font-bold text-[10pt] text-black">
+                      <div key={idx} style={{ marginTop: idx > 0 ? '6px' : '2px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
                           <span>{proj.title || 'Titlu Proiect'}</span>
-                          <span className="font-normal text-[9pt] italic text-gray-700">{proj.techStack || ''}</span>
+                          <span style={{ fontWeight: 'normal', fontSize: '8.5pt', fontStyle: 'italic', color: '#333333' }}>{proj.techStack || ''}</span>
                         </div>
                         {proj.bullets && proj.bullets.length > 0 && (
-                          <ul className="list-disc pl-4 text-[9pt] text-black mt-0.5 space-y-0.5 text-justify">
+                          <div style={{ marginTop: '3px' }}>
                             {proj.bullets.filter(Boolean).map((b, bIdx) => (
-                              <li key={bIdx}>{b}</li>
+                              <div key={bIdx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '2px' }}>
+                                <span style={{ display: 'inline-block', width: '14px', fontSize: '9pt', lineHeight: '1.3', color: '#000000', flexShrink: 0, textAlign: 'center' }}>•</span>
+                                <span style={{ flex: 1, fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}>{b}</span>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -1301,22 +1373,31 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                 {/* TECHNICAL SKILLS */}
                 {(cvSections.skills.languages || cvSections.skills.frameworks || cvSections.skills.databases || cvSections.skills.devops) && (
-                  <div className="mt-2.5">
-                    <h2 className="text-[10pt] font-bold uppercase tracking-wider border-b border-black pb-0.5" style={{ letterSpacing: '0.5px' }}>
+                  <div style={{ marginTop: '12px', marginBottom: '4px' }}>
+                    <div style={{ 
+                      fontWeight: 'bold', 
+                      fontSize: '9.5pt', 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '0.8px', 
+                      color: '#000000', 
+                      fontFamily: 'Arial, Helvetica, sans-serif',
+                      lineHeight: '1.2'
+                    }}>
                       Technical Skills
-                    </h2>
-                    <div className="mt-1 text-[9pt] text-black space-y-0.5">
+                    </div>
+                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
+                    <div style={{ marginTop: '3px', fontSize: '8.5pt', color: '#000000', lineHeight: '1.4' }}>
                       {cvSections.skills.languages && (
-                        <p><span className="font-bold">Languages:</span> {cvSections.skills.languages}</p>
+                        <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Languages:</span> {cvSections.skills.languages}</p>
                       )}
                       {cvSections.skills.frameworks && (
-                        <p><span className="font-bold">Frameworks:</span> {cvSections.skills.frameworks}</p>
+                        <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Frameworks:</span> {cvSections.skills.frameworks}</p>
                       )}
                       {cvSections.skills.databases && (
-                        <p><span className="font-bold">Databases:</span> {cvSections.skills.databases}</p>
+                        <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Databases:</span> {cvSections.skills.databases}</p>
                       )}
                       {cvSections.skills.devops && (
-                        <p><span className="font-bold">DevOps & Tools:</span> {cvSections.skills.devops}</p>
+                        <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>DevOps & Tools:</span> {cvSections.skills.devops}</p>
                       )}
                     </div>
                   </div>
