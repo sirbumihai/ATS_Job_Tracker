@@ -30,12 +30,17 @@ import {
   Phone,
   MapPin,
   Linkedin,
-  Github
+  Github,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Maximize
 } from 'lucide-react';
 
 export default function CvStudio({ applications = [], currentUser }) {
   const activeUserId = currentUser ? currentUser.userId : null;
   const previewRef = useRef(null);
+  const workbenchRef = useRef(null);
 
   // MASTER CV SECTIONS STATE (PERSISTATE IN BAZA DE DATE POSTGRESQL)
   const [cvSections, setCvSections] = useState({
@@ -58,6 +63,7 @@ export default function CvStudio({ applications = [], currentUser }) {
   });
 
   const [viewMode, setViewMode] = useState('split'); // 'split' | 'editor' | 'preview'
+  const [previewZoom, setPreviewZoom] = useState(0.55); // Default zoom for Split View
   const [languagePref, setLanguagePref] = useState('EN');
   const [selectedJobId, setSelectedJobId] = useState(applications.length > 0 ? applications[0].id : '');
   const [customJobDescription, setCustomJobDescription] = useState('');
@@ -75,6 +81,27 @@ export default function CvStudio({ applications = [], currentUser }) {
   const [agent2Output, setAgent2Output] = useState(null);
 
   const selectedApp = applications.find(a => a.id === selectedJobId) || (applications.length > 0 ? applications[0] : null);
+
+  // AUTO CALCULATE FIT ZOOM
+  const handleFitToWidth = () => {
+    if (workbenchRef.current) {
+      const containerWidth = workbenchRef.current.clientWidth - 48; // padding
+      const a4WidthPx = 794; // 210mm in standard 96dpi pixels
+      const calculatedZoom = Math.min(1.0, Math.max(0.35, Number((containerWidth / a4WidthPx).toFixed(2))));
+      setPreviewZoom(calculatedZoom);
+    } else {
+      setPreviewZoom(viewMode === 'split' ? 0.55 : 0.95);
+    }
+  };
+
+  // Auto-adjust default zoom when switching view modes
+  useEffect(() => {
+    if (viewMode === 'split') {
+      handleFitToWidth();
+    } else if (viewMode === 'preview') {
+      setPreviewZoom(0.95);
+    }
+  }, [viewMode]);
 
   // HELPER TO NORMALIZE EDUCATION AS ARRAY
   const normalizeEducation = (edu) => {
@@ -466,7 +493,7 @@ export default function CvStudio({ applications = [], currentUser }) {
     }, 1500);
   };
 
-  // DIRECT 1-PAGE PDF DOWNLOAD HANDLER (CLEAN A4, NO BORDERS, NO MULTI-PAGE OVERFLOW)
+  // DIRECT 1-PAGE PDF DOWNLOAD HANDLER (EXACT 210mm A4 RATIO)
   const handleDownloadDirectPdf = async () => {
     const element = previewRef.current || document.getElementById('cv-preview-sheet');
     if (!element) {
@@ -479,6 +506,10 @@ export default function CvStudio({ applications = [], currentUser }) {
     try {
       const sanitizedName = (cvSections.fullName || 'CV').trim().replace(/\s+/g, '_');
       
+      // Temporarily clear CSS transform during capture
+      const currentTransform = element.style.transform;
+      element.style.transform = 'none';
+
       const opt = {
         margin: [0, 0, 0, 0],
         filename: `${sanitizedName}_Resume_ATS.pdf`,
@@ -495,6 +526,9 @@ export default function CvStudio({ applications = [], currentUser }) {
       };
 
       await html2pdf().set(opt).from(element).save();
+
+      // Restore zoom transform
+      element.style.transform = currentTransform;
     } catch (err) {
       console.error("Eroare la generarea directa a PDF-ului:", err);
     } finally {
@@ -629,12 +663,12 @@ export default function CvStudio({ applications = [], currentUser }) {
 
       {/* MAIN CONTAINER: SPLIT VIEW (EDITOR ON LEFT, LIVE PREVIEW ON RIGHT) */}
       <div className={`grid gap-6 ${
-        viewMode === 'split' ? 'grid-cols-1 lg:grid-cols-12' : 'grid-cols-1'
+        viewMode === 'split' ? 'grid-cols-1 xl:grid-cols-12' : 'grid-cols-1'
       }`}>
         
         {/* ================= LEFT COLUMN: FULL CRUD CV EDITOR ================= */}
         {(viewMode === 'split' || viewMode === 'editor') && (
-          <div className={`${viewMode === 'split' ? 'lg:col-span-7' : 'w-full'} glass-card p-5 rounded-2xl border border-gray-800 space-y-5`}>
+          <div className={`${viewMode === 'split' ? 'xl:col-span-6' : 'w-full'} glass-card p-5 rounded-2xl border border-gray-800 space-y-5`}>
             
             <div className="flex items-center justify-between border-b border-gray-800 pb-3">
               <h3 className="text-sm font-black text-white flex items-center gap-2">
@@ -1169,240 +1203,300 @@ export default function CvStudio({ applications = [], currentUser }) {
           </div>
         )}
 
-        {/* ================= RIGHT COLUMN: LIVE CV DOCUMENT PREVIEW (FULL WHITE PAPER SHEET) ================= */}
+        {/* ================= RIGHT COLUMN: LIVE CV DOCUMENT PREVIEW (1:1 WYSIWYG SCALED WITH CLEAN HORIZONTAL SCROLL) ================= */}
         {(viewMode === 'split' || viewMode === 'preview') && (
-          <div className={`${viewMode === 'split' ? 'lg:col-span-5' : 'w-full'} space-y-4`}>
+          <div className={`${viewMode === 'split' ? 'xl:col-span-6' : 'w-full'} space-y-4`}>
             
-            {/* PREVIEW TOP BAR */}
-            <div className="glass-card p-3 rounded-2xl border border-gray-800 flex items-center justify-between text-xs">
+            {/* PREVIEW TOP TOOLBAR WITH ZOOM & FIT CONTROLS */}
+            <div className="glass-card p-3 rounded-2xl border border-gray-800 flex flex-wrap items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                <span className="font-extrabold text-white">Live CV Document Preview (A4 ATS)</span>
+                <span className="font-extrabold text-white">Live Preview Document (A4 1:1)</span>
               </div>
 
-              <button
-                onClick={handleDownloadDirectPdf}
-                disabled={isDownloadingPdf}
-                className="px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold text-[11px] flex items-center gap-1.5 shadow transition disabled:opacity-60"
-              >
-                {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                {isDownloadingPdf ? 'Se descarca...' : 'Descarca PDF'}
-              </button>
+              {/* ZOOM CONTROLS */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleFitToWidth}
+                  className="px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 rounded-xl font-bold text-[11px] flex items-center gap-1 transition"
+                  title="Potrivește automat pe lățimea ecranului fără margini tăiate"
+                >
+                  <Maximize className="w-3 h-3 text-purple-300" />
+                  <span>Potrivește (Fit)</span>
+                </button>
+
+                <div className="flex items-center bg-gray-950 px-2 py-1 rounded-xl border border-gray-800 text-xs">
+                  <button 
+                    onClick={() => setPreviewZoom(z => Math.max(0.35, Number((z - 0.05).toFixed(2))))}
+                    className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded transition"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setPreviewZoom(1.0)}
+                    className="font-mono text-purple-300 hover:text-purple-200 font-bold px-2 text-[11px] min-w-[44px] text-center"
+                    title="Setează la 100%"
+                  >
+                    {Math.round(previewZoom * 100)}%
+                  </button>
+                  <button 
+                    onClick={() => setPreviewZoom(z => Math.min(1.25, Number((z + 0.05).toFixed(2))))}
+                    className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded transition"
+                    title="Zoom In"
+                  >
+                    <ZoomIn className="w-3.5 h-3.5" />
+                  </button>
+                  <button 
+                    onClick={handleFitToWidth}
+                    className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded ml-1 transition"
+                    title="Resetează Zoom la Potrivire"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleDownloadDirectPdf}
+                  disabled={isDownloadingPdf}
+                  className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow transition disabled:opacity-60"
+                >
+                  {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  {isDownloadingPdf ? 'Se descarca...' : 'Descarca PDF'}
+                </button>
+              </div>
             </div>
 
-            {/* A4 CANVAS WORKBENCH */}
-            <div className="w-full bg-slate-900/60 p-3 sm:p-5 rounded-2xl border border-gray-800/80 overflow-y-auto max-h-[88vh] shadow-inner">
+            {/* A4 CANVAS WORKBENCH (FULL HORIZONTAL & VERTICAL SCROLL, ZERO CUTOFFS) */}
+            <div 
+              ref={workbenchRef}
+              className="w-full bg-slate-950/80 p-3 sm:p-5 rounded-2xl border border-gray-800/80 overflow-x-auto overflow-y-auto max-h-[88vh] shadow-inner text-center"
+            >
               
-              {/* EXACT A4 WHITE PAPER SHEET (ENCLOSES 100% OF CONTENT NATURALLY, NEVER CUTS OFF) */}
+              {/* SIZING WRAPPER FOR CSS TRANSFORM SCALE (INLINE-BLOCK WITH AUTO MARGIN PREVENTS NEGATIVE CLIPPING) */}
               <div 
-                ref={previewRef}
-                id="cv-preview-sheet" 
-                className="mx-auto w-full max-w-[210mm] bg-white text-black select-text shadow-2xl rounded-sm"
                 style={{ 
-                  fontFamily: "'Times New Roman', Times, serif",
-                  backgroundColor: '#ffffff',
-                  color: '#000000',
-                  padding: '12mm 15mm',
-                  minHeight: '297mm',
-                  height: 'fit-content',
-                  boxSizing: 'border-box',
-                  display: 'block',
-                  overflow: 'hidden'
+                  display: 'inline-block',
+                  width: `${210 * previewZoom}mm`, 
+                  minHeight: `${297 * previewZoom}mm`,
+                  margin: '0 auto',
+                  textAlign: 'left',
+                  position: 'relative',
+                  transition: 'width 0.1s ease, min-height 0.1s ease'
                 }}
               >
                 
-                {/* HEADER (NAME + CONTACT LINKS) */}
-                <div style={{ textAlign: 'center', paddingBottom: '2px' }}>
-                  <h1 style={{ 
-                    fontSize: '18pt', 
-                    fontWeight: 'bold', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '1px', 
-                    color: '#000000', 
-                    fontFamily: 'Arial, Helvetica, sans-serif',
-                    lineHeight: '1.2',
-                    margin: 0
-                  }}>
-                    {cvSections.fullName || 'Nume Prenume'}
-                  </h1>
-                  <div style={{ 
-                    fontSize: '8.5pt', 
-                    color: '#222222', 
-                    display: 'flex', 
-                    flexWrap: 'wrap', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    gap: '4px 6px', 
-                    marginTop: '4px',
-                    fontFamily: 'Arial, Helvetica, sans-serif'
-                  }}>
-                    {cvSections.email && <span>{cvSections.email}</span>}
-                    {cvSections.phone && <span>| {cvSections.phone}</span>}
-                    {cvSections.location && <span>| {cvSections.location}</span>}
-                    {cvSections.linkedin && <span>| {cvSections.linkedin}</span>}
-                    {cvSections.github && <span>| {cvSections.github}</span>}
+                {/* EXACT PHYSICAL 210mm A4 SHEET (NEVER SQUEEZES TEXT, IDENTICAL TO PDF) */}
+                <div 
+                  ref={previewRef}
+                  id="cv-preview-sheet" 
+                  className="bg-white text-black select-text shadow-2xl rounded-sm"
+                  style={{ 
+                    width: '210mm',
+                    minHeight: '297mm',
+                    padding: '12mm 15mm',
+                    transform: `scale(${previewZoom})`,
+                    transformOrigin: 'top left',
+                    fontFamily: "'Times New Roman', Times, serif",
+                    backgroundColor: '#ffffff',
+                    color: '#000000',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  
+                  {/* HEADER (NAME + CONTACT LINKS) */}
+                  <div style={{ textAlign: 'center', paddingBottom: '2px' }}>
+                    <h1 style={{ 
+                      fontSize: '18pt', 
+                      fontWeight: 'bold', 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '1px', 
+                      color: '#000000', 
+                      fontFamily: 'Arial, Helvetica, sans-serif',
+                      lineHeight: '1.2',
+                      margin: 0
+                    }}>
+                      {cvSections.fullName || 'Nume Prenume'}
+                    </h1>
+                    <div style={{ 
+                      fontSize: '8.5pt', 
+                      color: '#222222', 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '4px 6px', 
+                      marginTop: '4px',
+                      fontFamily: 'Arial, Helvetica, sans-serif'
+                    }}>
+                      {cvSections.email && <span>{cvSections.email}</span>}
+                      {cvSections.phone && <span>| {cvSections.phone}</span>}
+                      {cvSections.location && <span>| {cvSections.location}</span>}
+                      {cvSections.linkedin && <span>| {cvSections.linkedin}</span>}
+                      {cvSections.github && <span>| {cvSections.github}</span>}
+                    </div>
                   </div>
+
+                  {/* SUMMARY */}
+                  {cvSections.summary && (
+                    <div style={{ marginTop: '12px', marginBottom: '4px' }}>
+                      <div style={{ 
+                        fontWeight: 'bold', 
+                        fontSize: '9.5pt', 
+                        textTransform: 'uppercase', 
+                        letterSpacing: '0.8px', 
+                        color: '#000000', 
+                        fontFamily: 'Arial, Helvetica, sans-serif',
+                        lineHeight: '1.2'
+                      }}>
+                        Professional Summary
+                      </div>
+                      <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
+                      <p style={{ fontSize: '9pt', color: '#000000', textAlign: 'justify', lineHeight: '1.35', fontFamily: 'Arial, Helvetica, sans-serif', margin: 0 }}>
+                        {cvSections.summary}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* EDUCATION */}
+                  {eduList.length > 0 && (
+                    <div style={{ marginTop: '12px', marginBottom: '4px' }}>
+                      <div style={{ 
+                        fontWeight: 'bold', 
+                        fontSize: '9.5pt', 
+                        textTransform: 'uppercase', 
+                        letterSpacing: '0.8px', 
+                        color: '#000000', 
+                        fontFamily: 'Arial, Helvetica, sans-serif',
+                        lineHeight: '1.2'
+                      }}>
+                        Education
+                      </div>
+                      <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
+                      {eduList.map((edu, idx) => (
+                        <div key={idx} style={{ marginTop: idx > 0 ? '5px' : '2px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
+                            <span>{edu.school || 'Universitate / Scoala'}</span>
+                            <span>{edu.location || ''}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontStyle: 'italic', fontSize: '8.5pt', color: '#222222' }}>
+                            <span>{edu.degree || 'Diploma / Specializare'}</span>
+                            <span>{edu.period || ''}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* WORK EXPERIENCE */}
+                  {cvSections.workExperience.length > 0 && (
+                    <div style={{ marginTop: '12px', marginBottom: '4px' }}>
+                      <div style={{ 
+                        fontWeight: 'bold', 
+                        fontSize: '9.5pt', 
+                        textTransform: 'uppercase', 
+                        letterSpacing: '0.8px', 
+                        color: '#000000', 
+                        fontFamily: 'Arial, Helvetica, sans-serif',
+                        lineHeight: '1.2'
+                      }}>
+                        Work Experience
+                      </div>
+                      <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
+                      {cvSections.workExperience.map((exp, idx) => (
+                        <div key={idx} style={{ marginTop: idx > 0 ? '6px' : '2px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
+                            <span>{exp.company || 'Companie'}</span>
+                            <span>{exp.location || ''}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontStyle: 'italic', fontSize: '8.5pt', color: '#222222' }}>
+                            <span>{exp.role || 'Rol'}</span>
+                            <span>{exp.period || ''}</span>
+                          </div>
+                          {exp.bullets && exp.bullets.length > 0 && (
+                            <div style={{ marginTop: '3px' }}>
+                              {exp.bullets.filter(Boolean).map((b, bIdx) => (
+                                <div key={bIdx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '2px' }}>
+                                  <span style={{ display: 'inline-block', width: '14px', fontSize: '9pt', lineHeight: '1.3', color: '#000000', flexShrink: 0, textAlign: 'center' }}>•</span>
+                                  <span style={{ flex: 1, fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}>{b}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* PERSONAL PROJECTS */}
+                  {cvSections.projects.length > 0 && (
+                    <div style={{ marginTop: '12px', marginBottom: '4px' }}>
+                      <div style={{ 
+                        fontWeight: 'bold', 
+                        fontSize: '9.5pt', 
+                        textTransform: 'uppercase', 
+                        letterSpacing: '0.8px', 
+                        color: '#000000', 
+                        fontFamily: 'Arial, Helvetica, sans-serif',
+                        lineHeight: '1.2'
+                      }}>
+                        Personal Projects
+                      </div>
+                      <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
+                      {cvSections.projects.map((proj, idx) => (
+                        <div key={idx} style={{ marginTop: idx > 0 ? '6px' : '2px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
+                            <span>{proj.title || 'Titlu Proiect'}</span>
+                            <span style={{ fontWeight: 'normal', fontSize: '8.5pt', fontStyle: 'italic', color: '#333333' }}>{proj.techStack || ''}</span>
+                          </div>
+                          {proj.bullets && proj.bullets.length > 0 && (
+                            <div style={{ marginTop: '3px' }}>
+                              {proj.bullets.filter(Boolean).map((b, bIdx) => (
+                                <div key={bIdx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '2px' }}>
+                                  <span style={{ display: 'inline-block', width: '14px', fontSize: '9pt', lineHeight: '1.3', color: '#000000', flexShrink: 0, textAlign: 'center' }}>•</span>
+                                  <span style={{ flex: 1, fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}>{b}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* TECHNICAL SKILLS */}
+                  {(cvSections.skills.languages || cvSections.skills.frameworks || cvSections.skills.databases || cvSections.skills.devops) && (
+                    <div style={{ marginTop: '12px', marginBottom: '4px' }}>
+                      <div style={{ 
+                        fontWeight: 'bold', 
+                        fontSize: '9.5pt', 
+                        textTransform: 'uppercase', 
+                        letterSpacing: '0.8px', 
+                        color: '#000000', 
+                        fontFamily: 'Arial, Helvetica, sans-serif',
+                        lineHeight: '1.2'
+                      }}>
+                        Technical Skills
+                      </div>
+                      <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
+                      <div style={{ marginTop: '3px', fontSize: '8.5pt', color: '#000000', lineHeight: '1.4' }}>
+                        {cvSections.skills.languages && (
+                          <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Languages:</span> {cvSections.skills.languages}</p>
+                        )}
+                        {cvSections.skills.frameworks && (
+                          <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Frameworks:</span> {cvSections.skills.frameworks}</p>
+                        )}
+                        {cvSections.skills.databases && (
+                          <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Databases:</span> {cvSections.skills.databases}</p>
+                        )}
+                        {cvSections.skills.devops && (
+                          <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>DevOps & Tools:</span> {cvSections.skills.devops}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
-
-                {/* SUMMARY */}
-                {cvSections.summary && (
-                  <div style={{ marginTop: '12px', marginBottom: '4px' }}>
-                    <div style={{ 
-                      fontWeight: 'bold', 
-                      fontSize: '9.5pt', 
-                      textTransform: 'uppercase', 
-                      letterSpacing: '0.8px', 
-                      color: '#000000', 
-                      fontFamily: 'Arial, Helvetica, sans-serif',
-                      lineHeight: '1.2'
-                    }}>
-                      Professional Summary
-                    </div>
-                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
-                    <p style={{ fontSize: '9pt', color: '#000000', textAlign: 'justify', lineHeight: '1.35', fontFamily: 'Arial, Helvetica, sans-serif', margin: 0 }}>
-                      {cvSections.summary}
-                    </p>
-                  </div>
-                )}
-
-                {/* EDUCATION */}
-                {eduList.length > 0 && (
-                  <div style={{ marginTop: '12px', marginBottom: '4px' }}>
-                    <div style={{ 
-                      fontWeight: 'bold', 
-                      fontSize: '9.5pt', 
-                      textTransform: 'uppercase', 
-                      letterSpacing: '0.8px', 
-                      color: '#000000', 
-                      fontFamily: 'Arial, Helvetica, sans-serif',
-                      lineHeight: '1.2'
-                    }}>
-                      Education
-                    </div>
-                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
-                    {eduList.map((edu, idx) => (
-                      <div key={idx} style={{ marginTop: idx > 0 ? '5px' : '2px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
-                          <span>{edu.school || 'Universitate / Scoala'}</span>
-                          <span>{edu.location || ''}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontStyle: 'italic', fontSize: '8.5pt', color: '#222222' }}>
-                          <span>{edu.degree || 'Diploma / Specializare'}</span>
-                          <span>{edu.period || ''}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* WORK EXPERIENCE */}
-                {cvSections.workExperience.length > 0 && (
-                  <div style={{ marginTop: '12px', marginBottom: '4px' }}>
-                    <div style={{ 
-                      fontWeight: 'bold', 
-                      fontSize: '9.5pt', 
-                      textTransform: 'uppercase', 
-                      letterSpacing: '0.8px', 
-                      color: '#000000', 
-                      fontFamily: 'Arial, Helvetica, sans-serif',
-                      lineHeight: '1.2'
-                    }}>
-                      Work Experience
-                    </div>
-                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
-                    {cvSections.workExperience.map((exp, idx) => (
-                      <div key={idx} style={{ marginTop: idx > 0 ? '6px' : '2px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
-                          <span>{exp.company || 'Companie'}</span>
-                          <span>{exp.location || ''}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontStyle: 'italic', fontSize: '8.5pt', color: '#222222' }}>
-                          <span>{exp.role || 'Rol'}</span>
-                          <span>{exp.period || ''}</span>
-                        </div>
-                        {exp.bullets && exp.bullets.length > 0 && (
-                          <div style={{ marginTop: '3px' }}>
-                            {exp.bullets.filter(Boolean).map((b, bIdx) => (
-                              <div key={bIdx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '2px' }}>
-                                <span style={{ display: 'inline-block', width: '14px', fontSize: '9pt', lineHeight: '1.3', color: '#000000', flexShrink: 0, textAlign: 'center' }}>•</span>
-                                <span style={{ flex: 1, fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}>{b}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* PERSONAL PROJECTS */}
-                {cvSections.projects.length > 0 && (
-                  <div style={{ marginTop: '12px', marginBottom: '4px' }}>
-                    <div style={{ 
-                      fontWeight: 'bold', 
-                      fontSize: '9.5pt', 
-                      textTransform: 'uppercase', 
-                      letterSpacing: '0.8px', 
-                      color: '#000000', 
-                      fontFamily: 'Arial, Helvetica, sans-serif',
-                      lineHeight: '1.2'
-                    }}>
-                      Personal Projects
-                    </div>
-                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
-                    {cvSections.projects.map((proj, idx) => (
-                      <div key={idx} style={{ marginTop: idx > 0 ? '6px' : '2px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
-                          <span>{proj.title || 'Titlu Proiect'}</span>
-                          <span style={{ fontWeight: 'normal', fontSize: '8.5pt', fontStyle: 'italic', color: '#333333' }}>{proj.techStack || ''}</span>
-                        </div>
-                        {proj.bullets && proj.bullets.length > 0 && (
-                          <div style={{ marginTop: '3px' }}>
-                            {proj.bullets.filter(Boolean).map((b, bIdx) => (
-                              <div key={bIdx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '2px' }}>
-                                <span style={{ display: 'inline-block', width: '14px', fontSize: '9pt', lineHeight: '1.3', color: '#000000', flexShrink: 0, textAlign: 'center' }}>•</span>
-                                <span style={{ flex: 1, fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}>{b}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* TECHNICAL SKILLS */}
-                {(cvSections.skills.languages || cvSections.skills.frameworks || cvSections.skills.databases || cvSections.skills.devops) && (
-                  <div style={{ marginTop: '12px', marginBottom: '4px' }}>
-                    <div style={{ 
-                      fontWeight: 'bold', 
-                      fontSize: '9.5pt', 
-                      textTransform: 'uppercase', 
-                      letterSpacing: '0.8px', 
-                      color: '#000000', 
-                      fontFamily: 'Arial, Helvetica, sans-serif',
-                      lineHeight: '1.2'
-                    }}>
-                      Technical Skills
-                    </div>
-                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
-                    <div style={{ marginTop: '3px', fontSize: '8.5pt', color: '#000000', lineHeight: '1.4' }}>
-                      {cvSections.skills.languages && (
-                        <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Languages:</span> {cvSections.skills.languages}</p>
-                      )}
-                      {cvSections.skills.frameworks && (
-                        <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Frameworks:</span> {cvSections.skills.frameworks}</p>
-                      )}
-                      {cvSections.skills.databases && (
-                        <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Databases:</span> {cvSections.skills.databases}</p>
-                      )}
-                      {cvSections.skills.devops && (
-                        <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>DevOps & Tools:</span> {cvSections.skills.devops}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
               </div>
             </div>
 
