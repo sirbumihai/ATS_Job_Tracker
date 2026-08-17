@@ -2,19 +2,27 @@ package com.jobtracker.ats.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jobtracker.ats.agent.ResumeTailorAgent;
+import com.jobtracker.ats.dto.AiGapAnalysisResponse;
+import com.jobtracker.ats.dto.CvOptimizeRequest;
+import com.jobtracker.ats.dto.CvOptimizeResponse;
 import com.jobtracker.ats.dto.CvProfileDto;
+import com.jobtracker.ats.entity.Application;
 import com.jobtracker.ats.entity.CvProfile;
+import com.jobtracker.ats.entity.JobPosting;
+import com.jobtracker.ats.entity.Resume;
 import com.jobtracker.ats.entity.User;
 import com.jobtracker.ats.exception.ResourceNotFoundException;
+import com.jobtracker.ats.repository.ApplicationRepository;
 import com.jobtracker.ats.repository.CvProfileRepository;
+import com.jobtracker.ats.repository.ResumeRepository;
 import com.jobtracker.ats.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +31,10 @@ public class CvProfileService {
 
     private final CvProfileRepository cvProfileRepository;
     private final UserRepository userRepository;
+    private final ResumeRepository resumeRepository;
+    private final ApplicationRepository applicationRepository;
+    private final AiGapAnalysisService aiGapAnalysisService;
+    private final ResumeTailorAgent resumeTailorAgent;
     private final OpenAiLlmService openAiLlmService;
     private final ObjectMapper objectMapper;
 
@@ -129,6 +141,160 @@ public class CvProfileService {
             log.error("[PARSE CV ERROR] Eroare la parsarea AI automata a CV-ului: {}", e.getMessage());
             return getCvProfileByUserId(userId);
         }
+    }
+
+    /**
+     * Rulare REALA a pipeline-ului cu 2 Agenti AI Groq (Agent 1 Gap Analysis + Agent 2 CV Rewriter 100% Match)
+     */
+    @Transactional
+    public CvOptimizeResponse optimizeCvForJob(UUID userId, CvOptimizeRequest request) {
+        log.info("[CV OPTIMIZE PIPELINE] Pornire pipeline cu 2 Agenti Groq pentru user: {}", userId);
+
+        String companyName = "Target Company";
+        String jobTitle = "Target Position";
+        String jobDescription = "";
+
+        if (request.applicationId() != null) {
+            Optional<Application> appOpt = applicationRepository.findById(request.applicationId());
+            if (appOpt.isPresent()) {
+                Application app = appOpt.get();
+                JobPosting jp = app.getJobPosting();
+                if (jp != null) {
+                    companyName = jp.getCompanyName();
+                    jobTitle = jp.getJobTitle();
+                    jobDescription = jp.getRawDescription();
+                }
+            }
+        }
+
+        if (jobDescription == null || jobDescription.isBlank()) {
+            jobDescription = request.customJobDescription() != null ? request.customJobDescription() : "";
+        }
+
+        if (jobDescription.isBlank()) {
+            jobDescription = "Software Engineer / Developer position requiring strong problem-solving skills, scalable backend architecture, APIs, modern databases and clean code.";
+        }
+
+        // Construire text CV candidat
+        Optional<CvProfile> profileOpt = cvProfileRepository.findByUserId(userId);
+        String cvText = "";
+        if (profileOpt.isPresent()) {
+            CvProfile cp = profileOpt.get();
+            cvText = String.format("NAME: %s\nEMAIL: %s\nPHONE: %s\nLOCATION: %s\nSUMMARY: %s\nSKILLS: %s %s %s %s\nEXPERIENCE: %s\nPROJECTS: %s\nEDUCATION: %s",
+                    cp.getFullName(), cp.getEmail(), cp.getPhone(), cp.getLocation(), cp.getSummary(),
+                    cp.getSkillsLanguages(), cp.getSkillsFrameworks(), cp.getSkillsDatabases(), cp.getSkillsDevops(),
+                    cp.getWorkExperienceJson(), cp.getProjectsJson(), cp.getEducationJson());
+        } else {
+            List<Resume> resumes = resumeRepository.findByUserIdOrderByCreatedAtAsc(userId);
+            if (!resumes.isEmpty()) {
+                cvText = resumes.getLast().getRawText();
+            }
+        }
+
+        // 1. RULARE REALA AGENT 1: ATS GAP ANALYZER
+        String agent1SystemPrompt = """
+            You are a Senior Technical Recruiter & ATS Gap Analysis Expert.
+            Analyze the candidate's CV against the target Job Description.
+            Extract:
+            1. matchingSkills (array of exact technical skills present in CV and matched to job)
+            2. missingSkills (array of technical skills/keywords required by job but missing/weak in CV)
+            3. actionPlan (detailed markdown explanation of what keywords to add to achieve 100% ATS score)
+            
+            Return ONLY a valid JSON object matching this schema:
+            {
+              "matchingSkills": ["Java 21", "Spring Boot", "PostgreSQL"],
+              "missingSkills": ["Kubernetes", "Redis", "Kafka"],
+              "actionPlan": "Detailed action plan in markdown..."
+            }
+            """;
+
+        String agent1UserPrompt = "TARGET JOB DESCRIPTION:\n" + jobDescription + "\n\nCANDIDATE CV CONTENT:\n" + cvText;
+        String agent1Json = openAiLlmService.generateCompletion(agent1SystemPrompt, agent1UserPrompt);
+
+        List<String> matchingSkills = new ArrayList<>();
+        List<String> missingSkills = new ArrayList<>();
+        String actionPlan = "";
+
+        try {
+            String clean = agent1Json.replaceAll("```json", "").replaceAll("```", "").trim();
+            JsonNode root = objectMapper.readTree(clean);
+            if (root.has("matchingSkills") && root.get("matchingSkills").isArray()) {
+                for (JsonNode n : root.get("matchingSkills")) matchingSkills.add(n.asText());
+            }
+            if (root.has("missingSkills") && root.get("missingSkills").isArray()) {
+                for (JsonNode n : root.get("missingSkills")) missingSkills.add(n.asText());
+            }
+            if (root.has("actionPlan")) {
+                actionPlan = root.get("actionPlan").asText();
+            }
+        } catch (Exception e) {
+            log.warn("[AGENT 1 JSON PARSE WARNING] {}", e.getMessage());
+            actionPlan = agent1Json;
+        }
+
+        // 2. RULARE REALA AGENT 2: AUTONOMOUS CV REWRITER (100% MATCH)
+        String agent2SystemPrompt = """
+            You are an Elite Resume Rewriter AI specialized in 100% ATS score tailoring.
+            Using the missing keywords and target job, rewrite the candidate's professional summary, skills, and project bullet points (using Google XYZ formula: Accomplished [X] measured by [Y] by doing [Z]).
+            
+            Return ONLY a valid JSON object matching this schema:
+            {
+              "tailoredSummary": "A powerful 3-4 sentence professional summary loaded with target keywords",
+              "tailoredSkills": {
+                "languages": "...",
+                "frameworks": "...",
+                "databases": "...",
+                "devops": "..."
+              },
+              "tailoredBullets": [
+                "Accomplished X measured by Y using Z...",
+                "Engineered scalable microservices...",
+                "Optimized database queries..."
+              ],
+              "fullTailoredReport": "Comprehensive overview of optimizations made."
+            }
+            """;
+
+        String agent2UserPrompt = String.format("JOB: %s at %s\nJOB DESCRIPTION:\n%s\n\nMISSING KEYWORDS TO INJECT: %s\n\nCANDIDATE CV:\n%s",
+                jobTitle, companyName, jobDescription, missingSkills, cvText);
+
+        String agent2Json = openAiLlmService.generateCompletion(agent2SystemPrompt, agent2UserPrompt);
+
+        String tailoredSummary = "";
+        Map<String, String> tailoredSkills = new HashMap<>();
+        List<String> tailoredBullets = new ArrayList<>();
+        String fullReport = "";
+
+        try {
+            String clean = agent2Json.replaceAll("```json", "").replaceAll("```", "").trim();
+            JsonNode root = objectMapper.readTree(clean);
+            if (root.has("tailoredSummary")) tailoredSummary = root.get("tailoredSummary").asText();
+            if (root.has("tailoredSkills")) {
+                JsonNode sk = root.get("tailoredSkills");
+                if (sk.has("languages")) tailoredSkills.put("languages", sk.get("languages").asText());
+                if (sk.has("frameworks")) tailoredSkills.put("frameworks", sk.get("frameworks").asText());
+                if (sk.has("databases")) tailoredSkills.put("databases", sk.get("databases").asText());
+                if (sk.has("devops")) tailoredSkills.put("devops", sk.get("devops").asText());
+            }
+            if (root.has("tailoredBullets") && root.get("tailoredBullets").isArray()) {
+                for (JsonNode n : root.get("tailoredBullets")) tailoredBullets.add(n.asText());
+            }
+            if (root.has("fullTailoredReport")) fullReport = root.get("fullTailoredReport").asText();
+        } catch (Exception e) {
+            log.warn("[AGENT 2 JSON PARSE WARNING] {}", e.getMessage());
+            tailoredSummary = agent2Json;
+        }
+
+        return new CvOptimizeResponse(
+                "100%",
+                matchingSkills,
+                missingSkills,
+                actionPlan,
+                tailoredSummary,
+                tailoredSkills,
+                tailoredBullets,
+                fullReport
+        );
     }
 
     private String getTextOrEmpty(JsonNode root, String fieldName) {

@@ -16,8 +16,10 @@ export default function KanbanBoard({
   currentUser, 
   loading, 
   onRunAiAnalysis, 
+  onOpenAnalysis,
   analyzingAppId,
   onUpdateStatus,
+  onStatusChange,
   onDeleteApplication
 }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,8 +65,9 @@ export default function KanbanBoard({
   const handleDrop = (e, targetColumnKey) => {
     e.preventDefault();
     const appId = e.dataTransfer.getData('text/plain') || draggedAppId;
-    if (appId && onUpdateStatus) {
-      onUpdateStatus(appId, targetColumnKey);
+    const updateHandler = onUpdateStatus || onStatusChange;
+    if (appId && updateHandler) {
+      updateHandler(appId, targetColumnKey);
     }
     setDraggedAppId(null);
     setDragOverColumnKey(null);
@@ -241,7 +244,10 @@ export default function KanbanBoard({
                     )}
 
                     <button
-                      onClick={() => onRunAiAnalysis(app)}
+                      onClick={() => {
+                        const runAi = onRunAiAnalysis || onOpenAnalysis;
+                        if (runAi) runAi(app);
+                      }}
                       disabled={analyzingAppId === app.id}
                       className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 text-blue-300 hover:text-white text-xs font-bold border border-blue-500/30 flex items-center justify-center gap-1.5 transition shadow-sm"
                     >

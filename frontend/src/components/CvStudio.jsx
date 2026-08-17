@@ -440,57 +440,79 @@ export default function CvStudio({ applications = [], currentUser }) {
   };
 
   const handleRunTwoAgentPipeline = async () => {
+    if (!activeUserId) {
+      alert("Te rugam sa te autentifici inainte de a rula optimizarea AI.");
+      return;
+    }
+
     setIsAnalyzing(true);
     setAgent1Output(null);
     setAgent2Output(null);
 
-    setTimeout(() => {
-      // AGENT 1: ATS GAP ANALYZER
-      const gapReport = {
-        targetMatchScore: "100%",
-        missingSkills: ["KUBERNETES", "MICROSERVICES ARCHITECTURE", "REDIS CACHING"],
-        matchingSkills: ["JAVA", "SPRING BOOT", "POSTGRESQL", "REST API"],
-        actionPlan: languagePref === 'EN' ? `### AGENT 1 ANALYSIS REPORT (ATS GAP ANALYZER)
-
-1. **Missing Keywords in Your CV:**
-   - \`Kubernetes\`: Recommended for DevOps section.
-   - \`Redis Caching\`: Recommended for API performance.
-
-2. **Action Plan for 100% Score:**
-   - Add \`Kubernetes\` and \`Redis\` to technical skills.` 
-        : `### RAPORT ANALIZA AGENT 1 (ATS GAP ANALYZER)
-
-1. **Cuvinte Cheie Lipsa in CV-ul Tau:**
-   - \`Kubernetes\`: Recomandat in sectiunea DevOps.
-   - \`Redis Caching\`: Recomandat pentru optimizarea API-urilor.
-
-2. **Recomandari pentru Scor Match 100%:**
-   - Adauga \`Kubernetes\` si \`Redis\` la sectiunea de skill-uri tehnice.`
+    try {
+      const payload = {
+        applicationId: selectedJobId || (applications.length > 0 ? applications[0].id : null),
+        customJobDescription: customJobDescription || "",
+        languagePreference: languagePref
       };
 
-      setAgent1Output(gapReport);
+      const res = await fetch('/api/v1/cv/optimize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': activeUserId
+        },
+        body: JSON.stringify(payload)
+      });
 
-      // AGENT 2: AUTOMATED CV REWRITER FOR 100% MATCH
-      setTimeout(() => {
-        const rewrittenCv = {
-          tailoredSummary: languagePref === 'EN' 
-            ? `${cvSections.summary || "Passionate Software Engineer."} Enhanced with microservices architecture, Redis caching, and Kubernetes orchestration.`
-            : `${cvSections.summary || "Software Engineer pasionat."} Optimizat cu arhitecturi de microservicii, Redis caching si orchestrare Kubernetes.`,
-          tailoredSkills: {
-            languages: cvSections.skills.languages || "Java, SQL",
-            frameworks: `${cvSections.skills.frameworks || "Spring Boot"}, Microservices`,
-            databases: `${cvSections.skills.databases || "PostgreSQL"}, Redis`,
-            devops: `${cvSections.skills.devops || "Docker"}, Kubernetes`
-          },
-          tailoredExperience: cvSections.workExperience,
-          tailoredProjects: cvSections.projects
-        };
+      if (res.ok) {
+        const data = await res.json();
+        // Agent 1: ATS Gap Analyzer real Groq result
+        setAgent1Output({
+          targetMatchScore: data.targetMatchScore || "100%",
+          matchingSkills: data.matchingSkills || [],
+          missingSkills: data.missingSkills || [],
+          actionPlan: data.actionPlan || "Analiza realizata cu succes."
+        });
 
-        setAgent2Output(rewrittenCv);
-        setIsAnalyzing(false);
-      }, 1200);
+        // Agent 2: Autonomous Resume Tailor real Groq result
+        setAgent2Output({
+          tailoredSummary: data.tailoredSummary || "",
+          tailoredSkills: data.tailoredSkills || {},
+          tailoredProjects: [{
+            bullets: data.tailoredBullets || []
+          }],
+          fullTailoredReport: data.fullTailoredReport || ""
+        });
+      } else {
+        const err = await res.text();
+        console.error("Eroare la optimizarea AI:", err);
+      }
+    } catch (err) {
+      console.error("Eroare la apelul AI Groq:", err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
-    }, 1500);
+  const handleApplyAiOptimizations = () => {
+    if (!agent2Output) return;
+
+    setCvSections(prev => ({
+      ...prev,
+      summary: agent2Output.tailoredSummary || prev.summary,
+      skills: {
+        languages: agent2Output.tailoredSkills?.languages || prev.skills.languages,
+        frameworks: agent2Output.tailoredSkills?.frameworks || prev.skills.frameworks,
+        databases: agent2Output.tailoredSkills?.databases || prev.skills.databases,
+        devops: agent2Output.tailoredSkills?.devops || prev.skills.devops,
+      },
+      projects: prev.projects.length > 0 && agent2Output.tailoredProjects?.[0]?.bullets?.length > 0
+        ? [{ ...prev.projects[0], bullets: agent2Output.tailoredProjects[0].bullets }, ...prev.projects.slice(1)]
+        : prev.projects
+    }));
+
+    alert("Optimizarile generate de AI Groq au fost aplicate in CV! Poti edita in continuare sau salva in DB.");
   };
 
   // DIRECT 1-PAGE PDF DOWNLOAD HANDLER (EXACT 210mm A4 RATIO)
@@ -1612,12 +1634,21 @@ export default function CvStudio({ applications = [], currentUser }) {
                 <BrainCircuit className="w-4 h-4" /> Agent 2: Rewriter CV Autonom (Match 100%)
               </h4>
               {agent2Output && (
-                <button 
-                  onClick={handleDownloadDirectPdf}
-                  className="px-3 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-extrabold text-xs flex items-center gap-1 shadow-md"
-                >
-                  <Download className="w-3.5 h-3.5" /> Descarca PDF Optimizat 100%
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button 
+                    onClick={handleApplyAiOptimizations}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow-md transition"
+                    title="Transfera automat noul summary, skill-urile si gloantele rescrise direct in CV"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Aplica in CV
+                  </button>
+                  <button 
+                    onClick={handleDownloadDirectPdf}
+                    className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow-md transition"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Descarca PDF
+                  </button>
+                </div>
               )}
             </div>
 

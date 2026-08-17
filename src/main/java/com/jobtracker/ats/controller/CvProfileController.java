@@ -1,5 +1,7 @@
 package com.jobtracker.ats.controller;
 
+import com.jobtracker.ats.dto.CvOptimizeRequest;
+import com.jobtracker.ats.dto.CvOptimizeResponse;
 import com.jobtracker.ats.dto.CvProfileDto;
 import com.jobtracker.ats.service.CvProfileService;
 import lombok.RequiredArgsConstructor;
@@ -30,5 +32,13 @@ public class CvProfileController {
             @RequestBody CvProfileDto dto) {
         CvProfileDto saved = cvProfileService.saveOrUpdateCvProfile(userId, dto);
         return ResponseEntity.ok(saved);
+    }
+
+    @PostMapping("/optimize")
+    public ResponseEntity<CvOptimizeResponse> optimizeCvForJob(
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestBody CvOptimizeRequest request) {
+        CvOptimizeResponse response = cvProfileService.optimizeCvForJob(userId, request);
+        return ResponseEntity.ok(response);
     }
 }
