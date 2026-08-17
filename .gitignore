@@ -6,6 +6,14 @@
 ### AI Agent Configs ###
 .agents/
 
+### Node / Frontend ###
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.vite/
+**/.vite/
+
 ### Maven Build Output ###
 target/
 *.jar
