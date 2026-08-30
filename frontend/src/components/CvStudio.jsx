@@ -157,12 +157,16 @@ export default function CvStudio({ applications = [], currentUser }) {
   // SECTION ORDER
   const [sectionOrder, setSectionOrder] = useState(['education', 'experience', 'projects', 'skills']);
   
-  // UI CONTROLS
+  // UI CONTROLS & INTERACTIVITY STATES
   const [previewZoom, setPreviewZoom] = useState(0.85);
   const [showEditContactModal, setShowEditContactModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
-  const [activeSkillHover, setActiveSkillHover] = useState(null); // { fieldIdx, itemIdx }
-  const [activeLinkEditor, setActiveLinkEditor] = useState(null); // projId
+  
+  // CLICK-BASED SELECTION FOR PERSISTENT DELETE POPUPS
+  const [selectedSkill, setSelectedSkill] = useState(null); // { fieldIdx, itemIdx }
+  const [selectedField, setSelectedField] = useState(null); // fieldIdx
+  const [addingSkillFieldIdx, setAddingSkillFieldIdx] = useState(null); // fieldIdx where +add is open
+  const [newSkillText, setNewSkillText] = useState("");
   
   const [isSavingDb, setIsSavingDb] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState(null);
@@ -177,11 +181,23 @@ export default function CvStudio({ applications = [], currentUser }) {
   const [selectedJobId, setSelectedJobId] = useState(applications.length > 0 ? applications[0].id : '');
   const [customJobDescription, setCustomJobDescription] = useState('');
 
+  // DISMISS POPUPS ON OUTSIDE CLICK
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.skill-box-container') && !e.target.closest('.field-box-container')) {
+        setSelectedSkill(null);
+        setSelectedField(null);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, []);
+
   // AUTO FIT ZOOM CALCULATION
   const handleFitToWidth = () => {
     if (workbenchRef.current) {
       const containerWidth = workbenchRef.current.clientWidth - 48;
-      const a4WidthPx = 794; // 210mm in standard pixels
+      const a4WidthPx = 794;
       const calculatedZoom = Math.min(1.0, Math.max(0.4, Number((containerWidth / a4WidthPx).toFixed(2))));
       setPreviewZoom(calculatedZoom);
     } else {
@@ -314,6 +330,47 @@ export default function CvStudio({ applications = [], currentUser }) {
     }
   };
 
+  // REORDER ITEMS WITHIN SECTIONS
+  const moveProjectItem = (idx, direction) => {
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= projectsList.length) return;
+    const updated = [...projectsList];
+    const temp = updated[idx];
+    updated[idx] = updated[targetIdx];
+    updated[targetIdx] = temp;
+    setProjectsList(updated);
+  };
+
+  const moveExperienceItem = (idx, direction) => {
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= experienceList.length) return;
+    const updated = [...experienceList];
+    const temp = updated[idx];
+    updated[idx] = updated[targetIdx];
+    updated[targetIdx] = temp;
+    setExperienceList(updated);
+  };
+
+  const moveEducationItem = (idx, direction) => {
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= educationList.length) return;
+    const updated = [...educationList];
+    const temp = updated[idx];
+    updated[idx] = updated[targetIdx];
+    updated[targetIdx] = temp;
+    setEducationList(updated);
+  };
+
+  const moveSkillFieldItem = (idx, direction) => {
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= skillsFields.length) return;
+    const updated = [...skillsFields];
+    const temp = updated[idx];
+    updated[idx] = updated[targetIdx];
+    updated[targetIdx] = temp;
+    setSkillsFields(updated);
+  };
+
   // EDUCATION HANDLERS
   const addEducation = () => {
     const newEdu = {
@@ -405,24 +462,26 @@ export default function CvStudio({ applications = [], currentUser }) {
     setProjectsList(updated);
   };
 
-  // SKILLS HANDLERS (INDIVIDUAL ADD/DELETE + FIELD ADD/DELETE)
-  const addSkillItem = (fieldIdx) => {
-    const skillName = prompt("Introdu numele noului skill (ex: Docker, Redis, Kubernetes):");
-    if (!skillName || !skillName.trim()) return;
-    const updated = [...skillsFields];
-    updated[fieldIdx].items.push(skillName.trim());
-    setSkillsFields(updated);
+  // SKILLS HANDLERS (CLICK-BASED POPUP DELETE & INLINE +ADD)
+  const handleCommitSkill = (fieldIdx) => {
+    if (newSkillText && newSkillText.trim()) {
+      const updated = [...skillsFields];
+      updated[fieldIdx].items.push(newSkillText.trim());
+      setSkillsFields(updated);
+    }
+    setAddingSkillFieldIdx(null);
+    setNewSkillText("");
   };
 
   const deleteSkillItem = (fieldIdx, itemIdx) => {
     const updated = [...skillsFields];
     updated[fieldIdx].items = updated[fieldIdx].items.filter((_, idx) => idx !== itemIdx);
     setSkillsFields(updated);
-    setActiveSkillHover(null);
+    setSelectedSkill(null);
   };
 
   const addSkillField = () => {
-    const labelName = prompt("Introdu numele noii categorii de skill-uri (ex: Cloud & DevOps, Databases, Tools):");
+    const labelName = prompt("Introdu numele noii categorii de skill-uri (ex: Cloud & DevOps, Databases):");
     if (!labelName || !labelName.trim()) return;
     const newField = {
       id: 'field_' + Date.now(),
@@ -434,6 +493,7 @@ export default function CvStudio({ applications = [], currentUser }) {
 
   const deleteSkillField = (fieldIdx) => {
     setSkillsFields(prev => prev.filter((_, idx) => idx !== fieldIdx));
+    setSelectedField(null);
   };
 
   // UPLOAD PDF CV & AUTO FILL
@@ -633,7 +693,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                 CV Canvas Studio – Editare Directă în Pagină (Inline WYSIWYG)
               </h2>
               <p className="text-xs text-gray-400 font-medium">
-                Scrie direct pe foaie ca într-un document nativ. Căsuțele sunt fix pe text, fără chenare sau text tăiat.
+                Scrie direct pe foaie în căsuțe dedicate. Dă click pe un skill sau categorie pentru popup de ștergere, sau folosește săgețile pentru reordonare.
               </p>
             </div>
           </div>
@@ -766,7 +826,7 @@ export default function CvStudio({ applications = [], currentUser }) {
             transition: 'width 0.1s ease, min-height 0.1s ease'
           }}
         >
-          {/* EXACT PHYSICAL 210mm A4 SHEET (100% UNWRAPPED NATIVE TEXT RENDERING) */}
+          {/* EXACT PHYSICAL 210mm A4 SHEET */}
           <div 
             ref={previewRef}
             id="cv-preview-sheet" 
@@ -796,12 +856,12 @@ export default function CvStudio({ applications = [], currentUser }) {
                 <Edit3 className="w-3.5 h-3.5" /> Edit Contact
               </button>
 
-              {/* CANDIDATE FULL NAME */}
+              {/* CANDIDATE FULL NAME IN EDITABLE BOX */}
               <div 
                 contentEditable={true}
                 suppressContentEditableWarning={true}
                 onBlur={e => setContactData({...contactData, fullName: e.currentTarget.textContent || ""})}
-                className="outline-none font-bold uppercase tracking-wide cursor-text inline-block hover:bg-blue-50/30 focus:bg-blue-50/40 px-1 rounded transition"
+                className="outline-none font-bold uppercase tracking-wide cursor-text inline-block border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1.5 py-0.5 rounded transition"
                 style={{ 
                   fontSize: '20pt', 
                   fontFamily: 'Arial, Helvetica, sans-serif',
@@ -915,9 +975,16 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                     <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
 
-                    {/* ENTRIES */}
+                    {/* ENTRIES (WITH HOVER ARROWS ON LEFT) */}
                     {educationList.map((edu, eduIdx) => (
-                      <div key={edu.id || eduIdx} className="mt-1.5 mb-1.5 group/item">
+                      <div key={edu.id || eduIdx} className="mt-1.5 mb-1.5 group/item relative">
+                        
+                        {/* LEFT HOVER ARROWS TO REORDER EDUCATION ITEMS */}
+                        <div className="no-pdf absolute -left-7 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-0.5 text-gray-400 font-bold text-xs bg-white/90 p-0.5 rounded shadow-sm border border-gray-200">
+                          <button onClick={() => moveEducationItem(eduIdx, -1)} disabled={eduIdx === 0} className="hover:text-black disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
+                          <button onClick={() => moveEducationItem(eduIdx, 1)} disabled={eduIdx === educationList.length - 1} className="hover:text-black disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+                        </div>
+
                         {/* ROW 1: SCHOOL + DATES */}
                         <div className="flex items-baseline justify-between gap-2">
                           <div className="flex items-baseline gap-1.5 flex-1">
@@ -929,7 +996,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[eduIdx].school = e.currentTarget.textContent || "";
                                 setEducationList(updated);
                               }}
-                              className="font-bold text-black outline-none hover:bg-blue-50/40 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text inline-block"
+                              className="font-bold text-black outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text inline-block"
                               style={{ fontSize: '9.5pt' }}
                             >
                               {edu.school}
@@ -951,7 +1018,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[eduIdx].period = e.currentTarget.textContent || "";
                                 setEducationList(updated);
                               }}
-                              className="text-right text-black outline-none hover:bg-blue-50/40 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text inline-block"
+                              className="text-right text-black outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text inline-block"
                               style={{ fontSize: '9pt' }}
                             >
                               {edu.period}
@@ -976,7 +1043,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                               updated[eduIdx].degree = e.currentTarget.textContent || "";
                               setEducationList(updated);
                             }}
-                            className="italic text-gray-800 outline-none hover:bg-blue-50/40 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text inline-block flex-1"
+                            className="italic text-gray-800 outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text inline-block flex-1"
                             style={{ fontSize: '9pt' }}
                           >
                             {edu.degree}
@@ -989,7 +1056,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                               updated[eduIdx].location = e.currentTarget.textContent || "";
                               setEducationList(updated);
                             }}
-                            className="italic text-right text-gray-700 outline-none hover:bg-blue-50/40 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text inline-block shrink-0"
+                            className="italic text-right text-gray-700 outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text inline-block shrink-0"
                             style={{ fontSize: '9pt' }}
                           >
                             {edu.location}
@@ -1008,7 +1075,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[eduIdx].bullets[bIdx] = e.currentTarget.textContent || "";
                                 setEducationList(updated);
                               }}
-                              className="outline-none hover:bg-blue-50/30 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text flex-1"
+                              className="outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text flex-1"
                               style={{ fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}
                             >
                               {b}
@@ -1060,9 +1127,16 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                     <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
 
-                    {/* ENTRIES */}
+                    {/* ENTRIES (WITH HOVER ARROWS ON LEFT) */}
                     {experienceList.map((exp, expIdx) => (
-                      <div key={exp.id || expIdx} className="mt-1.5 mb-2 group/item">
+                      <div key={exp.id || expIdx} className="mt-1.5 mb-2 group/item relative">
+                        
+                        {/* LEFT HOVER ARROWS TO REORDER EXPERIENCE ENTRIES */}
+                        <div className="no-pdf absolute -left-7 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-0.5 text-gray-400 font-bold text-xs bg-white/90 p-0.5 rounded shadow-sm border border-gray-200">
+                          <button onClick={() => moveExperienceItem(expIdx, -1)} disabled={expIdx === 0} className="hover:text-black disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
+                          <button onClick={() => moveExperienceItem(expIdx, 1)} disabled={expIdx === experienceList.length - 1} className="hover:text-black disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+                        </div>
+
                         {/* ROW 1: ROLE + DATES */}
                         <div className="flex items-baseline justify-between gap-2">
                           <div className="flex items-baseline gap-1.5 flex-1">
@@ -1074,7 +1148,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[expIdx].role = e.currentTarget.textContent || "";
                                 setExperienceList(updated);
                               }}
-                              className="font-bold text-black outline-none hover:bg-blue-50/40 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text inline-block"
+                              className="font-bold text-black outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text inline-block"
                               style={{ fontSize: '9.5pt' }}
                             >
                               {exp.role}
@@ -1096,7 +1170,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[expIdx].period = e.currentTarget.textContent || "";
                                 setExperienceList(updated);
                               }}
-                              className="text-right text-black outline-none hover:bg-blue-50/40 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text inline-block"
+                              className="text-right text-black outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text inline-block"
                               style={{ fontSize: '9pt' }}
                             >
                               {exp.period}
@@ -1121,7 +1195,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                               updated[expIdx].company = e.currentTarget.textContent || "";
                               setExperienceList(updated);
                             }}
-                            className="italic text-gray-800 outline-none hover:bg-blue-50/40 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text inline-block flex-1"
+                            className="italic text-gray-800 outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text inline-block flex-1"
                             style={{ fontSize: '9pt' }}
                           >
                             {exp.company}
@@ -1134,7 +1208,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                               updated[expIdx].location = e.currentTarget.textContent || "";
                               setExperienceList(updated);
                             }}
-                            className="italic text-right text-gray-700 outline-none hover:bg-blue-50/40 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text inline-block shrink-0"
+                            className="italic text-right text-gray-700 outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text inline-block shrink-0"
                             style={{ fontSize: '9pt' }}
                           >
                             {exp.location}
@@ -1153,7 +1227,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[expIdx].bullets[bIdx] = e.currentTarget.textContent || "";
                                 setExperienceList(updated);
                               }}
-                              className="outline-none hover:bg-blue-50/30 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text flex-1"
+                              className="outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text flex-1"
                               style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
                             >
                               {b}
@@ -1205,9 +1279,16 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                     <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
 
-                    {/* ENTRIES */}
+                    {/* ENTRIES (WITH HOVER ARROWS ON LEFT) */}
                     {projectsList.map((proj, projIdx) => (
-                      <div key={proj.id || projIdx} className="mt-1.5 mb-2 group/item">
+                      <div key={proj.id || projIdx} className="mt-1.5 mb-2 group/item relative">
+                        
+                        {/* LEFT HOVER ARROWS TO REORDER PROJECTS */}
+                        <div className="no-pdf absolute -left-7 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-0.5 text-gray-400 font-bold text-xs bg-white/90 p-0.5 rounded shadow-sm border border-gray-200">
+                          <button onClick={() => moveProjectItem(projIdx, -1)} disabled={projIdx === 0} className="hover:text-black disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
+                          <button onClick={() => moveProjectItem(projIdx, 1)} disabled={projIdx === projectsList.length - 1} className="hover:text-black disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+                        </div>
+
                         {/* ROW 1: TITLE + TECH STACK + (+ ADD LINK) + (+ BULLET) + DATES */}
                         <div className="flex items-baseline justify-between gap-2">
                           <div className="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5 flex-1">
@@ -1219,7 +1300,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[projIdx].title = e.currentTarget.textContent || "";
                                 setProjectsList(updated);
                               }}
-                              className="font-bold text-black outline-none hover:bg-blue-50/40 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text inline-block"
+                              className="font-bold text-black outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text inline-block"
                               style={{ fontSize: '9.5pt' }}
                             >
                               {proj.title}
@@ -1235,13 +1316,13 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[projIdx].techStack = e.currentTarget.textContent || "";
                                 setProjectsList(updated);
                               }}
-                              className="italic text-gray-800 outline-none hover:bg-blue-50/40 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text inline-block"
+                              className="italic text-gray-800 outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text inline-block"
                               style={{ fontSize: '8.5pt' }}
                             >
                               {proj.techStack}
                             </span>
 
-                            {/* CLICKABLE LINK (IF CONFIGURED) */}
+                            {/* CLICKABLE LINK */}
                             {proj.linkUrl ? (
                               <span className="inline-flex items-center gap-1 font-sans text-xs">
                                 <a 
@@ -1302,7 +1383,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[projIdx].period = e.currentTarget.textContent || "";
                                 setProjectsList(updated);
                               }}
-                              className="text-right text-black outline-none hover:bg-blue-50/40 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text inline-block"
+                              className="text-right text-black outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text inline-block"
                               style={{ fontSize: '9pt' }}
                             >
                               {proj.period}
@@ -1317,7 +1398,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                           </div>
                         </div>
 
-                        {/* BULLETS (NATURAL MULTI-LINE TEXT WRAP, NO BLACK ARTIFACTS) */}
+                        {/* BULLETS */}
                         {proj.bullets && proj.bullets.map((b, bIdx) => (
                           <div key={bIdx} className="flex items-start gap-1 mt-0.5 group/b">
                             <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
@@ -1329,7 +1410,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[projIdx].bullets[bIdx] = e.currentTarget.textContent || "";
                                 setProjectsList(updated);
                               }}
-                              className="outline-none hover:bg-blue-50/30 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text flex-1"
+                              className="outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1 py-0.5 rounded transition cursor-text flex-1"
                               style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
                             >
                               {b}
@@ -1381,81 +1462,121 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                     <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
 
-                    {/* SKILLS ROWS (INDIVIDUAL SKILL PILLS/ITEMS WITH DELETE POPUP & +ADD BUTTON) */}
+                    {/* SKILLS ROWS (INDIVIDUAL SKILL BOXES WITH CLICK-BASED PERSISTENT DELETE POPUP & INLINE +ADD) */}
                     <div className="space-y-1 mt-1 text-black" style={{ fontSize: '8.5pt', lineHeight: '1.4' }}>
                       {skillsFields.map((field, fieldIdx) => (
-                        <div key={field.id || fieldIdx} className="flex items-baseline flex-wrap gap-x-1 gap-y-0.5 group/f">
+                        <div key={field.id || fieldIdx} className="flex items-baseline flex-wrap gap-x-1 gap-y-0.5 group/f relative">
                           
-                          {/* CATEGORY LABEL (EDITABLE INLINE) */}
-                          <span 
-                            contentEditable={true}
-                            suppressContentEditableWarning={true}
-                            onBlur={e => {
-                              const updated = [...skillsFields];
-                              updated[fieldIdx].label = e.currentTarget.textContent || "";
-                              setSkillsFields(updated);
-                            }}
-                            className="font-bold outline-none hover:bg-blue-50/40 px-0.5 rounded cursor-text"
-                          >
-                            {field.label}:
-                          </span>
+                          {/* LEFT HOVER ARROWS TO REORDER SKILL FIELDS */}
+                          <div className="no-pdf absolute -left-7 top-0 opacity-0 group-hover/f:opacity-100 transition flex items-center gap-0.5 text-gray-400 font-bold text-xs bg-white/90 p-0.5 rounded shadow-sm border border-gray-200">
+                            <button onClick={() => moveSkillFieldItem(fieldIdx, -1)} disabled={fieldIdx === 0} className="hover:text-black disabled:opacity-20 cursor-pointer" title="Muta categoria mai sus">↑</button>
+                            <button onClick={() => moveSkillFieldItem(fieldIdx, 1)} disabled={fieldIdx === skillsFields.length - 1} className="hover:text-black disabled:opacity-20 cursor-pointer" title="Muta categoria mai jos">↓</button>
+                          </div>
 
-                          {/* INDIVIDUAL SKILL ITEMS (WITH HOVER DELETE POPUP) */}
+                          {/* FIELD LABEL (CLICK TO SHOW DELETE FIELD POPUP OR EDIT INLINE) */}
+                          <div className="field-box-container relative inline-block">
+                            {selectedField === fieldIdx && (
+                              <div className="no-pdf absolute bottom-full left-0 mb-1 z-30 bg-slate-900 text-white text-[10px] px-2 py-1 rounded shadow-xl flex items-center gap-2 border border-gray-700 animate-in fade-in">
+                                <span className="font-bold text-gray-300">Ștergi {field.label}?</span>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); deleteSkillField(fieldIdx); }}
+                                  className="bg-rose-600 hover:bg-rose-500 text-white text-[9px] px-1.5 py-0.5 rounded font-bold flex items-center gap-0.5 cursor-pointer shadow"
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" /> Delete Field
+                                </button>
+                              </div>
+                            )}
+
+                            <span 
+                              contentEditable={true}
+                              suppressContentEditableWarning={true}
+                              onClick={(e) => { e.stopPropagation(); setSelectedField(fieldIdx); setSelectedSkill(null); }}
+                              onBlur={e => {
+                                const updated = [...skillsFields];
+                                updated[fieldIdx].label = e.currentTarget.textContent || "";
+                                setSkillsFields(updated);
+                              }}
+                              className={`font-bold outline-none border px-1 py-0.5 rounded cursor-pointer transition ${
+                                selectedField === fieldIdx ? 'border-purple-500 bg-purple-50/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              {field.label}:
+                            </span>
+                          </div>
+
+                          {/* INDIVIDUAL SKILL ITEMS (NATURAL TEXT FLOW, CLICK OPENS DELETE POPUP) */}
                           {field.items.map((item, itemIdx) => {
-                            const isHovered = activeSkillHover?.fieldIdx === fieldIdx && activeSkillHover?.itemIdx === itemIdx;
+                            const isSelected = selectedSkill?.fieldIdx === fieldIdx && selectedSkill?.itemIdx === itemIdx;
                             return (
                               <span 
                                 key={itemIdx} 
-                                className="relative inline-block group/sk cursor-pointer"
-                                onMouseEnter={() => setActiveSkillHover({ fieldIdx, itemIdx })}
-                                onMouseLeave={() => setActiveSkillHover(null)}
+                                className="skill-box-container relative inline-block cursor-pointer"
                               >
-                                {/* FLOATING DELETE POPUP */}
-                                {isHovered && (
-                                  <div className="no-pdf absolute bottom-full left-1/2 -translate-x-1/2 mb-1 z-30 bg-slate-900 text-white text-[9px] px-2 py-0.5 rounded shadow-lg flex items-center gap-1 border border-gray-700 animate-in fade-in">
+                                {/* PERSISTENT CLICK-BASED DELETE POPUP ANCHORED OVER THE SKILL */}
+                                {isSelected && (
+                                  <div className="no-pdf absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-40 bg-slate-900 text-white text-[10px] px-2 py-1 rounded shadow-xl flex items-center gap-1.5 border border-gray-700 animate-in fade-in">
                                     <button 
-                                      onClick={() => deleteSkillItem(fieldIdx, itemIdx)}
-                                      className="text-rose-400 hover:text-rose-300 font-bold flex items-center gap-0.5 cursor-pointer"
+                                      onClick={(e) => { e.stopPropagation(); deleteSkillItem(fieldIdx, itemIdx); }}
+                                      className="bg-rose-600 hover:bg-rose-500 text-white text-[9px] px-1.5 py-0.5 rounded font-bold flex items-center gap-0.5 cursor-pointer shadow"
                                     >
                                       <Trash2 className="w-2.5 h-2.5" /> Delete
                                     </button>
                                   </div>
                                 )}
 
+                                {/* SKILL BOX WITH SUBTLE BORDER ON HOVER & CLICK */}
                                 <span
                                   contentEditable={true}
                                   suppressContentEditableWarning={true}
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    setSelectedSkill({ fieldIdx, itemIdx }); 
+                                    setSelectedField(null);
+                                  }}
                                   onBlur={e => {
                                     const updated = [...skillsFields];
                                     updated[fieldIdx].items[itemIdx] = e.currentTarget.textContent || "";
                                     setSkillsFields(updated);
                                   }}
-                                  className="outline-none hover:bg-rose-50 hover:text-rose-700 px-0.5 rounded transition"
+                                  className={`outline-none border px-1 py-0.5 rounded transition ${
+                                    isSelected 
+                                      ? 'border-blue-500 bg-blue-50/50 text-blue-900 font-medium' 
+                                      : 'border-transparent hover:border-blue-300 hover:bg-blue-50/20'
+                                  }`}
                                 >
                                   {item}
                                 </span>
-                                {itemIdx < field.items.length - 1 && <span className="mr-1">,</span>}
+                                {itemIdx < field.items.length - 1 && <span className="mr-0.5">,</span>}
                               </span>
                             );
                           })}
 
-                          {/* + ADD SKILL BUTTON */}
-                          <button
-                            onClick={() => addSkillItem(fieldIdx)}
-                            className="no-pdf text-[10px] font-sans text-gray-400 hover:text-blue-600 font-semibold cursor-pointer px-1 hover:bg-blue-50 rounded ml-1 shrink-0"
-                            title={`Adauga skill in ${field.label}`}
-                          >
-                            + add
-                          </button>
+                          {/* INLINE +ADD INPUT BOX (DISAPPEARS ON OUTSIDE CLICK / BLUR IF EMPTY) */}
+                          {addingSkillFieldIdx === fieldIdx ? (
+                            <input
+                              type="text"
+                              autoFocus
+                              placeholder="Scrie skill..."
+                              value={newSkillText}
+                              onChange={e => setNewSkillText(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') handleCommitSkill(fieldIdx);
+                                if (e.key === 'Escape') { setAddingSkillFieldIdx(null); setNewSkillText(""); }
+                              }}
+                              onBlur={() => handleCommitSkill(fieldIdx)}
+                              className="no-pdf border border-blue-500 bg-blue-50/30 px-1.5 py-0.5 rounded text-[8.5pt] outline-none text-black font-medium w-24 ml-1 shadow-sm"
+                            />
+                          ) : (
+                            /* + ADD BUTTON */
+                            <button
+                              onClick={() => { setAddingSkillFieldIdx(fieldIdx); setNewSkillText(""); }}
+                              className="no-pdf text-[10px] font-sans text-gray-400 hover:text-blue-600 font-semibold cursor-pointer px-1 hover:bg-blue-50 rounded ml-1 shrink-0"
+                              title={`Adaugă skill în ${field.label}`}
+                            >
+                              + add
+                            </button>
+                          )}
 
-                          {/* DELETE FIELD ICON (ON HOVER) */}
-                          <button
-                            onClick={() => deleteSkillField(fieldIdx)}
-                            className="no-pdf text-gray-300 hover:text-rose-600 p-0.5 cursor-pointer ml-auto opacity-0 group-hover/f:opacity-100 transition"
-                            title="Sterge categoria de skill"
-                          >
-                            <Trash2 className="w-2.5 h-2.5" />
-                          </button>
                         </div>
                       ))}
                     </div>
@@ -1493,7 +1614,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                       contentEditable={true}
                       suppressContentEditableWarning={true}
                       onBlur={e => setSummaryText(e.currentTarget.textContent || "")}
-                      className="outline-none hover:bg-blue-50/30 focus:bg-blue-50/40 px-0.5 rounded transition cursor-text"
+                      className="outline-none border border-transparent hover:border-blue-400 hover:bg-blue-50/20 focus:border-blue-500 focus:bg-blue-50/30 px-1.5 py-0.5 rounded transition cursor-text"
                       style={{ fontSize: '9pt', color: '#000000', textAlign: 'justify', lineHeight: '1.35', fontFamily: 'Arial, Helvetica, sans-serif' }}
                     >
                       {summaryText}
