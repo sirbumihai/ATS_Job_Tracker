@@ -255,7 +255,7 @@ export default function App() {
   };
 
   return (
-    <div className={activeTab === 'cv_studio' ? "min-h-screen bg-gray-100 text-gray-900 flex flex-col font-sans selection:bg-black selection:text-white" : "min-h-screen bg-[#090d16] text-gray-100 flex flex-col font-sans selection:bg-purple-500 selection:text-white"}>
+    <div className="min-h-screen bg-gray-100 text-gray-900 flex flex-col font-sans selection:bg-black selection:text-white">
       
       {/* NAVBAR */}
       <Navbar 
@@ -298,7 +298,7 @@ export default function App() {
       </main>
 
       {/* FOOTER */}
-      <footer className={activeTab === 'cv_studio' ? "border-t border-gray-200 bg-white py-4 text-center text-xs text-gray-500" : "border-t border-gray-800/60 bg-[#0b0f19] py-4 text-center text-xs text-gray-400"}>
+      <footer className="border-t border-gray-200 bg-white py-4 text-center text-xs text-gray-500">
         <p>ATS AI Career Coach & Engine • Spring Boot 3.3 Java 21 • React 18 • PostgreSQL pgvector</p>
       </footer>
 

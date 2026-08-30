@@ -23,7 +23,7 @@ export default function Navbar({
   onOpenAddJob 
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const isWhiteTheme = activeTab === 'cv_studio';
+  const isWhiteTheme = true;
 
   return (
     <header className={
