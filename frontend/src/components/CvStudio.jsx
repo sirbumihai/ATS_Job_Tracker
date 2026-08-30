@@ -830,31 +830,6 @@ export default function CvStudio({ applications = [], currentUser }) {
               <Plus className="w-3 h-3" /> Summary
             </button>
           )}
-
-          {/* ZOOM CONTROLS (FIXED 100% SCALE DEFAULT) */}
-          <div className="ml-auto flex items-center bg-gray-50 px-2 py-1 rounded-lg border border-gray-200 text-xs">
-            <button 
-              onClick={() => setPreviewZoom(z => Math.max(0.4, Number((z - 0.05).toFixed(2))))}
-              className="p-1 hover:bg-gray-200 text-gray-600 hover:text-black rounded cursor-pointer"
-              title="Zoom Out"
-            >
-              <ZoomOut className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setPreviewZoom(1.0)}
-              className="font-mono text-gray-900 font-bold px-2 text-[11px] min-w-[38px] text-center cursor-pointer"
-              title="Setează la 100%"
-            >
-              {Math.round(previewZoom * 100)}%
-            </button>
-            <button 
-              onClick={() => setPreviewZoom(z => Math.min(1.3, Number((z + 0.05).toFixed(2))))}
-              className="p-1 hover:bg-gray-200 text-gray-600 hover:text-black rounded cursor-pointer"
-              title="Zoom In"
-            >
-              <ZoomIn className="w-3.5 h-3.5" />
-            </button>
-          </div>
         </div>
 
         {parsedPdfSuccess && (
@@ -873,12 +848,11 @@ export default function CvStudio({ applications = [], currentUser }) {
         <div 
           style={{ 
             display: 'inline-block',
-            width: `${210 * previewZoom}mm`, 
-            minHeight: `${297 * previewZoom}mm`,
+            width: '210mm', 
+            minHeight: '297mm',
             margin: '0 auto',
             textAlign: 'left',
-            position: 'relative',
-            transition: 'width 0.1s ease, min-height 0.1s ease'
+            position: 'relative'
           }}
         >
           {/* EXACT PHYSICAL 210mm A4 SHEET (CLEAN WHITE CARD WITH ROUNDED CORNERS & SHADOW) */}
@@ -890,8 +864,6 @@ export default function CvStudio({ applications = [], currentUser }) {
               width: '210mm',
               minHeight: '297mm',
               padding: '14mm 16mm',
-              transform: `scale(${previewZoom})`,
-              transformOrigin: 'top left',
               fontFamily: "'Times New Roman', Times, serif",
               backgroundColor: '#ffffff',
               color: '#000000',

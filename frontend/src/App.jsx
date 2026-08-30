@@ -8,9 +8,12 @@ import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './comp
 export default function App() {
   const getInitialTab = () => {
     if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      if (path.startsWith('/cv-studio') || path.startsWith('/cv_studio')) return 'cv_studio';
+      if (path.startsWith('/kanban')) return 'kanban';
       const hash = window.location.hash.toLowerCase();
-      if (hash === '#cv-studio' || hash === '#cv_studio') return 'cv_studio';
-      if (hash === '#kanban') return 'kanban';
+      if (hash.includes('cv-studio') || hash.includes('cv_studio')) return 'cv_studio';
+      if (hash.includes('kanban')) return 'kanban';
       const stored = localStorage.getItem('ats_active_tab');
       if (stored === 'cv_studio' || stored === 'kanban') return stored;
     }
@@ -19,28 +22,31 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState(getInitialTab);
 
-  // Sync tab with URL hash and localStorage
+  // Sync tab with clean URL pathname and localStorage
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       localStorage.setItem('ats_active_tab', tab);
-      window.location.hash = tab === 'cv_studio' ? '#cv-studio' : '#kanban';
+      const targetPath = tab === 'cv_studio' ? '/cv-studio' : '/kanban';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ tab }, '', targetPath);
+      }
     }
   };
 
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.toLowerCase();
-      if (hash === '#cv-studio' || hash === '#cv_studio') {
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase();
+      if (path.startsWith('/cv-studio') || path.startsWith('/cv_studio')) {
         setActiveTab('cv_studio');
         localStorage.setItem('ats_active_tab', 'cv_studio');
-      } else if (hash === '#kanban') {
+      } else {
         setActiveTab('kanban');
         localStorage.setItem('ats_active_tab', 'kanban');
       }
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const [applications, setApplications] = useState([]);
@@ -249,7 +255,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-gray-100 flex flex-col font-sans selection:bg-purple-500 selection:text-white">
+    <div className={activeTab === 'cv_studio' ? "min-h-screen bg-gray-100 text-gray-900 flex flex-col font-sans selection:bg-black selection:text-white" : "min-h-screen bg-[#090d16] text-gray-100 flex flex-col font-sans selection:bg-purple-500 selection:text-white"}>
       
       {/* NAVBAR */}
       <Navbar 
@@ -292,7 +298,7 @@ export default function App() {
       </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-gray-800/60 bg-[#0b0f19] py-4 text-center text-xs text-gray-400">
+      <footer className={activeTab === 'cv_studio' ? "border-t border-gray-200 bg-white py-4 text-center text-xs text-gray-500" : "border-t border-gray-800/60 bg-[#0b0f19] py-4 text-center text-xs text-gray-400"}>
         <p>ATS AI Career Coach & Engine • Spring Boot 3.3 Java 21 • React 18 • PostgreSQL pgvector</p>
       </footer>
 
