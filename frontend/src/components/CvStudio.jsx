@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import html2pdf from 'html2pdf.js';
 import { 
   FileText, 
@@ -16,6 +16,7 @@ import {
   Briefcase,
   FolderGit2,
   GraduationCap,
+  Award,
   Plus,
   Trash2,
   Code2,
@@ -128,6 +129,19 @@ export default function CvStudio({ applications = [], currentUser }) {
     }
   ]);
 
+  // CERTIFICATIONS STATE
+  const [certificationsList, setCertificationsList] = useState([
+    {
+      id: 1,
+      name: "Oracle Certified Professional: Java SE 21 Developer",
+      issuer: "Oracle",
+      period: "May 2025",
+      bullets: [
+        "Demonstrated proficiency in core Java, modern concurrency, virtual threads, and JVM performance tuning."
+      ]
+    }
+  ]);
+
   // TECHNICAL SKILLS FIELDS STATE
   const [skillsFields, setSkillsFields] = useState([
     {
@@ -162,13 +176,16 @@ export default function CvStudio({ applications = [], currentUser }) {
   const [showEditContactModal, setShowEditContactModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   
-  // POPUP DELETION SELECTION TARGETS
+  // DIRECT SINGLE-BUTTON POPUP DELETION TARGET
   const [selectedTarget, setSelectedTarget] = useState(null); // { type: 'skill'|'field'|'bullet'|'item', section: string, idx: number, subIdx?: number }
   const [addingSkillFieldIdx, setAddingSkillFieldIdx] = useState(null);
   const [newSkillText, setNewSkillText] = useState("");
   
-  const [isSavingDb, setIsSavingDb] = useState(false);
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState(null);
+  // AUTO-SAVE STATES
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastAutoSavedTime, setLastAutoSavedTime] = useState(null);
+  const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
+  
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [parsingPdf, setParsingPdf] = useState(false);
@@ -189,24 +206,6 @@ export default function CvStudio({ applications = [], currentUser }) {
     };
     document.addEventListener('click', handleOutsideClick);
     return () => document.removeEventListener('click', handleOutsideClick);
-  }, []);
-
-  // AUTO FIT ZOOM CALCULATION
-  const handleFitToWidth = () => {
-    if (workbenchRef.current) {
-      const containerWidth = workbenchRef.current.clientWidth - 48;
-      const a4WidthPx = 794;
-      const calculatedZoom = Math.min(1.0, Math.max(0.4, Number((containerWidth / a4WidthPx).toFixed(2))));
-      setPreviewZoom(calculatedZoom);
-    } else {
-      setPreviewZoom(0.85);
-    }
-  };
-
-  useEffect(() => {
-    handleFitToWidth();
-    window.addEventListener('resize', handleFitToWidth);
-    return () => window.removeEventListener('resize', handleFitToWidth);
   }, []);
 
   // LOAD FROM DATABASE ON MOUNT
@@ -252,6 +251,8 @@ export default function CvStudio({ applications = [], currentUser }) {
       }
     } catch (err) {
       console.error("Eroare la citirea CV-ului din DB:", err);
+    } finally {
+      setIsInitialLoadDone(true);
     }
   };
 
@@ -259,53 +260,63 @@ export default function CvStudio({ applications = [], currentUser }) {
     fetchCvFromDatabase();
   }, [activeUserId]);
 
-  // SAVE CV TO DATABASE
-  const handleSaveToDatabase = async () => {
-    if (!activeUserId) {
-      alert("Te rugam sa te autentifici pentru a salva CV-ul in baza de date.");
-      return;
-    }
-    setIsSavingDb(true);
-    setSaveSuccessMsg(null);
+  // AUTOMATIC REAL-TIME DEBOUNCED DATABASE SAVE
+  useEffect(() => {
+    if (!isInitialLoadDone || !activeUserId) return;
 
-    try {
-      const payload = {
-        fullName: contactData.fullName,
-        email: contactData.email,
-        phone: contactData.phone,
-        location: contactData.location,
-        linkedin: contactData.linkedin,
-        github: contactData.github,
-        summary: summaryText,
-        skillsLanguages: skillsFields.find(f => f.id === 'languages')?.items.join(', ') || "",
-        skillsFrameworks: skillsFields.find(f => f.id === 'frameworks')?.items.join(', ') || "",
-        skillsDevops: skillsFields.find(f => f.id === 'developer_tools')?.items.join(', ') || "",
-        skillsDatabases: skillsFields.find(f => f.id === 'libraries')?.items.join(', ') || "",
-        workExperienceJson: JSON.stringify(experienceList),
-        projectsJson: JSON.stringify(projectsList),
-        educationJson: JSON.stringify(educationList),
-        languagePreference: "EN"
-      };
+    const timer = setTimeout(async () => {
+      setIsAutoSaving(true);
+      try {
+        const payload = {
+          fullName: contactData.fullName,
+          email: contactData.email,
+          phone: contactData.phone,
+          location: contactData.location,
+          linkedin: contactData.linkedin,
+          github: contactData.github,
+          summary: summaryText,
+          skillsLanguages: skillsFields.find(f => f.id === 'languages')?.items.join(', ') || "",
+          skillsFrameworks: skillsFields.find(f => f.id === 'frameworks')?.items.join(', ') || "",
+          skillsDevops: skillsFields.find(f => f.id === 'developer_tools')?.items.join(', ') || "",
+          skillsDatabases: skillsFields.find(f => f.id === 'libraries')?.items.join(', ') || "",
+          workExperienceJson: JSON.stringify(experienceList),
+          projectsJson: JSON.stringify(projectsList),
+          educationJson: JSON.stringify(educationList),
+          languagePreference: "EN"
+        };
 
-      const res = await fetch('/api/v1/cv', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': activeUserId
-        },
-        body: JSON.stringify(payload)
-      });
+        const res = await fetch('/api/v1/cv', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': activeUserId
+          },
+          body: JSON.stringify(payload)
+        });
 
-      if (res.ok) {
-        setSaveSuccessMsg("Toate modificarile din CV au fost salvate cu succes in PostgreSQL!");
-        setTimeout(() => setSaveSuccessMsg(null), 4000);
+        if (res.ok) {
+          setLastAutoSavedTime(new Date());
+        }
+      } catch (err) {
+        console.error("Eroare la salvarea automata:", err);
+      } finally {
+        setIsAutoSaving(false);
       }
-    } catch (err) {
-      console.error("Eroare la salvarea in DB:", err);
-    } finally {
-      setIsSavingDb(false);
-    }
-  };
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [
+    isInitialLoadDone,
+    activeUserId,
+    contactData,
+    educationList,
+    experienceList,
+    projectsList,
+    certificationsList,
+    skillsFields,
+    summaryText,
+    sectionOrder
+  ]);
 
   // REORDER SECTIONS
   const moveSection = (idx, direction) => {
@@ -359,6 +370,16 @@ export default function CvStudio({ applications = [], currentUser }) {
     setEducationList(updated);
   };
 
+  const moveCertificationItem = (idx, direction) => {
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= certificationsList.length) return;
+    const updated = [...certificationsList];
+    const temp = updated[idx];
+    updated[idx] = updated[targetIdx];
+    updated[targetIdx] = temp;
+    setCertificationsList(updated);
+  };
+
   const moveSkillFieldItem = (idx, direction) => {
     const targetIdx = idx + direction;
     if (targetIdx < 0 || targetIdx >= skillsFields.length) return;
@@ -375,8 +396,8 @@ export default function CvStudio({ applications = [], currentUser }) {
       id: Date.now(),
       school: "University / School Name",
       degree: "Bachelor of Computer Science & Engineering",
-      period: "Month Year – Month Year",
-      location: "City, Country",
+      period: "",
+      location: "Bucharest, Romania",
       bullets: []
     };
     setEducationList(prev => [...prev, newEdu]);
@@ -407,7 +428,7 @@ export default function CvStudio({ applications = [], currentUser }) {
       id: Date.now(),
       role: "Software Engineering Intern",
       company: "Company Name",
-      period: "Month Year – Month Year",
+      period: "",
       location: "City, Country",
       bullets: ["Accomplished key task using Java, Spring Boot, reducing latency by 25%."]
     };
@@ -439,7 +460,7 @@ export default function CvStudio({ applications = [], currentUser }) {
       id: Date.now(),
       title: "Project Title",
       techStack: "Java, Spring Boot, React, PostgreSQL",
-      period: "Month Year – Month Year",
+      period: "",
       linkUrl: "",
       linkText: "",
       bullets: ["Architected and delivered full-stack platform features..."]
@@ -463,6 +484,37 @@ export default function CvStudio({ applications = [], currentUser }) {
     const updated = [...projectsList];
     updated[projIdx].bullets = updated[projIdx].bullets.filter((_, idx) => idx !== bIdx);
     setProjectsList(updated);
+    setSelectedTarget(null);
+  };
+
+  // CERTIFICATIONS HANDLERS
+  const addCertification = () => {
+    const newCert = {
+      id: Date.now(),
+      name: "Certification Name (e.g. AWS Certified Solutions Architect)",
+      issuer: "Issuing Organization",
+      period: "",
+      bullets: []
+    };
+    setCertificationsList(prev => [...prev, newCert]);
+  };
+
+  const deleteCertification = (id) => {
+    setCertificationsList(prev => prev.filter(c => c.id !== id));
+    setSelectedTarget(null);
+  };
+
+  const addCertBullet = (certIdx) => {
+    const updated = [...certificationsList];
+    if (!updated[certIdx].bullets) updated[certIdx].bullets = [];
+    updated[certIdx].bullets.push("Key skill validated or project domain covered...");
+    setCertificationsList(updated);
+  };
+
+  const deleteCertBullet = (certIdx, bIdx) => {
+    const updated = [...certificationsList];
+    updated[certIdx].bullets = updated[certIdx].bullets.filter((_, idx) => idx !== bIdx);
+    setCertificationsList(updated);
     setSelectedTarget(null);
   };
 
@@ -698,20 +750,24 @@ export default function CvStudio({ applications = [], currentUser }) {
                 CV Canvas Studio – Editare Directă în Pagină (Inline WYSIWYG)
               </h2>
               <p className="text-xs text-gray-400 font-medium">
-                Scrie direct pe foaie în căsuțe dedicate cu margini gri discrete. Dă click pe un element pentru popup-ul de ștergere sau folosește butoanele din stânga pentru reordonare.
+                Scrie direct pe foaie. Toate modificările se salvează automat în timp real în baza de date.
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              onClick={handleSaveToDatabase}
-              disabled={isSavingDb || !activeUserId}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-blue-600/25 transition disabled:opacity-50"
-            >
-              {isSavingDb ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-              {isSavingDb ? 'Se salvează...' : 'Salvează în DB'}
-            </button>
+            {/* REAL-TIME AUTO-SAVE STATUS INDICATOR */}
+            <div className="px-3.5 py-2 bg-gray-900/90 border border-gray-800 rounded-xl text-xs flex items-center gap-1.5 shadow-inner">
+              {isAutoSaving ? (
+                <span className="text-amber-300 font-bold flex items-center gap-1.5 animate-pulse">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Se salvează...
+                </span>
+              ) : (
+                <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Salvat automat
+                </span>
+              )}
+            </div>
 
             <button
               onClick={() => setShowAiModal(true)}
@@ -738,7 +794,7 @@ export default function CvStudio({ applications = [], currentUser }) {
           </div>
         </div>
 
-        {/* RESTORE SECTIONS & ZOOM CONTROLS */}
+        {/* RESTORE SECTIONS & ZOOM CONTROLS (WITHOUT FIT BUTTON) */}
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-800/80 text-xs">
           <span className="text-[11px] font-bold text-gray-400">Adaugă secțiuni:</span>
           {!sectionOrder.includes('education') && (
@@ -756,6 +812,11 @@ export default function CvStudio({ applications = [], currentUser }) {
               <Plus className="w-3 h-3" /> Projects
             </button>
           )}
+          {!sectionOrder.includes('certifications') && (
+            <button onClick={() => restoreSection('certifications')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-yellow-300 rounded-lg text-[10px] font-bold border border-yellow-500/30 flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Certifications
+            </button>
+          )}
           {!sectionOrder.includes('skills') && (
             <button onClick={() => restoreSection('skills')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-cyan-300 rounded-lg text-[10px] font-bold border border-cyan-500/30 flex items-center gap-1">
               <Plus className="w-3 h-3" /> Technical Skills
@@ -767,45 +828,31 @@ export default function CvStudio({ applications = [], currentUser }) {
             </button>
           )}
 
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={handleFitToWidth}
-              className="px-2.5 py-1 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition"
+          {/* ZOOM CONTROLS (WITHOUT FIT BUTTON) */}
+          <div className="ml-auto flex items-center bg-gray-950 px-2 py-1 rounded-lg border border-gray-800 text-xs">
+            <button 
+              onClick={() => setPreviewZoom(z => Math.max(0.4, Number((z - 0.05).toFixed(2))))}
+              className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded"
+              title="Zoom Out"
             >
-              <Maximize className="w-3 h-3" /> Potrivește (Fit)
+              <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <div className="flex items-center bg-gray-950 px-2 py-1 rounded-lg border border-gray-800 text-xs">
-              <button 
-                onClick={() => setPreviewZoom(z => Math.max(0.4, Number((z - 0.05).toFixed(2))))}
-                className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded"
-                title="Zoom Out"
-              >
-                <ZoomOut className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setPreviewZoom(1.0)}
-                className="font-mono text-purple-300 font-bold px-2 text-[11px] min-w-[38px] text-center"
-                title="Seteaza la 100%"
-              >
-                {Math.round(previewZoom * 100)}%
-              </button>
-              <button 
-                onClick={() => setPreviewZoom(z => Math.min(1.3, Number((z + 0.05).toFixed(2))))}
-                className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded"
-                title="Zoom In"
-              >
-                <ZoomIn className="w-3 h-3" />
-              </button>
-            </div>
+            <button
+              onClick={() => setPreviewZoom(1.0)}
+              className="font-mono text-purple-300 font-bold px-2 text-[11px] min-w-[38px] text-center"
+              title="Setează la 100%"
+            >
+              {Math.round(previewZoom * 100)}%
+            </button>
+            <button 
+              onClick={() => setPreviewZoom(z => Math.min(1.3, Number((z + 0.05).toFixed(2))))}
+              className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded"
+              title="Zoom In"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
-
-        {saveSuccessMsg && (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-xl text-xs flex items-center gap-2 animate-bounce">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{saveSuccessMsg}</span>
-          </div>
-        )}
 
         {parsedPdfSuccess && (
           <div className="p-3 bg-blue-500/10 border border-blue-500/30 text-blue-300 rounded-xl text-xs flex items-center gap-2">
@@ -831,7 +878,7 @@ export default function CvStudio({ applications = [], currentUser }) {
             transition: 'width 0.1s ease, min-height 0.1s ease'
           }}
         >
-          {/* EXACT PHYSICAL 210mm A4 SHEET (CLEAN WHITE CARD WITH ROUNDED CORNERS & SHADOW) */}
+          {/* EXACT PHYSICAL 210mm A4 SHEET */}
           <div 
             ref={previewRef}
             id="cv-preview-sheet" 
@@ -861,7 +908,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                 <Edit3 className="w-3.5 h-3.5 text-gray-500" /> Edit Contact
               </button>
 
-              {/* CANDIDATE FULL NAME IN EDITABLE BOX (SUBTLE GRAY BORDER ON CLICK) */}
+              {/* CANDIDATE FULL NAME IN EDITABLE BOX */}
               <div 
                 contentEditable={true}
                 suppressContentEditableWarning={true}
@@ -877,7 +924,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                 {contactData.fullName}
               </div>
 
-              {/* CONTACT DETAILS ROW (BLACK TEXT, CLEAN UNDERLINE LINKS) */}
+              {/* CONTACT DETAILS ROW */}
               <div 
                 className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-black mt-1 font-sans"
                 style={{ fontSize: '9pt' }}
@@ -1015,6 +1062,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                           </div>
 
                           <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
+                            {/* DATES WITH VISIBLE PLACEHOLDER IF EMPTY */}
                             <span
                               contentEditable={true}
                               suppressContentEditableWarning={true}
@@ -1023,21 +1071,22 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[eduIdx].period = e.currentTarget.textContent || "";
                                 setEducationList(updated);
                               }}
-                              className="text-right text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                              className={`text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block ${
+                                !edu.period ? 'text-gray-400 italic' : 'text-black'
+                              }`}
                               style={{ fontSize: '9pt' }}
                             >
-                              {edu.period}
+                              {edu.period || "Dates"}
                             </span>
 
-                            {/* DELETE POPUP ANCHOR */}
+                            {/* DIRECT SINGLE DELETE BUTTON */}
                             {selectedTarget?.type === 'item' && selectedTarget?.section === 'education' && selectedTarget?.idx === eduIdx && (
-                              <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 bg-white text-gray-800 text-[10px] px-2 py-1 rounded shadow-md border border-gray-200 animate-in fade-in flex items-center gap-2 font-sans">
-                                <span className="text-gray-500 font-medium">Ștergi intrarea?</span>
+                              <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
                                 <button 
-                                  onClick={() => deleteEducation(edu.id)}
-                                  className="bg-gray-100 hover:bg-rose-50 text-gray-700 hover:text-rose-600 border border-gray-300 px-2 py-0.5 rounded font-bold flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                                  onClick={(e) => { e.stopPropagation(); deleteEducation(edu.id); }}
+                                  className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
                                 >
-                                  <Trash2 className="w-2.5 h-2.5" /> Delete
+                                  <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                                 </button>
                               </div>
                             )}
@@ -1085,21 +1134,20 @@ export default function CvStudio({ applications = [], currentUser }) {
                           </span>
                         </div>
 
-                        {/* BULLETS (WITH WHITE CARD DELETE POPUP) */}
+                        {/* BULLETS */}
                         {edu.bullets && edu.bullets.map((b, bIdx) => {
                           const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'education' && selectedTarget?.idx === eduIdx && selectedTarget?.subIdx === bIdx;
                           return (
                             <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
                               
-                              {/* WHITE CARD DELETE POPUP FOR BULLET */}
+                              {/* DIRECT SINGLE DELETE BUTTON */}
                               {isBulletSelected && (
-                                <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 bg-white text-gray-800 text-[10px] px-2 py-1 rounded shadow-md border border-gray-200 animate-in fade-in flex items-center gap-2 font-sans">
-                                  <span className="text-gray-500 font-medium">Ștergi rândul?</span>
+                                <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); deleteEduBullet(eduIdx, bIdx); }}
-                                    className="bg-gray-100 hover:bg-rose-50 text-gray-700 hover:text-rose-600 border border-gray-300 px-2 py-0.5 rounded font-bold flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                                    className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
                                   >
-                                    <Trash2 className="w-2.5 h-2.5" /> Delete
+                                    <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                                   </button>
                                 </div>
                               )}
@@ -1200,6 +1248,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                           </div>
 
                           <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
+                            {/* DATES WITH VISIBLE PLACEHOLDER IF EMPTY */}
                             <span
                               contentEditable={true}
                               suppressContentEditableWarning={true}
@@ -1208,21 +1257,22 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[expIdx].period = e.currentTarget.textContent || "";
                                 setExperienceList(updated);
                               }}
-                              className="text-right text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                              className={`text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block ${
+                                !exp.period ? 'text-gray-400 italic' : 'text-black'
+                              }`}
                               style={{ fontSize: '9pt' }}
                             >
-                              {exp.period}
+                              {exp.period || "Dates"}
                             </span>
 
-                            {/* DELETE POPUP ANCHOR */}
+                            {/* DIRECT SINGLE DELETE BUTTON */}
                             {selectedTarget?.type === 'item' && selectedTarget?.section === 'experience' && selectedTarget?.idx === expIdx && (
-                              <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 bg-white text-gray-800 text-[10px] px-2 py-1 rounded shadow-md border border-gray-200 animate-in fade-in flex items-center gap-2 font-sans">
-                                <span className="text-gray-500 font-medium">Ștergi rolul?</span>
+                              <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
                                 <button 
-                                  onClick={() => deleteExperience(exp.id)}
-                                  className="bg-gray-100 hover:bg-rose-50 text-gray-700 hover:text-rose-600 border border-gray-300 px-2 py-0.5 rounded font-bold flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                                  onClick={(e) => { e.stopPropagation(); deleteExperience(exp.id); }}
+                                  className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
                                 >
-                                  <Trash2 className="w-2.5 h-2.5" /> Delete
+                                  <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                                 </button>
                               </div>
                             )}
@@ -1270,21 +1320,20 @@ export default function CvStudio({ applications = [], currentUser }) {
                           </span>
                         </div>
 
-                        {/* BULLETS (WITH WHITE CARD DELETE POPUP) */}
+                        {/* BULLETS */}
                         {exp.bullets && exp.bullets.map((b, bIdx) => {
                           const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'experience' && selectedTarget?.idx === expIdx && selectedTarget?.subIdx === bIdx;
                           return (
                             <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
                               
-                              {/* WHITE CARD DELETE POPUP FOR BULLET */}
+                              {/* DIRECT SINGLE DELETE BUTTON */}
                               {isBulletSelected && (
-                                <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 bg-white text-gray-800 text-[10px] px-2 py-1 rounded shadow-md border border-gray-200 animate-in fade-in flex items-center gap-2 font-sans">
-                                  <span className="text-gray-500 font-medium">Ștergi rândul?</span>
+                                <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
-                                    className="bg-gray-100 hover:bg-rose-50 text-gray-700 hover:text-rose-600 border border-gray-300 px-2 py-0.5 rounded font-bold flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                                    className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
                                   >
-                                    <Trash2 className="w-2.5 h-2.5" /> Delete
+                                    <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                                   </button>
                                 </div>
                               )}
@@ -1445,7 +1494,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                             </button>
                           </div>
 
-                          {/* DATES (EXACT MATCH FOR EDUCATION & EXPERIENCE) */}
+                          {/* DATES (EXACT MATCH FOR EDUCATION & EXPERIENCE WITH PLACEHOLDER) */}
                           <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
                             <span
                               contentEditable={true}
@@ -1455,21 +1504,22 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[projIdx].period = e.currentTarget.textContent || "";
                                 setProjectsList(updated);
                               }}
-                              className="text-right text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                              className={`text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block ${
+                                !proj.period ? 'text-gray-400 italic' : 'text-black'
+                              }`}
                               style={{ fontSize: '9pt' }}
                             >
-                              {proj.period}
+                              {proj.period || "Dates"}
                             </span>
 
-                            {/* DELETE POPUP ANCHOR */}
+                            {/* DIRECT SINGLE DELETE BUTTON */}
                             {selectedTarget?.type === 'item' && selectedTarget?.section === 'projects' && selectedTarget?.idx === projIdx && (
-                              <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 bg-white text-gray-800 text-[10px] px-2 py-1 rounded shadow-md border border-gray-200 animate-in fade-in flex items-center gap-2 font-sans">
-                                <span className="text-gray-500 font-medium">Ștergi proiectul?</span>
+                              <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
                                 <button 
-                                  onClick={() => deleteProject(proj.id)}
-                                  className="bg-gray-100 hover:bg-rose-50 text-gray-700 hover:text-rose-600 border border-gray-300 px-2 py-0.5 rounded font-bold flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                                  onClick={(e) => { e.stopPropagation(); deleteProject(proj.id); }}
+                                  className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
                                 >
-                                  <Trash2 className="w-2.5 h-2.5" /> Delete
+                                  <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                                 </button>
                               </div>
                             )}
@@ -1487,21 +1537,20 @@ export default function CvStudio({ applications = [], currentUser }) {
                           </div>
                         </div>
 
-                        {/* BULLETS (WITH WHITE CARD DELETE POPUP) */}
+                        {/* BULLETS */}
                         {proj.bullets && proj.bullets.map((b, bIdx) => {
                           const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'projects' && selectedTarget?.idx === projIdx && selectedTarget?.subIdx === bIdx;
                           return (
                             <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
                               
-                              {/* WHITE CARD DELETE POPUP FOR BULLET */}
+                              {/* DIRECT SINGLE DELETE BUTTON */}
                               {isBulletSelected && (
-                                <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 bg-white text-gray-800 text-[10px] px-2 py-1 rounded shadow-md border border-gray-200 animate-in fade-in flex items-center gap-2 font-sans">
-                                  <span className="text-gray-500 font-medium">Ștergi rândul?</span>
+                                <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
-                                    className="bg-gray-100 hover:bg-rose-50 text-gray-700 hover:text-rose-600 border border-gray-300 px-2 py-0.5 rounded font-bold flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                                    className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
                                   >
-                                    <Trash2 className="w-2.5 h-2.5" /> Delete
+                                    <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                                   </button>
                                 </div>
                               )}
@@ -1518,6 +1567,182 @@ export default function CvStudio({ applications = [], currentUser }) {
                                   const updated = [...projectsList];
                                   updated[projIdx].bullets[bIdx] = e.currentTarget.textContent || "";
                                   setProjectsList(updated);
+                                }}
+                                className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
+                                  isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
+                                }`}
+                                style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
+                              >
+                                {b}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+
+              // ------------------- CERTIFICATIONS -------------------
+              if (sectionKey === 'certifications') {
+                return (
+                  <div key="certifications" className="mt-3.5 mb-2 group/sec">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span style={{ 
+                          fontWeight: 'bold', 
+                          fontSize: '10.5pt', 
+                          textTransform: 'uppercase', 
+                          letterSpacing: '0.8px', 
+                          color: '#000000', 
+                          fontFamily: 'Arial, Helvetica, sans-serif'
+                        }}>
+                          Certifications
+                        </span>
+                        
+                        {/* LARGER SIZED SEPARATE ARROW BUTTONS */}
+                        <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
+                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
+                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
+                          <button onClick={addCertification} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga certificare">+ new</button>
+                        </div>
+                      </div>
+
+                      <button onClick={() => deleteSection('certifications')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+                        <Trash2 className="w-3 h-3" /> delete section
+                      </button>
+                    </div>
+
+                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+
+                    {/* ENTRIES */}
+                    {certificationsList.map((cert, certIdx) => (
+                      <div key={cert.id || certIdx} className="mt-1.5 mb-2 group/item relative">
+                        
+                        {/* 2 SEPARATE HOVER BUTTONS ON LEFT */}
+                        <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
+                          <button onClick={() => moveCertificationItem(certIdx, -1)} disabled={certIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
+                          <button onClick={() => moveCertificationItem(certIdx, 1)} disabled={certIdx === certificationsList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+                        </div>
+
+                        {/* ROW 1: CERT NAME + ISSUER + DATES */}
+                        <div className="flex items-baseline justify-between gap-2">
+                          <div className="flex items-baseline flex-wrap gap-1.5 flex-1">
+                            <span
+                              contentEditable={true}
+                              suppressContentEditableWarning={true}
+                              onBlur={e => {
+                                const updated = [...certificationsList];
+                                updated[certIdx].name = e.currentTarget.textContent || "";
+                                setCertificationsList(updated);
+                              }}
+                              className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                              style={{ fontSize: '9.5pt' }}
+                            >
+                              {cert.name}
+                            </span>
+                            
+                            {cert.issuer && (
+                              <>
+                                <span className="text-gray-400 font-normal">|</span>
+                                <span
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={e => {
+                                    const updated = [...certificationsList];
+                                    updated[certIdx].issuer = e.currentTarget.textContent || "";
+                                    setCertificationsList(updated);
+                                  }}
+                                  className="italic text-gray-800 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                                  style={{ fontSize: '8.5pt' }}
+                                >
+                                  {cert.issuer}
+                                </span>
+                              </>
+                            )}
+
+                            <button 
+                              onClick={() => addCertBullet(certIdx)}
+                              className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0 ml-1"
+                            >
+                              + bullet
+                            </button>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
+                            {/* DATES WITH VISIBLE PLACEHOLDER IF EMPTY */}
+                            <span
+                              contentEditable={true}
+                              suppressContentEditableWarning={true}
+                              onBlur={e => {
+                                const updated = [...certificationsList];
+                                updated[certIdx].period = e.currentTarget.textContent || "";
+                                setCertificationsList(updated);
+                              }}
+                              className={`text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block ${
+                                !cert.period ? 'text-gray-400 italic' : 'text-black'
+                              }`}
+                              style={{ fontSize: '9pt' }}
+                            >
+                              {cert.period || "Dates"}
+                            </span>
+
+                            {/* DIRECT SINGLE DELETE BUTTON */}
+                            {selectedTarget?.type === 'item' && selectedTarget?.section === 'certifications' && selectedTarget?.idx === certIdx && (
+                              <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); deleteCertification(cert.id); }}
+                                  className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                                >
+                                  <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                                </button>
+                              </div>
+                            )}
+
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedTarget({ type: 'item', section: 'certifications', idx: certIdx });
+                              }}
+                              className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
+                              title="Delete entry"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* BULLETS */}
+                        {cert.bullets && cert.bullets.map((b, bIdx) => {
+                          const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'certifications' && selectedTarget?.idx === certIdx && selectedTarget?.subIdx === bIdx;
+                          return (
+                            <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
+                              
+                              {/* DIRECT SINGLE DELETE BUTTON */}
+                              {isBulletSelected && (
+                                <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); deleteCertBullet(certIdx, bIdx); }}
+                                    className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                                  >
+                                    <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                                  </button>
+                                </div>
+                              )}
+
+                              <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
+                              <div
+                                contentEditable={true}
+                                suppressContentEditableWarning={true}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedTarget({ type: 'bullet', section: 'certifications', idx: certIdx, subIdx: bIdx });
+                                }}
+                                onBlur={e => {
+                                  const updated = [...certificationsList];
+                                  updated[certIdx].bullets[bIdx] = e.currentTarget.textContent || "";
+                                  setCertificationsList(updated);
                                 }}
                                 className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
                                   isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
@@ -1567,7 +1792,7 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                     <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
 
-                    {/* SKILLS ROWS (NATURAL INLINE TEXT FLOW WITH WHITE CARD DELETE POPUP) */}
+                    {/* SKILLS ROWS (NATURAL INLINE TEXT FLOW WITH DIRECT SINGLE DELETE BUTTON) */}
                     <div className="space-y-0.5 mt-1 text-black" style={{ fontSize: '8.5pt', lineHeight: '1.4' }}>
                       {skillsFields.map((field, fieldIdx) => (
                         <div key={field.id || fieldIdx} className="group/f relative leading-normal">
@@ -1578,16 +1803,16 @@ export default function CvStudio({ applications = [], currentUser }) {
                             <button onClick={() => moveSkillFieldItem(fieldIdx, 1)} disabled={fieldIdx === skillsFields.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta categoria mai jos">↓</button>
                           </div>
 
-                          {/* FIELD LABEL (NO EXTRA COLONS ACCUMULATING) */}
+                          {/* FIELD LABEL */}
                           <span className="cv-popup-target relative inline font-bold">
+                            {/* DIRECT SINGLE DELETE BUTTON FOR FIELD */}
                             {selectedTarget?.type === 'field' && selectedTarget?.idx === fieldIdx && (
-                              <div className="no-pdf absolute bottom-full left-0 mb-1 z-40 bg-white text-gray-800 text-[10px] px-2.5 py-1.5 rounded shadow-md border border-gray-200 animate-in fade-in flex items-center gap-2 font-sans">
-                                <span className="font-semibold text-gray-600">Ștergi {field.label}?</span>
+                              <div className="no-pdf absolute bottom-full left-0 mb-1 z-40 animate-in fade-in">
                                 <button 
                                   onClick={(e) => { e.stopPropagation(); deleteSkillField(fieldIdx); }}
-                                  className="bg-gray-100 hover:bg-rose-50 text-gray-700 hover:text-rose-600 border border-gray-300 px-2 py-0.5 rounded font-bold flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                                  className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
                                 >
-                                  <Trash2 className="w-2.5 h-2.5" /> Delete Field
+                                  <Trash2 className="w-3 h-3 text-gray-500" /> Delete Field
                                 </button>
                               </div>
                             )}
@@ -1610,7 +1835,7 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                           <span className="ml-1.5"></span>
 
-                          {/* INDIVIDUAL SKILL ITEMS (NATURAL INLINE PLAIN TEXT FLOW) */}
+                          {/* INDIVIDUAL SKILL ITEMS */}
                           {field.items.map((item, itemIdx) => {
                             const isSkillSelected = selectedTarget?.type === 'skill' && selectedTarget?.idx === fieldIdx && selectedTarget?.subIdx === itemIdx;
                             return (
@@ -1618,19 +1843,19 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 key={itemIdx} 
                                 className="cv-popup-target relative inline cursor-pointer"
                               >
-                                {/* WHITE CARD DELETE POPUP WITH SUBTLE SHADOW & CLEAN GRAY BUTTON */}
+                                {/* DIRECT SINGLE DELETE BUTTON FOR SKILL */}
                                 {isSkillSelected && (
-                                  <div className="no-pdf absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-40 bg-white text-gray-800 text-[10px] px-2.5 py-1.5 rounded shadow-md border border-gray-200 animate-in fade-in flex items-center gap-1.5 font-sans">
+                                  <div className="no-pdf absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-40 animate-in fade-in">
                                     <button 
                                       onClick={(e) => { e.stopPropagation(); deleteSkillItem(fieldIdx, itemIdx); }}
-                                      className="bg-gray-100 hover:bg-rose-50 text-gray-700 hover:text-rose-600 border border-gray-300 px-2 py-0.5 rounded font-bold flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                                      className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
                                     >
-                                      <Trash2 className="w-2.5 h-2.5" /> Delete
+                                      <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                                     </button>
                                   </div>
                                 )}
 
-                                {/* SKILL TEXT WITH SUBTLE GRAY BORDER ON FOCUS */}
+                                {/* SKILL TEXT */}
                                 <span
                                   contentEditable={true}
                                   suppressContentEditableWarning={true}
