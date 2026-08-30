@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import html2pdf from 'html2pdf.js';
 import { 
   FileText, 
@@ -171,8 +171,8 @@ export default function CvStudio({ applications = [], currentUser }) {
   // SECTION ORDER
   const [sectionOrder, setSectionOrder] = useState(['education', 'experience', 'projects', 'skills']);
   
-  // UI CONTROLS & INTERACTIVITY STATES
-  const [previewZoom, setPreviewZoom] = useState(0.85);
+  // UI CONTROLS & INTERACTIVITY STATES (DEFAULT 100% ZOOM)
+  const [previewZoom, setPreviewZoom] = useState(1.0);
   const [showEditContactModal, setShowEditContactModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   
@@ -491,7 +491,7 @@ export default function CvStudio({ applications = [], currentUser }) {
   const addCertification = () => {
     const newCert = {
       id: Date.now(),
-      name: "Certification Name (e.g. AWS Certified Solutions Architect)",
+      name: "Certification Name",
       issuer: "Issuing Organization",
       period: "",
       bullets: []
@@ -736,57 +736,60 @@ export default function CvStudio({ applications = [], currentUser }) {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16 font-sans">
       
-      {/* TOP TOOLBAR */}
-      <div className="glass-card p-4 sm:p-5 rounded-2xl border border-purple-500/30 space-y-4">
+      {/* MINIMALIST WHITE & BLACK TOOLBAR */}
+      <div className="bg-white border border-gray-200/90 shadow-sm p-4 sm:p-5 rounded-2xl space-y-4 text-gray-900">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-600 rounded-2xl text-white shadow-lg shadow-purple-600/30 shrink-0">
-              <Sparkles className="w-5 h-5" />
+            <div className="p-2.5 bg-black text-white rounded-xl shrink-0 shadow-sm">
+              <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-                CV Canvas Studio – Editare Directă în Pagină (Inline WYSIWYG)
+              <h2 className="text-base sm:text-lg font-bold text-gray-950 tracking-tight flex items-center gap-2">
+                CV Canvas Studio
               </h2>
-              <p className="text-xs text-gray-400 font-medium">
-                Scrie direct pe foaie. Toate modificările se salvează automat în timp real în baza de date.
+              <p className="text-xs text-gray-500 font-medium">
+                Editare directă în pagină. Modificările se salvează automat în timp real.
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
             {/* REAL-TIME AUTO-SAVE STATUS INDICATOR */}
-            <div className="px-3.5 py-2 bg-gray-900/90 border border-gray-800 rounded-xl text-xs flex items-center gap-1.5 shadow-inner">
+            <div className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs flex items-center gap-1.5">
               {isAutoSaving ? (
-                <span className="text-amber-300 font-bold flex items-center gap-1.5 animate-pulse">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Se salvează...
+                <span className="text-gray-700 font-medium flex items-center gap-1.5">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-gray-500" /> Se salvează...
                 </span>
               ) : (
-                <span className="text-emerald-400 font-bold flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Salvat automat
+                <span className="text-emerald-700 font-medium flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Salvat automat
                 </span>
               )}
             </div>
 
+            {/* AI OPTIMIZE BUTTON */}
             <button
               onClick={() => setShowAiModal(true)}
-              className="px-4 py-2 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-purple-600/25 transition"
+              className="px-3.5 py-1.5 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-lg font-semibold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
             >
-              <Zap className="w-3.5 h-3.5 text-amber-300" />
+              <Zap className="w-3.5 h-3.5 text-black" />
               Optimizare AI ATS 100%
             </button>
 
-            <label className="px-4 py-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition">
-              <Upload className="w-3.5 h-3.5 text-purple-400" />
-              {parsingPdf ? 'Se extrage...' : 'Importă CV PDF'}
+            {/* IMPORT PDF BUTTON */}
+            <label className="px-3.5 py-1.5 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-lg font-semibold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition">
+              <Upload className="w-3.5 h-3.5 text-gray-700" />
+              {parsingPdf ? 'Se extrage...' : 'Importă PDF'}
               <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
             </label>
 
+            {/* DOWNLOAD PDF BUTTON */}
             <button
               onClick={handleDownloadDirectPdf}
               disabled={isDownloadingPdf}
-              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-600/25 transition disabled:opacity-60"
+              className="px-4 py-1.5 bg-black hover:bg-neutral-800 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition disabled:opacity-60 cursor-pointer"
             >
               {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
               {isDownloadingPdf ? 'Generare...' : 'Descarcă PDF'}
@@ -794,59 +797,59 @@ export default function CvStudio({ applications = [], currentUser }) {
           </div>
         </div>
 
-        {/* RESTORE SECTIONS & ZOOM CONTROLS (WITHOUT FIT BUTTON) */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-800/80 text-xs">
-          <span className="text-[11px] font-bold text-gray-400">Adaugă secțiuni:</span>
+        {/* RESTORE SECTIONS & ZOOM CONTROLS (MINIMALIST WHITE) */}
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100 text-xs">
+          <span className="text-[11px] font-semibold text-gray-500">Adaugă secțiuni:</span>
           {!sectionOrder.includes('education') && (
-            <button onClick={() => restoreSection('education')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-emerald-300 rounded-lg text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1">
+            <button onClick={() => restoreSection('education')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
               <Plus className="w-3 h-3" /> Education
             </button>
           )}
           {!sectionOrder.includes('experience') && (
-            <button onClick={() => restoreSection('experience')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-blue-300 rounded-lg text-[10px] font-bold border border-blue-500/30 flex items-center gap-1">
+            <button onClick={() => restoreSection('experience')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
               <Plus className="w-3 h-3" /> Experience
             </button>
           )}
           {!sectionOrder.includes('projects') && (
-            <button onClick={() => restoreSection('projects')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-amber-300 rounded-lg text-[10px] font-bold border border-amber-500/30 flex items-center gap-1">
+            <button onClick={() => restoreSection('projects')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
               <Plus className="w-3 h-3" /> Projects
             </button>
           )}
           {!sectionOrder.includes('certifications') && (
-            <button onClick={() => restoreSection('certifications')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-yellow-300 rounded-lg text-[10px] font-bold border border-yellow-500/30 flex items-center gap-1">
+            <button onClick={() => restoreSection('certifications')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
               <Plus className="w-3 h-3" /> Certifications
             </button>
           )}
           {!sectionOrder.includes('skills') && (
-            <button onClick={() => restoreSection('skills')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-cyan-300 rounded-lg text-[10px] font-bold border border-cyan-500/30 flex items-center gap-1">
+            <button onClick={() => restoreSection('skills')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
               <Plus className="w-3 h-3" /> Technical Skills
             </button>
           )}
           {!sectionOrder.includes('summary') && (
-            <button onClick={() => restoreSection('summary')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-purple-300 rounded-lg text-[10px] font-bold border border-purple-500/30 flex items-center gap-1">
+            <button onClick={() => restoreSection('summary')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
               <Plus className="w-3 h-3" /> Summary
             </button>
           )}
 
-          {/* ZOOM CONTROLS (WITHOUT FIT BUTTON) */}
-          <div className="ml-auto flex items-center bg-gray-950 px-2 py-1 rounded-lg border border-gray-800 text-xs">
+          {/* ZOOM CONTROLS (FIXED 100% SCALE DEFAULT) */}
+          <div className="ml-auto flex items-center bg-gray-50 px-2 py-1 rounded-lg border border-gray-200 text-xs">
             <button 
               onClick={() => setPreviewZoom(z => Math.max(0.4, Number((z - 0.05).toFixed(2))))}
-              className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded"
+              className="p-1 hover:bg-gray-200 text-gray-600 hover:text-black rounded cursor-pointer"
               title="Zoom Out"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setPreviewZoom(1.0)}
-              className="font-mono text-purple-300 font-bold px-2 text-[11px] min-w-[38px] text-center"
+              className="font-mono text-gray-900 font-bold px-2 text-[11px] min-w-[38px] text-center cursor-pointer"
               title="Setează la 100%"
             >
               {Math.round(previewZoom * 100)}%
             </button>
             <button 
               onClick={() => setPreviewZoom(z => Math.min(1.3, Number((z + 0.05).toFixed(2))))}
-              className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded"
+              className="p-1 hover:bg-gray-200 text-gray-600 hover:text-black rounded cursor-pointer"
               title="Zoom In"
             >
               <ZoomIn className="w-3.5 h-3.5" />
@@ -855,17 +858,17 @@ export default function CvStudio({ applications = [], currentUser }) {
         </div>
 
         {parsedPdfSuccess && (
-          <div className="p-3 bg-blue-500/10 border border-blue-500/30 text-blue-300 rounded-xl text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+          <div className="p-3 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl text-xs flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{parsedPdfSuccess}</span>
           </div>
         )}
       </div>
 
-      {/* ================= A4 DOCUMENT WORKBENCH (CLEAN, DIRECT DOCUMENT FRAMING) ================= */}
+      {/* ================= A4 DOCUMENT WORKBENCH (PURE WHITE CANVAS) ================= */}
       <div 
         ref={workbenchRef}
-        className="w-full flex justify-center py-4 overflow-x-auto text-center"
+        className="w-full flex justify-center py-6 overflow-x-auto text-center"
       >
         <div 
           style={{ 
@@ -878,11 +881,11 @@ export default function CvStudio({ applications = [], currentUser }) {
             transition: 'width 0.1s ease, min-height 0.1s ease'
           }}
         >
-          {/* EXACT PHYSICAL 210mm A4 SHEET */}
+          {/* EXACT PHYSICAL 210mm A4 SHEET (CLEAN WHITE CARD WITH ROUNDED CORNERS & SHADOW) */}
           <div 
             ref={previewRef}
             id="cv-preview-sheet" 
-            className="bg-white text-black shadow-2xl rounded-2xl border border-gray-200/90 transition-all"
+            className="bg-white text-black shadow-xl rounded-2xl border border-gray-200/90 transition-all"
             style={{ 
               width: '210mm',
               minHeight: '297mm',
@@ -902,7 +905,7 @@ export default function CvStudio({ applications = [], currentUser }) {
               {/* EDIT CONTACT BUTTON */}
               <button 
                 onClick={() => setShowEditContactModal(true)}
-                className="no-pdf absolute right-0 top-0 text-[11px] font-sans text-gray-500 hover:text-black flex items-center gap-1 bg-gray-50 hover:bg-gray-100 px-2.5 py-1 rounded border border-gray-200 shadow-sm transition cursor-pointer"
+                className="no-pdf absolute right-0 top-0 text-[11px] font-sans text-gray-500 hover:text-black flex items-center gap-1 bg-gray-50 hover:bg-gray-100 px-2.5 py-1 rounded border border-gray-200 shadow-2xs transition cursor-pointer"
                 title="Editează datele de contact ca în formular"
               >
                 <Edit3 className="w-3.5 h-3.5 text-gray-500" /> Edit Contact
@@ -1442,7 +1445,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                               {proj.techStack}
                             </span>
 
-                            {/* CLICKABLE LINK (BLACK UNDERLINED, MATCHING CONTACT DETAILS) */}
+                            {/* CLICKABLE LINK */}
                             {proj.linkUrl ? (
                               <span className="inline-flex items-center gap-1 font-sans text-xs">
                                 <a 
@@ -1494,7 +1497,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                             </button>
                           </div>
 
-                          {/* DATES (EXACT MATCH FOR EDUCATION & EXPERIENCE WITH PLACEHOLDER) */}
+                          {/* DATES WITH PLACEHOLDER */}
                           <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
                             <span
                               contentEditable={true}
@@ -1671,7 +1674,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                           </div>
 
                           <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
-                            {/* DATES WITH VISIBLE PLACEHOLDER IF EMPTY */}
+                            {/* DATES WITH PLACEHOLDER */}
                             <span
                               contentEditable={true}
                               suppressContentEditableWarning={true}
@@ -1792,7 +1795,7 @@ export default function CvStudio({ applications = [], currentUser }) {
 
                     <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
 
-                    {/* SKILLS ROWS (NATURAL INLINE TEXT FLOW WITH DIRECT SINGLE DELETE BUTTON) */}
+                    {/* SKILLS ROWS */}
                     <div className="space-y-0.5 mt-1 text-black" style={{ fontSize: '8.5pt', lineHeight: '1.4' }}>
                       {skillsFields.map((field, fieldIdx) => (
                         <div key={field.id || fieldIdx} className="group/f relative leading-normal">
@@ -1962,24 +1965,20 @@ export default function CvStudio({ applications = [], currentUser }) {
         </div>
       </div>
 
-      {/* ================= MODAL: EDIT CONTACT (EXACT MATCH FOR IMAGE 2) ================= */}
+      {/* ================= MODAL: EDIT CONTACT ================= */}
       {showEditContactModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="max-w-xl w-full my-6 animate-in fade-in zoom-in-95 font-sans">
             
-            {/* LARGE CANDIDATE NAME TITLE AT TOP (AS IN IMAGE 2) */}
             <div className="text-center mb-3">
               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wide" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
                 {contactData.fullName}
               </h2>
             </div>
 
-            {/* WHITE FORM CARD (AS IN IMAGE 2) */}
             <div className="bg-white text-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl space-y-4 border border-gray-200">
               
-              {/* TOP ROWS: EMAIL, PHONE, LOCATION */}
               <div className="space-y-3">
-                {/* EMAIL */}
                 <div className="grid grid-cols-12 items-center gap-3">
                   <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Email</label>
                   <input 
@@ -1991,7 +1990,6 @@ export default function CvStudio({ applications = [], currentUser }) {
                   />
                 </div>
 
-                {/* PHONE */}
                 <div className="grid grid-cols-12 items-center gap-3">
                   <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Phone</label>
                   <input 
@@ -2003,7 +2001,6 @@ export default function CvStudio({ applications = [], currentUser }) {
                   />
                 </div>
 
-                {/* LOCATION */}
                 <div className="grid grid-cols-12 items-center gap-3">
                   <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Location</label>
                   <input 
@@ -2016,13 +2013,10 @@ export default function CvStudio({ applications = [], currentUser }) {
                 </div>
               </div>
 
-              {/* DIVIDER LINE */}
               <div className="border-t border-gray-200 my-4"></div>
 
-              {/* BOTTOM ROWS: SOCIAL LINKS WITH "SHOW FULL URL" CHECKBOXES */}
               <div className="space-y-3">
                 
-                {/* LINKEDIN */}
                 <div className="grid grid-cols-12 items-center gap-3">
                   <label className="col-span-3 text-right text-xs font-semibold text-gray-500">LinkedIn</label>
                   <input 
@@ -2043,7 +2037,6 @@ export default function CvStudio({ applications = [], currentUser }) {
                   </label>
                 </div>
 
-                {/* GITHUB */}
                 <div className="grid grid-cols-12 items-center gap-3">
                   <label className="col-span-3 text-right text-xs font-semibold text-gray-500">GitHub</label>
                   <input 
@@ -2064,7 +2057,6 @@ export default function CvStudio({ applications = [], currentUser }) {
                   </label>
                 </div>
 
-                {/* PORTFOLIO */}
                 <div className="grid grid-cols-12 items-center gap-3">
                   <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Portfolio</label>
                   <input 
@@ -2085,7 +2077,6 @@ export default function CvStudio({ applications = [], currentUser }) {
                   </label>
                 </div>
 
-                {/* BLOG */}
                 <div className="grid grid-cols-12 items-center gap-3">
                   <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Blog</label>
                   <input 
@@ -2106,7 +2097,6 @@ export default function CvStudio({ applications = [], currentUser }) {
                   </label>
                 </div>
 
-                {/* SOCIAL */}
                 <div className="grid grid-cols-12 items-center gap-3">
                   <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Social</label>
                   <input 
@@ -2129,7 +2119,6 @@ export default function CvStudio({ applications = [], currentUser }) {
 
               </div>
 
-              {/* BLACK "DONE" BUTTON AT BOTTOM LEFT */}
               <div className="pt-4">
                 <button
                   onClick={() => setShowEditContactModal(false)}
@@ -2146,19 +2135,19 @@ export default function CvStudio({ applications = [], currentUser }) {
 
       {/* ================= MODAL: AI 100% ATS OPTIMIZATION ================= */}
       {showAiModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="glass-card max-w-4xl w-full p-6 rounded-3xl border border-purple-500/30 space-y-5 shadow-2xl my-8">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white text-gray-900 max-w-4xl w-full p-6 rounded-2xl border border-gray-200 space-y-5 shadow-2xl my-8">
+            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-purple-600/30 text-purple-400 rounded-xl">
+                <div className="p-2 bg-black text-white rounded-xl">
                   <Zap className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-white">Pipeline AI cu 2 Agenți Groq (Match 100%)</h3>
-                  <p className="text-[11px] text-gray-400">Analiză diferențe ATS + Rescriere completă a experienței candidatului</p>
+                  <h3 className="text-base font-bold text-gray-950">Optimizare AI ATS 100% (Groq Live)</h3>
+                  <p className="text-[11px] text-gray-500">Analiză diferențe ATS + Rescriere adaptată pentru cerințele jobului</p>
                 </div>
               </div>
-              <button onClick={() => setShowAiModal(false)} className="p-1 text-gray-400 hover:text-white rounded-lg">
+              <button onClick={() => setShowAiModal(false)} className="p-1 text-gray-400 hover:text-black rounded-lg cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -2166,11 +2155,11 @@ export default function CvStudio({ applications = [], currentUser }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               {applications.length > 0 && (
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 mb-1">Selectează Jobul din Tracker:</label>
+                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Selectează Jobul din Tracker:</label>
                   <select 
                     value={selectedJobId}
                     onChange={e => setSelectedJobId(e.target.value)}
-                    className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-xs text-white"
+                    className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs text-gray-900"
                   >
                     {applications.map(app => (
                       <option key={app.id} value={app.id}>{app.jobTitle} la {app.companyName}</option>
@@ -2180,13 +2169,13 @@ export default function CvStudio({ applications = [], currentUser }) {
               )}
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 mb-1">Sau introdu cerințe job personalizate:</label>
+                <label className="block text-[10px] font-bold text-gray-600 mb-1">Sau introdu cerințe job personalizate:</label>
                 <input 
                   type="text" 
                   placeholder="ex: Java 21, Spring Boot, Microservices, Kubernetes, Redis"
                   value={customJobDescription}
                   onChange={e => setCustomJobDescription(e.target.value)}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-xs text-white"
+                  className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs text-gray-900"
                 />
               </div>
             </div>
@@ -2194,16 +2183,16 @@ export default function CvStudio({ applications = [], currentUser }) {
             <button
               onClick={handleRunTwoAgentPipeline}
               disabled={isAnalyzing}
-              className="w-full py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-black text-xs rounded-xl shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition disabled:opacity-60"
+              className="w-full py-3 bg-black hover:bg-neutral-800 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition disabled:opacity-60 cursor-pointer"
             >
               {isAnalyzing ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-amber-300" />
+                  <RefreshCw className="w-4 h-4 animate-spin text-gray-300" />
                   Se rulează Agent 1 (Gap Analyzer) & Agent 2 (Groq LLM Rewriter)...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <Sparkles className="w-4 h-4 text-amber-400" />
                   Rulează Analiza și Rescrierea AI (Groq Live)
                 </>
               )}
@@ -2212,31 +2201,31 @@ export default function CvStudio({ applications = [], currentUser }) {
             {(agent1Output || agent2Output) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 {agent1Output && (
-                  <div className="p-4 bg-gray-950/80 rounded-2xl border border-blue-500/30 space-y-3 text-xs">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-blue-400 flex items-center gap-1.5">
-                        <Target className="w-4 h-4" /> Agent 1: Gap Analyzer
+                      <span className="font-bold text-gray-900 flex items-center gap-1.5">
+                        <Target className="w-4 h-4 text-black" /> Agent 1: Gap Analyzer
                       </span>
-                      <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded font-mono font-bold text-[10px]">
+                      <span className="px-2 py-0.5 bg-black text-white rounded font-mono font-bold text-[10px]">
                         Scor: 100%
                       </span>
                     </div>
 
                     <div className="space-y-2">
-                      <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                        <span className="text-[10px] font-bold text-emerald-400 block">Skill-uri Match:</span>
+                      <div className="p-2.5 bg-white rounded-lg border border-gray-200">
+                        <span className="text-[10px] font-bold text-emerald-700 block">Skill-uri Match:</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {agent1Output.matchingSkills.map(s => (
-                            <span key={s} className="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-bold">{s}</span>
+                            <span key={s} className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-medium">{s}</span>
                           ))}
                         </div>
                       </div>
 
-                      <div className="p-2.5 bg-rose-500/10 rounded-xl border border-rose-500/20">
-                        <span className="text-[10px] font-bold text-rose-400 block">Cuvinte Cheie de Adăugat:</span>
+                      <div className="p-2.5 bg-white rounded-lg border border-gray-200">
+                        <span className="text-[10px] font-bold text-rose-700 block">Cuvinte Cheie de Adăugat:</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {agent1Output.missingSkills.map(s => (
-                            <span key={s} className="text-[9px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded font-bold">{s}</span>
+                            <span key={s} className="text-[9px] bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded font-medium">{s}</span>
                           ))}
                         </div>
                       </div>
@@ -2245,32 +2234,32 @@ export default function CvStudio({ applications = [], currentUser }) {
                 )}
 
                 {agent2Output && (
-                  <div className="p-4 bg-gray-950/80 rounded-2xl border border-purple-500/30 space-y-3 text-xs">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-purple-400 flex items-center gap-1.5">
-                        <BrainCircuit className="w-4 h-4" /> Agent 2: CV Rewriter (100%)
+                      <span className="font-bold text-gray-900 flex items-center gap-1.5">
+                        <BrainCircuit className="w-4 h-4 text-black" /> Agent 2: CV Rewriter (100%)
                       </span>
                       <button
                         onClick={handleApplyAiOptimizations}
-                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-[10px] flex items-center gap-1 shadow transition"
+                        className="px-2.5 py-1 bg-black hover:bg-neutral-800 text-white rounded-lg font-bold text-[10px] flex items-center gap-1 shadow transition cursor-pointer"
                       >
-                        <Check className="w-3 h-3" /> Aplică direct în CV
+                        <Check className="w-3 h-3 text-emerald-400" /> Aplică direct în CV
                       </button>
                     </div>
 
                     {agent2Output.tailoredSummary && (
-                      <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20 space-y-1">
-                        <span className="text-[10px] font-bold text-purple-300">Summary Re-scris:</span>
-                        <p className="text-[11px] text-gray-200 italic">{agent2Output.tailoredSummary}</p>
+                      <div className="p-2.5 bg-white rounded-lg border border-gray-200 space-y-1">
+                        <span className="text-[10px] font-bold text-gray-700">Summary Re-scris:</span>
+                        <p className="text-[11px] text-gray-800 italic">{agent2Output.tailoredSummary}</p>
                       </div>
                     )}
 
                     {agent2Output.tailoredProjects?.[0]?.bullets?.length > 0 && (
-                      <div className="p-2.5 bg-gray-900/60 rounded-xl border border-gray-800 space-y-1 max-h-36 overflow-y-auto">
-                        <span className="text-[10px] font-bold text-amber-400">Bullet-uri Metoda XYZ:</span>
+                      <div className="p-2.5 bg-white rounded-lg border border-gray-200 space-y-1 max-h-36 overflow-y-auto">
+                        <span className="text-[10px] font-bold text-gray-700">Bullet-uri Metoda XYZ:</span>
                         {agent2Output.tailoredProjects[0].bullets.map((b, idx) => (
-                          <p key={idx} className="text-[10px] text-gray-300 flex items-start gap-1">
-                            <span className="text-purple-400">•</span> <span>{b}</span>
+                          <p key={idx} className="text-[10px] text-gray-800 flex items-start gap-1">
+                            <span className="text-black">•</span> <span>{b}</span>
                           </p>
                         ))}
                       </div>

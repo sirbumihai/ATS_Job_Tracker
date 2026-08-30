@@ -6,7 +6,42 @@ import CvStudio from './components/CvStudio';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('kanban'); // 'kanban' or 'cv_studio'
+  const getInitialTab = () => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#cv-studio' || hash === '#cv_studio') return 'cv_studio';
+      if (hash === '#kanban') return 'kanban';
+      const stored = localStorage.getItem('ats_active_tab');
+      if (stored === 'cv_studio' || stored === 'kanban') return stored;
+    }
+    return 'kanban';
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  // Sync tab with URL hash and localStorage
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ats_active_tab', tab);
+      window.location.hash = tab === 'cv_studio' ? '#cv-studio' : '#kanban';
+    }
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#cv-studio' || hash === '#cv_studio') {
+        setActiveTab('cv_studio');
+        localStorage.setItem('ats_active_tab', 'cv_studio');
+      } else if (hash === '#kanban') {
+        setActiveTab('kanban');
+        localStorage.setItem('ats_active_tab', 'kanban');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const [applications, setApplications] = useState([]);
   const [resumes, setResumes] = useState([]);
@@ -219,7 +254,7 @@ export default function App() {
       {/* NAVBAR */}
       <Navbar 
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         currentUser={currentUser}
         onLogout={handleLogout}
         onOpenAuth={() => setShowAuthModal(true)}
@@ -230,23 +265,23 @@ export default function App() {
       {/* CONTINUT PRINCIPAL */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        {/* TOP STATS DASHBOARD */}
-        <StatsDashboard applications={applications} />
-
-        {/* TAB 1: KANBAN BOARD */}
+        {/* TAB 1: KANBAN BOARD (WITH STATS) */}
         {activeTab === 'kanban' && (
-          <KanbanBoard 
-            applications={applications}
-            onStatusChange={handleStatusChange}
-            onOpenAnalysis={handleOpenAiAnalysis}
-            onDeleteApplication={handleDeleteApplication}
-            analyzingAppId={analyzingAppId}
-            onOpenAddJob={() => setShowAddJobModal(true)}
-            currentUser={currentUser}
-          />
+          <>
+            <StatsDashboard applications={applications} />
+            <KanbanBoard 
+              applications={applications}
+              onStatusChange={handleStatusChange}
+              onOpenAnalysis={handleOpenAiAnalysis}
+              onDeleteApplication={handleDeleteApplication}
+              analyzingAppId={analyzingAppId}
+              onOpenAddJob={() => setShowAddJobModal(true)}
+              currentUser={currentUser}
+            />
+          </>
         )}
 
-        {/* TAB 2: STUDIO CV & MATCH 100% */}
+        {/* TAB 2: STUDIO CV & MATCH 100% (SEPARATE DEDICATED PAGE) */}
         {activeTab === 'cv_studio' && (
           <CvStudio 
             applications={applications}
