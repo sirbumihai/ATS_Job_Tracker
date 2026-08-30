@@ -34,7 +34,10 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  Maximize
+  Maximize,
+  Edit3,
+  X,
+  Wand2
 } from 'lucide-react';
 
 export default function CvStudio({ applications = [], currentUser }) {
@@ -42,28 +45,88 @@ export default function CvStudio({ applications = [], currentUser }) {
   const previewRef = useRef(null);
   const workbenchRef = useRef(null);
 
-  // MASTER CV SECTIONS STATE (PERSISTATE IN BAZA DE DATE POSTGRESQL)
+  // MASTER CV STATE
   const [cvSections, setCvSections] = useState({
-    fullName: currentUser ? (currentUser.fullName || "") : "",
-    email: currentUser ? (currentUser.email || "") : "",
-    phone: "",
-    location: "",
-    linkedin: "",
-    github: "",
-    summary: "",
-    workExperience: [],
-    projects: [],
+    fullName: currentUser ? (currentUser.fullName || "Sîrbu Mihai-Alexandru") : "Sîrbu Mihai-Alexandru",
+    email: currentUser ? (currentUser.email || "sarbumihai0@gmail.com") : "sarbumihai0@gmail.com",
+    phone: "(+40) 723 034 706",
+    location: "Bucharest, Romania",
+    linkedin: "linkedin.com/in/sirbu-mihai",
+    github: "github.com/sirbumihai",
+    summary: "Computer Science & Engineering graduate with software engineering internship experience specializing in full-stack development and deep learning. Proficient in Java (Spring Boot), TypeScript (React), and Python (PyTorch), with a track record of building secure web applications and high-performance 3D segmentation models.",
+    workExperience: [
+      {
+        id: 1,
+        company: "SIMAVI (Software Imagination & Vision)",
+        role: "Software Engineering Intern",
+        period: "June 2025 – August 2025",
+        location: "Bucharest, Romania",
+        bullets: [
+          "Optimized data retrieval for a library management system by architecting a normalized MySQL schema with strategic indexing and implementing custom Spring Data JPA repositories, achieving sub-second latency for complex queries across 50,000+ records.",
+          "Developed and maintained enterprise-grade features using Java, Spring Boot, and PrimeFaces, ensuring seamless integration with legacy systems and enhancing UI responsiveness."
+        ]
+      }
+    ],
+    projects: [
+      {
+        id: 1,
+        title: "3D Medical Image Segmentation",
+        techStack: "Python, PyTorch, SimpleITK, Flask, Plotly, NumPy, SciPy, Nibabel",
+        period: "February 2026 – June 2026",
+        link: "",
+        bullets: [
+          "Architected a high-throughput medical data pipeline using SimpleITK to process 1,506 multi-center cases, reducing data preprocessing time by 40% and ensuring standardized inputs for segmentation models via isotropic resampling."
+        ]
+      },
+      {
+        id: 2,
+        title: "OneRep – Fitness Tracking Web Application",
+        techStack: "Next.js, React, TypeScript, Supabase, PostgreSQL, Tailwind",
+        period: "October 2025 – January 2026",
+        link: "one-rep.vercel.app",
+        bullets: [
+          "Engineered a scalable fitness tracking platform using Next.js and Supabase, enforcing granular data security via 8 RLS policies and automating subscription workflows via Stripe webhooks, which reduced manual payment processing overhead by 25%."
+        ]
+      },
+      {
+        id: 3,
+        title: "Banking Application",
+        techStack: "Java, Spring Boot, Spring Security, MySQL, Thymeleaf",
+        period: "November 2024 – January 2025",
+        link: "",
+        bullets: [
+          "Architected a secure full-stack banking platform with Spring Security and Thymeleaf, implementing custom transaction categorization logic that reduced manual reconciliation time by 30% and improved data accuracy for 500+ monthly transactions."
+        ]
+      }
+    ],
     skills: {
-      languages: "",
-      frameworks: "",
-      databases: "",
-      devops: ""
+      languages: "Java, TypeScript, Python, C/C++, HTML, CSS",
+      frameworks: "Spring Boot, React, Next.js, PrimeFaces, Spring Security, Thymeleaf",
+      developerTools: "Linux, Git, Supabase, Stripe",
+      libraries: "PyTorch, SimpleITK, Flask, Plotly, NumPy, SciPy, Nibabel, Tailwind, Bootstrap"
     },
-    education: []
+    education: [
+      {
+        id: 1,
+        school: "University Politehnica of Bucharest",
+        degree: "Bachelor of Computer Science & Engineering",
+        period: "October 2022 – July 2026",
+        location: "Bucharest, Romania",
+        bullets: [
+          "Courses: Data Structures & Algorithms, Object-Oriented Programming, Database Systems, Computer Networks, Software Engineering."
+        ]
+      }
+    ]
   });
 
-  const [viewMode, setViewMode] = useState('split'); // 'split' | 'editor' | 'preview'
-  const [previewZoom, setPreviewZoom] = useState(0.55); // Default zoom for Split View
+  // SECTION ORDER & VISIBILITY
+  const [sectionOrder, setSectionOrder] = useState(['education', 'experience', 'projects', 'skills']);
+  const [showSummarySection, setShowSummarySection] = useState(false);
+
+  // UI CONTROLS
+  const [previewZoom, setPreviewZoom] = useState(0.85);
+  const [showEditContactModal, setShowEditContactModal] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
   const [languagePref, setLanguagePref] = useState('EN');
   const [selectedJobId, setSelectedJobId] = useState(applications.length > 0 ? applications[0].id : '');
   const [customJobDescription, setCustomJobDescription] = useState('');
@@ -74,34 +137,28 @@ export default function CvStudio({ applications = [], currentUser }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [parsingPdf, setParsingPdf] = useState(false);
   const [parsedPdfSuccess, setParsedPdfSuccess] = useState(null);
-  const [extractedMarkdown, setExtractedMarkdown] = useState('');
 
   // AGENT OUTPUTS
   const [agent1Output, setAgent1Output] = useState(null);
   const [agent2Output, setAgent2Output] = useState(null);
 
-  const selectedApp = applications.find(a => a.id === selectedJobId) || (applications.length > 0 ? applications[0] : null);
-
   // AUTO CALCULATE FIT ZOOM
   const handleFitToWidth = () => {
     if (workbenchRef.current) {
-      const containerWidth = workbenchRef.current.clientWidth - 48; // padding
-      const a4WidthPx = 794; // 210mm in standard 96dpi pixels
-      const calculatedZoom = Math.min(1.0, Math.max(0.35, Number((containerWidth / a4WidthPx).toFixed(2))));
+      const containerWidth = workbenchRef.current.clientWidth - 48;
+      const a4WidthPx = 794; // 210mm in pixels at standard 96dpi
+      const calculatedZoom = Math.min(1.0, Math.max(0.4, Number((containerWidth / a4WidthPx).toFixed(2))));
       setPreviewZoom(calculatedZoom);
     } else {
-      setPreviewZoom(viewMode === 'split' ? 0.55 : 0.95);
+      setPreviewZoom(0.85);
     }
   };
 
-  // Auto-adjust default zoom when switching view modes
   useEffect(() => {
-    if (viewMode === 'split') {
-      handleFitToWidth();
-    } else if (viewMode === 'preview') {
-      setPreviewZoom(0.95);
-    }
-  }, [viewMode]);
+    handleFitToWidth();
+    window.addEventListener('resize', handleFitToWidth);
+    return () => window.removeEventListener('resize', handleFitToWidth);
+  }, []);
 
   // HELPER TO NORMALIZE EDUCATION AS ARRAY
   const normalizeEducation = (edu) => {
@@ -124,38 +181,7 @@ export default function CvStudio({ applications = [], currentUser }) {
     return [];
   };
 
-  // HELPER FUNCTION TO PARSE TEXT FALLBACK IN FRONTEND
-  const parseRawResumeText = (text) => {
-    if (!text) return {};
-    
-    const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-    const email = emailMatch ? emailMatch[1] : "";
-
-    const phoneMatch = text.match(/(\+?\d{1,4}[\s-]?\(?\d{2,4}\)?[\s-]?\d{3,4}[\s-]?\d{3,4})/);
-    const phone = phoneMatch ? phoneMatch[1] : "";
-
-    const linkedinMatch = text.match(/(linkedin\.com\/in\/[a-zA-Z0-9_-]+)/i);
-    const linkedin = linkedinMatch ? linkedinMatch[1] : "";
-
-    const githubMatch = text.match(/(github\.com\/[a-zA-Z0-9_-]+)/i);
-    const github = githubMatch ? githubMatch[1] : "";
-
-    let summary = "";
-    const summaryMatch = text.match(/(?:PROFESSIONAL SUMMARY|SUMMARY|PROFILE)\s*\n+([\s\S]*?)(?=\n+[A-Z\s]{4,}|\n+EDUCATION|\n+EXPERIENCE|\n+PROJECTS|\n+TECHNICAL SKILLS|$)/i);
-    if (summaryMatch) {
-      summary = summaryMatch[1].trim();
-    } else {
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      const nonHeaderLines = lines.filter(l => !l.includes('@') && !l.includes('linkedin.com') && !l.includes('github.com') && !l.match(/^\(?\+?\d/));
-      if (nonHeaderLines.length > 1) {
-        summary = nonHeaderLines.slice(1, 4).join(' ');
-      }
-    }
-
-    return { email, phone, linkedin, github, summary };
-  };
-
-  // LOAD PERSISTED CV FROM DATABASE ON MOUNT
+  // LOAD CV FROM DATABASE ON MOUNT
   const fetchCvFromDatabase = async () => {
     if (!activeUserId) return;
     try {
@@ -165,24 +191,25 @@ export default function CvStudio({ applications = [], currentUser }) {
       if (res.ok && res.status !== 204) {
         const data = await res.json();
         if (data) {
-          setCvSections({
-            fullName: data.fullName || (currentUser ? currentUser.fullName : ""),
-            email: data.email || (currentUser ? currentUser.email : ""),
-            phone: data.phone || "",
-            location: data.location || "",
-            linkedin: data.linkedin || "",
-            github: data.github || "",
-            summary: data.summary || "",
-            workExperience: data.workExperienceJson ? JSON.parse(data.workExperienceJson) : [],
-            projects: data.projectsJson ? JSON.parse(data.projectsJson) : [],
+          const edu = normalizeEducation(data.educationJson);
+          setCvSections(prev => ({
+            fullName: data.fullName || prev.fullName,
+            email: data.email || prev.email,
+            phone: data.phone || prev.phone,
+            location: data.location || prev.location,
+            linkedin: data.linkedin || prev.linkedin,
+            github: data.github || prev.github,
+            summary: data.summary || prev.summary,
+            workExperience: data.workExperienceJson ? JSON.parse(data.workExperienceJson) : prev.workExperience,
+            projects: data.projectsJson ? JSON.parse(data.projectsJson) : prev.projects,
             skills: {
-              languages: data.skillsLanguages || "",
-              frameworks: data.skillsFrameworks || "",
-              databases: data.skillsDatabases || "",
-              devops: data.skillsDevops || ""
+              languages: data.skillsLanguages || prev.skills.languages,
+              frameworks: data.skillsFrameworks || prev.skills.frameworks,
+              developerTools: data.skillsDevops || prev.skills.developerTools,
+              libraries: data.skillsDatabases || prev.skills.libraries
             },
-            education: normalizeEducation(data.educationJson)
-          });
+            education: edu.length > 0 ? edu : prev.education
+          }));
           if (data.languagePreference) setLanguagePref(data.languagePreference);
         }
       }
@@ -215,8 +242,8 @@ export default function CvStudio({ applications = [], currentUser }) {
         summary: cvSections.summary,
         skillsLanguages: cvSections.skills.languages,
         skillsFrameworks: cvSections.skills.frameworks,
-        skillsDatabases: cvSections.skills.databases,
-        skillsDevops: cvSections.skills.devops,
+        skillsDatabases: cvSections.skills.libraries,
+        skillsDevops: cvSections.skills.developerTools,
         workExperienceJson: JSON.stringify(cvSections.workExperience),
         projectsJson: JSON.stringify(cvSections.projects),
         educationJson: JSON.stringify(cvSections.education),
@@ -233,7 +260,7 @@ export default function CvStudio({ applications = [], currentUser }) {
       });
 
       if (res.ok) {
-        setSaveSuccessMsg("CV-ul si toate modificarile au fost salvate cu succes in PostgreSQL!");
+        setSaveSuccessMsg("Toate modificarile din CV au fost salvate cu succes in PostgreSQL!");
         setTimeout(() => setSaveSuccessMsg(null), 4000);
       }
     } catch (err) {
@@ -243,129 +270,118 @@ export default function CvStudio({ applications = [], currentUser }) {
     }
   };
 
-  // EDUCATION DYNAMIC HANDLERS (ADD, DELETE, MOVE)
-  const handleAddEducation = () => {
+  // REORDER SECTIONS
+  const moveSection = (idx, direction) => {
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= sectionOrder.length) return;
+    const newOrder = [...sectionOrder];
+    const temp = newOrder[idx];
+    newOrder[idx] = newOrder[targetIdx];
+    newOrder[targetIdx] = temp;
+    setSectionOrder(newOrder);
+  };
+
+  const deleteSection = (sectionKey) => {
+    setSectionOrder(prev => prev.filter(k => k !== sectionKey));
+  };
+
+  const restoreSection = (sectionKey) => {
+    if (!sectionOrder.includes(sectionKey)) {
+      setSectionOrder(prev => [...prev, sectionKey]);
+    }
+  };
+
+  // DYNAMIC ITEM HANDLERS (EDUCATION)
+  const addEducation = () => {
     const newEdu = {
       id: Date.now(),
-      school: "",
-      degree: "",
-      period: "",
-      location: ""
+      school: "University / School Name",
+      degree: "Degree / Specialization",
+      period: "Month Year – Month Year",
+      location: "City, Country",
+      bullets: []
     };
-    setCvSections(prev => ({
-      ...prev,
-      education: [...(prev.education || []), newEdu]
-    }));
+    setCvSections(prev => ({ ...prev, education: [...prev.education, newEdu] }));
   };
 
-  const handleDeleteEducation = (id) => {
-    setCvSections(prev => ({
-      ...prev,
-      education: prev.education.filter(e => e.id !== id)
-    }));
+  const deleteEducation = (id) => {
+    setCvSections(prev => ({ ...prev, education: prev.education.filter(e => e.id !== id) }));
   };
 
-  const handleMoveEducation = (eduIdx, direction) => {
-    const updated = [...normalizeEducation(cvSections.education)];
-    const targetIdx = eduIdx + direction;
-    if (targetIdx < 0 || targetIdx >= updated.length) return;
-    const temp = updated[eduIdx];
-    updated[eduIdx] = updated[targetIdx];
-    updated[targetIdx] = temp;
+  const addEduBullet = (eduIdx) => {
+    const updated = [...cvSections.education];
+    if (!updated[eduIdx].bullets) updated[eduIdx].bullets = [];
+    updated[eduIdx].bullets.push("Courses: Relevant coursework or honors...");
     setCvSections({ ...cvSections, education: updated });
   };
 
-  // WORK EXPERIENCE DYNAMIC HANDLERS (ADD, DELETE, BULLETS, MOVE)
-  const handleAddWorkExperience = () => {
+  const deleteEduBullet = (eduIdx, bIdx) => {
+    const updated = [...cvSections.education];
+    updated[eduIdx].bullets = updated[eduIdx].bullets.filter((_, idx) => idx !== bIdx);
+    setCvSections({ ...cvSections, education: updated });
+  };
+
+  // DYNAMIC ITEM HANDLERS (EXPERIENCE)
+  const addExperience = () => {
     const newExp = {
       id: Date.now(),
-      company: "",
-      role: "",
-      period: "",
-      location: "",
-      bullets: [""]
+      company: "Company Name",
+      role: "Job Role / Title",
+      period: "Month Year – Month Year",
+      location: "City, Country",
+      bullets: ["Describe key responsibility or achievement using action verbs..."]
     };
-    setCvSections(prev => ({
-      ...prev,
-      workExperience: [...prev.workExperience, newExp]
-    }));
+    setCvSections(prev => ({ ...prev, workExperience: [...prev.workExperience, newExp] }));
   };
 
-  const handleDeleteWorkExperience = (id) => {
-    setCvSections(prev => ({
-      ...prev,
-      workExperience: prev.workExperience.filter(e => e.id !== id)
-    }));
+  const deleteExperience = (id) => {
+    setCvSections(prev => ({ ...prev, workExperience: prev.workExperience.filter(e => e.id !== id) }));
   };
 
-  const handleAddWorkBullet = (expIdx) => {
+  const addExpBullet = (expIdx) => {
     const updated = [...cvSections.workExperience];
     if (!updated[expIdx].bullets) updated[expIdx].bullets = [];
-    updated[expIdx].bullets.push("");
+    updated[expIdx].bullets.push("New accomplishment measured by impact...");
     setCvSections({ ...cvSections, workExperience: updated });
   };
 
-  const handleDeleteWorkBullet = (expIdx, bIdx) => {
+  const deleteExpBullet = (expIdx, bIdx) => {
     const updated = [...cvSections.workExperience];
     updated[expIdx].bullets = updated[expIdx].bullets.filter((_, idx) => idx !== bIdx);
     setCvSections({ ...cvSections, workExperience: updated });
   };
 
-  const handleMoveWorkExperience = (expIdx, direction) => {
-    const updated = [...cvSections.workExperience];
-    const targetIdx = expIdx + direction;
-    if (targetIdx < 0 || targetIdx >= updated.length) return;
-    const temp = updated[expIdx];
-    updated[expIdx] = updated[targetIdx];
-    updated[targetIdx] = temp;
-    setCvSections({ ...cvSections, workExperience: updated });
-  };
-
-  // PROJECTS DYNAMIC HANDLERS (ADD, DELETE, BULLETS, MOVE)
-  const handleAddProject = () => {
+  // DYNAMIC ITEM HANDLERS (PROJECTS)
+  const addProject = () => {
     const newProj = {
       id: Date.now(),
-      title: "",
-      techStack: "",
-      bullets: [""]
+      title: "Project Title",
+      techStack: "Tech, Stack, Used",
+      period: "Month Year – Month Year",
+      link: "",
+      bullets: ["Architected and delivered key project features using..."]
     };
-    setCvSections(prev => ({
-      ...prev,
-      projects: [...prev.projects, newProj]
-    }));
+    setCvSections(prev => ({ ...prev, projects: [...prev.projects, newProj] }));
   };
 
-  const handleDeleteProject = (id) => {
-    setCvSections(prev => ({
-      ...prev,
-      projects: prev.projects.filter(p => p.id !== id)
-    }));
+  const deleteProject = (id) => {
+    setCvSections(prev => ({ ...prev, projects: prev.projects.filter(p => p.id !== id) }));
   };
 
-  const handleAddProjectBullet = (projIdx) => {
+  const addProjectBullet = (projIdx) => {
     const updated = [...cvSections.projects];
     if (!updated[projIdx].bullets) updated[projIdx].bullets = [];
-    updated[projIdx].bullets.push("");
+    updated[projIdx].bullets.push("Accomplished [X] measured by [Y] using [Z]...");
     setCvSections({ ...cvSections, projects: updated });
   };
 
-  const handleDeleteProjectBullet = (projIdx, bIdx) => {
+  const deleteProjectBullet = (projIdx, bIdx) => {
     const updated = [...cvSections.projects];
     updated[projIdx].bullets = updated[projIdx].bullets.filter((_, idx) => idx !== bIdx);
     setCvSections({ ...cvSections, projects: updated });
   };
 
-  const handleMoveProject = (projIdx, direction) => {
-    const updated = [...cvSections.projects];
-    const targetIdx = projIdx + direction;
-    if (targetIdx < 0 || targetIdx >= updated.length) return;
-    const temp = updated[projIdx];
-    updated[projIdx] = updated[targetIdx];
-    updated[targetIdx] = temp;
-    setCvSections({ ...cvSections, projects: updated });
-  };
-
-  // UPLOAD PDF CV & CONVERT TO MD + AI AUTOMATED SECTION EXTRACTION
+  // UPLOAD PDF CV & AUTO FILL
   const handleFileUploadPdf = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -390,10 +406,6 @@ export default function CvStudio({ applications = [], currentUser }) {
 
       if (res.ok) {
         const data = await res.json();
-        const rawText = data.rawText || data.rawTextSnippet || "";
-        const mdText = `# CV Extras: ${file.name}\n\n${rawText}`;
-        setExtractedMarkdown(mdText);
-
         if (data.parsedProfile) {
           const p = data.parsedProfile;
           const safeParse = (str, fallback) => {
@@ -401,44 +413,35 @@ export default function CvStudio({ applications = [], currentUser }) {
           };
 
           setCvSections({
-            fullName: p.fullName || (currentUser ? currentUser.fullName : ""),
-            email: p.email || (currentUser ? currentUser.email : ""),
-            phone: p.phone || "",
-            location: p.location || "",
-            linkedin: p.linkedin || "",
-            github: p.github || "",
-            summary: p.summary || "",
-            workExperience: safeParse(p.workExperienceJson, []),
-            projects: safeParse(p.projectsJson, []),
+            fullName: p.fullName || cvSections.fullName,
+            email: p.email || cvSections.email,
+            phone: p.phone || cvSections.phone,
+            location: p.location || cvSections.location,
+            linkedin: p.linkedin || cvSections.linkedin,
+            github: p.github || cvSections.github,
+            summary: p.summary || cvSections.summary,
+            workExperience: safeParse(p.workExperienceJson, cvSections.workExperience),
+            projects: safeParse(p.projectsJson, cvSections.projects),
             skills: {
-              languages: p.skillsLanguages || "",
-              frameworks: p.skillsFrameworks || "",
-              databases: p.skillsDatabases || "",
-              devops: p.skillsDevops || ""
+              languages: p.skillsLanguages || cvSections.skills.languages,
+              frameworks: p.skillsFrameworks || cvSections.skills.frameworks,
+              developerTools: p.skillsDevops || cvSections.skills.developerTools,
+              libraries: p.skillsDatabases || cvSections.skills.libraries
             },
             education: normalizeEducation(p.educationJson)
           });
-        } else {
-          const parsed = parseRawResumeText(rawText);
-          setCvSections(prev => ({
-            ...prev,
-            email: parsed.email || prev.email,
-            phone: parsed.phone || prev.phone,
-            linkedin: parsed.linkedin || prev.linkedin,
-            github: parsed.github || prev.github,
-            summary: parsed.summary || prev.summary
-          }));
         }
-
-        setParsedPdfSuccess(`CV-ul "${file.name}" a fost extras de Apache Tika, analizat de AI si populat in toate sectiunile!`);
+        setParsedPdfSuccess(`CV-ul "${file.name}" a fost importat si completat direct pe pagina!`);
+        setTimeout(() => setParsedPdfSuccess(null), 5000);
       }
     } catch (err) {
-      console.error("Eroare la parsarea PDF-ului:", err);
+      console.error("Eroare la incarcarea PDF-ului:", err);
     } finally {
       setParsingPdf(false);
     }
   };
 
+  // RUN REAL 2-AGENT GROQ PIPELINE
   const handleRunTwoAgentPipeline = async () => {
     if (!activeUserId) {
       alert("Te rugam sa te autentifici inainte de a rula optimizarea AI.");
@@ -467,7 +470,6 @@ export default function CvStudio({ applications = [], currentUser }) {
 
       if (res.ok) {
         const data = await res.json();
-        // Agent 1: ATS Gap Analyzer real Groq result
         setAgent1Output({
           targetMatchScore: data.targetMatchScore || "100%",
           matchingSkills: data.matchingSkills || [],
@@ -475,7 +477,6 @@ export default function CvStudio({ applications = [], currentUser }) {
           actionPlan: data.actionPlan || "Analiza realizata cu succes."
         });
 
-        // Agent 2: Autonomous Resume Tailor real Groq result
         setAgent2Output({
           tailoredSummary: data.tailoredSummary || "",
           tailoredSkills: data.tailoredSkills || {},
@@ -486,10 +487,11 @@ export default function CvStudio({ applications = [], currentUser }) {
         });
       } else {
         const err = await res.text();
-        console.error("Eroare la optimizarea AI:", err);
+        alert("Eroare la optimizarea AI: " + err);
       }
     } catch (err) {
-      console.error("Eroare la apelul AI Groq:", err);
+      console.error("Eroare la apelul AI:", err);
+      alert("A intervenit o eroare la apelul serviciului AI: " + err.message);
     } finally {
       setIsAnalyzing(false);
     }
@@ -504,22 +506,29 @@ export default function CvStudio({ applications = [], currentUser }) {
       skills: {
         languages: agent2Output.tailoredSkills?.languages || prev.skills.languages,
         frameworks: agent2Output.tailoredSkills?.frameworks || prev.skills.frameworks,
-        databases: agent2Output.tailoredSkills?.databases || prev.skills.databases,
-        devops: agent2Output.tailoredSkills?.devops || prev.skills.devops,
+        developerTools: agent2Output.tailoredSkills?.devops || prev.skills.developerTools,
+        libraries: agent2Output.tailoredSkills?.databases || prev.skills.libraries
       },
       projects: prev.projects.length > 0 && agent2Output.tailoredProjects?.[0]?.bullets?.length > 0
         ? [{ ...prev.projects[0], bullets: agent2Output.tailoredProjects[0].bullets }, ...prev.projects.slice(1)]
         : prev.projects
     }));
 
-    alert("Optimizarile generate de AI Groq au fost aplicate in CV! Poti edita in continuare sau salva in DB.");
+    if (agent2Output.tailoredSummary) {
+      setShowSummarySection(true);
+      if (!sectionOrder.includes('summary')) {
+        setSectionOrder(prev => ['summary', ...prev]);
+      }
+    }
+
+    alert("Optimizarile generate de AI Groq au fost aplicate direct pe foaia CV-ului!");
   };
 
-  // DIRECT 1-PAGE PDF DOWNLOAD HANDLER (EXACT 210mm A4 RATIO)
+  // DIRECT PDF DOWNLOAD HANDLER (PRINTS CLEAN A4 WITH HELPER CONTROLS HIDDEN)
   const handleDownloadDirectPdf = async () => {
     const element = previewRef.current || document.getElementById('cv-preview-sheet');
     if (!element) {
-      alert("Nu s-a putut gasi fisa CV-ului pentru generarea PDF.");
+      alert("Nu s-a putut gasi fisa CV-ului.");
       return;
     }
 
@@ -531,6 +540,10 @@ export default function CvStudio({ applications = [], currentUser }) {
       // Temporarily clear CSS transform during capture
       const currentTransform = element.style.transform;
       element.style.transform = 'none';
+
+      // Hide all .no-pdf interactive helper elements
+      const helperElements = element.querySelectorAll('.no-pdf');
+      helperElements.forEach(el => { el.style.display = 'none'; });
 
       const opt = {
         margin: [0, 0, 0, 0],
@@ -549,109 +562,142 @@ export default function CvStudio({ applications = [], currentUser }) {
 
       await html2pdf().set(opt).from(element).save();
 
-      // Restore zoom transform
+      // Restore helper elements and transform
+      helperElements.forEach(el => { el.style.display = ''; });
       element.style.transform = currentTransform;
     } catch (err) {
-      console.error("Eroare la generarea directa a PDF-ului:", err);
+      console.error("Eroare la generarea PDF-ului:", err);
     } finally {
       setIsDownloadingPdf(false);
     }
   };
 
-  const eduList = normalizeEducation(cvSections.education);
+  const autoResizeTextarea = (e) => {
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
       
-      {/* HEADER BANNER */}
-      <div className="glass-card p-4 sm:p-6 rounded-2xl border border-purple-500/30 space-y-4 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+      {/* TOP WORKSPACE TOOLBAR */}
+      <div className="glass-card p-4 sm:p-5 rounded-2xl border border-purple-500/30 space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 sm:p-3 bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-600 rounded-2xl text-white shadow-lg shadow-purple-600/30 shrink-0">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="p-3 bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-600 rounded-2xl text-white shadow-lg shadow-purple-600/30 shrink-0">
+              <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2 tracking-tight">
-                Studio CV ATS - Editor Complet, Live Preview & Descarcare Directa PDF
+              <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                CV Canvas Studio – Editare Directă în Pagină (Inline WYSIWYG)
               </h2>
               <p className="text-xs text-gray-400 font-medium">
-                Editeaza, adauga, sterge sau reordoneaza orice sectiune si descarca PDF-ul direct pe o singura pagina A4 curata.
+                Scrie, editează, adaugă sau șterge direct pe foaia A4 de mai jos exact ca într-un document nativ.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {/* VIEW MODE TOGGLE BUTTONS */}
-            <div className="flex items-center bg-gray-900/90 p-1 rounded-xl border border-gray-800 text-xs">
-              <button
-                onClick={() => setViewMode('split')}
-                className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
-                  viewMode === 'split' ? 'bg-purple-600 text-white shadow' : 'text-gray-400 hover:text-white'
-                }`}
-                title="Editor si Live Preview alaturate"
-              >
-                <Columns className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Split View</span>
-              </button>
-              <button
-                onClick={() => setViewMode('editor')}
-                className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
-                  viewMode === 'editor' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'
-                }`}
-                title="Doar Editor"
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Doar Editor</span>
-              </button>
-              <button
-                onClick={() => setViewMode('preview')}
-                className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
-                  viewMode === 'preview' ? 'bg-emerald-600 text-white shadow' : 'text-gray-400 hover:text-white'
-                }`}
-                title="Doar Live Preview"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Live Preview</span>
-              </button>
-            </div>
-
-            {/* SAVE TO DB BUTTON */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* SAVE TO DB */}
             <button
               onClick={handleSaveToDatabase}
               disabled={isSavingDb || !activeUserId}
-              className="px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-blue-600/25 transition disabled:opacity-50"
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-blue-600/25 transition disabled:opacity-50"
             >
-              {isSavingDb ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5 text-cyan-300" />}
-              {isSavingDb ? 'Se salveaza...' : 'Salveaza in DB'}
+              {isSavingDb ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              {isSavingDb ? 'Se salvează...' : 'Salvează în DB'}
             </button>
 
-            {/* UPLOAD PDF */}
-            <label className="px-3.5 py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition">
+            {/* AI OPTIMIZE DRAWER BUTTON */}
+            <button
+              onClick={() => setShowAiModal(true)}
+              className="px-4 py-2 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-purple-600/25 transition"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-300" />
+              Optimizare AI ATS 100%
+            </button>
+
+            {/* UPLOAD PDF CV */}
+            <label className="px-4 py-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition">
               <Upload className="w-3.5 h-3.5 text-purple-400" />
-              {parsingPdf ? 'Se proceseaza...' : 'Incarca CV PDF'}
+              {parsingPdf ? 'Se extrage...' : 'Importă CV PDF'}
               <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
             </label>
 
-            {/* DIRECT DOWNLOAD PDF */}
+            {/* DOWNLOAD PDF */}
             <button
               onClick={handleDownloadDirectPdf}
               disabled={isDownloadingPdf}
-              className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/25 transition disabled:opacity-60"
+              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-600/25 transition disabled:opacity-60"
             >
               {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-              {isDownloadingPdf ? 'Se genereaza PDF...' : 'Descarca PDF Direct'}
+              {isDownloadingPdf ? 'Generare...' : 'Descarcă PDF'}
             </button>
           </div>
         </div>
 
-        {!activeUserId && (
-          <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl text-xs flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
-            <span>Te rugam sa te autentifici (Login) pentru a salva si incarca profilul tau CV in baza de date.</span>
+        {/* RESTORE SECTIONS QUICK BAR */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-800/80 text-xs">
+          <span className="text-[11px] font-bold text-gray-400">Adaugă secțiuni în pagină:</span>
+          {!sectionOrder.includes('education') && (
+            <button onClick={() => restoreSection('education')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-emerald-300 rounded-lg text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Education
+            </button>
+          )}
+          {!sectionOrder.includes('experience') && (
+            <button onClick={() => restoreSection('experience')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-blue-300 rounded-lg text-[10px] font-bold border border-blue-500/30 flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Experience
+            </button>
+          )}
+          {!sectionOrder.includes('projects') && (
+            <button onClick={() => restoreSection('projects')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-amber-300 rounded-lg text-[10px] font-bold border border-amber-500/30 flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Projects
+            </button>
+          )}
+          {!sectionOrder.includes('skills') && (
+            <button onClick={() => restoreSection('skills')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-cyan-300 rounded-lg text-[10px] font-bold border border-cyan-500/30 flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Technical Skills
+            </button>
+          )}
+          {!sectionOrder.includes('summary') && (
+            <button onClick={() => restoreSection('summary')} className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-purple-300 rounded-lg text-[10px] font-bold border border-purple-500/30 flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Professional Summary
+            </button>
+          )}
+
+          {/* ZOOM TOOLBAR */}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={handleFitToWidth}
+              className="px-2 py-1 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition"
+            >
+              <Maximize className="w-3 h-3" /> Potrivește (Fit)
+            </button>
+            <div className="flex items-center bg-gray-950 px-1.5 py-0.5 rounded-lg border border-gray-800 text-xs">
+              <button 
+                onClick={() => setPreviewZoom(z => Math.max(0.4, Number((z - 0.05).toFixed(2))))}
+                className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => setPreviewZoom(1.0)}
+                className="font-mono text-purple-300 font-bold px-1.5 text-[11px] min-w-[38px] text-center"
+                title="Seteaza la 100%"
+              >
+                {Math.round(previewZoom * 100)}%
+              </button>
+              <button 
+                onClick={() => setPreviewZoom(z => Math.min(1.3, Number((z + 0.05).toFixed(2))))}
+                className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-3 h-3" />
+              </button>
+            </div>
           </div>
-        )}
+        </div>
 
         {saveSuccessMsg && (
           <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-xl text-xs flex items-center gap-2 animate-bounce">
@@ -668,1021 +714,885 @@ export default function CvStudio({ applications = [], currentUser }) {
         )}
       </div>
 
-      {/* EXTRACTED MARKDOWN PREVIEW BOX (IF PDF LOADED) */}
-      {extractedMarkdown && (
-        <div className="glass-card p-4 rounded-2xl border border-blue-500/30 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
-              <Code2 className="w-4 h-4" /> Fisier CV Extras & Convertit in Format Markdown (.md):
-            </span>
-            <span className="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded">Apache Tika Parser</span>
-          </div>
-          <pre className="p-3 bg-gray-950/90 rounded-xl border border-gray-800 text-[11px] font-mono text-gray-300 max-h-40 overflow-y-auto whitespace-pre-wrap">
-            {extractedMarkdown}
-          </pre>
-        </div>
-      )}
-
-      {/* MAIN CONTAINER: SPLIT VIEW (EDITOR ON LEFT, LIVE PREVIEW ON RIGHT) */}
-      <div className={`grid gap-6 ${
-        viewMode === 'split' ? 'grid-cols-1 xl:grid-cols-12' : 'grid-cols-1'
-      }`}>
-        
-        {/* ================= LEFT COLUMN: FULL CRUD CV EDITOR ================= */}
-        {(viewMode === 'split' || viewMode === 'editor') && (
-          <div className={`${viewMode === 'split' ? 'xl:col-span-6' : 'w-full'} glass-card p-5 rounded-2xl border border-gray-800 space-y-5`}>
+      {/* ================= INLINE WYSIWYG A4 CV DOCUMENT CANVAS ================= */}
+      <div 
+        ref={workbenchRef}
+        className="w-full bg-slate-950/90 p-4 sm:p-8 rounded-3xl border border-gray-800 overflow-x-auto overflow-y-auto max-h-[90vh] shadow-2xl text-center"
+      >
+        <div 
+          style={{ 
+            display: 'inline-block',
+            width: `${210 * previewZoom}mm`, 
+            minHeight: `${297 * previewZoom}mm`,
+            margin: '0 auto',
+            textAlign: 'left',
+            position: 'relative',
+            transition: 'width 0.1s ease, min-height 0.1s ease'
+          }}
+        >
+          {/* EXACT PHYSICAL 210mm A4 SHEET */}
+          <div 
+            ref={previewRef}
+            id="cv-preview-sheet" 
+            className="bg-white text-black shadow-2xl rounded-sm transition-all"
+            style={{ 
+              width: '210mm',
+              minHeight: '297mm',
+              padding: '14mm 16mm',
+              transform: `scale(${previewZoom})`,
+              transformOrigin: 'top left',
+              fontFamily: "'Times New Roman', Times, serif",
+              backgroundColor: '#ffffff',
+              color: '#000000',
+              boxSizing: 'border-box'
+            }}
+          >
             
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-              <h3 className="text-sm font-black text-white flex items-center gap-2">
-                <FileText className="w-4 h-4 text-purple-400" />
-                Editor Sectiuni CV (Editare, Stergere, Mutare & Salvare)
-              </h3>
-              <span className="text-[10px] text-gray-400 bg-gray-900 px-2 py-1 rounded border border-gray-800">
-                PostgreSQL Dynamic Sync
-              </span>
+            {/* ================= HEADER SECTION (NAME + CONTACT DETAILS) ================= */}
+            <div className="relative group text-center pb-2">
+              
+              {/* EDIT CONTACT BUTTON */}
+              <button 
+                onClick={() => setShowEditContactModal(true)}
+                className="no-pdf absolute right-0 top-0 text-[11px] font-sans text-gray-400 hover:text-blue-600 flex items-center gap-1 bg-gray-50 hover:bg-blue-50 px-2 py-1 rounded border border-gray-200 transition cursor-pointer"
+                title="Editeaza datele de contact"
+              >
+                <Edit3 className="w-3 h-3" /> Edit Contact
+              </button>
+
+              {/* CANDIDATE FULL NAME */}
+              <input 
+                type="text"
+                value={cvSections.fullName}
+                onChange={e => setCvSections({...cvSections, fullName: e.target.value})}
+                placeholder="NUME CANDIDAT"
+                className="w-full text-center bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:bg-blue-50/20 outline-none text-black font-bold uppercase tracking-wide transition"
+                style={{ 
+                  fontSize: '20pt', 
+                  fontFamily: 'Arial, Helvetica, sans-serif',
+                  letterSpacing: '0.5px',
+                  lineHeight: '1.2'
+                }}
+              />
+
+              {/* CONTACT DETAILS ROW */}
+              <div 
+                className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-black mt-1 font-sans"
+                style={{ fontSize: '9pt' }}
+              >
+                {cvSections.phone && <span>{cvSections.phone}</span>}
+                {cvSections.email && (
+                  <>
+                    <span className="text-gray-400">|</span>
+                    <a href={`mailto:${cvSections.email}`} className="text-black underline">{cvSections.email}</a>
+                  </>
+                )}
+                {cvSections.linkedin && (
+                  <>
+                    <span className="text-gray-400">|</span>
+                    <a href={cvSections.linkedin.startsWith('http') ? cvSections.linkedin : `https://${cvSections.linkedin}`} target="_blank" rel="noreferrer" className="text-black underline">
+                      LinkedIn
+                    </a>
+                  </>
+                )}
+                {cvSections.github && (
+                  <>
+                    <span className="text-gray-400">|</span>
+                    <a href={cvSections.github.startsWith('http') ? cvSections.github : `https://${cvSections.github}`} target="_blank" rel="noreferrer" className="text-black underline">
+                      GitHub
+                    </a>
+                  </>
+                )}
+                {cvSections.location && (
+                  <>
+                    <span className="text-gray-400">|</span>
+                    <span className="text-gray-700">{cvSections.location}</span>
+                  </>
+                )}
+              </div>
             </div>
 
-            <div className="space-y-4 text-xs">
+            {/* ================= DYNAMIC SECTIONS RENDERING ================= */}
+            {sectionOrder.map((sectionKey, sIdx) => {
               
-              {/* SECTION: CONTACT DETAILS */}
-              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
-                <span className="text-xs font-black text-purple-400 uppercase tracking-wider block">
-                  Date de Contact & Antet
-                </span>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Nume Complet:</label>
-                    <input 
-                      type="text" 
-                      placeholder="ex: Nume Prenume"
-                      value={cvSections.fullName}
-                      onChange={e => setCvSections({...cvSections, fullName: e.target.value})}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Email:</label>
-                    <input 
-                      type="text" 
-                      placeholder="ex: email@example.com"
-                      value={cvSections.email}
-                      onChange={e => setCvSections({...cvSections, email: e.target.value})}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Telefon:</label>
-                    <input 
-                      type="text" 
-                      placeholder="ex: (+40) 700 000 000"
-                      value={cvSections.phone}
-                      onChange={e => setCvSections({...cvSections, phone: e.target.value})}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-                </div>
+              // ------------------- SECTION: EDUCATION -------------------
+              if (sectionKey === 'education') {
+                return (
+                  <div key="education" className="mt-3.5 mb-2 group/sec">
+                    {/* SECTION TITLE & INLINE CONTROLS */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span style={{ 
+                          fontWeight: 'bold', 
+                          fontSize: '10.5pt', 
+                          textTransform: 'uppercase', 
+                          letterSpacing: '0.8px', 
+                          color: '#000000', 
+                          fontFamily: 'Arial, Helvetica, sans-serif'
+                        }}>
+                          Education
+                        </span>
+                        
+                        {/* INLINE ACTION BUTTONS */}
+                        <div className="no-pdf flex items-center gap-1 font-sans text-[10px] text-gray-400">
+                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-gray-800 disabled:opacity-20 cursor-pointer" title="Move Up">↑</button>
+                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-gray-800 disabled:opacity-20 cursor-pointer" title="Move Down">↓</button>
+                          <button onClick={addEducation} className="hover:text-blue-600 text-gray-500 font-semibold ml-1 cursor-pointer" title="Add education entry">+ new</button>
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Locatie (Oras, Tara):</label>
-                    <input 
-                      type="text" 
-                      placeholder="ex: Bucuresti, Romania"
-                      value={cvSections.location}
-                      onChange={e => setCvSections({...cvSections, location: e.target.value})}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">LinkedIn:</label>
-                    <input 
-                      type="text" 
-                      placeholder="ex: linkedin.com/in/profil"
-                      value={cvSections.linkedin}
-                      onChange={e => setCvSections({...cvSections, linkedin: e.target.value})}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">GitHub:</label>
-                    <input 
-                      type="text" 
-                      placeholder="ex: github.com/username"
-                      value={cvSections.github}
-                      onChange={e => setCvSections({...cvSections, github: e.target.value})}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-                </div>
-              </div>
+                      <button onClick={() => deleteSection('education')} className="no-pdf text-[10px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+                        <Trash2 className="w-3 h-3" /> delete section
+                      </button>
+                    </div>
 
-              {/* SECTION: PROFESSIONAL SUMMARY */}
-              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-purple-400 uppercase tracking-wider">
-                    Professional Summary / Profil Profesional
-                  </span>
-                  {cvSections.summary && (
-                    <button
-                      onClick={() => setCvSections({ ...cvSections, summary: "" })}
-                      className="text-[10px] text-gray-400 hover:text-rose-400 transition"
-                    >
-                      Goleste Sumar
-                    </button>
-                  )}
-                </div>
-                <textarea 
-                  rows={4}
-                  placeholder="Introdu profilul profesional..."
-                  value={cvSections.summary}
-                  onChange={e => setCvSections({...cvSections, summary: e.target.value})}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
+                    {/* SECTION DIVIDER */}
+                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+
+                    {/* ENTRIES */}
+                    {cvSections.education.map((edu, eduIdx) => (
+                      <div key={edu.id || eduIdx} className="mt-1.5 mb-1.5 group/item">
+                        {/* ROW 1: SCHOOL (LEFT) + DATES (RIGHT) */}
+                        <div className="flex items-baseline justify-between gap-2">
+                          <div className="flex items-baseline gap-1.5 flex-1">
+                            <input 
+                              type="text"
+                              value={edu.school || ""}
+                              onChange={e => {
+                                const updated = [...cvSections.education];
+                                updated[eduIdx].school = e.target.value;
+                                setCvSections({...cvSections, education: updated});
+                              }}
+                              placeholder="University / School"
+                              className="font-bold text-black bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none flex-1 transition"
+                              style={{ fontSize: '9.5pt' }}
+                            />
+                            <button 
+                              onClick={() => addEduBullet(eduIdx)}
+                              className="no-pdf text-[10px] font-sans text-gray-400 hover:text-blue-600 font-semibold cursor-pointer shrink-0"
+                            >
+                              + bullet
+                            </button>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <input 
+                              type="text"
+                              value={edu.period || ""}
+                              onChange={e => {
+                                const updated = [...cvSections.education];
+                                updated[eduIdx].period = e.target.value;
+                                setCvSections({...cvSections, education: updated});
+                              }}
+                              placeholder="Dates"
+                              className="text-right text-black bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none transition"
+                              style={{ fontSize: '9pt' }}
+                            />
+                            <button 
+                              onClick={() => deleteEducation(edu.id)}
+                              className="no-pdf text-gray-400 hover:text-rose-600 p-0.5 cursor-pointer"
+                              title="Delete entry"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* ROW 2: DEGREE (LEFT) + LOCATION (RIGHT) */}
+                        <div className="flex items-baseline justify-between gap-2">
+                          <input 
+                            type="text"
+                            value={edu.degree || ""}
+                            onChange={e => {
+                              const updated = [...cvSections.education];
+                              updated[eduIdx].degree = e.target.value;
+                              setCvSections({...cvSections, education: updated});
+                            }}
+                            placeholder="Bachelor of Computer Science & Engineering"
+                            className="italic text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none flex-1 transition"
+                            style={{ fontSize: '9pt' }}
+                          />
+                          <input 
+                            type="text"
+                            value={edu.location || ""}
+                            onChange={e => {
+                              const updated = [...cvSections.education];
+                              updated[eduIdx].location = e.target.value;
+                              setCvSections({...cvSections, education: updated});
+                            }}
+                            placeholder="Location"
+                            className="italic text-right text-gray-700 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none shrink-0 transition"
+                            style={{ fontSize: '9pt' }}
+                          />
+                        </div>
+
+                        {/* BULLETS */}
+                        {edu.bullets && edu.bullets.map((b, bIdx) => (
+                          <div key={bIdx} className="flex items-start gap-1 mt-0.5 group/b">
+                            <span style={{ fontSize: '9pt', lineHeight: '1.3', flexShrink: 0, paddingLeft: '4px' }}>•</span>
+                            <textarea
+                              rows={1}
+                              value={b}
+                              onInput={autoResizeTextarea}
+                              onChange={e => {
+                                const updated = [...cvSections.education];
+                                updated[eduIdx].bullets[bIdx] = e.target.value;
+                                setCvSections({...cvSections, education: updated});
+                              }}
+                              placeholder="Courses: Data Structures, Algorithms..."
+                              className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none resize-none transition"
+                              style={{ fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}
+                            />
+                            <button 
+                              onClick={() => deleteEduBullet(eduIdx, bIdx)}
+                              className="no-pdf text-gray-300 hover:text-rose-600 p-0.5 cursor-pointer shrink-0"
+                              title="Delete bullet"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+
+              // ------------------- SECTION: EXPERIENCE -------------------
+              if (sectionKey === 'experience') {
+                return (
+                  <div key="experience" className="mt-3.5 mb-2 group/sec">
+                    {/* SECTION TITLE & INLINE CONTROLS */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span style={{ 
+                          fontWeight: 'bold', 
+                          fontSize: '10.5pt', 
+                          textTransform: 'uppercase', 
+                          letterSpacing: '0.8px', 
+                          color: '#000000', 
+                          fontFamily: 'Arial, Helvetica, sans-serif'
+                        }}>
+                          Experience
+                        </span>
+                        
+                        {/* INLINE ACTION BUTTONS */}
+                        <div className="no-pdf flex items-center gap-1 font-sans text-[10px] text-gray-400">
+                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-gray-800 disabled:opacity-20 cursor-pointer" title="Move Up">↑</button>
+                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-gray-800 disabled:opacity-20 cursor-pointer" title="Move Down">↓</button>
+                          <button onClick={addExperience} className="hover:text-blue-600 text-gray-500 font-semibold ml-1 cursor-pointer" title="Add experience entry">+ new</button>
+                        </div>
+                      </div>
+
+                      <button onClick={() => deleteSection('experience')} className="no-pdf text-[10px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+                        <Trash2 className="w-3 h-3" /> delete section
+                      </button>
+                    </div>
+
+                    {/* SECTION DIVIDER */}
+                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+
+                    {/* ENTRIES */}
+                    {cvSections.workExperience.map((exp, expIdx) => (
+                      <div key={exp.id || expIdx} className="mt-1.5 mb-2 group/item">
+                        {/* ROW 1: ROLE (LEFT) + DATES (RIGHT) */}
+                        <div className="flex items-baseline justify-between gap-2">
+                          <div className="flex items-baseline gap-1.5 flex-1">
+                            <input 
+                              type="text"
+                              value={exp.role || ""}
+                              onChange={e => {
+                                const updated = [...cvSections.workExperience];
+                                updated[expIdx].role = e.target.value;
+                                setCvSections({...cvSections, workExperience: updated});
+                              }}
+                              placeholder="Job Role / Title"
+                              className="font-bold text-black bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none flex-1 transition"
+                              style={{ fontSize: '9.5pt' }}
+                            />
+                            <button 
+                              onClick={() => addExpBullet(expIdx)}
+                              className="no-pdf text-[10px] font-sans text-gray-400 hover:text-blue-600 font-semibold cursor-pointer shrink-0"
+                            >
+                              + bullet
+                            </button>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <input 
+                              type="text"
+                              value={exp.period || ""}
+                              onChange={e => {
+                                const updated = [...cvSections.workExperience];
+                                updated[expIdx].period = e.target.value;
+                                setCvSections({...cvSections, workExperience: updated});
+                              }}
+                              placeholder="June 2025 – August 2025"
+                              className="text-right text-black bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none transition"
+                              style={{ fontSize: '9pt' }}
+                            />
+                            <button 
+                              onClick={() => deleteExperience(exp.id)}
+                              className="no-pdf text-gray-400 hover:text-rose-600 p-0.5 cursor-pointer"
+                              title="Delete entry"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* ROW 2: COMPANY (LEFT) + LOCATION (RIGHT) */}
+                        <div className="flex items-baseline justify-between gap-2">
+                          <input 
+                            type="text"
+                            value={exp.company || ""}
+                            onChange={e => {
+                              const updated = [...cvSections.workExperience];
+                              updated[expIdx].company = e.target.value;
+                              setCvSections({...cvSections, workExperience: updated});
+                            }}
+                            placeholder="Company Name"
+                            className="italic text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none flex-1 transition"
+                            style={{ fontSize: '9pt' }}
+                          />
+                          <input 
+                            type="text"
+                            value={exp.location || ""}
+                            onChange={e => {
+                              const updated = [...cvSections.workExperience];
+                              updated[expIdx].location = e.target.value;
+                              setCvSections({...cvSections, workExperience: updated});
+                            }}
+                            placeholder="Location"
+                            className="italic text-right text-gray-700 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none shrink-0 transition"
+                            style={{ fontSize: '9pt' }}
+                          />
+                        </div>
+
+                        {/* BULLETS */}
+                        {exp.bullets && exp.bullets.map((b, bIdx) => (
+                          <div key={bIdx} className="flex items-start gap-1 mt-0.5 group/b">
+                            <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
+                            <textarea
+                              rows={1}
+                              value={b}
+                              onInput={autoResizeTextarea}
+                              onChange={e => {
+                                const updated = [...cvSections.workExperience];
+                                updated[expIdx].bullets[bIdx] = e.target.value;
+                                setCvSections({...cvSections, workExperience: updated});
+                              }}
+                              placeholder="Accomplishment / responsibility..."
+                              className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none resize-none transition"
+                              style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
+                            />
+                            <button 
+                              onClick={() => deleteExpBullet(expIdx, bIdx)}
+                              className="no-pdf text-gray-300 hover:text-rose-600 p-0.5 cursor-pointer shrink-0"
+                              title="Delete bullet"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+
+              // ------------------- SECTION: PROJECTS -------------------
+              if (sectionKey === 'projects') {
+                return (
+                  <div key="projects" className="mt-3.5 mb-2 group/sec">
+                    {/* SECTION TITLE & INLINE CONTROLS */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span style={{ 
+                          fontWeight: 'bold', 
+                          fontSize: '10.5pt', 
+                          textTransform: 'uppercase', 
+                          letterSpacing: '0.8px', 
+                          color: '#000000', 
+                          fontFamily: 'Arial, Helvetica, sans-serif'
+                        }}>
+                          Projects
+                        </span>
+                        
+                        {/* INLINE ACTION BUTTONS */}
+                        <div className="no-pdf flex items-center gap-1 font-sans text-[10px] text-gray-400">
+                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-gray-800 disabled:opacity-20 cursor-pointer" title="Move Up">↑</button>
+                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-gray-800 disabled:opacity-20 cursor-pointer" title="Move Down">↓</button>
+                          <button onClick={addProject} className="hover:text-blue-600 text-gray-500 font-semibold ml-1 cursor-pointer" title="Add project entry">+ new</button>
+                        </div>
+                      </div>
+
+                      <button onClick={() => deleteSection('projects')} className="no-pdf text-[10px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+                        <Trash2 className="w-3 h-3" /> delete section
+                      </button>
+                    </div>
+
+                    {/* SECTION DIVIDER */}
+                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+
+                    {/* ENTRIES */}
+                    {cvSections.projects.map((proj, projIdx) => (
+                      <div key={proj.id || projIdx} className="mt-1.5 mb-2 group/item">
+                        {/* ROW 1: TITLE + TECH STACK (LEFT) + DATES (RIGHT) */}
+                        <div className="flex items-baseline justify-between gap-2">
+                          <div className="flex items-baseline flex-wrap gap-1 flex-1">
+                            <input 
+                              type="text"
+                              value={proj.title || ""}
+                              onChange={e => {
+                                const updated = [...cvSections.projects];
+                                updated[projIdx].title = e.target.value;
+                                setCvSections({...cvSections, projects: updated});
+                              }}
+                              placeholder="Project Title"
+                              className="font-bold text-black bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none transition"
+                              style={{ fontSize: '9.5pt' }}
+                            />
+                            <span className="text-gray-400 font-normal">|</span>
+                            <input 
+                              type="text"
+                              value={proj.techStack || ""}
+                              onChange={e => {
+                                const updated = [...cvSections.projects];
+                                updated[projIdx].techStack = e.target.value;
+                                setCvSections({...cvSections, projects: updated});
+                              }}
+                              placeholder="Python, PyTorch, React..."
+                              className="italic text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none flex-1 transition min-w-[140px]"
+                              style={{ fontSize: '8.5pt' }}
+                            />
+                            <button 
+                              onClick={() => addProjectBullet(projIdx)}
+                              className="no-pdf text-[10px] font-sans text-gray-400 hover:text-blue-600 font-semibold cursor-pointer shrink-0 ml-1"
+                            >
+                              + bullet
+                            </button>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <input 
+                              type="text"
+                              value={proj.period || ""}
+                              onChange={e => {
+                                const updated = [...cvSections.projects];
+                                updated[projIdx].period = e.target.value;
+                                setCvSections({...cvSections, projects: updated});
+                              }}
+                              placeholder="Dates"
+                              className="text-right text-black bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none transition"
+                              style={{ fontSize: '9pt' }}
+                            />
+                            <button 
+                              onClick={() => deleteProject(proj.id)}
+                              className="no-pdf text-gray-400 hover:text-rose-600 p-0.5 cursor-pointer"
+                              title="Delete entry"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* BULLETS */}
+                        {proj.bullets && proj.bullets.map((b, bIdx) => (
+                          <div key={bIdx} className="flex items-start gap-1 mt-0.5 group/b">
+                            <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
+                            <textarea
+                              rows={1}
+                              value={b}
+                              onInput={autoResizeTextarea}
+                              onChange={e => {
+                                const updated = [...cvSections.projects];
+                                updated[projIdx].bullets[bIdx] = e.target.value;
+                                setCvSections({...cvSections, projects: updated});
+                              }}
+                              placeholder="Architected / Built..."
+                              className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none resize-none transition"
+                              style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
+                            />
+                            <button 
+                              onClick={() => deleteProjectBullet(projIdx, bIdx)}
+                              className="no-pdf text-gray-300 hover:text-rose-600 p-0.5 cursor-pointer shrink-0"
+                              title="Delete bullet"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+
+              // ------------------- SECTION: TECHNICAL SKILLS -------------------
+              if (sectionKey === 'skills') {
+                return (
+                  <div key="skills" className="mt-3.5 mb-2 group/sec">
+                    {/* SECTION TITLE & INLINE CONTROLS */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span style={{ 
+                          fontWeight: 'bold', 
+                          fontSize: '10.5pt', 
+                          textTransform: 'uppercase', 
+                          letterSpacing: '0.8px', 
+                          color: '#000000', 
+                          fontFamily: 'Arial, Helvetica, sans-serif'
+                        }}>
+                          Technical Skills
+                        </span>
+                        
+                        {/* INLINE ACTION BUTTONS */}
+                        <div className="no-pdf flex items-center gap-1 font-sans text-[10px] text-gray-400">
+                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-gray-800 disabled:opacity-20 cursor-pointer" title="Move Up">↑</button>
+                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-gray-800 disabled:opacity-20 cursor-pointer" title="Move Down">↓</button>
+                        </div>
+                      </div>
+
+                      <button onClick={() => deleteSection('skills')} className="no-pdf text-[10px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+                        <Trash2 className="w-3 h-3" /> delete section
+                      </button>
+                    </div>
+
+                    {/* SECTION DIVIDER */}
+                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+
+                    {/* SKILLS ROWS */}
+                    <div className="space-y-1 mt-1 text-black" style={{ fontSize: '8.5pt', lineHeight: '1.4' }}>
+                      
+                      {/* LANGUAGES */}
+                      <div className="flex items-baseline gap-1.5 group/sk">
+                        <span style={{ fontWeight: 'bold' }}>Languages:</span>
+                        <input 
+                          type="text"
+                          value={cvSections.skills.languages || ""}
+                          onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, languages: e.target.value}})}
+                          placeholder="Java, TypeScript, Python, C/C++, HTML, CSS"
+                          className="flex-1 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none transition"
+                        />
+                      </div>
+
+                      {/* FRAMEWORKS */}
+                      <div className="flex items-baseline gap-1.5 group/sk">
+                        <span style={{ fontWeight: 'bold' }}>Frameworks:</span>
+                        <input 
+                          type="text"
+                          value={cvSections.skills.frameworks || ""}
+                          onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, frameworks: e.target.value}})}
+                          placeholder="Spring Boot, React, Next.js, PrimeFaces, Spring Security"
+                          className="flex-1 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none transition"
+                        />
+                      </div>
+
+                      {/* DEVELOPER TOOLS */}
+                      <div className="flex items-baseline gap-1.5 group/sk">
+                        <span style={{ fontWeight: 'bold' }}>Developer Tools:</span>
+                        <input 
+                          type="text"
+                          value={cvSections.skills.developerTools || ""}
+                          onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, developerTools: e.target.value}})}
+                          placeholder="Linux, Git, Supabase, Stripe, Docker"
+                          className="flex-1 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none transition"
+                        />
+                      </div>
+
+                      {/* LIBRARIES */}
+                      <div className="flex items-baseline gap-1.5 group/sk">
+                        <span style={{ fontWeight: 'bold' }}>Libraries:</span>
+                        <input 
+                          type="text"
+                          value={cvSections.skills.libraries || ""}
+                          onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, libraries: e.target.value}})}
+                          placeholder="PyTorch, SimpleITK, Flask, Plotly, NumPy, SciPy, Tailwind"
+                          className="flex-1 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none transition"
+                        />
+                      </div>
+
+                    </div>
+                  </div>
+                );
+              }
+
+              // ------------------- SECTION: SUMMARY -------------------
+              if (sectionKey === 'summary') {
+                return (
+                  <div key="summary" className="mt-3.5 mb-2 group/sec">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span style={{ 
+                          fontWeight: 'bold', 
+                          fontSize: '10.5pt', 
+                          textTransform: 'uppercase', 
+                          letterSpacing: '0.8px', 
+                          color: '#000000', 
+                          fontFamily: 'Arial, Helvetica, sans-serif'
+                        }}>
+                          Professional Summary
+                        </span>
+                        <div className="no-pdf flex items-center gap-1 font-sans text-[10px] text-gray-400">
+                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-gray-800 disabled:opacity-20 cursor-pointer" title="Move Up">↑</button>
+                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-gray-800 disabled:opacity-20 cursor-pointer" title="Move Down">↓</button>
+                        </div>
+                      </div>
+                      <button onClick={() => deleteSection('summary')} className="no-pdf text-[10px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+                        <Trash2 className="w-3 h-3" /> delete section
+                      </button>
+                    </div>
+                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+                    <textarea
+                      rows={3}
+                      value={cvSections.summary}
+                      onInput={autoResizeTextarea}
+                      onChange={e => setCvSections({...cvSections, summary: e.target.value})}
+                      placeholder="Enter your professional summary..."
+                      className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none resize-none transition"
+                      style={{ fontSize: '9pt', color: '#000000', textAlign: 'justify', lineHeight: '1.35', fontFamily: 'Arial, Helvetica, sans-serif' }}
+                    />
+                  </div>
+                );
+              }
+
+              return null;
+            })}
+
+          </div>
+        </div>
+      </div>
+
+      {/* ================= MODAL: EDIT CONTACT DETAILS ================= */}
+      {showEditContactModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-card max-w-lg w-full p-6 rounded-3xl border border-purple-500/30 space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <h3 className="text-base font-black text-white flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-purple-400" /> Editează Date de Contact & Header
+              </h3>
+              <button onClick={() => setShowEditContactModal(false)} className="p-1 text-gray-400 hover:text-white rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 mb-1">Nume Complet:</label>
+                <input 
+                  type="text" 
+                  value={cvSections.fullName} 
+                  onChange={e => setCvSections({...cvSections, fullName: e.target.value})}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-white" 
                 />
               </div>
 
-              {/* SECTION 1: EDUCATION EDITOR (WITH ADD, DELETE, MOVE) */}
-              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5 uppercase">
-                    <GraduationCap className="w-4 h-4" /> 1. Educatie si Studii (Education)
-                  </span>
-                  <button 
-                    onClick={handleAddEducation}
-                    className="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-lg text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1 transition"
-                  >
-                    <Plus className="w-3 h-3" /> Adauga Educatie Noua
-                  </button>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 mb-1">Email:</label>
+                  <input 
+                    type="email" 
+                    value={cvSections.email} 
+                    onChange={e => setCvSections({...cvSections, email: e.target.value})}
+                    className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-white" 
+                  />
                 </div>
-
-                {eduList.length === 0 && (
-                  <p className="text-[11px] text-gray-500 italic text-center py-2">
-                    Nicio institutie adaugata. Apasa pe "+ Adauga Educatie Noua" sau incarca un CV PDF.
-                  </p>
-                )}
-
-                {eduList.map((edu, eduIdx) => (
-                  <div key={edu.id || eduIdx} className="space-y-2 p-3 bg-gray-900/50 rounded-xl border border-gray-800/80">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-bold text-emerald-300">
-                        Diploma / Scoala #{eduIdx + 1}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <button 
-                          onClick={() => handleMoveEducation(eduIdx, -1)}
-                          disabled={eduIdx === 0}
-                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
-                          title="Muta mai sus"
-                        >
-                          <ArrowUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => handleMoveEducation(eduIdx, 1)}
-                          disabled={eduIdx === eduList.length - 1}
-                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
-                          title="Muta mai jos"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteEducation(edu.id)}
-                          className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg shrink-0 ml-1"
-                          title="Sterge Educatie"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Institutie / Universitate:</label>
-                        <input 
-                          type="text" 
-                          placeholder="ex: Universitatea Politehnica din Bucuresti"
-                          value={edu.school || ""}
-                          onChange={e => {
-                            const updated = [...eduList];
-                            updated[eduIdx].school = e.target.value;
-                            setCvSections({ ...cvSections, education: updated });
-                          }}
-                          className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Diploma / Specializare:</label>
-                        <input 
-                          type="text" 
-                          placeholder="ex: Bachelor of Computer Science & Engineering"
-                          value={edu.degree || ""}
-                          onChange={e => {
-                            const updated = [...eduList];
-                            updated[eduIdx].degree = e.target.value;
-                            setCvSections({ ...cvSections, education: updated });
-                          }}
-                          className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Perioada de Studii:</label>
-                        <input 
-                          type="text" 
-                          placeholder="ex: Octombrie 2022 - Iulie 2026"
-                          value={edu.period || ""}
-                          onChange={e => {
-                            const updated = [...eduList];
-                            updated[eduIdx].period = e.target.value;
-                            setCvSections({ ...cvSections, education: updated });
-                          }}
-                          className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Locatie Universitate:</label>
-                        <input 
-                          type="text" 
-                          placeholder="ex: Bucuresti, Romania"
-                          value={edu.location || ""}
-                          onChange={e => {
-                            const updated = [...eduList];
-                            updated[eduIdx].location = e.target.value;
-                            setCvSections({ ...cvSections, education: updated });
-                          }}
-                          className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* SECTION 2: WORK EXPERIENCE EDITOR */}
-              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-blue-400 flex items-center gap-1.5 uppercase">
-                    <Briefcase className="w-4 h-4" /> 2. Experienta Profesionala (Work Experience)
-                  </span>
-                  <button 
-                    onClick={handleAddWorkExperience}
-                    className="px-2.5 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg text-[10px] font-bold border border-blue-500/30 flex items-center gap-1 transition"
-                  >
-                    <Plus className="w-3 h-3" /> Adauga Experienta Noua
-                  </button>
-                </div>
-
-                {cvSections.workExperience.length === 0 && (
-                  <p className="text-[11px] text-gray-500 italic text-center py-2">
-                    Nicio experienta adaugata. Apasa pe "+ Adauga Experienta Noua" sau incarca un CV PDF.
-                  </p>
-                )}
-
-                {cvSections.workExperience.map((exp, expIdx) => (
-                  <div key={exp.id || expIdx} className="space-y-2.5 p-3 bg-gray-900/50 rounded-xl border border-gray-800/80">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="grid grid-cols-2 gap-2 flex-1">
-                        <input 
-                          type="text" 
-                          placeholder="Nume Companie"
-                          value={exp.company || ""}
-                          onChange={e => {
-                            const updated = [...cvSections.workExperience];
-                            updated[expIdx].company = e.target.value;
-                            setCvSections({...cvSections, workExperience: updated});
-                          }}
-                          className="bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs font-bold text-white"
-                        />
-                        <input 
-                          type="text" 
-                          placeholder="Rol / Titlu Job"
-                          value={exp.role || ""}
-                          onChange={e => {
-                            const updated = [...cvSections.workExperience];
-                            updated[expIdx].role = e.target.value;
-                            setCvSections({...cvSections, workExperience: updated});
-                          }}
-                          className="bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                        />
-                      </div>
-                      
-                      <div className="flex items-center gap-1">
-                        <button 
-                          onClick={() => handleMoveWorkExperience(expIdx, -1)}
-                          disabled={expIdx === 0}
-                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
-                          title="Muta mai sus"
-                        >
-                          <ArrowUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => handleMoveWorkExperience(expIdx, 1)}
-                          disabled={expIdx === cvSections.workExperience.length - 1}
-                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
-                          title="Muta mai jos"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteWorkExperience(exp.id)}
-                          className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg shrink-0 ml-1"
-                          title="Sterge Experienta"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <input 
-                        type="text" 
-                        placeholder="Perioada (ex: Iunie 2025 - August 2025)"
-                        value={exp.period || ""}
-                        onChange={e => {
-                          const updated = [...cvSections.workExperience];
-                          updated[expIdx].period = e.target.value;
-                          setCvSections({...cvSections, workExperience: updated});
-                        }}
-                        className="bg-gray-950 border border-gray-800 rounded-lg p-1.5 text-xs text-gray-300"
-                      />
-                      <input 
-                        type="text" 
-                        placeholder="Locatie (ex: Bucuresti, Romania)"
-                        value={exp.location || ""}
-                        onChange={e => {
-                          const updated = [...cvSections.workExperience];
-                          updated[expIdx].location = e.target.value;
-                          setCvSections({...cvSections, workExperience: updated});
-                        }}
-                        className="bg-gray-950 border border-gray-800 rounded-lg p-1.5 text-xs text-gray-300"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="block text-[10px] font-semibold text-gray-400">Bullet-uri Responsabilitati:</label>
-                        <button 
-                          onClick={() => handleAddWorkBullet(expIdx)}
-                          className="text-[10px] text-blue-400 hover:underline flex items-center gap-0.5 font-bold"
-                        >
-                          <Plus className="w-3 h-3" /> Adauga Bullet
-                        </button>
-                      </div>
-                      {exp.bullets && exp.bullets.map((b, bIdx) => (
-                        <div key={bIdx} className="flex items-center gap-1.5">
-                          <input 
-                            type="text" 
-                            placeholder="Introdu o responsabilitate..."
-                            value={b}
-                            onChange={e => {
-                              const updated = [...cvSections.workExperience];
-                              updated[expIdx].bullets[bIdx] = e.target.value;
-                              setCvSections({...cvSections, workExperience: updated});
-                            }}
-                            className="flex-1 bg-gray-950 border border-gray-800 rounded-lg p-1.5 text-xs text-gray-300"
-                          />
-                          <button 
-                            onClick={() => handleDeleteWorkBullet(expIdx, bIdx)}
-                            className="p-1 text-gray-500 hover:text-rose-400"
-                            title="Sterge bullet"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* SECTION 3: PERSONAL PROJECTS EDITOR */}
-              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-amber-400 flex items-center gap-1.5 uppercase">
-                    <FolderGit2 className="w-4 h-4" /> 3. Proiecte Personale (Personal Projects)
-                  </span>
-                  <button 
-                    onClick={handleAddProject}
-                    className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-[10px] font-bold border border-amber-500/30 flex items-center gap-1 transition"
-                  >
-                    <Plus className="w-3 h-3" /> Adauga Proiect Nou
-                  </button>
-                </div>
-
-                {cvSections.projects.length === 0 && (
-                  <p className="text-[11px] text-gray-500 italic text-center py-2">
-                    Niciun proiect adaugat. Apasa pe "+ Adauga Proiect Nou" sau incarca un CV PDF.
-                  </p>
-                )}
-
-                {cvSections.projects.map((proj, projIdx) => (
-                  <div key={proj.id || projIdx} className="space-y-2.5 p-3 bg-gray-900/50 rounded-xl border border-gray-800/80">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="grid grid-cols-2 gap-2 flex-1">
-                        <input 
-                          type="text" 
-                          placeholder="Titlu Proiect"
-                          value={proj.title || ""}
-                          onChange={e => {
-                            const updated = [...cvSections.projects];
-                            updated[projIdx].title = e.target.value;
-                            setCvSections({...cvSections, projects: updated});
-                          }}
-                          className="bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs font-bold text-white"
-                        />
-                        <input 
-                          type="text" 
-                          placeholder="Stack Tehnologic (ex: Python, PyTorch, React)"
-                          value={proj.techStack || ""}
-                          onChange={e => {
-                            const updated = [...cvSections.projects];
-                            updated[projIdx].techStack = e.target.value;
-                            setCvSections({...cvSections, projects: updated});
-                          }}
-                          className="bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                        />
-                      </div>
-                      
-                      <div className="flex items-center gap-1">
-                        <button 
-                          onClick={() => handleMoveProject(projIdx, -1)}
-                          disabled={projIdx === 0}
-                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
-                          title="Muta mai sus"
-                        >
-                          <ArrowUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => handleMoveProject(projIdx, 1)}
-                          disabled={projIdx === cvSections.projects.length - 1}
-                          className="p-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30"
-                          title="Muta mai jos"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteProject(proj.id)}
-                          className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg shrink-0 ml-1"
-                          title="Sterge Proiect"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="block text-[10px] font-semibold text-gray-400">Gloante Proiect (Metoda XYZ):</label>
-                        <button 
-                          onClick={() => handleAddProjectBullet(projIdx)}
-                          className="text-[10px] text-amber-400 hover:underline flex items-center gap-0.5 font-bold"
-                        >
-                          <Plus className="w-3 h-3" /> Adauga Bullet
-                        </button>
-                      </div>
-                      {proj.bullets && proj.bullets.map((b, bIdx) => (
-                        <div key={bIdx} className="flex items-center gap-1.5">
-                          <input 
-                            type="text" 
-                            placeholder="Introdu descrierea proiectului..."
-                            value={b}
-                            onChange={e => {
-                              const updated = [...cvSections.projects];
-                              updated[projIdx].bullets[bIdx] = e.target.value;
-                              setCvSections({...cvSections, projects: updated});
-                            }}
-                            className="flex-1 bg-gray-950 border border-gray-800 rounded-lg p-1.5 text-xs text-gray-300"
-                          />
-                          <button 
-                            onClick={() => handleDeleteProjectBullet(projIdx, bIdx)}
-                            className="p-1 text-gray-500 hover:text-rose-400"
-                            title="Sterge bullet"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* SECTION 4: TECHNICAL SKILLS EDITOR */}
-              <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800/80 space-y-3">
-                <span className="text-xs font-black text-cyan-400 uppercase tracking-wider block">
-                  4. Abilitati Tehnice (Technical Skills)
-                </span>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Limbaje de Programare:</label>
-                    <input 
-                      type="text" 
-                      placeholder="ex: Java, TypeScript, Python, SQL"
-                      value={cvSections.skills.languages}
-                      onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, languages: e.target.value}})}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Framework-uri & Biblioteci:</label>
-                    <input 
-                      type="text" 
-                      placeholder="ex: Spring Boot, React, Next.js, PyTorch"
-                      value={cvSections.skills.frameworks}
-                      onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, frameworks: e.target.value}})}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">Baze de Date & AI:</label>
-                    <input 
-                      type="text" 
-                      placeholder="ex: PostgreSQL, MySQL, Supabase, pgvector"
-                      value={cvSections.skills.databases}
-                      onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, databases: e.target.value}})}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">DevOps, Tools & Tehnologii:</label>
-                    <input 
-                      type="text" 
-                      placeholder="ex: Docker, Linux, Git, REST API"
-                      value={cvSections.skills.devops}
-                      onChange={e => setCvSections({...cvSections, skills: {...cvSections.skills, devops: e.target.value}})}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 mb-1">Telefon:</label>
+                  <input 
+                    type="text" 
+                    value={cvSections.phone} 
+                    onChange={e => setCvSections({...cvSections, phone: e.target.value})}
+                    className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-white" 
+                  />
                 </div>
               </div>
 
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 mb-1">Locație (Oraș, Țară):</label>
+                <input 
+                  type="text" 
+                  value={cvSections.location} 
+                  onChange={e => setCvSections({...cvSections, location: e.target.value})}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-white" 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 mb-1">LinkedIn (URL sau handle):</label>
+                  <input 
+                    type="text" 
+                    value={cvSections.linkedin} 
+                    onChange={e => setCvSections({...cvSections, linkedin: e.target.value})}
+                    className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-white" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 mb-1">GitHub (URL sau handle):</label>
+                  <input 
+                    type="text" 
+                    value={cvSections.github} 
+                    onChange={e => setCvSections({...cvSections, github: e.target.value})}
+                    className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-white" 
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-gray-800">
+              <button
+                onClick={() => setShowEditContactModal(false)}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition"
+              >
+                Gata (Actualizează)
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ================= RIGHT COLUMN: LIVE CV DOCUMENT PREVIEW (1:1 WYSIWYG SCALED WITH CLEAN HORIZONTAL SCROLL) ================= */}
-        {(viewMode === 'split' || viewMode === 'preview') && (
-          <div className={`${viewMode === 'split' ? 'xl:col-span-6' : 'w-full'} space-y-4`}>
-            
-            {/* PREVIEW TOP TOOLBAR WITH ZOOM & FIT CONTROLS */}
-            <div className="glass-card p-3 rounded-2xl border border-gray-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+      {/* ================= MODAL: AI 100% ATS OPTIMIZATION ================= */}
+      {showAiModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="glass-card max-w-4xl w-full p-6 rounded-3xl border border-purple-500/30 space-y-5 shadow-2xl my-8">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                <span className="font-extrabold text-white">Live Preview Document (A4 1:1)</span>
-              </div>
-
-              {/* ZOOM CONTROLS */}
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  onClick={handleFitToWidth}
-                  className="px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 rounded-xl font-bold text-[11px] flex items-center gap-1 transition"
-                  title="Potrivește automat pe lățimea ecranului fără margini tăiate"
-                >
-                  <Maximize className="w-3 h-3 text-purple-300" />
-                  <span>Potrivește (Fit)</span>
-                </button>
-
-                <div className="flex items-center bg-gray-950 px-2 py-1 rounded-xl border border-gray-800 text-xs">
-                  <button 
-                    onClick={() => setPreviewZoom(z => Math.max(0.35, Number((z - 0.05).toFixed(2))))}
-                    className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded transition"
-                    title="Zoom Out"
-                  >
-                    <ZoomOut className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => setPreviewZoom(1.0)}
-                    className="font-mono text-purple-300 hover:text-purple-200 font-bold px-2 text-[11px] min-w-[44px] text-center"
-                    title="Setează la 100%"
-                  >
-                    {Math.round(previewZoom * 100)}%
-                  </button>
-                  <button 
-                    onClick={() => setPreviewZoom(z => Math.min(1.25, Number((z + 0.05).toFixed(2))))}
-                    className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded transition"
-                    title="Zoom In"
-                  >
-                    <ZoomIn className="w-3.5 h-3.5" />
-                  </button>
-                  <button 
-                    onClick={handleFitToWidth}
-                    className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded ml-1 transition"
-                    title="Resetează Zoom la Potrivire"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                  </button>
+                <div className="p-2 bg-purple-600/30 text-purple-400 rounded-xl">
+                  <Zap className="w-5 h-5" />
                 </div>
-
-                <button
-                  onClick={handleDownloadDirectPdf}
-                  disabled={isDownloadingPdf}
-                  className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow transition disabled:opacity-60"
-                >
-                  {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                  {isDownloadingPdf ? 'Se descarca...' : 'Descarca PDF'}
-                </button>
-              </div>
-            </div>
-
-            {/* A4 CANVAS WORKBENCH (FULL HORIZONTAL & VERTICAL SCROLL, ZERO CUTOFFS) */}
-            <div 
-              ref={workbenchRef}
-              className="w-full bg-slate-950/80 p-3 sm:p-5 rounded-2xl border border-gray-800/80 overflow-x-auto overflow-y-auto max-h-[88vh] shadow-inner text-center"
-            >
-              
-              {/* SIZING WRAPPER FOR CSS TRANSFORM SCALE (INLINE-BLOCK WITH AUTO MARGIN PREVENTS NEGATIVE CLIPPING) */}
-              <div 
-                style={{ 
-                  display: 'inline-block',
-                  width: `${210 * previewZoom}mm`, 
-                  minHeight: `${297 * previewZoom}mm`,
-                  margin: '0 auto',
-                  textAlign: 'left',
-                  position: 'relative',
-                  transition: 'width 0.1s ease, min-height 0.1s ease'
-                }}
-              >
-                
-                {/* EXACT PHYSICAL 210mm A4 SHEET (NEVER SQUEEZES TEXT, IDENTICAL TO PDF) */}
-                <div 
-                  ref={previewRef}
-                  id="cv-preview-sheet" 
-                  className="bg-white text-black select-text shadow-2xl rounded-sm"
-                  style={{ 
-                    width: '210mm',
-                    minHeight: '297mm',
-                    padding: '12mm 15mm',
-                    transform: `scale(${previewZoom})`,
-                    transformOrigin: 'top left',
-                    fontFamily: "'Times New Roman', Times, serif",
-                    backgroundColor: '#ffffff',
-                    color: '#000000',
-                    boxSizing: 'border-box'
-                  }}
-                >
-                  
-                  {/* HEADER (NAME + CONTACT LINKS) */}
-                  <div style={{ textAlign: 'center', paddingBottom: '2px' }}>
-                    <h1 style={{ 
-                      fontSize: '18pt', 
-                      fontWeight: 'bold', 
-                      textTransform: 'uppercase', 
-                      letterSpacing: '1px', 
-                      color: '#000000', 
-                      fontFamily: 'Arial, Helvetica, sans-serif',
-                      lineHeight: '1.2',
-                      margin: 0
-                    }}>
-                      {cvSections.fullName || 'Nume Prenume'}
-                    </h1>
-                    <div style={{ 
-                      fontSize: '8.5pt', 
-                      color: '#222222', 
-                      display: 'flex', 
-                      flexWrap: 'wrap', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      gap: '4px 6px', 
-                      marginTop: '4px',
-                      fontFamily: 'Arial, Helvetica, sans-serif'
-                    }}>
-                      {cvSections.email && <span>{cvSections.email}</span>}
-                      {cvSections.phone && <span>| {cvSections.phone}</span>}
-                      {cvSections.location && <span>| {cvSections.location}</span>}
-                      {cvSections.linkedin && <span>| {cvSections.linkedin}</span>}
-                      {cvSections.github && <span>| {cvSections.github}</span>}
-                    </div>
-                  </div>
-
-                  {/* SUMMARY */}
-                  {cvSections.summary && (
-                    <div style={{ marginTop: '12px', marginBottom: '4px' }}>
-                      <div style={{ 
-                        fontWeight: 'bold', 
-                        fontSize: '9.5pt', 
-                        textTransform: 'uppercase', 
-                        letterSpacing: '0.8px', 
-                        color: '#000000', 
-                        fontFamily: 'Arial, Helvetica, sans-serif',
-                        lineHeight: '1.2'
-                      }}>
-                        Professional Summary
-                      </div>
-                      <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
-                      <p style={{ fontSize: '9pt', color: '#000000', textAlign: 'justify', lineHeight: '1.35', fontFamily: 'Arial, Helvetica, sans-serif', margin: 0 }}>
-                        {cvSections.summary}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* EDUCATION */}
-                  {eduList.length > 0 && (
-                    <div style={{ marginTop: '12px', marginBottom: '4px' }}>
-                      <div style={{ 
-                        fontWeight: 'bold', 
-                        fontSize: '9.5pt', 
-                        textTransform: 'uppercase', 
-                        letterSpacing: '0.8px', 
-                        color: '#000000', 
-                        fontFamily: 'Arial, Helvetica, sans-serif',
-                        lineHeight: '1.2'
-                      }}>
-                        Education
-                      </div>
-                      <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
-                      {eduList.map((edu, idx) => (
-                        <div key={idx} style={{ marginTop: idx > 0 ? '5px' : '2px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
-                            <span>{edu.school || 'Universitate / Scoala'}</span>
-                            <span>{edu.location || ''}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontStyle: 'italic', fontSize: '8.5pt', color: '#222222' }}>
-                            <span>{edu.degree || 'Diploma / Specializare'}</span>
-                            <span>{edu.period || ''}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* WORK EXPERIENCE */}
-                  {cvSections.workExperience.length > 0 && (
-                    <div style={{ marginTop: '12px', marginBottom: '4px' }}>
-                      <div style={{ 
-                        fontWeight: 'bold', 
-                        fontSize: '9.5pt', 
-                        textTransform: 'uppercase', 
-                        letterSpacing: '0.8px', 
-                        color: '#000000', 
-                        fontFamily: 'Arial, Helvetica, sans-serif',
-                        lineHeight: '1.2'
-                      }}>
-                        Work Experience
-                      </div>
-                      <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
-                      {cvSections.workExperience.map((exp, idx) => (
-                        <div key={idx} style={{ marginTop: idx > 0 ? '6px' : '2px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
-                            <span>{exp.company || 'Companie'}</span>
-                            <span>{exp.location || ''}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontStyle: 'italic', fontSize: '8.5pt', color: '#222222' }}>
-                            <span>{exp.role || 'Rol'}</span>
-                            <span>{exp.period || ''}</span>
-                          </div>
-                          {exp.bullets && exp.bullets.length > 0 && (
-                            <div style={{ marginTop: '3px' }}>
-                              {exp.bullets.filter(Boolean).map((b, bIdx) => (
-                                <div key={bIdx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '2px' }}>
-                                  <span style={{ display: 'inline-block', width: '14px', fontSize: '9pt', lineHeight: '1.3', color: '#000000', flexShrink: 0, textAlign: 'center' }}>•</span>
-                                  <span style={{ flex: 1, fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}>{b}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* PERSONAL PROJECTS */}
-                  {cvSections.projects.length > 0 && (
-                    <div style={{ marginTop: '12px', marginBottom: '4px' }}>
-                      <div style={{ 
-                        fontWeight: 'bold', 
-                        fontSize: '9.5pt', 
-                        textTransform: 'uppercase', 
-                        letterSpacing: '0.8px', 
-                        color: '#000000', 
-                        fontFamily: 'Arial, Helvetica, sans-serif',
-                        lineHeight: '1.2'
-                      }}>
-                        Personal Projects
-                      </div>
-                      <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
-                      {cvSections.projects.map((proj, idx) => (
-                        <div key={idx} style={{ marginTop: idx > 0 ? '6px' : '2px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '9.5pt', color: '#000000' }}>
-                            <span>{proj.title || 'Titlu Proiect'}</span>
-                            <span style={{ fontWeight: 'normal', fontSize: '8.5pt', fontStyle: 'italic', color: '#333333' }}>{proj.techStack || ''}</span>
-                          </div>
-                          {proj.bullets && proj.bullets.length > 0 && (
-                            <div style={{ marginTop: '3px' }}>
-                              {proj.bullets.filter(Boolean).map((b, bIdx) => (
-                                <div key={bIdx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '2px' }}>
-                                  <span style={{ display: 'inline-block', width: '14px', fontSize: '9pt', lineHeight: '1.3', color: '#000000', flexShrink: 0, textAlign: 'center' }}>•</span>
-                                  <span style={{ flex: 1, fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}>{b}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* TECHNICAL SKILLS */}
-                  {(cvSections.skills.languages || cvSections.skills.frameworks || cvSections.skills.databases || cvSections.skills.devops) && (
-                    <div style={{ marginTop: '12px', marginBottom: '4px' }}>
-                      <div style={{ 
-                        fontWeight: 'bold', 
-                        fontSize: '9.5pt', 
-                        textTransform: 'uppercase', 
-                        letterSpacing: '0.8px', 
-                        color: '#000000', 
-                        fontFamily: 'Arial, Helvetica, sans-serif',
-                        lineHeight: '1.2'
-                      }}>
-                        Technical Skills
-                      </div>
-                      <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '3px', marginBottom: '5px' }}></div>
-                      <div style={{ marginTop: '3px', fontSize: '8.5pt', color: '#000000', lineHeight: '1.4' }}>
-                        {cvSections.skills.languages && (
-                          <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Languages:</span> {cvSections.skills.languages}</p>
-                        )}
-                        {cvSections.skills.frameworks && (
-                          <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Frameworks:</span> {cvSections.skills.frameworks}</p>
-                        )}
-                        {cvSections.skills.databases && (
-                          <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>Databases:</span> {cvSections.skills.databases}</p>
-                        )}
-                        {cvSections.skills.devops && (
-                          <p style={{ margin: '1.5px 0' }}><span style={{ fontWeight: 'bold' }}>DevOps & Tools:</span> {cvSections.skills.devops}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
+                <div>
+                  <h3 className="text-base font-black text-white">Pipeline AI cu 2 Agenți Groq (Match 100%)</h3>
+                  <p className="text-[11px] text-gray-400">Analiză diferențe ATS + Rescriere completă a experienței candidatului</p>
                 </div>
               </div>
+              <button onClick={() => setShowAiModal(false)} className="p-1 text-gray-400 hover:text-white rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* TARGET JOB AI OPTIMIZATION ACCORDION */}
-            <div className="glass-card p-4 rounded-2xl border border-purple-500/30 space-y-3">
-              <h4 className="text-xs font-black text-white flex items-center gap-2">
-                <Target className="w-4 h-4 text-blue-400" />
-                Optimizare AI ATS Match 100% pentru un Job Tinta
-              </h4>
-              
+            {/* SELECTION ROW */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               {applications.length > 0 && (
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 mb-1">Selecteaza jobul din pipeline:</label>
+                  <label className="block text-[10px] font-bold text-gray-400 mb-1">Selectează Jobul din Tracker:</label>
                   <select 
                     value={selectedJobId}
                     onChange={e => setSelectedJobId(e.target.value)}
-                    className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-xs text-white"
                   >
                     {applications.map(app => (
-                      <option key={app.id} value={app.id}>
-                        {app.jobTitle} la {app.companyName}
-                      </option>
+                      <option key={app.id} value={app.id}>{app.jobTitle} la {app.companyName}</option>
                     ))}
                   </select>
                 </div>
               )}
 
-              <button
-                onClick={handleRunTwoAgentPipeline}
-                disabled={isAnalyzing}
-                className="w-full py-2.5 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    Analiza AI in desfasurare...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 text-amber-300" />
-                    Ruleaza Analiza AI Match 100%
-                  </>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 mb-1">Sau introdu cerințe job personalizate:</label>
+                <input 
+                  type="text" 
+                  placeholder="ex: Java 21, Spring Boot, Microservices, Kubernetes, Redis"
+                  value={customJobDescription}
+                  onChange={e => setCustomJobDescription(e.target.value)}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-xs text-white"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleRunTwoAgentPipeline}
+              disabled={isAnalyzing}
+              className="w-full py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-black text-xs rounded-xl shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition disabled:opacity-60"
+            >
+              {isAnalyzing ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin text-amber-300" />
+                  Se rulează Agent 1 (Gap Analyzer) & Agent 2 (Groq LLM Rewriter)...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  Rulează Analiza și Rescrierea AI (Groq Live)
+                </>
+              )}
+            </button>
+
+            {/* RESULTS ROW */}
+            {(agent1Output || agent2Output) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                {/* AGENT 1 CARD */}
+                {agent1Output && (
+                  <div className="p-4 bg-gray-950/80 rounded-2xl border border-blue-500/30 space-y-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-blue-400 flex items-center gap-1.5">
+                        <Target className="w-4 h-4" /> Agent 1: Gap Analyzer
+                      </span>
+                      <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded font-mono font-bold text-[10px]">
+                        Scor: 100%
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                        <span className="text-[10px] font-bold text-emerald-400 block">Skill-uri Match:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {agent1Output.matchingSkills.map(s => (
+                            <span key={s} className="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-bold">{s}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 bg-rose-500/10 rounded-xl border border-rose-500/20">
+                        <span className="text-[10px] font-bold text-rose-400 block">Cuvinte Cheie de Adăugat:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {agent1Output.missingSkills.map(s => (
+                            <span key={s} className="text-[9px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded font-bold">{s}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
-              </button>
-            </div>
 
-          </div>
-        )}
-
-      </div>
-
-      {/* SECTION: DUAL AGENT PIPELINE OUTPUT CARDS */}
-      {(agent1Output || agent2Output || isAnalyzing) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* AGENT 1: ATS GAP ANALYZER REPORT */}
-          <div className="glass-card p-5 rounded-2xl border border-blue-500/30 space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-black text-blue-400 flex items-center gap-2 uppercase tracking-wider">
-                <Target className="w-4 h-4" /> Agent 1: ATS Gap Analyzer (Analiza Diferente)
-              </h4>
-              {agent1Output && (
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-extrabold text-xs border border-blue-500/40">
-                  Target Match: 100%
-                </span>
-              )}
-            </div>
-
-            {agent1Output ? (
-              <div className="space-y-3 text-xs">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-1">
-                    <span className="text-[11px] font-extrabold text-emerald-400 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Skill-uri Prezente:
-                    </span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {agent1Output.matchingSkills.map(s => (
-                        <span key={s} className="text-[9px] font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">{s}</span>
-                      ))}
+                {/* AGENT 2 CARD */}
+                {agent2Output && (
+                  <div className="p-4 bg-gray-950/80 rounded-2xl border border-purple-500/30 space-y-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-purple-400 flex items-center gap-1.5">
+                        <BrainCircuit className="w-4 h-4" /> Agent 2: CV Rewriter (100%)
+                      </span>
+                      <button
+                        onClick={handleApplyAiOptimizations}
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-[10px] flex items-center gap-1 shadow transition"
+                      >
+                        <Check className="w-3 h-3" /> Aplică direct în CV
+                      </button>
                     </div>
+
+                    {agent2Output.tailoredSummary && (
+                      <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20 space-y-1">
+                        <span className="text-[10px] font-bold text-purple-300">Summary Re-scris:</span>
+                        <p className="text-[11px] text-gray-200 italic">{agent2Output.tailoredSummary}</p>
+                      </div>
+                    )}
+
+                    {agent2Output.tailoredProjects?.[0]?.bullets?.length > 0 && (
+                      <div className="p-2.5 bg-gray-900/60 rounded-xl border border-gray-800 space-y-1 max-h-36 overflow-y-auto">
+                        <span className="text-[10px] font-bold text-amber-400">Bullet-uri Metoda XYZ:</span>
+                        {agent2Output.tailoredProjects[0].bullets.map((b, idx) => (
+                          <p key={idx} className="text-[10px] text-gray-300 flex items-start gap-1">
+                            <span className="text-purple-400">•</span> <span>{b}</span>
+                          </p>
+                        ))}
+                      </div>
+                    )}
                   </div>
-
-                  <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl space-y-1">
-                    <span className="text-[11px] font-extrabold text-rose-400 flex items-center gap-1">
-                      <AlertTriangle className="w-3.5 h-3.5" /> Recomandat de adaugat:
-                    </span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {agent1Output.missingSkills.map(s => (
-                        <span key={s} className="text-[9px] font-bold bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded">{s}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-gray-950/80 rounded-xl border border-gray-800 max-h-52 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap font-sans text-xs text-gray-300 leading-relaxed">
-                    {agent1Output.actionPlan}
-                  </pre>
-                </div>
-              </div>
-            ) : (
-              <div className="p-8 text-center text-xs text-gray-500 italic">
-                <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-400" />
-                Agent 1 analizeaza diferentele dintre CV si cerintele jobului...
-              </div>
-            )}
-          </div>
-
-          {/* AGENT 2: AUTOMATED CV REWRITER FOR 100% MATCH */}
-          <div className="glass-card p-5 rounded-2xl border border-purple-500/30 space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-black text-purple-400 flex items-center gap-2 uppercase tracking-wider">
-                <BrainCircuit className="w-4 h-4" /> Agent 2: Rewriter CV Autonom (Match 100%)
-              </h4>
-              {agent2Output && (
-                <div className="flex items-center gap-1.5">
-                  <button 
-                    onClick={handleApplyAiOptimizations}
-                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow-md transition"
-                    title="Transfera automat noul summary, skill-urile si gloantele rescrise direct in CV"
-                  >
-                    <Check className="w-3.5 h-3.5" /> Aplica in CV
-                  </button>
-                  <button 
-                    onClick={handleDownloadDirectPdf}
-                    className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow-md transition"
-                  >
-                    <Download className="w-3.5 h-3.5" /> Descarca PDF
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {agent2Output ? (
-              <div className="space-y-3 text-xs">
-                <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl space-y-1">
-                  <span className="text-[11px] font-extrabold text-purple-300">Summary Re-scris pentru 100% ATS:</span>
-                  <p className="text-[11px] text-gray-200 italic mt-1">{agent2Output.tailoredSummary}</p>
-                </div>
-
-                <div className="p-3.5 bg-gray-950/80 rounded-xl border border-gray-800 max-h-44 overflow-y-auto space-y-1.5">
-                  <span className="text-[11px] font-extrabold text-amber-400">Gloante Proiecte Re-scrise (Metoda XYZ):</span>
-                  {agent2Output.tailoredProjects.length > 0 && agent2Output.tailoredProjects[0].bullets.map((b, idx) => (
-                    <p key={idx} className="text-[11px] text-gray-300 flex items-start gap-1.5">
-                      <span className="text-purple-400">•</span>
-                      <span>{b}</span>
-                    </p>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="p-8 text-center text-xs text-gray-500 italic">
-                {isAnalyzing ? (
-                  <>
-                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-purple-400" />
-                    Agent 2 rescrie sectiunile CV-ului pentru a obtine scorul de 100%...
-                  </>
-                ) : (
-                  "Apasa pe 'Ruleaza Analiza AI Match 100%' pentru a genera noul CV optimizat."
                 )}
               </div>
             )}
           </div>
-
         </div>
       )}
 
