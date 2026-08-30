@@ -187,6 +187,7 @@ export default function CvStudio({ applications = [], currentUser }) {
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
   
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [pdfCustomName, setPdfCustomName] = useState(() => (contactData?.fullName || 'Resume').trim().replace(/\s+/g, '_') + '_ATS');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [parsingPdf, setParsingPdf] = useState(false);
   const [parsedPdfSuccess, setParsedPdfSuccess] = useState(null);
@@ -700,7 +701,8 @@ export default function CvStudio({ applications = [], currentUser }) {
     setIsDownloadingPdf(true);
 
     try {
-      const sanitizedName = (contactData.fullName || 'CV').trim().replace(/\s+/g, '_');
+      const sanitizedName = (pdfCustomName || contactData.fullName || 'Resume').trim().replace(/\s+/g, '_');
+      const finalFileName = sanitizedName.toLowerCase().endsWith('.pdf') ? sanitizedName : `${sanitizedName}.pdf`;
       
       const currentTransform = element.style.transform;
       element.style.transform = 'none';
@@ -711,7 +713,7 @@ export default function CvStudio({ applications = [], currentUser }) {
 
       const opt = {
         margin: [0, 0, 0, 0],
-        filename: `${sanitizedName}_Resume_ATS.pdf`,
+        filename: finalFileName,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
           scale: 2.5, 
@@ -785,15 +787,27 @@ export default function CvStudio({ applications = [], currentUser }) {
               <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
             </label>
 
-            {/* DOWNLOAD PDF BUTTON */}
-            <button
-              onClick={handleDownloadDirectPdf}
-              disabled={isDownloadingPdf}
-              className="px-4 py-1.5 bg-black hover:bg-neutral-800 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition disabled:opacity-60 cursor-pointer"
-            >
-              {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-              {isDownloadingPdf ? 'Generare...' : 'Descarcă PDF'}
-            </button>
+            {/* DOWNLOAD PDF WITH EDITABLE FILENAME */}
+            <div className="flex items-center bg-gray-50 border border-gray-300 rounded-lg pl-2.5 pr-1 py-1 shadow-2xs">
+              <input 
+                type="text" 
+                value={pdfCustomName} 
+                onChange={e => setPdfCustomName(e.target.value)} 
+                title="Editează numele fișierului PDF descărcat"
+                placeholder="Nume fișier PDF..." 
+                className="bg-transparent text-xs text-gray-900 outline-none w-28 sm:w-36 font-medium placeholder-gray-400" 
+              />
+              <span className="text-gray-400 text-xs mr-1.5 font-mono select-none">.pdf</span>
+              <button
+                onClick={handleDownloadDirectPdf}
+                disabled={isDownloadingPdf}
+                className="px-3 py-1 bg-black hover:bg-neutral-800 text-white rounded-md font-bold text-xs flex items-center gap-1.5 shadow-sm transition disabled:opacity-60 cursor-pointer shrink-0"
+                title="Descarcă CV-ul în format PDF"
+              >
+                {isDownloadingPdf ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+                {isDownloadingPdf ? 'Generare...' : 'Descarcă'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1037,7 +1051,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                           </div>
 
                           <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
-                            {/* DATES WITH VISIBLE PLACEHOLDER IF EMPTY */}
+                            {/* DATES */}
                             <span
                               contentEditable={true}
                               suppressContentEditableWarning={true}
@@ -1046,12 +1060,10 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[eduIdx].period = e.currentTarget.textContent || "";
                                 setEducationList(updated);
                               }}
-                              className={`text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block ${
-                                !edu.period ? 'text-gray-400 italic' : 'text-black'
-                              }`}
+                              className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
                               style={{ fontSize: '9pt' }}
                             >
-                              {edu.period || "Dates"}
+                              {edu.period || ""}
                             </span>
 
                             {/* DIRECT SINGLE DELETE BUTTON */}
@@ -1223,7 +1235,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                           </div>
 
                           <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
-                            {/* DATES WITH VISIBLE PLACEHOLDER IF EMPTY */}
+                            {/* DATES */}
                             <span
                               contentEditable={true}
                               suppressContentEditableWarning={true}
@@ -1232,12 +1244,10 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[expIdx].period = e.currentTarget.textContent || "";
                                 setExperienceList(updated);
                               }}
-                              className={`text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block ${
-                                !exp.period ? 'text-gray-400 italic' : 'text-black'
-                              }`}
+                              className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
                               style={{ fontSize: '9pt' }}
                             >
-                              {exp.period || "Dates"}
+                              {exp.period || ""}
                             </span>
 
                             {/* DIRECT SINGLE DELETE BUTTON */}
@@ -1469,7 +1479,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                             </button>
                           </div>
 
-                          {/* DATES WITH PLACEHOLDER */}
+                          {/* DATES */}
                           <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
                             <span
                               contentEditable={true}
@@ -1479,12 +1489,10 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[projIdx].period = e.currentTarget.textContent || "";
                                 setProjectsList(updated);
                               }}
-                              className={`text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block ${
-                                !proj.period ? 'text-gray-400 italic' : 'text-black'
-                              }`}
+                              className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
                               style={{ fontSize: '9pt' }}
                             >
-                              {proj.period || "Dates"}
+                              {proj.period || ""}
                             </span>
 
                             {/* DIRECT SINGLE DELETE BUTTON */}
@@ -1646,7 +1654,7 @@ export default function CvStudio({ applications = [], currentUser }) {
                           </div>
 
                           <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
-                            {/* DATES WITH PLACEHOLDER */}
+                            {/* DATES */}
                             <span
                               contentEditable={true}
                               suppressContentEditableWarning={true}
@@ -1655,12 +1663,10 @@ export default function CvStudio({ applications = [], currentUser }) {
                                 updated[certIdx].period = e.currentTarget.textContent || "";
                                 setCertificationsList(updated);
                               }}
-                              className={`text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block ${
-                                !cert.period ? 'text-gray-400 italic' : 'text-black'
-                              }`}
+                              className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
                               style={{ fontSize: '9pt' }}
                             >
-                              {cert.period || "Dates"}
+                              {cert.period || ""}
                             </span>
 
                             {/* DIRECT SINGLE DELETE BUTTON */}
