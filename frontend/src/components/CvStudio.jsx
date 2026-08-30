@@ -815,10 +815,10 @@ export default function CvStudio({ applications = [], currentUser }) {
         )}
       </div>
 
-      {/* ================= A4 DOCUMENT WORKBENCH ================= */}
+      {/* ================= A4 DOCUMENT WORKBENCH (CLEAN, DIRECT DOCUMENT FRAMING) ================= */}
       <div 
         ref={workbenchRef}
-        className="w-full bg-slate-950/90 p-4 sm:p-8 rounded-3xl border border-gray-800 overflow-x-auto overflow-y-auto max-h-[90vh] shadow-2xl text-center"
+        className="w-full flex justify-center py-4 overflow-x-auto text-center"
       >
         <div 
           style={{ 
@@ -831,11 +831,11 @@ export default function CvStudio({ applications = [], currentUser }) {
             transition: 'width 0.1s ease, min-height 0.1s ease'
           }}
         >
-          {/* EXACT PHYSICAL 210mm A4 SHEET */}
+          {/* EXACT PHYSICAL 210mm A4 SHEET (CLEAN WHITE CARD WITH ROUNDED CORNERS & SHADOW) */}
           <div 
             ref={previewRef}
             id="cv-preview-sheet" 
-            className="bg-white text-black shadow-2xl rounded-sm transition-all"
+            className="bg-white text-black shadow-2xl rounded-2xl border border-gray-200/90 transition-all"
             style={{ 
               width: '210mm',
               minHeight: '297mm',
