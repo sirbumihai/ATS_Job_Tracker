@@ -124,6 +124,7 @@ public class ApplicationService {
             CvProfile cv = cvProfileRepository.findById(cvProfileId)
                     .orElseThrow(() -> new ResourceNotFoundException("Profilul CV nu a fost gasit."));
             app.setCvProfile(cv);
+            app.setResume(null);
 
             if (app.getJobPosting() != null && app.getJobPosting().getRawDescription() != null) {
                 BigDecimal score = calculateMatchScoreFromText(app.getJobPosting().getRawDescription(), buildCvProfileText(cv));
@@ -146,6 +147,7 @@ public class ApplicationService {
             Resume resume = resumeRepository.findById(resumeId)
                     .orElseThrow(() -> new ResourceNotFoundException("Fisierul Resume nu a fost gasit."));
             app.setResume(resume);
+            app.setCvProfile(null);
 
             if (app.getJobPosting() != null) {
                 BigDecimal score = calculateMultiCriteriaMatchScore(app.getJobPosting(), resume);

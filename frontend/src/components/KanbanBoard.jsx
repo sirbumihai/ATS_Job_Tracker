@@ -37,27 +37,33 @@ export default function KanbanBoard({
   const [draggedAppId, setDraggedAppId] = useState(null);
   const [dragOverColumnKey, setDragOverColumnKey] = useState(null);
   const [cvList, setCvList] = useState([]);
+  const [uploadedResumes, setUploadedResumes] = useState([]);
   const [attachingCvAppId, setAttachingCvAppId] = useState(null);
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
 
-  // LOAD USER'S SAVED CVS FOR SELECTION
-  const fetchCvProfiles = async () => {
+  // LOAD USER'S SAVED CVS AND UPLOADED RESUMES FOR SELECTION
+  const fetchCvProfilesAndResumes = async () => {
     try {
-      const res = await fetch('/api/v1/cv/list', {
-        headers: { 'X-User-Id': activeUserId }
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const [cvRes, resRes] = await Promise.all([
+        fetch('/api/v1/cv/list', { headers: { 'X-User-Id': activeUserId } }),
+        fetch('/api/v1/resumes/user', { headers: { 'X-User-Id': activeUserId } })
+      ]);
+      if (cvRes.ok) {
+        const data = await cvRes.json();
         setCvList(Array.isArray(data) ? data : []);
       }
+      if (resRes.ok) {
+        const rData = await resRes.json();
+        setUploadedResumes(Array.isArray(rData) ? rData : []);
+      }
     } catch (err) {
-      console.error('Eroare la incarcarea listei de CV-uri in Kanban:', err);
+      console.error('Eroare la incarcarea CV-urilor in Kanban:', err);
     }
   };
 
   useEffect(() => {
-    fetchCvProfiles();
+    fetchCvProfilesAndResumes();
   }, [activeUserId]);
 
   const kanbanColumns = [
@@ -142,6 +148,25 @@ export default function KanbanBoard({
       }
     } catch (err) {
       console.error('Eroare la asocierea CV-ului:', err);
+    } finally {
+      setAttachingCvAppId(null);
+    }
+  };
+
+  // ATTACH UPLOADED RESUME FILE HANDLER
+  const handleAttachResume = async (appId, resumeId) => {
+    if (!resumeId) return;
+    setAttachingCvAppId(appId);
+    try {
+      const res = await fetch(`/api/v1/applications/${appId}/resume/${resumeId}`, {
+        method: 'PATCH'
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        if (onApplicationUpdated) onApplicationUpdated(updated);
+      }
+    } catch (err) {
+      console.error('Eroare la asocierea fisierului de CV:', err);
     } finally {
       setAttachingCvAppId(null);
     }
@@ -367,20 +392,39 @@ export default function KanbanBoard({
                           <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-lg border border-gray-200 text-xs">
                             <FileText className="w-3.5 h-3.5 text-gray-500 shrink-0" />
                             <select
-                              value={app.cvProfileId || ''}
-                              onChange={(e) => handleAttachCvProfile(app.id, e.target.value)}
+                              value={app.cvProfileId ? `CV_${app.cvProfileId}` : (app.resumeId ? `RESUME_${app.resumeId}` : '')}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (!val) return;
+                                if (val.startsWith('CV_')) {
+                                  handleAttachCvProfile(app.id, val.replace('CV_', ''));
+                                } else if (val.startsWith('RESUME_')) {
+                                  handleAttachResume(app.id, val.replace('RESUME_', ''));
+                                }
+                              }}
                               disabled={attachingCvAppId === app.id}
                               className="bg-transparent text-gray-900 font-semibold outline-none cursor-pointer w-full text-[11px] truncate"
-                              title="Alege CV-ul dorit pentru această aplicație"
+                              title="Alege CV-ul sau fișierul dorit pentru această aplicație"
                             >
-                              <option value="">
-                                {app.resumeFileName ? `Fișier: ${app.resumeFileName}` : '-- Selectează CV --'}
-                              </option>
-                              {cvList.map((cv) => (
-                                <option key={cv.id} value={cv.id}>
-                                  {cv.title} {cv.isPrimary ? '(⭐ Principal)' : ''}
-                                </option>
-                              ))}
+                              <option value="">-- Alege CV sau Fișier --</option>
+                              {cvList.length > 0 && (
+                                <optgroup label="CV-uri Create în Studio">
+                                  {cvList.map((cv) => (
+                                    <option key={cv.id} value={`CV_${cv.id}`}>
+                                      {cv.title} {cv.isPrimary ? '(⭐ Principal)' : ''}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
+                              {uploadedResumes.length > 0 && (
+                                <optgroup label="Fișiere CV Încărcate">
+                                  {uploadedResumes.map((r) => (
+                                    <option key={r.id} value={`RESUME_${r.id}`}>
+                                      Fișier: {r.fileName}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
                             </select>
                           </div>
                         </div>
@@ -502,23 +546,42 @@ export default function KanbanBoard({
 
                         {/* 4. CV ASOCIAT DROPDOWN */}
                         <td className="py-4 px-4">
-                          <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-200 max-w-[200px]">
+                          <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-200 max-w-[220px]">
                             <FileText className="w-3.5 h-3.5 text-gray-500 shrink-0" />
                             <select
-                              value={app.cvProfileId || ''}
-                              onChange={(e) => handleAttachCvProfile(app.id, e.target.value)}
+                              value={app.cvProfileId ? `CV_${app.cvProfileId}` : (app.resumeId ? `RESUME_${app.resumeId}` : '')}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (!val) return;
+                                if (val.startsWith('CV_')) {
+                                  handleAttachCvProfile(app.id, val.replace('CV_', ''));
+                                } else if (val.startsWith('RESUME_')) {
+                                  handleAttachResume(app.id, val.replace('RESUME_', ''));
+                                }
+                              }}
                               disabled={attachingCvAppId === app.id}
                               className="bg-transparent text-gray-900 font-semibold outline-none cursor-pointer w-full text-xs truncate"
-                              title="Alege CV-ul asociat pentru această aplicație"
+                              title="Alege CV-ul sau fișierul asociat pentru această aplicație"
                             >
-                              <option value="">
-                                {app.resumeFileName ? `Fișier: ${app.resumeFileName}` : '-- Alege CV --'}
-                              </option>
-                              {cvList.map((cv) => (
-                                <option key={cv.id} value={cv.id}>
-                                  {cv.title} {cv.isPrimary ? '(⭐ Principal)' : ''}
-                                </option>
-                              ))}
+                              <option value="">-- Alege CV sau Fișier --</option>
+                              {cvList.length > 0 && (
+                                <optgroup label="CV-uri Create în Studio">
+                                  {cvList.map((cv) => (
+                                    <option key={cv.id} value={`CV_${cv.id}`}>
+                                      {cv.title} {cv.isPrimary ? '(⭐ Principal)' : ''}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
+                              {uploadedResumes.length > 0 && (
+                                <optgroup label="Fișiere CV Încărcate">
+                                  {uploadedResumes.map((r) => (
+                                    <option key={r.id} value={`RESUME_${r.id}`}>
+                                      Fișier: {r.fileName}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
                             </select>
                             {app.cvProfileId && onEditCvInStudio && (
                               <button

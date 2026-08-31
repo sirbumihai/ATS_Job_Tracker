@@ -53,6 +53,14 @@ public class ResumeService {
         return mapToResponse(resume, profile);
     }
 
+    @Transactional(readOnly = true)
+    public java.util.List<ResumeResponse> getUserResumes(UUID userId) {
+        return resumeRepository.findByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(r -> mapToResponse(r, null))
+                .toList();
+    }
+
     private ResumeResponse mapToResponse(Resume resume, CvProfileDto parsedProfile) {
         String snippet = resume.getRawText() != null && resume.getRawText().length() > 200 
                 ? resume.getRawText().substring(0, 200) + "..." 

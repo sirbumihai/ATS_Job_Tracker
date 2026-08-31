@@ -615,6 +615,9 @@ export default function CvStudio({
             try { return str ? (typeof str === 'string' ? JSON.parse(str) : str) : fallback; } catch (e) { return fallback; }
           };
 
+          if (p.title) setCvTitle(p.title);
+          if (p.id) setCurrentCvId(p.id);
+
           setContactData(prev => ({
             ...prev,
             fullName: p.fullName || prev.fullName,
@@ -635,9 +638,34 @@ export default function CvStudio({
 
           const parsedProj = safeParse(p.projectsJson, []);
           if (Array.isArray(parsedProj) && parsedProj.length > 0) setProjectsList(parsedProj);
+
+          if (p.skillsLanguages || p.skillsFrameworks || p.skillsDevops || p.skillsDatabases) {
+            setSkillsFields([
+              {
+                id: 'languages',
+                label: 'Languages',
+                items: p.skillsLanguages ? p.skillsLanguages.split(',').map(s => s.trim()).filter(Boolean) : ['Java', 'TypeScript', 'Python', 'C/C++']
+              },
+              {
+                id: 'frameworks',
+                label: 'Frameworks',
+                items: p.skillsFrameworks ? p.skillsFrameworks.split(',').map(s => s.trim()).filter(Boolean) : ['Spring Boot', 'React', 'Next.js']
+              },
+              {
+                id: 'developer_tools',
+                label: 'Developer Tools',
+                items: p.skillsDevops ? p.skillsDevops.split(',').map(s => s.trim()).filter(Boolean) : ['Docker', 'Git', 'Linux', 'CI/CD']
+              },
+              {
+                id: 'libraries',
+                label: 'Libraries',
+                items: p.skillsDatabases ? p.skillsDatabases.split(',').map(s => s.trim()).filter(Boolean) : ['PostgreSQL', 'Redis', 'Tailwind']
+              }
+            ]);
+          }
         }
-        setParsedPdfSuccess(`CV-ul "${file.name}" a fost importat si completat direct pe pagina!`);
-        setTimeout(() => setParsedPdfSuccess(null), 5000);
+        setParsedPdfSuccess(`CV-ul "${file.name}" a fost importat, structurat pe șablonul Jake Resume și poate fi editat live!`);
+        setTimeout(() => setParsedPdfSuccess(null), 6000);
       }
     } catch (err) {
       console.error("Eroare la incarcarea PDF-ului:", err);

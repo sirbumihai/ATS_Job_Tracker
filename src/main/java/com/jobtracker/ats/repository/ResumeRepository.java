@@ -13,6 +13,7 @@ import java.util.UUID;
 public interface ResumeRepository extends JpaRepository<Resume, UUID> {
     List<Resume> findByUserId(UUID userId);
     List<Resume> findByUserIdOrderByCreatedAtAsc(UUID userId);
+    List<Resume> findByUserIdOrderByCreatedAtDesc(UUID userId);
 
     @Query(value = """
         SELECT (1.0 - (r.text_embedding <=> j.description_embedding)) * 100.0

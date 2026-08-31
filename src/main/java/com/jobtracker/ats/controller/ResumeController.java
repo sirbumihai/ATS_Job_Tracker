@@ -27,6 +27,13 @@ public class ResumeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping("/user")
+    public ResponseEntity<java.util.List<ResumeResponse>> getUserResumes(
+            @RequestHeader("X-User-Id") UUID userId) {
+        java.util.List<ResumeResponse> response = resumeService.getUserResumes(userId);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ResumeResponse> getResumeById(@PathVariable UUID id) {
         ResumeResponse response = resumeService.getResumeById(id);
