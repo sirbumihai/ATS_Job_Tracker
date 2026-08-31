@@ -27,6 +27,7 @@ export default function CvLibrary({
   const [creatingNew, setCreatingNew] = useState(false);
   const [newCvTitle, setNewCvTitle] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [actionMessage, setActionMessage] = useState(null);
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
 
