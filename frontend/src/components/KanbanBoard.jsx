@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, 
   Sparkles, 
@@ -11,11 +11,10 @@ import {
   Trash2, 
   Columns, 
   List,
+  Edit3,
   CheckCircle2,
   Clock,
-  Send,
-  XCircle,
-  HelpCircle
+  ExternalLink
 } from 'lucide-react';
 
 export default function KanbanBoard({ 
@@ -27,7 +26,9 @@ export default function KanbanBoard({
   analyzingAppId,
   onUpdateStatus,
   onStatusChange,
-  onDeleteApplication
+  onDeleteApplication,
+  onApplicationUpdated,
+  onEditCvInStudio
 }) {
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,6 +36,29 @@ export default function KanbanBoard({
   const [mobileSelectedColumn, setMobileSelectedColumn] = useState('SAVED');
   const [draggedAppId, setDraggedAppId] = useState(null);
   const [dragOverColumnKey, setDragOverColumnKey] = useState(null);
+  const [cvList, setCvList] = useState([]);
+  const [attachingCvAppId, setAttachingCvAppId] = useState(null);
+
+  const activeUserId = currentUser?.id || '00000000-0000-0000-0000-000000000001';
+
+  // LOAD USER'S SAVED CVS FOR SELECTION
+  const fetchCvProfiles = async () => {
+    try {
+      const res = await fetch('/api/v1/cv/list', {
+        headers: { 'X-User-Id': activeUserId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCvList(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Eroare la incarcarea listei de CV-uri in Kanban:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCvProfiles();
+  }, [activeUserId]);
 
   const kanbanColumns = [
     { key: 'SAVED', title: 'Salvate', label: 'Salvat' },
@@ -101,6 +125,25 @@ export default function KanbanBoard({
     const updateHandler = onUpdateStatus || onStatusChange;
     if (updateHandler) {
       updateHandler(appId, newStatus);
+    }
+  };
+
+  // ATTACH CV PROFILE HANDLER
+  const handleAttachCvProfile = async (appId, cvProfileId) => {
+    if (!cvProfileId) return;
+    setAttachingCvAppId(appId);
+    try {
+      const res = await fetch(`/api/v1/applications/${appId}/cv/${cvProfileId}`, {
+        method: 'PATCH'
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        if (onApplicationUpdated) onApplicationUpdated(updated);
+      }
+    } catch (err) {
+      console.error('Eroare la asocierea CV-ului:', err);
+    } finally {
+      setAttachingCvAppId(null);
     }
   };
 
@@ -193,14 +236,14 @@ export default function KanbanBoard({
           </h2>
           <p className="text-xs text-gray-500 font-medium">
             {viewMode === 'kanban' 
-              ? 'Trage orice card de job în altă coloană pentru a-i actualiza statusul instant.'
-              : 'Gestionează statusul, analizele AI și detaliile aplicărilor tale într-un format compact și clar.'}
+              ? 'Trage orice card de job în altă coloană pentru a-i actualiza statusul instant și alege CV-ul asociat.'
+              : 'Gestionează statusul, CV-ul asociat fiecărui job și rapoartele AI într-un format compact.'}
           </p>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. KANBAN VIEW (COLUMNS WITH DRAG & DROP) */}
+      {/* 1. KANBAN VIEW (COLUMNS WITH DRAG & DROP & CV SELECTOR) */}
       {/* ========================================================================= */}
       {viewMode === 'kanban' && (
         <>
@@ -303,19 +346,46 @@ export default function KanbanBoard({
                           </div>
                         </div>
 
-                        {/* CV ATTACHED BADGE */}
-                        {app.resumeFileName ? (
-                          <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-gray-700 font-medium bg-gray-50 px-2 py-1 rounded-lg border border-gray-200 min-w-0">
-                            <FileText className="w-3 h-3 text-gray-500 shrink-0" />
-                            <span className="truncate">CV: {app.resumeFileName}</span>
+                        {/* DYNAMIC CV SELECTOR DROPDOWN */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-[10px] font-semibold text-gray-500">
+                            <span>CV Asociat:</span>
+                            {app.cvProfileId && onEditCvInStudio && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEditCvInStudio(app.cvProfileId);
+                                }}
+                                className="text-gray-500 hover:text-black flex items-center gap-0.5 cursor-pointer font-bold"
+                                title="Deschide și editează acest CV în Studio"
+                              >
+                                <Edit3 className="w-2.5 h-2.5" /> Edit
+                              </button>
+                            )}
                           </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-amber-700 font-medium bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 min-w-0">
-                            <FileText className="w-3 h-3 text-amber-600 shrink-0" />
-                            <span className="truncate">Niciun CV asociat</span>
+                          
+                          <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-lg border border-gray-200 text-xs">
+                            <FileText className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                            <select
+                              value={app.cvProfileId || ''}
+                              onChange={(e) => handleAttachCvProfile(app.id, e.target.value)}
+                              disabled={attachingCvAppId === app.id}
+                              className="bg-transparent text-gray-900 font-semibold outline-none cursor-pointer w-full text-[11px] truncate"
+                              title="Alege CV-ul dorit pentru această aplicație"
+                            >
+                              <option value="">
+                                {app.resumeFileName ? `Fișier: ${app.resumeFileName}` : '-- Selectează CV --'}
+                              </option>
+                              {cvList.map((cv) => (
+                                <option key={cv.id} value={cv.id}>
+                                  {cv.title} {cv.isPrimary ? '(⭐ Principal)' : ''}
+                                </option>
+                              ))}
+                            </select>
                           </div>
-                        )}
+                        </div>
 
+                        {/* AI ANALYSIS BUTTON */}
                         <button
                           onClick={() => {
                             const runAi = onRunAiAnalysis || onOpenAnalysis;
@@ -353,7 +423,7 @@ export default function KanbanBoard({
       )}
 
       {/* ========================================================================= */}
-      {/* 2. LIST VIEW (CLEAN MINIMALIST TABLE & CARDS) */}
+      {/* 2. LIST VIEW (CLEAN MINIMALIST TABLE & CARDS WITH CV SELECTOR) */}
       {/* ========================================================================= */}
       {viewMode === 'list' && (
         <div className="bg-white border border-gray-200/90 shadow-sm rounded-2xl overflow-hidden font-sans">
@@ -430,16 +500,36 @@ export default function KanbanBoard({
                           </div>
                         </td>
 
-                        {/* 4. CV ASOCIAT */}
+                        {/* 4. CV ASOCIAT DROPDOWN */}
                         <td className="py-4 px-4">
-                          {app.resumeFileName ? (
-                            <div className="inline-flex items-center gap-1.5 text-xs text-gray-800 font-medium bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200 max-w-[180px]">
-                              <FileText className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                              <span className="truncate">{app.resumeFileName}</span>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400 italic text-[11px]">Niciun CV</span>
-                          )}
+                          <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-200 max-w-[200px]">
+                            <FileText className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                            <select
+                              value={app.cvProfileId || ''}
+                              onChange={(e) => handleAttachCvProfile(app.id, e.target.value)}
+                              disabled={attachingCvAppId === app.id}
+                              className="bg-transparent text-gray-900 font-semibold outline-none cursor-pointer w-full text-xs truncate"
+                              title="Alege CV-ul asociat pentru această aplicație"
+                            >
+                              <option value="">
+                                {app.resumeFileName ? `Fișier: ${app.resumeFileName}` : '-- Alege CV --'}
+                              </option>
+                              {cvList.map((cv) => (
+                                <option key={cv.id} value={cv.id}>
+                                  {cv.title} {cv.isPrimary ? '(⭐ Principal)' : ''}
+                                </option>
+                              ))}
+                            </select>
+                            {app.cvProfileId && onEditCvInStudio && (
+                              <button
+                                onClick={() => onEditCvInStudio(app.cvProfileId)}
+                                className="text-gray-400 hover:text-black p-0.5 cursor-pointer shrink-0"
+                                title="Editează în Studio"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
                         </td>
 
                         {/* 5. ACȚIUNI */}

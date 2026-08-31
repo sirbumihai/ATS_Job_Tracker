@@ -21,9 +21,15 @@ public class CvProfile {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "title")
+    private String title;
+
+    @Column(name = "is_primary")
+    private Boolean isPrimary;
 
     @Column(name = "full_name")
     private String fullName;

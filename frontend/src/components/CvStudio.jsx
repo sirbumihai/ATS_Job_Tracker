@@ -42,8 +42,15 @@ import {
   Globe
 } from 'lucide-react';
 
-export default function CvStudio({ applications = [], currentUser }) {
-  const activeUserId = currentUser ? currentUser.userId : null;
+export default function CvStudio({ 
+  applications = [], 
+  currentUser,
+  activeCvId = null,
+  onNavigateToLibrary = null
+}) {
+  const activeUserId = currentUser?.id || '00000000-0000-0000-0000-000000000001';
+  const [currentCvId, setCurrentCvId] = useState(activeCvId);
+  const [cvTitle, setCvTitle] = useState("CV Principal");
   const previewRef = useRef(null);
   const workbenchRef = useRef(null);
 
@@ -209,16 +216,24 @@ export default function CvStudio({ applications = [], currentUser }) {
     return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
 
-  // LOAD FROM DATABASE ON MOUNT
-  const fetchCvFromDatabase = async () => {
+  // LOAD FROM DATABASE ON MOUNT OR ON CV ID CHANGE
+  const fetchCvFromDatabase = async (idToFetch) => {
     if (!activeUserId) return;
+    const targetId = idToFetch || currentCvId;
+    const endpoint = targetId ? `/api/v1/cv/${targetId}` : '/api/v1/cv';
+
     try {
-      const res = await fetch('/api/v1/cv', {
+      const res = await fetch(endpoint, {
         headers: { 'X-User-Id': activeUserId }
       });
       if (res.ok && res.status !== 204) {
         const data = await res.json();
         if (data) {
+          if (data.id) setCurrentCvId(data.id);
+          if (data.title) {
+            setCvTitle(data.title);
+            setPdfCustomName(`${data.title.replace(/\s+/g, '_')}_Resume_ATS`);
+          }
           setContactData(prev => ({
             ...prev,
             fullName: data.fullName || prev.fullName,
@@ -258,8 +273,13 @@ export default function CvStudio({ applications = [], currentUser }) {
   };
 
   useEffect(() => {
-    fetchCvFromDatabase();
-  }, [activeUserId]);
+    if (activeCvId && activeCvId !== currentCvId) {
+      setCurrentCvId(activeCvId);
+      fetchCvFromDatabase(activeCvId);
+    } else {
+      fetchCvFromDatabase();
+    }
+  }, [activeUserId, activeCvId]);
 
   // AUTOMATIC REAL-TIME DEBOUNCED DATABASE SAVE
   useEffect(() => {
@@ -269,6 +289,8 @@ export default function CvStudio({ applications = [], currentUser }) {
       setIsAutoSaving(true);
       try {
         const payload = {
+          id: currentCvId,
+          title: cvTitle,
           fullName: contactData.fullName,
           email: contactData.email,
           phone: contactData.phone,
@@ -286,7 +308,8 @@ export default function CvStudio({ applications = [], currentUser }) {
           languagePreference: "EN"
         };
 
-        const res = await fetch('/api/v1/cv', {
+        const endpoint = currentCvId ? `/api/v1/cv/${currentCvId}` : '/api/v1/cv';
+        const res = await fetch(endpoint, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -296,6 +319,10 @@ export default function CvStudio({ applications = [], currentUser }) {
         });
 
         if (res.ok) {
+          const savedData = await res.json();
+          if (savedData?.id && !currentCvId) {
+            setCurrentCvId(savedData.id);
+          }
           setLastAutoSavedTime(new Date());
         }
       } catch (err) {
@@ -309,6 +336,8 @@ export default function CvStudio({ applications = [], currentUser }) {
   }, [
     isInitialLoadDone,
     activeUserId,
+    currentCvId,
+    cvTitle,
     contactData,
     educationList,
     experienceList,
@@ -744,13 +773,29 @@ export default function CvStudio({ applications = [], currentUser }) {
       <div className="w-full bg-white border border-gray-200/90 shadow-sm p-4 sm:p-5 rounded-2xl space-y-4 text-gray-900">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
+            {onNavigateToLibrary && (
+              <button
+                onClick={onNavigateToLibrary}
+                className="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-2xs cursor-pointer shrink-0"
+                title="Înapoi la lista cu toate CV-urile"
+              >
+                <span>←</span> CV-urile Mele
+              </button>
+            )}
             <div className="p-2.5 bg-black text-white rounded-xl shrink-0 shadow-sm">
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-gray-950 tracking-tight flex items-center gap-2">
-                CV Canvas Studio
-              </h2>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  value={cvTitle} 
+                  onChange={e => setCvTitle(e.target.value)}
+                  placeholder="Denumire CV..." 
+                  className="font-bold text-base sm:text-lg text-gray-950 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-black outline-none transition px-0.5"
+                  title="Apasă pentru a redenumi această versiune de CV"
+                />
+              </div>
               <p className="text-xs text-gray-500 font-medium">
                 Editare directă în pagină. Modificările se salvează automat în timp real.
               </p>

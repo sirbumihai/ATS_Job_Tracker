@@ -37,6 +37,10 @@ public class Application {
     @JoinColumn(name = "resume_id")
     private Resume resume;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cv_profile_id")
+    private CvProfile cvProfile;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "application_status")
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)

@@ -1,7 +1,7 @@
 package com.jobtracker.ats.controller;
 
-import com.jobtracker.ats.dto.CreateApplicationRequest;
 import com.jobtracker.ats.dto.ApplicationResponse;
+import com.jobtracker.ats.dto.CreateApplicationRequest;
 import com.jobtracker.ats.entity.Application.ApplicationStatus;
 import com.jobtracker.ats.service.ApplicationService;
 import jakarta.validation.Valid;
@@ -43,6 +43,24 @@ public class ApplicationController {
             @RequestParam ApplicationStatus status) {
 
         ApplicationResponse response = applicationService.updateApplicationStatus(id, status);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/cv/{cvProfileId}")
+    public ResponseEntity<ApplicationResponse> attachCvProfile(
+            @PathVariable UUID id,
+            @PathVariable UUID cvProfileId) {
+
+        ApplicationResponse response = applicationService.attachCvProfile(id, cvProfileId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/resume/{resumeId}")
+    public ResponseEntity<ApplicationResponse> attachResume(
+            @PathVariable UUID id,
+            @PathVariable UUID resumeId) {
+
+        ApplicationResponse response = applicationService.attachResume(id, resumeId);
         return ResponseEntity.ok(response);
     }
 

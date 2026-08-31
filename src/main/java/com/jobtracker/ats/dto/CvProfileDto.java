@@ -1,9 +1,12 @@
 package com.jobtracker.ats.dto;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record CvProfileDto(
     UUID id,
+    String title,
+    Boolean isPrimary,
     String fullName,
     String email,
     String phone,
@@ -18,5 +21,7 @@ public record CvProfileDto(
     String workExperienceJson,
     String projectsJson,
     String educationJson,
-    String languagePreference
+    String languagePreference,
+    OffsetDateTime createdAt,
+    OffsetDateTime updatedAt
 ) {}

@@ -15,6 +15,8 @@ public record ApplicationResponse(
     String jobTitle,
     UUID resumeId,
     String resumeFileName,
+    UUID cvProfileId,
+    String cvProfileTitle,
     ApplicationStatus status,
     BigDecimal semanticMatchScore,
     String notes,
