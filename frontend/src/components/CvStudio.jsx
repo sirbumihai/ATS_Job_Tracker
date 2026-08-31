@@ -48,7 +48,8 @@ export default function CvStudio({
   activeCvId = null,
   onNavigateToLibrary = null
 }) {
-  const activeUserId = currentUser?.id || '00000000-0000-0000-0000-000000000001';
+  const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
+  const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
   const [currentCvId, setCurrentCvId] = useState(activeCvId);
   const [cvTitle, setCvTitle] = useState("CV Principal");
   const previewRef = useRef(null);

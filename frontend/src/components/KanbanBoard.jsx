@@ -37,9 +37,8 @@ export default function KanbanBoard({
   const [draggedAppId, setDraggedAppId] = useState(null);
   const [dragOverColumnKey, setDragOverColumnKey] = useState(null);
   const [cvList, setCvList] = useState([]);
-  const [attachingCvAppId, setAttachingCvAppId] = useState(null);
-
-  const activeUserId = currentUser?.id || '00000000-0000-0000-0000-000000000001';
+  const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
+  const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
 
   // LOAD USER'S SAVED CVS FOR SELECTION
   const fetchCvProfiles = async () => {

@@ -94,7 +94,8 @@ export default function App() {
     rawDescription: '' 
   });
 
-  const activeUserId = currentUser?.id || '00000000-0000-0000-0000-000000000001';
+  const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
+  const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
 
   // Fetch initial applications
   const fetchApplications = async () => {
@@ -163,10 +164,16 @@ export default function App() {
       });
       const data = await res.json();
       if (res.ok) {
+        const userData = {
+          id: data.userId || data.id,
+          userId: data.userId || data.id,
+          email: data.email,
+          fullName: data.fullName
+        };
         localStorage.setItem('ats_jwt_token', data.token);
-        localStorage.setItem('ats_user', JSON.stringify(data.user));
+        localStorage.setItem('ats_user', JSON.stringify(userData));
         setAuthToken(data.token);
-        setCurrentUser(data.user);
+        setCurrentUser(userData);
         setShowAuthModal(false);
         setAuthForm({ fullName: '', email: '', password: '' });
       } else {
