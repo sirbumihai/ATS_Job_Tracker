@@ -134,7 +134,7 @@ public class DeterministicResumeParserService {
             github = "https://github.com/sarbumihai";
         }
 
-        // 2. SEGMENT LINES INTO SECTIONS (WITH DEDUPLICATION OF SECTION HEADERS)
+        // 2. SEGMENT LINES INTO SECTIONS
         Map<SectionType, List<String>> sections = new LinkedHashMap<>();
         for (SectionType type : SectionType.values()) {
             sections.put(type, new ArrayList<>());
@@ -146,9 +146,7 @@ public class DeterministicResumeParserService {
         for (String line : cleanLines) {
             SectionType detectedHeader = detectSectionHeader(line);
             if (detectedHeader != SectionType.UNKNOWN) {
-                // If section was already encountered before, avoid duplicates from multiple scans
                 if (encounteredSections.contains(detectedHeader)) {
-                    // Check if current list is already populated
                     if (sections.get(detectedHeader).size() > 2) {
                         currentSection = SectionType.UNKNOWN;
                         continue;
@@ -270,10 +268,10 @@ public class DeterministicResumeParserService {
         int idCounter = 1;
 
         for (String line : lines) {
-            boolean isBullet = isBulletLine(line);
+            boolean isBullet = isBulletLine(line) || line.toLowerCase().startsWith("courses:") || line.toLowerCase().startsWith("coursework:");
             Matcher dateMatch = DATE_RANGE_PATTERN.matcher(line);
 
-            if (!isBullet && (dateMatch.find() || line.toLowerCase().contains("university") || line.toLowerCase().contains("politehnica") || line.toLowerCase().contains("faculty") || line.toLowerCase().contains("college") || line.toLowerCase().contains("bachelor") || line.toLowerCase().contains("master"))) {
+            if (!isBullet && (line.toLowerCase().contains("university") || line.toLowerCase().contains("politehnica") || line.toLowerCase().contains("faculty") || line.toLowerCase().contains("college") || (dateMatch.find() && current == null))) {
                 if (current != null) {
                     current.put("bullets", new ArrayList<>(bullets));
                     if (!isDuplicateEntry(list, "school", String.valueOf(current.get("school")))) {
@@ -295,20 +293,16 @@ public class DeterministicResumeParserService {
                     cleanLine = line.replace(period, "").replaceAll("[|–—]", "").trim();
                 }
 
-                if (cleanLine.toLowerCase().contains("bachelor") || cleanLine.toLowerCase().contains("master") || cleanLine.toLowerCase().contains("degree")) {
-                    current.put("degree", cleanLine);
-                    current.put("school", "University Politehnica of Bucharest");
-                } else {
-                    current.put("school", cleanLine);
-                    current.put("degree", "");
-                }
+                current.put("school", cleanLine.isEmpty() ? "University Politehnica of Bucharest" : cleanLine);
+                current.put("degree", "");
                 current.put("period", period);
                 current.put("location", "Bucharest, Romania");
             } else if (!isBullet && current != null && (current.get("degree") == null || String.valueOf(current.get("degree")).isEmpty())) {
                 String degLine = line;
                 String loc = "Bucharest, Romania";
-                if (degLine.contains("Bucharest") || degLine.contains("Romania")) {
-                    degLine = degLine.replace("Bucharest, Romania", "").replace("Bucharest", "").replaceAll("[,|–—]$", "").trim();
+                if (degLine.contains("Bucharest") || degLine.contains("Romania") || degLine.contains("București")) {
+                    loc = "Bucharest, Romania";
+                    degLine = degLine.replace("Bucharest, Romania", "").replace("Bucharest", "").replace("București, România", "").replace("Romania", "").replaceAll("[,|–—]$", "").trim();
                 }
                 current.put("degree", degLine);
                 current.put("location", loc);
@@ -338,9 +332,11 @@ public class DeterministicResumeParserService {
 
         for (String line : lines) {
             boolean isBullet = isBulletLine(line);
+            boolean isActionVerb = startsWithActionVerb(line);
             Matcher dateMatch = DATE_RANGE_PATTERN.matcher(line);
 
-            if (!isBullet && (dateMatch.find() || isRoleLine(line))) {
+            // A new experience entry starts ONLY if line has a date range OR if current == null and line is a role
+            if (!isBullet && !isActionVerb && (dateMatch.find() || (current == null && isRoleLine(line)))) {
                 if (current != null) {
                     current.put("bullets", new ArrayList<>(bullets));
                     if (!isDuplicateEntry(list, "role", String.valueOf(current.get("role")))) {
@@ -365,22 +361,20 @@ public class DeterministicResumeParserService {
                 current.put("company", "");
                 current.put("period", period);
                 current.put("location", "Bucharest, Romania");
-            } else if (!isBullet && current != null && (current.get("company") == null || String.valueOf(current.get("company")).isEmpty())) {
+            } else if (!isBullet && !isActionVerb && current != null && (current.get("company") == null || String.valueOf(current.get("company")).isEmpty())) {
+                // Next line: Company name and location
                 String compLine = line;
                 String loc = "Bucharest, Romania";
-                if (compLine.contains("Bucharest, Romania") || compLine.contains("Bucharest")) {
-                    compLine = compLine.replace("Bucharest, Romania", "").replace("Bucharest", "").replaceAll("[,|–—]$", "").trim();
+                if (compLine.contains("Bucharest") || compLine.contains("Romania") || compLine.contains("București")) {
+                    loc = "Bucharest, Romania";
+                    compLine = compLine.replace("Bucharest, Romania", "").replace("Bucharest", "").replace("București, România", "").replace("Romania", "").replaceAll("[,|–—]$", "").trim();
                 }
                 current.put("company", compLine);
                 current.put("location", loc);
-            } else if (isBullet && current != null) {
+            } else if (current != null) {
+                // All other lines are bullet points
                 String b = cleanBulletText(line);
                 if (!bullets.contains(b) && !b.isBlank()) bullets.add(b);
-            } else if (!isBullet && current != null) {
-                if (!line.contains("@") && !line.toLowerCase().contains("linkedin") && !line.toLowerCase().contains("github") && detectSectionHeader(line) == SectionType.UNKNOWN) {
-                    String b = cleanBulletText(line);
-                    if (!bullets.contains(b) && !b.isBlank()) bullets.add(b);
-                }
             }
         }
 
@@ -404,15 +398,16 @@ public class DeterministicResumeParserService {
 
         for (String line : lines) {
             String lower = line.toLowerCase();
-            
-            if (lower.contains("sirbu") || lower.contains("@gmail.com") || lower.contains("linkedin") || lower.contains("github") || lower.contains("bucuresti") || lower.contains("(+40)")) {
+            if (lower.contains("sirbu") || lower.contains("@gmail.com") || lower.contains("linkedin") || lower.contains("github") || lower.contains("(+40)")) {
                 continue;
             }
 
             boolean isBullet = isBulletLine(line);
+            boolean isActionVerb = startsWithActionVerb(line);
             Matcher dateMatch = DATE_RANGE_PATTERN.matcher(line);
 
-            if (!isBullet && isLikelyProjectTitle(line)) {
+            // A line is a NEW PROJECT TITLE if not a bullet, not an action verb, and not just a tech stack line
+            if (!isBullet && !isActionVerb && !isPureTechList(line) && isLikelyProjectTitle(line)) {
                 if (current != null) {
                     current.put("bullets", new ArrayList<>(bullets));
                     if (!isDuplicateEntry(list, "title", String.valueOf(current.get("title")))) {
@@ -434,9 +429,9 @@ public class DeterministicResumeParserService {
 
                 String title = cleanLine;
                 String techStack = "";
-                if (cleanLine.contains("Java") || cleanLine.contains("React") || cleanLine.contains("Next.js") || cleanLine.contains("Python")) {
-                    String[] parts = cleanLine.split("(?=Java|Python|React|Next\\.js|TypeScript)");
-                    if (parts.length > 1) {
+                if (cleanLine.contains("Java") || cleanLine.contains("React") || cleanLine.contains("Next.js") || cleanLine.contains("Python") || cleanLine.contains("Spring Boot")) {
+                    String[] parts = cleanLine.split("(?=Java|Python|React|Next\\.js|TypeScript|Spring Boot)");
+                    if (parts.length > 1 && !parts[0].trim().isEmpty()) {
                         title = parts[0].trim();
                         techStack = parts[1].trim();
                     }
@@ -447,7 +442,7 @@ public class DeterministicResumeParserService {
                 current.put("period", period);
                 current.put("linkUrl", "");
                 current.put("linkText", "");
-            } else if (!isBullet && current != null && (current.get("techStack") == null || String.valueOf(current.get("techStack")).isEmpty()) && isTechStackLine(line)) {
+            } else if (!isBullet && !isActionVerb && current != null && (current.get("techStack") == null || String.valueOf(current.get("techStack")).isEmpty()) && (isTechStackLine(line) || isPureTechList(line))) {
                 String cleanLine = line;
                 String linkUrl = "";
                 String linkText = "";
@@ -465,10 +460,8 @@ public class DeterministicResumeParserService {
                     current.put("linkUrl", linkUrl);
                     current.put("linkText", linkText);
                 }
-            } else if (isBullet && current != null) {
-                String b = cleanBulletText(line);
-                if (!bullets.contains(b) && !b.isBlank()) bullets.add(b);
-            } else if (!isBullet && current != null) {
+            } else if (current != null) {
+                // Bullet point / description line
                 String b = cleanBulletText(line);
                 if (!bullets.contains(b) && !b.isBlank()) bullets.add(b);
             }
@@ -482,6 +475,19 @@ public class DeterministicResumeParserService {
         }
 
         return list;
+    }
+
+    private boolean startsWithActionVerb(String line) {
+        String clean = line.replaceAll("^[•\\-*–—o0-9.)\\s]+", "").trim();
+        if (clean.isEmpty()) return false;
+        String firstWord = clean.split("\\s+")[0].toLowerCase();
+        return Set.of(
+            "implemented", "designed", "developed", "built", "created", "engineered", 
+            "architected", "constructed", "programmed", "optimized", "collaborated", 
+            "wrote", "configured", "maintained", "integrated", "managed", "deployed",
+            "construit", "realizat", "dezvoltat", "implementat", "optimizat", "colaborat",
+            "programat", "creat", "gestionat", "structurat", "asigurat"
+        ).contains(firstWord);
     }
 
     private boolean isRoleLine(String line) {
@@ -509,6 +515,12 @@ public class DeterministicResumeParserService {
                lower.contains("pytorch") || lower.contains("postgresql") || lower.contains("next.js");
     }
 
+    private boolean isPureTechList(String line) {
+        String lower = line.toLowerCase();
+        return (lower.contains("java") || lower.contains("react") || lower.contains("python") || lower.contains("docker")) &&
+               (line.contains(",") || line.contains("|"));
+    }
+
     private boolean isBulletLine(String line) {
         return line.startsWith("•") || line.startsWith("-") || line.startsWith("*") || 
                line.startsWith("–") || line.startsWith("—") || line.startsWith("o ") ||
@@ -523,7 +535,7 @@ public class DeterministicResumeParserService {
         if (value == null || value.isBlank()) return false;
         for (Map<String, Object> item : list) {
             String existing = String.valueOf(item.get(key));
-            if (existing.equalsIgnoreCase(value) || existing.contains(value) || value.contains(existing)) {
+            if (existing.equalsIgnoreCase(value) || (existing.length() > 6 && value.length() > 6 && (existing.contains(value) || value.contains(existing)))) {
                 return true;
             }
         }
