@@ -176,15 +176,28 @@ public class AiGapAnalysisService {
             fallbackSkillExtraction(job.getRawDescription(), resumeText, matchingSkills, missingSkills);
         }
 
-        // 3. Generare Raport Text Curat Fara Zgomot
-        String cleanReportText = generateCleanReportText(companyName, jobTitle, matchingSkills, missingSkills, vectorScore);
+        // 3. Calcul Scor ATS Multicriterial Realist (Hard Skills 55% + Semantic 35% + Base 10%)
+        int totalSkills = matchingSkills.size() + missingSkills.size();
+        double skillScore = totalSkills > 0 ? ((double) matchingSkills.size() / totalSkills) * 100.0 : 90.0;
+        
+        double compositeMatchScore;
+        if (missingSkills.isEmpty() && !matchingSkills.isEmpty()) {
+            // Daca toate skill-urile cerute sunt prezente (0 lipsa), scorul este de excelenta (95% - 100%)
+            compositeMatchScore = 95.0 + Math.min(5.0, (vectorScore > 40.0 ? (vectorScore - 40.0) * (5.0 / 60.0) : 0.0));
+        } else {
+            compositeMatchScore = (skillScore * 0.55) + (Math.max(30.0, vectorScore) * 0.35) + 10.0;
+        }
+        compositeMatchScore = Math.min(100.0, Math.max(15.0, compositeMatchScore));
+
+        // 4. Generare Raport Text Curat Fara Zgomot
+        String cleanReportText = generateCleanReportText(companyName, jobTitle, matchingSkills, missingSkills, compositeMatchScore);
 
         return new AiGapAnalysisResponse(
                 UUID.randomUUID(),
                 applicationId,
                 jobTitle,
                 companyName,
-                vectorScore,
+                compositeMatchScore,
                 matchingSkills,
                 missingSkills,
                 cleanReportText,
