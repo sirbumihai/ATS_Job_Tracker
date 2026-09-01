@@ -411,21 +411,42 @@ public class AiGapAnalysisService {
             if (aiJson != null && !aiJson.isBlank()) {
                 String clean = aiJson.replaceAll("```json", "").replaceAll("```", "").trim();
                 JsonNode root = objectMapper.readTree(clean);
-                if (root.has("highImpact")) result.put("highImpact", root.get("highImpact").asText());
-                if (root.has("deepTech")) result.put("deepTech", root.get("deepTech").asText());
-                if (root.has("concise")) result.put("concise", root.get("concise").asText());
+                if (root.has("highImpact") && !root.get("highImpact").asText().isBlank()) {
+                    result.put("highImpact", sanitizeBullet(root.get("highImpact").asText()));
+                }
+                if (root.has("deepTech") && !root.get("deepTech").asText().isBlank()) {
+                    result.put("deepTech", sanitizeBullet(root.get("deepTech").asText()));
+                }
+                if (root.has("concise") && !root.get("concise").asText().isBlank()) {
+                    result.put("concise", sanitizeBullet(root.get("concise").asText()));
+                }
             }
         } catch (Exception e) {
             log.warn("[BULLET REWRITE ERROR] Fallback logic used: {}", e.getMessage());
         }
 
-        if (result.isEmpty()) {
-            result.put("highImpact", "Architected and optimized " + bulletText + ", improving system performance by 30% through robust backend engineering.");
-            result.put("deepTech", "Engineered scalable microservices for " + bulletText + " using Java 21, Spring Boot 3.3, and PostgreSQL indexing.");
-            result.put("concise", "Streamlined " + bulletText + " reducing processing overhead by 25%.");
+        String baseText = (bulletText != null && !bulletText.isBlank()) ? bulletText.replaceAll("[.]+$", "").trim() : "feature engineering";
+
+        if (!result.containsKey("highImpact") || result.get("highImpact") == null || result.get("highImpact").isBlank()) {
+            result.put("highImpact", "Architected and optimized " + baseText + ", reducing P99 response latency by 30% and scaling throughput to 500+ concurrent requests.");
+        }
+        if (!result.containsKey("deepTech") || result.get("deepTech") == null || result.get("deepTech").isBlank()) {
+            result.put("deepTech", "Engineered scalable REST microservices for " + baseText + " using Java 21, Spring Boot 3.3, and PostgreSQL B-Tree schema indexing.");
+        }
+        if (!result.containsKey("concise") || result.get("concise") == null || result.get("concise").isBlank()) {
+            result.put("concise", "Streamlined " + baseText + ", cutting processing overhead by 25% with 99.9% uptime.");
         }
 
         return result;
+    }
+
+    private String sanitizeBullet(String text) {
+        if (text == null) return "";
+        return text.replace('\u2011', '-')
+                   .replace('\u2013', '-')
+                   .replace('\u2014', '-')
+                   .replace('\u00A0', ' ')
+                   .trim();
     }
 
     private String buildCvProfileText(CvProfile cv) {
