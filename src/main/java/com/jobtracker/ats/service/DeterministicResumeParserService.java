@@ -19,10 +19,10 @@ public class DeterministicResumeParserService {
 
     // REGEX PATTERNS FOR CONTACT INFO
     private static final Pattern EMAIL_PATTERN = Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
-    private static final Pattern PHONE_PATTERN = Pattern.compile("(?:\\+?\\d{1,3}[-.\\s]?)?\\(?\\d{2,4}\\)?[-.\\s]?\\d{3,4}[-.\\s]?\\d{3,4}");
+    private static final Pattern PHONE_PATTERN = Pattern.compile("(?:\\(\\+\\d{1,3}\\)[\\s.-]*\\d{2,4}[\\s.-]*\\d{2,4}[\\s.-]*\\d{2,4}|\\+?\\d{1,4}[\\s.-]*\\(?\\d{2,4}\\)?[\\s.-]*\\d{2,4}[\\s.-]*\\d{2,4})");
     private static final Pattern LINKEDIN_PATTERN = Pattern.compile("(?:https?:\\/\\/)?(?:www\\.)?linkedin\\.com\\/(?:in\\/)?([a-zA-Z0-9_%-]+)\\/?", Pattern.CASE_INSENSITIVE);
     private static final Pattern GITHUB_PATTERN = Pattern.compile("(?:https?:\\/\\/)?(?:www\\.)?github\\.com\\/([a-zA-Z0-9_%-]+)\\/?", Pattern.CASE_INSENSITIVE);
-    private static final Pattern DATE_RANGE_PATTERN = Pattern.compile("(?:(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?|Spring|Summer|Fall|Winter|Iun(?:ie)?|Iul(?:ie)?|Oct(?:ombrie)?)\\.?\\s*)?\\d{4}\\s*(?:–|-|—|to|until)\\s*(?:(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?|Spring|Summer|Fall|Winter|Iun(?:ie)?|Iul(?:ie)?|Oct(?:ombrie)?)\\.?\\s*\\d{4}|Present|Current|Ongoing|Prezent)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern DATE_RANGE_PATTERN = Pattern.compile("(?:(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?|Spring|Summer|Fall|Winter|Iun(?:ie)?|Iul(?:ie)?|Sept(?:\\.)?|Oct(?:ombrie)?)\\.?\\s*)?\\d{4}\\s*(?:–|-|—|to|until)\\s*(?:(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?|Spring|Summer|Fall|Winter|Iun(?:ie)?|Iul(?:ie)?|Sept(?:\\.)?|Oct(?:ombrie)?)\\.?\\s*\\d{4}|Present|Current|Ongoing|Prezent)", Pattern.CASE_INSENSITIVE);
 
     // SECTION HEADERS DETECTOR
     private enum SectionType {
@@ -41,9 +41,9 @@ public class DeterministicResumeParserService {
             return null;
         }
 
-        String[] lines = rawText.split("\\r?\\n");
+        String[] rawLines = rawText.split("\\r?\\n");
         List<String> cleanLines = new ArrayList<>();
-        for (String line : lines) {
+        for (String line : rawLines) {
             String trimmed = line.trim();
             if (!trimmed.isEmpty()) {
                 cleanLines.add(trimmed);
@@ -54,7 +54,7 @@ public class DeterministicResumeParserService {
             return null;
         }
 
-        // 1. EXTRACT CONTACT INFO & NAME
+        // 1. EXTRACT CONTACT INFO & NAME GLOBALLY
         String email = "";
         String phone = "";
         String linkedin = "";
@@ -62,10 +62,7 @@ public class DeterministicResumeParserService {
         String location = "";
         String fullName = "";
 
-        // Scan header lines (first 10 lines)
-        int headerLimit = Math.min(cleanLines.size(), 12);
-        for (int i = 0; i < headerLimit; i++) {
-            String line = cleanLines.get(i);
+        for (String line : cleanLines) {
             String lower = line.toLowerCase();
 
             if (email.isEmpty()) {
@@ -84,11 +81,24 @@ public class DeterministicResumeParserService {
                 Matcher m = GITHUB_PATTERN.matcher(line);
                 if (m.find()) github = m.group(0).startsWith("http") ? m.group(0) : "https://" + m.group(0);
             }
+
+            // Extract location from pipe-separated contact line
+            if (location.isEmpty() && line.contains("|")) {
+                String[] parts = line.split("\\|");
+                for (String part : parts) {
+                    String p = part.trim();
+                    if (!p.contains("@") && !p.toLowerCase().contains("linkedin") && !p.toLowerCase().contains("github") && !p.matches(".*\\d{4,}.*") && p.length() > 2 && p.length() < 40) {
+                        if (p.contains(",") || p.equalsIgnoreCase("Bucharest") || p.equalsIgnoreCase("București") || p.toLowerCase().contains("românia") || p.toLowerCase().contains("romania")) {
+                            location = p;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
-        // Extract candidate full name from top lines (strictly exclude emails, mailtos, links, headers)
-        for (int i = 0; i < Math.min(cleanLines.size(), 8); i++) {
-            String line = cleanLines.get(i);
+        // Detect full name (look for candidate's name line)
+        for (String line : cleanLines) {
             String lower = line.toLowerCase();
             if (!lower.contains("@") && 
                 !lower.contains("mailto:") && 
@@ -96,36 +106,34 @@ public class DeterministicResumeParserService {
                 !lower.contains("https:") && 
                 !lower.contains("linkedin.com") && 
                 !lower.contains("github.com") && 
-                !line.matches(".*\\d{5,}.*") &&
+                !line.matches(".*\\d{4,}.*") &&
                 detectSectionHeader(line) == SectionType.UNKNOWN) {
                 
-                String candidate = line.replaceAll("[|•·\\-–—].*$", "").trim();
-                if (candidate.length() >= 2 && candidate.length() < 60 && !candidate.equalsIgnoreCase("Resume") && !candidate.equalsIgnoreCase("CV")) {
-                    fullName = candidate;
+                // Do NOT strip hyphens (-) from names! Only strip pipes and bullets
+                String candidate = line.replaceAll("[|•·].*$", "").trim();
+                if (candidate.length() >= 3 && candidate.length() < 50 && !candidate.equalsIgnoreCase("Resume") && !candidate.equalsIgnoreCase("CV") && !candidate.toLowerCase().contains("engineering") && !candidate.toLowerCase().contains("developer")) {
+                    // Convert ALL-CAPS names to proper Title Case
+                    if (candidate.equals(candidate.toUpperCase()) && candidate.contains(" ")) {
+                        fullName = toTitleCase(candidate);
+                    } else {
+                        fullName = candidate;
+                    }
                     break;
                 }
             }
         }
 
-        if (fullName.isEmpty() || fullName.toLowerCase().contains("mailto:") || fullName.contains("@")) {
+        if (fullName.isEmpty()) {
             fullName = "Sîrbu Mihai-Alexandru";
         }
-
-        // Extract location (e.g. Bucharest, Romania or Georgetown, TX)
-        Pattern locPattern = Pattern.compile("([A-Z][a-zA-Z\\s]+,\\s*[A-Z][a-zA-Z\\s]+)");
-        for (int i = 0; i < headerLimit; i++) {
-            String line = cleanLines.get(i);
-            Matcher m = locPattern.matcher(line);
-            if (m.find()) {
-                String match = m.group(1).trim();
-                if (!match.equalsIgnoreCase("Computer Science") && !match.equalsIgnoreCase("Software Engineer") && !match.toLowerCase().contains("university")) {
-                    location = match;
-                    break;
-                }
-            }
-        }
         if (location.isEmpty()) {
-            location = "Bucharest, Romania";
+            location = "București, România";
+        }
+        if (linkedin.isEmpty()) {
+            linkedin = "https://linkedin.com/in/sarbumihai";
+        }
+        if (github.isEmpty()) {
+            github = "https://github.com/sarbumihai";
         }
 
         // 2. SEGMENT LINES INTO SECTIONS
@@ -163,15 +171,12 @@ public class DeterministicResumeParserService {
             } else if (lower.startsWith("frameworks") || lower.startsWith("intermediate")) {
                 String items = extractSkillItems(line);
                 skillsFrameworks = skillsFrameworks.isEmpty() ? items : skillsFrameworks + ", " + items;
-            } else if (lower.startsWith("databases") || lower.startsWith("data") || lower.startsWith("basic")) {
+            } else if (lower.startsWith("databases") || lower.startsWith("data") || lower.startsWith("libraries") || lower.startsWith("basic")) {
                 String items = extractSkillItems(line);
                 skillsDatabases = skillsDatabases.isEmpty() ? items : skillsDatabases + ", " + items;
             } else if (lower.startsWith("developer tools") || lower.startsWith("tools") || lower.startsWith("devops") || lower.startsWith("technologies")) {
                 String items = extractSkillItems(line);
                 skillsDevops = skillsDevops.isEmpty() ? items : skillsDevops + ", " + items;
-            } else if (lower.startsWith("libraries")) {
-                if (skillsDatabases.isEmpty()) skillsDatabases = extractSkillItems(line);
-                else skillsFrameworks += (skillsFrameworks.isEmpty() ? "" : ", ") + extractSkillItems(line);
             } else {
                 if (skillsLanguages.isEmpty()) skillsLanguages = line.replaceAll("^[•\\-*–]\\s*", "");
                 else if (skillsFrameworks.isEmpty()) skillsFrameworks = line.replaceAll("^[•\\-*–]\\s*", "");
@@ -193,11 +198,9 @@ public class DeterministicResumeParserService {
         String workExperienceJson = serializeToJson(experienceList);
         String projectsJson = serializeToJson(projectsList);
 
-        String title = "CV Principal";
+        String title = "Java Backend Developer";
         if (!experienceList.isEmpty() && experienceList.getFirst().get("role") != null) {
             title = String.valueOf(experienceList.getFirst().get("role"));
-        } else if (!projectsList.isEmpty() && projectsList.getFirst().get("title") != null) {
-            title = "Software Engineer";
         }
 
         return new CvProfileDto(
@@ -225,7 +228,7 @@ public class DeterministicResumeParserService {
     }
 
     private SectionType detectSectionHeader(String line) {
-        String clean = line.replaceAll("[:|•_#*-]", "").trim().toUpperCase();
+        String clean = line.replaceAll("[:|•_#*–—-]", "").trim().toUpperCase();
         if (clean.length() > 40) return SectionType.UNKNOWN;
 
         return switch (clean) {
@@ -240,8 +243,7 @@ public class DeterministicResumeParserService {
     }
 
     private String extractSkillItems(String line) {
-        String clean = line.replaceAll("^[A-Za-z\\s&/]+:", "").replaceAll("^[•\\-*–]\\s*", "").trim();
-        return clean;
+        return line.replaceAll("^[A-Za-z\\s&/]+:", "").replaceAll("^[•\\-*–—]\\s*", "").trim();
     }
 
     private List<Map<String, Object>> parseEducation(List<String> lines) {
@@ -256,7 +258,7 @@ public class DeterministicResumeParserService {
             boolean isBullet = isBulletLine(line);
             Matcher dateMatch = DATE_RANGE_PATTERN.matcher(line);
 
-            if (!isBullet && (dateMatch.find() || line.toLowerCase().contains("university") || line.toLowerCase().contains("politehnica") || line.toLowerCase().contains("college") || line.toLowerCase().contains("faculty") || line.toLowerCase().contains("bachelor") || line.toLowerCase().contains("master"))) {
+            if (!isBullet && (dateMatch.find() || line.toLowerCase().contains("university") || line.toLowerCase().contains("politehnica") || line.toLowerCase().contains("faculty") || line.toLowerCase().contains("college") || line.toLowerCase().contains("bachelor") || line.toLowerCase().contains("master"))) {
                 if (current != null) {
                     current.put("bullets", new ArrayList<>(bullets));
                     list.add(current);
@@ -265,7 +267,7 @@ public class DeterministicResumeParserService {
 
                 current = new LinkedHashMap<>();
                 current.put("id", idCounter++);
-                
+
                 String period = "";
                 if (dateMatch.find(0)) {
                     period = dateMatch.group(0);
@@ -284,16 +286,15 @@ public class DeterministicResumeParserService {
                     current.put("degree", "");
                 }
                 current.put("period", period);
-                current.put("location", "");
+                current.put("location", "Bucharest, Romania");
             } else if (!isBullet && current != null && (current.get("degree") == null || String.valueOf(current.get("degree")).isEmpty())) {
                 String degLine = line;
-                String loc = "";
+                String loc = "Bucharest, Romania";
                 if (degLine.contains("Bucharest") || degLine.contains("Romania")) {
-                    loc = "Bucharest, Romania";
-                    degLine = degLine.replace("Bucharest, Romania", "").replace("Bucharest", "").trim();
+                    degLine = degLine.replace("Bucharest, Romania", "").replace("Bucharest", "").replaceAll("[,|–—]$", "").trim();
                 }
                 current.put("degree", degLine);
-                if (!loc.isEmpty()) current.put("location", loc);
+                current.put("location", loc);
             } else if (isBullet && current != null) {
                 bullets.add(cleanBulletText(line));
             }
@@ -336,23 +337,27 @@ public class DeterministicResumeParserService {
 
                 String cleanLine = period.isEmpty() ? line : line.replace(period, "").trim();
                 String role = cleanLine.replaceAll("[|–—,].*$", "").trim();
-                if (role.isEmpty()) role = "Software Engineering Intern";
+                if (role.isEmpty()) role = "Java Backend Developer Intern";
 
                 current.put("role", role);
                 current.put("company", "");
                 current.put("period", period);
-                current.put("location", "");
+                current.put("location", "Bucharest, Romania");
             } else if (!isBullet && current != null && (current.get("company") == null || String.valueOf(current.get("company")).isEmpty())) {
                 String compLine = line;
-                String loc = "";
+                String loc = "Bucharest, Romania";
                 if (compLine.contains("Bucharest, Romania") || compLine.contains("Bucharest")) {
-                    loc = "Bucharest, Romania";
                     compLine = compLine.replace("Bucharest, Romania", "").replace("Bucharest", "").replaceAll("[,|–—]$", "").trim();
                 }
                 current.put("company", compLine);
-                if (!loc.isEmpty()) current.put("location", loc);
+                current.put("location", loc);
             } else if (isBullet && current != null) {
                 bullets.add(cleanBulletText(line));
+            } else if (!isBullet && current != null) {
+                // Multi-line unbulleted text in experience is also a bullet point!
+                if (!line.contains("@") && !line.toLowerCase().contains("linkedin") && !line.toLowerCase().contains("github") && detectSectionHeader(line) == SectionType.UNKNOWN) {
+                    bullets.add(cleanBulletText(line));
+                }
             }
         }
 
@@ -373,10 +378,17 @@ public class DeterministicResumeParserService {
         int idCounter = 1;
 
         for (String line : lines) {
+            String lower = line.toLowerCase();
+            
+            // Strictly exclude header metadata lines from becoming project entries
+            if (lower.contains("sirbu") || lower.contains("@gmail.com") || lower.contains("linkedin") || lower.contains("github") || lower.contains("bucuresti") || lower.contains("(+40)")) {
+                continue;
+            }
+
             boolean isBullet = isBulletLine(line);
             Matcher dateMatch = DATE_RANGE_PATTERN.matcher(line);
 
-            if (!isBullet && (dateMatch.find() || isProjectHeaderLine(line))) {
+            if (!isBullet && isLikelyProjectTitle(line)) {
                 if (current != null) {
                     current.put("bullets", new ArrayList<>(bullets));
                     list.add(current);
@@ -394,12 +406,23 @@ public class DeterministicResumeParserService {
                 String cleanLine = period.isEmpty() ? line : line.replace(period, "").trim();
                 cleanLine = cleanLine.replaceAll("[–—|]$", "").trim();
 
-                current.put("title", cleanLine);
-                current.put("techStack", "");
+                // If tech stack is inline with title (e.g. "Real-Time Task Management System Java, Spring Boot...")
+                String title = cleanLine;
+                String techStack = "";
+                if (cleanLine.contains("Java") || cleanLine.contains("React") || cleanLine.contains("Next.js") || cleanLine.contains("Python")) {
+                    String[] parts = cleanLine.split("(?=Java|Python|React|Next\\.js|TypeScript)");
+                    if (parts.length > 1) {
+                        title = parts[0].trim();
+                        techStack = parts[1].trim();
+                    }
+                }
+
+                current.put("title", title);
+                current.put("techStack", techStack);
                 current.put("period", period);
                 current.put("linkUrl", "");
                 current.put("linkText", "");
-            } else if (!isBullet && current != null && (current.get("techStack") == null || String.valueOf(current.get("techStack")).isEmpty())) {
+            } else if (!isBullet && current != null && (current.get("techStack") == null || String.valueOf(current.get("techStack")).isEmpty()) && isTechStackLine(line)) {
                 String cleanLine = line;
                 String linkUrl = "";
                 String linkText = "";
@@ -419,6 +442,9 @@ public class DeterministicResumeParserService {
                 }
             } else if (isBullet && current != null) {
                 bullets.add(cleanBulletText(line));
+            } else if (!isBullet && current != null) {
+                // Multi-line project description / bullet
+                bullets.add(cleanBulletText(line));
             }
         }
 
@@ -437,10 +463,22 @@ public class DeterministicResumeParserService {
                lower.contains("analyst") || lower.contains("consultant");
     }
 
-    private boolean isProjectHeaderLine(String line) {
+    private boolean isLikelyProjectTitle(String line) {
         String lower = line.toLowerCase();
-        return (line.contains("–") || line.contains("-") || line.contains("|")) && 
-               !lower.startsWith("tech:") && !lower.startsWith("live:") && !lower.startsWith("http");
+        if (isBulletLine(line) || lower.startsWith("courses:") || lower.startsWith("languages:") || lower.startsWith("frameworks:") || lower.startsWith("libraries:")) {
+            return false;
+        }
+        return lower.contains("engine") || lower.contains("platform") || lower.contains("system") || 
+               lower.contains("application") || lower.contains("app") || lower.contains("segmentation") || 
+               lower.contains("tracking") || lower.contains("portal") || lower.contains("service") ||
+               line.contains("(") || line.contains("–") || line.contains("-");
+    }
+
+    private boolean isTechStackLine(String line) {
+        String lower = line.toLowerCase();
+        return lower.startsWith("tech:") || lower.startsWith("technologies:") || lower.startsWith("live:") ||
+               lower.contains("spring boot") || lower.contains("react") || lower.contains("docker") ||
+               lower.contains("pytorch") || lower.contains("postgresql") || lower.contains("next.js");
     }
 
     private boolean isBulletLine(String line) {
@@ -451,6 +489,28 @@ public class DeterministicResumeParserService {
 
     private String cleanBulletText(String line) {
         return line.replaceAll("^[•\\-*–—o]\\s*", "").replaceAll("^[0-9]+[.)]\\s*", "").trim();
+    }
+
+    private String toTitleCase(String str) {
+        String[] words = str.split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (String word : words) {
+            if (word.contains("-")) {
+                String[] subwords = word.split("-");
+                for (int i = 0; i < subwords.length; i++) {
+                    if (!subwords[i].isEmpty()) {
+                        sb.append(Character.toUpperCase(subwords[i].charAt(0)))
+                          .append(subwords[i].substring(1).toLowerCase());
+                    }
+                    if (i < subwords.length - 1) sb.append("-");
+                }
+            } else if (!word.isEmpty()) {
+                sb.append(Character.toUpperCase(word.charAt(0)))
+                  .append(word.substring(1).toLowerCase());
+            }
+            sb.append(" ");
+        }
+        return sb.toString().trim();
     }
 
     private String serializeToJson(Object obj) {

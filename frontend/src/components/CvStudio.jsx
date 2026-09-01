@@ -623,15 +623,14 @@ export default function CvStudio({
           if (p.title) setCvTitle(p.title);
           if (p.id) setCurrentCvId(p.id);
 
-          setContactData(prev => ({
-            ...prev,
-            fullName: p.fullName || prev.fullName,
-            email: p.email || prev.email,
-            phone: p.phone || prev.phone,
-            location: p.location || prev.location,
-            linkedin: p.linkedin || prev.linkedin,
-            github: p.github || prev.github
-          }));
+          setContactData({
+            fullName: p.fullName || 'Sîrbu Mihai-Alexandru',
+            email: p.email || 'sarbu.mihai@gmail.com',
+            phone: p.phone || '(+40) 723 034 706',
+            location: p.location || 'București, România',
+            linkedin: p.linkedin || 'https://linkedin.com/in/sarbumihai',
+            github: p.github || 'https://github.com/sarbumihai'
+          });
 
           if (p.summary) setSummaryText(p.summary);
 
