@@ -28,6 +28,7 @@ import {
   Maximize2,
   ExternalLink,
   Mail,
+  Printer,
   Phone,
   MapPin,
   Linkedin,
@@ -799,6 +800,16 @@ export default function CvStudio({
     }
   };
 
+  const handlePrintVectorPdf = () => {
+    const originalTitle = document.title;
+    const sanitizedName = (pdfCustomName || contactData.fullName || 'Resume').trim().replace(/\s+/g, '_');
+    document.title = sanitizedName;
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
+  };
+
   return (
     <div className="space-y-6 w-full max-w-[210mm] mx-auto pb-16 font-sans">
       
@@ -823,7 +834,7 @@ export default function CvStudio({
                 <input 
                   type="text" 
                   value={cvTitle} 
-                  onChange={e => setCvTitle(e.target.value)}
+                  onChange={e => setCvTitle(e.target.value)} 
                   placeholder="Denumire CV..." 
                   className="font-bold text-base sm:text-lg text-gray-950 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-black outline-none transition px-0.5"
                   title="Apasă pentru a redenumi această versiune de CV"
@@ -865,25 +876,33 @@ export default function CvStudio({
               <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
             </label>
 
-            {/* DOWNLOAD PDF WITH EDITABLE FILENAME */}
-            <div className="flex items-center bg-gray-50 border border-gray-300 rounded-lg pl-2.5 pr-1 py-1 shadow-2xs">
+            {/* DOWNLOAD PDF WITH EDITABLE FILENAME & ATS VECTOR PRINT */}
+            <div className="flex items-center bg-gray-50 border border-gray-300 rounded-lg pl-2.5 pr-1 py-1 shadow-2xs gap-1">
               <input 
                 type="text" 
                 value={pdfCustomName} 
                 onChange={e => setPdfCustomName(e.target.value)} 
                 title="Editează numele fișierului PDF descărcat"
                 placeholder="Nume fișier PDF..." 
-                className="bg-transparent text-xs text-gray-900 outline-none w-28 sm:w-36 font-medium placeholder-gray-400" 
+                className="bg-transparent text-xs text-gray-900 outline-none w-24 sm:w-32 font-medium placeholder-gray-400" 
               />
-              <span className="text-gray-400 text-xs mr-1.5 font-mono select-none">.pdf</span>
+              <span className="text-gray-400 text-xs mr-1 font-mono select-none">.pdf</span>
+              <button
+                onClick={handlePrintVectorPdf}
+                className="px-2.5 py-1 bg-white hover:bg-gray-100 text-gray-900 border border-gray-300 rounded-md font-bold text-xs flex items-center gap-1 shadow-2xs transition cursor-pointer shrink-0"
+                title="Printează sau salvează ca PDF Vectorial ATS (100% text selectabil)"
+              >
+                <Printer className="w-3.5 h-3.5 text-black" />
+                <span>Vector ATS</span>
+              </button>
               <button
                 onClick={handleDownloadDirectPdf}
                 disabled={isDownloadingPdf}
-                className="px-3 py-1 bg-black hover:bg-neutral-800 text-white rounded-md font-bold text-xs flex items-center gap-1.5 shadow-sm transition disabled:opacity-60 cursor-pointer shrink-0"
-                title="Descarcă CV-ul în format PDF"
+                className="px-2.5 py-1 bg-black hover:bg-neutral-800 text-white rounded-md font-bold text-xs flex items-center gap-1 shadow-sm transition disabled:opacity-60 cursor-pointer shrink-0"
+                title="Descarcă direct fișierul PDF"
               >
                 {isDownloadingPdf ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
-                {isDownloadingPdf ? 'Generare...' : 'Descarcă'}
+                <span>Descarcă</span>
               </button>
             </div>
           </div>

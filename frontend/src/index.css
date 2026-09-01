@@ -98,3 +98,40 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-thumb:hover {
   background: #374151;
 }
+
+/* ATS Vector Print Styling */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  #cv-preview-sheet, #cv-preview-sheet * {
+    visibility: visible;
+  }
+  
+  #cv-preview-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 210mm !important;
+    margin: 0 auto !important;
+    padding: 12mm 15mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    transform: none !important;
+    background: #ffffff !important;
+  }
+  
+  .no-pdf, .no-print, header, nav, footer, button {
+    display: none !important;
+  }
+}
+
