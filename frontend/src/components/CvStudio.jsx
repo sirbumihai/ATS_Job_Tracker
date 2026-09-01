@@ -23,6 +23,7 @@ import {
   Database,
   ArrowUp,
   ArrowDown,
+  ArrowRight,
   Eye,
   Columns,
   Maximize2,
