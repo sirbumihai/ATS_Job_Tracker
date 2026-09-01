@@ -6,23 +6,44 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/applications/{applicationId}/analysis")
 @RequiredArgsConstructor
 public class AiGapAnalysisController {
 
     private final AiGapAnalysisService aiGapAnalysisService;
 
-    @PostMapping
+    @PostMapping("/api/v1/applications/{applicationId}/analysis")
     public ResponseEntity<AiGapAnalysisResponse> generateAnalysis(@PathVariable UUID applicationId) {
         AiGapAnalysisResponse response = aiGapAnalysisService.generateGapAnalysis(applicationId);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
+    @GetMapping("/api/v1/applications/{applicationId}/analysis")
     public ResponseEntity<AiGapAnalysisResponse> getAnalysis(@PathVariable UUID applicationId) {
+        AiGapAnalysisResponse response = aiGapAnalysisService.generateGapAnalysis(applicationId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/api/v1/ai/gap-analysis")
+    public ResponseEntity<AiGapAnalysisResponse> generateGapAnalysisAlias(
+            @RequestParam(required = false) UUID applicationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        UUID appId = applicationId;
+        if (appId == null && body != null && body.containsKey("applicationId")) {
+            appId = UUID.fromString(String.valueOf(body.get("applicationId")));
+        }
+        if (appId == null) {
+            throw new IllegalArgumentException("Parametrul applicationId este obligatoriu.");
+        }
+        AiGapAnalysisResponse response = aiGapAnalysisService.generateGapAnalysis(appId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/v1/ai/gap-analysis")
+    public ResponseEntity<AiGapAnalysisResponse> getGapAnalysisAlias(@RequestParam UUID applicationId) {
         AiGapAnalysisResponse response = aiGapAnalysisService.generateGapAnalysis(applicationId);
         return ResponseEntity.ok(response);
     }

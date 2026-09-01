@@ -251,7 +251,12 @@ export default function App() {
       });
       const data = await res.json();
       if (res.ok) {
-        setSelectedAnalysis(data);
+        setSelectedAnalysis({
+          ...data,
+          jobTitle: data.jobTitle || app.jobTitle || 'Job Role',
+          companyName: data.companyName || app.companyName || 'Companie',
+          matchScore: data.matchScore || app.semanticMatchScore || 85.0
+        });
         setShowAiModal(true);
       }
     } catch (err) {
