@@ -36,6 +36,7 @@ public class CvProfileService {
     private final AiGapAnalysisService aiGapAnalysisService;
     private final ResumeTailorAgent resumeTailorAgent;
     private final OpenAiLlmService openAiLlmService;
+    private final DeterministicResumeParserService deterministicResumeParserService;
     private final ObjectMapper objectMapper;
 
     @Transactional(readOnly = true)
@@ -210,6 +211,19 @@ public class CvProfileService {
     public CvProfileDto parseAndSaveResumeText(UUID userId, String rawText) {
         if (rawText == null || rawText.isBlank()) {
             return getCvProfileByUserId(userId);
+        }
+
+        // 1. DETERMINISTIC RULE-BASED PARSER (100% OFFLINE, ZERO TRANSLATION, COMPLETE EXTRACTION)
+        try {
+            log.info("[RESUME PARSER] Rulare parsare deterministica (fara AI) pentru userId={}...", userId);
+            CvProfileDto deterministicDto = deterministicResumeParserService.parseResume(userId, rawText);
+            if (deterministicDto != null && deterministicDto.fullName() != null && !deterministicDto.fullName().isBlank()) {
+                log.info("[RESUME PARSER SUCCESS] Parsat deterministic cu succes: Nume='{}', Email='{}'", 
+                        deterministicDto.fullName(), deterministicDto.email());
+                return createCvProfile(userId, deterministicDto);
+            }
+        } catch (Exception e) {
+            log.warn("[RESUME PARSER] Parsarea deterministica a intampinat o eroare: {}, incercare fallback...", e.getMessage());
         }
 
         String systemPrompt = """
