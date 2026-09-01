@@ -1,5 +1,6 @@
 package com.jobtracker.ats.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jobtracker.ats.dto.CvProfileDto;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.regex.Pattern;
 public class DeterministicResumeParserService {
 
     private final ObjectMapper objectMapper;
+    private final OpenAiLlmService openAiLlmService;
 
     // REGEX PATTERNS FOR CONTACT INFO
     private static final Pattern EMAIL_PATTERN = Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
@@ -54,7 +56,7 @@ public class DeterministicResumeParserService {
             return null;
         }
 
-        // 1. EXTRACT CONTACT INFO & NAME GLOBALLY
+        // 1. EXTRACT CONTACT INFO & NAME GLOBALLY (100% Deterministic - 0 AI tokens)
         String email = "";
         String phone = "";
         String linkedin = "";
@@ -97,7 +99,7 @@ public class DeterministicResumeParserService {
             }
         }
 
-        // Detect full name (look for candidate's name line)
+        // Detect full name
         for (String line : cleanLines) {
             String lower = line.toLowerCase();
             if (!lower.contains("@") && 
@@ -161,10 +163,10 @@ public class DeterministicResumeParserService {
             }
         }
 
-        // 3. PARSE SUMMARY
+        // 3. PARSE SUMMARY (100% Deterministic)
         String summary = String.join(" ", sections.get(SectionType.SUMMARY)).trim();
 
-        // 4. PARSE SKILLS
+        // 4. PARSE SKILLS (100% Deterministic)
         String rawLanguages = "";
         String rawFrameworks = "";
         String rawDatabases = "";
@@ -197,14 +199,14 @@ public class DeterministicResumeParserService {
         String skillsDatabases = deduplicateSkills(rawDatabases);
         String skillsDevops = deduplicateSkills(rawDevops);
 
-        // 5. PARSE EDUCATION
+        // 5. PARSE EDUCATION (100% Deterministic)
         List<Map<String, Object>> educationList = parseEducation(sections.get(SectionType.EDUCATION));
 
-        // 6. PARSE EXPERIENCE
+        // 6. PARSE EXPERIENCE (100% Deterministic)
         List<Map<String, Object>> experienceList = parseExperience(sections.get(SectionType.EXPERIENCE));
 
-        // 7. PARSE PROJECTS
-        List<Map<String, Object>> projectsList = parseProjects(sections.get(SectionType.PROJECTS));
+        // 7. PARSE PROJECTS (HYBRID: Targeted Lightweight AI for precise boundary extraction, with deterministic fallback)
+        List<Map<String, Object>> projectsList = parseProjectsHybrid(sections.get(SectionType.PROJECTS));
 
         // 8. SERIALIZE TO JSON
         String educationJson = serializeToJson(educationList);
@@ -238,6 +240,68 @@ public class DeterministicResumeParserService {
                 null,
                 null
         );
+    }
+
+    private List<Map<String, Object>> parseProjectsHybrid(List<String> lines) {
+        if (lines == null || lines.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String rawProjectsText = String.join("\n", lines).trim();
+        if (rawProjectsText.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        // Try Targeted AI Extraction (Ultra-fast ~200 tokens, strict schema, zero translation)
+        try {
+            String systemPrompt = """
+                You are a precise, lightweight resume projects parser.
+                Given the raw text of the projects section, split it into individual projects.
+                
+                CRITICAL INSTRUCTIONS:
+                1. STRICT LANGUAGE PRESERVATION: DO NOT translate anything. Preserve the exact original language, wording, and phrases.
+                2. Delimit each project accurately with its title, tech stack (frameworks, databases, tools), period (if any), and all bullet points verbatim.
+                3. Return ONLY a valid raw JSON array of objects without markdown formatting or conversational text.
+                
+                JSON Schema:
+                [
+                  {
+                    "id": 1,
+                    "title": "Project Title",
+                    "techStack": "Technologies used (e.g. Java 21, Spring Boot, React, Docker)",
+                    "period": "Date range or empty string",
+                    "linkUrl": "https://... or empty string",
+                    "linkText": "domain or empty string",
+                    "bullets": [
+                      "Full verbatim bullet point 1...",
+                      "Full verbatim bullet point 2..."
+                    ]
+                  }
+                ]
+                """;
+
+            String userPrompt = "PROJECTS TEXT TO PARSE:\n" + rawProjectsText;
+            String jsonOutput = openAiLlmService.generateCompletion(systemPrompt, userPrompt);
+            
+            if (jsonOutput != null && !jsonOutput.isBlank()) {
+                String cleanJson = jsonOutput.trim();
+                if (cleanJson.startsWith("```json")) cleanJson = cleanJson.substring(7);
+                else if (cleanJson.startsWith("```")) cleanJson = cleanJson.substring(3);
+                if (cleanJson.endsWith("```")) cleanJson = cleanJson.substring(0, cleanJson.length() - 3);
+                cleanJson = cleanJson.trim();
+
+                List<Map<String, Object>> aiProjects = objectMapper.readValue(cleanJson, new TypeReference<List<Map<String, Object>>>() {});
+                if (aiProjects != null && !aiProjects.isEmpty()) {
+                    log.info("[HYBRID PARSER SUCCESS] Extrase {} proiecte prin AI tintit ultra-rapid!", aiProjects.size());
+                    return aiProjects;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[HYBRID PARSER FALLBACK] AI-ul tintit pe proiecte a intampinat o eroare ({}), se utilizeaza parserul determinist...", e.getMessage());
+        }
+
+        // Fallback to deterministic parser
+        return parseProjects(lines);
     }
 
     private SectionType detectSectionHeader(String line) {
@@ -335,7 +399,6 @@ public class DeterministicResumeParserService {
             boolean isActionVerb = startsWithActionVerb(line);
             Matcher dateMatch = DATE_RANGE_PATTERN.matcher(line);
 
-            // A new experience entry starts ONLY if line has a date range OR if current == null and line is a role
             if (!isBullet && !isActionVerb && (dateMatch.find() || (current == null && isRoleLine(line)))) {
                 if (current != null) {
                     current.put("bullets", new ArrayList<>(bullets));
@@ -362,7 +425,6 @@ public class DeterministicResumeParserService {
                 current.put("period", period);
                 current.put("location", "Bucharest, Romania");
             } else if (!isBullet && !isActionVerb && current != null && (current.get("company") == null || String.valueOf(current.get("company")).isEmpty())) {
-                // Next line: Company name and location
                 String compLine = line;
                 String loc = "Bucharest, Romania";
                 if (compLine.contains("Bucharest") || compLine.contains("Romania") || compLine.contains("București")) {
@@ -372,7 +434,6 @@ public class DeterministicResumeParserService {
                 current.put("company", compLine);
                 current.put("location", loc);
             } else if (current != null) {
-                // All other lines are bullet points
                 String b = cleanBulletText(line);
                 if (!bullets.contains(b) && !b.isBlank()) bullets.add(b);
             }
@@ -406,7 +467,6 @@ public class DeterministicResumeParserService {
             boolean isActionVerb = startsWithActionVerb(line);
             Matcher dateMatch = DATE_RANGE_PATTERN.matcher(line);
 
-            // A line is a NEW PROJECT TITLE if not a bullet, not an action verb, and not just a tech stack line
             if (!isBullet && !isActionVerb && !isPureTechList(line) && isLikelyProjectTitle(line)) {
                 if (current != null) {
                     current.put("bullets", new ArrayList<>(bullets));
@@ -461,7 +521,6 @@ public class DeterministicResumeParserService {
                     current.put("linkText", linkText);
                 }
             } else if (current != null) {
-                // Bullet point / description line
                 String b = cleanBulletText(line);
                 if (!bullets.contains(b) && !b.isBlank()) bullets.add(b);
             }
