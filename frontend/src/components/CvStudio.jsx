@@ -634,13 +634,13 @@ export default function CvStudio({
 
           if (p.summary) setSummaryText(p.summary);
 
-          const parsedEdu = safeParse(p.educationJson, []);
+          const parsedEdu = safeParse(p.educationJson, []).map((e, idx) => ({ ...e, id: e.id || idx + 1 }));
           if (Array.isArray(parsedEdu) && parsedEdu.length > 0) setEducationList(parsedEdu);
 
-          const parsedExp = safeParse(p.workExperienceJson, []);
+          const parsedExp = safeParse(p.workExperienceJson, []).map((e, idx) => ({ ...e, id: e.id || idx + 1 }));
           if (Array.isArray(parsedExp) && parsedExp.length > 0) setExperienceList(parsedExp);
 
-          const parsedProj = safeParse(p.projectsJson, []);
+          const parsedProj = safeParse(p.projectsJson, []).map((pr, idx) => ({ ...pr, id: pr.id || idx + 1 }));
           if (Array.isArray(parsedProj) && parsedProj.length > 0) setProjectsList(parsedProj);
 
           if (p.skillsLanguages || p.skillsFrameworks || p.skillsDevops || p.skillsDatabases) {

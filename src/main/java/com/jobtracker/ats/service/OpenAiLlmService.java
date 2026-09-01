@@ -66,7 +66,8 @@ public class OpenAiLlmService {
                                 Map.of("role", "system", "content", systemPrompt),
                                 Map.of("role", "user", "content", userPrompt)
                         ),
-                        "temperature", 0.1
+                        "temperature", 0.0,
+                        "max_tokens", 8192
                 );
 
                 @SuppressWarnings("unchecked")

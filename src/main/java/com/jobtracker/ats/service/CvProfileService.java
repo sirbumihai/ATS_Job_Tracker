@@ -213,36 +213,95 @@ public class CvProfileService {
         }
 
         String systemPrompt = """
-            You are an expert AI Resume Parser. Parse the provided raw resume text into a structured JSON object representing the candidate's profile.
-            Return ONLY a valid JSON object matching this exact schema (no markdown wrapping, no text before or after):
+            You are a master ATS Resume Parsing Engine. Your task is to perform an EXHAUSTIVE, LOSSLESS, 100% COMPLETE extraction of the provided resume text into a structured JSON format following the Jake Ryan resume standard.
+
+            CRITICAL MANDATORY INSTRUCTIONS:
+            1. STRICT LANGUAGE PRESERVATION: DO NOT TRANSLATE ANYTHING. If the resume is written in English, keep EVERYTHING in English (names, titles, summary, skill categories, work experience bullets, project descriptions). DO NOT translate to Romanian, French, German, or any other language under any circumstance.
+            2. ZERO TRUNCATION & NO DROPPED SECTIONS: Extract EVERY single work experience, EVERY single project, EVERY single education entry, and EVERY single bullet point from the resume. Never omit, summarize, shorten, or truncate bullet points. Preserve all numbers, percentages, metrics, and technologies.
+            3. LINK PRESERVATION: Extract project and portfolio links (GitHub, live demo URLs) if available.
+            4. STRICT JSON FORMAT ONLY: Output ONLY a valid JSON object matching the schema below without any markdown fences, conversational text, or explanations.
+
+            JSON Schema:
             {
-              "title": "Short descriptive role title (e.g. Java Backend Developer)",
-              "fullName": "Candidate Full Name",
-              "email": "candidate email address",
-              "phone": "candidate phone number",
-              "location": "city, country",
-              "linkedin": "linkedin URL or profile handle",
-              "github": "github URL or handle",
-              "summary": "Professional summary paragraph ONLY (strictly exclude name, phone, email, links header)",
-              "skillsLanguages": "comma-separated programming languages",
-              "skillsFrameworks": "comma-separated frameworks",
-              "skillsDatabases": "comma-separated databases",
-              "skillsDevops": "comma-separated tools or devops",
-              "workExperienceJson": "[{\\"id\\":1,\\"company\\":\\"...\\",\\"role\\":\\"...\\",\\"period\\":\\"...\\",\\"location\\":\\"...\\",\\"bullets\\":[\\"...\\"]}]",
-              "projectsJson": "[{\\"id\\":1,\\"title\\":\\"...\\",\\"techStack\\":\\"...\\",\\"bullets\\":[\\"...\\"]}]",
-              "educationJson": "{\\"school\\":\\"...\\",\\"degree\\":\\"...\\",\\"period\\":\\"...\\",\\"location\\":\\"...\\"}"
+              "title": "Descriptive candidate role title (e.g. Java Backend Developer, Full Stack Engineer)",
+              "fullName": "Full Name",
+              "email": "Email Address",
+              "phone": "Phone Number",
+              "location": "City, Country",
+              "linkedin": "LinkedIn URL or handle",
+              "github": "GitHub URL or handle",
+              "summary": "Professional summary or objective (keep in original language; leave empty string if not in CV)",
+              "skillsLanguages": "Comma-separated programming languages",
+              "skillsFrameworks": "Comma-separated frameworks & libraries",
+              "skillsDatabases": "Comma-separated databases & storage tools",
+              "skillsDevops": "Comma-separated developer tools, cloud, CI/CD, platforms",
+              "education": [
+                {
+                  "id": 1,
+                  "school": "University or Institution Name",
+                  "degree": "Degree and Major",
+                  "period": "Start Date – End Date",
+                  "location": "City, Country",
+                  "bullets": ["Coursework, honors, GPA or thesis details"]
+                }
+              ],
+              "workExperience": [
+                {
+                  "id": 1,
+                  "company": "Company Name",
+                  "role": "Job Title",
+                  "period": "Start Date – End Date",
+                  "location": "City, Country",
+                  "bullets": [
+                    "Full, complete bullet point 1 with all original details and metrics...",
+                    "Full, complete bullet point 2..."
+                  ]
+                }
+              ],
+              "projects": [
+                {
+                  "id": 1,
+                  "title": "Project Title",
+                  "techStack": "Technologies Used",
+                  "period": "Start Date – End Date",
+                  "linkUrl": "https://...",
+                  "linkText": "domain or repo name",
+                  "bullets": [
+                    "Full, complete project bullet 1 with all technical details and achievements...",
+                    "Full, complete project bullet 2..."
+                  ]
+                }
+              ]
             }
-            Do not make up fake data. Extract accurate values strictly from the provided raw text.
             """;
 
-        String userPrompt = "RAW RESUME TEXT:\n" + rawText;
+        String userPrompt = "RAW RESUME TEXT TO PARSE EXHAUSTIVELY:\n" + rawText;
 
         try {
             String jsonOutput = openAiLlmService.generateCompletion(systemPrompt, userPrompt);
-            JsonNode root = objectMapper.readTree(jsonOutput);
+            if (jsonOutput == null || jsonOutput.isBlank()) {
+                return getCvProfileByUserId(userId);
+            }
+
+            String cleanJson = jsonOutput.trim();
+            if (cleanJson.startsWith("```json")) {
+                cleanJson = cleanJson.substring(7);
+            } else if (cleanJson.startsWith("```")) {
+                cleanJson = cleanJson.substring(3);
+            }
+            if (cleanJson.endsWith("```")) {
+                cleanJson = cleanJson.substring(0, cleanJson.length() - 3);
+            }
+            cleanJson = cleanJson.trim();
+
+            JsonNode root = objectMapper.readTree(cleanJson);
 
             String title = getTextOrEmpty(root, "title");
             if (title.isBlank()) title = "CV Importat";
+
+            String workExperienceJson = extractJsonArrayOrFallback(root, "workExperience", "workExperienceJson");
+            String projectsJson = extractJsonArrayOrFallback(root, "projects", "projectsJson");
+            String educationJson = extractEducationJson(root);
 
             CvProfileDto parsedDto = new CvProfileDto(
                     null,
@@ -259,9 +318,9 @@ public class CvProfileService {
                     getTextOrEmpty(root, "skillsFrameworks"),
                     getTextOrEmpty(root, "skillsDatabases"),
                     getTextOrEmpty(root, "skillsDevops"),
-                    getJsonFieldOrEmptyArray(root, "workExperienceJson"),
-                    getJsonFieldOrEmptyArray(root, "projectsJson"),
-                    getJsonFieldOrEmptyObject(root, "educationJson"),
+                    workExperienceJson,
+                    projectsJson,
+                    educationJson,
                     "EN",
                     null,
                     null
@@ -269,7 +328,7 @@ public class CvProfileService {
 
             return createCvProfile(userId, parsedDto);
         } catch (Exception e) {
-            log.error("Eroare la parsarea LLM a CV-ului: {}", e.getMessage());
+            log.error("Eroare la parsarea LLM a CV-ului: {}", e.getMessage(), e);
             return getCvProfileByUserId(userId);
         }
     }
@@ -322,6 +381,50 @@ public class CvProfileService {
                 List.of("Realizat arhitectură microservicii scalabilă.", "Implementat sistem de analiză ATS."),
                 tailoredCvResult
         );
+    }
+
+    private String extractJsonArrayOrFallback(JsonNode root, String arrayKey, String oldKey) {
+        if (root.has(arrayKey) && !root.get(arrayKey).isNull()) {
+            JsonNode node = root.get(arrayKey);
+            if (node.isArray()) {
+                return node.toString();
+            } else if (node.isTextual()) {
+                return node.asText("[]");
+            }
+        }
+        if (root.has(oldKey) && !root.get(oldKey).isNull()) {
+            JsonNode node = root.get(oldKey);
+            if (node.isArray()) {
+                return node.toString();
+            } else if (node.isTextual()) {
+                return node.asText("[]");
+            }
+        }
+        return "[]";
+    }
+
+    private String extractEducationJson(JsonNode root) {
+        if (root.has("education") && !root.get("education").isNull()) {
+            JsonNode node = root.get("education");
+            if (node.isArray()) {
+                return node.toString();
+            } else if (node.isObject()) {
+                return "[" + node.toString() + "]";
+            } else if (node.isTextual()) {
+                return node.asText("[]");
+            }
+        }
+        if (root.has("educationJson") && !root.get("educationJson").isNull()) {
+            JsonNode node = root.get("educationJson");
+            if (node.isArray()) {
+                return node.toString();
+            } else if (node.isObject()) {
+                return "[" + node.toString() + "]";
+            } else if (node.isTextual()) {
+                return node.asText("[]");
+            }
+        }
+        return "[]";
     }
 
     private String getTextOrEmpty(JsonNode root, String fieldName) {

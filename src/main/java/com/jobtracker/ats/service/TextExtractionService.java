@@ -9,7 +9,12 @@ import java.io.IOException;
 @Service
 public class TextExtractionService {
 
-    private final Tika tika = new Tika();
+    private final Tika tika;
+
+    public TextExtractionService() {
+        this.tika = new Tika();
+        this.tika.setMaxStringLength(-1);
+    }
 
     public String extractText(MultipartFile file) {
         if (file == null || file.isEmpty()) {
