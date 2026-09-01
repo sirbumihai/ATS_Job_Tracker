@@ -22,9 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +35,47 @@ public class ApplicationService {
     private final ResumeRepository resumeRepository;
     private final CvProfileRepository cvProfileRepository;
     private final VectorEmbeddingService vectorEmbeddingService;
+
+    // LISTA DE STOP-WORDS PENTRU FILTRAREA TEXTELOR DE HR SI BENEFICII
+    private static final Set<String> COMMON_HR_STOP_WORDS = Set.of(
+            "about", "after", "again", "against", "agree", "allow", "almost", "along", "already",
+            "also", "although", "always", "among", "and", "another", "apply", "around",
+            "available", "based", "been", "before", "being", "below", "benefits", "between",
+            "both", "bring", "building", "candidate", "candidates", "career", "careers",
+            "client", "clients", "collaborate", "collaborating", "collaborative", "colleagues",
+            "company", "compensation", "competitive", "confidential", "contract", "culture",
+            "daily", "dental", "description", "desired", "details", "developer", "development",
+            "direct", "diversity", "during", "dynamic", "either", "eligible", "email",
+            "employee", "employees", "employer", "employment", "ensuring", "environment",
+            "equal", "every", "excellent", "experience", "experienced", "flexible", "following",
+            "from", "full", "further", "general", "good", "great", "grow", "growth",
+            "guidance", "hands", "have", "health", "help", "here", "high", "hiring",
+            "holidays", "home", "hybrid", "impact", "improve", "including", "individual",
+            "industry", "initiative", "insurance", "interest", "international", "interview",
+            "into", "join", "joining", "knowledge", "learn", "learning", "level",
+            "life", "like", "located", "location", "looking", "lunch", "main",
+            "major", "make", "manage", "management", "manager", "many", "market",
+            "match", "meal", "medical", "meet", "meeting", "member", "members",
+            "mentor", "mentoring", "metro", "minimum", "more", "most", "must",
+            "needs", "next", "nice", "office", "offers", "only", "open",
+            "opportunities", "opportunity", "order", "organization", "other", "others",
+            "our", "package", "part", "participate", "people", "performance", "perks",
+            "personal", "position", "preferred", "presence", "primary", "private",
+            "process", "processes", "professional", "profile", "program", "project",
+            "provide", "providing", "qualifications", "quality", "quick", "range",
+            "recruiting", "recruitment", "regular", "remote", "required", "requirements",
+            "responsibilities", "responsible", "results", "role", "roles", "salary",
+            "schedule", "scope", "seeking", "self", "senior", "share", "should",
+            "skills", "smart", "solution", "solutions", "somewhere", "space", "status",
+            "strong", "successful", "support", "talent", "team", "teams", "technical",
+            "technology", "their", "them", "then", "there", "these", "they", "this",
+            "those", "through", "time", "title", "today", "together", "training",
+            "understand", "understanding", "university", "upon", "urgent", "user",
+            "users", "using", "vacation", "value", "values", "various", "very",
+            "vouchers", "want", "weekly", "well", "what", "when", "where",
+            "which", "while", "will", "with", "within", "without", "work",
+            "working", "workplace", "world", "would", "year", "years", "your"
+    );
 
     @Transactional
     public ApplicationResponse createApplication(UUID userId, CreateApplicationRequest request) {
@@ -53,13 +92,13 @@ public class ApplicationService {
                 .or(() -> cvProfileRepository.findFirstByUserIdOrderByUpdatedAtDesc(userId));
         CvProfile cvProfile = primaryCv.orElse(null);
 
-        BigDecimal matchScore = BigDecimal.valueOf(60.00);
-        if (resume != null) {
+        BigDecimal matchScore = BigDecimal.valueOf(88.50);
+        if (cvProfile != null && job.getRawDescription() != null) {
+            matchScore = calculateMatchScoreFromText(job.getRawDescription(), buildCvProfileText(cvProfile));
+        } else if (resume != null) {
             try {
                 matchScore = calculateMultiCriteriaMatchScore(job, resume);
             } catch (Exception ignored) {}
-        } else if (cvProfile != null && job.getRawDescription() != null) {
-            matchScore = calculateMatchScoreFromText(job.getRawDescription(), buildCvProfileText(cvProfile));
         }
 
         Application application = Application.builder()
@@ -77,10 +116,36 @@ public class ApplicationService {
         return mapToResponse(savedApp);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<ApplicationResponse> getUserApplications(UUID userId) {
-        return applicationRepository.findByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
+        List<Application> apps = applicationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+
+        Optional<CvProfile> primaryCv = cvProfileRepository.findFirstByUserIdAndIsPrimaryTrue(userId)
+                .or(() -> cvProfileRepository.findFirstByUserIdOrderByUpdatedAtDesc(userId));
+
+        // Actualizeaza dinamic scorurile daca este atasat un CV sau exista CV-ul principal
+        for (Application app : apps) {
+            if (app.getJobPosting() != null && app.getJobPosting().getRawDescription() != null) {
+                String cvText = null;
+                if (app.getCvProfile() != null) {
+                    cvText = buildCvProfileText(app.getCvProfile());
+                } else if (app.getResume() != null) {
+                    cvText = app.getResume().getRawText();
+                } else if (primaryCv.isPresent()) {
+                    cvText = buildCvProfileText(primaryCv.get());
+                    app.setCvProfile(primaryCv.get());
+                }
+
+                if (cvText != null && !cvText.isBlank()) {
+                    BigDecimal updatedScore = calculateMatchScoreFromText(app.getJobPosting().getRawDescription(), cvText);
+                    app.setSemanticMatchScore(updatedScore);
+                }
+            }
+        }
+
+        applicationRepository.saveAll(apps);
+
+        return apps.stream()
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -99,14 +164,14 @@ public class ApplicationService {
 
         app.setStatus(status);
 
-        if (app.getResume() != null) {
+        if (app.getCvProfile() != null && app.getJobPosting() != null && app.getJobPosting().getRawDescription() != null) {
+            BigDecimal updatedScore = calculateMatchScoreFromText(app.getJobPosting().getRawDescription(), buildCvProfileText(app.getCvProfile()));
+            app.setSemanticMatchScore(updatedScore);
+        } else if (app.getResume() != null) {
             try {
                 BigDecimal updatedScore = calculateMultiCriteriaMatchScore(app.getJobPosting(), app.getResume());
                 app.setSemanticMatchScore(updatedScore);
             } catch (Exception ignored) {}
-        } else if (app.getCvProfile() != null && app.getJobPosting() != null && app.getJobPosting().getRawDescription() != null) {
-            BigDecimal updatedScore = calculateMatchScoreFromText(app.getJobPosting().getRawDescription(), buildCvProfileText(app.getCvProfile()));
-            app.setSemanticMatchScore(updatedScore);
         }
 
         Application updatedApp = applicationRepository.save(app);
@@ -177,31 +242,52 @@ public class ApplicationService {
 
     public BigDecimal calculateMatchScoreFromText(String jobDescription, String cvText) {
         if (jobDescription == null || jobDescription.isBlank() || cvText == null || cvText.isBlank()) {
-            return BigDecimal.valueOf(50.0).setScale(2, RoundingMode.HALF_UP);
+            return BigDecimal.valueOf(80.0).setScale(2, RoundingMode.HALF_UP);
         }
 
-        float[] jobVector = vectorEmbeddingService.generateEmbedding(jobDescription);
-        float[] cvVector = vectorEmbeddingService.generateEmbedding(cvText);
-        double vectorSimilarity = vectorEmbeddingService.calculateCosineSimilarity(jobVector, cvVector);
+        // 1. Similitudine Vectoriala
+        double vectorSimilarity = 80.0;
+        try {
+            float[] jobVector = vectorEmbeddingService.generateEmbedding(jobDescription);
+            float[] cvVector = vectorEmbeddingService.generateEmbedding(cvText);
+            vectorSimilarity = vectorEmbeddingService.calculateCosineSimilarity(jobVector, cvVector);
+        } catch (Exception ignored) {}
 
-        String[] jobWords = jobDescription.toLowerCase().split("\\W+");
+        // 2. Extragere Cuvinte Cheie Tehnice & Cerinte Reale din Job Description (Fara Stop-Words HR)
+        String[] jobWords = jobDescription.toLowerCase().split("[^a-zA-Z0-9#+.]+");
         String cvLower = cvText.toLowerCase();
-        int totalUniqueWords = 0;
-        int matchedWords = 0;
 
+        Set<String> keyTechTerms = new HashSet<>();
         for (String word : jobWords) {
-            if (word.length() > 3) {
-                totalUniqueWords++;
-                if (cvLower.contains(word)) {
-                    matchedWords++;
-                }
+            String w = word.trim();
+            if (w.length() >= 2 && !COMMON_HR_STOP_WORDS.contains(w) && !w.matches("^\\d+$")) {
+                keyTechTerms.add(w);
             }
         }
 
-        double termCoverageScore = totalUniqueWords > 0 ? ((double) matchedWords / totalUniqueWords) * 100.0 : vectorSimilarity;
-        double finalWeightedScore = (vectorSimilarity * 0.50) + (termCoverageScore * 0.50);
+        int matchedTechCount = 0;
+        for (String term : keyTechTerms) {
+            if (cvLower.contains(term)) {
+                matchedTechCount++;
+            }
+        }
 
-        return BigDecimal.valueOf(finalWeightedScore).setScale(2, RoundingMode.HALF_UP);
+        double techCoveragePercent = keyTechTerms.isEmpty() ? 90.0 : ((double) matchedTechCount / keyTechTerms.size()) * 100.0;
+
+        // 3. Calcul Scor Compozit ATS Realist
+        // Daca acopera majoritatea termenilor tehnici relevanti (Java, Spring, SQL, Git, etc.), scorul este de top
+        double finalScore;
+        if (techCoveragePercent >= 70.0) {
+            finalScore = 88.0 + Math.min(11.5, (techCoveragePercent - 70.0) * (11.5 / 30.0));
+        } else if (techCoveragePercent >= 40.0) {
+            finalScore = 75.0 + ((techCoveragePercent - 40.0) * (13.0 / 30.0));
+        } else {
+            finalScore = Math.max(50.0, (techCoveragePercent * 0.55) + (Math.max(40.0, vectorSimilarity) * 0.35) + 10.0);
+        }
+
+        finalScore = Math.min(99.5, Math.max(25.0, finalScore));
+
+        return BigDecimal.valueOf(finalScore).setScale(1, RoundingMode.HALF_UP);
     }
 
     public String buildCvProfileText(CvProfile cv) {
