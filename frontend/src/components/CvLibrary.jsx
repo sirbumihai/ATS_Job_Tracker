@@ -66,41 +66,79 @@ export default function CvLibrary({
       const newCvData = {
         title: newCvTitle.trim(),
         isPrimary: cvList.length === 0,
-        fullName: currentUser?.fullName || "NUME PRENUME",
-        email: currentUser?.email || "email@example.com",
-        phone: "+40 700 000 000",
-        location: "București, România",
-        summary: "Rezumat profesional orientat spre rezultate și impact tehnic.",
-        skillsLanguages: "Java, JavaScript, TypeScript, SQL",
-        skillsFrameworks: "Spring Boot, React, Node.js",
-        skillsDatabases: "PostgreSQL, Redis",
-        skillsDevops: "Docker, Git, CI/CD",
+        fullName: currentUser?.fullName || "Jake Ryan",
+        email: currentUser?.email || "jake@su.edu",
+        phone: "123-456-7890",
+        location: "Georgetown, TX",
+        linkedin: "https://linkedin.com/in/jake",
+        github: "https://github.com/jake",
+        summary: "Computer Science graduate with hands-on software engineering internship experience in building high-performance full-stack web applications and robust REST APIs. Proficient in Java, Spring Boot, React, and cloud workflows with a passion for clean code and scalable architecture.",
+        skillsLanguages: "Java, Python, C/C++, SQL (PostgreSQL), JavaScript, TypeScript, HTML/CSS",
+        skillsFrameworks: "Spring Boot, React, Node.js, Express, Flask, Tailwind CSS",
+        skillsDatabases: "pandas, NumPy, Matplotlib, JUnit, Mockito, Jest",
+        skillsDevops: "Git, Docker, Linux, Postman, AWS, VS Code, GitHub Actions",
         workExperienceJson: JSON.stringify([
           {
             id: 1,
-            role: "Software Developer",
-            company: "Companie Tech",
-            period: "2024 - Prezent",
-            location: "București",
-            bullets: ["Dezvoltat module backend REST API de înaltă performanță."]
+            role: "Software Engineering Intern",
+            company: "Under Armour",
+            period: "June 2020 – August 2020",
+            location: "Austin, TX",
+            bullets: [
+              "Architected and deployed RESTful microservices using Java, Spring Boot, and PostgreSQL, reducing query latency by 20% across high-traffic endpoints.",
+              "Collaborated with cross-functional engineering teams in an Agile environment to build scalable data pipelines with 95%+ unit test coverage using JUnit and Mockito.",
+              "Optimized database indexes and query plans, achieving sub-second response times for catalog search queries serving 100,000+ daily active users."
+            ]
+          },
+          {
+            id: 2,
+            role: "Teaching Assistant – Computer Science",
+            company: "Southwestern University",
+            period: "August 2019 – May 2020",
+            location: "Georgetown, TX",
+            bullets: [
+              "Facilitated weekly lab sessions and debugged code for 50+ undergraduate students in Object-Oriented Programming and Data Structures (Java & C++).",
+              "Conducted office hours and code reviews, providing detailed technical feedback on algorithm design, time complexity, and clean code practices."
+            ]
           }
         ]),
         projectsJson: JSON.stringify([
           {
             id: 1,
-            title: "Proiect ATS Full-Stack",
-            techStack: "Java 21, Spring Boot, React, PostgreSQL",
-            bullets: ["Arhitectură microservicii scalabilă."]
+            title: "Git CLI Automation Tool",
+            techStack: "Python, Click, Git, REST API",
+            period: "June 2020 – July 2020",
+            linkUrl: "https://github.com/jake/git-cli",
+            linkText: "github.com/jake/git-cli",
+            bullets: [
+              "Engineered an automated command-line developer tool using Python and Click to streamline multi-repository branch management and PR verification.",
+              "Integrated GitHub Webhook events and REST APIs to trigger automated CI/CD builds, saving engineering teams 3+ manual deployment hours per week."
+            ]
+          },
+          {
+            id: 2,
+            title: "E-Commerce Web Application",
+            techStack: "React, Node.js, Express, PostgreSQL, Tailwind CSS",
+            period: "January 2020 – May 2020",
+            linkUrl: "https://github.com/jake/shop-app",
+            linkText: "github.com/jake/shop-app",
+            bullets: [
+              "Architected a scalable full-stack e-commerce web application with product search, filtering, JWT authentication, and secure Stripe checkout integration.",
+              "Optimized frontend performance and bundle size by 35% using React code-splitting and memoization, achieving a 98/100 Google Lighthouse score."
+            ]
           }
         ]),
         educationJson: JSON.stringify([
           {
             id: 1,
-            school: "Universitatea Politehnica din București",
-            degree: "Licență în Informatică",
-            period: "2022 - 2026",
-            location: "București",
-            bullets: ["Cursuri: Structuri de date, Baze de date, Arhitecturi software."]
+            school: "Southwestern University",
+            degree: "Bachelor of Arts in Computer Science, Minor in Business",
+            period: "Aug. 2018 – May 2021",
+            location: "Georgetown, TX",
+            bullets: [
+              "GPA: 3.9 / 4.0",
+              "Relevant Coursework: Data Structures & Algorithms, Object-Oriented Programming, Database Systems, Computer Systems, Software Engineering."
+            ]
           }
         ]),
         languagePreference: "EN"

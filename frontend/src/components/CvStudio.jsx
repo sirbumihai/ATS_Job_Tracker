@@ -55,15 +55,15 @@ export default function CvStudio({
   const previewRef = useRef(null);
   const workbenchRef = useRef(null);
 
-  // MASTER CONTACT STATE
+  // MASTER CONTACT STATE (DEFAULT: JAKE'S RESUME TEMPLATE)
   const [contactData, setContactData] = useState({
-    fullName: currentUser ? (currentUser.fullName || "Sîrbu Mihai-Alexandru") : "Sîrbu Mihai-Alexandru",
-    email: currentUser ? (currentUser.email || "sarbumihai0@gmail.com") : "sarbumihai0@gmail.com",
-    phone: "(+40) 723 034 706",
-    location: "Bucharest, Romania",
-    linkedin: "https://www.linkedin.com/in/sirbu-mihai-86133b181/",
+    fullName: currentUser?.fullName || "Jake Ryan",
+    email: currentUser?.email || "jake@su.edu",
+    phone: "123-456-7890",
+    location: "Georgetown, TX",
+    linkedin: "https://linkedin.com/in/jake",
     linkedinFull: false,
-    github: "https://github.com/sirbumihai",
+    github: "https://github.com/jake",
     githubFull: false,
     portfolio: "",
     portfolioFull: false,
@@ -73,16 +73,17 @@ export default function CvStudio({
     socialFull: false
   });
 
-  // CV SECTIONS STATE
+  // CV SECTIONS STATE (DEFAULT: JAKE'S RESUME TEMPLATE)
   const [educationList, setEducationList] = useState([
     {
       id: 1,
-      school: "University Politehnica of Bucharest",
-      degree: "Bachelor of Computer Science & Engineering",
-      period: "October 2022 – July 2026",
-      location: "Bucharest, Romania",
+      school: "Southwestern University",
+      degree: "Bachelor of Arts in Computer Science, Minor in Business",
+      period: "Aug. 2018 – May 2021",
+      location: "Georgetown, TX",
       bullets: [
-        "Courses: Data Structures & Algorithms, Object-Oriented Programming, Database Systems, Computer Networks, Software Engineering."
+        "GPA: 3.9 / 4.0",
+        "Relevant Coursework: Data Structures & Algorithms, Object-Oriented Programming, Database Systems, Computer Systems, Software Engineering."
       ]
     }
   ]);
@@ -91,12 +92,24 @@ export default function CvStudio({
     {
       id: 1,
       role: "Software Engineering Intern",
-      company: "SIMAVI (Software Imagination & Vision)",
-      period: "June 2025 – August 2025",
-      location: "Bucharest, Romania",
+      company: "Under Armour",
+      period: "June 2020 – August 2020",
+      location: "Austin, TX",
       bullets: [
-        "Optimized data retrieval for a library management system by architecting a normalized MySQL schema with strategic indexing and implementing custom Spring Data JPA repositories, achieving sub-second latency for complex queries across 50,000+ records.",
-        "Developed and maintained enterprise-grade features using Java, Spring Boot, and PrimeFaces, ensuring seamless integration with legacy systems and enhancing UI responsiveness."
+        "Architected and deployed RESTful microservices using Java, Spring Boot, and PostgreSQL, reducing query latency by 20% across high-traffic endpoints.",
+        "Collaborated with cross-functional engineering teams in an Agile environment to build scalable data pipelines with 95%+ unit test coverage using JUnit and Mockito.",
+        "Optimized database indexes and query plans, achieving sub-second response times for catalog search queries serving 100,000+ daily active users."
+      ]
+    },
+    {
+      id: 2,
+      role: "Teaching Assistant – Computer Science",
+      company: "Southwestern University",
+      period: "August 2019 – May 2020",
+      location: "Georgetown, TX",
+      bullets: [
+        "Facilitated weekly lab sessions and debugged code for 50+ undergraduate students in Object-Oriented Programming and Data Structures (Java & C++).",
+        "Conducted office hours and code reviews, providing detailed technical feedback on algorithm design, time complexity, and clean code practices."
       ]
     }
   ]);
@@ -104,77 +117,68 @@ export default function CvStudio({
   const [projectsList, setProjectsList] = useState([
     {
       id: 1,
-      title: "3D Medical Image Segmentation",
-      techStack: "Python, PyTorch, SimpleITK, Flask, Plotly, NumPy, SciPy, Nibabel",
-      period: "February 2026 – June 2026",
-      linkUrl: "",
-      linkText: "",
+      title: "Git CLI Automation Tool",
+      techStack: "Python, Click, Git, REST API",
+      period: "June 2020 – July 2020",
+      linkUrl: "https://github.com/jake/git-cli",
+      linkText: "github.com/jake/git-cli",
       bullets: [
-        "Architected a high-throughput medical data pipeline using SimpleITK to process 1,506 multi-center cases, reducing data preprocessing time by 40% and ensuring standardized inputs for segmentation models via isotropic resampling."
+        "Engineered an automated command-line developer tool using Python and Click to streamline multi-repository branch management and PR verification.",
+        "Integrated GitHub Webhook events and REST APIs to trigger automated CI/CD builds, saving engineering teams 3+ manual deployment hours per week."
       ]
     },
     {
       id: 2,
-      title: "OneRep – Fitness Tracking Web Application",
-      techStack: "Next.js, React, TypeScript, Supabase, PostgreSQL, Tailwind",
-      period: "October 2025 – January 2026",
-      linkUrl: "https://one-rep.vercel.app",
-      linkText: "one-rep.vercel.app",
+      title: "E-Commerce Web Application",
+      techStack: "React, Node.js, Express, PostgreSQL, Tailwind CSS",
+      period: "January 2020 – May 2020",
+      linkUrl: "https://github.com/jake/shop-app",
+      linkText: "github.com/jake/shop-app",
       bullets: [
-        "Engineered a scalable fitness tracking platform using Next.js and Supabase, enforcing granular data security via 8 RLS policies and automating subscription workflows via Stripe webhooks, which reduced manual payment processing overhead by 25%."
-      ]
-    },
-    {
-      id: 3,
-      title: "Banking Application",
-      techStack: "Java, Spring Boot, Spring Security, MySQL, Thymeleaf",
-      period: "November 2024 – January 2025",
-      linkUrl: "",
-      linkText: "",
-      bullets: [
-        "Architected a secure full-stack banking platform with Spring Security and Thymeleaf, implementing custom transaction categorization logic that reduced manual reconciliation time by 30% and improved data accuracy for 500+ monthly transactions."
+        "Architected a scalable full-stack e-commerce web application with product search, filtering, JWT authentication, and secure Stripe checkout integration.",
+        "Optimized frontend performance and bundle size by 35% using React code-splitting and memoization, achieving a 98/100 Google Lighthouse score."
       ]
     }
   ]);
 
-  // CERTIFICATIONS STATE
+  // CERTIFICATIONS STATE (DEFAULT: JAKE'S RESUME TEMPLATE)
   const [certificationsList, setCertificationsList] = useState([
     {
       id: 1,
-      name: "Oracle Certified Professional: Java SE 21 Developer",
-      issuer: "Oracle",
-      period: "May 2025",
+      name: "AWS Certified Cloud Practitioner",
+      issuer: "Amazon Web Services",
+      period: "April 2021",
       bullets: [
-        "Demonstrated proficiency in core Java, modern concurrency, virtual threads, and JVM performance tuning."
+        "Validated core knowledge of cloud infrastructure, IAM security, EC2 computing, S3 storage, and serverless architectures."
       ]
     }
   ]);
 
-  // TECHNICAL SKILLS FIELDS STATE
+  // TECHNICAL SKILLS FIELDS STATE (DEFAULT: JAKE'S RESUME TEMPLATE)
   const [skillsFields, setSkillsFields] = useState([
     {
       id: 'languages',
       label: 'Languages',
-      items: ['Java', 'TypeScript', 'Python', 'C/C++', 'HTML', 'CSS']
+      items: ['Java', 'Python', 'C/C++', 'SQL (PostgreSQL)', 'JavaScript', 'TypeScript', 'HTML/CSS']
     },
     {
       id: 'frameworks',
       label: 'Frameworks',
-      items: ['Spring Boot', 'React', 'Next.js', 'PrimeFaces', 'Spring Security', 'Thymeleaf']
+      items: ['Spring Boot', 'React', 'Node.js', 'Express', 'Flask', 'Tailwind CSS']
     },
     {
       id: 'developer_tools',
       label: 'Developer Tools',
-      items: ['Linux', 'Git', 'Supabase', 'Stripe']
+      items: ['Git', 'Docker', 'Linux', 'Postman', 'AWS', 'VS Code', 'GitHub Actions']
     },
     {
       id: 'libraries',
       label: 'Libraries',
-      items: ['PyTorch', 'SimpleITK', 'Flask', 'Plotly', 'NumPy', 'SciPy', 'Nibabel', 'Tailwind', 'Bootstrap']
+      items: ['pandas', 'NumPy', 'Matplotlib', 'JUnit', 'Mockito', 'Jest']
     }
   ]);
 
-  const [summaryText, setSummaryText] = useState("Computer Science & Engineering graduate with software engineering internship experience specializing in full-stack development and deep learning. Proficient in Java (Spring Boot), TypeScript (React), and Python (PyTorch), with a track record of building secure web applications and high-performance 3D segmentation models.");
+  const [summaryText, setSummaryText] = useState("Computer Science graduate with hands-on software engineering internship experience in building high-performance full-stack web applications and robust REST APIs. Proficient in Java, Spring Boot, React, and cloud workflows with a passion for clean code and scalable architecture.");
 
   // SECTION ORDER
   const [sectionOrder, setSectionOrder] = useState(['education', 'experience', 'projects', 'skills']);
