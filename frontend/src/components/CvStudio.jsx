@@ -42,6 +42,7 @@ import {
   Link as LinkIcon,
   Globe
 } from 'lucide-react';
+import PolishAiCoach from './PolishAiCoach';
 
 export default function CvStudio({ 
   applications = [], 
@@ -210,6 +211,94 @@ export default function CvStudio({
   const [agent2Output, setAgent2Output] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(applications.length > 0 ? applications[0].id : '');
   const [customJobDescription, setCustomJobDescription] = useState('');
+
+  // POLISH AI COACH & BULLET REWRITER STATES
+  const [showPolishCoach, setShowPolishCoach] = useState(false);
+  const [activeRewritingBullet, setActiveRewritingBullet] = useState(null);
+
+  const handleApplyPolishFix = (sug) => {
+    if (!sug) return;
+    if (sug.targetSection === 'EXPERIENCE') {
+      setExperienceList(prev => {
+        const updated = [...prev];
+        const targetIdx = Math.min(updated.length - 1, Math.max(0, parseInt(sug.targetId || '1', 10) - 1));
+        if (updated[targetIdx] && updated[targetIdx].bullets) {
+          const bIdx = Math.min(updated[targetIdx].bullets.length - 1, Math.max(0, sug.bulletIndex));
+          const newBullets = [...updated[targetIdx].bullets];
+          newBullets[bIdx] = sug.afterText;
+          updated[targetIdx] = { ...updated[targetIdx], bullets: newBullets };
+        }
+        return updated;
+      });
+    } else if (sug.targetSection === 'PROJECTS') {
+      setProjectsList(prev => {
+        const updated = [...prev];
+        const targetIdx = Math.min(updated.length - 1, Math.max(0, parseInt(sug.targetId || '1', 10) - 1));
+        if (updated[targetIdx] && updated[targetIdx].bullets) {
+          const bIdx = Math.min(updated[targetIdx].bullets.length - 1, Math.max(0, sug.bulletIndex));
+          const newBullets = [...updated[targetIdx].bullets];
+          newBullets[bIdx] = sug.afterText;
+          updated[targetIdx] = { ...updated[targetIdx], bullets: newBullets };
+        }
+        return updated;
+      });
+    }
+  };
+
+  const handleApplyAllPolishFixes = (suggestions) => {
+    if (!Array.isArray(suggestions)) return;
+    suggestions.forEach(s => handleApplyPolishFix(s));
+  };
+
+  const handleOpenBulletRewrite = async (section, itemIdx, bulletIdx, bulletText) => {
+    setActiveRewritingBullet({
+      section,
+      itemIdx,
+      bulletIdx,
+      originalText: bulletText,
+      variations: null,
+      loading: true
+    });
+
+    try {
+      const res = await fetch('/api/v1/ai/rewrite-bullet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          bulletText, 
+          context: section === 'experience' ? experienceList[itemIdx]?.role : projectsList[itemIdx]?.title 
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setActiveRewritingBullet(prev => prev ? { ...prev, variations: data, loading: false } : null);
+      } else {
+        setActiveRewritingBullet(prev => prev ? { ...prev, loading: false } : null);
+      }
+    } catch (err) {
+      console.error('Eroare la rescrierea bullet-ului:', err);
+      setActiveRewritingBullet(prev => prev ? { ...prev, loading: false } : null);
+    }
+  };
+
+  const handleSelectBulletVariation = (newText) => {
+    if (!activeRewritingBullet || !newText) return;
+    const { section, itemIdx, bulletIdx } = activeRewritingBullet;
+    if (section === 'experience') {
+      const updated = [...experienceList];
+      if (updated[itemIdx]?.bullets) {
+        updated[itemIdx].bullets[bulletIdx] = newText;
+        setExperienceList(updated);
+      }
+    } else if (section === 'projects') {
+      const updated = [...projectsList];
+      if (updated[itemIdx]?.bullets) {
+        updated[itemIdx].bullets[bulletIdx] = newText;
+        setProjectsList(updated);
+      }
+    }
+    setActiveRewritingBullet(null);
+  };
 
   // DISMISS POPUPS ON OUTSIDE CLICK
   useEffect(() => {
@@ -862,6 +951,19 @@ export default function CvStudio({
               )}
             </div>
 
+            {/* POLISH AI COACH TOGGLE BUTTON */}
+            <button
+              onClick={() => setShowPolishCoach(!showPolishCoach)}
+              className={`px-3.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer ${
+                showPolishCoach 
+                  ? 'bg-black text-white shadow-sm ring-2 ring-amber-400' 
+                  : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-amber-500/20'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+              {showPolishCoach ? 'Închide Polish AI' : '✨ Polish AI Coach (95+)'}
+            </button>
+
             {/* AI OPTIMIZE BUTTON */}
             <button
               onClick={() => setShowAiModal(true)}
@@ -952,6 +1054,19 @@ export default function CvStudio({
           </div>
         )}
       </div>
+
+      {/* POLISH AI COACH PANEL */}
+      {showPolishCoach && (
+        <div className="w-full animate-in fade-in slide-in-from-top-4 duration-300">
+          <PolishAiCoach 
+            cvId={currentCvId}
+            applicationId={selectedJobId}
+            onApplyFix={handleApplyPolishFix}
+            onApplyAllFixes={handleApplyAllPolishFixes}
+            onClose={() => setShowPolishCoach(false)}
+          />
+        </div>
+      )}
 
       {/* ================= A4 DOCUMENT WORKBENCH (PURE WHITE CANVAS) ================= */}
       <div 
@@ -1442,6 +1557,28 @@ export default function CvStudio({
                               >
                                 {b}
                               </div>
+
+                              {/* HOVER ACTIONS (AI XYZ REWRITE & DELETE) */}
+                              <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenBulletRewrite('experience', expIdx, bIdx, b);
+                                  }}
+                                  className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs"
+                                  title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici măsurabile"
+                                >
+                                  <Sparkles className="w-2.5 h-2.5 text-amber-600" />
+                                  <span>AI XYZ</span>
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
+                                  className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
+                                  title="Șterge bullet"
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" />
+                                </button>
+                              </div>
                             </div>
                           );
                         })}
@@ -1656,6 +1793,28 @@ export default function CvStudio({
                                 style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
                               >
                                 {b}
+                              </div>
+
+                              {/* HOVER ACTIONS (AI XYZ REWRITE & DELETE) */}
+                              <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenBulletRewrite('projects', projIdx, bIdx, b);
+                                  }}
+                                  className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs"
+                                  title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici măsurabile"
+                                >
+                                  <Sparkles className="w-2.5 h-2.5 text-amber-600" />
+                                  <span>AI XYZ</span>
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
+                                  className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
+                                  title="Șterge bullet"
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" />
+                                </button>
                               </div>
                             </div>
                           );
@@ -2345,6 +2504,117 @@ export default function CvStudio({
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* SINGLE BULLET XYZ REWRITE MODAL */}
+      {activeRewritingBullet && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl border border-gray-200 text-gray-900 space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-100 text-amber-800 rounded-xl">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm sm:text-base text-gray-950">
+                    Rescriere AI • Formula Google X-Y-Z
+                  </h3>
+                  <p className="text-[11px] text-gray-500">
+                    Alege una dintre cele 3 variante optimizate cu metrici măsurabile
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setActiveRewritingBullet(null)}
+                className="p-1 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-900 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Varianta Curentă:</span>
+              <p className="text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg border border-gray-200 italic">
+                {activeRewritingBullet.originalText}
+              </p>
+            </div>
+
+            {activeRewritingBullet.loading ? (
+              <div className="py-8 flex flex-col items-center justify-center gap-2 text-gray-500">
+                <RefreshCw className="w-6 h-6 animate-spin text-black" />
+                <span className="text-xs font-semibold">Generare opțiuni Google X-Y-Z în curs...</span>
+              </div>
+            ) : activeRewritingBullet.variations ? (
+              <div className="space-y-3 pt-1">
+                {activeRewritingBullet.variations.highImpact && (
+                  <div 
+                    onClick={() => handleSelectBulletVariation(activeRewritingBullet.variations.highImpact)}
+                    className="p-3 rounded-xl border border-purple-200 bg-purple-50/40 hover:border-purple-400 hover:bg-purple-50/80 cursor-pointer transition space-y-1 group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-200">
+                        🚀 Impact Maxim (Google XYZ)
+                      </span>
+                      <span className="text-xs font-bold text-purple-700 opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+                        Selectează <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-900 font-medium leading-relaxed">
+                      {activeRewritingBullet.variations.highImpact}
+                    </p>
+                  </div>
+                )}
+
+                {activeRewritingBullet.variations.deepTech && (
+                  <div 
+                    onClick={() => handleSelectBulletVariation(activeRewritingBullet.variations.deepTech)}
+                    className="p-3 rounded-xl border border-blue-200 bg-blue-50/40 hover:border-blue-400 hover:bg-blue-50/80 cursor-pointer transition space-y-1 group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+                        ⚙️ Adâncime Tehnică & Arhitectură
+                      </span>
+                      <span className="text-xs font-bold text-blue-700 opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+                        Selectează <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-900 font-medium leading-relaxed">
+                      {activeRewritingBullet.variations.deepTech}
+                    </p>
+                  </div>
+                )}
+
+                {activeRewritingBullet.variations.concise && (
+                  <div 
+                    onClick={() => handleSelectBulletVariation(activeRewritingBullet.variations.concise)}
+                    className="p-3 rounded-xl border border-emerald-200 bg-emerald-50/40 hover:border-emerald-400 hover:bg-emerald-50/80 cursor-pointer transition space-y-1 group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        🎯 Formulare Concisă & Directă
+                      </span>
+                      <span className="text-xs font-bold text-emerald-700 opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+                        Selectează <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-900 font-medium leading-relaxed">
+                      {activeRewritingBullet.variations.concise}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setActiveRewritingBullet(null)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-bold text-xs cursor-pointer transition"
+              >
+                Anulează
+              </button>
+            </div>
           </div>
         </div>
       )}
