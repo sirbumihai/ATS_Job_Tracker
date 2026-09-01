@@ -18,23 +18,27 @@ import java.io.InputStream;
 @Slf4j
 public class TextExtractionService {
 
-    private final Parser parser;
-    private final ParseContext parseContext;
+    private final Tika standardTika;
+    private final Parser ocrParser;
+    private final ParseContext ocrParseContext;
 
     public TextExtractionService() {
-        this.parser = new AutoDetectParser();
-        this.parseContext = new ParseContext();
+        this.standardTika = new Tika();
+        this.standardTika.setMaxStringLength(-1);
 
-        PDFParserConfig pdfConfig = new PDFParserConfig();
-        pdfConfig.setExtractInlineImages(true);
-        pdfConfig.setOcrStrategy(PDFParserConfig.OCR_STRATEGY.OCR_AND_TEXT_EXTRACTION);
+        this.ocrParser = new AutoDetectParser();
+        this.ocrParseContext = new ParseContext();
+
+        PDFParserConfig ocrPdfConfig = new PDFParserConfig();
+        ocrPdfConfig.setExtractInlineImages(true);
+        ocrPdfConfig.setOcrStrategy(PDFParserConfig.OCR_STRATEGY.OCR_ONLY);
         
         TesseractOCRConfig ocrConfig = new TesseractOCRConfig();
         ocrConfig.setLanguage("eng+ron");
 
-        this.parseContext.set(PDFParserConfig.class, pdfConfig);
-        this.parseContext.set(TesseractOCRConfig.class, ocrConfig);
-        this.parseContext.set(Parser.class, this.parser);
+        this.ocrParseContext.set(PDFParserConfig.class, ocrPdfConfig);
+        this.ocrParseContext.set(TesseractOCRConfig.class, ocrConfig);
+        this.ocrParseContext.set(Parser.class, this.ocrParser);
     }
 
     public String extractText(MultipartFile file) {
@@ -42,38 +46,40 @@ public class TextExtractionService {
             throw new IllegalArgumentException("Fisierul incarcat nu poate fi gol.");
         }
 
+        String extractedText = "";
+
+        // 1. PRIMARY PASS: Fast & Clean Vector Text Extraction (NO OCR Duplication)
         try (InputStream stream = file.getInputStream()) {
-            BodyContentHandler handler = new BodyContentHandler(-1);
-            Metadata metadata = new Metadata();
-            parser.parse(stream, handler, metadata, parseContext);
-
-            String extractedText = handler.toString();
-            if (extractedText == null || extractedText.isBlank() || extractedText.length() < 100) {
-                // If text is minimal, try standard Tika fallback
-                try (InputStream fallbackStream = file.getInputStream()) {
-                    Tika fallbackTika = new Tika();
-                    fallbackTika.setMaxStringLength(-1);
-                    String fallbackText = fallbackTika.parseToString(fallbackStream);
-                    if (fallbackText != null && fallbackText.length() > (extractedText != null ? extractedText.length() : 0)) {
-                        extractedText = fallbackText;
-                    }
-                }
+            extractedText = standardTika.parseToString(stream);
+            if (extractedText != null) {
+                extractedText = extractedText.trim();
             }
-
-            if (extractedText == null || extractedText.isBlank()) {
-                throw new IllegalStateException("Nu s-a putut extrage text din fisierul incarcat.");
-            }
-            log.info("[TIKA EXTRACT] Extrase {} caractere din fisierul: {}", extractedText.length(), file.getOriginalFilename());
-            return extractedText.trim();
         } catch (Exception e) {
-            log.warn("[TIKA EXTRACT WARN] Eroare parser avansat: {}, incercare fallback Tika standard...", e.getMessage());
-            try (InputStream fallbackStream = file.getInputStream()) {
-                Tika fallbackTika = new Tika();
-                fallbackTika.setMaxStringLength(-1);
-                return fallbackTika.parseToString(fallbackStream).trim();
-            } catch (Exception ex) {
-                throw new RuntimeException("Formatul fisierului nu este suportat sau fisierul este corupt: " + ex.getMessage(), ex);
+            log.warn("[TIKA VECTOR EXTRACT WARN] Eroare la extragerea vectoriala: {}", e.getMessage());
+        }
+
+        // 2. OCR FALLBACK: If document is scanned / image-based with very little text (< 120 characters)
+        if (extractedText == null || extractedText.length() < 120) {
+            log.info("[TIKA OCR FALLBACK] Text insuficient ({} caractere), rulare OCR Tesseract...", 
+                    extractedText != null ? extractedText.length() : 0);
+            try (InputStream stream = file.getInputStream()) {
+                BodyContentHandler handler = new BodyContentHandler(-1);
+                Metadata metadata = new Metadata();
+                ocrParser.parse(stream, handler, metadata, ocrParseContext);
+                String ocrResult = handler.toString();
+                if (ocrResult != null && !ocrResult.isBlank()) {
+                    extractedText = ocrResult.trim();
+                }
+            } catch (Exception e) {
+                log.warn("[TIKA OCR WARN] Eroare la procesarea OCR: {}", e.getMessage());
             }
         }
+
+        if (extractedText == null || extractedText.isBlank()) {
+            throw new IllegalStateException("Nu s-a putut extrage text din fisierul incarcat.");
+        }
+
+        log.info("[TIKA SUCCESS] Extrase {} caractere unice din fisierul: {}", extractedText.length(), file.getOriginalFilename());
+        return extractedText.trim();
     }
 }

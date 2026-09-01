@@ -109,10 +109,8 @@ public class DeterministicResumeParserService {
                 !line.matches(".*\\d{4,}.*") &&
                 detectSectionHeader(line) == SectionType.UNKNOWN) {
                 
-                // Do NOT strip hyphens (-) from names! Only strip pipes and bullets
                 String candidate = line.replaceAll("[|•·].*$", "").trim();
                 if (candidate.length() >= 3 && candidate.length() < 50 && !candidate.equalsIgnoreCase("Resume") && !candidate.equalsIgnoreCase("CV") && !candidate.toLowerCase().contains("engineering") && !candidate.toLowerCase().contains("developer")) {
-                    // Convert ALL-CAPS names to proper Title Case
                     if (candidate.equals(candidate.toUpperCase()) && candidate.contains(" ")) {
                         fullName = toTitleCase(candidate);
                     } else {
@@ -136,53 +134,70 @@ public class DeterministicResumeParserService {
             github = "https://github.com/sarbumihai";
         }
 
-        // 2. SEGMENT LINES INTO SECTIONS
+        // 2. SEGMENT LINES INTO SECTIONS (WITH DEDUPLICATION OF SECTION HEADERS)
         Map<SectionType, List<String>> sections = new LinkedHashMap<>();
         for (SectionType type : SectionType.values()) {
             sections.put(type, new ArrayList<>());
         }
 
         SectionType currentSection = SectionType.HEADER;
+        Set<SectionType> encounteredSections = new HashSet<>();
 
         for (String line : cleanLines) {
             SectionType detectedHeader = detectSectionHeader(line);
             if (detectedHeader != SectionType.UNKNOWN) {
+                // If section was already encountered before, avoid duplicates from multiple scans
+                if (encounteredSections.contains(detectedHeader)) {
+                    // Check if current list is already populated
+                    if (sections.get(detectedHeader).size() > 2) {
+                        currentSection = SectionType.UNKNOWN;
+                        continue;
+                    }
+                }
+                encounteredSections.add(detectedHeader);
                 currentSection = detectedHeader;
                 continue;
             }
-            sections.get(currentSection).add(line);
+            if (currentSection != SectionType.UNKNOWN) {
+                sections.get(currentSection).add(line);
+            }
         }
 
         // 3. PARSE SUMMARY
         String summary = String.join(" ", sections.get(SectionType.SUMMARY)).trim();
 
         // 4. PARSE SKILLS
-        String skillsLanguages = "";
-        String skillsFrameworks = "";
-        String skillsDatabases = "";
-        String skillsDevops = "";
+        String rawLanguages = "";
+        String rawFrameworks = "";
+        String rawDatabases = "";
+        String rawDevops = "";
 
         List<String> skillsLines = sections.get(SectionType.SKILLS);
         for (String line : skillsLines) {
             String lower = line.toLowerCase();
             if (lower.startsWith("languages") || lower.startsWith("programming languages") || lower.startsWith("proficient")) {
                 String items = extractSkillItems(line);
-                skillsLanguages = skillsLanguages.isEmpty() ? items : skillsLanguages + ", " + items;
+                rawLanguages = rawLanguages.isEmpty() ? items : rawLanguages + ", " + items;
             } else if (lower.startsWith("frameworks") || lower.startsWith("intermediate")) {
                 String items = extractSkillItems(line);
-                skillsFrameworks = skillsFrameworks.isEmpty() ? items : skillsFrameworks + ", " + items;
+                rawFrameworks = rawFrameworks.isEmpty() ? items : rawFrameworks + ", " + items;
             } else if (lower.startsWith("databases") || lower.startsWith("data") || lower.startsWith("libraries") || lower.startsWith("basic")) {
                 String items = extractSkillItems(line);
-                skillsDatabases = skillsDatabases.isEmpty() ? items : skillsDatabases + ", " + items;
+                rawDatabases = rawDatabases.isEmpty() ? items : rawDatabases + ", " + items;
             } else if (lower.startsWith("developer tools") || lower.startsWith("tools") || lower.startsWith("devops") || lower.startsWith("technologies")) {
                 String items = extractSkillItems(line);
-                skillsDevops = skillsDevops.isEmpty() ? items : skillsDevops + ", " + items;
+                rawDevops = rawDevops.isEmpty() ? items : rawDevops + ", " + items;
             } else {
-                if (skillsLanguages.isEmpty()) skillsLanguages = line.replaceAll("^[•\\-*–]\\s*", "");
-                else if (skillsFrameworks.isEmpty()) skillsFrameworks = line.replaceAll("^[•\\-*–]\\s*", "");
-                else if (skillsDevops.isEmpty()) skillsDevops = line.replaceAll("^[•\\-*–]\\s*", "");
+                if (rawLanguages.isEmpty()) rawLanguages = line.replaceAll("^[•\\-*–]\\s*", "");
+                else if (rawFrameworks.isEmpty()) rawFrameworks = line.replaceAll("^[•\\-*–]\\s*", "");
+                else if (rawDevops.isEmpty()) rawDevops = line.replaceAll("^[•\\-*–]\\s*", "");
             }
         }
+
+        String skillsLanguages = deduplicateSkills(rawLanguages);
+        String skillsFrameworks = deduplicateSkills(rawFrameworks);
+        String skillsDatabases = deduplicateSkills(rawDatabases);
+        String skillsDevops = deduplicateSkills(rawDevops);
 
         // 5. PARSE EDUCATION
         List<Map<String, Object>> educationList = parseEducation(sections.get(SectionType.EDUCATION));
@@ -261,7 +276,9 @@ public class DeterministicResumeParserService {
             if (!isBullet && (dateMatch.find() || line.toLowerCase().contains("university") || line.toLowerCase().contains("politehnica") || line.toLowerCase().contains("faculty") || line.toLowerCase().contains("college") || line.toLowerCase().contains("bachelor") || line.toLowerCase().contains("master"))) {
                 if (current != null) {
                     current.put("bullets", new ArrayList<>(bullets));
-                    list.add(current);
+                    if (!isDuplicateEntry(list, "school", String.valueOf(current.get("school")))) {
+                        list.add(current);
+                    }
                     bullets.clear();
                 }
 
@@ -296,13 +313,16 @@ public class DeterministicResumeParserService {
                 current.put("degree", degLine);
                 current.put("location", loc);
             } else if (isBullet && current != null) {
-                bullets.add(cleanBulletText(line));
+                String b = cleanBulletText(line);
+                if (!bullets.contains(b) && !b.isBlank()) bullets.add(b);
             }
         }
 
         if (current != null) {
             current.put("bullets", new ArrayList<>(bullets));
-            list.add(current);
+            if (!isDuplicateEntry(list, "school", String.valueOf(current.get("school")))) {
+                list.add(current);
+            }
         }
 
         return list;
@@ -323,7 +343,9 @@ public class DeterministicResumeParserService {
             if (!isBullet && (dateMatch.find() || isRoleLine(line))) {
                 if (current != null) {
                     current.put("bullets", new ArrayList<>(bullets));
-                    list.add(current);
+                    if (!isDuplicateEntry(list, "role", String.valueOf(current.get("role")))) {
+                        list.add(current);
+                    }
                     bullets.clear();
                 }
 
@@ -352,18 +374,21 @@ public class DeterministicResumeParserService {
                 current.put("company", compLine);
                 current.put("location", loc);
             } else if (isBullet && current != null) {
-                bullets.add(cleanBulletText(line));
+                String b = cleanBulletText(line);
+                if (!bullets.contains(b) && !b.isBlank()) bullets.add(b);
             } else if (!isBullet && current != null) {
-                // Multi-line unbulleted text in experience is also a bullet point!
                 if (!line.contains("@") && !line.toLowerCase().contains("linkedin") && !line.toLowerCase().contains("github") && detectSectionHeader(line) == SectionType.UNKNOWN) {
-                    bullets.add(cleanBulletText(line));
+                    String b = cleanBulletText(line);
+                    if (!bullets.contains(b) && !b.isBlank()) bullets.add(b);
                 }
             }
         }
 
         if (current != null) {
             current.put("bullets", new ArrayList<>(bullets));
-            list.add(current);
+            if (!isDuplicateEntry(list, "role", String.valueOf(current.get("role")))) {
+                list.add(current);
+            }
         }
 
         return list;
@@ -380,7 +405,6 @@ public class DeterministicResumeParserService {
         for (String line : lines) {
             String lower = line.toLowerCase();
             
-            // Strictly exclude header metadata lines from becoming project entries
             if (lower.contains("sirbu") || lower.contains("@gmail.com") || lower.contains("linkedin") || lower.contains("github") || lower.contains("bucuresti") || lower.contains("(+40)")) {
                 continue;
             }
@@ -391,7 +415,9 @@ public class DeterministicResumeParserService {
             if (!isBullet && isLikelyProjectTitle(line)) {
                 if (current != null) {
                     current.put("bullets", new ArrayList<>(bullets));
-                    list.add(current);
+                    if (!isDuplicateEntry(list, "title", String.valueOf(current.get("title")))) {
+                        list.add(current);
+                    }
                     bullets.clear();
                 }
 
@@ -406,7 +432,6 @@ public class DeterministicResumeParserService {
                 String cleanLine = period.isEmpty() ? line : line.replace(period, "").trim();
                 cleanLine = cleanLine.replaceAll("[–—|]$", "").trim();
 
-                // If tech stack is inline with title (e.g. "Real-Time Task Management System Java, Spring Boot...")
                 String title = cleanLine;
                 String techStack = "";
                 if (cleanLine.contains("Java") || cleanLine.contains("React") || cleanLine.contains("Next.js") || cleanLine.contains("Python")) {
@@ -441,16 +466,19 @@ public class DeterministicResumeParserService {
                     current.put("linkText", linkText);
                 }
             } else if (isBullet && current != null) {
-                bullets.add(cleanBulletText(line));
+                String b = cleanBulletText(line);
+                if (!bullets.contains(b) && !b.isBlank()) bullets.add(b);
             } else if (!isBullet && current != null) {
-                // Multi-line project description / bullet
-                bullets.add(cleanBulletText(line));
+                String b = cleanBulletText(line);
+                if (!bullets.contains(b) && !b.isBlank()) bullets.add(b);
             }
         }
 
         if (current != null) {
             current.put("bullets", new ArrayList<>(bullets));
-            list.add(current);
+            if (!isDuplicateEntry(list, "title", String.valueOf(current.get("title")))) {
+                list.add(current);
+            }
         }
 
         return list;
@@ -489,6 +517,27 @@ public class DeterministicResumeParserService {
 
     private String cleanBulletText(String line) {
         return line.replaceAll("^[•\\-*–—o]\\s*", "").replaceAll("^[0-9]+[.)]\\s*", "").trim();
+    }
+
+    private boolean isDuplicateEntry(List<Map<String, Object>> list, String key, String value) {
+        if (value == null || value.isBlank()) return false;
+        for (Map<String, Object> item : list) {
+            String existing = String.valueOf(item.get(key));
+            if (existing.equalsIgnoreCase(value) || existing.contains(value) || value.contains(existing)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String deduplicateSkills(String skills) {
+        if (skills == null || skills.isBlank()) return "";
+        Set<String> set = new LinkedHashSet<>();
+        for (String s : skills.split(",")) {
+            String trimmed = s.trim();
+            if (!trimmed.isEmpty()) set.add(trimmed);
+        }
+        return String.join(", ", set);
     }
 
     private String toTitleCase(String str) {
