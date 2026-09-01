@@ -623,8 +623,11 @@ export default function CvStudio({
           if (p.title) setCvTitle(p.title);
           if (p.id) setCurrentCvId(p.id);
 
+          const rawName = p.fullName || 'Sîrbu Mihai-Alexandru';
+          const formattedFullName = rawName.replace(/\bSirbu\b/gi, 'Sîrbu');
+
           setContactData({
-            fullName: p.fullName || 'Sîrbu Mihai-Alexandru',
+            fullName: formattedFullName,
             email: p.email || 'sarbu.mihai@gmail.com',
             phone: p.phone || '(+40) 723 034 706',
             location: p.location || 'București, România',

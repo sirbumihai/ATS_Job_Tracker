@@ -123,8 +123,10 @@ public class DeterministicResumeParserService {
             }
         }
 
-        if (fullName.isEmpty()) {
+        if (fullName.isEmpty() || fullName.equalsIgnoreCase("Sirbu Mihai-Alexandru") || fullName.equalsIgnoreCase("Sîrbu Mihai-Alexandru")) {
             fullName = "Sîrbu Mihai-Alexandru";
+        } else {
+            fullName = fullName.replaceAll("(?i)\\bSirbu\\b", "Sîrbu");
         }
         if (location.isEmpty()) {
             location = "București, România";
