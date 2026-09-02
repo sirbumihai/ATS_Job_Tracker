@@ -53,7 +53,7 @@ public class JobSearchAggregatorService {
 
     @PostConstruct
     public void initializeLiveFeed() {
-        log.info("[JOB CRAWLER] Initializare feed de joburi live (LinkedIn Multi-Tier, StagiiPeBune, Juniors.ro Multi-Page, UndeLucram, eJobs)...");
+        log.info("[JOB CRAWLER] Initializare feed extins de joburi live...");
         refreshLiveJobs();
     }
 
@@ -69,8 +69,8 @@ public class JobSearchAggregatorService {
     public synchronized int refreshLiveJobs() {
         List<UnifiedJobListingDto> freshList = new ArrayList<>();
 
-        // 1. LINKEDIN ROMÂNIA MULTI-TIER SCRAPING (INTERNSHIP, JUNIOR, MID, SENIOR)
-        scrapeLinkedInMultiTier(freshList);
+        // 1. LINKEDIN ROMÂNIA EXTINS (TOATE SPECIALIZĂRILE IT & TOATE NIVELURILE)
+        scrapeLinkedInExpanded(freshList);
 
         // 2. STAGIIPEBUNE.RO MULTI-PAGE LIVE SCRAPING CU DATE ȘI SALARII REALE
         scrapeStagiiPeBuneDetailed(freshList);
@@ -106,16 +106,19 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * 1. LINKEDIN ROMANIA MULTI-TIER SCRAPING (INTERNSHIP, JUNIOR, MID, SENIOR)
+     * 1. LINKEDIN ROMÂNIA EXTINS: PESTE 25 DE CĂUTĂRI PE TOATE DOMENIILE IT (JAVA, BACKEND, FULLSTACK, AI,
+     * DATA, SUPPORT, BUSINESS ANALYST, CYBERSECURITY, SYSADMIN, SCRUM PM, DBA, ERP/SAP, UI/UX)
      */
-    private void scrapeLinkedInMultiTier(List<UnifiedJobListingDto> list) {
-        // Tiers: query, experienceFilterId (1=Internship, 2=Entry, 3=Associate/Mid, 4=Mid-Senior, 5=Director)
+    private void scrapeLinkedInExpanded(List<UnifiedJobListingDto> list) {
         Map<String, String> searchTiers = new LinkedHashMap<>();
-        // Internship
+        
+        // INTERNSHIPS
         searchTiers.put("Software Intern Romania", "f_E=1");
         searchTiers.put("Java Intern Romania", "f_E=1");
         searchTiers.put("Internship IT Romania", "f_E=1");
-        // Junior / Entry Level
+        searchTiers.put("Data Analyst Intern Romania", "f_E=1");
+
+        // JUNIOR / ENTRY LEVEL
         searchTiers.put("Junior Java Developer Romania", "f_E=2");
         searchTiers.put("Junior Backend Developer Romania", "f_E=2");
         searchTiers.put("Junior Full Stack Developer Romania", "f_E=2");
@@ -124,16 +127,31 @@ public class JobSearchAggregatorService {
         searchTiers.put("Junior QA Automation Romania", "f_E=2");
         searchTiers.put("Junior DevOps Engineer Romania", "f_E=2");
         searchTiers.put("Junior Data Analyst Romania", "f_E=2");
-        // Middle
+        searchTiers.put("Junior IT Support Romania", "f_E=2");
+        searchTiers.put("Junior Business Analyst Romania", "f_E=2");
+        searchTiers.put("Junior Cyber Security Romania", "f_E=2");
+        searchTiers.put("Junior System Administrator Romania", "f_E=2");
+
+        // MIDDLE
         searchTiers.put("Java Developer Romania", "f_E=3");
         searchTiers.put("Backend Engineer Romania", "f_E=3");
         searchTiers.put("Full Stack Developer Romania", "f_E=3");
         searchTiers.put("DevOps Engineer Romania", "f_E=3");
         searchTiers.put("Data Engineer Romania", "f_E=3");
-        // Senior
+        searchTiers.put("Technical Support Engineer Romania", "f_E=3");
+        searchTiers.put("Business Analyst IT Romania", "f_E=3");
+        searchTiers.put("Cyber Security Analyst Romania", "f_E=3");
+        searchTiers.put("Database Administrator Romania", "f_E=3");
+        searchTiers.put("Scrum Master Romania", "f_E=3");
+        searchTiers.put("SAP Consultant Romania", "f_E=3");
+        searchTiers.put("UI UX Designer Romania", "f_E=3");
+
+        // SENIOR / LEAD
         searchTiers.put("Senior Java Developer Romania", "f_E=4");
         searchTiers.put("Senior Backend Engineer Romania", "f_E=4");
         searchTiers.put("Lead Software Engineer Romania", "f_E=4");
+        searchTiers.put("Senior Cyber Security Romania", "f_E=4");
+        searchTiers.put("IT Project Manager Romania", "f_E=4");
 
         Set<String> seenJobUrls = new HashSet<>();
 
@@ -173,7 +191,7 @@ public class JobSearchAggregatorService {
                             logoEl.attr("data-delayed-url") : 
                             "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80";
 
-                    // DETECTARE PRECISĂ A NIVELULUI PE BAZA TITLULUI
+                    // DETECTARE PRECISĂ A NIVELULUI PE BAZA TITLULUI (PRIORITATE INTERN/JUNIOR)
                     String level = determineExperienceLevel(title);
                     if (level.equals("MID") && expFilter.contains("f_E=1")) {
                         level = "INTERNSHIP";
@@ -182,6 +200,10 @@ public class JobSearchAggregatorService {
                     } else if (level.equals("MID") && expFilter.contains("f_E=4")) {
                         level = "SENIOR";
                     }
+
+                    int daysAgo = parseDaysAgo(postedDate);
+                    String compLevel = determineCompetitiveness(company, "LINKEDIN", daysAgo, level);
+                    String compLabel = getCompetitivenessLabel(compLevel);
 
                     List<String> skills = extractSkillsFromTitle(title);
 
@@ -201,14 +223,17 @@ public class JobSearchAggregatorService {
                             Collections.emptyList(),
                             Collections.emptyList(),
                             postedDate,
-                            97.0
+                            97.0,
+                            compLevel,
+                            compLabel,
+                            daysAgo
                     ));
                 }
             } catch (Exception e) {
                 log.warn("[JOB CRAWLER] LinkedIn scrape fallback pentru {}: {}", query, e.getMessage());
             }
         }
-        log.info("[JOB CRAWLER] LinkedIn România Multi-Tier: {} joburi reale preluate.", seenJobUrls.size());
+        log.info("[JOB CRAWLER] LinkedIn România Extins: {} joburi reale preluate.", seenJobUrls.size());
     }
 
     /**
@@ -268,6 +293,9 @@ public class JobSearchAggregatorService {
                     }
 
                     List<String> skills = extractSkillsFromTitle(title);
+                    int daysAgo = parseDaysAgo(postedDate);
+                    String compLevel = "LOW"; // Stagii universitare au șanse mari de acces
+                    String compLabel = getCompetitivenessLabel(compLevel);
 
                     list.add(new UnifiedJobListingDto(
                             "spb-live-" + UUID.randomUUID().toString().substring(0, 8),
@@ -285,7 +313,10 @@ public class JobSearchAggregatorService {
                             Collections.emptyList(),
                             Collections.emptyList(),
                             postedDate,
-                            97.5
+                            97.5,
+                            compLevel,
+                            compLabel,
+                            daysAgo
                     ));
                 }
             } catch (Exception e) {
@@ -371,10 +402,11 @@ public class JobSearchAggregatorService {
                         tags = extractSkillsFromTitle(title);
                     }
 
-                    // SALARIU: NUMAI DACĂ EXISTĂ ÎN ANUNȚ, ALTFEL SALARIU NESPECIFICAT (FĂRĂ FAKE RANGES)
                     String salary = "Salariu Nespecificat / Conform Anunț";
-
                     String level = determineExperienceLevel(title);
+                    int daysAgo = parseDaysAgo(postedDate);
+                    String compLevel = "LOW"; // Rolurile de junior din comunități de nișă au competiție mai redusă
+                    String compLabel = getCompetitivenessLabel(compLevel);
 
                     list.add(new UnifiedJobListingDto(
                             "jun-live-" + UUID.randomUUID().toString().substring(0, 8),
@@ -392,7 +424,10 @@ public class JobSearchAggregatorService {
                             Collections.emptyList(),
                             Collections.emptyList(),
                             postedDate,
-                            96.0
+                            96.0,
+                            compLevel,
+                            compLabel,
+                            daysAgo
                     ));
                 }
             } catch (Exception e) {
@@ -431,6 +466,9 @@ public class JobSearchAggregatorService {
 
                 String level = determineExperienceLevel(title);
                 List<String> skills = extractSkillsFromTitle(title);
+                int daysAgo = 2;
+                String compLevel = "LOW";
+                String compLabel = getCompetitivenessLabel(compLevel);
 
                 list.add(new UnifiedJobListingDto(
                         "udl-live-" + UUID.randomUUID().toString().substring(0, 8),
@@ -448,7 +486,10 @@ public class JobSearchAggregatorService {
                         Collections.emptyList(),
                         Collections.emptyList(),
                         "Activ pe UndeLucram",
-                        94.5
+                        94.5,
+                        compLevel,
+                        compLabel,
+                        daysAgo
                 ));
             }
             log.info("[JOB CRAWLER] UndeLucram.ro: {} joburi reale preluate.", seenUrls.size());
@@ -506,6 +547,9 @@ public class JobSearchAggregatorService {
                     String company = "Companie IT România";
                     String level = determineExperienceLevel(title);
                     List<String> skills = extractSkillsFromTitle(title);
+                    int daysAgo = 3;
+                    String compLevel = "MEDIUM";
+                    String compLabel = getCompetitivenessLabel(compLevel);
 
                     list.add(new UnifiedJobListingDto(
                             "ejobs-live-" + UUID.randomUUID().toString().substring(0, 8),
@@ -523,7 +567,10 @@ public class JobSearchAggregatorService {
                             Collections.emptyList(),
                             Collections.emptyList(),
                             "Postat în ultima lună",
-                            94.0
+                            94.0,
+                            compLevel,
+                            compLabel,
+                            daysAgo
                     ));
                 }
             } catch (Exception e) {
@@ -556,6 +603,9 @@ public class JobSearchAggregatorService {
 
                             String level = determineExperienceLevel(name);
                             List<String> skills = extractSkillsFromTitle(name);
+                            int daysAgo = 2;
+                            String compLevel = "HIGH"; // Global tech enterprise
+                            String compLabel = getCompetitivenessLabel(compLevel);
 
                             list.add(new UnifiedJobListingDto(
                                     "sr-" + comp + "-" + id,
@@ -573,7 +623,10 @@ public class JobSearchAggregatorService {
                                     Collections.emptyList(),
                                     Collections.emptyList(),
                                     "Postat recent",
-                                    94.0
+                                    94.0,
+                                    compLevel,
+                                    compLabel,
+                                    daysAgo
                             ));
                         }
                     }
@@ -605,6 +658,9 @@ public class JobSearchAggregatorService {
 
                             String level = determineExperienceLevel(title);
                             List<String> skills = extractSkillsFromTitle(title);
+                            int daysAgo = 1;
+                            String compLevel = "HIGH"; // Top-tier silicon valley startups
+                            String compLabel = getCompetitivenessLabel(compLevel);
 
                             list.add(new UnifiedJobListingDto(
                                     id,
@@ -622,7 +678,10 @@ public class JobSearchAggregatorService {
                                     Collections.emptyList(),
                                     Collections.emptyList(),
                                     "Postat în ultima lună",
-                                    93.0
+                                    93.0,
+                                    compLevel,
+                                    compLabel,
+                                    daysAgo
                             ));
                         }
                     }
@@ -654,6 +713,9 @@ public class JobSearchAggregatorService {
 
                             String level = determineExperienceLevel(title);
                             List<String> skills = extractSkillsFromTitle(title);
+                            int daysAgo = 2;
+                            String compLevel = "HIGH";
+                            String compLabel = getCompetitivenessLabel(compLevel);
 
                             list.add(new UnifiedJobListingDto(
                                     id,
@@ -671,7 +733,10 @@ public class JobSearchAggregatorService {
                                     Collections.emptyList(),
                                     Collections.emptyList(),
                                     "Postat în ultima lună",
-                                    92.5
+                                    92.5,
+                                    compLevel,
+                                    compLabel,
+                                    daysAgo
                             ));
                         }
                     }
@@ -714,6 +779,9 @@ public class JobSearchAggregatorService {
                         }
 
                         String level = determineExperienceLevel(title);
+                        int daysAgo = 3;
+                        String compLevel = "MEDIUM";
+                        String compLabel = getCompetitivenessLabel(compLevel);
 
                         list.add(new UnifiedJobListingDto(
                                 id,
@@ -731,7 +799,10 @@ public class JobSearchAggregatorService {
                                 Collections.emptyList(),
                                 Collections.emptyList(),
                                 "Acum câteva zile",
-                                91.0
+                                91.0,
+                                compLevel,
+                                compLabel,
+                                daysAgo
                         ));
                     }
                 }
@@ -773,6 +844,9 @@ public class JobSearchAggregatorService {
                         }
 
                         String level = determineExperienceLevel(title);
+                        int daysAgo = 2;
+                        String compLevel = "MEDIUM";
+                        String compLabel = getCompetitivenessLabel(compLevel);
 
                         list.add(new UnifiedJobListingDto(
                                 "arbeit-" + node.path("slug").asText(UUID.randomUUID().toString()),
@@ -790,7 +864,10 @@ public class JobSearchAggregatorService {
                                 Collections.emptyList(),
                                 Collections.emptyList(),
                                 "Acum 2 zile",
-                                90.0
+                                90.0,
+                                compLevel,
+                                compLabel,
+                                daysAgo
                         ));
                     }
                 }
@@ -832,6 +909,77 @@ public class JobSearchAggregatorService {
         return "MID";
     }
 
+    private int parseDaysAgo(String postedText) {
+        if (postedText == null || postedText.isBlank()) return 5;
+        String t = postedText.toLowerCase();
+
+        if (t.contains("astazi") || t.contains("astăzi") || t.contains("today") || t.contains("hour") || t.contains("ore") || t.contains("acum cateva")) {
+            return 0;
+        }
+        if (t.contains("1 zi") || t.contains("1 day") || t.contains("ieri") || t.contains("yesterday")) {
+            return 1;
+        }
+        if (t.contains("2 zi") || t.contains("2 day") || t.contains("2 days")) {
+            return 2;
+        }
+        if (t.contains("3 zi") || t.contains("3 day") || t.contains("3 days")) {
+            return 3;
+        }
+        if (t.contains("4 zi") || t.contains("4 day") || t.contains("4 days")) {
+            return 4;
+        }
+        if (t.contains("5 zi") || t.contains("5 day") || t.contains("5 days")) {
+            return 5;
+        }
+        if (t.contains("1 week") || t.contains("1 saptamana") || t.contains("1 săptămână")) {
+            return 7;
+        }
+        if (t.contains("2 week") || t.contains("2 saptamani") || t.contains("2 săptămâni")) {
+            return 14;
+        }
+        if (t.contains("3 week") || t.contains("3 saptamani") || t.contains("3 săptămâni")) {
+            return 21;
+        }
+        if (t.contains("month") || t.contains("luna") || t.contains("lună")) {
+            return 28;
+        }
+        return 4;
+    }
+
+    private String determineCompetitiveness(String company, String platform, int daysAgo, String level) {
+        String compLower = (company != null) ? company.toLowerCase() : "";
+        
+        // Branduri globale cu competiție extrem de mare
+        if (compLower.contains("google") || compLower.contains("amazon") || compLower.contains("microsoft") || 
+            compLower.contains("adobe") || compLower.contains("meta") || compLower.contains("linear") || 
+            compLower.contains("posthog") || compLower.contains("gitlab") || compLower.contains("cloudflare")) {
+            return "HIGH";
+        }
+
+        // Joburi proaspete (0-2 zile) sau din platforme dedicate de junior/internship au competiție mai scăzută = ȘANSĂ MARE
+        if (platform.equals("STAGIIPEBUNE") || platform.equals("JUNIORS_RO") || daysAgo <= 1) {
+            return "LOW";
+        }
+
+        if (level.equals("INTERNSHIP") || daysAgo <= 4) {
+            return "LOW";
+        }
+
+        if (level.equals("SENIOR") || daysAgo >= 14) {
+            return "HIGH";
+        }
+
+        return "MEDIUM";
+    }
+
+    private String getCompetitivenessLabel(String compLevel) {
+        return switch (compLevel) {
+            case "LOW" -> "🟢 Șansă Mare (Competiție Scăzută / Aplicare Rapidă)";
+            case "HIGH" -> "🔴 Competiție Ridicată (Brand Global / Mulți Candidați)";
+            default -> "🟡 Competiție Medie (Șanse Echilibrate)";
+        };
+    }
+
     private String formatSlugName(String slug) {
         if (slug == null || slug.isEmpty()) return "Companie Parteneră";
         String cleaned = slug.replace("-", " ").replace("2", "").trim();
@@ -853,9 +1001,14 @@ public class JobSearchAggregatorService {
         if (t.contains("typescript") || t.contains("frontend")) skills.add("TypeScript");
         if (t.contains("python") || t.contains("ai") || t.contains("data")) skills.add("Python");
         if (t.contains("backend") || t.contains("distributed")) skills.add("Microservices");
-        if (t.contains("security")) skills.add("Cloud Security");
+        if (t.contains("security") || t.contains("cyber")) skills.add("Cybersecurity");
         if (t.contains("devops") || t.contains("sre") || t.contains("cloud")) skills.add("Docker");
         if (t.contains("qa") || t.contains("test")) skills.add("QA Automation");
+        if (t.contains("support") || t.contains("helpdesk")) skills.add("IT Support");
+        if (t.contains("business analyst") || t.contains("analyst")) skills.add("Business Analysis");
+        if (t.contains("scrum") || t.contains("project manager")) skills.add("Agile / Scrum");
+        if (t.contains("sap") || t.contains("erp") || t.contains("salesforce")) skills.add("ERP / SAP");
+        if (t.contains("ui") || t.contains("ux") || t.contains("design")) skills.add("Figma / UI-UX");
         if (skills.isEmpty()) skills = List.of("Software Engineering", "Git", "REST API", "SQL");
         return skills;
     }
@@ -982,11 +1135,20 @@ public class JobSearchAggregatorService {
                     matching,
                     missing,
                     job.postedDateAgo(),
-                    calculatedMatchScore
+                    calculatedMatchScore,
+                    job.competitiveness(),
+                    job.competitivenessLabel(),
+                    job.postedDaysAgo()
             ));
         }
 
-        results.sort((a, b) -> Double.compare(b.atsMatchScore(), a.atsMatchScore()));
+        // Sortare implicită inteligentă: Cele mai bune potriviri & Cele mai recente
+        results.sort((a, b) -> {
+            int scoreCmp = Double.compare(b.atsMatchScore(), a.atsMatchScore());
+            if (scoreCmp != 0) return scoreCmp;
+            return Integer.compare(a.postedDaysAgo(), b.postedDaysAgo());
+        });
+
         return results;
     }
 
@@ -999,16 +1161,23 @@ public class JobSearchAggregatorService {
             case "JAVA" -> title.contains("java") || skills.contains("java") || desc.contains("spring boot");
             case "BACKEND" -> title.contains("backend") || title.contains("java") || desc.contains("microservices") || desc.contains("api") || skills.contains("backend");
             case "FULLSTACK" -> title.contains("full-stack") || title.contains("full stack") || title.contains("fullstack") || (skills.contains("react") && skills.contains("java"));
-            case "DATA_ANALYST" -> title.contains("data analyst") || desc.contains("bi") || desc.contains("power bi") || desc.contains("tableau") || skills.contains("data analysis");
+            case "DATA_ANALYST" -> title.contains("data analyst") || desc.contains("bi") || desc.contains("power bi") || desc.contains("tableau") || skills.contains("data analysis") || title.contains("analist date");
             case "DATA_SCIENTIST" -> title.contains("data scientist") || title.contains("data science") || desc.contains("predictive") || desc.contains("scikit") || skills.contains("data science");
             case "DATA_ENGINEER" -> title.contains("data engineer") || desc.contains("spark") || desc.contains("etl") || desc.contains("data platform") || skills.contains("data engineering");
             case "ML_ENGINEER" -> title.contains("machine learning") || desc.contains("deep learning") || desc.contains("pytorch") || desc.contains("tensorflow") || skills.contains("ai/ml");
             case "AI_LLM" -> title.contains("ai ") || title.contains("llm") || desc.contains("rag") || desc.contains("pgvector") || desc.contains("generative") || title.contains("genai");
             case "FRONTEND_REACT" -> title.contains("frontend") || title.contains("react") || skills.contains("react") || skills.contains("typescript");
-            case "ANDROID" -> title.contains("android") || skills.contains("kotlin") || desc.contains("android sdk");
+            case "ANDROID" -> title.contains("android") || skills.contains("kotlin") || desc.contains("android sdk") || title.contains("mobile");
             case "DEVOPS" -> title.contains("devops") || title.contains("sre") || title.contains("reliability") || desc.contains("kubernetes") || skills.contains("site reliability");
-            case "CLOUD_SECURITY" -> title.contains("security") || desc.contains("threat") || desc.contains("cryptography") || desc.contains("vulnerability");
+            case "CLOUD_SECURITY", "CYBERSECURITY" -> title.contains("security") || desc.contains("threat") || desc.contains("cryptography") || desc.contains("vulnerability") || title.contains("cyber") || title.contains("penetration");
             case "QA_TESTING", "AUTOMATION_TEST" -> title.contains("qa") || title.contains("test") || title.contains("quality") || skills.contains("selenium") || skills.contains("playwright") || skills.contains("cypress") || skills.contains("testing");
+            case "BUSINESS_ANALYST" -> title.contains("business analyst") || title.contains("product owner") || title.contains("requirements") || skills.contains("business analysis");
+            case "TECH_SUPPORT" -> title.contains("support") || title.contains("helpdesk") || title.contains("servicedesk") || title.contains("suport tehnic") || title.contains("it service");
+            case "SYSADMIN_NETWORK" -> title.contains("system admin") || title.contains("sysadmin") || title.contains("network") || title.contains("administrator de sistem") || title.contains("infrastructure");
+            case "SCRUM_PM" -> title.contains("scrum master") || title.contains("project manager") || title.contains("agile coach") || title.contains("delivery manager");
+            case "DBA_SQL" -> title.contains("database") || title.contains("dba") || title.contains("sql developer") || title.contains("oracle") || title.contains("postgres");
+            case "ERP_SAP_CRM" -> title.contains("sap") || title.contains("salesforce") || title.contains("erp") || title.contains("crm") || title.contains("servicenow");
+            case "UI_UX" -> title.contains("ui") || title.contains("ux") || title.contains("product designer") || title.contains("designer") || skills.contains("figma");
             default -> true;
         };
     }

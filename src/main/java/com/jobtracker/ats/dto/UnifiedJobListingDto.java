@@ -18,5 +18,8 @@ public record UnifiedJobListingDto(
     List<String> matchingSkills,
     List<String> missingSkills,
     String postedDateAgo,
-    double atsMatchScore
+    double atsMatchScore,
+    String competitiveness, // "LOW", "MEDIUM", "HIGH"
+    String competitivenessLabel, // "🟢 Șansă Mare (Competiție Scăzută)", "🟡 Competiție Medie", "🔴 Competiție Ridicată"
+    int postedDaysAgo // 0 for today, 1 for yesterday, 7 for 1 week, etc. for sorting
 ) {}
