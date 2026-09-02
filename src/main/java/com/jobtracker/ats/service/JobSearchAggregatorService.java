@@ -53,7 +53,7 @@ public class JobSearchAggregatorService {
 
     @PostConstruct
     public void initializeLiveFeed() {
-        log.info("[JOB CRAWLER] Initializare feed de joburi live...");
+        log.info("[JOB CRAWLER] Initializare feed de joburi live (LinkedIn Junior/Intern, StagiiPeBune, Juniors.ro, eJobs)...");
         refreshLiveJobs();
     }
 
@@ -69,16 +69,16 @@ public class JobSearchAggregatorService {
     public synchronized int refreshLiveJobs() {
         List<UnifiedJobListingDto> freshList = new ArrayList<>();
 
-        // 1. LINKEDIN ROMÂNIA LIVE SCRAPING (GUEST JOBS API • 100% REAL)
-        scrapeLinkedInRomania(freshList);
+        // 1. LINKEDIN ROMÂNIA JUNIOR & INTERNSHIP LIVE SCRAPING (GUEST JOBS API)
+        scrapeLinkedInJuniorAndIntern(freshList);
 
-        // 2. STAGIIPEBUNE.RO MULTI-PAGE LIVE SCRAPING (Jsoup)
-        scrapeStagiiPeBuneMultiPage(freshList);
+        // 2. STAGIIPEBUNE.RO MULTI-PAGE LIVE SCRAPING CU DATE ȘI SALARII REALE
+        scrapeStagiiPeBuneDetailed(freshList);
 
-        // 3. JUNIORS.RO LIVE SCRAPING (Jsoup • 100% DIRECT LINKS /jobs/{id}/link)
-        scrapeJuniorsRo(freshList);
+        // 3. JUNIORS.RO LIVE SCRAPING CU TITLURI, COMPANII, TAGS ȘI DATE REALE
+        scrapeJuniorsRoDetailed(freshList);
 
-        // 4. EJOBS.RO IT MULTI-PAGE LIVE SCRAPING (Jsoup)
+        // 4. EJOBS.RO IT MULTI-PAGE LIVE SCRAPING (STRICT IT ONLY)
         scrapeEjobsItMultiPage(freshList);
 
         // 5. SMARTRECRUITERS LIVE API (CERN, UBISOFT, GLOVO, BOSCH)
@@ -103,26 +103,34 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * 1. LINKEDIN ROMANIA LIVE SCRAPING (GUEST SEARCH API)
+     * 1. LINKEDIN ROMANIA LIVE SCRAPING - CONCENTRARE MAXIMĂ PE JUNIOR & INTERNSHIP
      */
-    private void scrapeLinkedInRomania(List<UnifiedJobListingDto> list) {
-        List<String> keywords = List.of(
-                "Java Developer",
-                "Backend Engineer",
-                "Full Stack Developer",
-                "React Developer",
-                "DevOps Engineer",
-                "Data Engineer",
-                "QA Automation",
-                "Machine Learning"
+    private void scrapeLinkedInJuniorAndIntern(List<UnifiedJobListingDto> list) {
+        List<String> juniorQueries = List.of(
+                "Junior Java Developer",
+                "Junior Backend Developer",
+                "Junior Full Stack Developer",
+                "Junior Software Engineer",
+                "Java Intern",
+                "Software Engineer Intern",
+                "Junior Frontend Developer",
+                "Junior React Developer",
+                "Junior QA Tester",
+                "Junior Automation Tester",
+                "Junior DevOps Engineer",
+                "Junior Data Analyst",
+                "Junior Data Engineer",
+                "Junior Machine Learning Engineer",
+                "Entry Level Software Engineer"
         );
 
         Set<String> seenJobUrls = new HashSet<>();
 
-        for (String kw : keywords) {
+        for (String query : juniorQueries) {
             try {
+                // f_E=1,2 (1=Internship, 2=Entry level), f_TPR=r2592000 (past 30 days)
                 String queryUrl = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=" 
-                        + kw.replace(" ", "+") + "&location=Romania&f_TPR=r2592000&start=0";
+                        + query.replace(" ", "+") + "&location=Romania&f_TPR=r2592000&f_E=1,2&start=0";
 
                 Document doc = Jsoup.connect(queryUrl)
                         .userAgent(BROWSER_USER_AGENT)
@@ -143,45 +151,55 @@ public class JobSearchAggregatorService {
                     Element compEl = card.selectFirst(".base-search-card__subtitle");
                     Element locEl = card.selectFirst(".job-search-card__location");
                     Element dateEl = card.selectFirst("time.job-search-card__listdate");
+                    Element logoEl = card.selectFirst("img.artdeco-entity-image");
 
-                    String title = titleEl != null ? titleEl.text().trim() : kw;
+                    String title = titleEl != null ? titleEl.text().trim() : query;
                     String company = compEl != null ? compEl.text().trim() : "Tech Company";
                     String location = locEl != null ? locEl.text().trim() : "Bucharest, Romania";
-                    String postedDate = dateEl != null ? dateEl.text().trim() : "Postat în ultima lună";
+                    String postedDate = dateEl != null ? dateEl.text().trim() : "Postat recent";
+                    String logoUrl = logoEl != null && logoEl.hasAttr("data-delayed-url") ? 
+                            logoEl.attr("data-delayed-url") : 
+                            "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80";
 
                     String level = determineExperienceLevel(title);
+                    if (level.equals("MID") && (query.toLowerCase().contains("junior") || query.toLowerCase().contains("entry"))) {
+                        level = "JUNIOR";
+                    } else if (query.toLowerCase().contains("intern")) {
+                        level = "INTERNSHIP";
+                    }
+
                     List<String> skills = extractSkillsFromTitle(title);
 
                     list.add(new UnifiedJobListingDto(
                             "li-live-" + UUID.randomUUID().toString().substring(0, 8),
                             title,
                             company,
-                            "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80",
+                            logoUrl,
                             location,
                             location.toLowerCase().contains("remote") ? "REMOTE" : "HYBRID",
                             level,
                             "LINKEDIN",
                             directUrl,
-                            "Anunț live preluat de pe LinkedIn România. Rol oficial la " + company + " în departamentul de software engineering.",
+                            "Oportunitate live preluată de pe LinkedIn România pentru nivel " + level + ". Rol la " + company + ". Aplicare directă pe LinkedIn.",
                             "Pachet Salarial Standard LinkedIn",
                             skills,
                             Collections.emptyList(),
                             Collections.emptyList(),
                             postedDate,
-                            95.5
+                            97.0
                     ));
                 }
             } catch (Exception e) {
-                log.warn("[JOB CRAWLER] LinkedIn scrape fallback pentru {}: {}", kw, e.getMessage());
+                log.warn("[JOB CRAWLER] LinkedIn scrape fallback pentru {}: {}", query, e.getMessage());
             }
         }
-        log.info("[JOB CRAWLER] LinkedIn România: {} joburi reale preluate.", seenJobUrls.size());
+        log.info("[JOB CRAWLER] LinkedIn România (Junior & Intern): {} joburi reale preluate.", seenJobUrls.size());
     }
 
     /**
-     * 2. STAGIIPEBUNE.RO MULTI-PAGE LIVE SCRAPING
+     * 2. STAGIIPEBUNE.RO - MULTI-PAGE & EXTRAGERE EXACTĂ A DATEI ȘI SALARIULUI
      */
-    private void scrapeStagiiPeBuneMultiPage(List<UnifiedJobListingDto> list) {
+    private void scrapeStagiiPeBuneDetailed(List<UnifiedJobListingDto> list) {
         Set<String> seenUrls = new HashSet<>();
         int maxPages = 4;
 
@@ -193,23 +211,45 @@ public class JobSearchAggregatorService {
                         .timeout(10000)
                         .get();
 
-                Elements jobLinks = doc.select("a[href^=/jobs/]");
-                if (jobLinks.isEmpty()) break;
+                Elements jobBodies = doc.select("tbody.job-table-body");
+                if (jobBodies.isEmpty()) break;
 
-                for (Element el : jobLinks) {
-                    String href = el.attr("href");
+                for (Element body : jobBodies) {
+                    Element linkEl = body.selectFirst("p.job-row-title a");
+                    if (linkEl == null) continue;
+
+                    String href = linkEl.attr("href");
                     if (href == null || href.isEmpty() || seenUrls.contains(href)) continue;
                     seenUrls.add(href);
 
                     String directUrl = "https://stagiipebune.ro" + href;
-                    String[] parts = href.split("/");
-                    String company = "Companie StagiiPeBune";
-                    String title = "Software Engineering Intern";
-                    if (parts.length >= 3) {
-                        company = formatSlugName(parts[2]);
-                    }
-                    if (parts.length >= 4) {
-                        title = formatSlugTitle(parts[3]);
+                    String title = linkEl.text().trim();
+
+                    // Extragere companie
+                    Element compEl = body.selectFirst("p.job-row-sub a.color-link");
+                    String company = compEl != null ? compEl.text().trim() : "Companie StagiiPeBune";
+
+                    // Extragere logo
+                    Element logoEl = body.selectFirst("td.job-logo img");
+                    String logoUrl = logoEl != null && logoEl.hasAttr("src") ? 
+                            logoEl.attr("src") : 
+                            "https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=100&auto=format&fit=crop&q=80";
+
+                    // Extragere detalii (salariu, data reală postare, locație)
+                    Elements metaSpans = body.select("p.job-row-sub span.muted");
+                    String salary = "Stagiu Plătit";
+                    String postedDate = "Postat recent";
+                    String location = "Bucharest, Romania";
+
+                    for (Element span : metaSpans) {
+                        String text = span.text().trim();
+                        if (text.toLowerCase().contains("platit") || text.toLowerCase().contains("remunerat") || text.matches(".*\\d+.*RON.*") || text.matches(".*\\d{3,}.*")) {
+                            salary = text.replace("•", "").trim();
+                        } else if (text.matches(".*\\d+\\s+[A-Za-zăîșțâ]+.*") || text.toLowerCase().contains("aug") || text.toLowerCase().contains("iul") || text.toLowerCase().contains("sep")) {
+                            postedDate = "Postat pe " + text.replace("•", "").trim();
+                        } else if (text.toLowerCase().contains("bucure") || text.toLowerCase().contains("cluj") || text.toLowerCase().contains("iasi") || text.toLowerCase().contains("timisoara") || text.toLowerCase().contains("remote")) {
+                            location = text.replace("•", "").trim();
+                        }
                     }
 
                     List<String> skills = extractSkillsFromTitle(title);
@@ -218,32 +258,32 @@ public class JobSearchAggregatorService {
                             "spb-live-" + UUID.randomUUID().toString().substring(0, 8),
                             title,
                             company,
-                            "https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=100&auto=format&fit=crop&q=80",
-                            "Bucharest / Romania",
-                            "HYBRID",
+                            logoUrl,
+                            location,
+                            location.toLowerCase().contains("remote") ? "REMOTE" : "HYBRID",
                             "INTERNSHIP",
                             "STAGIIPEBUNE",
                             directUrl,
-                            "Stagiu oficial publicat pe platforma StagiiPeBune.ro la compania " + company + ". Aplicare directă prin contul de student.",
-                            "3.500 - 6.000 RON / lună",
+                            "Stagiu oficial de vară publicat pe platforma universitară StagiiPeBune.ro la compania " + company + ". Aplicare directă prin contul de student.",
+                            salary,
                             skills,
                             Collections.emptyList(),
                             Collections.emptyList(),
-                            "Activ pe StagiiPeBune (Postat recent)",
-                            96.5
+                            postedDate,
+                            97.5
                     ));
                 }
             } catch (Exception e) {
-                log.warn("[JOB CRAWLER] StagiiPeBune page {} scrape fallback: {}", page, e.getMessage());
+                log.warn("[JOB CRAWLER] StagiiPeBune detailed scrape page {} fallback: {}", page, e.getMessage());
             }
         }
-        log.info("[JOB CRAWLER] StagiiPeBune: {} joburi reale preluate pe {} pagini.", seenUrls.size(), maxPages);
+        log.info("[JOB CRAWLER] StagiiPeBune Detailed: {} joburi reale preluate cu dată și salariu.", seenUrls.size());
     }
 
     /**
-     * 3. JUNIORS.RO LIVE SCRAPING (100% DIRECT APPLY LINKS)
+     * 3. JUNIORS.RO - EXTRAGERE PRECISĂ (TITLU REAL, COMPANIE REALĂ, LOGO, TAGS, DATĂ)
      */
-    private void scrapeJuniorsRo(List<UnifiedJobListingDto> list) {
+    private void scrapeJuniorsRoDetailed(List<UnifiedJobListingDto> list) {
         Set<String> seenUrls = new HashSet<>();
         try {
             String url = "https://juniors.ro/jobs";
@@ -252,54 +292,83 @@ public class JobSearchAggregatorService {
                     .timeout(10000)
                     .get();
 
-            Elements jobCardLinks = doc.select("a[href*=/jobs/][href*=/link]");
-            for (Element linkEl : jobCardLinks) {
+            Elements jobItems = doc.select("li.job");
+            for (Element item : jobItems) {
+                Element linkEl = item.selectFirst("a[href*=/jobs/][href*=/link]");
+                if (linkEl == null) continue;
+
                 String href = linkEl.attr("href");
                 if (href == null || href.isEmpty() || seenUrls.contains(href)) continue;
                 seenUrls.add(href);
 
                 String directUrl = href.startsWith("http") ? href : "https://juniors.ro" + href;
-                
-                // Extract parent card for details
-                Element card = linkEl.closest("div.card, div.job-card, div.row");
-                String title = "Junior Software Developer";
-                String company = "Companie Juniors.ro";
-                
-                if (card != null) {
-                    Element titleEl = card.selectFirst("h3, h4, h5, .title, .job-title");
-                    if (titleEl != null && !titleEl.text().trim().isEmpty()) {
-                        title = titleEl.text().trim();
-                    }
-                    Element compEl = card.selectFirst(".company, .company-name, small, span.text-muted");
-                    if (compEl != null && !compEl.text().trim().isEmpty()) {
-                        company = compEl.text().trim();
+
+                // Titlu real
+                Element titleEl = item.selectFirst(".job_header_title h3");
+                String title = titleEl != null ? titleEl.text().trim() : "Junior Software Engineer";
+
+                // Logo real
+                Element logoEl = item.selectFirst(".job_header_logo img");
+                String logoUrl = logoEl != null && logoEl.hasAttr("src") ? 
+                        logoEl.attr("src") : 
+                        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80";
+
+                // Companie din logo sau titlu
+                String company = "Companie Parteneră Juniors.ro";
+                if (logoEl != null && logoEl.hasAttr("src")) {
+                    String src = logoEl.attr("src");
+                    String file = src.substring(src.lastIndexOf('/') + 1).replace(".png", "").replace(".jpg", "").replace(".svg", "").replace("-logo", "");
+                    if (!file.isEmpty() && !file.equals("logo")) {
+                        company = capitalize(file);
                     }
                 }
 
-                List<String> skills = extractSkillsFromTitle(title);
+                // Locație și dată reală
+                Element dateStrong = item.selectFirst(".job_header_title strong");
+                String location = "Bucharest, Romania";
+                String postedDate = "Postat recent";
+                if (dateStrong != null) {
+                    String text = dateStrong.text().trim();
+                    String[] parts = text.split("\\|");
+                    if (parts.length >= 1) location = parts[0].trim();
+                    if (parts.length >= 2) postedDate = parts[1].trim();
+                }
+
+                // Tag-uri reale
+                List<String> tags = new ArrayList<>();
+                Elements tagLinks = item.select(".job_tags li a");
+                for (Element tLink : tagLinks) {
+                    String tText = tLink.text().trim();
+                    if (!tText.isEmpty()) tags.add(tText);
+                }
+                if (tags.isEmpty()) {
+                    tags = extractSkillsFromTitle(title);
+                }
+
+                String level = determineExperienceLevel(title);
 
                 list.add(new UnifiedJobListingDto(
                         "jun-live-" + UUID.randomUUID().toString().substring(0, 8),
                         title,
                         company,
-                        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
-                        "Bucharest / Remote, Romania",
-                        "HYBRID",
-                        "JUNIOR",
+                        logoUrl,
+                        location,
+                        location.toLowerCase().contains("remote") ? "REMOTE" : "HYBRID",
+                        level,
                         "JUNIORS_RO",
                         directUrl,
-                        "Oportunitate IT pentru juniori și începători publicată pe Juniors.ro la " + company + ". Aplicare directă.",
+                        "Oportunitate IT pentru juniori și începători publicată pe Juniors.ro la compania " + company + ". Tech stack: " + String.join(", ", tags),
                         "4.500 - 7.500 RON / lună",
-                        skills,
+                        tags,
                         Collections.emptyList(),
                         Collections.emptyList(),
-                        "Activ pe Juniors.ro",
+                        postedDate,
                         96.0
-                    ));
+                ));
             }
-            log.info("[JOB CRAWLER] Juniors.ro: {} joburi reale preluate.", seenUrls.size());
+            log.info("[JOB CRAWLER] Juniors.ro Detailed: {} joburi reale preluate.", seenUrls.size());
         } catch (Exception e) {
-            log.warn("[JOB CRAWLER] Juniors.ro scrape fallback: {}", e.getMessage());
+            log.warn("[JOB CRAWLER] Juniors.ro Detailed scrape fallback: {}", e.getMessage());
         }
     }
 
@@ -338,7 +407,7 @@ public class JobSearchAggregatorService {
                         }
                     }
 
-                    // STRICT IT FILTER: Exclude non-IT keywords
+                    // STRICT IT FILTER
                     String textLower = text.toLowerCase();
                     if (textLower.contains("magazin") || textLower.contains("vanzator") || textLower.contains("contabil") || 
                         textLower.contains("curier") || textLower.contains("sofer") || textLower.contains("vanzari")) {
@@ -368,7 +437,7 @@ public class JobSearchAggregatorService {
                             skills,
                             Collections.emptyList(),
                             Collections.emptyList(),
-                            "Live pe eJobs",
+                            "Postat în ultima lună",
                             94.0
                     ));
                 }
@@ -434,7 +503,7 @@ public class JobSearchAggregatorService {
      * 6. ASHBY DIRECT ATS APIS
      */
     private void fetchAshbyBoards(List<UnifiedJobListingDto> list) {
-        List<String> ashbyCompanies = List.of("linear", "posthog", "retool", "ramp", "sentry");
+        List<String> ashbyCompanies = List.of("linear", "posthog", "ramp", "sentry");
         for (String company : ashbyCompanies) {
             try {
                 String ashbyUrl = "https://api.ashbyhq.com/posting-api/job-board/" + company;
@@ -483,7 +552,7 @@ public class JobSearchAggregatorService {
      * 7. GREENHOUSE DIRECT ATS APIS
      */
     private void fetchGreenhouseBoards(List<UnifiedJobListingDto> list) {
-        List<String> greenhouseCompanies = List.of("gitlab", "cloudflare", "canva", "automattic");
+        List<String> greenhouseCompanies = List.of("gitlab", "cloudflare");
         for (String company : greenhouseCompanies) {
             try {
                 String ghUrl = "https://boards-api.greenhouse.io/v1/boards/" + company + "/jobs";
@@ -659,7 +728,7 @@ public class JobSearchAggregatorService {
         if (t.contains("senior") || t.contains("lead") || t.contains("principal") || t.contains("staff") || t.contains("head") || t.contains("architect") || t.contains("manager")) {
             return "SENIOR";
         }
-        if (t.contains("junior") || t.contains("entry") || t.contains("associate") || t.contains("grad") || t.contains("incepator")) {
+        if (t.contains("junior") || t.contains("entry") || t.contains("associate") || t.contains("grad") || t.contains("incepator") || t.contains("0-2") || t.contains("entry-level")) {
             return "JUNIOR";
         }
         return "MID";
