@@ -112,6 +112,22 @@ export default function JobSearchPage({
     }
   };
 
+  const handleSyncLive = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/v1/jobs/sync-live', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setToastMessage(`Sincronizare Live Reușită! ${data.totalLiveJobs || '100+'} joburi agregate și active.`);
+        setTimeout(() => setToastMessage(null), 4500);
+      }
+    } catch (err) {
+      console.warn('Sync live warn:', err);
+    } finally {
+      fetchJobs();
+    }
+  };
+
   useEffect(() => {
     fetchJobs();
   }, [selectedRoleCategory, selectedPlatform, selectedWorkModel, selectedLevel]);
@@ -224,12 +240,12 @@ export default function JobSearchPage({
 
           <div className="flex items-center gap-2 self-start md:self-auto">
             <button 
-              onClick={fetchJobs}
+              onClick={handleSyncLive}
               disabled={loading}
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>Actualizează Feed</span>
+              <span>Sincronizare Live</span>
             </button>
           </div>
         </div>

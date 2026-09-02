@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -55,5 +56,15 @@ public class JobSearchController {
 
         ApplicationResponse response = jobSearchAggregatorService.saveJobToKanban(activeUserId, jobDto);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/sync-live")
+    public ResponseEntity<Map<String, Object>> syncLiveJobs() {
+        int totalJobs = jobSearchAggregatorService.refreshLiveJobs();
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "message", "Feed-ul de joburi a fost actualizat cu succes.",
+                "totalLiveJobs", totalJobs
+        ));
     }
 }
