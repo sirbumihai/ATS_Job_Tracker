@@ -22,7 +22,18 @@ import {
   ChevronDown, 
   ChevronUp,
   ArrowUpRight,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Code2,
+  Database,
+  Cpu,
+  Terminal,
+  Smartphone,
+  Server,
+  Shield,
+  CheckSquare,
+  LineChart,
+  BrainCircuit,
+  Bot
 } from 'lucide-react';
 
 export default function JobSearchPage({ 
@@ -34,16 +45,46 @@ export default function JobSearchPage({
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
 
-  const [keyword, setKeyword] = useState('Java');
+  const [keyword, setKeyword] = useState('');
   const [location, setLocation] = useState('');
+  const [selectedRoleCategory, setSelectedRoleCategory] = useState('ALL');
   const [selectedPlatform, setSelectedPlatform] = useState('ALL');
+  const [selectedWorkModel, setSelectedWorkModel] = useState('ALL');
   const [selectedLevel, setSelectedLevel] = useState('ALL');
+  
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [savedJobIds, setSavedJobIds] = useState(new Set());
   const [savingJobId, setSavingJobId] = useState(null);
   const [expandedJobId, setExpandedJobId] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+
+  const roleCategories = [
+    { id: 'ALL', label: 'Toate Rolurile', icon: Globe },
+    { id: 'JAVA', label: 'Java Engineer', icon: Code2 },
+    { id: 'BACKEND', label: 'Backend Engineer', icon: Server },
+    { id: 'FULLSTACK', label: 'Full Stack Engineer', icon: Layers },
+    { id: 'AI_LLM', label: 'AI & LLM Engineer', icon: Bot },
+    { id: 'ML_ENGINEER', label: 'Machine Learning & Deep Learning', icon: BrainCircuit },
+    { id: 'DATA_ANALYST', label: 'Data Analyst', icon: LineChart },
+    { id: 'DATA_SCIENTIST', label: 'Data Scientist', icon: Cpu },
+    { id: 'DATA_ENGINEER', label: 'Data Engineer', icon: Database },
+    { id: 'FRONTEND_REACT', label: 'Frontend / React Developer', icon: Terminal },
+    { id: 'ANDROID', label: 'Android Developer', icon: Smartphone },
+    { id: 'DEVOPS', label: 'DevOps & SRE', icon: Zap },
+    { id: 'CLOUD_SECURITY', label: 'Cloud Security Engineer', icon: Shield },
+    { id: 'AUTOMATION_TEST', label: 'QA & Automation Test Engineer', icon: CheckSquare }
+  ];
+
+  const platformsList = [
+    { id: 'ALL', label: 'Toate Platformele', icon: Globe },
+    { id: 'STAGIIPEBUNE', label: '🎓 StagiiPeBune.ro', icon: GraduationCap },
+    { id: 'JUNIORS_RO', label: '👶 Juniors.ro', icon: Briefcase },
+    { id: 'DIRECT_ATS', label: '🏢 Direct ATS (Greenhouse / Ashby / Lever)', icon: Building2 },
+    { id: 'LINKEDIN', label: '🌐 LinkedIn Jobs', icon: ExternalLink },
+    { id: 'WELLFOUND', label: '🚀 Wellfound Startups', icon: Zap },
+    { id: 'EJOBS', label: '🇷🇴 eJobs & Hipo', icon: Layers }
+  ];
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -53,6 +94,8 @@ export default function JobSearchPage({
       if (location) params.append('location', location);
       if (selectedPlatform && selectedPlatform !== 'ALL') params.append('platform', selectedPlatform);
       if (selectedLevel && selectedLevel !== 'ALL') params.append('level', selectedLevel);
+      if (selectedRoleCategory && selectedRoleCategory !== 'ALL') params.append('roleCategory', selectedRoleCategory);
+      if (selectedWorkModel && selectedWorkModel !== 'ALL') params.append('workModel', selectedWorkModel);
       params.append('userId', activeUserId);
 
       const res = await fetch(`/api/v1/jobs/search?${params.toString()}`, {
@@ -71,7 +114,7 @@ export default function JobSearchPage({
 
   useEffect(() => {
     fetchJobs();
-  }, [selectedPlatform, selectedLevel]);
+  }, [selectedRoleCategory, selectedPlatform, selectedWorkModel, selectedLevel]);
 
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
@@ -131,15 +174,11 @@ export default function JobSearchPage({
     }
   };
 
-  const platformsList = [
-    { id: 'ALL', label: 'Toate Platformele', icon: Globe },
-    { id: 'STAGIIPEBUNE', label: '🎓 StagiiPeBune.ro', icon: GraduationCap },
-    { id: 'JUNIORS_RO', label: '👶 Juniors.ro', icon: Briefcase },
-    { id: 'DIRECT_ATS', label: '🏢 Direct ATS (Greenhouse / Ashby / Lever)', icon: Building2 },
-    { id: 'LINKEDIN', label: '🌐 LinkedIn', icon: ExternalLink },
-    { id: 'WELLFOUND', label: '🚀 Wellfound', icon: Zap },
-    { id: 'EJOBS', label: '🇷🇴 eJobs & Hipo', icon: Layers }
-  ];
+  const getEffectiveSearchTerm = () => {
+    if (keyword && keyword.trim().length > 0) return keyword.trim();
+    const activeCat = roleCategories.find(c => c.id === selectedRoleCategory);
+    return activeCat && activeCat.id !== 'ALL' ? activeCat.label : 'Software Engineer';
+  };
 
   return (
     <div className="space-y-6 w-full max-w-7xl mx-auto pb-16 font-sans text-gray-900">
@@ -164,19 +203,22 @@ export default function JobSearchPage({
       <div className="bg-white border border-gray-200/90 shadow-sm p-6 sm:p-8 rounded-3xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
-                10+ Surse Integrate
+                17+ Specializări IT
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-blue-100 text-blue-800 border border-blue-200">
-                Live ATS Matching
+                Postate în Ultima Lună (Verificate)
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-purple-100 text-purple-800 border border-purple-200">
+                Live ATS Match Score
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">
               Căutare & Agregator Job-uri Multi-Platformă
             </h2>
             <p className="text-xs sm:text-sm text-gray-500 font-medium max-w-3xl leading-relaxed">
-              Descoperă și aplică direct pe oportunități agregate de pe <strong>StagiiPeBune.ro, Juniors.ro, Greenhouse, Ashby, Lever, LinkedIn, Wellfound, eJobs și Hipo</strong>, cu scor de compatibilitate ATS calculat instant pe baza CV-ului tău.
+              Descoperă și aplică direct pe joburi de la companii de top din România și globale: <strong>Backend, Java, Full Stack, AI & LLM, Machine Learning, Data Analyst, Data Scientist, Data Engineer, Frontend, Android, DevOps, Cloud Security, QA Automation</strong>.
             </p>
           </div>
 
@@ -192,17 +234,50 @@ export default function JobSearchPage({
           </div>
         </div>
 
-        {/* SEARCH & FILTERS BAR */}
+        {/* ROLE CATEGORY QUICK FILTERS (HORIZONTAL PILLS) */}
+        <div className="pt-2 border-t border-gray-100">
+          <div className="flex items-center justify-between pb-1.5">
+            <span className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+              <Cpu className="w-3.5 h-3.5 text-black" /> Alege Domeniul / Specializarea:
+            </span>
+            <span className="text-[11px] text-gray-400 font-medium">
+              {jobs.length} rezultate active
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+            {roleCategories.map((cat) => {
+              const Icon = cat.icon;
+              const isSelected = selectedRoleCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedRoleCategory(cat.id)}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs shrink-0 flex items-center gap-1.5 transition cursor-pointer border ${
+                    isSelected 
+                      ? 'bg-black text-white border-black shadow-2xs' 
+                      : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200/90'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* SEARCH & DETAILED FILTERS BAR */}
         <form onSubmit={handleSearchSubmit} className="pt-2 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
             {/* KEYWORD SEARCH */}
-            <div className="sm:col-span-6 relative flex items-center">
+            <div className="sm:col-span-4 relative flex items-center">
               <Search className="w-4 h-4 text-gray-400 absolute left-3.5" />
               <input 
                 type="text" 
                 value={keyword}
                 onChange={e => setKeyword(e.target.value)}
-                placeholder="Titlu rol, tehnologie (ex: Java, Spring Boot, React, Python)..."
+                placeholder="Cuvinte cheie (ex: Spring Boot, PyTorch, Docker, React)..."
                 className="w-full bg-gray-50/80 hover:bg-gray-50 focus:bg-white border border-gray-300 focus:border-black rounded-2xl pl-10 pr-4 py-2.5 text-xs sm:text-sm font-semibold text-gray-900 outline-none transition placeholder-gray-400 shadow-2xs"
               />
             </div>
@@ -219,6 +294,21 @@ export default function JobSearchPage({
               />
             </div>
 
+            {/* WORK MODEL (REMOTE / HYBRID / ONSITE) */}
+            <div className="sm:col-span-2 relative flex items-center">
+              <select 
+                value={selectedWorkModel}
+                onChange={e => setSelectedWorkModel(e.target.value)}
+                className="w-full bg-gray-50/80 hover:bg-gray-50 focus:bg-white border border-gray-300 focus:border-black rounded-2xl px-3 py-2.5 text-xs sm:text-sm font-semibold text-gray-900 outline-none transition cursor-pointer shadow-2xs appearance-none"
+              >
+                <option value="ALL">🏠 Toate Modurile</option>
+                <option value="REMOTE">🏠 100% Remote</option>
+                <option value="HYBRID">🏢 Hibrid</option>
+                <option value="ONSITE">📍 On-Site</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-3 pointer-events-none" />
+            </div>
+
             {/* EXPERIENCE LEVEL */}
             <div className="sm:col-span-2 relative flex items-center">
               <select 
@@ -226,8 +316,8 @@ export default function JobSearchPage({
                 onChange={e => setSelectedLevel(e.target.value)}
                 className="w-full bg-gray-50/80 hover:bg-gray-50 focus:bg-white border border-gray-300 focus:border-black rounded-2xl px-3 py-2.5 text-xs sm:text-sm font-semibold text-gray-900 outline-none transition cursor-pointer shadow-2xs appearance-none"
               >
-                <option value="ALL">Toate Nivelurile</option>
-                <option value="INTERNSHIP">Internship / Stagii</option>
+                <option value="ALL">🎓 Toate Nivelurile</option>
+                <option value="INTERNSHIP">Internship / Stagiu</option>
                 <option value="JUNIOR">Junior (0-2 ani)</option>
                 <option value="MID">Mid-Level</option>
               </select>
@@ -272,11 +362,13 @@ export default function JobSearchPage({
           </div>
         </form>
 
-        {/* QUICK DEEP-SEARCH EXTERNAL SHORTCUTS */}
+        {/* QUICK DEEP-SEARCH EXTERNAL SHORTCUTS WITH DYNAMIC QUERY */}
         <div className="pt-2 border-t border-gray-100 flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-[11px] font-semibold text-gray-500">Căutare directă pe site-uri externe:</span>
+          <span className="text-[11px] font-semibold text-gray-500">
+            Căutare directă live pentru „<strong className="text-black">{getEffectiveSearchTerm()}</strong>”:
+          </span>
           <a 
-            href={`https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(keyword || 'Java Developer')}`} 
+            href={`https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(getEffectiveSearchTerm())}`} 
             target="_blank" 
             rel="noreferrer"
             className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-lg font-bold text-[11px] flex items-center gap-1 transition shadow-2xs"
@@ -285,12 +377,21 @@ export default function JobSearchPage({
             <ArrowUpRight className="w-3 h-3" />
           </a>
           <a 
-            href={`https://wellfound.com/jobs?role=${encodeURIComponent(keyword || 'Software Engineer')}`} 
+            href={`https://wellfound.com/jobs?role=${encodeURIComponent(getEffectiveSearchTerm())}`} 
             target="_blank" 
             rel="noreferrer"
             className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-200 rounded-lg font-bold text-[11px] flex items-center gap-1 transition shadow-2xs"
           >
             <span>Wellfound</span>
+            <ArrowUpRight className="w-3 h-3" />
+          </a>
+          <a 
+            href={`https://ro.indeed.com/jobs?q=${encodeURIComponent(getEffectiveSearchTerm())}`} 
+            target="_blank" 
+            rel="noreferrer"
+            className="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-200 rounded-lg font-bold text-[11px] flex items-center gap-1 transition shadow-2xs"
+          >
+            <span>Indeed</span>
             <ArrowUpRight className="w-3 h-3" />
           </a>
           <a 
@@ -312,7 +413,7 @@ export default function JobSearchPage({
             <ArrowUpRight className="w-3 h-3" />
           </a>
           <a 
-            href={`https://www.ejobs.ro/locuri-de-munca/${encodeURIComponent(keyword || 'java')}/`} 
+            href={`https://www.ejobs.ro/locuri-de-munca/${encodeURIComponent(getEffectiveSearchTerm())}/`} 
             target="_blank" 
             rel="noreferrer"
             className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg font-bold text-[11px] flex items-center gap-1 transition shadow-2xs"
@@ -321,7 +422,7 @@ export default function JobSearchPage({
             <ArrowUpRight className="w-3 h-3" />
           </a>
           <a 
-            href={`https://www.hipo.ro/locuri-de-munca/cautajob/toate-domeniile/${encodeURIComponent(keyword || 'java')}`} 
+            href={`https://www.hipo.ro/locuri-de-munca/cautajob/toate-domeniile/${encodeURIComponent(getEffectiveSearchTerm())}`} 
             target="_blank" 
             rel="noreferrer"
             className="px-2.5 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-900 border border-cyan-200 rounded-lg font-bold text-[11px] flex items-center gap-1 transition shadow-2xs"
@@ -355,13 +456,15 @@ export default function JobSearchPage({
           <Building2 className="w-10 h-10 text-gray-300 mx-auto" />
           <h4 className="text-base font-bold text-gray-900">Niciun job găsit pentru filtrele selectate</h4>
           <p className="text-xs text-gray-500 max-w-md mx-auto">
-            Încearcă să schimbi cuvintele cheie (ex: "Java", "Spring", "Backend") sau să selectezi "Toate Platformele".
+            Încearcă să schimbi cuvintele cheie sau să selectezi „Toate Rolurile”.
           </p>
           <button 
             onClick={() => {
               setKeyword('');
               setLocation('');
+              setSelectedRoleCategory('ALL');
               setSelectedPlatform('ALL');
+              setSelectedWorkModel('ALL');
               setSelectedLevel('ALL');
             }}
             className="px-4 py-2 bg-black text-white rounded-xl text-xs font-bold hover:bg-neutral-800 transition cursor-pointer"

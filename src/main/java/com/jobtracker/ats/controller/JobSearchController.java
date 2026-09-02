@@ -24,7 +24,9 @@ public class JobSearchController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String location,
             @RequestParam(required = false, defaultValue = "ALL") String platform,
-            @RequestParam(required = false, defaultValue = "ALL") String level
+            @RequestParam(required = false, defaultValue = "ALL") String level,
+            @RequestParam(required = false, defaultValue = "ALL") String roleCategory,
+            @RequestParam(required = false, defaultValue = "ALL") String workModel
     ) {
         UUID activeUserId = headerUserId != null ? headerUserId : userId;
         List<UnifiedJobListingDto> jobs = jobSearchAggregatorService.searchJobs(
@@ -32,7 +34,9 @@ public class JobSearchController {
                 keyword,
                 location,
                 platform,
-                level
+                level,
+                roleCategory,
+                workModel
         );
         return ResponseEntity.ok(jobs);
     }
