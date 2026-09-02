@@ -137,6 +137,13 @@
 			<version>2.9.2</version>
 		</dependency>
 
+		<!-- Jsoup for HTML scraping & job parsing -->
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.17.2</version>
+		</dependency>
+
 		<!-- Testing Dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

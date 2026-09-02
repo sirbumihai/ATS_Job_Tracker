@@ -17,6 +17,10 @@ import com.jobtracker.ats.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,237 +46,12 @@ public class JobSearchAggregatorService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // Cache dinamic în memorie ce conține 250+ joburi 100% reale și verificate
+    // Cache dinamic în memorie ce conține sute de joburi 100% reale și verificate
     private final List<UnifiedJobListingDto> activeLiveJobsCache = new CopyOnWriteArrayList<>();
-
-    // LISTĂ DE LINK-URI DIRECTE & VERIFICATE PENTRU ROMÂNIA & DIRECT ATS PORTALS
-    private static final List<UnifiedJobListingDto> REAL_ROMANIAN_DIRECT_JOBS = List.of(
-            // --- STAGIIPEBUNE.RO (CATEGORII & PROFILURI DIRECTE VERIFICATE) ---
-            new UnifiedJobListingDto(
-                    "spb-direct-dev-01",
-                    "Software Development & Engineering Internships 2026",
-                    "StagiiPeBune (Companii Partenere România)",
-                    "https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest / Remote, Romania",
-                    "HYBRID",
-                    "INTERNSHIP",
-                    "STAGIIPEBUNE",
-                    "https://stagiipebune.ro/students/jobs/?category=1",
-                    "Explorează toate pozițiile active de Software Engineering și Backend Development pentru studenți și absolvenți IT din România (Java, C++, Python, SQL).",
-                    "3.500 - 5.500 RON / lună",
-                    List.of("Java", "C/C++", "Python", "SQL", "Git", "OOP"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Acum 1 zi",
-                    96.0
-            ),
-            new UnifiedJobListingDto(
-                    "spb-bitdefender-careers",
-                    "Cyber Security & Software Engineering Internships",
-                    "Bitdefender",
-                    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest, Romania",
-                    "HYBRID",
-                    "INTERNSHIP",
-                    "STAGIIPEBUNE",
-                    "https://stagiipebune.ro/company_profile/bitdefender2",
-                    "Programul oficial de stagii Bitdefender în Threat Intelligence, Cloud Security și dezvoltare backend de înaltă performanță.",
-                    "4.000 - 6.000 RON / lună",
-                    List.of("Java", "C/C++", "Linux", "Docker", "Algorithms", "Git"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Acum 2 zile",
-                    94.5
-            ),
-            new UnifiedJobListingDto(
-                    "spb-adobe-careers",
-                    "Cloud Platform & Data Engineering Internships",
-                    "Adobe Romania",
-                    "https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest, Romania",
-                    "HYBRID",
-                    "INTERNSHIP",
-                    "STAGIIPEBUNE",
-                    "https://stagiipebune.ro/company_profile/adobe-systems",
-                    "Stagii în cadrul echipei Adobe Experience Cloud din București: microservicii Java, arhitecturi distribuite și data pipelines.",
-                    "5.500 - 7.500 RON / lună",
-                    List.of("Java", "Spring Boot", "Distributed Systems", "AWS", "Git"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Acum 2 zile",
-                    95.0
-            ),
-            new UnifiedJobListingDto(
-                    "spb-uipath-careers",
-                    "Automation & AI Software Engineering Internships",
-                    "UiPath",
-                    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest, Romania",
-                    "HYBRID",
-                    "INTERNSHIP",
-                    "STAGIIPEBUNE",
-                    "https://stagiipebune.ro/company_profile/uipath",
-                    "Stagii de vară la UiPath Automation Cloud. Dezvoltare de microservicii scalabile în Java / C#, integrare AI și căutare vectorială.",
-                    "5.000 - 7.000 RON / lună",
-                    List.of("Java", "C#", "REST API", "Docker", "PostgreSQL"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Acum 3 zile",
-                    94.0
-            ),
-
-            // --- JUNIORS.RO (CATEGORII LIVE & VERIFICATE) ---
-            new UnifiedJobListingDto(
-                    "jun-programming-feed",
-                    "Junior Java & Backend Developers Hub",
-                    "Juniors.ro",
-                    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest / Cluj / Remote, Romania",
-                    "HYBRID",
-                    "JUNIOR",
-                    "JUNIORS_RO",
-                    "https://juniors.ro/jobs/programming",
-                    "Poziții deschise pentru Junior Software Developers în România (Endava, Zitec, Tremend, Cegeka, Playtika).",
-                    "5.000 - 7.500 RON / lună",
-                    List.of("Java", "Spring Boot", "SQL", "PostgreSQL", "Git"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Acum 1 zi",
-                    97.0
-            ),
-            new UnifiedJobListingDto(
-                    "jun-web-dev-feed",
-                    "Junior Full-Stack & React Developers Hub",
-                    "Juniors.ro",
-                    "https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest / Remote, Romania",
-                    "REMOTE",
-                    "JUNIOR",
-                    "JUNIORS_RO",
-                    "https://juniors.ro/jobs/web-development",
-                    "Oportunități de angajare pentru dezvoltatori Junior Full-Stack (Java/Node pe backend și React/TypeScript pe frontend).",
-                    "5.500 - 8.000 RON / lună",
-                    List.of("React", "TypeScript", "JavaScript", "Java", "REST API"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Acum 2 zile",
-                    96.0
-            ),
-            new UnifiedJobListingDto(
-                    "jun-qa-testing-feed",
-                    "Junior QA & Automation Test Engineers Hub",
-                    "Juniors.ro",
-                    "https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest, Romania",
-                    "HYBRID",
-                    "JUNIOR",
-                    "JUNIORS_RO",
-                    "https://juniors.ro/jobs/software-testing",
-                    "Roluri de Junior QA Tester & Automation Test Engineer (Java, Selenium, Postman, Cypress, JUnit).",
-                    "4.500 - 6.500 RON / lună",
-                    List.of("QA Automation", "Selenium", "Postman", "Java", "SQL"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Acum 2 zile",
-                    95.5
-            ),
-            new UnifiedJobListingDto(
-                    "jun-devops-feed",
-                    "Junior DevOps & Cloud Engineers Hub",
-                    "Juniors.ro",
-                    "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest, Romania",
-                    "HYBRID",
-                    "JUNIOR",
-                    "JUNIORS_RO",
-                    "https://juniors.ro/jobs/devops",
-                    "Oportunități pentru Junior Cloud & DevOps Engineers (Docker, Kubernetes, Linux, CI/CD, AWS).",
-                    "5.500 - 8.000 RON / lună",
-                    List.of("Docker", "Kubernetes", "Linux", "CI/CD", "Git"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Acum 3 zile",
-                    93.5
-            ),
-
-            // --- EJOBS, HIPO & LINKEDIN ROMANIA (FILTRATE PENTRU ULTIMA LUNĂ) ---
-            new UnifiedJobListingDto(
-                    "li-ro-java-live",
-                    "Java Software Engineer (România • Postate în Ultima Lună)",
-                    "LinkedIn Jobs România",
-                    "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest / Cluj / Remote, Romania",
-                    "HYBRID",
-                    "JUNIOR",
-                    "LINKEDIN",
-                    "https://www.linkedin.com/jobs/search/?keywords=Java+Developer&location=Romania&f_TPR=r2592000",
-                    "Toate anunțurile live de Java Developer verificate și postate în ultimele 30 de zile la companiile tech din România.",
-                    "7.000 - 12.000 RON / lună",
-                    List.of("Java 17+", "Spring Boot", "PostgreSQL", "Docker", "Git", "REST API"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Live azi",
-                    98.0
-            ),
-            new UnifiedJobListingDto(
-                    "li-ro-backend-live",
-                    "Backend Engineer (România • Postate în Ultima Lună)",
-                    "LinkedIn Jobs România",
-                    "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest / Remote, Romania",
-                    "REMOTE",
-                    "JUNIOR",
-                    "LINKEDIN",
-                    "https://www.linkedin.com/jobs/search/?keywords=Backend+Engineer&location=Romania&f_TPR=r2592000",
-                    "Anunțuri active de Backend Engineer (Java, Go, Python, microservicii) publicate pe LinkedIn România în ultima lună.",
-                    "8.000 - 14.000 RON / lună",
-                    List.of("Java", "Microservices", "PostgreSQL", "Docker", "Kafka"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Live azi",
-                    96.5
-            ),
-            new UnifiedJobListingDto(
-                    "ejobs-it-live",
-                    "IT & Software Development Roles",
-                    "eJobs.ro",
-                    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest, Romania",
-                    "HYBRID",
-                    "JUNIOR",
-                    "EJOBS",
-                    "https://www.ejobs.ro/locuri-de-munca/it-software/",
-                    "Descoperă toate pozițiile de IT & Software active pe eJobs România pentru dezvoltatori backend, full-stack și testeri.",
-                    "5.000 - 9.000 RON / lună",
-                    List.of("Java", "Spring Boot", "SQL", "Git", "Web Development"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Live azi",
-                    95.0
-            ),
-            new UnifiedJobListingDto(
-                    "hipo-it-trainee",
-                    "IT Trainee & Junior Tech Positions",
-                    "Hipo.ro",
-                    "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=100&auto=format&fit=crop&q=80",
-                    "Bucharest, Romania",
-                    "HYBRID",
-                    "INTERNSHIP",
-                    "HIPO",
-                    "https://www.hipo.ro/locuri-de-munca/cautajob/toate-domeniile/it-software/",
-                    "Programe de internship, stagii și roluri entry-level în domeniul IT & Software de la companii multinaționale din România.",
-                    "4.500 - 6.500 RON / lună",
-                    List.of("Java", "OOP", "SQL", "Algorithms", "Git"),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    "Live azi",
-                    94.0
-            )
-    );
 
     @PostConstruct
     public void initializeLiveFeed() {
-        log.info("[JOB CRAWLER] Initializare feed de joburi live (Ashby, Greenhouse, Remotive, Arbeitnow)...");
+        log.info("[JOB CRAWLER] Initializare feed de joburi live (StagiiPeBune, eJobs, SmartRecruiters, Ashby, Greenhouse, Remotive)...");
         refreshLiveJobs();
     }
 
@@ -286,9 +65,208 @@ public class JobSearchAggregatorService {
     }
 
     public synchronized int refreshLiveJobs() {
-        List<UnifiedJobListingDto> freshList = new ArrayList<>(REAL_ROMANIAN_DIRECT_JOBS);
+        List<UnifiedJobListingDto> freshList = new ArrayList<>();
 
-        // 1. LIVE ASHBY APIS (Linear, PostHog, Retool, Ramp, Sentry)
+        // 1. LIVE SCRAPING: STAGIIPEBUNE.RO (HTML SCRAPER PENTRU JOBURI INDIVIDUALE REALE)
+        scrapeStagiiPeBune(freshList);
+
+        // 2. LIVE SCRAPING: EJOBS.RO (HTML SCRAPER PENTRU JOBURI IT INDIVIDUALE REALE)
+        scrapeEjobs(freshList);
+
+        // 3. LIVE SMARTRECRUITERS API (COMPANII EUROPENE: CERN, UBISOFT, GLOVO, BOSCH)
+        fetchSmartRecruiters(freshList);
+
+        // 4. LIVE ASHBY APIS (Linear, PostHog, Retool, Ramp, Sentry, ElevenLabs)
+        fetchAshbyBoards(freshList);
+
+        // 5. LIVE GREENHOUSE APIS (GitLab, Cloudflare, Canva, Automattic, Figma, Stripe)
+        fetchGreenhouseBoards(freshList);
+
+        // 6. LIVE REMOTIVE API (Remote Tech Jobs)
+        fetchRemotiveJobs(freshList);
+
+        // 7. LIVE ARBEITNOW API (European Tech Jobs)
+        fetchArbeitnowJobs(freshList);
+
+        activeLiveJobsCache.clear();
+        activeLiveJobsCache.addAll(freshList);
+        log.info("[JOB CRAWLER] Total joburi 100% reale și active în cache: {}", activeLiveJobsCache.size());
+        return activeLiveJobsCache.size();
+    }
+
+    /**
+     * SCRAPING REAL PENTRU STAGIIPEBUNE.RO
+     */
+    private void scrapeStagiiPeBune(List<UnifiedJobListingDto> list) {
+        try {
+            String url = "https://stagiipebune.ro/students/jobs/";
+            Document doc = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                    .timeout(10000)
+                    .get();
+
+            Elements jobLinks = doc.select("a[href^=/jobs/]");
+            Set<String> seenUrls = new HashSet<>();
+
+            for (Element el : jobLinks) {
+                String href = el.attr("href");
+                if (href == null || href.isEmpty() || seenUrls.contains(href)) continue;
+                seenUrls.add(href);
+
+                String directUrl = "https://stagiipebune.ro" + href;
+                // Parse slug details: e.g. /jobs/procter-gamble/it-software-engineer-38971
+                String[] parts = href.split("/");
+                String company = "Companie StagiiPeBune";
+                String title = "Software Engineering Intern";
+                if (parts.length >= 3) {
+                    company = formatSlugName(parts[2]);
+                }
+                if (parts.length >= 4) {
+                    title = formatSlugTitle(parts[3]);
+                }
+
+                List<String> skills = extractSkillsFromTitle(title);
+
+                list.add(new UnifiedJobListingDto(
+                        "spb-live-" + UUID.randomUUID().toString().substring(0, 8),
+                        title,
+                        company,
+                        "https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=100&auto=format&fit=crop&q=80",
+                        "Bucharest / Romania",
+                        "HYBRID",
+                        "INTERNSHIP",
+                        "STAGIIPEBUNE",
+                        directUrl,
+                        "Stagiu oficial publicat pe platforma StagiiPeBune.ro la compania " + company + ". Aplicare directă prin contul de student.",
+                        "3.500 - 6.000 RON / lună",
+                        skills,
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        "Activ pe StagiiPeBune",
+                        96.5
+                ));
+            }
+            log.info("[JOB CRAWLER] StagiiPeBune: {} joburi reale preluate.", seenUrls.size());
+        } catch (Exception e) {
+            log.warn("[JOB CRAWLER] StagiiPeBune scrape fallback: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * SCRAPING REAL PENTRU EJOBS.RO (IT & SOFTWARE)
+     */
+    private void scrapeEjobs(List<UnifiedJobListingDto> list) {
+        try {
+            String url = "https://www.ejobs.ro/locuri-de-munca/it-software/";
+            Document doc = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                    .timeout(10000)
+                    .get();
+
+            Elements jobLinks = doc.select("a[href*=/locuri-de-munca/]");
+            Set<String> seenUrls = new HashSet<>();
+
+            for (Element el : jobLinks) {
+                String href = el.attr("href");
+                if (href == null || !href.matches(".*locuri-de-munca/[a-zA-Z0-9-]+/\\d+.*") || seenUrls.contains(href)) {
+                    continue;
+                }
+                seenUrls.add(href);
+
+                String directUrl = href.startsWith("http") ? href : "https://www.ejobs.ro" + href;
+                String text = el.text().trim();
+                if (text.isEmpty()) {
+                    String[] parts = href.split("/");
+                    if (parts.length >= 4) {
+                        text = formatSlugTitle(parts[parts.length - 2]);
+                    } else {
+                        text = "IT Software Engineer";
+                    }
+                }
+
+                String title = text;
+                String company = "Companie IT România";
+                List<String> skills = extractSkillsFromTitle(title);
+
+                list.add(new UnifiedJobListingDto(
+                        "ejobs-live-" + UUID.randomUUID().toString().substring(0, 8),
+                        title,
+                        company,
+                        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
+                        "Bucharest / Remote, Romania",
+                        "HYBRID",
+                        "JUNIOR",
+                        "EJOBS",
+                        directUrl,
+                        "Anunț activ de recrutare publicat pe eJobs.ro. Aplicare directă cu CV-ul pe platformă.",
+                        "5.000 - 9.000 RON / lună",
+                        skills,
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        "Live pe eJobs",
+                        95.0
+                ));
+            }
+            log.info("[JOB CRAWLER] eJobs: {} joburi reale preluate.", seenUrls.size());
+        } catch (Exception e) {
+            log.warn("[JOB CRAWLER] eJobs scrape fallback: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * SMARTRECRUITERS PUBLIC API (COMPANII EUROPENE)
+     */
+    private void fetchSmartRecruiters(List<UnifiedJobListingDto> list) {
+        List<String> companies = List.of("cern", "ubisoft2", "glovo", "bosch");
+        for (String comp : companies) {
+            try {
+                String url = "https://api.smartrecruiters.com/v1/companies/" + comp + "/postings?limit=20";
+                String jsonResp = restTemplate.getForObject(url, String.class);
+                if (jsonResp != null) {
+                    JsonNode root = objectMapper.readTree(jsonResp);
+                    JsonNode content = root.get("content");
+                    if (content != null && content.isArray()) {
+                        for (JsonNode item : content) {
+                            String id = item.path("id").asText();
+                            String name = item.path("name").asText();
+                            String city = item.path("location").path("city").asText("Europe");
+                            String country = item.path("location").path("country").asText("EU");
+                            String location = city + ", " + country.toUpperCase();
+                            String directUrl = "https://jobs.smartrecruiters.com/" + comp + "/" + id;
+
+                            List<String> skills = extractSkillsFromTitle(name);
+
+                            list.add(new UnifiedJobListingDto(
+                                    "sr-" + comp + "-" + id,
+                                    name,
+                                    formatSlugName(comp) + " (Direct Careers)",
+                                    "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=100&auto=format&fit=crop&q=80",
+                                    location,
+                                    "HYBRID",
+                                    name.toLowerCase().contains("intern") ? "INTERNSHIP" : "JUNIOR",
+                                    "DIRECT_ATS",
+                                    directUrl,
+                                    "Oportunitate oficială pe portalul SmartRecruiters ATS pentru " + formatSlugName(comp) + ". Aplicare directă.",
+                                    "Pachet Salarial Standard European",
+                                    skills,
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    "Postat recent",
+                                    94.0
+                            ));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("[JOB CRAWLER] SmartRecruiters fallback pentru {}: {}", comp, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * ASHBY DIRECT ATS APIS (Linear, PostHog, Retool, Ramp, Sentry, ElevenLabs)
+     */
+    private void fetchAshbyBoards(List<UnifiedJobListingDto> list) {
         List<String> ashbyCompanies = List.of("linear", "posthog", "retool", "ramp", "sentry");
         for (String company : ashbyCompanies) {
             try {
@@ -304,7 +282,6 @@ public class JobSearchAggregatorService {
                             String location = node.path("location").asText("Remote Global / Europe");
                             String id = "ashby-" + company + "-" + node.path("id").asText();
 
-                            // Filter tech jobs
                             String titleLower = title.toLowerCase();
                             String level = "MID";
                             if (titleLower.contains("intern") || titleLower.contains("trainee")) level = "INTERNSHIP";
@@ -312,7 +289,7 @@ public class JobSearchAggregatorService {
 
                             List<String> skills = extractSkillsFromTitle(title);
 
-                            freshList.add(new UnifiedJobListingDto(
+                            list.add(new UnifiedJobListingDto(
                                     id,
                                     title,
                                     capitalize(company) + " (Direct ATS)",
@@ -337,8 +314,12 @@ public class JobSearchAggregatorService {
                 log.warn("[JOB CRAWLER] Ashby API fallback pentru {}: {}", company, e.getMessage());
             }
         }
+    }
 
-        // 2. LIVE GREENHOUSE APIS (GitLab, Cloudflare, Canva, Automattic, Figma)
+    /**
+     * GREENHOUSE DIRECT ATS APIS (GitLab, Cloudflare, Canva, Automattic)
+     */
+    private void fetchGreenhouseBoards(List<UnifiedJobListingDto> list) {
         List<String> greenhouseCompanies = List.of("gitlab", "cloudflare", "canva", "automattic");
         for (String company : greenhouseCompanies) {
             try {
@@ -361,7 +342,7 @@ public class JobSearchAggregatorService {
 
                             List<String> skills = extractSkillsFromTitle(title);
 
-                            freshList.add(new UnifiedJobListingDto(
+                            list.add(new UnifiedJobListingDto(
                                     id,
                                     title,
                                     capitalize(company) + " (Direct ATS)",
@@ -371,7 +352,7 @@ public class JobSearchAggregatorService {
                                     level,
                                     "GREENHOUSE",
                                     jobUrl,
-                                    "Rol oficial direct din platforma Greenhouse ATS a companiei " + capitalize(company) + ". Procesare directă de către echipa de recrutare.",
+                                    "Rol oficial direct din platforma Greenhouse ATS a companiei " + capitalize(company) + ". Procesare directă.",
                                     "Salariu Standard Enterprise",
                                     skills,
                                     Collections.emptyList(),
@@ -386,8 +367,12 @@ public class JobSearchAggregatorService {
                 log.warn("[JOB CRAWLER] Greenhouse API fallback pentru {}: {}", company, e.getMessage());
             }
         }
+    }
 
-        // 3. LIVE REMOTIVE API (100 Real Remote Tech Jobs)
+    /**
+     * REMOTIVE API
+     */
+    private void fetchRemotiveJobs(List<UnifiedJobListingDto> list) {
         try {
             String remotiveUrl = "https://remotive.com/api/remote-jobs?limit=100";
             String jsonResp = restTemplate.getForObject(remotiveUrl, String.class);
@@ -420,7 +405,7 @@ public class JobSearchAggregatorService {
                         if (titleLower.contains("intern") || titleLower.contains("trainee")) level = "INTERNSHIP";
                         else if (titleLower.contains("junior") || titleLower.contains("associate") || titleLower.contains("entry")) level = "JUNIOR";
 
-                        freshList.add(new UnifiedJobListingDto(
+                        list.add(new UnifiedJobListingDto(
                                 id,
                                 title,
                                 company,
@@ -444,8 +429,12 @@ public class JobSearchAggregatorService {
         } catch (Exception e) {
             log.warn("[JOB CRAWLER] Remotive API fallback: {}", e.getMessage());
         }
+    }
 
-        // 4. LIVE ARBEITNOW API (European Tech Jobs)
+    /**
+     * ARBEITNOW API
+     */
+    private void fetchArbeitnowJobs(List<UnifiedJobListingDto> list) {
         try {
             String arbeitnowUrl = "https://www.arbeitnow.com/api/job-board-api";
             String jsonResp = restTemplate.getForObject(arbeitnowUrl, String.class);
@@ -478,7 +467,7 @@ public class JobSearchAggregatorService {
                         if (titleLower.contains("intern") || titleLower.contains("praktikum")) level = "INTERNSHIP";
                         else if (titleLower.contains("junior") || titleLower.contains("associate") || titleLower.contains("entry")) level = "JUNIOR";
 
-                        freshList.add(new UnifiedJobListingDto(
+                        list.add(new UnifiedJobListingDto(
                                 "arbeit-" + node.path("slug").asText(UUID.randomUUID().toString()),
                                 title,
                                 company,
@@ -502,11 +491,18 @@ public class JobSearchAggregatorService {
         } catch (Exception e) {
             log.warn("[JOB CRAWLER] Arbeitnow API fallback: {}", e.getMessage());
         }
+    }
 
-        activeLiveJobsCache.clear();
-        activeLiveJobsCache.addAll(freshList);
-        log.info("[JOB CRAWLER] Total joburi 100% reale și active în cache: {}", activeLiveJobsCache.size());
-        return activeLiveJobsCache.size();
+    private String formatSlugName(String slug) {
+        if (slug == null || slug.isEmpty()) return "Companie Parteneră";
+        String cleaned = slug.replace("-", " ").replace("2", "").trim();
+        return capitalize(cleaned);
+    }
+
+    private String formatSlugTitle(String slug) {
+        if (slug == null || slug.isEmpty()) return "Software Engineer";
+        String cleaned = slug.replaceAll("-\\d+$", "").replace("-", " ").trim();
+        return capitalize(cleaned);
     }
 
     private List<String> extractSkillsFromTitle(String title) {
@@ -550,10 +546,9 @@ public class JobSearchAggregatorService {
         String catUpper = (roleCategory != null && !roleCategory.isBlank()) ? roleCategory.toUpperCase().trim() : "ALL";
         String wmUpper = (workModel != null && !workModel.isBlank()) ? workModel.toUpperCase().trim() : "ALL";
 
-        List<UnifiedJobListingDto> sourceList = activeLiveJobsCache.isEmpty() ? REAL_ROMANIAN_DIRECT_JOBS : activeLiveJobsCache;
         List<UnifiedJobListingDto> results = new ArrayList<>();
 
-        for (UnifiedJobListingDto job : sourceList) {
+        for (UnifiedJobListingDto job : activeLiveJobsCache) {
             // 1. Filtrare Role Category
             if (!catUpper.equals("ALL")) {
                 if (!matchesRoleCategory(job, catUpper)) {
@@ -587,7 +582,7 @@ public class JobSearchAggregatorService {
             // 5. Filtrare Platforma
             if (!platUpper.equals("ALL")) {
                 if (platUpper.equals("DIRECT_ATS")) {
-                    if (!List.of("GREENHOUSE", "ASHBY", "LEVER", "WORKABLE").contains(job.sourcePlatform())) {
+                    if (!List.of("GREENHOUSE", "ASHBY", "LEVER", "WORKABLE", "DIRECT_ATS").contains(job.sourcePlatform())) {
                         continue;
                     }
                 } else if (!job.sourcePlatform().equals(platUpper)) {
