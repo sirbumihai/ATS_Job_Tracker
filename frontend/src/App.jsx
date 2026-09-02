@@ -4,21 +4,24 @@ import StatsDashboard from './components/StatsDashboard';
 import KanbanBoard from './components/KanbanBoard';
 import CvLibrary from './components/CvLibrary';
 import CvStudio from './components/CvStudio';
+import JobSearchPage from './components/JobSearchPage';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
 
 export default function App() {
   const getInitialTab = () => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
+      if (path.startsWith('/job-search') || path.startsWith('/jobs')) return 'job_search';
       if (path.startsWith('/cv-library') || path.startsWith('/cv_library')) return 'cv_library';
       if (path.startsWith('/cv-studio') || path.startsWith('/cv_studio')) return 'cv_studio';
       if (path.startsWith('/kanban')) return 'kanban';
       const hash = window.location.hash.toLowerCase();
+      if (hash.includes('job-search') || hash.includes('jobs')) return 'job_search';
       if (hash.includes('cv-library') || hash.includes('cv_library')) return 'cv_library';
       if (hash.includes('cv-studio') || hash.includes('cv_studio')) return 'cv_studio';
       if (hash.includes('kanban')) return 'kanban';
       const stored = localStorage.getItem('ats_active_tab');
-      if (stored === 'cv_library' || stored === 'cv_studio' || stored === 'kanban') return stored;
+      if (stored === 'job_search' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'kanban') return stored;
     }
     return 'kanban';
   };
@@ -32,6 +35,7 @@ export default function App() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('ats_active_tab', tab);
       let targetPath = '/kanban';
+      if (tab === 'job_search') targetPath = '/job-search';
       if (tab === 'cv_library') targetPath = '/cv-library';
       if (tab === 'cv_studio') targetPath = '/cv-studio';
       
@@ -49,7 +53,10 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
-      if (path.startsWith('/cv-library') || path.startsWith('/cv_library')) {
+      if (path.startsWith('/job-search') || path.startsWith('/jobs')) {
+        setActiveTab('job_search');
+        localStorage.setItem('ats_active_tab', 'job_search');
+      } else if (path.startsWith('/cv-library') || path.startsWith('/cv_library')) {
         setActiveTab('cv_library');
         localStorage.setItem('ats_active_tab', 'cv_library');
       } else if (path.startsWith('/cv-studio') || path.startsWith('/cv_studio')) {
@@ -301,7 +308,17 @@ export default function App() {
           </>
         )}
 
-        {/* TAB 2: CV LIBRARY (CV-URILE MELE) */}
+        {/* TAB 2: JOB SEARCH & MULTI-PLATFORM AGGREGATOR */}
+        {activeTab === 'job_search' && (
+          <JobSearchPage 
+            currentUser={currentUser}
+            onSaveToKanbanSuccess={fetchApplications}
+            onNavigateToStudio={() => handleTabChange('cv_studio')}
+            onNavigateToKanban={() => handleTabChange('kanban')}
+          />
+        )}
+
+        {/* TAB 3: CV LIBRARY (CV-URILE MELE) */}
         {activeTab === 'cv_library' && (
           <CvLibrary 
             currentUser={currentUser}
@@ -310,7 +327,7 @@ export default function App() {
           />
         )}
 
-        {/* TAB 3: STUDIO CV & MATCH 100% (SEPARATE DEDICATED PAGE) */}
+        {/* TAB 4: STUDIO CV & MATCH 100% (SEPARATE DEDICATED PAGE) */}
         {activeTab === 'cv_studio' && (
           <CvStudio 
             applications={applications}

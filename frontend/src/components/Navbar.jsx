@@ -10,6 +10,7 @@ import {
   ShieldCheck, 
   Menu, 
   X, 
+  Search,
   FileText,
   FolderKanban,
   Files
@@ -46,7 +47,7 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* DESKTOP TABS NAVIGATION (3 TABS) */}
+        {/* DESKTOP TABS NAVIGATION (4 TABS) */}
         <div className="hidden md:flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200">
           <button
             onClick={() => setActiveTab('kanban')}
@@ -58,6 +59,18 @@ export default function Navbar({
           >
             <Building2 className="w-3.5 h-3.5" />
             Kanban
+          </button>
+
+          <button
+            onClick={() => setActiveTab('job_search')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+              activeTab === 'job_search' 
+                ? 'bg-black text-white shadow-sm' 
+                : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+            }`}
+          >
+            <Search className="w-3.5 h-3.5 text-amber-500" />
+            Căutare Job-uri
           </button>
 
           <button
@@ -158,6 +171,15 @@ export default function Navbar({
             >
               <Building2 className="w-3.5 h-3.5" />
               Kanban
+            </button>
+            <button
+              onClick={() => { setActiveTab('job_search'); setMobileMenuOpen(false); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 shrink-0 ${
+                activeTab === 'job_search' ? 'bg-black text-white' : 'text-gray-700'
+              }`}
+            >
+              <Search className="w-3.5 h-3.5" />
+              Joburi
             </button>
             <button
               onClick={() => { setActiveTab('cv_library'); setMobileMenuOpen(false); }}
