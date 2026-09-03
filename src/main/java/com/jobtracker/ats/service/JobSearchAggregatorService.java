@@ -197,13 +197,11 @@ public class JobSearchAggregatorService {
                             logoEl.attr("data-delayed-url") : 
                             "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80";
 
-                    // DETECTARE PRECISĂ A NIVELULUI PE BAZA TITLULUI (PRIORITATE INTERN/JUNIOR)
-                    String level = determineExperienceLevel(title);
-                    if (level.equals("MID") && expFilter.contains("f_E=1")) {
+                    // DETECTARE PRECISĂ A NIVELULUI PE BAZA TITLULUI (PRIORITATE REALĂ)
+                    String level = determineExperienceLevel(title, null);
+                    if (level.equals("MID") && expFilter.contains("f_E=1") && (title.toLowerCase().contains("intern") || title.toLowerCase().contains("stagiu") || title.toLowerCase().contains("trainee") || title.toLowerCase().contains("student"))) {
                         level = "INTERNSHIP";
-                    } else if (level.equals("MID") && expFilter.contains("f_E=2") && (query.toLowerCase().contains("junior") || query.toLowerCase().contains("entry"))) {
-                        level = "JUNIOR";
-                    } else if (level.equals("MID") && expFilter.contains("f_E=4")) {
+                    } else if (level.equals("MID") && expFilter.contains("f_E=4") && (title.toLowerCase().contains("senior") || title.toLowerCase().contains("lead") || title.toLowerCase().contains("principal"))) {
                         level = "SENIOR";
                     }
 
@@ -933,35 +931,58 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * DETERMINĂ STRICT ȘI PRECIS NIVELUL DE EXPERIENȚĂ: INTERNSHIP / JUNIOR / MID / SENIOR
+     * DETERMINĂ STRICT ȘI PRECIS NIVELUL DE EXPERIENȚĂ:
+     * - SENIOR: Titlu Senior / Lead / Principal / Architect / Staff sau cerințe 5+ ani
+     * - MID: Nespecificat / Software Engineer / Java Developer sau cerințe 2-3+ ani (NU POATE FI JUNIOR)
+     * - JUNIOR: Exclusiv dacă titlul specifică clar Junior / Entry-level / Graduate / Începător și NU cere 2-3+ ani
+     * - INTERNSHIP: Intern / Stagiu / Practică / Trainee / Student
      */
-    private String determineExperienceLevel(String title) {
+    private String determineExperienceLevel(String title, String description) {
         if (title == null) return "MID";
         String t = title.toLowerCase();
+        String d = description != null ? description.toLowerCase() : "";
+        String combined = t + " " + d;
 
-        // 1. Internship checks (Intern, Stagiu, Praktikum, Trainee, Practica, Working Student)
+        // 1. Seniority checks (Senior, Lead, Principal, Architect, Staff, Head, Director, Confirmé)
+        if (t.contains("senior") || t.contains("sr.") || t.contains("sr ") || 
+            t.contains("lead") || t.contains("principal") || t.contains("staff") || 
+            t.contains("head") || t.contains("architect") || t.contains("director") || 
+            t.contains("expert") || t.contains("confirme") || t.contains("confirmé") ||
+            combined.matches(".*\\b(?:5\\+|6\\+|7\\+|8\\+|5-7|5-8)\\s*(?:ani|years|yrs)\\b.*")) {
+            return "SENIOR";
+        }
+
+        // 2. EXPLICIT 2-3+ ANI / MID-LEVEL EXPERIENCE CHECK:
+        // Dacă anunțul sau descrierea specifică 2-3 ani sau 2+ ani de experiență, NU POATE FI JUNIOR!
+        if (combined.matches(".*\\b(?:minim(?:um)?|cel puțin|cel putin|at least)\\s*(?:2|3|4)\\s*(?:\\+|-\\s*\\d+)?\\s*(?:ani|years|yrs|an)\\b.*") ||
+            combined.matches(".*\\b[234]\\+\\s*(?:ani|years|yrs)\\b.*") ||
+            combined.matches(".*\\b(?:2\\s*-\\s*[345]|3\\s*-\\s*[45])\\s*(?:ani|years|yrs)\\b.*") ||
+            t.contains("mid-level") || t.contains("mid level") || t.contains("middle") || t.contains("intermediate")) {
+            return "MID";
+        }
+
+        // 3. Internship checks (Intern, Stagiu, Praktikum, Trainee, Practica, Working Student)
         if (t.contains("intern") || t.contains("stagiu") || 
             t.contains("praktikum") || t.contains("trainee") || t.contains("student") || 
             t.contains("practica")) {
             return "INTERNSHIP";
         }
 
-        // 2. Junior checks (Junior, Entry, Associate, Incepator, 0-2)
+        // 4. Strict Junior checks (titlul trebuie să conțină explicit Junior / Entry-level / Graduate / Începător)
         if (t.contains("junior") || t.contains("jr.") || t.contains("jr ") || 
-            t.contains("entry") || t.contains("associate") || t.contains("grad") || 
-            t.contains("incepator") || t.contains("0-2") || t.contains("entry-level")) {
+            t.contains("entry-level") || t.contains("entry level") || 
+            t.contains("fresh grad") || t.contains("graduate") || 
+            t.contains("incepator") || t.contains("începător") || 
+            t.contains("0-1 ani") || t.contains("0-2 ani")) {
             return "JUNIOR";
         }
 
-        // 3. Senior checks (Senior, Lead, Principal, Architect, Head)
-        if (t.contains("senior") || t.contains("sr.") || t.contains("sr ") || 
-            t.contains("lead") || t.contains("principal") || t.contains("staff") || 
-            t.contains("head") || t.contains("architect") || t.contains("director") || t.contains("expert")) {
-            return "SENIOR";
-        }
-
-        // 4. Default is Mid-level
+        // 5. Default: Orice rol standard fără prefixul "Junior" (Java Developer, Software Engineer, DevOps, React) este MID!
         return "MID";
+    }
+
+    private String determineExperienceLevel(String title) {
+        return determineExperienceLevel(title, null);
     }
 
     private int parseDaysAgo(String postedText) {
@@ -1267,6 +1288,37 @@ public class JobSearchAggregatorService {
                 savedApp.getNotes(),
                 savedApp.getAppliedDate(),
                 savedApp.getCreatedAt()
+        );
+    }
+
+    public Map<String, Object> getJobStats() {
+        Map<String, Integer> platformCounts = new HashMap<>();
+        platformCounts.put("ALL", activeLiveJobsCache.size());
+
+        int junior = 0;
+        int intern = 0;
+        int remote = 0;
+        int highChance = 0;
+
+        for (UnifiedJobListingDto job : activeLiveJobsCache) {
+            String p = job.sourcePlatform();
+            platformCounts.put(p, platformCounts.getOrDefault(p, 0) + 1);
+
+            if ("JUNIOR".equalsIgnoreCase(job.experienceLevel())) junior++;
+            if ("INTERNSHIP".equalsIgnoreCase(job.experienceLevel())) intern++;
+            if ("REMOTE".equalsIgnoreCase(job.workModel())) remote++;
+            if ("LOW".equalsIgnoreCase(job.competitiveness())) highChance++;
+        }
+
+        return Map.of(
+                "platformCounts", platformCounts,
+                "summaryStats", Map.of(
+                        "junior", junior,
+                        "intern", intern,
+                        "remote", remote,
+                        "highChance", highChance
+                ),
+                "totalLiveJobs", activeLiveJobsCache.size()
         );
     }
 

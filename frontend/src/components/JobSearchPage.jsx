@@ -74,6 +74,13 @@ export default function JobSearchPage({
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   
+  // Statistici globale persistente (platforme & oportunități cheie)
+  const [globalStats, setGlobalStats] = useState({
+    platformCounts: {},
+    summaryStats: { junior: 0, intern: 0, remote: 0, highChance: 0 },
+    totalLiveJobs: 0
+  });
+
   // Persistență jobs salvate în localStorage
   const [savedJobIds, setSavedJobIds] = useState(() => {
     try {
@@ -99,6 +106,7 @@ export default function JobSearchPage({
       setSecondsUntilSync(prev => {
         if (prev <= 1) {
           fetchJobs();
+          fetchGlobalStats();
           return 3600;
         }
         return prev - 1;
@@ -152,6 +160,18 @@ export default function JobSearchPage({
     { id: 'UI_UX', label: 'UI/UX & Product Design', icon: Palette }
   ];
 
+  const fetchGlobalStats = async () => {
+    try {
+      const res = await fetch('/api/v1/jobs/stats');
+      if (res.ok) {
+        const data = await res.json();
+        setGlobalStats(data);
+      }
+    } catch (err) {
+      console.warn('Nu s-au putut încărca statisticile globale:', err);
+    }
+  };
+
   const fetchJobs = async () => {
     setLoading(true);
     try {
@@ -193,8 +213,13 @@ export default function JobSearchPage({
       console.warn('Sync live warn:', err);
     } finally {
       fetchJobs();
+      fetchGlobalStats();
     }
   };
+
+  useEffect(() => {
+    fetchGlobalStats();
+  }, []);
 
   useEffect(() => {
     fetchJobs();
@@ -235,26 +260,6 @@ export default function JobSearchPage({
       setSavingJobId(null);
     }
   };
-
-  // Calcul dinamice statistici pentru platforme
-  const platformCounts = useMemo(() => {
-    const counts = { ALL: jobs.length };
-    jobs.forEach(job => {
-      const p = job.sourcePlatform;
-      counts[p] = (counts[p] || 0) + 1;
-    });
-    return counts;
-  }, [jobs]);
-
-  // Statistici rapide pentru antet
-  const summaryStats = useMemo(() => {
-    return {
-      junior: jobs.filter(j => j.experienceLevel === 'JUNIOR').length,
-      intern: jobs.filter(j => j.experienceLevel === 'INTERNSHIP').length,
-      remote: jobs.filter(j => j.workModel === 'REMOTE').length,
-      highChance: jobs.filter(j => j.competitiveness === 'LOW').length
-    };
-  }, [jobs]);
 
   // Filtrare & Sortare flexibilă pe client
   const filteredAndSortedJobs = useMemo(() => {
@@ -398,7 +403,7 @@ export default function JobSearchPage({
                 Număr Real Aplicanți & Competiție
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-purple-100 text-purple-800 border border-purple-200">
-                Sincronizare Activă
+                Filtre Reversibile & Toggle
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">
@@ -430,47 +435,84 @@ export default function JobSearchPage({
           </div>
         </div>
 
-        {/* QUICK STATS CHIPS CLICKABLE */}
+        {/* QUICK STATS CHIPS TOGGLE CLICKABLE (ACTIVARE / DEZACTIVARE CU UN CLICK) */}
         <div className="pt-2 flex flex-wrap items-center gap-2 border-t border-gray-100 text-xs">
-          <span className="text-gray-400 font-bold uppercase text-[10px] tracking-wider mr-1">Oportunități Cheie:</span>
+          <span className="text-gray-400 font-bold uppercase text-[10px] tracking-wider mr-1">Oportunități Cheie (Apasă pentru toggle):</span>
+          
           <button
-            onClick={() => { setSelectedLevel('JUNIOR'); setCurrentPage(1); }}
-            className={`px-3 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
-              selectedLevel === 'JUNIOR' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+            onClick={() => {
+              setSelectedLevel(prev => prev === 'JUNIOR' ? 'ALL' : 'JUNIOR');
+              setCurrentPage(1);
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
+              selectedLevel === 'JUNIOR' 
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' 
+                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
             }`}
+            title={selectedLevel === 'JUNIOR' ? 'Click pentru a dezactiva filtrul Junior' : 'Click pentru a filtra doar Junior'}
           >
             <span>👶 Junior:</span>
-            <span className="px-1.5 py-0.2 bg-black/10 rounded-md">{summaryStats.junior}</span>
+            <span className={`px-1.5 py-0.2 rounded-md ${selectedLevel === 'JUNIOR' ? 'bg-white/20 text-white' : 'bg-black/10'}`}>
+              {globalStats.summaryStats?.junior || 0}
+            </span>
+            {selectedLevel === 'JUNIOR' && <X className="w-3.5 h-3.5 ml-0.5" />}
           </button>
 
           <button
-            onClick={() => { setSelectedLevel('INTERNSHIP'); setCurrentPage(1); }}
-            className={`px-3 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
-              selectedLevel === 'INTERNSHIP' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+            onClick={() => {
+              setSelectedLevel(prev => prev === 'INTERNSHIP' ? 'ALL' : 'INTERNSHIP');
+              setCurrentPage(1);
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
+              selectedLevel === 'INTERNSHIP' 
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
+                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
             }`}
+            title={selectedLevel === 'INTERNSHIP' ? 'Click pentru a dezactiva filtrul Internship' : 'Click pentru a filtra doar Internship'}
           >
             <span>🎓 Internship:</span>
-            <span className="px-1.5 py-0.2 bg-black/10 rounded-md">{summaryStats.intern}</span>
+            <span className={`px-1.5 py-0.2 rounded-md ${selectedLevel === 'INTERNSHIP' ? 'bg-white/20 text-white' : 'bg-black/10'}`}>
+              {globalStats.summaryStats?.intern || 0}
+            </span>
+            {selectedLevel === 'INTERNSHIP' && <X className="w-3.5 h-3.5 ml-0.5" />}
           </button>
 
           <button
-            onClick={() => { setSelectedWorkModel('REMOTE'); setCurrentPage(1); }}
-            className={`px-3 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
-              selectedWorkModel === 'REMOTE' ? 'bg-purple-600 text-white border-purple-600' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+            onClick={() => {
+              setSelectedWorkModel(prev => prev === 'REMOTE' ? 'ALL' : 'REMOTE');
+              setCurrentPage(1);
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
+              selectedWorkModel === 'REMOTE' 
+                ? 'bg-purple-600 text-white border-purple-600 shadow-sm' 
+                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
             }`}
+            title={selectedWorkModel === 'REMOTE' ? 'Click pentru a dezactiva filtrul Remote' : 'Click pentru a filtra doar Remote'}
           >
             <span>🌐 Remote:</span>
-            <span className="px-1.5 py-0.2 bg-black/10 rounded-md">{summaryStats.remote}</span>
+            <span className={`px-1.5 py-0.2 rounded-md ${selectedWorkModel === 'REMOTE' ? 'bg-white/20 text-white' : 'bg-black/10'}`}>
+              {globalStats.summaryStats?.remote || 0}
+            </span>
+            {selectedWorkModel === 'REMOTE' && <X className="w-3.5 h-3.5 ml-0.5" />}
           </button>
 
           <button
-            onClick={() => { setSelectedCompetitiveness('LOW'); setCurrentPage(1); }}
-            className={`px-3 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
-              selectedCompetitiveness === 'LOW' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
+            onClick={() => {
+              setSelectedCompetitiveness(prev => prev === 'LOW' ? 'ALL' : 'LOW');
+              setCurrentPage(1);
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
+              selectedCompetitiveness === 'LOW' 
+                ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm' 
+                : 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
             }`}
+            title={selectedCompetitiveness === 'LOW' ? 'Click pentru a dezactiva filtrul Șansă Mare' : 'Click pentru a filtra doar Șansă Mare'}
           >
             <span>🟢 Șansă Mare:</span>
-            <span className="px-1.5 py-0.2 bg-black/10 rounded-md">{summaryStats.highChance}</span>
+            <span className={`px-1.5 py-0.2 rounded-md ${selectedCompetitiveness === 'LOW' ? 'bg-white/20 text-white' : 'bg-black/10'}`}>
+              {globalStats.summaryStats?.highChance || 0}
+            </span>
+            {selectedCompetitiveness === 'LOW' && <X className="w-3.5 h-3.5 ml-0.5" />}
           </button>
         </div>
       </div>
@@ -532,13 +574,13 @@ export default function JobSearchPage({
           </div>
         </form>
 
-        {/* 🌟 SECȚIUNE DEDICATĂ: DELIMITARE CLARĂ A PLATFORMELOR (TABS / CHIPS DISTINCTE) */}
+        {/* 🌟 SECȚIUNE DEDICATĂ: DELIMITARE CLARĂ A PLATFORMELOR (NUMERELE RĂMÂN VIZIBILE MEREU) */}
         <div className="space-y-2.5 pt-2 border-t border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
                 <Globe className="w-3.5 h-3.5 text-indigo-600" />
-                Selectează Platforma Sursă (Delimitată Individual):
+                Selectează Platforma Sursă (Fiecare cu numărul său de joburi):
               </span>
             </div>
             
@@ -570,17 +612,25 @@ export default function JobSearchPage({
             {platformsConfig.map((plat) => {
               const Icon = plat.icon;
               const isSelected = selectedPlatform === plat.id;
-              const count = plat.id === 'ALL' ? jobs.length : (platformCounts[plat.id] || 0);
+              
+              // Numărul este obținut din statisticile globale, astfel că NU devine 0 când este selectată o platformă!
+              const count = plat.id === 'ALL' 
+                ? (globalStats.totalLiveJobs || jobs.length) 
+                : (globalStats.platformCounts?.[plat.id] ?? 0);
 
               return (
                 <button
                   key={plat.id}
-                  onClick={() => { setSelectedPlatform(plat.id); setCurrentPage(1); }}
+                  onClick={() => { 
+                    setSelectedPlatform(prev => prev === plat.id ? 'ALL' : plat.id); 
+                    setCurrentPage(1); 
+                  }}
                   className={`px-3.5 py-2.5 rounded-2xl text-xs font-extrabold whitespace-nowrap flex items-center gap-2 transition cursor-pointer shrink-0 border shadow-2xs ${
                     isSelected 
                       ? (plat.activeClass || 'bg-black text-white border-black shadow-md')
                       : (plat.badgeClass || 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100')
                   }`}
+                  title={isSelected ? `Apasă din nou pentru a reseta la Toate Platformele` : `Filtrează joburile de pe ${plat.label}`}
                 >
                   <Icon className="w-3.5 h-3.5 shrink-0" />
                   <span>{plat.label}</span>
@@ -589,6 +639,7 @@ export default function JobSearchPage({
                   }`}>
                     {count}
                   </span>
+                  {isSelected && plat.id !== 'ALL' && <X className="w-3 h-3 ml-0.5 opacity-80" />}
                 </button>
               );
             })}
@@ -633,7 +684,10 @@ export default function JobSearchPage({
               return (
                 <button
                   key={cat.id}
-                  onClick={() => { setSelectedRoleCategory(cat.id); setCurrentPage(1); }}
+                  onClick={() => { 
+                    setSelectedRoleCategory(prev => prev === cat.id ? 'ALL' : cat.id); 
+                    setCurrentPage(1); 
+                  }}
                   className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition cursor-pointer shrink-0 border ${
                     isSelected 
                       ? 'bg-black text-white border-black shadow-sm' 
@@ -663,9 +717,9 @@ export default function JobSearchPage({
             >
               <option value="ALL">Toate Nivelurile</option>
               <option value="INTERNSHIP">🎓 Internship & Stagiari</option>
-              <option value="JUNIOR">👶 Junior & Entry Level</option>
-              <option value="MID">🏢 Mid-Level (Middle)</option>
-              <option value="SENIOR">⭐ Senior & Lead / Architect</option>
+              <option value="JUNIOR">👶 Junior (Strict 0-1 ani / Începători)</option>
+              <option value="MID">🏢 Mid-Level (2-4 ani experiență)</option>
+              <option value="SENIOR">⭐ Senior & Lead (5+ ani / Arhitecți)</option>
             </select>
           </div>
 
