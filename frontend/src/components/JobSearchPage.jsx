@@ -43,10 +43,12 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  X,
-  Flame,
-  AlertCircle
+  X, 
+  Flame, 
+  AlertCircle,
+  FileText
 } from 'lucide-react';
+import JobDetailModal from './JobDetailModal';
 
 export default function JobSearchPage({ 
   currentUser, 
@@ -73,6 +75,7 @@ export default function JobSearchPage({
 
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedJobForDetails, setSelectedJobForDetails] = useState(null);
   
   // Statistici globale persistente (platforme & oportunități cheie)
   const [globalStats, setGlobalStats] = useState({
@@ -136,6 +139,7 @@ export default function JobSearchPage({
     { id: 'ASHBY', label: 'AshbyHQ ATS', icon: Zap, badgeClass: 'bg-violet-50 text-violet-900 border-violet-200 hover:border-violet-400', dot: 'bg-violet-600', activeClass: 'bg-violet-700 text-white border-violet-700 shadow-md shadow-violet-100' },
     { id: 'SMARTRECRUITERS', label: 'SmartRecruiters', icon: Building2, badgeClass: 'bg-teal-50 text-teal-900 border-teal-200 hover:border-teal-400', dot: 'bg-teal-600', activeClass: 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-100' },
     { id: 'REMOTIVE', label: 'Remotive Global', icon: Globe, badgeClass: 'bg-rose-50 text-rose-900 border-rose-200 hover:border-rose-400', dot: 'bg-rose-600', activeClass: 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-100' },
+    { id: 'WWR', label: 'WeWorkRemotely', icon: Globe, badgeClass: 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:border-emerald-500', dot: 'bg-emerald-600', activeClass: 'bg-emerald-700 text-white border-emerald-700 shadow-md shadow-emerald-100' },
     { id: 'ARBEITNOW', label: 'Arbeitnow EU', icon: Cpu, badgeClass: 'bg-slate-100 text-slate-900 border-slate-300 hover:border-slate-500', dot: 'bg-slate-600', activeClass: 'bg-slate-800 text-white border-slate-800 shadow-md shadow-slate-200' }
   ];
 
@@ -348,6 +352,8 @@ export default function JobSearchPage({
         return { label: 'SmartRecruiters', bg: 'bg-teal-100 text-teal-900 border-teal-300', dot: 'bg-teal-600' };
       case 'REMOTIVE':
         return { label: 'Remotive Global', bg: 'bg-rose-100 text-rose-900 border-rose-300', dot: 'bg-rose-500' };
+      case 'WWR':
+        return { label: 'WeWorkRemotely', bg: 'bg-emerald-100 text-emerald-950 border-emerald-300', dot: 'bg-emerald-600' };
       case 'ARBEITNOW':
         return { label: 'Arbeitnow EU', bg: 'bg-slate-100 text-slate-900 border-slate-300', dot: 'bg-slate-600' };
       default:
@@ -901,18 +907,22 @@ export default function JobSearchPage({
                     </div>
                   </div>
 
-                  {/* LOGO & TITLU */}
-                  <div className="flex items-start gap-3">
+                  {/* LOGO & TITLU (CLICK PENTRU FIȘĂ DETALIATĂ) */}
+                  <div 
+                    onClick={() => setSelectedJobForDetails(job)}
+                    className="flex items-start gap-3 cursor-pointer group/title"
+                    title="Apasă pentru a deschide fișa completă a postului"
+                  >
                     <img 
                       src={job.companyLogoUrl} 
                       alt={job.companyName}
-                      className="w-12 h-12 rounded-2xl object-cover bg-gray-50 border border-gray-200/70 shrink-0 shadow-2xs"
+                      className="w-12 h-12 rounded-2xl object-cover bg-gray-50 border border-gray-200/70 shrink-0 shadow-2xs group-hover/title:scale-105 transition"
                       onError={(e) => {
                         e.target.src = 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80';
                       }}
                     />
                     <div className="space-y-0.5 flex-1 min-w-0">
-                      <h3 className="text-sm sm:text-base font-extrabold text-gray-950 leading-snug line-clamp-2 group-hover:text-indigo-600 transition">
+                      <h3 className="text-sm sm:text-base font-extrabold text-gray-950 leading-snug line-clamp-2 group-hover/title:text-indigo-600 transition">
                         {job.jobTitle}
                       </h3>
                       <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold truncate">
@@ -990,20 +1000,14 @@ export default function JobSearchPage({
                     )}
                   </div>
 
-                  {/* 🌟 DESCRIERE ORIGINALĂ A JOBULUI CU BUTON DE EXTINDERE */}
-                  <div className="text-xs text-gray-600 leading-relaxed bg-gray-50/70 p-3 rounded-xl border border-gray-100">
-                    <p className={`whitespace-pre-line ${isExpanded ? '' : 'line-clamp-3'}`}>
-                      {job.rawDescription}
-                    </p>
-                    {job.rawDescription && job.rawDescription.length > 130 && (
-                      <button
-                        onClick={() => setExpandedJobId(isExpanded ? null : job.id)}
-                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 mt-1.5 flex items-center gap-0.5 cursor-pointer"
-                      >
-                        {isExpanded ? <>Restrânge descrierea <ChevronUp className="w-3 h-3" /></> : <>Citește descrierea completă <ChevronDown className="w-3 h-3" /></>}
-                      </button>
-                    )}
-                  </div>
+                  {/* 🌟 BUTON MARE: VEZI FIȘA COMPLETĂ & CERINȚE ORIGINALE */}
+                  <button
+                    onClick={() => setSelectedJobForDetails(job)}
+                    className="w-full py-2.5 px-3 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border border-indigo-200/80 shadow-2xs"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Vezi Fișa Completă & Cerințe</span>
+                  </button>
 
                 </div>
 
@@ -1124,6 +1128,18 @@ export default function JobSearchPage({
             </button>
           </div>
         </div>
+      )}
+
+      {/* MODAL DETALII COMPLETE JOB */}
+      {selectedJobForDetails && (
+        <JobDetailModal
+          job={selectedJobForDetails}
+          onClose={() => setSelectedJobForDetails(null)}
+          onSaveToKanban={handleSaveToKanban}
+          isSaved={savedJobIds.has(selectedJobForDetails.id)}
+          isSaving={savingJobId === selectedJobForDetails.id}
+          activeUserId={activeUserId}
+        />
       )}
 
     </div>

@@ -63,6 +63,15 @@ public class JobSearchController {
         return ResponseEntity.ok(jobSearchAggregatorService.getJobStats());
     }
 
+    @GetMapping("/{id}/details")
+    public ResponseEntity<UnifiedJobListingDto> getJobDetails(@PathVariable String id) {
+        UnifiedJobListingDto details = jobSearchAggregatorService.getJobDetails(id);
+        if (details == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(details);
+    }
+
     @PostMapping("/sync-live")
     public ResponseEntity<Map<String, Object>> syncLiveJobs() {
         int totalJobs = jobSearchAggregatorService.refreshLiveJobs();
