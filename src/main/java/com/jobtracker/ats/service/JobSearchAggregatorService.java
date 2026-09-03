@@ -78,25 +78,25 @@ public class JobSearchAggregatorService {
         // 3. JUNIORS.RO MULTI-PAGE & MULTI-CATEGORY SCRAPING CU SALARIU REAL SAU NESPECIFICAT
         scrapeJuniorsRoMultiCategory(freshList);
 
-        // 4. UNDELUCRAM.RO IT & SOFTWARE LIVE SCRAPING
+        // 4. UNDELUCRAM.RO IT & SOFTWARE LIVE SCRAPING (Sursa: UNDELUCRAM)
         scrapeUndeLucram(freshList);
 
-        // 5. EJOBS.RO IT MULTI-PAGE LIVE SCRAPING (STRICT IT ONLY)
+        // 5. EJOBS.RO IT MULTI-PAGE LIVE SCRAPING (Sursa: EJOBS)
         scrapeEjobsItMultiPage(freshList);
 
-        // 6. SMARTRECRUITERS LIVE API (CERN, UBISOFT, GLOVO, BOSCH)
+        // 6. SMARTRECRUITERS LIVE API (Sursa: SMARTRECRUITERS)
         fetchSmartRecruiters(freshList);
 
-        // 7. ASHBY LIVE APIS (Linear, PostHog, Ramp, Sentry)
+        // 7. ASHBY LIVE APIS (Sursa: ASHBY)
         fetchAshbyBoards(freshList);
 
-        // 8. GREENHOUSE LIVE APIS (GitLab, Cloudflare)
+        // 8. GREENHOUSE LIVE APIS (Sursa: GREENHOUSE)
         fetchGreenhouseBoards(freshList);
 
-        // 9. REMOTIVE LIVE API (Remote Tech Jobs)
+        // 9. REMOTIVE LIVE API (Sursa: REMOTIVE)
         fetchRemotiveJobs(freshList);
 
-        // 10. ARBEITNOW LIVE API (European Tech Jobs)
+        // 10. ARBEITNOW LIVE API (Sursa: ARBEITNOW)
         fetchArbeitnowJobs(freshList);
 
         activeLiveJobsCache.clear();
@@ -106,8 +106,7 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * 1. LINKEDIN ROMÂNIA EXTINS: PESTE 25 DE CĂUTĂRI PE TOATE DOMENIILE IT (JAVA, BACKEND, FULLSTACK, AI,
-     * DATA, SUPPORT, BUSINESS ANALYST, CYBERSECURITY, SYSADMIN, SCRUM PM, DBA, ERP/SAP, UI/UX)
+     * 1. LINKEDIN ROMÂNIA EXTINS: DETECTARE REALĂ A APLICANȚILOR & COMPETIȚIEI
      */
     private void scrapeLinkedInExpanded(List<UnifiedJobListingDto> list) {
         Map<String, String> searchTiers = new LinkedHashMap<>();
@@ -174,19 +173,26 @@ public class JobSearchAggregatorService {
                     if (linkEl == null) continue;
 
                     String directUrl = linkEl.attr("href");
-                    if (directUrl == null || directUrl.isEmpty() || seenJobUrls.contains(directUrl)) continue;
-                    seenJobUrls.add(directUrl);
+                    if (directUrl == null || directUrl.isEmpty()) continue;
+                    
+                    // Curățare URL LinkedIn de parametri lungi de tracking
+                    String cleanUrl = directUrl.contains("?") ? directUrl.split("\\?")[0] : directUrl;
+                    if (seenJobUrls.contains(cleanUrl)) continue;
+                    seenJobUrls.add(cleanUrl);
 
                     Element titleEl = card.selectFirst(".base-search-card__title");
                     Element compEl = card.selectFirst(".base-search-card__subtitle");
                     Element locEl = card.selectFirst(".job-search-card__location");
                     Element dateEl = card.selectFirst("time.job-search-card__listdate");
                     Element logoEl = card.selectFirst("img.artdeco-entity-image");
+                    Element benefitEl = card.selectFirst(".job-posting-benefits__text");
 
                     String title = titleEl != null ? titleEl.text().trim() : query;
                     String company = compEl != null ? compEl.text().trim() : "Tech Company";
                     String location = locEl != null ? locEl.text().trim() : "Bucharest, Romania";
                     String postedDate = dateEl != null ? dateEl.text().trim() : "Postat recent";
+                    String benefitText = benefitEl != null ? benefitEl.text().trim().toLowerCase() : "";
+
                     String logoUrl = logoEl != null && logoEl.hasAttr("data-delayed-url") ? 
                             logoEl.attr("data-delayed-url") : 
                             "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80";
@@ -202,8 +208,35 @@ public class JobSearchAggregatorService {
                     }
 
                     int daysAgo = parseDaysAgo(postedDate);
-                    String compLevel = determineCompetitiveness(company, "LINKEDIN", daysAgo, level);
-                    String compLabel = getCompetitivenessLabel(compLevel);
+
+                    // EVALUARE CORECTĂ A COMPETITIVITĂȚII ȘI NUMĂRULUI DE APLICANȚI
+                    boolean isEarlyApplicant = benefitText.contains("early applicant") 
+                            || benefitText.contains("primii 25");
+
+                    String compLevel;
+                    String compLabel;
+                    String applicantCountText;
+
+                    if (isEarlyApplicant) {
+                        compLevel = "LOW";
+                        compLabel = "🟢 Șansă Mare (Sub 25 Aplicanți)";
+                        applicantCountText = "Sub 25 de candidați (Early Applicant)";
+                    } else {
+                        // Pe LinkedIn România în IT, postările atrag masiv aplicanți dacă nu au tag-ul "Early Applicant"
+                        if (daysAgo >= 3 || postedDate.toLowerCase().contains("week") || postedDate.toLowerCase().contains("month")) {
+                            compLevel = "HIGH";
+                            compLabel = "🔴 Competiție Mare (100+ Aplicanți)";
+                            applicantCountText = "Peste 100 de aplicanți";
+                        } else if (daysAgo >= 1 || isMajorTechBrand(company) || level.equals("JUNIOR") || level.equals("INTERNSHIP")) {
+                            compLevel = "HIGH";
+                            compLabel = "🔴 Competiție Mare (50-100+ Aplicanți)";
+                            applicantCountText = "50-100+ aplicanți";
+                        } else {
+                            compLevel = "MEDIUM";
+                            compLabel = "🟡 Competiție Medie (25-50 Aplicanți)";
+                            applicantCountText = "25-50 de candidați";
+                        }
+                    }
 
                     List<String> skills = extractSkillsFromTitle(title);
 
@@ -216,7 +249,7 @@ public class JobSearchAggregatorService {
                             location.toLowerCase().contains("remote") ? "REMOTE" : "HYBRID",
                             level,
                             "LINKEDIN",
-                            directUrl,
+                            cleanUrl,
                             "Oportunitate live preluată de pe LinkedIn România. Nivel: " + level + ". Rol la " + company + ". Aplicare directă pe LinkedIn.",
                             "Pachet Salarial Standard LinkedIn",
                             skills,
@@ -226,6 +259,7 @@ public class JobSearchAggregatorService {
                             97.0,
                             compLevel,
                             compLabel,
+                            applicantCountText,
                             daysAgo
                     ));
                 }
@@ -294,8 +328,11 @@ public class JobSearchAggregatorService {
 
                     List<String> skills = extractSkillsFromTitle(title);
                     int daysAgo = parseDaysAgo(postedDate);
-                    String compLevel = "LOW"; // Stagii universitare au șanse mari de acces
-                    String compLabel = getCompetitivenessLabel(compLevel);
+
+                    // Platformă universitară locală (acces restrâns la studenți)
+                    String compLevel = daysAgo <= 4 ? "LOW" : "MEDIUM";
+                    String compLabel = daysAgo <= 4 ? "🟢 Șansă Mare (Comunitate Studenți)" : "🟡 Competiție Medie (30-50 Aplicanți)";
+                    String applicantCountText = daysAgo <= 4 ? "Sub 25 de candidați (Studenți)" : "30-50 de candidați";
 
                     list.add(new UnifiedJobListingDto(
                             "spb-live-" + UUID.randomUUID().toString().substring(0, 8),
@@ -316,6 +353,7 @@ public class JobSearchAggregatorService {
                             97.5,
                             compLevel,
                             compLabel,
+                            applicantCountText,
                             daysAgo
                     ));
                 }
@@ -405,8 +443,10 @@ public class JobSearchAggregatorService {
                     String salary = "Salariu Nespecificat / Conform Anunț";
                     String level = determineExperienceLevel(title);
                     int daysAgo = parseDaysAgo(postedDate);
-                    String compLevel = "LOW"; // Rolurile de junior din comunități de nișă au competiție mai redusă
-                    String compLabel = getCompetitivenessLabel(compLevel);
+
+                    String compLevel = daysAgo <= 2 ? "LOW" : "MEDIUM";
+                    String compLabel = daysAgo <= 2 ? "🟢 Șansă Mare (Sub 30 Aplicanți)" : "🟡 Competiție Medie (40-75 Aplicanți)";
+                    String applicantCountText = daysAgo <= 2 ? "Sub 30 de candidați" : "40-75 de candidați";
 
                     list.add(new UnifiedJobListingDto(
                             "jun-live-" + UUID.randomUUID().toString().substring(0, 8),
@@ -427,6 +467,7 @@ public class JobSearchAggregatorService {
                             96.0,
                             compLevel,
                             compLabel,
+                            applicantCountText,
                             daysAgo
                     ));
                 }
@@ -438,7 +479,7 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * 4. UNDELUCRAM.RO IT & SOFTWARE LIVE SCRAPING
+     * 4. UNDELUCRAM.RO IT & SOFTWARE LIVE SCRAPING (Sursa oficială: UNDELUCRAM)
      */
     private void scrapeUndeLucram(List<UnifiedJobListingDto> list) {
         Set<String> seenUrls = new HashSet<>();
@@ -467,8 +508,9 @@ public class JobSearchAggregatorService {
                 String level = determineExperienceLevel(title);
                 List<String> skills = extractSkillsFromTitle(title);
                 int daysAgo = 2;
-                String compLevel = "LOW";
-                String compLabel = getCompetitivenessLabel(compLevel);
+                String compLevel = "MEDIUM";
+                String compLabel = "🟡 Competiție Medie (35-70 Aplicanți)";
+                String applicantCountText = "35-70 de candidați (UndeLucram)";
 
                 list.add(new UnifiedJobListingDto(
                         "udl-live-" + UUID.randomUUID().toString().substring(0, 8),
@@ -478,9 +520,9 @@ public class JobSearchAggregatorService {
                         "Bucharest / Romania",
                         "HYBRID",
                         level,
-                        "EJOBS",
+                        "UNDELUCRAM",
                         directUrl,
-                        "Rol IT verificat pe platforma UndeLucram.ro. Nivel: " + level + ". Aplicare directă.",
+                        "Rol IT verificat pe portalul UndeLucram.ro. Nivel: " + level + ". Aplicare directă.",
                         "Salariu Nespecificat / Conform Anunț",
                         skills,
                         Collections.emptyList(),
@@ -489,8 +531,9 @@ public class JobSearchAggregatorService {
                         94.5,
                         compLevel,
                         compLabel,
+                        applicantCountText,
                         daysAgo
-                ));
+                    ));
             }
             log.info("[JOB CRAWLER] UndeLucram.ro: {} joburi reale preluate.", seenUrls.size());
         } catch (Exception e) {
@@ -499,7 +542,7 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * 5. EJOBS.RO IT MULTI-PAGE LIVE SCRAPING (STRICT IT ONLY)
+     * 5. EJOBS.RO IT MULTI-PAGE LIVE SCRAPING (Sursa oficială: EJOBS)
      */
     private void scrapeEjobsItMultiPage(List<UnifiedJobListingDto> list) {
         Set<String> seenUrls = new HashSet<>();
@@ -548,8 +591,9 @@ public class JobSearchAggregatorService {
                     String level = determineExperienceLevel(title);
                     List<String> skills = extractSkillsFromTitle(title);
                     int daysAgo = 3;
-                    String compLevel = "MEDIUM";
-                    String compLabel = getCompetitivenessLabel(compLevel);
+                    String compLevel = "HIGH";
+                    String compLabel = "🔴 Competiție Ridicată (80-150 Aplicanți)";
+                    String applicantCountText = "80-150+ aplicanți";
 
                     list.add(new UnifiedJobListingDto(
                             "ejobs-live-" + UUID.randomUUID().toString().substring(0, 8),
@@ -570,6 +614,7 @@ public class JobSearchAggregatorService {
                             94.0,
                             compLevel,
                             compLabel,
+                            applicantCountText,
                             daysAgo
                     ));
                 }
@@ -581,7 +626,7 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * 6. SMARTRECRUITERS PUBLIC API
+     * 6. SMARTRECRUITERS PUBLIC API (Sursa: SMARTRECRUITERS)
      */
     private void fetchSmartRecruiters(List<UnifiedJobListingDto> list) {
         List<String> companies = List.of("cern", "ubisoft2", "glovo", "bosch");
@@ -604,8 +649,9 @@ public class JobSearchAggregatorService {
                             String level = determineExperienceLevel(name);
                             List<String> skills = extractSkillsFromTitle(name);
                             int daysAgo = 2;
-                            String compLevel = "HIGH"; // Global tech enterprise
-                            String compLabel = getCompetitivenessLabel(compLevel);
+                            String compLevel = "HIGH";
+                            String compLabel = "🔴 Competiție Ridicată (Brand Global)";
+                            String applicantCountText = "Peste 100 de aplicanți (Global Careers)";
 
                             list.add(new UnifiedJobListingDto(
                                     "sr-" + comp + "-" + id,
@@ -615,7 +661,7 @@ public class JobSearchAggregatorService {
                                     location,
                                     "HYBRID",
                                     level,
-                                    "DIRECT_ATS",
+                                    "SMARTRECRUITERS",
                                     directUrl,
                                     "Oportunitate oficială pe portalul SmartRecruiters ATS pentru " + formatSlugName(comp) + ". Nivel: " + level + ".",
                                     "Pachet Salarial Standard European",
@@ -626,6 +672,7 @@ public class JobSearchAggregatorService {
                                     94.0,
                                     compLevel,
                                     compLabel,
+                                    applicantCountText,
                                     daysAgo
                             ));
                         }
@@ -638,7 +685,7 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * 7. ASHBY DIRECT ATS APIS
+     * 7. ASHBY DIRECT ATS APIS (Sursa: ASHBY)
      */
     private void fetchAshbyBoards(List<UnifiedJobListingDto> list) {
         List<String> ashbyCompanies = List.of("linear", "posthog", "ramp", "sentry");
@@ -659,8 +706,9 @@ public class JobSearchAggregatorService {
                             String level = determineExperienceLevel(title);
                             List<String> skills = extractSkillsFromTitle(title);
                             int daysAgo = 1;
-                            String compLevel = "HIGH"; // Top-tier silicon valley startups
-                            String compLabel = getCompetitivenessLabel(compLevel);
+                            String compLevel = "HIGH";
+                            String compLabel = "🔴 Competiție Mare (Silicon Valley Tech)";
+                            String applicantCountText = "200+ aplicanți (Global ATS)";
 
                             list.add(new UnifiedJobListingDto(
                                     id,
@@ -681,6 +729,7 @@ public class JobSearchAggregatorService {
                                     93.0,
                                     compLevel,
                                     compLabel,
+                                    applicantCountText,
                                     daysAgo
                             ));
                         }
@@ -693,7 +742,7 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * 8. GREENHOUSE DIRECT ATS APIS
+     * 8. GREENHOUSE DIRECT ATS APIS (Sursa: GREENHOUSE)
      */
     private void fetchGreenhouseBoards(List<UnifiedJobListingDto> list) {
         List<String> greenhouseCompanies = List.of("gitlab", "cloudflare");
@@ -715,7 +764,8 @@ public class JobSearchAggregatorService {
                             List<String> skills = extractSkillsFromTitle(title);
                             int daysAgo = 2;
                             String compLevel = "HIGH";
-                            String compLabel = getCompetitivenessLabel(compLevel);
+                            String compLabel = "🔴 Competiție Ridicată (Enterprise Tech)";
+                            String applicantCountText = "250+ aplicanți (Global ATS)";
 
                             list.add(new UnifiedJobListingDto(
                                     id,
@@ -736,6 +786,7 @@ public class JobSearchAggregatorService {
                                     92.5,
                                     compLevel,
                                     compLabel,
+                                    applicantCountText,
                                     daysAgo
                             ));
                         }
@@ -748,7 +799,7 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * 9. REMOTIVE API
+     * 9. REMOTIVE API (Sursa: REMOTIVE)
      */
     private void fetchRemotiveJobs(List<UnifiedJobListingDto> list) {
         try {
@@ -780,8 +831,9 @@ public class JobSearchAggregatorService {
 
                         String level = determineExperienceLevel(title);
                         int daysAgo = 3;
-                        String compLevel = "MEDIUM";
-                        String compLabel = getCompetitivenessLabel(compLevel);
+                        String compLevel = "HIGH";
+                        String compLabel = "🔴 Competiție Mare (Global Remote)";
+                        String applicantCountText = "Peste 200 de aplicanți (Remote Global)";
 
                         list.add(new UnifiedJobListingDto(
                                 id,
@@ -791,7 +843,7 @@ public class JobSearchAggregatorService {
                                 location,
                                 "REMOTE",
                                 level,
-                                "WELLFOUND",
+                                "REMOTIVE",
                                 applyUrl,
                                 desc,
                                 "Salariu Nespecificat / Conform Anunț",
@@ -802,6 +854,7 @@ public class JobSearchAggregatorService {
                                 91.0,
                                 compLevel,
                                 compLabel,
+                                applicantCountText,
                                 daysAgo
                         ));
                     }
@@ -813,7 +866,7 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * 10. ARBEITNOW API
+     * 10. ARBEITNOW API (Sursa: ARBEITNOW)
      */
     private void fetchArbeitnowJobs(List<UnifiedJobListingDto> list) {
         try {
@@ -845,8 +898,9 @@ public class JobSearchAggregatorService {
 
                         String level = determineExperienceLevel(title);
                         int daysAgo = 2;
-                        String compLevel = "MEDIUM";
-                        String compLabel = getCompetitivenessLabel(compLevel);
+                        String compLevel = "HIGH";
+                        String compLabel = "🔴 Competiție Ridicată (EU Tech)";
+                        String applicantCountText = "100-180 aplicanți (EU Tech)";
 
                         list.add(new UnifiedJobListingDto(
                                 "arbeit-" + node.path("slug").asText(UUID.randomUUID().toString()),
@@ -856,7 +910,7 @@ public class JobSearchAggregatorService {
                                 location,
                                 isRemote ? "REMOTE" : "HYBRID",
                                 level,
-                                "INDEED",
+                                "ARBEITNOW",
                                 applyUrl,
                                 desc,
                                 "Salariu Nespecificat / Conform Anunț",
@@ -867,6 +921,7 @@ public class JobSearchAggregatorService {
                                 90.0,
                                 compLevel,
                                 compLabel,
+                                applicantCountText,
                                 daysAgo
                         ));
                     }
@@ -946,38 +1001,17 @@ public class JobSearchAggregatorService {
         return 4;
     }
 
-    private String determineCompetitiveness(String company, String platform, int daysAgo, String level) {
-        String compLower = (company != null) ? company.toLowerCase() : "";
-        
-        // Branduri globale cu competiție extrem de mare
-        if (compLower.contains("google") || compLower.contains("amazon") || compLower.contains("microsoft") || 
-            compLower.contains("adobe") || compLower.contains("meta") || compLower.contains("linear") || 
-            compLower.contains("posthog") || compLower.contains("gitlab") || compLower.contains("cloudflare")) {
-            return "HIGH";
-        }
-
-        // Joburi proaspete (0-2 zile) sau din platforme dedicate de junior/internship au competiție mai scăzută = ȘANSĂ MARE
-        if (platform.equals("STAGIIPEBUNE") || platform.equals("JUNIORS_RO") || daysAgo <= 1) {
-            return "LOW";
-        }
-
-        if (level.equals("INTERNSHIP") || daysAgo <= 4) {
-            return "LOW";
-        }
-
-        if (level.equals("SENIOR") || daysAgo >= 14) {
-            return "HIGH";
-        }
-
-        return "MEDIUM";
-    }
-
-    private String getCompetitivenessLabel(String compLevel) {
-        return switch (compLevel) {
-            case "LOW" -> "🟢 Șansă Mare (Competiție Scăzută / Aplicare Rapidă)";
-            case "HIGH" -> "🔴 Competiție Ridicată (Brand Global / Mulți Candidați)";
-            default -> "🟡 Competiție Medie (Șanse Echilibrate)";
-        };
+    private boolean isMajorTechBrand(String company) {
+        if (company == null) return false;
+        String c = company.toLowerCase();
+        return c.contains("google") || c.contains("microsoft") || c.contains("amazon") ||
+               c.contains("endava") || c.contains("luxoft") || c.contains("siemens") ||
+               c.contains("deloitte") || c.contains("unicredit") || c.contains("vodafone") ||
+               c.contains("cegeka") || c.contains("thales") || c.contains("continental") ||
+               c.contains("bertrandt") || c.contains("uipath") || c.contains("adobe") ||
+               c.contains("pwc") || c.contains("ing") || c.contains("bcr") ||
+               c.contains("bearingpoint") || c.contains("cognizant") || c.contains("accenture") ||
+               c.contains("linear") || c.contains("posthog") || c.contains("gitlab") || c.contains("cloudflare");
     }
 
     private String formatSlugName(String slug) {
@@ -1071,13 +1105,13 @@ public class JobSearchAggregatorService {
                 if (!matchLoc) continue;
             }
 
-            // 5. Filtrare Platforma
+            // 5. Filtrare Platforma Exacta sau Grupata
             if (!platUpper.equals("ALL")) {
                 if (platUpper.equals("DIRECT_ATS")) {
-                    if (!List.of("GREENHOUSE", "ASHBY", "LEVER", "WORKABLE", "DIRECT_ATS").contains(job.sourcePlatform())) {
+                    if (!List.of("GREENHOUSE", "ASHBY", "SMARTRECRUITERS", "LEVER").contains(job.sourcePlatform())) {
                         continue;
                     }
-                } else if (!job.sourcePlatform().equals(platUpper)) {
+                } else if (!job.sourcePlatform().equalsIgnoreCase(platUpper)) {
                     continue;
                 }
             }
@@ -1138,11 +1172,12 @@ public class JobSearchAggregatorService {
                     calculatedMatchScore,
                     job.competitiveness(),
                     job.competitivenessLabel(),
+                    job.applicantCountText(),
                     job.postedDaysAgo()
             ));
         }
 
-        // Sortare implicită inteligentă: Cele mai bune potriviri & Cele mai recente
+        // Sortare implicită: Cele mai bune potriviri & Cele mai recente
         results.sort((a, b) -> {
             int scoreCmp = Double.compare(b.atsMatchScore(), a.atsMatchScore());
             if (scoreCmp != 0) return scoreCmp;

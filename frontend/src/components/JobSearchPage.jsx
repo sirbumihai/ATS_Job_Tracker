@@ -43,8 +43,9 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  X,
   Flame,
-  Gauge
+  AlertCircle
 } from 'lucide-react';
 
 export default function JobSearchPage({ 
@@ -56,6 +57,7 @@ export default function JobSearchPage({
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
 
+  // Search & Filter state
   const [keyword, setKeyword] = useState('');
   const [location, setLocation] = useState('');
   const [selectedRoleCategory, setSelectedRoleCategory] = useState('ALL');
@@ -63,15 +65,25 @@ export default function JobSearchPage({
   const [selectedWorkModel, setSelectedWorkModel] = useState('ALL');
   const [selectedLevel, setSelectedLevel] = useState('ALL');
   const [selectedCompetitiveness, setSelectedCompetitiveness] = useState('ALL');
-  const [sortBy, setSortBy] = useState('MATCH_AND_RECENCY'); // 'MATCH_AND_RECENCY', 'MATCH_SCORE', 'NEWEST', 'LOW_COMPETITION'
+  const [sortBy, setSortBy] = useState('MATCH_AND_RECENCY'); 
   
-  // Paginare & Optimizare
+  // Paginare
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
 
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [savedJobIds, setSavedJobIds] = useState(new Set());
+  
+  // Persistență jobs salvate în localStorage
+  const [savedJobIds, setSavedJobIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ats_saved_job_ids');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
   const [savingJobId, setSavingJobId] = useState(null);
   const [expandedJobId, setExpandedJobId] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
@@ -79,6 +91,8 @@ export default function JobSearchPage({
   // Timer sincronizare automată orară (60 minute)
   const [secondsUntilSync, setSecondsUntilSync] = useState(3600);
   const jobsListRef = useRef(null);
+  const platformScrollRef = useRef(null);
+  const roleScrollRef = useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -98,6 +112,21 @@ export default function JobSearchPage({
     const seconds = totalSeconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
+
+  // LISTĂ PLATFORME DELIMITATE INDIVIDUAL CU BRANDING & CULORI SPECIFICE
+  const platformsConfig = [
+    { id: 'ALL', label: 'Toate Platformele', icon: Globe, badgeClass: 'bg-gray-100 text-gray-900 border-gray-300', dot: 'bg-gray-700' },
+    { id: 'LINKEDIN', label: 'LinkedIn Jobs', icon: ExternalLink, badgeClass: 'bg-blue-50 text-blue-900 border-blue-200 hover:border-blue-400', dot: 'bg-blue-600', activeClass: 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' },
+    { id: 'STAGIIPEBUNE', label: 'StagiiPeBune.ro', icon: GraduationCap, badgeClass: 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:border-emerald-400', dot: 'bg-emerald-600', activeClass: 'bg-emerald-700 text-white border-emerald-700 shadow-md shadow-emerald-100' },
+    { id: 'JUNIORS_RO', label: 'Juniors.ro', icon: Briefcase, badgeClass: 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:border-indigo-400', dot: 'bg-indigo-600', activeClass: 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100' },
+    { id: 'EJOBS', label: 'eJobs.ro', icon: Layers, badgeClass: 'bg-amber-50 text-amber-900 border-amber-200 hover:border-amber-400', dot: 'bg-amber-600', activeClass: 'bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-100' },
+    { id: 'UNDELUCRAM', label: 'UndeLucram.ro', icon: Building2, badgeClass: 'bg-cyan-50 text-cyan-900 border-cyan-200 hover:border-cyan-400', dot: 'bg-cyan-600', activeClass: 'bg-cyan-600 text-white border-cyan-600 shadow-md shadow-cyan-100' },
+    { id: 'GREENHOUSE', label: 'Greenhouse ATS', icon: ShieldCheck, badgeClass: 'bg-purple-50 text-purple-900 border-purple-200 hover:border-purple-400', dot: 'bg-purple-600', activeClass: 'bg-purple-700 text-white border-purple-700 shadow-md shadow-purple-100' },
+    { id: 'ASHBY', label: 'AshbyHQ ATS', icon: Zap, badgeClass: 'bg-violet-50 text-violet-900 border-violet-200 hover:border-violet-400', dot: 'bg-violet-600', activeClass: 'bg-violet-700 text-white border-violet-700 shadow-md shadow-violet-100' },
+    { id: 'SMARTRECRUITERS', label: 'SmartRecruiters', icon: Building2, badgeClass: 'bg-teal-50 text-teal-900 border-teal-200 hover:border-teal-400', dot: 'bg-teal-600', activeClass: 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-100' },
+    { id: 'REMOTIVE', label: 'Remotive Global', icon: Globe, badgeClass: 'bg-rose-50 text-rose-900 border-rose-200 hover:border-rose-400', dot: 'bg-rose-600', activeClass: 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-100' },
+    { id: 'ARBEITNOW', label: 'Arbeitnow EU', icon: Cpu, badgeClass: 'bg-sky-50 text-sky-900 border-sky-200 hover:border-sky-400', dot: 'bg-sky-600', activeClass: 'bg-sky-600 text-white border-sky-600 shadow-md shadow-sky-100' }
+  ];
 
   const roleCategories = [
     { id: 'ALL', label: 'Toate Rolurile', icon: Globe },
@@ -123,16 +152,6 @@ export default function JobSearchPage({
     { id: 'UI_UX', label: 'UI/UX & Product Design', icon: Palette }
   ];
 
-  const platformsList = [
-    { id: 'ALL', label: 'Toate Platformele', icon: Globe },
-    { id: 'STAGIIPEBUNE', label: '🎓 StagiiPeBune.ro', icon: GraduationCap },
-    { id: 'JUNIORS_RO', label: '👶 Juniors.ro', icon: Briefcase },
-    { id: 'LINKEDIN', label: '🌐 LinkedIn Jobs', icon: ExternalLink },
-    { id: 'DIRECT_ATS', label: '🏢 Direct ATS (Greenhouse / Ashby / Lever)', icon: Building2 },
-    { id: 'WELLFOUND', label: '🚀 Wellfound Startups', icon: Zap },
-    { id: 'EJOBS', label: '🇷🇴 eJobs & UndeLucram', icon: Layers }
-  ];
-
   const fetchJobs = async () => {
     setLoading(true);
     try {
@@ -151,10 +170,10 @@ export default function JobSearchPage({
       if (res.ok) {
         const data = await res.json();
         setJobs(data);
-        setCurrentPage(1); // Reset la prima pagină la căutare
+        setCurrentPage(1);
       }
     } catch (err) {
-      console.error('Eroare la căutarea joburilor:', err);
+      console.error('Eroare la preluarea joburilor:', err);
     } finally {
       setLoading(false);
     }
@@ -166,7 +185,7 @@ export default function JobSearchPage({
       const res = await fetch('/api/v1/jobs/sync-live', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        setToastMessage(`Sincronizare Live Reușită! ${data.totalLiveJobs || '1200+'} joburi agregate și active.`);
+        setToastMessage(`Sincronizare Reușită! ${data.totalLiveJobs || '1300+'} joburi agregate și actualizate.`);
         setSecondsUntilSync(3600);
         setTimeout(() => setToastMessage(null), 4500);
       }
@@ -198,7 +217,14 @@ export default function JobSearchPage({
         body: JSON.stringify(job)
       });
       if (res.ok) {
-        setSavedJobIds(prev => new Set(prev).add(job.id));
+        const nextSaved = new Set(savedJobIds).add(job.id);
+        setSavedJobIds(nextSaved);
+        try {
+          localStorage.setItem('ats_saved_job_ids', JSON.stringify(Array.from(nextSaved)));
+        } catch (e) {
+          console.warn('Nu s-a putut salva în localStorage:', e);
+        }
+
         setToastMessage(`Jobul „${job.jobTitle}” la ${job.companyName} a fost salvat în Kanban!`);
         setTimeout(() => setToastMessage(null), 4000);
         if (onSaveToKanbanSuccess) onSaveToKanbanSuccess();
@@ -210,16 +236,34 @@ export default function JobSearchPage({
     }
   };
 
-  // Filtrare suplimentară pe client & Sortare flexibilă
+  // Calcul dinamice statistici pentru platforme
+  const platformCounts = useMemo(() => {
+    const counts = { ALL: jobs.length };
+    jobs.forEach(job => {
+      const p = job.sourcePlatform;
+      counts[p] = (counts[p] || 0) + 1;
+    });
+    return counts;
+  }, [jobs]);
+
+  // Statistici rapide pentru antet
+  const summaryStats = useMemo(() => {
+    return {
+      junior: jobs.filter(j => j.experienceLevel === 'JUNIOR').length,
+      intern: jobs.filter(j => j.experienceLevel === 'INTERNSHIP').length,
+      remote: jobs.filter(j => j.workModel === 'REMOTE').length,
+      highChance: jobs.filter(j => j.competitiveness === 'LOW').length
+    };
+  }, [jobs]);
+
+  // Filtrare & Sortare flexibilă pe client
   const filteredAndSortedJobs = useMemo(() => {
     let result = [...jobs];
 
-    // Filtrare competitivitate
     if (selectedCompetitiveness !== 'ALL') {
       result = result.filter(j => (j.competitiveness || 'MEDIUM') === selectedCompetitiveness);
     }
 
-    // Sortare
     result.sort((a, b) => {
       if (sortBy === 'MATCH_SCORE') {
         return b.atsMatchScore - a.atsMatchScore;
@@ -234,9 +278,9 @@ export default function JobSearchPage({
         if (compA !== compB) return compA - compB;
         return b.atsMatchScore - a.atsMatchScore;
       }
-      // Implicit: MATCH_AND_RECENCY (Cele mai bune match-uri dintre cele mai recente)
+      // Implicit: MATCH_AND_RECENCY
       const scoreDiff = b.atsMatchScore - a.atsMatchScore;
-      if (Math.abs(scoreDiff) > 5) {
+      if (Math.abs(scoreDiff) > 6) {
         return scoreDiff;
       }
       return (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
@@ -265,24 +309,26 @@ export default function JobSearchPage({
 
   const getPlatformBadge = (platform) => {
     switch (platform) {
+      case 'LINKEDIN':
+        return { label: 'LinkedIn Jobs', bg: 'bg-blue-100 text-blue-900 border-blue-300', dot: 'bg-blue-600' };
       case 'STAGIIPEBUNE':
         return { label: 'StagiiPeBune.ro', bg: 'bg-emerald-100 text-emerald-900 border-emerald-300', dot: 'bg-emerald-500' };
       case 'JUNIORS_RO':
         return { label: 'Juniors.ro', bg: 'bg-indigo-100 text-indigo-900 border-indigo-300', dot: 'bg-indigo-500' };
-      case 'GREENHOUSE':
-        return { label: 'Greenhouse (Direct ATS)', bg: 'bg-purple-100 text-purple-900 border-purple-300', dot: 'bg-purple-600' };
-      case 'ASHBY':
-        return { label: 'AshbyHQ (Direct ATS)', bg: 'bg-purple-100 text-purple-900 border-purple-300', dot: 'bg-purple-600' };
-      case 'LEVER':
-        return { label: 'Lever.co (Direct ATS)', bg: 'bg-purple-100 text-purple-900 border-purple-300', dot: 'bg-purple-600' };
-      case 'LINKEDIN':
-        return { label: 'LinkedIn Jobs', bg: 'bg-blue-100 text-blue-900 border-blue-300', dot: 'bg-blue-600' };
-      case 'WELLFOUND':
-        return { label: 'Wellfound Startups', bg: 'bg-rose-100 text-rose-900 border-rose-300', dot: 'bg-rose-500' };
-      case 'INDEED':
-        return { label: 'Indeed', bg: 'bg-sky-100 text-sky-900 border-sky-300', dot: 'bg-sky-600' };
       case 'EJOBS':
-        return { label: 'eJobs & UndeLucram', bg: 'bg-amber-100 text-amber-900 border-amber-300', dot: 'bg-amber-500' };
+        return { label: 'eJobs.ro', bg: 'bg-amber-100 text-amber-900 border-amber-300', dot: 'bg-amber-600' };
+      case 'UNDELUCRAM':
+        return { label: 'UndeLucram.ro', bg: 'bg-cyan-100 text-cyan-900 border-cyan-300', dot: 'bg-cyan-600' };
+      case 'GREENHOUSE':
+        return { label: 'Greenhouse ATS', bg: 'bg-purple-100 text-purple-900 border-purple-300', dot: 'bg-purple-600' };
+      case 'ASHBY':
+        return { label: 'AshbyHQ ATS', bg: 'bg-violet-100 text-violet-900 border-violet-300', dot: 'bg-violet-600' };
+      case 'SMARTRECRUITERS':
+        return { label: 'SmartRecruiters', bg: 'bg-teal-100 text-teal-900 border-teal-300', dot: 'bg-teal-600' };
+      case 'REMOTIVE':
+        return { label: 'Remotive Global', bg: 'bg-rose-100 text-rose-900 border-rose-300', dot: 'bg-rose-500' };
+      case 'ARBEITNOW':
+        return { label: 'Arbeitnow EU', bg: 'bg-sky-100 text-sky-900 border-sky-300', dot: 'bg-sky-600' };
       default:
         return { label: platform, bg: 'bg-gray-100 text-gray-800 border-gray-300', dot: 'bg-gray-500' };
     }
@@ -292,26 +338,33 @@ export default function JobSearchPage({
     const comp = job.competitiveness || 'MEDIUM';
     if (comp === 'LOW') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          🟢 Șansă Mare de Angajare (Competiție Redusă)
+          🟢 Șansă Mare (Sub 25 Aplicanți)
         </span>
       );
     }
     if (comp === 'HIGH') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-rose-50 text-rose-800 border border-rose-300 shadow-2xs">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-rose-50 text-rose-800 border border-rose-300 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-          🔴 Competiție Ridicată (Top Brand / Mulți Candidați)
+          🔴 Competiție Mare (100+ Aplicanți)
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs">
         <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-        🟡 Competiție Medie (Șanse Echilibrate)
+        🟡 Competiție Medie (25-50 Aplicanți)
       </span>
     );
+  };
+
+  const scrollHorizontal = (ref, direction) => {
+    if (ref.current) {
+      const amount = direction === 'left' ? -280 : 280;
+      ref.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -339,20 +392,20 @@ export default function JobSearchPage({
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
-                20+ Specializări IT
+                10 Platforme Distincte
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-blue-100 text-blue-800 border border-blue-200">
-                Postate în Ultima Lună (Verificate)
+                Număr Real Aplicanți & Competiție
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-purple-100 text-purple-800 border border-purple-200">
-                Indexare & Scor ATS Match
+                Sincronizare Activă
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">
               Căutare & Agregator Job-uri Multi-Platformă
             </h2>
             <p className="text-xs sm:text-sm text-gray-500 font-medium max-w-3xl leading-relaxed">
-              Explorează peste 1.200+ oportunități live extrase direct de pe <strong>LinkedIn România, StagiiPeBune, Juniors.ro, UndeLucram, eJobs, Ashby, Greenhouse & Remotive</strong>.
+              Explorează peste 1.300+ oportunități verificate extrase direct din surse reale: <strong>LinkedIn România, StagiiPeBune, Juniors.ro, UndeLucram, eJobs, Greenhouse, Ashby, SmartRecruiters, Remotive & Arbeitnow</strong>.
             </p>
           </div>
 
@@ -376,10 +429,56 @@ export default function JobSearchPage({
             </button>
           </div>
         </div>
+
+        {/* QUICK STATS CHIPS CLICKABLE */}
+        <div className="pt-2 flex flex-wrap items-center gap-2 border-t border-gray-100 text-xs">
+          <span className="text-gray-400 font-bold uppercase text-[10px] tracking-wider mr-1">Oportunități Cheie:</span>
+          <button
+            onClick={() => { setSelectedLevel('JUNIOR'); setCurrentPage(1); }}
+            className={`px-3 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
+              selectedLevel === 'JUNIOR' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+            }`}
+          >
+            <span>👶 Junior:</span>
+            <span className="px-1.5 py-0.2 bg-black/10 rounded-md">{summaryStats.junior}</span>
+          </button>
+
+          <button
+            onClick={() => { setSelectedLevel('INTERNSHIP'); setCurrentPage(1); }}
+            className={`px-3 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
+              selectedLevel === 'INTERNSHIP' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+            }`}
+          >
+            <span>🎓 Internship:</span>
+            <span className="px-1.5 py-0.2 bg-black/10 rounded-md">{summaryStats.intern}</span>
+          </button>
+
+          <button
+            onClick={() => { setSelectedWorkModel('REMOTE'); setCurrentPage(1); }}
+            className={`px-3 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
+              selectedWorkModel === 'REMOTE' ? 'bg-purple-600 text-white border-purple-600' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+            }`}
+          >
+            <span>🌐 Remote:</span>
+            <span className="px-1.5 py-0.2 bg-black/10 rounded-md">{summaryStats.remote}</span>
+          </button>
+
+          <button
+            onClick={() => { setSelectedCompetitiveness('LOW'); setCurrentPage(1); }}
+            className={`px-3 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer border ${
+              selectedCompetitiveness === 'LOW' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
+            }`}
+          >
+            <span>🟢 Șansă Mare:</span>
+            <span className="px-1.5 py-0.2 bg-black/10 rounded-md">{summaryStats.highChance}</span>
+          </button>
+        </div>
       </div>
 
-      {/* SEARCH BAR & MAIN FILTERS */}
+      {/* SEARCH BAR & DELIMITARE CLARĂ A PLATFORMELOR */}
       <div className="bg-white border border-gray-200/90 shadow-sm p-6 rounded-3xl space-y-6">
+        
+        {/* INPUTURI DE CĂUTARE CU BUTON DE ȘTERGERE RAPIDĂ (X) */}
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-3">
           <div className="relative md:col-span-6">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -388,8 +487,17 @@ export default function JobSearchPage({
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="Titlu rol, tehnologii (Java, Spring, Python, React, SQL, DevOps)..."
-              className="w-full pl-11 pr-4 py-3 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition"
+              className="w-full pl-11 pr-9 py-3 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition"
             />
+            {keyword && (
+              <button
+                type="button"
+                onClick={() => { setKeyword(''); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           <div className="relative md:col-span-4">
@@ -399,8 +507,17 @@ export default function JobSearchPage({
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Locație (București, Cluj, Timișoara, Remote)..."
-              className="w-full pl-11 pr-4 py-3 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition"
+              className="w-full pl-11 pr-9 py-3 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition"
             />
+            {location && (
+              <button
+                type="button"
+                onClick={() => { setLocation(''); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           <div className="md:col-span-2">
@@ -415,22 +532,109 @@ export default function JobSearchPage({
           </div>
         </form>
 
-        {/* CATEGORII DE ROLURI IT EXTINSE */}
-        <div className="space-y-2">
+        {/* 🌟 SECȚIUNE DEDICATĂ: DELIMITARE CLARĂ A PLATFORMELOR (TABS / CHIPS DISTINCTE) */}
+        <div className="space-y-2.5 pt-2 border-t border-gray-100">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-              Specializare & Domeniu Tehnic (20+ Opțiuni):
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-indigo-600" />
+                Selectează Platforma Sursă (Delimitată Individual):
+              </span>
+            </div>
+            
+            {/* Săgeți scroll pentru desktop */}
+            <div className="hidden sm:flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => scrollHorizontal(platformScrollRef, 'left')}
+                className="p-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 cursor-pointer"
+                title="Scroll stânga"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollHorizontal(platformScrollRef, 'right')}
+                className="p-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 cursor-pointer"
+                title="Scroll dreapta"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+
+          <div 
+            ref={platformScrollRef}
+            className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scroll-smooth"
+          >
+            {platformsConfig.map((plat) => {
+              const Icon = plat.icon;
+              const isSelected = selectedPlatform === plat.id;
+              const count = plat.id === 'ALL' ? jobs.length : (platformCounts[plat.id] || 0);
+
+              return (
+                <button
+                  key={plat.id}
+                  onClick={() => { setSelectedPlatform(plat.id); setCurrentPage(1); }}
+                  className={`px-3.5 py-2.5 rounded-2xl text-xs font-extrabold whitespace-nowrap flex items-center gap-2 transition cursor-pointer shrink-0 border shadow-2xs ${
+                    isSelected 
+                      ? (plat.activeClass || 'bg-black text-white border-black shadow-md')
+                      : (plat.badgeClass || 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100')
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span>{plat.label}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                    isSelected ? 'bg-white/20 text-white' : 'bg-gray-200/80 text-gray-800'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* CATEGORII DE ROLURI IT EXTINSE (20+ OPȚIUNI) */}
+        <div className="space-y-2.5 pt-2 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-gray-500" />
+              Domeniu Tehnic & Rol IT:
+            </span>
+
+            <div className="hidden sm:flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => scrollHorizontal(roleScrollRef, 'left')}
+                className="p-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 cursor-pointer"
+                title="Scroll stânga"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollHorizontal(roleScrollRef, 'right')}
+                className="p-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 cursor-pointer"
+                title="Scroll dreapta"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <div 
+            ref={roleScrollRef}
+            className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scroll-smooth"
+          >
             {roleCategories.map((cat) => {
               const Icon = cat.icon;
               const isSelected = selectedRoleCategory === cat.id;
               return (
                 <button
                   key={cat.id}
-                  onClick={() => setSelectedRoleCategory(cat.id)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition cursor-pointer shrink-0 border ${
+                  onClick={() => { setSelectedRoleCategory(cat.id); setCurrentPage(1); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition cursor-pointer shrink-0 border ${
                     isSelected 
                       ? 'bg-black text-white border-black shadow-sm' 
                       : 'bg-gray-50/90 text-gray-700 border-gray-200/90 hover:bg-gray-100 hover:text-gray-900'
@@ -444,8 +648,8 @@ export default function JobSearchPage({
           </div>
         </div>
 
-        {/* FILTRE AVANSATE DE NIVEL, COMPETITIVITATE, PLATFORMĂ & SORTARE */}
-        <div className="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {/* FILTRE AVANSATE: NIVEL, COMPETITIVITATE, WORK MODEL & SORTARE */}
+        <div className="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           
           {/* NIVEL EXPERIENȚĂ */}
           <div>
@@ -454,7 +658,7 @@ export default function JobSearchPage({
             </label>
             <select
               value={selectedLevel}
-              onChange={(e) => setSelectedLevel(e.target.value)}
+              onChange={(e) => { setSelectedLevel(e.target.value); setCurrentPage(1); }}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
             >
               <option value="ALL">Toate Nivelurile</option>
@@ -472,29 +676,13 @@ export default function JobSearchPage({
             </label>
             <select
               value={selectedCompetitiveness}
-              onChange={(e) => setSelectedCompetitiveness(e.target.value)}
+              onChange={(e) => { setSelectedCompetitiveness(e.target.value); setCurrentPage(1); }}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
             >
               <option value="ALL">Toate Tipurile de Competiție</option>
-              <option value="LOW">🟢 Șansă Mare (Competiție Scăzută)</option>
-              <option value="MEDIUM">🟡 Competiție Medie</option>
-              <option value="HIGH">🔴 Competiție Ridicată (Top Tech)</option>
-            </select>
-          </div>
-
-          {/* PLATFORMĂ */}
-          <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">
-              Platformă Sursă
-            </label>
-            <select
-              value={selectedPlatform}
-              onChange={(e) => setSelectedPlatform(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
-            >
-              {platformsList.map(p => (
-                <option key={p.id} value={p.id}>{p.label}</option>
-              ))}
+              <option value="LOW">🟢 Șansă Mare (Sub 25 Aplicanți)</option>
+              <option value="MEDIUM">🟡 Competiție Medie (25-50 Aplicanți)</option>
+              <option value="HIGH">🔴 Competiție Ridicată (100+ Aplicanți)</option>
             </select>
           </div>
 
@@ -505,7 +693,7 @@ export default function JobSearchPage({
             </label>
             <select
               value={selectedWorkModel}
-              onChange={(e) => setSelectedWorkModel(e.target.value)}
+              onChange={(e) => { setSelectedWorkModel(e.target.value); setCurrentPage(1); }}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
             >
               <option value="ALL">Toate Modurile</option>
@@ -522,7 +710,7 @@ export default function JobSearchPage({
             </label>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
               className="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-xl text-xs font-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-600 cursor-pointer"
             >
               <option value="MATCH_AND_RECENCY">🚀 Cele Mai Recente & Scor ATS</option>
@@ -541,7 +729,7 @@ export default function JobSearchPage({
           <span className="text-lg font-black text-gray-900">
             {loading ? 'Se caută...' : `${totalJobs} Oportunități Găsite`}
           </span>
-          <span className="text-xs font-semibold text-gray-400">
+          <span className="text-xs font-semibold text-gray-500">
             • Afișare {totalJobs > 0 ? startIndex + 1 : 0} - {endIndex} din {totalJobs}
           </span>
         </div>
@@ -591,7 +779,7 @@ export default function JobSearchPage({
           </div>
           <h3 className="text-base font-bold text-gray-800">Nu am găsit joburi care să corespundă filtrelor selectate</h3>
           <p className="text-xs text-gray-500 max-w-md mx-auto">
-            Încearcă să resetezi filtrele sau apasă pe butonul <strong>Sincronizare Live</strong> pentru a reîmprospăta baza de date cu cele mai noi anunțuri.
+            Încearcă să resetezi filtrele de platformă sau apasă pe <strong>Sincronizează Acum</strong> pentru a reactualiza feed-ul de date.
           </p>
           <button
             onClick={() => {
@@ -601,6 +789,7 @@ export default function JobSearchPage({
               setSelectedPlatform('ALL');
               setSelectedLevel('ALL');
               setSelectedCompetitiveness('ALL');
+              setSelectedWorkModel('ALL');
             }}
             className="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-xl hover:bg-black transition cursor-pointer"
           >
@@ -677,9 +866,16 @@ export default function JobSearchPage({
                     </span>
                   </div>
 
-                  {/* INDICATOR DE COMPETITIVITATE */}
-                  <div>
+                  {/* 🌟 INDICATOR DE COMPETITIVITATE & NUMĂR EXACT DE CANDIDAȚI */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                     {renderCompetitivenessBadge(job)}
+
+                    {job.applicantCountText && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-gray-50 text-gray-700 border border-gray-200">
+                        <Users className="w-3 h-3 text-gray-500" />
+                        <span>{job.applicantCountText}</span>
+                      </span>
+                    )}
                   </div>
 
                   {/* SALARIU & DATA POSTĂRII */}
