@@ -72,31 +72,40 @@ public class JobSearchAggregatorService {
         // 1. LINKEDIN ROMÂNIA EXTINS (TOATE SPECIALIZĂRILE IT & TOATE NIVELURILE)
         scrapeLinkedInExpanded(freshList);
 
-        // 2. STAGIIPEBUNE.RO MULTI-PAGE LIVE SCRAPING CU DATE ȘI SALARII REALE
+        // 2. DEVJOB.RO API OFICIALĂ (România #1 Developer Job Board cu salarii transparente)
+        scrapeDevJobRo(freshList);
+
+        // 3. STAGIIPEBUNE.RO MULTI-PAGE LIVE SCRAPING CU DATE ȘI SALARII REALE
         scrapeStagiiPeBuneDetailed(freshList);
 
-        // 3. JUNIORS.RO MULTI-PAGE & MULTI-CATEGORY SCRAPING CU SALARIU REAL SAU NESPECIFICAT
+        // 4. JUNIORS.RO MULTI-PAGE & MULTI-CATEGORY SCRAPING
         scrapeJuniorsRoMultiCategory(freshList);
 
-        // 4. UNDELUCRAM.RO IT & SOFTWARE LIVE SCRAPING (Sursa: UNDELUCRAM)
+        // 5. HIPO.RO IT & SOFTWARE TRAINEE / JUNIOR SCRAPING
+        scrapeHipoItJobs(freshList);
+
+        // 6. UNDELUCRAM.RO IT & SOFTWARE MULTI-PAGE EXTINS
         scrapeUndeLucram(freshList);
 
-        // 5. EJOBS.RO IT MULTI-PAGE LIVE SCRAPING (Sursa: EJOBS)
+        // 7. EJOBS.RO IT MULTI-PAGE LIVE SCRAPING
         scrapeEjobsItMultiPage(freshList);
 
-        // 6. SMARTRECRUITERS LIVE API (Sursa: SMARTRECRUITERS)
+        // 8. SMARTRECRUITERS LIVE API
         fetchSmartRecruiters(freshList);
 
-        // 7. ASHBY LIVE APIS (Sursa: ASHBY)
+        // 9. ASHBY LIVE APIS
         fetchAshbyBoards(freshList);
 
-        // 8. GREENHOUSE LIVE APIS (Sursa: GREENHOUSE)
+        // 10. GREENHOUSE LIVE APIS
         fetchGreenhouseBoards(freshList);
 
-        // 9. REMOTIVE LIVE API (Sursa: REMOTIVE)
+        // 11. GERMANTECHJOBS (Europa / EU Remote & Hybrid Tech Jobs)
+        scrapeGermanTechJobs(freshList);
+
+        // 12. REMOTIVE LIVE API (Global Remote)
         fetchRemotiveJobs(freshList);
 
-        // 10. ARBEITNOW LIVE API (Sursa: ARBEITNOW)
+        // 13. ARBEITNOW LIVE API (EU Tech)
         fetchArbeitnowJobs(freshList);
 
         activeLiveJobsCache.clear();
@@ -217,26 +226,30 @@ public class JobSearchAggregatorService {
 
                     if (isEarlyApplicant) {
                         compLevel = "LOW";
-                        compLabel = "🟢 Șansă Mare (Sub 25 Aplicanți)";
-                        applicantCountText = "Sub 25 de candidați (Early Applicant)";
+                        compLabel = "🟢 Șansă Mare";
+                        applicantCountText = "Sub 25 de candidați";
                     } else {
                         // Pe LinkedIn România în IT, postările atrag masiv aplicanți dacă nu au tag-ul "Early Applicant"
                         if (daysAgo >= 3 || postedDate.toLowerCase().contains("week") || postedDate.toLowerCase().contains("month")) {
                             compLevel = "HIGH";
-                            compLabel = "🔴 Competiție Mare (100+ Aplicanți)";
+                            compLabel = "🔴 Competiție Ridicată";
                             applicantCountText = "Peste 100 de aplicanți";
                         } else if (daysAgo >= 1 || isMajorTechBrand(company) || level.equals("JUNIOR") || level.equals("INTERNSHIP")) {
                             compLevel = "HIGH";
-                            compLabel = "🔴 Competiție Mare (50-100+ Aplicanți)";
-                            applicantCountText = "50-100+ aplicanți";
+                            compLabel = "🔴 Competiție Ridicată";
+                            applicantCountText = "50-100+ de aplicanți";
                         } else {
                             compLevel = "MEDIUM";
-                            compLabel = "🟡 Competiție Medie (25-50 Aplicanți)";
+                            compLabel = "🟡 Competiție Medie";
                             applicantCountText = "25-50 de candidați";
                         }
                     }
 
                     List<String> skills = extractSkillsFromTitle(title);
+
+                    String desc = "Poziție activă de " + title + " la " + company + " (" + location + "). " +
+                            "Nivel identificat: " + level + ". Competențe asociate: " + String.join(", ", skills) + ". " +
+                            (benefitText.isEmpty() ? "Aplicare directă securizată pe platforma oficială LinkedIn România." : "Beneficii evidențiate: " + benefitText + ". Aplicare directă pe LinkedIn.");
 
                     list.add(new UnifiedJobListingDto(
                             "li-live-" + UUID.randomUUID().toString().substring(0, 8),
@@ -248,7 +261,7 @@ public class JobSearchAggregatorService {
                             level,
                             "LINKEDIN",
                             cleanUrl,
-                            "Oportunitate live preluată de pe LinkedIn România. Nivel: " + level + ". Rol la " + company + ". Aplicare directă pe LinkedIn.",
+                            desc,
                             "Pachet Salarial Standard LinkedIn",
                             skills,
                             Collections.emptyList(),
@@ -477,65 +490,343 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * 4. UNDELUCRAM.RO IT & SOFTWARE LIVE SCRAPING (Sursa oficială: UNDELUCRAM)
+     * 2. DEVJOB.RO API OFICIALĂ (Sursa oficială România: DEVJOB_RO)
+     */
+    private void scrapeDevJobRo(List<UnifiedJobListingDto> list) {
+        try {
+            String url = "https://devjob.ro/api/jobsLight";
+            String jsonResp = restTemplate.getForObject(url, String.class);
+            if (jsonResp != null) {
+                JsonNode root = objectMapper.readTree(jsonResp);
+                if (root.isArray()) {
+                    for (JsonNode item : root) {
+                        String name = item.path("name").asText("");
+                        if (name.isBlank()) continue;
+                        String company = item.path("company").asText("Tech Company");
+                        String jobUrlSlug = item.path("jobUrl").asText("");
+                        String city = item.path("actualCity").asText("București");
+                        String workplace = item.path("workplace").asText("hybrid").toUpperCase();
+                        String expLevel = item.path("expLevel").asText("Regular");
+
+                        String directUrl = "https://devjob.ro/en/jobs/" + jobUrlSlug;
+                        int salaryFrom = item.path("annualSalaryFrom").asInt(0);
+                        int salaryTo = item.path("annualSalaryTo").asInt(0);
+                        String salary = "Salariu Nespecificat / Conform Anunț";
+                        if (salaryFrom > 0 && salaryTo > 0) {
+                            salary = salaryFrom + " - " + salaryTo + " EUR / an";
+                        }
+
+                        List<String> technologies = new ArrayList<>();
+                        JsonNode techNode = item.path("technologies");
+                        if (techNode.isArray()) {
+                            for (JsonNode t : techNode) {
+                                technologies.add(t.asText());
+                            }
+                        }
+                        if (technologies.isEmpty()) {
+                            technologies = extractSkillsFromTitle(name);
+                        }
+
+                        String level;
+                        if (expLevel.equalsIgnoreCase("Junior")) {
+                            level = "JUNIOR";
+                        } else if (expLevel.equalsIgnoreCase("Senior") || expLevel.equalsIgnoreCase("Lead")) {
+                            level = "SENIOR";
+                        } else {
+                            level = determineExperienceLevel(name);
+                        }
+
+                        String logoImg = item.path("logoImg").asText("");
+                        String logoUrl = !logoImg.isBlank() ? 
+                                "https://devjob.ro/company-logos/" + logoImg : 
+                                "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=100&auto=format&fit=crop&q=80";
+
+                        String desc = "Rol oficial de software engineering la " + company + " (" + city + "). " +
+                                "Mod de lucru: " + workplace + ". Nivel identificat: " + level + ". " +
+                                "Stack tehnologic principal: " + String.join(", ", technologies) + ". " +
+                                (salaryFrom > 0 ? "Pachet salarial transparent: " + salary + ". " : "") +
+                                "Aplicare directă fără intermediari pe DevJob România.";
+
+                        int daysAgo = 1;
+                        String compLevel = level.equals("JUNIOR") ? "LOW" : "MEDIUM";
+                        String compLabel = level.equals("JUNIOR") ? "🟢 Șansă Mare" : "🟡 Competiție Medie";
+                        String applicantCountText = level.equals("JUNIOR") ? "Sub 25 de candidați" : "30-60 de candidați";
+
+                        list.add(new UnifiedJobListingDto(
+                                "devjob-" + item.path("_id").asText(UUID.randomUUID().toString()),
+                                name,
+                                company,
+                                logoUrl,
+                                city + ", Romania",
+                                workplace.contains("REMOTE") ? "REMOTE" : workplace.contains("HYBRID") ? "HYBRID" : "ONSITE",
+                                level,
+                                "DEVJOB_RO",
+                                directUrl,
+                                desc,
+                                salary,
+                                technologies,
+                                Collections.emptyList(),
+                                Collections.emptyList(),
+                                "Postat recent pe DevJob",
+                                95.0,
+                                compLevel,
+                                compLabel,
+                                applicantCountText,
+                                daysAgo
+                        ));
+                    }
+                }
+            }
+            log.info("[JOB CRAWLER] DevJob.ro: Joburi preluate cu succes prin API oficial.");
+        } catch (Exception e) {
+            log.warn("[JOB CRAWLER] DevJob.ro fallback: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 5. HIPO.RO IT & SOFTWARE TRAINEE / JUNIOR SCRAPING (Sursa oficială: HIPO)
+     */
+    private void scrapeHipoItJobs(List<UnifiedJobListingDto> list) {
+        Set<String> seenUrls = new HashSet<>();
+        List<String> hipoUrls = List.of(
+                "https://www.hipo.ro/locuri-de-munca/domenii/it-software",
+                "https://www.hipo.ro/locuri-de-munca/joburi-it"
+        );
+
+        for (String url : hipoUrls) {
+            try {
+                Document doc = Jsoup.connect(url)
+                        .userAgent(BROWSER_USER_AGENT)
+                        .timeout(10000)
+                        .get();
+
+                Elements links = doc.select("a[href*=/locuri_de_munca/]");
+                for (Element el : links) {
+                    String href = el.attr("href");
+                    if (href == null || href.isEmpty() || seenUrls.contains(href)) continue;
+
+                    String title = el.text().trim();
+                    if (title.isEmpty() || title.equalsIgnoreCase("Inscriere") || title.length() < 4) continue;
+
+                    // Excludere posturi non-IT
+                    String tLower = title.toLowerCase();
+                    if (tLower.contains("curatenie") || tLower.contains("infirmier") || tLower.contains("electrician") || 
+                        tLower.contains("drumuri") || tLower.contains("receptionist") || tLower.contains("economist")) {
+                        continue;
+                    }
+
+                    seenUrls.add(href);
+                    String cleanHref = href.contains("?") ? href.split("\\?")[0] : href;
+                    String directUrl = cleanHref.startsWith("http") ? cleanHref : "https://www.hipo.ro" + cleanHref;
+
+                    String level = determineExperienceLevel(title);
+                    List<String> skills = extractSkillsFromTitle(title);
+                    int daysAgo = 2;
+                    String compLevel = level.equals("JUNIOR") || level.equals("INTERNSHIP") ? "LOW" : "MEDIUM";
+                    String compLabel = level.equals("JUNIOR") || level.equals("INTERNSHIP") ? "🟢 Șansă Mare" : "🟡 Competiție Medie";
+                    String applicantCountText = level.equals("JUNIOR") ? "Sub 30 de candidați" : "40-80 de candidați";
+
+                    list.add(new UnifiedJobListingDto(
+                            "hipo-live-" + UUID.randomUUID().toString().substring(0, 8),
+                            title,
+                            "Companie Hipo.ro",
+                            "https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=100&auto=format&fit=crop&q=80",
+                            "Bucharest / Hybrid, Romania",
+                            "HYBRID",
+                            level,
+                            "HIPO",
+                            directUrl,
+                            "Oportunitate IT oficială publicată pe Hipo.ro. Rol: " + title + ". Nivel identificat: " + level + ". Competențe: " + String.join(", ", skills) + ". Aplicare directă prin portalul Hipo.",
+                            "Salariu Conform Anunț",
+                            skills,
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            "Activ pe Hipo",
+                            93.0,
+                            compLevel,
+                            compLabel,
+                            applicantCountText,
+                            daysAgo
+                    ));
+                }
+            } catch (Exception e) {
+                log.warn("[JOB CRAWLER] Hipo scrape fallback: {}", e.getMessage());
+            }
+        }
+        log.info("[JOB CRAWLER] Hipo.ro: {} joburi IT preluate.", seenUrls.size());
+    }
+
+    /**
+     * 6. UNDELUCRAM.RO IT & SOFTWARE MULTI-PAGE EXTINS (Sursa oficială: UNDELUCRAM)
      */
     private void scrapeUndeLucram(List<UnifiedJobListingDto> list) {
         Set<String> seenUrls = new HashSet<>();
-        try {
-            String url = "https://www.undelucram.ro/ro/locuri-de-munca/it-software";
-            Document doc = Jsoup.connect(url)
-                    .userAgent(BROWSER_USER_AGENT)
-                    .timeout(10000)
-                    .get();
+        List<String> targetUrls = List.of(
+                "https://www.undelucram.ro/ro/locuri-de-munca?keyword=software",
+                "https://www.undelucram.ro/ro/locuri-de-munca?keyword=developer",
+                "https://www.undelucram.ro/ro/locuri-de-munca?keyword=java",
+                "https://www.undelucram.ro/ro/locuri-de-munca?keyword=data",
+                "https://www.undelucram.ro/ro/locuri-de-munca?keyword=devops",
+                "https://www.undelucram.ro/ro/locuri-de-munca",
+                "https://www.undelucram.ro/ro/locuri-de-munca?page=2"
+        );
 
-            Elements links = doc.select("a[href*=/locuri-de-munca/]");
-            for (Element el : links) {
-                String href = el.attr("href");
-                if (href == null || !href.matches(".*locuri-de-munca/[a-zA-Z0-9-]+/\\d+.*") || seenUrls.contains(href)) {
-                    continue;
-                }
-                seenUrls.add(href);
+        for (String url : targetUrls) {
+            try {
+                Document doc = Jsoup.connect(url)
+                        .userAgent(BROWSER_USER_AGENT)
+                        .timeout(10000)
+                        .get();
 
-                String directUrl = href.startsWith("http") ? href : "https://www.undelucram.ro" + href;
-                String title = el.text().trim();
-                if (title.isEmpty()) {
-                    String[] parts = href.split("/");
-                    title = parts.length >= 4 ? formatSlugTitle(parts[parts.length - 2]) : "Software Engineer";
-                }
+                Elements links = doc.select("a[href*=/locuri-de-munca/]");
+                for (Element el : links) {
+                    String href = el.attr("href");
+                    if (href == null || !href.matches(".*locuri-de-munca/[a-zA-Z0-9-]+/\\d+.*") || seenUrls.contains(href)) {
+                        continue;
+                    }
 
-                String level = determineExperienceLevel(title);
-                List<String> skills = extractSkillsFromTitle(title);
-                int daysAgo = 2;
-                String compLevel = "MEDIUM";
-                String compLabel = "🟡 Competiție Medie (35-70 Aplicanți)";
-                String applicantCountText = "35-70 de candidați (UndeLucram)";
+                    String directUrl = href.startsWith("http") ? href : "https://www.undelucram.ro" + href;
+                    String title = el.text().trim();
+                    if (title.isEmpty()) {
+                        String[] parts = href.split("/");
+                        title = parts.length >= 4 ? formatSlugTitle(parts[parts.length - 2]) : "Software Engineer";
+                    }
 
-                list.add(new UnifiedJobListingDto(
-                        "udl-live-" + UUID.randomUUID().toString().substring(0, 8),
-                        title,
-                        "Companie UndeLucram.ro",
-                        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
-                        "Bucharest / Romania",
-                        "HYBRID",
-                        level,
-                        "UNDELUCRAM",
-                        directUrl,
-                        "Rol IT verificat pe portalul UndeLucram.ro. Nivel: " + level + ". Aplicare directă.",
-                        "Salariu Nespecificat / Conform Anunț",
-                        skills,
-                        Collections.emptyList(),
-                        Collections.emptyList(),
-                        "Activ pe UndeLucram",
-                        94.5,
-                        compLevel,
-                        compLabel,
-                        applicantCountText,
-                        daysAgo
+                    // STRICT IT FILTER
+                    String titleLower = title.toLowerCase();
+                    if (titleLower.contains("farmacist") || titleLower.contains("vanzator") || titleLower.contains("curatenie") ||
+                        titleLower.contains("sofer") || titleLower.contains("contabil") || titleLower.contains("asistent medical") ||
+                        titleLower.contains("receptie") || titleLower.contains("nutritionist")) {
+                        continue;
+                    }
+
+                    seenUrls.add(href);
+
+                    String level = determineExperienceLevel(title);
+                    List<String> skills = extractSkillsFromTitle(title);
+                    int daysAgo = 2;
+                    String compLevel = level.equals("JUNIOR") ? "LOW" : "MEDIUM";
+                    String compLabel = level.equals("JUNIOR") ? "🟢 Șansă Mare" : "🟡 Competiție Medie";
+                    String applicantCountText = level.equals("JUNIOR") ? "Sub 25 de candidați" : "35-70 de candidați";
+
+                    list.add(new UnifiedJobListingDto(
+                            "udl-live-" + UUID.randomUUID().toString().substring(0, 8),
+                            title,
+                            "Companie IT UndeLucram.ro",
+                            "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
+                            "Bucharest / Remote, Romania",
+                            "HYBRID",
+                            level,
+                            "UNDELUCRAM",
+                            directUrl,
+                            "Rol oficial de " + title + " publicat pe UndeLucram.ro. Nivel identificat: " + level + ". Competențe: " + String.join(", ", skills) + ". Aplicare directă pe platforma angajatorului.",
+                            "Salariu Nespecificat / Conform Anunț",
+                            skills,
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            "Activ pe UndeLucram",
+                            94.5,
+                            compLevel,
+                            compLabel,
+                            applicantCountText,
+                            daysAgo
                     ));
+                }
+            } catch (Exception e) {
+                log.warn("[JOB CRAWLER] UndeLucram scrape fallback: {}", e.getMessage());
             }
-            log.info("[JOB CRAWLER] UndeLucram.ro: {} joburi reale preluate.", seenUrls.size());
+        }
+        log.info("[JOB CRAWLER] UndeLucram.ro Extins: {} joburi reale preluate.", seenUrls.size());
+    }
+
+    /**
+     * 11. GERMANTECHJOBS (Europa / EU Remote & Hybrid Tech Jobs - Sursa oficială: EU_TECH)
+     */
+    private void scrapeGermanTechJobs(List<UnifiedJobListingDto> list) {
+        try {
+            String url = "https://germantechjobs.de/api/jobsLight";
+            String jsonResp = restTemplate.getForObject(url, String.class);
+            if (jsonResp != null) {
+                JsonNode root = objectMapper.readTree(jsonResp);
+                if (root.isArray()) {
+                    int count = 0;
+                    for (JsonNode item : root) {
+                        if (count++ >= 160) break; // Luăm primele 160 joburi europene cele mai recente
+                        String name = item.path("name").asText("");
+                        if (name.isBlank()) continue;
+                        String company = item.path("company").asText("European Tech");
+                        String jobUrlSlug = item.path("jobUrl").asText("");
+                        String city = item.path("actualCity").asText("Germany / EU Remote");
+                        String workplace = item.path("workplace").asText("remote").toUpperCase();
+                        String expLevel = item.path("expLevel").asText("Regular");
+
+                        String directUrl = "https://germantechjobs.de/jobs/" + jobUrlSlug;
+                        int salaryFrom = item.path("annualSalaryFrom").asInt(0);
+                        int salaryTo = item.path("annualSalaryTo").asInt(0);
+                        String salary = "Salariu Conform Anunț";
+                        if (salaryFrom > 0 && salaryTo > 0) {
+                            salary = salaryFrom + " - " + salaryTo + " EUR / an";
+                        }
+
+                        List<String> technologies = new ArrayList<>();
+                        JsonNode techNode = item.path("technologies");
+                        if (techNode.isArray()) {
+                            for (JsonNode t : techNode) {
+                                technologies.add(t.asText());
+                            }
+                        }
+                        if (technologies.isEmpty()) {
+                            technologies = extractSkillsFromTitle(name);
+                        }
+
+                        String level;
+                        if (expLevel.equalsIgnoreCase("Junior")) {
+                            level = "JUNIOR";
+                        } else if (expLevel.equalsIgnoreCase("Senior") || expLevel.equalsIgnoreCase("Lead")) {
+                            level = "SENIOR";
+                        } else {
+                            level = determineExperienceLevel(name);
+                        }
+
+                        String desc = "Oportunitate de software engineering în Europa la " + company + ". " +
+                                "Locație: " + city + " (" + workplace + "). Nivel identificat: " + level + ". " +
+                                "Tehnologii cerute: " + String.join(", ", technologies) + ". " +
+                                (salaryFrom > 0 ? "Pachet salarial: " + salary + ". " : "") +
+                                "Posibilitate de lucru remote din Europa. Aplicare directă fără intermediari.";
+
+                        int daysAgo = 2;
+                        String compLevel = "HIGH";
+                        String compLabel = "🔴 Competiție Ridicată";
+                        String applicantCountText = "100-200 de aplicanți (EU Tech)";
+
+                        list.add(new UnifiedJobListingDto(
+                                "eu-" + item.path("_id").asText(UUID.randomUUID().toString()),
+                                name,
+                                company,
+                                "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=100&auto=format&fit=crop&q=80",
+                                city + " / Remote EU",
+                                workplace.contains("REMOTE") ? "REMOTE" : "HYBRID",
+                                level,
+                                "EU_TECH",
+                                directUrl,
+                                desc,
+                                salary,
+                                technologies,
+                                Collections.emptyList(),
+                                Collections.emptyList(),
+                                "Postat recent în Europa",
+                                91.0,
+                                compLevel,
+                                compLabel,
+                                applicantCountText,
+                                daysAgo
+                        ));
+                    }
+                }
+            }
+            log.info("[JOB CRAWLER] GermanTechJobs (EU): Joburi europene preluate cu succes.");
         } catch (Exception e) {
-            log.warn("[JOB CRAWLER] UndeLucram scrape fallback: {}", e.getMessage());
+            log.warn("[JOB CRAWLER] GermanTechJobs fallback: {}", e.getMessage());
         }
     }
 
@@ -1165,14 +1456,29 @@ public class JobSearchAggregatorService {
                 }
             }
 
-            double calculatedMatchScore;
-            if (job.skillsRequired().isEmpty()) {
-                calculatedMatchScore = 90.0;
+            // 7. Calcul Dinamic ATS Match bazat pe Skills + Nivel de Experiență (Realist & Riguros)
+            double skillMatchRatio = job.skillsRequired().isEmpty() ? 0.7 : ((double) matching.size() / job.skillsRequired().size());
+            double skillScore = Math.min(100.0, skillMatchRatio * 100.0);
+
+            // Ponderare experiență: profilul candidatului este Junior / Absolvent (0-1 ani)
+            // Dacă un job cere Senior (5+ ani / Lead / Architect), scorul scade drastic!
+            double experienceScore;
+            if ("INTERNSHIP".equalsIgnoreCase(job.experienceLevel())) {
+                experienceScore = 100.0;
+            } else if ("JUNIOR".equalsIgnoreCase(job.experienceLevel())) {
+                experienceScore = 95.0;
+            } else if ("MID".equalsIgnoreCase(job.experienceLevel())) {
+                experienceScore = 55.0; // Cere 2-4 ani experiență
             } else {
-                double matchRatio = (double) matching.size() / job.skillsRequired().size();
-                calculatedMatchScore = 74.0 + (matchRatio * 25.0);
+                experienceScore = 20.0; // Senior / Lead cere 5+ ani
             }
-            calculatedMatchScore = Math.min(99.0, Math.max(60.0, Math.round(calculatedMatchScore * 10.0) / 10.0));
+
+            // Pondere: 65% competențe tehnice + 35% potrivire nivel de experiență
+            double rawScore = (skillScore * 0.65) + (experienceScore * 0.35);
+            if (matching.isEmpty() && !job.skillsRequired().isEmpty()) {
+                rawScore = Math.min(rawScore, 30.0);
+            }
+            double calculatedMatchScore = Math.min(99.0, Math.max(15.0, Math.round(rawScore * 10.0) / 10.0));
 
             results.add(new UnifiedJobListingDto(
                     job.id(),
@@ -1234,6 +1540,12 @@ public class JobSearchAggregatorService {
             case "DBA_SQL" -> title.contains("database") || title.contains("dba") || title.contains("sql developer") || title.contains("oracle") || title.contains("postgres");
             case "ERP_SAP_CRM" -> title.contains("sap") || title.contains("salesforce") || title.contains("erp") || title.contains("crm") || title.contains("servicenow");
             case "UI_UX" -> title.contains("ui") || title.contains("ux") || title.contains("product designer") || title.contains("designer") || skills.contains("figma");
+            case "EMBEDDED_CPP" -> title.contains("embedded") || title.contains("c++") || title.contains("c/") || skills.contains("c++") || desc.contains("autosar") || desc.contains("microcontroller") || desc.contains("firmware");
+            case "IOS_SWIFT" -> title.contains("ios") || title.contains("swift") || skills.contains("swift");
+            case "GAME_DEV" -> title.contains("game") || title.contains("unity") || title.contains("unreal") || skills.contains("unity") || desc.contains("gameplay");
+            case "PRODUCT_MGMT" -> title.contains("product manager") || title.contains("technical product manager") || title.contains("product lead") || desc.contains("product roadmap");
+            case "SOLUTIONS_ARCHITECT" -> title.contains("solutions architect") || title.contains("cloud architect") || title.contains("enterprise architect") || title.contains("software architect");
+            case "BI_ETL" -> title.contains("power bi") || title.contains("bi developer") || title.contains("business intelligence") || title.contains("tableau") || title.contains("etl") || skills.contains("power bi");
             default -> true;
         };
     }

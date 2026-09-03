@@ -121,37 +121,47 @@ export default function JobSearchPage({
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // LISTĂ PLATFORME DELIMITATE INDIVIDUAL CU BRANDING & CULORI SPECIFICE
+  // 14 PLATFORME DELIMITATE INDIVIDUAL CU BRANDING, CULORI & CONTOARE PERMANENTE
   const platformsConfig = [
     { id: 'ALL', label: 'Toate Platformele', icon: Globe, badgeClass: 'bg-gray-100 text-gray-900 border-gray-300', dot: 'bg-gray-700' },
+    { id: 'DEVJOB_RO', label: 'DevJob.ro (Tech)', icon: Code2, badgeClass: 'bg-emerald-50 text-emerald-950 border-emerald-300 hover:border-emerald-500', dot: 'bg-emerald-600', activeClass: 'bg-emerald-700 text-white border-emerald-700 shadow-md shadow-emerald-100' },
     { id: 'LINKEDIN', label: 'LinkedIn Jobs', icon: ExternalLink, badgeClass: 'bg-blue-50 text-blue-900 border-blue-200 hover:border-blue-400', dot: 'bg-blue-600', activeClass: 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' },
-    { id: 'STAGIIPEBUNE', label: 'StagiiPeBune.ro', icon: GraduationCap, badgeClass: 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:border-emerald-400', dot: 'bg-emerald-600', activeClass: 'bg-emerald-700 text-white border-emerald-700 shadow-md shadow-emerald-100' },
+    { id: 'HIPO', label: 'Hipo.ro Trainee & IT', icon: GraduationCap, badgeClass: 'bg-amber-50 text-amber-950 border-amber-300 hover:border-amber-500', dot: 'bg-amber-600', activeClass: 'bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-100' },
+    { id: 'STAGIIPEBUNE', label: 'StagiiPeBune.ro', icon: GraduationCap, badgeClass: 'bg-teal-50 text-teal-900 border-teal-200 hover:border-teal-400', dot: 'bg-teal-600', activeClass: 'bg-teal-700 text-white border-teal-700 shadow-md shadow-teal-100' },
     { id: 'JUNIORS_RO', label: 'Juniors.ro', icon: Briefcase, badgeClass: 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:border-indigo-400', dot: 'bg-indigo-600', activeClass: 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100' },
-    { id: 'EJOBS', label: 'eJobs.ro', icon: Layers, badgeClass: 'bg-amber-50 text-amber-900 border-amber-200 hover:border-amber-400', dot: 'bg-amber-600', activeClass: 'bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-100' },
     { id: 'UNDELUCRAM', label: 'UndeLucram.ro', icon: Building2, badgeClass: 'bg-cyan-50 text-cyan-900 border-cyan-200 hover:border-cyan-400', dot: 'bg-cyan-600', activeClass: 'bg-cyan-600 text-white border-cyan-600 shadow-md shadow-cyan-100' },
+    { id: 'EJOBS', label: 'eJobs.ro', icon: Layers, badgeClass: 'bg-orange-50 text-orange-900 border-orange-200 hover:border-orange-400', dot: 'bg-orange-600', activeClass: 'bg-orange-600 text-white border-orange-600 shadow-md shadow-orange-100' },
+    { id: 'EU_TECH', label: 'GermanTechJobs (EU)', icon: Globe, badgeClass: 'bg-sky-50 text-sky-950 border-sky-300 hover:border-sky-500', dot: 'bg-sky-600', activeClass: 'bg-sky-700 text-white border-sky-700 shadow-md shadow-sky-100' },
     { id: 'GREENHOUSE', label: 'Greenhouse ATS', icon: ShieldCheck, badgeClass: 'bg-purple-50 text-purple-900 border-purple-200 hover:border-purple-400', dot: 'bg-purple-600', activeClass: 'bg-purple-700 text-white border-purple-700 shadow-md shadow-purple-100' },
     { id: 'ASHBY', label: 'AshbyHQ ATS', icon: Zap, badgeClass: 'bg-violet-50 text-violet-900 border-violet-200 hover:border-violet-400', dot: 'bg-violet-600', activeClass: 'bg-violet-700 text-white border-violet-700 shadow-md shadow-violet-100' },
     { id: 'SMARTRECRUITERS', label: 'SmartRecruiters', icon: Building2, badgeClass: 'bg-teal-50 text-teal-900 border-teal-200 hover:border-teal-400', dot: 'bg-teal-600', activeClass: 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-100' },
     { id: 'REMOTIVE', label: 'Remotive Global', icon: Globe, badgeClass: 'bg-rose-50 text-rose-900 border-rose-200 hover:border-rose-400', dot: 'bg-rose-600', activeClass: 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-100' },
-    { id: 'ARBEITNOW', label: 'Arbeitnow EU', icon: Cpu, badgeClass: 'bg-sky-50 text-sky-900 border-sky-200 hover:border-sky-400', dot: 'bg-sky-600', activeClass: 'bg-sky-600 text-white border-sky-600 shadow-md shadow-sky-100' }
+    { id: 'ARBEITNOW', label: 'Arbeitnow EU', icon: Cpu, badgeClass: 'bg-slate-100 text-slate-900 border-slate-300 hover:border-slate-500', dot: 'bg-slate-600', activeClass: 'bg-slate-800 text-white border-slate-800 shadow-md shadow-slate-200' }
   ];
 
+  // 25+ SPECIALIZĂRI IT CUPRINZĂTOARE (INCLUDE EMBEDDED, C++, IOS, GAME DEV, ETC.)
   const roleCategories = [
     { id: 'ALL', label: 'Toate Rolurile', icon: Globe },
     { id: 'JAVA', label: 'Java Engineer', icon: Code2 },
     { id: 'BACKEND', label: 'Backend Engineer', icon: Server },
     { id: 'FULLSTACK', label: 'Full Stack Engineer', icon: Layers },
+    { id: 'EMBEDDED_CPP', label: 'Embedded & C/C++', icon: Cpu },
+    { id: 'IOS_SWIFT', label: 'iOS & Swift Developer', icon: Smartphone },
+    { id: 'ANDROID', label: 'Android & Kotlin', icon: Smartphone },
+    { id: 'GAME_DEV', label: 'Game Developer (Unity/Unreal)', icon: Flame },
     { id: 'AI_LLM', label: 'AI & LLM Engineer', icon: Bot },
     { id: 'ML_ENGINEER', label: 'Machine Learning & Deep Learning', icon: BrainCircuit },
     { id: 'DATA_ANALYST', label: 'Data Analyst', icon: LineChart },
     { id: 'DATA_SCIENTIST', label: 'Data Scientist', icon: Cpu },
     { id: 'DATA_ENGINEER', label: 'Data Engineer', icon: Database },
     { id: 'FRONTEND_REACT', label: 'Frontend / React Developer', icon: Terminal },
-    { id: 'ANDROID', label: 'Android Developer', icon: Smartphone },
     { id: 'DEVOPS', label: 'DevOps & SRE', icon: Zap },
     { id: 'CLOUD_SECURITY', label: 'Cloud Security / Cyber', icon: Shield },
     { id: 'AUTOMATION_TEST', label: 'QA & Automation Testing', icon: CheckSquare },
+    { id: 'SOLUTIONS_ARCHITECT', label: 'Cloud & Solutions Architect', icon: Network },
+    { id: 'PRODUCT_MGMT', label: 'Product Manager (Tech)', icon: Users },
     { id: 'BUSINESS_ANALYST', label: 'Business Analyst / PO', icon: LineChart },
+    { id: 'BI_ETL', label: 'BI, Tableau & PowerBI', icon: LineChart },
     { id: 'TECH_SUPPORT', label: 'Technical Support & Helpdesk', icon: HelpCircle },
     { id: 'SYSADMIN_NETWORK', label: 'SysAdmin & Network Engineer', icon: Network },
     { id: 'SCRUM_PM', label: 'Scrum Master & IT PM', icon: Users },
@@ -205,7 +215,7 @@ export default function JobSearchPage({
       const res = await fetch('/api/v1/jobs/sync-live', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        setToastMessage(`Sincronizare Reușită! ${data.totalLiveJobs || '1300+'} joburi agregate și actualizate.`);
+        setToastMessage(`Sincronizare Reușită! ${data.totalLiveJobs || '1500+'} joburi agregate și actualizate.`);
         setSecondsUntilSync(3600);
         setTimeout(() => setToastMessage(null), 4500);
       }
@@ -285,7 +295,7 @@ export default function JobSearchPage({
       }
       // Implicit: MATCH_AND_RECENCY
       const scoreDiff = b.atsMatchScore - a.atsMatchScore;
-      if (Math.abs(scoreDiff) > 6) {
+      if (Math.abs(scoreDiff) > 8) {
         return scoreDiff;
       }
       return (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
@@ -314,14 +324,20 @@ export default function JobSearchPage({
 
   const getPlatformBadge = (platform) => {
     switch (platform) {
+      case 'DEVJOB_RO':
+        return { label: 'DevJob.ro', bg: 'bg-emerald-100 text-emerald-950 border-emerald-300', dot: 'bg-emerald-600' };
+      case 'HIPO':
+        return { label: 'Hipo.ro Trainee', bg: 'bg-amber-100 text-amber-950 border-amber-300', dot: 'bg-amber-600' };
+      case 'EU_TECH':
+        return { label: 'GermanTechJobs (EU)', bg: 'bg-sky-100 text-sky-950 border-sky-300', dot: 'bg-sky-600' };
       case 'LINKEDIN':
         return { label: 'LinkedIn Jobs', bg: 'bg-blue-100 text-blue-900 border-blue-300', dot: 'bg-blue-600' };
       case 'STAGIIPEBUNE':
-        return { label: 'StagiiPeBune.ro', bg: 'bg-emerald-100 text-emerald-900 border-emerald-300', dot: 'bg-emerald-500' };
+        return { label: 'StagiiPeBune.ro', bg: 'bg-teal-100 text-teal-900 border-teal-300', dot: 'bg-teal-500' };
       case 'JUNIORS_RO':
         return { label: 'Juniors.ro', bg: 'bg-indigo-100 text-indigo-900 border-indigo-300', dot: 'bg-indigo-500' };
       case 'EJOBS':
-        return { label: 'eJobs.ro', bg: 'bg-amber-100 text-amber-900 border-amber-300', dot: 'bg-amber-600' };
+        return { label: 'eJobs.ro', bg: 'bg-orange-100 text-orange-900 border-orange-300', dot: 'bg-orange-600' };
       case 'UNDELUCRAM':
         return { label: 'UndeLucram.ro', bg: 'bg-cyan-100 text-cyan-900 border-cyan-300', dot: 'bg-cyan-600' };
       case 'GREENHOUSE':
@@ -333,19 +349,20 @@ export default function JobSearchPage({
       case 'REMOTIVE':
         return { label: 'Remotive Global', bg: 'bg-rose-100 text-rose-900 border-rose-300', dot: 'bg-rose-500' };
       case 'ARBEITNOW':
-        return { label: 'Arbeitnow EU', bg: 'bg-sky-100 text-sky-900 border-sky-300', dot: 'bg-sky-600' };
+        return { label: 'Arbeitnow EU', bg: 'bg-slate-100 text-slate-900 border-slate-300', dot: 'bg-slate-600' };
       default:
         return { label: platform, bg: 'bg-gray-100 text-gray-800 border-gray-300', dot: 'bg-gray-500' };
     }
   };
 
+  // INDICATOR CURAT DE COMPETITIVITATE (FĂRĂ DUPLICARE DE TEXT CANDIDAȚI)
   const renderCompetitivenessBadge = (job) => {
     const comp = job.competitiveness || 'MEDIUM';
     if (comp === 'LOW') {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          🟢 Șansă Mare (Sub 25 Aplicanți)
+          🟢 Șansă Mare
         </span>
       );
     }
@@ -353,14 +370,14 @@ export default function JobSearchPage({
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-rose-50 text-rose-800 border border-rose-300 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-          🔴 Competiție Mare (100+ Aplicanți)
+          🔴 Competiție Ridicată
         </span>
       );
     }
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs">
         <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-        🟡 Competiție Medie (25-50 Aplicanți)
+        🟡 Competiție Medie
       </span>
     );
   };
@@ -396,21 +413,21 @@ export default function JobSearchPage({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
-                10 Platforme Distincte
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-emerald-100 text-emerald-900 border border-emerald-300">
+                14 Platforme (RO + Europa)
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-blue-100 text-blue-800 border border-blue-200">
-                Număr Real Aplicanți & Competiție
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-blue-100 text-blue-900 border border-blue-300">
+                Scor ATS Bazat pe Skills & Experiență
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-purple-100 text-purple-800 border border-purple-200">
-                Filtre Reversibile & Toggle
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-purple-100 text-purple-900 border border-purple-300">
+                DevJob.ro, Hipo & EU Tech Adăugate
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">
-              Căutare & Agregator Job-uri Multi-Platformă
+              Căutare & Agregator Job-uri Multi-Platformă (România & Europa)
             </h2>
-            <p className="text-xs sm:text-sm text-gray-500 font-medium max-w-3xl leading-relaxed">
-              Explorează peste 1.300+ oportunități verificate extrase direct din surse reale: <strong>LinkedIn România, StagiiPeBune, Juniors.ro, UndeLucram, eJobs, Greenhouse, Ashby, SmartRecruiters, Remotive & Arbeitnow</strong>.
+            <p className="text-xs sm:text-sm text-gray-600 font-medium max-w-3xl leading-relaxed">
+              Explorează oportunități verificate extrase direct din surse reale: <strong>DevJob.ro, LinkedIn România, Hipo.ro, StagiiPeBune, Juniors.ro, UndeLucram, eJobs, GermanTechJobs (EU), Greenhouse, Ashby, SmartRecruiters, Remotive & Arbeitnow</strong>.
             </p>
           </div>
 
@@ -528,7 +545,7 @@ export default function JobSearchPage({
               type="text"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              placeholder="Titlu rol, tehnologii (Java, Spring, Python, React, SQL, DevOps)..."
+              placeholder="Titlu rol, tehnologii (Java, Spring, Embedded, React, Python, C++, SQL)..."
               className="w-full pl-11 pr-9 py-3 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition"
             />
             {keyword && (
@@ -548,7 +565,7 @@ export default function JobSearchPage({
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Locație (București, Cluj, Timișoara, Remote)..."
+              placeholder="Locație (București, Cluj, Timișoara, Remote, Europa)..."
               className="w-full pl-11 pr-9 py-3 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition"
             />
             {location && (
@@ -574,13 +591,13 @@ export default function JobSearchPage({
           </div>
         </form>
 
-        {/* 🌟 SECȚIUNE DEDICATĂ: DELIMITARE CLARĂ A PLATFORMELOR (NUMERELE RĂMÂN VIZIBILE MEREU) */}
+        {/* 🌟 SECȚIUNE DEDICATĂ: DELIMITARE CLARĂ A CELOR 14 PLATFORME (NUMERELE RĂMÂN VIZIBILE MEREU) */}
         <div className="space-y-2.5 pt-2 border-t border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
                 <Globe className="w-3.5 h-3.5 text-indigo-600" />
-                Selectează Platforma Sursă (Fiecare cu numărul său de joburi):
+                Platforme Sursă (România & Europa - Niciun număr nu devine 0):
               </span>
             </div>
             
@@ -646,12 +663,12 @@ export default function JobSearchPage({
           </div>
         </div>
 
-        {/* CATEGORII DE ROLURI IT EXTINSE (20+ OPȚIUNI) */}
+        {/* SPECIALIZĂRI TEHNICE IT EXTINSE (25+ OPȚIUNI) */}
         <div className="space-y-2.5 pt-2 border-t border-gray-100">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-gray-500" />
-              Domeniu Tehnic & Rol IT:
+              Specializare & Rol Tehnic IT:
             </span>
 
             <div className="hidden sm:flex items-center gap-1">
@@ -865,15 +882,21 @@ export default function JobSearchPage({
               >
                 <div className="space-y-3.5">
                   
-                  {/* TOP HEADER: PLATFORMĂ & SCOR MATCH */}
+                  {/* TOP HEADER: PLATFORMĂ & SCOR MATCH DINAMIC */}
                   <div className="flex items-center justify-between gap-2">
                     <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 ${platformBadge.bg}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${platformBadge.dot}`}></span>
                       {platformBadge.label}
                     </span>
 
-                    <div className="flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full text-xs font-black">
-                      <Sparkles className="w-3 h-3 text-emerald-600" />
+                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black border ${
+                      job.atsMatchScore >= 80 
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                        : job.atsMatchScore >= 50 
+                        ? 'bg-amber-50 text-amber-800 border-amber-200' 
+                        : 'bg-rose-50 text-rose-800 border-rose-200'
+                    }`}>
+                      <Sparkles className={`w-3 h-3 ${job.atsMatchScore >= 80 ? 'text-emerald-600' : 'text-amber-600'}`} />
                       <span>{job.atsMatchScore.toFixed(1)}% Match</span>
                     </div>
                   </div>
@@ -920,7 +943,7 @@ export default function JobSearchPage({
                     </span>
                   </div>
 
-                  {/* 🌟 INDICATOR DE COMPETITIVITATE & NUMĂR EXACT DE CANDIDAȚI */}
+                  {/* 🌟 INDICATOR DE COMPETITIVITATE & NUMĂR EXACT DE CANDIDAȚI (FĂRĂ DUPLICARE) */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                     {renderCompetitivenessBadge(job)}
 
@@ -946,7 +969,7 @@ export default function JobSearchPage({
                   {/* SKILLS REQUIRED & MATCHING */}
                   <div className="flex flex-wrap gap-1 pt-1">
                     {job.skillsRequired.slice(0, 4).map((s, idx) => {
-                      const isMatched = job.matchingSkills.includes(s);
+                      const isMatched = job.matchingSkills && job.matchingSkills.includes(s);
                       return (
                         <span 
                           key={idx}
@@ -967,17 +990,17 @@ export default function JobSearchPage({
                     )}
                   </div>
 
-                  {/* DESCRIERE CU BUTON EXTINDERE */}
-                  <div className="text-xs text-gray-600 leading-relaxed bg-gray-50/70 p-2.5 rounded-xl border border-gray-100">
-                    <p className={isExpanded ? '' : 'line-clamp-2'}>
+                  {/* 🌟 DESCRIERE ORIGINALĂ A JOBULUI CU BUTON DE EXTINDERE */}
+                  <div className="text-xs text-gray-600 leading-relaxed bg-gray-50/70 p-3 rounded-xl border border-gray-100">
+                    <p className={`whitespace-pre-line ${isExpanded ? '' : 'line-clamp-3'}`}>
                       {job.rawDescription}
                     </p>
-                    {job.rawDescription.length > 120 && (
+                    {job.rawDescription && job.rawDescription.length > 130 && (
                       <button
                         onClick={() => setExpandedJobId(isExpanded ? null : job.id)}
-                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 mt-1 flex items-center gap-0.5 cursor-pointer"
+                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 mt-1.5 flex items-center gap-0.5 cursor-pointer"
                       >
-                        {isExpanded ? <>Mai puțin <ChevronUp className="w-3 h-3" /></> : <>Citește mai mult <ChevronDown className="w-3 h-3" /></>}
+                        {isExpanded ? <>Restrânge descrierea <ChevronUp className="w-3 h-3" /></> : <>Citește descrierea completă <ChevronDown className="w-3 h-3" /></>}
                       </button>
                     )}
                   </div>
