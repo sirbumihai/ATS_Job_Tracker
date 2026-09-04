@@ -1575,6 +1575,20 @@ public class JobSearchAggregatorService {
             String roleCategory,
             String workModel
     ) {
+        return searchJobs(userId, keyword, location, platform, level, roleCategory, workModel, "MATCH_AND_RECENCY");
+    }
+
+    @Transactional(readOnly = true)
+    public List<UnifiedJobListingDto> searchJobs(
+            UUID userId,
+            String keyword,
+            String location,
+            String platform,
+            String level,
+            String roleCategory,
+            String workModel,
+            String sortBy
+    ) {
         String cvText = getCandidateCvText(userId);
         String cvLower = cvText.toLowerCase();
 
@@ -1586,6 +1600,7 @@ public class JobSearchAggregatorService {
         String wmUpper = (workModel != null && !workModel.isBlank()) ? workModel.toUpperCase().trim() : "ALL";
 
         List<UnifiedJobListingDto> results = new ArrayList<>();
+        Map<String, Double> searchRelevanceMap = new HashMap<>();
 
         for (UnifiedJobListingDto job : activeLiveJobsCache) {
             // 1. Filtrare Role Category
@@ -1602,23 +1617,23 @@ public class JobSearchAggregatorService {
                 }
             }
 
-            // 3. Filtrare Keyword
+            // 3. Filtrare Inteligentă Keyword (Tokenizare & Sinonime)
             if (!kwLower.isEmpty()) {
-                boolean matchKw = job.jobTitle().toLowerCase().contains(kwLower) ||
-                        job.companyName().toLowerCase().contains(kwLower) ||
-                        job.rawDescription().toLowerCase().contains(kwLower) ||
-                        job.skillsRequired().stream().anyMatch(s -> s.toLowerCase().contains(kwLower));
-                if (!matchKw) continue;
+                double relevance = calculateKeywordRelevance(job, kwLower);
+                if (relevance < 0) {
+                    continue; // Nu corespunde termenilor căutați
+                }
+                searchRelevanceMap.put(job.id(), relevance);
             }
 
-            // 4. Filtrare Locatie
+            // 4. Filtrare Inteligentă Locație (București/Bucharest, Cluj, România, Remote, Europa)
             if (!locLower.isEmpty()) {
-                boolean matchLoc = job.location().toLowerCase().contains(locLower) ||
-                        job.workModel().toLowerCase().contains(locLower);
-                if (!matchLoc) continue;
+                if (!matchesLocationIntelligently(job, locLower)) {
+                    continue;
+                }
             }
 
-            // 5. Filtrare Platforma Exacta sau Grupata
+            // 5. Filtrare Platformă Exactă sau Grup Direct ATS
             if (!platUpper.equals("ALL")) {
                 if (platUpper.equals("DIRECT_ATS")) {
                     if (!List.of("GREENHOUSE", "ASHBY", "SMARTRECRUITERS", "LEVER").contains(job.sourcePlatform())) {
@@ -1629,7 +1644,7 @@ public class JobSearchAggregatorService {
                 }
             }
 
-            // 6. Filtrare Nivel Experienta (JUNIOR, MID, SENIOR, INTERNSHIP)
+            // 6. Filtrare Nivel Experiență (JUNIOR, MID, SENIOR, INTERNSHIP)
             if (!lvlUpper.equals("ALL")) {
                 if (!job.experienceLevel().equalsIgnoreCase(lvlUpper)) {
                     continue;
@@ -1657,12 +1672,11 @@ public class JobSearchAggregatorService {
                 }
             }
 
-            // 7. Calcul Dinamic ATS Match bazat pe Skills + Nivel de Experiență (Realist & Riguros)
+            // 8. Calcul Dinamic ATS Match bazat pe Skills + Nivel de Experiență (Realist & Riguros)
             double skillMatchRatio = job.skillsRequired().isEmpty() ? 0.7 : ((double) matching.size() / job.skillsRequired().size());
             double skillScore = Math.min(100.0, skillMatchRatio * 100.0);
 
             // Ponderare experiență: profilul candidatului este Junior / Absolvent (0-1 ani)
-            // Dacă un job cere Senior (5+ ani / Lead / Architect), scorul scade drastic!
             double experienceScore;
             if ("INTERNSHIP".equalsIgnoreCase(job.experienceLevel())) {
                 experienceScore = 100.0;
@@ -1705,14 +1719,275 @@ public class JobSearchAggregatorService {
             ));
         }
 
-        // Sortare implicită: Cele mai bune potriviri & Cele mai recente
-        results.sort((a, b) -> {
-            int scoreCmp = Double.compare(b.atsMatchScore(), a.atsMatchScore());
-            if (scoreCmp != 0) return scoreCmp;
-            return Integer.compare(a.postedDaysAgo(), b.postedDaysAgo());
-        });
+        // 9. Sortare Avansată
+        sortJobList(results, sortBy, searchRelevanceMap, kwLower);
 
         return results;
+    }
+
+    /**
+     * Potrivire inteligentă a căutării după cuvinte cheie:
+     * - Tokenizare după spații și separatori
+     * - Suport pentru sinonime tehnologice (c++ / cpp, js / javascript, ts / typescript, k8s / kubernetes, qa / test, devops / cloud)
+     * - Fiecare token căutat este verificat (AND matching), dar ordinea nu contează
+     * - Calculează un scor suplimentar de relevanță a căutării pentru sortare
+     */
+    private double calculateKeywordRelevance(UnifiedJobListingDto job, String kwLower) {
+        if (kwLower == null || kwLower.isBlank()) return 0.0;
+
+        String title = job.jobTitle().toLowerCase();
+        String company = job.companyName().toLowerCase();
+        String desc = job.rawDescription().toLowerCase();
+        String location = job.location().toLowerCase();
+        String workModel = job.workModel().toLowerCase();
+        String level = job.experienceLevel().toLowerCase();
+        String skills = String.join(" ", job.skillsRequired()).toLowerCase();
+
+        double relevance = 0.0;
+
+        // 1. Verificare potrivire exactă a întregii fraze
+        if (title.contains(kwLower)) {
+            relevance += 120.0;
+        } else if (skills.contains(kwLower)) {
+            relevance += 80.0;
+        } else if (company.contains(kwLower)) {
+            relevance += 50.0;
+        } else if (desc.contains(kwLower)) {
+            relevance += 30.0;
+        }
+
+        // 2. Tokenizare cuvinte
+        String[] tokens = kwLower.split("[\\s,;+/]+");
+        int matchedTokens = 0;
+
+        for (String token : tokens) {
+            String t = token.trim();
+            if (t.isEmpty()) continue;
+
+            List<String> synonyms = expandTechSynonyms(t);
+            boolean tokenMatched = false;
+
+            for (String syn : synonyms) {
+                if (title.contains(syn)) {
+                    relevance += 35.0;
+                    tokenMatched = true;
+                    break;
+                } else if (skills.contains(syn)) {
+                    relevance += 25.0;
+                    tokenMatched = true;
+                    break;
+                } else if (company.contains(syn)) {
+                    relevance += 15.0;
+                    tokenMatched = true;
+                    break;
+                } else if (level.contains(syn)) {
+                    relevance += 20.0;
+                    tokenMatched = true;
+                    break;
+                } else if (workModel.contains(syn)) {
+                    relevance += 15.0;
+                    tokenMatched = true;
+                    break;
+                } else if (location.contains(syn)) {
+                    relevance += 15.0;
+                    tokenMatched = true;
+                    break;
+                } else if (desc.contains(syn)) {
+                    relevance += 8.0;
+                    tokenMatched = true;
+                    break;
+                }
+            }
+
+            if (tokenMatched) {
+                matchedTokens++;
+            }
+        }
+
+        if (tokens.length > 1 && matchedTokens < Math.min(tokens.length, 2)) {
+            return -1.0; // Nu se potrivește
+        }
+        if (tokens.length == 1 && matchedTokens == 0) {
+            return -1.0; // Nu se potrivește
+        }
+
+        return relevance;
+    }
+
+    private List<String> expandTechSynonyms(String term) {
+        String t = term.toLowerCase().trim();
+        List<String> list = new ArrayList<>();
+        list.add(t);
+        switch (t) {
+            case "js", "javascript" -> list.addAll(List.of("js", "javascript", "react", "node", "typescript"));
+            case "ts", "typescript" -> list.addAll(List.of("ts", "typescript", "angular", "react"));
+            case "c++", "cpp" -> list.addAll(List.of("c++", "cpp", "c/c++", "embedded"));
+            case "c#", "csharp" -> list.addAll(List.of("c#", "csharp", ".net", "dotnet"));
+            case "k8s", "kubernetes" -> list.addAll(List.of("kubernetes", "k8s", "helm", "devops"));
+            case "qa", "tester", "testing" -> list.addAll(List.of("qa", "test", "testing", "quality", "automation"));
+            case "devops", "sre" -> list.addAll(List.of("devops", "sre", "cloud", "docker", "kubernetes", "ci/cd"));
+            case "be", "backend" -> list.addAll(List.of("backend", "back-end", "back end"));
+            case "fe", "frontend" -> list.addAll(List.of("frontend", "front-end", "front end"));
+            case "fullstack" -> list.addAll(List.of("fullstack", "full-stack", "full stack"));
+            case "intern", "internship", "stagiu" -> list.addAll(List.of("intern", "internship", "stagiu", "practica", "trainee", "student"));
+            case "junior", "entry" -> list.addAll(List.of("junior", "entry-level", "entry level", "incepator", "graduate"));
+            case "ai", "ml" -> list.addAll(List.of("ai", "ml", "machine learning", "deep learning", "llm", "data science"));
+            case "db", "database", "dba" -> list.addAll(List.of("database", "dba", "sql", "postgres", "oracle", "mysql"));
+            default -> {}
+        }
+        return list;
+    }
+
+    /**
+     * Potrivire inteligentă pe locații (cu suport pentru diacritice, București/Bucharest, Cluj, etc.)
+     */
+    private boolean matchesLocationIntelligently(UnifiedJobListingDto job, String locLower) {
+        if (locLower == null || locLower.isBlank()) return true;
+
+        String jLoc = job.location().toLowerCase();
+        String jModel = job.workModel().toLowerCase();
+        String jPlatform = job.sourcePlatform().toLowerCase();
+
+        // 1. Direct match
+        if (jLoc.contains(locLower) || jModel.contains(locLower)) return true;
+
+        // 2. Bucuresti / Bucharest
+        if (locLower.contains("bucur") || locLower.contains("bucharest")) {
+            return jLoc.contains("bucuresti") || jLoc.contains("bucharest") || jLoc.contains("sector");
+        }
+
+        // 3. Cluj
+        if (locLower.contains("cluj")) {
+            return jLoc.contains("cluj");
+        }
+
+        // 4. Timisoara
+        if (locLower.contains("timis")) {
+            return jLoc.contains("timisoara");
+        }
+
+        // 5. Iasi
+        if (locLower.contains("iasi") || locLower.contains("iași")) {
+            return jLoc.contains("iasi") || jLoc.contains("iași");
+        }
+
+        // 6. Brasov
+        if (locLower.contains("brasov") || locLower.contains("brașov")) {
+            return jLoc.contains("brasov") || jLoc.contains("brașov");
+        }
+
+        // 7. Romania (toate joburile locale sau platformele din Romania)
+        if (locLower.contains("romania") || locLower.contains("românia")) {
+            return jLoc.contains("romania") || jLoc.contains("românia") ||
+                   List.of("devjob_ro", "stagiipebune", "juniors_ro", "undelucram", "ejobs", "hipo").contains(jPlatform);
+        }
+
+        // 8. Remote
+        if (locLower.contains("remote")) {
+            return jModel.contains("remote") || jLoc.contains("remote");
+        }
+
+        // 9. Europa / Europe
+        if (locLower.contains("europ") || locLower.contains("germany") || locLower.contains("germania") || locLower.contains("elvetia") || locLower.contains("switzerland")) {
+            return jLoc.contains("europe") || jLoc.contains("germany") || jLoc.contains("switzerland") || jLoc.contains("berlin") || jLoc.contains("munich") || jLoc.contains("zurich") ||
+                   List.of("eu_tech", "arbeitnow", "remotive", "wwr").contains(jPlatform);
+        }
+
+        return false;
+    }
+
+    /**
+     * Extrage și normalizează salariul maxim în RON/lună pentru sortare uniformă
+     */
+    public static double parseSalaryEstimate(String salaryRange) {
+        if (salaryRange == null || salaryRange.isBlank()) return 0.0;
+        String s = salaryRange.toLowerCase().replace(".", "").replace(",", "");
+
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d{3,6})").matcher(s);
+        double maxVal = 0.0;
+        while (m.find()) {
+            try {
+                double val = Double.parseDouble(m.group(1));
+                if (val > maxVal && val < 500000) {
+                    maxVal = val;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (maxVal == 0.0) return 0.0;
+
+        boolean isEur = s.contains("eur") || s.contains("€");
+        boolean isChf = s.contains("chf");
+        boolean isAnnual = s.contains("an") || s.contains("year") || maxVal > 35000;
+
+        double monthlyVal = isAnnual ? (maxVal / 12.0) : maxVal;
+        if (isEur) {
+            monthlyVal *= 5.0; // 1 EUR ~ 5.0 RON
+        } else if (isChf) {
+            monthlyVal *= 5.2; // 1 CHF ~ 5.2 RON
+        }
+
+        return monthlyVal;
+    }
+
+    /**
+     * Motor Avansat de Sortare Multicriterială
+     */
+    private void sortJobList(List<UnifiedJobListingDto> list, String sortBy, Map<String, Double> searchRelevanceMap, String kwLower) {
+        String effectiveSort = (sortBy != null && !sortBy.isBlank()) ? sortBy.toUpperCase().trim() : "MATCH_AND_RECENCY";
+
+        switch (effectiveSort) {
+            case "MATCH_SCORE" -> list.sort((a, b) -> {
+                int cmp = Double.compare(b.atsMatchScore(), a.atsMatchScore());
+                if (cmp != 0) return cmp;
+                return Integer.compare(a.postedDaysAgo(), b.postedDaysAgo());
+            });
+            case "NEWEST" -> list.sort((a, b) -> {
+                int cmp = Integer.compare(a.postedDaysAgo(), b.postedDaysAgo());
+                if (cmp != 0) return cmp;
+                return Double.compare(b.atsMatchScore(), a.atsMatchScore());
+            });
+            case "SALARY_DESC" -> list.sort((a, b) -> {
+                double salA = parseSalaryEstimate(a.salaryRange());
+                double salB = parseSalaryEstimate(b.salaryRange());
+                int cmp = Double.compare(salB, salA);
+                if (cmp != 0) return cmp;
+                return Double.compare(b.atsMatchScore(), a.atsMatchScore());
+            });
+            case "LOW_COMPETITION" -> list.sort((a, b) -> {
+                int compA = "LOW".equalsIgnoreCase(a.competitiveness()) ? 0 : "MEDIUM".equalsIgnoreCase(a.competitiveness()) ? 1 : 2;
+                int compB = "LOW".equalsIgnoreCase(b.competitiveness()) ? 0 : "MEDIUM".equalsIgnoreCase(b.competitiveness()) ? 1 : 2;
+                if (compA != compB) return Integer.compare(compA, compB);
+                return Double.compare(b.atsMatchScore(), a.atsMatchScore());
+            });
+            case "JUNIOR_FIRST" -> list.sort((a, b) -> {
+                int rankA = "INTERNSHIP".equalsIgnoreCase(a.experienceLevel()) ? 0 : "JUNIOR".equalsIgnoreCase(a.experienceLevel()) ? 1 : "MID".equalsIgnoreCase(a.experienceLevel()) ? 2 : 3;
+                int rankB = "INTERNSHIP".equalsIgnoreCase(b.experienceLevel()) ? 0 : "JUNIOR".equalsIgnoreCase(b.experienceLevel()) ? 1 : "MID".equalsIgnoreCase(b.experienceLevel()) ? 2 : 3;
+                if (rankA != rankB) return Integer.compare(rankA, rankB);
+                return Double.compare(b.atsMatchScore(), a.atsMatchScore());
+            });
+            case "COMPANY_AZ" -> list.sort((a, b) -> {
+                int cmp = String.CASE_INSENSITIVE_ORDER.compare(a.companyName(), b.companyName());
+                if (cmp != 0) return cmp;
+                return Double.compare(b.atsMatchScore(), a.atsMatchScore());
+            });
+            default -> {
+                // MATCH_AND_RECENCY: Recomandare inteligentă (Scor ATS + Recență + Relevanță căutare)
+                list.sort((a, b) -> {
+                    double relA = searchRelevanceMap.getOrDefault(a.id(), 0.0);
+                    double relB = searchRelevanceMap.getOrDefault(b.id(), 0.0);
+                    if (!kwLower.isEmpty() && Math.abs(relB - relA) > 15.0) {
+                        return Double.compare(relB, relA);
+                    }
+
+                    double recencyBoostA = Math.max(0, 30 - a.postedDaysAgo()) * 1.0;
+                    double recencyBoostB = Math.max(0, 30 - b.postedDaysAgo()) * 1.0;
+                    double totalA = (a.atsMatchScore() * 0.70) + (recencyBoostA * 0.30) + (relA * 0.15);
+                    double totalB = (b.atsMatchScore() * 0.70) + (recencyBoostB * 0.30) + (relB * 0.15);
+                    return Double.compare(totalB, totalA);
+                });
+            }
+        }
     }
 
     private boolean matchesRoleCategory(UnifiedJobListingDto job, String category) {

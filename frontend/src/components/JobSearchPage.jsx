@@ -174,6 +174,10 @@ export default function JobSearchPage({
     { id: 'UI_UX', label: 'UI/UX & Product Design', icon: Palette }
   ];
 
+  const quickSearchTags = [
+    "Java", "Spring Boot", "React", "Python", "Junior", "Internship", "Remote", "DevOps", "C++", "QA Testing", "București", "Cluj"
+  ];
+
   const fetchGlobalStats = async () => {
     try {
       const res = await fetch('/api/v1/jobs/stats');
@@ -196,6 +200,7 @@ export default function JobSearchPage({
       if (selectedLevel && selectedLevel !== 'ALL') params.append('level', selectedLevel);
       if (selectedRoleCategory && selectedRoleCategory !== 'ALL') params.append('roleCategory', selectedRoleCategory);
       if (selectedWorkModel && selectedWorkModel !== 'ALL') params.append('workModel', selectedWorkModel);
+      if (sortBy) params.append('sortBy', sortBy);
       params.append('userId', activeUserId);
 
       const res = await fetch(`/api/v1/jobs/search?${params.toString()}`, {
@@ -231,13 +236,41 @@ export default function JobSearchPage({
     }
   };
 
+  const handleResetFilters = () => {
+    setKeyword('');
+    setLocation('');
+    setSelectedRoleCategory('ALL');
+    setSelectedPlatform('ALL');
+    setSelectedWorkModel('ALL');
+    setSelectedLevel('ALL');
+    setSelectedCompetitiveness('ALL');
+    setSortBy('MATCH_AND_RECENCY');
+    setCurrentPage(1);
+  };
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (keyword) count++;
+    if (location) count++;
+    if (selectedRoleCategory !== 'ALL') count++;
+    if (selectedPlatform !== 'ALL') count++;
+    if (selectedWorkModel !== 'ALL') count++;
+    if (selectedLevel !== 'ALL') count++;
+    if (selectedCompetitiveness !== 'ALL') count++;
+    return count;
+  }, [keyword, location, selectedRoleCategory, selectedPlatform, selectedWorkModel, selectedLevel, selectedCompetitiveness]);
+
   useEffect(() => {
     fetchGlobalStats();
   }, []);
 
+  // Căutare debounced (300ms) la orice tastare sau schimbare de filtru
   useEffect(() => {
-    fetchJobs();
-  }, [selectedRoleCategory, selectedPlatform, selectedWorkModel, selectedLevel]);
+    const timer = setTimeout(() => {
+      fetchJobs();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [keyword, location, selectedRoleCategory, selectedPlatform, selectedWorkModel, selectedLevel, sortBy]);
 
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
@@ -275,6 +308,27 @@ export default function JobSearchPage({
     }
   };
 
+  // Parser uniform de salarii pentru sortare exactă pe client
+  const parseSalaryForSort = (salaryRange) => {
+    if (!salaryRange) return 0;
+    const s = salaryRange.toLowerCase().replace(/\./g, '').replace(/,/g, '');
+    const matches = s.match(/\d{3,6}/g);
+    if (!matches) return 0;
+    let maxVal = 0;
+    for (const m of matches) {
+      const v = parseFloat(m);
+      if (v > maxVal && v < 500000) maxVal = v;
+    }
+    if (maxVal === 0) return 0;
+    const isEur = s.includes('eur') || s.includes('€');
+    const isChf = s.includes('chf');
+    const isAnnual = s.includes('an') || s.includes('year') || maxVal > 35000;
+    let monthly = isAnnual ? maxVal / 12 : maxVal;
+    if (isEur) monthly *= 5.0;
+    else if (isChf) monthly *= 5.2;
+    return monthly;
+  };
+
   // Filtrare & Sortare flexibilă pe client
   const filteredAndSortedJobs = useMemo(() => {
     let result = [...jobs];
@@ -285,10 +339,20 @@ export default function JobSearchPage({
 
     result.sort((a, b) => {
       if (sortBy === 'MATCH_SCORE') {
-        return b.atsMatchScore - a.atsMatchScore;
+        const diff = b.atsMatchScore - a.atsMatchScore;
+        if (diff !== 0) return diff;
+        return (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
       }
       if (sortBy === 'NEWEST') {
-        return (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
+        const diff = (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
+        if (diff !== 0) return diff;
+        return b.atsMatchScore - a.atsMatchScore;
+      }
+      if (sortBy === 'SALARY_DESC') {
+        const salA = parseSalaryForSort(a.salaryRange);
+        const salB = parseSalaryForSort(b.salaryRange);
+        if (salA !== salB) return salB - salA;
+        return b.atsMatchScore - a.atsMatchScore;
       }
       if (sortBy === 'LOW_COMPETITION') {
         const compOrder = { 'LOW': 0, 'MEDIUM': 1, 'HIGH': 2 };
@@ -297,12 +361,22 @@ export default function JobSearchPage({
         if (compA !== compB) return compA - compB;
         return b.atsMatchScore - a.atsMatchScore;
       }
-      // Implicit: MATCH_AND_RECENCY
-      const scoreDiff = b.atsMatchScore - a.atsMatchScore;
-      if (Math.abs(scoreDiff) > 8) {
-        return scoreDiff;
+      if (sortBy === 'JUNIOR_FIRST') {
+        const lvlOrder = { 'INTERNSHIP': 0, 'JUNIOR': 1, 'MID': 2, 'SENIOR': 3 };
+        const lvlA = lvlOrder[a.experienceLevel] ?? 2;
+        const lvlB = lvlOrder[b.experienceLevel] ?? 2;
+        if (lvlA !== lvlB) return lvlA - lvlB;
+        return b.atsMatchScore - a.atsMatchScore;
       }
-      return (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
+      if (sortBy === 'COMPANY_AZ') {
+        return (a.companyName || '').localeCompare(b.companyName || '');
+      }
+      // Implicit: MATCH_AND_RECENCY (Pondere: 70% ATS Match + 30% Recență)
+      const recencyA = Math.max(0, 30 - (a.postedDaysAgo || 0));
+      const recencyB = Math.max(0, 30 - (b.postedDaysAgo || 0));
+      const totalA = (a.atsMatchScore * 0.70) + (recencyA * 0.30);
+      const totalB = (b.atsMatchScore * 0.70) + (recencyB * 0.30);
+      return totalB - totalA;
     });
 
     return result;
@@ -597,6 +671,34 @@ export default function JobSearchPage({
           </div>
         </form>
 
+        {/* 🌟 CHIPS DE CĂUTĂRI RAPIDE (TEHNOLOGII ȘI ROLURI CHEIE) */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <span className="text-[11px] font-extrabold text-gray-500 uppercase flex items-center gap-1 mr-1">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+            Căutări Rapide:
+          </span>
+          {quickSearchTags.map(tag => {
+            const isSelected = keyword.toLowerCase() === tag.toLowerCase();
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => {
+                  setKeyword(prev => prev.toLowerCase() === tag.toLowerCase() ? '' : tag);
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                  isSelected
+                    ? 'bg-black text-white border-black shadow-xs'
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-black border-gray-200'
+                }`}
+              >
+                {tag}
+              </button>
+            );
+          })}
+        </div>
+
         {/* 🌟 SECȚIUNE DEDICATĂ: DELIMITARE CLARĂ A CELOR 14 PLATFORME (NUMERELE RĂMÂN VIZIBILE MEREU) */}
         <div className="space-y-2.5 pt-2 border-t border-gray-100">
           <div className="flex items-center justify-between">
@@ -782,23 +884,110 @@ export default function JobSearchPage({
 
           {/* SORTARE INTELIGENTĂ */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">
-              Sortare Rezultate
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
+              <TrendingUp className="w-3 h-3 text-indigo-600" />
+              <span>Sortare Rezultate</span>
             </label>
             <select
               value={sortBy}
               onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-xl text-xs font-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-600 cursor-pointer"
+              className="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-950 font-black rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 cursor-pointer shadow-2xs"
             >
-              <option value="MATCH_AND_RECENCY">🚀 Cele Mai Recente & Scor ATS</option>
-              <option value="NEWEST">🕒 Cele Mai Noi (Data Postării)</option>
-              <option value="MATCH_SCORE">🎯 Scor Match ATS Descrescător</option>
-              <option value="LOW_COMPETITION">🟢 Șanse Maxime (Competiție Redusă)</option>
+              <option value="MATCH_AND_RECENCY">🚀 Recomandate (Scor ATS & Recență)</option>
+              <option value="MATCH_SCORE">🎯 Scor ATS Maxim (Top Match CV)</option>
+              <option value="NEWEST">🕒 Cele Mai Noi (Ultimele 24-48 ore)</option>
+              <option value="SALARY_DESC">💰 Salariu Cel Mai Mare (Top Salarii)</option>
+              <option value="LOW_COMPETITION">🟢 Șanse Maxime (Sub 25 Aplicanți)</option>
+              <option value="JUNIOR_FIRST">👶 Juniori & Stagii Prioritar</option>
+              <option value="COMPANY_AZ">🏢 Nume Companie (A - Z)</option>
             </select>
           </div>
 
         </div>
       </div>
+
+      {/* 🌟 BARA DE FILTRE ACTIVE CU RESET RAPID */}
+      {activeFiltersCount > 0 && (
+        <div className="bg-indigo-50/60 border border-indigo-100/90 p-4 rounded-3xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center gap-1.5 mr-1">
+              <Filter className="w-3.5 h-3.5 text-indigo-600" />
+              Filtre Active ({activeFiltersCount}):
+            </span>
+
+            {keyword && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                <span>Cuvânt: <strong>"{keyword}"</strong></span>
+                <button onClick={() => setKeyword('')} className="hover:text-rose-600 cursor-pointer p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {location && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                <span>Locație: <strong>"{location}"</strong></span>
+                <button onClick={() => setLocation('')} className="hover:text-rose-600 cursor-pointer p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedPlatform !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                <span>Platformă: <strong>{selectedPlatform}</strong></span>
+                <button onClick={() => setSelectedPlatform('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedLevel !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                <span>Nivel: <strong>{selectedLevel}</strong></span>
+                <button onClick={() => setSelectedLevel('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedRoleCategory !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                <span>Rol: <strong>{selectedRoleCategory}</strong></span>
+                <button onClick={() => setSelectedRoleCategory('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedWorkModel !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                <span>Mod: <strong>{selectedWorkModel}</strong></span>
+                <button onClick={() => setSelectedWorkModel('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedCompetitiveness !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                <span>Competiție: <strong>{selectedCompetitiveness}</strong></span>
+                <button onClick={() => setSelectedCompetitiveness('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={handleResetFilters}
+            className="text-xs font-extrabold text-indigo-700 hover:text-indigo-900 bg-white hover:bg-indigo-50 border border-indigo-200 px-3.5 py-2 rounded-xl transition cursor-pointer shadow-2xs flex items-center gap-1.5"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Resetează Toate Filtrele</span>
+          </button>
+        </div>
+      )}
 
       {/* HEADER REZULTATE CU STATISTICI & CONTROALE DE PAGINARE TOP */}
       <div ref={jobsListRef} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
