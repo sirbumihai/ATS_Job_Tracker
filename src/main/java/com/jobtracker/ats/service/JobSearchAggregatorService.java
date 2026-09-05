@@ -7,10 +7,12 @@ import com.jobtracker.ats.dto.UnifiedJobListingDto;
 import com.jobtracker.ats.entity.Application;
 import com.jobtracker.ats.entity.Application.ApplicationStatus;
 import com.jobtracker.ats.entity.CvProfile;
+import com.jobtracker.ats.entity.CachedJobListing;
 import com.jobtracker.ats.entity.JobPosting;
 import com.jobtracker.ats.entity.User;
 import com.jobtracker.ats.exception.ResourceNotFoundException;
 import com.jobtracker.ats.repository.ApplicationRepository;
+import com.jobtracker.ats.repository.CachedJobListingRepository;
 import com.jobtracker.ats.repository.CvProfileRepository;
 import com.jobtracker.ats.repository.JobPostingRepository;
 import com.jobtracker.ats.repository.UserRepository;
@@ -43,6 +45,7 @@ public class JobSearchAggregatorService {
     private final UserRepository userRepository;
     private final CvProfileRepository cvProfileRepository;
     private final ApplicationService applicationService;
+    private final CachedJobListingRepository cachedJobListingRepository;
     private final ObjectMapper objectMapper;
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -54,8 +57,21 @@ public class JobSearchAggregatorService {
 
     @PostConstruct
     public void initializeLiveFeed() {
-        log.info("[JOB CRAWLER] Initializare feed extins de joburi live...");
-        refreshLiveJobs();
+        log.info("[JOB CRAWLER] Initializare feed din baza de date persistenta PostgreSQL...");
+        int loaded = loadJobsFromDatabase();
+        log.info("[JOB CRAWLER] Incarcate instantaneu {} joburi din baza de date in cache.", loaded);
+
+        // Rulam sincronizarea diferentiala asincron in fundal fara a bloca pornirea serverului Tomcat
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                // Asteptam 3 secunde ca serverul Tomcat sa termine de pornit pe portul 8080
+                Thread.sleep(3000);
+                log.info("[JOB CRAWLER] Pornire sincronizare diferentiala automata in fundal...");
+                refreshLiveJobs();
+            } catch (Exception e) {
+                log.warn("[JOB CRAWLER] Eroare la sincronizarea asincrona din fundal: {}", e.getMessage());
+            }
+        });
     }
 
     /**
@@ -63,7 +79,7 @@ public class JobSearchAggregatorService {
      */
     @Scheduled(fixedRate = 3600000, initialDelay = 3600000)
     public void scheduledHourlyJobRefresh() {
-        log.info("[JOB CRAWLER] Rulare automata orara de sincronizare a joburilor...");
+        log.info("[JOB CRAWLER] Rulare automata orara de sincronizare diferentiala a joburilor...");
         refreshLiveJobs();
     }
 
@@ -71,11 +87,20 @@ public class JobSearchAggregatorService {
         List<UnifiedJobListingDto> freshList = new ArrayList<>();
         Set<String> seenDedupKeys = new HashSet<>();
 
+        // Incarcam URL-urile cunoscute din DB pentru crawl diferential
+        Set<String> knownDbUrls = new HashSet<>();
+        try {
+            knownDbUrls.addAll(cachedJobListingRepository.findAllDirectApplyUrls());
+        } catch (Exception e) {
+            log.warn("[JOB CRAWLER] Nu s-au putut citi URL-urile existente din DB: {}", e.getMessage());
+        }
+        log.info("[JOB CRAWLER] Baza de date contine {} joburi deja salvate. Pornire crawl diferential...", knownDbUrls.size());
+
         // 1. DEVJOB.RO RSS (România #1 Developer Job Board - Descrieri 100% Originale)
         scrapeDevJobRo(freshList, seenDedupKeys);
 
-        // 2. LINKEDIN ROMÂNIA EXTINS (TOATE SPECIALIZĂRILE IT & TOATE NIVELURILE)
-        scrapeLinkedInExpanded(freshList, seenDedupKeys);
+        // 2. LINKEDIN ROMÂNIA EXTINS (CRAWLING DIFERENȚIAL PE TOATE SPECIALIZĂRILE & ZERO LIMITĂRI SENIORI)
+        scrapeLinkedInExpanded(freshList, seenDedupKeys, knownDbUrls);
 
         // 3. STAGIIPEBUNE.RO MULTI-PAGE LIVE SCRAPING CU DATE ȘI SALARII REALE
         scrapeStagiiPeBuneDetailed(freshList, seenDedupKeys);
@@ -114,10 +139,64 @@ public class JobSearchAggregatorService {
         // 14. ARBEITNOW LIVE API (EU Tech)
         fetchArbeitnowJobs(freshList, seenDedupKeys);
 
-        activeLiveJobsCache.clear();
-        activeLiveJobsCache.addAll(freshList);
-        log.info("[JOB CRAWLER] Total joburi 100% reale, deduplicate și active în cache: {}", activeLiveJobsCache.size());
+        // Salvare persistență: inserăm joburile noi în PostgreSQL
+        saveNewJobsToDatabase(freshList);
+
+        // Reîncărcare rapidă în memorie din baza de date pentru a avea întregul istoric actualizat
+        int totalLoaded = loadJobsFromDatabase();
+        if (totalLoaded == 0 && !freshList.isEmpty()) {
+            activeLiveJobsCache.clear();
+            activeLiveJobsCache.addAll(freshList);
+        }
+
+        log.info("[JOB CRAWLER] Total joburi 100% reale, deduplicate și active în cache/baza de date: {}", activeLiveJobsCache.size());
         return activeLiveJobsCache.size();
+    }
+
+    public int loadJobsFromDatabase() {
+        try {
+            List<CachedJobListing> entities = cachedJobListingRepository.findAllOrderedByRecency();
+            if (!entities.isEmpty()) {
+                List<UnifiedJobListingDto> dtos = entities.stream()
+                        .map(CachedJobListing::toDto)
+                        .toList();
+                activeLiveJobsCache.clear();
+                activeLiveJobsCache.addAll(dtos);
+                return activeLiveJobsCache.size();
+            }
+        } catch (Exception e) {
+            log.warn("[JOB CRAWLER] Eroare la citirea joburilor din baza de date: {}", e.getMessage());
+        }
+        return 0;
+    }
+
+    @Transactional
+    public void saveNewJobsToDatabase(List<UnifiedJobListingDto> freshList) {
+        if (freshList == null || freshList.isEmpty()) return;
+        try {
+            Set<String> existingUrls = new HashSet<>(cachedJobListingRepository.findAllDirectApplyUrls());
+            List<CachedJobListing> toInsert = new ArrayList<>();
+
+            for (UnifiedJobListingDto dto : freshList) {
+                if (dto.directApplyUrl() != null && !dto.directApplyUrl().isBlank() && !existingUrls.contains(dto.directApplyUrl())) {
+                    toInsert.add(CachedJobListing.fromDto(dto));
+                    existingUrls.add(dto.directApplyUrl());
+                }
+            }
+
+            if (!toInsert.isEmpty()) {
+                int batchSize = 250;
+                for (int i = 0; i < toInsert.size(); i += batchSize) {
+                    int end = Math.min(i + batchSize, toInsert.size());
+                    cachedJobListingRepository.saveAll(toInsert.subList(i, end));
+                }
+                log.info("[JOB PERSISTENCE] Salvate cu succes {} joburi NOI in PostgreSQL.", toInsert.size());
+            } else {
+                log.info("[JOB PERSISTENCE] Toate joburile extrase exista deja in baza de date. Fara duplicate.");
+            }
+        } catch (Exception e) {
+            log.error("[JOB PERSISTENCE] Eroare la inserarea joburilor in PostgreSQL: {}", e.getMessage());
+        }
     }
 
     /**
@@ -133,7 +212,7 @@ public class JobSearchAggregatorService {
     /**
      * 1. LINKEDIN ROMÂNIA EXTINS: DETECTARE REALĂ A APLICANȚILOR & COMPETIȚIEI (MULTI-PAGE & TOATE SPECIALIZĂRILE)
      */
-    private void scrapeLinkedInExpanded(List<UnifiedJobListingDto> list, Set<String> seenDedupKeys) {
+    private void scrapeLinkedInExpanded(List<UnifiedJobListingDto> list, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
         Map<String, String> searchTiers = new LinkedHashMap<>();
         
         // 1. INTERNSHIPS & STAGII (f_E=1)
@@ -158,7 +237,6 @@ public class JobSearchAggregatorService {
         searchTiers.put("Junior Embedded Romania", "f_E=2");
         searchTiers.put("Junior Backend Developer Romania", "f_E=2");
         searchTiers.put("Junior Full Stack Developer Romania", "f_E=2");
-        searchTiers.put("Junior Software Engineer Romania", "f_E=2");
         searchTiers.put("Junior Frontend Developer Romania", "f_E=2");
         searchTiers.put("Junior React Developer Romania", "f_E=2");
         searchTiers.put("Junior Angular Developer Romania", "f_E=2");
@@ -184,7 +262,8 @@ public class JobSearchAggregatorService {
         searchTiers.put("Graduate Software Engineer Romania", "f_E=2");
         searchTiers.put("Trainee Software Engineer Romania", "f_E=2");
 
-        // 3. MIDDLE (f_E=3)
+        // 3. MIDDLE (f_E=3 - TOATE SPECIALIZĂRILE IT)
+        searchTiers.put("Software Engineer Romania", "f_E=3");
         searchTiers.put("Java Developer Romania", "f_E=3");
         searchTiers.put("Python Developer Romania", "f_E=3");
         searchTiers.put("Backend Engineer Romania", "f_E=3");
@@ -206,18 +285,44 @@ public class JobSearchAggregatorService {
         searchTiers.put("SAP Consultant Romania", "f_E=3");
         searchTiers.put("UI UX Designer Romania", "f_E=3");
 
-        // 4. SENIOR / LEAD (f_E=4)
+        // 4. SENIOR / LEAD / ARCHITECT / PRINCIPAL / MANAGER (f_E=4) - TOATE SPECIALIZĂRILE IT FĂRĂ NICIO LIMITARE
+        searchTiers.put("Senior Software Engineer Romania", "f_E=4");
         searchTiers.put("Senior Java Developer Romania", "f_E=4");
         searchTiers.put("Senior Python Developer Romania", "f_E=4");
+        searchTiers.put("Senior C++ Developer Romania", "f_E=4");
+        searchTiers.put("Senior Embedded Romania", "f_E=4");
         searchTiers.put("Senior Backend Engineer Romania", "f_E=4");
         searchTiers.put("Senior Full Stack Developer Romania", "f_E=4");
-        searchTiers.put("Lead Software Engineer Romania", "f_E=4");
+        searchTiers.put("Senior Frontend Developer Romania", "f_E=4");
+        searchTiers.put("Senior React Developer Romania", "f_E=4");
+        searchTiers.put("Senior Angular Developer Romania", "f_E=4");
         searchTiers.put("Senior DevOps Engineer Romania", "f_E=4");
+        searchTiers.put("Senior Cloud Engineer Romania", "f_E=4");
+        searchTiers.put("Senior Cloud Architect Romania", "f_E=4");
         searchTiers.put("Senior Data Engineer Romania", "f_E=4");
+        searchTiers.put("Senior Data Analyst Romania", "f_E=4");
+        searchTiers.put("Senior Machine Learning Romania", "f_E=4");
+        searchTiers.put("Senior AI Engineer Romania", "f_E=4");
         searchTiers.put("Senior QA Automation Romania", "f_E=4");
         searchTiers.put("Senior Cyber Security Romania", "f_E=4");
-        searchTiers.put("IT Project Manager Romania", "f_E=4");
+        searchTiers.put("Senior Mobile Developer Romania", "f_E=4");
+        searchTiers.put("Senior Android Developer Romania", "f_E=4");
+        searchTiers.put("Senior iOS Developer Romania", "f_E=4");
+        searchTiers.put("Senior IT Support Romania", "f_E=4");
+        searchTiers.put("Senior System Administrator Romania", "f_E=4");
+        searchTiers.put("Senior Network Engineer Romania", "f_E=4");
+        searchTiers.put("Senior Database Administrator Romania", "f_E=4");
+        searchTiers.put("Senior Scrum Master Romania", "f_E=4");
+        searchTiers.put("Senior SAP Consultant Romania", "f_E=4");
+        searchTiers.put("Senior Business Analyst Romania", "f_E=4");
+        searchTiers.put("Senior UI UX Designer Romania", "f_E=4");
+        searchTiers.put("Principal Software Engineer Romania", "f_E=4");
+        searchTiers.put("Tech Lead Romania", "f_E=4");
+        searchTiers.put("Lead Software Engineer Romania", "f_E=4");
         searchTiers.put("Software Architect Romania", "f_E=4");
+        searchTiers.put("Solutions Architect Romania", "f_E=4");
+        searchTiers.put("Engineering Manager Romania", "f_E=4");
+        searchTiers.put("IT Project Manager Romania", "f_E=4");
 
         Set<String> seenJobUrls = new HashSet<>();
         int queryIdx = 0;
@@ -225,11 +330,12 @@ public class JobSearchAggregatorService {
         for (Map.Entry<String, String> entry : searchTiers.entrySet()) {
             String query = entry.getKey();
             String expFilter = entry.getValue();
-            boolean isJuniorOrIntern = expFilter.contains("f_E=1") || expFilter.contains("f_E=2");
             int offset = 0;
             int consecutiveZeroNew = 0;
+            int consecutiveKnownDbPages = 0;
             // Paginare dinamică completă: parcurge TOATE paginile existente (start=0, 25, 50, 75, 100...)
-            int maxPagesPerQuery = isJuniorOrIntern ? 40 : 25;
+            // FĂRĂ LIMITĂRI: 40 de pagini egale pentru TOATE nivelurile (Senior, Lead, Mid, Junior, Intern)
+            int maxPagesPerQuery = 40;
 
             while (true) {
                 try {
@@ -252,6 +358,7 @@ public class JobSearchAggregatorService {
                     }
 
                     int newJobsThisPage = 0;
+                    int knownDbJobsThisPage = 0;
                     for (Element card : cards) {
                         Element linkEl = card.selectFirst("a.base-card__full-link");
                         if (linkEl == null) continue;
@@ -261,6 +368,9 @@ public class JobSearchAggregatorService {
                         
                         // Curățare URL LinkedIn de parametri lungi de tracking
                         String cleanUrl = directUrl.contains("?") ? directUrl.split("\\?")[0] : directUrl;
+                        if (knownDbUrls != null && knownDbUrls.contains(cleanUrl)) {
+                            knownDbJobsThisPage++;
+                        }
                         if (seenJobUrls.contains(cleanUrl)) continue;
                         seenJobUrls.add(cleanUrl);
                         newJobsThisPage++;
@@ -357,6 +467,18 @@ public class JobSearchAggregatorService {
                     // Dacă pagina a avut sub 5 rezultate, am atins ultima pagină oficială
                     if (cards.size() < 5) {
                         break;
+                    }
+
+                    // CRAWLING DIFERENȚIAL INTELIGENT:
+                    // Dacă cel puțin 70% din joburile de pe pagină există deja în baza de date,
+                    // și 2 pagini consecutive confirmă acest lucru, oprim căutarea pentru acest query!
+                    if (knownDbUrls != null && !knownDbUrls.isEmpty() && knownDbJobsThisPage >= Math.max(3, cards.size() * 0.7)) {
+                        consecutiveKnownDbPages++;
+                        if (consecutiveKnownDbPages >= 2) {
+                            break; // Gata diferența pentru acest query
+                        }
+                    } else {
+                        consecutiveKnownDbPages = 0;
                     }
 
                     // Dacă două pagini consecutive aduc 0 joburi noi (toate fiind deja cunoscute), trecem la următorul query
