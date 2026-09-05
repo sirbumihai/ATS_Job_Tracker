@@ -31,6 +31,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -231,21 +232,21 @@ public class JobSearchAggregatorService {
 
                     if (isEarlyApplicant) {
                         compLevel = "LOW";
-                        compLabel = "🟢 Șansă Mare";
+                        compLabel = "Șansă Mare";
                         applicantCountText = "Sub 25 de candidați";
                     } else {
                         // Pe LinkedIn România în IT, postările atrag masiv aplicanți dacă nu au tag-ul "Early Applicant"
                         if (daysAgo >= 3 || postedDate.toLowerCase().contains("week") || postedDate.toLowerCase().contains("month")) {
                             compLevel = "HIGH";
-                            compLabel = "🔴 Competiție Ridicată";
+                            compLabel = "Competiție Ridicată";
                             applicantCountText = "Peste 100 de aplicanți";
                         } else if (daysAgo >= 1 || isMajorTechBrand(company) || level.equals("JUNIOR") || level.equals("INTERNSHIP")) {
                             compLevel = "HIGH";
-                            compLabel = "🔴 Competiție Ridicată";
+                            compLabel = "Competiție Ridicată";
                             applicantCountText = "50-100+ de aplicanți";
                         } else {
                             compLevel = "MEDIUM";
-                            compLabel = "🟡 Competiție Medie";
+                            compLabel = "Competiție Medie";
                             applicantCountText = "25-50 de candidați";
                         }
                     }
@@ -354,7 +355,7 @@ public class JobSearchAggregatorService {
 
                     // Platformă universitară locală (acces restrâns la studenți)
                     String compLevel = daysAgo <= 4 ? "LOW" : "MEDIUM";
-                    String compLabel = daysAgo <= 4 ? "🟢 Șansă Mare" : "🟡 Competiție Medie";
+                    String compLabel = daysAgo <= 4 ? "Șansă Mare" : "Competiție Medie";
                     String applicantCountText = daysAgo <= 4 ? "Sub 25 de candidați (Studenți)" : "30-50 de candidați";
 
                     list.add(new UnifiedJobListingDto(
@@ -471,7 +472,7 @@ public class JobSearchAggregatorService {
                     int daysAgo = parseDaysAgo(postedDate);
 
                     String compLevel = daysAgo <= 2 ? "LOW" : "MEDIUM";
-                    String compLabel = daysAgo <= 2 ? "🟢 Șansă Mare" : "🟡 Competiție Medie";
+                    String compLabel = daysAgo <= 2 ? "Șansă Mare" : "Competiție Medie";
                     String applicantCountText = daysAgo <= 2 ? "Sub 30 de candidați" : "40-75 de candidați";
 
                     list.add(new UnifiedJobListingDto(
@@ -565,7 +566,7 @@ public class JobSearchAggregatorService {
 
                 int daysAgo = 1;
                 String compLevel = level.equals("JUNIOR") ? "LOW" : "MEDIUM";
-                String compLabel = level.equals("JUNIOR") ? "🟢 Șansă Mare" : "🟡 Competiție Medie";
+                String compLabel = level.equals("JUNIOR") ? "Șansă Mare" : "Competiție Medie";
                 String applicantCountText = level.equals("JUNIOR") ? "Sub 25 de candidați" : "30-60 de candidați";
 
                 list.add(new UnifiedJobListingDto(
@@ -641,7 +642,7 @@ public class JobSearchAggregatorService {
                     List<String> skills = extractSkillsFromTitle(title);
                     int daysAgo = 2;
                     String compLevel = level.equals("JUNIOR") || level.equals("INTERNSHIP") ? "LOW" : "MEDIUM";
-                    String compLabel = level.equals("JUNIOR") || level.equals("INTERNSHIP") ? "🟢 Șansă Mare" : "🟡 Competiție Medie";
+                    String compLabel = level.equals("JUNIOR") || level.equals("INTERNSHIP") ? "Șansă Mare" : "Competiție Medie";
                     String applicantCountText = level.equals("JUNIOR") ? "Sub 30 de candidați" : "40-80 de candidați";
 
                     list.add(new UnifiedJobListingDto(
@@ -728,7 +729,7 @@ public class JobSearchAggregatorService {
                     List<String> skills = extractSkillsFromTitle(title);
                     int daysAgo = 2;
                     String compLevel = level.equals("JUNIOR") ? "LOW" : "MEDIUM";
-                    String compLabel = level.equals("JUNIOR") ? "🟢 Șansă Mare" : "🟡 Competiție Medie";
+                    String compLabel = level.equals("JUNIOR") ? "Șansă Mare" : "Competiție Medie";
                     String applicantCountText = level.equals("JUNIOR") ? "Sub 25 de candidați" : "35-70 de candidați";
 
                     list.add(new UnifiedJobListingDto(
@@ -804,7 +805,7 @@ public class JobSearchAggregatorService {
 
                 int daysAgo = 1;
                 String compLevel = "HIGH";
-                String compLabel = "🔴 Competiție Ridicată";
+                String compLabel = "Competiție Ridicată";
                 String applicantCountText = "100-250 de candidați (Global Remote)";
 
                 list.add(new UnifiedJobListingDto(
@@ -890,7 +891,7 @@ public class JobSearchAggregatorService {
 
                 int daysAgo = 2;
                 String compLevel = "HIGH";
-                String compLabel = "🔴 Competiție Ridicată";
+                String compLabel = "Competiție Ridicată";
                 String applicantCountText = "100-200 de aplicanți (EU Tech)";
 
                 list.add(new UnifiedJobListingDto(
@@ -973,7 +974,7 @@ public class JobSearchAggregatorService {
 
                 int daysAgo = 2;
                 String compLevel = "HIGH";
-                String compLabel = "🔴 Competiție Ridicată";
+                String compLabel = "Competiție Ridicată";
                 String applicantCountText = "50-120 de candidați (Switzerland/EU)";
 
                 list.add(new UnifiedJobListingDto(
@@ -1059,7 +1060,7 @@ public class JobSearchAggregatorService {
                     List<String> skills = extractSkillsFromTitle(title);
                     int daysAgo = 3;
                     String compLevel = "HIGH";
-                    String compLabel = "🔴 Competiție Ridicată";
+                    String compLabel = "Competiție Ridicată";
                     String applicantCountText = "80-150+ aplicanți";
 
                     list.add(new UnifiedJobListingDto(
@@ -1122,7 +1123,7 @@ public class JobSearchAggregatorService {
                             List<String> skills = extractSkillsFromTitle(name);
                             int daysAgo = 2;
                             String compLevel = "HIGH";
-                            String compLabel = "🔴 Competiție Ridicată";
+                            String compLabel = "Competiție Ridicată";
                             String applicantCountText = "Peste 100 de aplicanți (Global Careers)";
 
                             list.add(new UnifiedJobListingDto(
@@ -1184,7 +1185,7 @@ public class JobSearchAggregatorService {
                             List<String> skills = extractSkillsFromTitle(title);
                             int daysAgo = 1;
                             String compLevel = "HIGH";
-                            String compLabel = "🔴 Competiție Ridicată";
+                            String compLabel = "Competiție Ridicată";
                             String applicantCountText = "200+ aplicanți (Global ATS)";
 
                             list.add(new UnifiedJobListingDto(
@@ -1246,7 +1247,7 @@ public class JobSearchAggregatorService {
                             List<String> skills = extractSkillsFromTitle(title);
                             int daysAgo = 2;
                             String compLevel = "HIGH";
-                            String compLabel = "🔴 Competiție Ridicată";
+                            String compLabel = "Competiție Ridicată";
                             String applicantCountText = "250+ aplicanți (Global ATS)";
 
                             list.add(new UnifiedJobListingDto(
@@ -1317,7 +1318,7 @@ public class JobSearchAggregatorService {
                         String level = determineExperienceLevel(title);
                         int daysAgo = 3;
                         String compLevel = "HIGH";
-                        String compLabel = "🔴 Competiție Ridicată";
+                        String compLabel = "Competiție Ridicată";
                         String applicantCountText = "Peste 200 de aplicanți (Remote Global)";
 
                         list.add(new UnifiedJobListingDto(
@@ -1387,7 +1388,7 @@ public class JobSearchAggregatorService {
                         String level = determineExperienceLevel(title);
                         int daysAgo = 2;
                         String compLevel = "HIGH";
-                        String compLabel = "🔴 Competiție Ridicată";
+                        String compLabel = "Competiție Ridicată";
                         String applicantCountText = "100-180 aplicanți (EU Tech)";
 
                         list.add(new UnifiedJobListingDto(
@@ -1575,7 +1576,7 @@ public class JobSearchAggregatorService {
             String roleCategory,
             String workModel
     ) {
-        return searchJobs(userId, keyword, location, platform, level, roleCategory, workModel, "MATCH_AND_RECENCY");
+        return searchJobs(userId, keyword, location, platform, level, roleCategory, workModel, "MATCH_AND_RECENCY", "ALL");
     }
 
     @Transactional(readOnly = true)
@@ -1589,6 +1590,21 @@ public class JobSearchAggregatorService {
             String workModel,
             String sortBy
     ) {
+        return searchJobs(userId, keyword, location, platform, level, roleCategory, workModel, sortBy, "ALL");
+    }
+
+    @Transactional(readOnly = true)
+    public List<UnifiedJobListingDto> searchJobs(
+            UUID userId,
+            String keyword,
+            String location,
+            String platform,
+            String level,
+            String roleCategory,
+            String workModel,
+            String sortBy,
+            String datePosted
+    ) {
         String cvText = getCandidateCvText(userId);
         String cvLower = cvText.toLowerCase();
 
@@ -1599,13 +1615,40 @@ public class JobSearchAggregatorService {
         String catUpper = (roleCategory != null && !roleCategory.isBlank()) ? roleCategory.toUpperCase().trim() : "ALL";
         String wmUpper = (workModel != null && !workModel.isBlank()) ? workModel.toUpperCase().trim() : "ALL";
 
+        // Multi-Platform Set
+        Set<String> selectedPlatforms = Arrays.stream(platUpper.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty() && !s.equals("ALL"))
+                .collect(Collectors.toSet());
+
+        // Multi-RoleCategory Set
+        Set<String> selectedCategories = Arrays.stream(catUpper.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty() && !s.equals("ALL"))
+                .collect(Collectors.toSet());
+
+        // Date Posted Filter (ex: 1, 3, 7, 14, 30 zile)
+        int maxDaysFilter = -1;
+        if (datePosted != null && !datePosted.isBlank() && !datePosted.equalsIgnoreCase("ALL")) {
+            try {
+                maxDaysFilter = Integer.parseInt(datePosted.trim());
+            } catch (NumberFormatException ignored) {}
+        }
+
         List<UnifiedJobListingDto> results = new ArrayList<>();
         Map<String, Double> searchRelevanceMap = new HashMap<>();
 
         for (UnifiedJobListingDto job : activeLiveJobsCache) {
-            // 1. Filtrare Role Category
-            if (!catUpper.equals("ALL")) {
-                if (!matchesRoleCategory(job, catUpper)) {
+            // 1. Filtrare Role Category (Suport Selecție Multiplă)
+            if (!selectedCategories.isEmpty()) {
+                boolean matchesCategory = false;
+                for (String cat : selectedCategories) {
+                    if (matchesRoleCategory(job, cat)) {
+                        matchesCategory = true;
+                        break;
+                    }
+                }
+                if (!matchesCategory) {
                     continue;
                 }
             }
@@ -1633,13 +1676,21 @@ public class JobSearchAggregatorService {
                 }
             }
 
-            // 5. Filtrare Platformă Exactă sau Grup Direct ATS
-            if (!platUpper.equals("ALL")) {
-                if (platUpper.equals("DIRECT_ATS")) {
-                    if (!List.of("GREENHOUSE", "ASHBY", "SMARTRECRUITERS", "LEVER").contains(job.sourcePlatform())) {
-                        continue;
+            // 5. Filtrare Platformă (Suport Selecție Multiplă)
+            if (!selectedPlatforms.isEmpty()) {
+                boolean matchesPlat = false;
+                for (String p : selectedPlatforms) {
+                    if (p.equals("DIRECT_ATS")) {
+                        if (List.of("GREENHOUSE", "ASHBY", "SMARTRECRUITERS", "LEVER").contains(job.sourcePlatform())) {
+                            matchesPlat = true;
+                            break;
+                        }
+                    } else if (job.sourcePlatform().equalsIgnoreCase(p)) {
+                        matchesPlat = true;
+                        break;
                     }
-                } else if (!job.sourcePlatform().equalsIgnoreCase(platUpper)) {
+                }
+                if (!matchesPlat) {
                     continue;
                 }
             }
@@ -1647,6 +1698,13 @@ public class JobSearchAggregatorService {
             // 6. Filtrare Nivel Experiență (JUNIOR, MID, SENIOR, INTERNSHIP)
             if (!lvlUpper.equals("ALL")) {
                 if (!job.experienceLevel().equalsIgnoreCase(lvlUpper)) {
+                    continue;
+                }
+            }
+
+            // 7. Filtrare Data Postării (Ultimele N Zile)
+            if (maxDaysFilter >= 0) {
+                if (job.postedDaysAgo() > maxDaysFilter) {
                     continue;
                 }
             }
@@ -1838,57 +1896,90 @@ public class JobSearchAggregatorService {
         return list;
     }
 
+    private String normalizeDiacritics(String text) {
+        if (text == null) return "";
+        return text.toLowerCase()
+                .replace("ă", "a")
+                .replace("â", "a")
+                .replace("î", "i")
+                .replace("ș", "s")
+                .replace("ş", "s")
+                .replace("ț", "t")
+                .replace("ţ", "t");
+    }
+
     /**
-     * Potrivire inteligentă pe locații (cu suport pentru diacritice, București/Bucharest, Cluj, etc.)
+     * Potrivire inteligentă pe locații (cu suport complet pentru diacritice, București/Bucharest, Cluj, etc.)
      */
     private boolean matchesLocationIntelligently(UnifiedJobListingDto job, String locLower) {
         if (locLower == null || locLower.isBlank()) return true;
 
-        String jLoc = job.location().toLowerCase();
-        String jModel = job.workModel().toLowerCase();
+        String normQuery = normalizeDiacritics(locLower.trim());
+        String jLoc = normalizeDiacritics(job.location());
+        String jModel = normalizeDiacritics(job.workModel());
         String jPlatform = job.sourcePlatform().toLowerCase();
 
-        // 1. Direct match
-        if (jLoc.contains(locLower) || jModel.contains(locLower)) return true;
+        // 1. Direct match or substring match
+        if (jLoc.contains(normQuery) || jModel.contains(normQuery)) return true;
 
-        // 2. Bucuresti / Bucharest
-        if (locLower.contains("bucur") || locLower.contains("bucharest")) {
-            return jLoc.contains("bucuresti") || jLoc.contains("bucharest") || jLoc.contains("sector");
+        // 2. Bucuresti / Bucharest / Sector
+        if (normQuery.contains("bucur") || normQuery.contains("bucharest")) {
+            return jLoc.contains("bucur") || jLoc.contains("bucharest") || jLoc.contains("sector");
         }
 
-        // 3. Cluj
-        if (locLower.contains("cluj")) {
+        // 3. Cluj-Napoca / Cluj
+        if (normQuery.contains("cluj")) {
             return jLoc.contains("cluj");
         }
 
         // 4. Timisoara
-        if (locLower.contains("timis")) {
-            return jLoc.contains("timisoara");
+        if (normQuery.contains("timis")) {
+            return jLoc.contains("timis");
         }
 
         // 5. Iasi
-        if (locLower.contains("iasi") || locLower.contains("iași")) {
-            return jLoc.contains("iasi") || jLoc.contains("iași");
+        if (normQuery.contains("iasi")) {
+            return jLoc.contains("iasi");
         }
 
         // 6. Brasov
-        if (locLower.contains("brasov") || locLower.contains("brașov")) {
-            return jLoc.contains("brasov") || jLoc.contains("brașov");
+        if (normQuery.contains("brasov")) {
+            return jLoc.contains("brasov");
         }
 
-        // 7. Romania (toate joburile locale sau platformele din Romania)
-        if (locLower.contains("romania") || locLower.contains("românia")) {
-            return jLoc.contains("romania") || jLoc.contains("românia") ||
+        // 7. Sibiu
+        if (normQuery.contains("sibiu")) {
+            return jLoc.contains("sibiu");
+        }
+
+        // 8. Craiova
+        if (normQuery.contains("craiova")) {
+            return jLoc.contains("craiova");
+        }
+
+        // 9. Oradea
+        if (normQuery.contains("oradea")) {
+            return jLoc.contains("oradea");
+        }
+
+        // 10. Constanta
+        if (normQuery.contains("constant")) {
+            return jLoc.contains("constant");
+        }
+
+        // 11. Romania (toate joburile locale sau platformele din Romania)
+        if (normQuery.contains("romania")) {
+            return jLoc.contains("romania") ||
                    List.of("devjob_ro", "stagiipebune", "juniors_ro", "undelucram", "ejobs", "hipo").contains(jPlatform);
         }
 
-        // 8. Remote
-        if (locLower.contains("remote")) {
+        // 12. Remote
+        if (normQuery.contains("remote")) {
             return jModel.contains("remote") || jLoc.contains("remote");
         }
 
-        // 9. Europa / Europe
-        if (locLower.contains("europ") || locLower.contains("germany") || locLower.contains("germania") || locLower.contains("elvetia") || locLower.contains("switzerland")) {
+        // 13. Europa / Europe
+        if (normQuery.contains("europ") || normQuery.contains("germany") || normQuery.contains("germania") || normQuery.contains("elvetia") || normQuery.contains("switzerland")) {
             return jLoc.contains("europe") || jLoc.contains("germany") || jLoc.contains("switzerland") || jLoc.contains("berlin") || jLoc.contains("munich") || jLoc.contains("zurich") ||
                    List.of("eu_tech", "arbeitnow", "remotive", "wwr").contains(jPlatform);
         }

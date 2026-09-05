@@ -231,7 +231,7 @@ export default function JobDetailModal({
                 Mod de Lucru
               </span>
               <p className="text-xs sm:text-sm font-extrabold text-gray-900">
-                {currentJob.workModel === 'REMOTE' ? '🌐 Remote' : currentJob.workModel === 'HYBRID' ? '🏢 Hibrid' : '📍 On-Site'}
+                {currentJob.workModel === 'REMOTE' ? 'Remote' : currentJob.workModel === 'HYBRID' ? 'Hibrid' : 'On-Site'}
               </p>
             </div>
 
@@ -241,9 +241,9 @@ export default function JobDetailModal({
                 Nivel Experiență
               </span>
               <p className="text-xs sm:text-sm font-extrabold text-gray-900">
-                {currentJob.experienceLevel === 'INTERNSHIP' ? '🎓 Internship' :
-                 currentJob.experienceLevel === 'JUNIOR' ? '👶 Junior' :
-                 currentJob.experienceLevel === 'SENIOR' ? '⭐ Senior' : '🏢 Mid-Level'}
+                {currentJob.experienceLevel === 'INTERNSHIP' ? 'Internship' :
+                 currentJob.experienceLevel === 'JUNIOR' ? 'Junior' :
+                 currentJob.experienceLevel === 'SENIOR' ? 'Senior' : 'Mid-Level'}
               </p>
             </div>
 
