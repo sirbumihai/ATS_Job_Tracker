@@ -186,11 +186,26 @@ public class JobSearchAggregatorService {
 
             if (!toInsert.isEmpty()) {
                 int batchSize = 250;
+                int savedCount = 0;
                 for (int i = 0; i < toInsert.size(); i += batchSize) {
                     int end = Math.min(i + batchSize, toInsert.size());
-                    cachedJobListingRepository.saveAll(toInsert.subList(i, end));
+                    List<CachedJobListing> chunk = toInsert.subList(i, end);
+                    try {
+                        cachedJobListingRepository.saveAll(chunk);
+                        savedCount += chunk.size();
+                    } catch (Exception batchEx) {
+                        log.warn("[JOB PERSISTENCE] Eroare batch {}..{}, incercare individuala: {}", i, end, batchEx.getMessage());
+                        for (CachedJobListing singleJob : chunk) {
+                            try {
+                                cachedJobListingRepository.save(singleJob);
+                                savedCount++;
+                            } catch (Exception singleEx) {
+                                log.warn("[JOB PERSISTENCE] Omis job invalid '{}': {}", singleJob.getJobTitle(), singleEx.getMessage());
+                            }
+                        }
+                    }
                 }
-                log.info("[JOB PERSISTENCE] Salvate cu succes {} joburi NOI in PostgreSQL.", toInsert.size());
+                log.info("[JOB PERSISTENCE] Salvate cu succes {} joburi NOI in PostgreSQL.", savedCount);
             } else {
                 log.info("[JOB PERSISTENCE] Toate joburile extrase exista deja in baza de date. Fara duplicate.");
             }

@@ -21,28 +21,28 @@ import java.util.List;
 public class CachedJobListing {
 
     @Id
-    @Column(name = "id", length = 64)
+    @Column(name = "id", length = 255)
     private String id;
 
-    @Column(name = "job_title", nullable = false, length = 255)
+    @Column(name = "job_title", nullable = false, length = 500)
     private String jobTitle;
 
-    @Column(name = "company_name", nullable = false, length = 255)
+    @Column(name = "company_name", nullable = false, length = 500)
     private String companyName;
 
-    @Column(name = "company_logo_url", length = 1024)
+    @Column(name = "company_logo_url", columnDefinition = "TEXT")
     private String companyLogoUrl;
 
-    @Column(name = "location", length = 255)
+    @Column(name = "location", length = 500)
     private String location;
 
-    @Column(name = "work_model", length = 50)
+    @Column(name = "work_model", length = 100)
     private String workModel;
 
-    @Column(name = "experience_level", length = 50)
+    @Column(name = "experience_level", length = 100)
     private String experienceLevel;
 
-    @Column(name = "source_platform", nullable = false, length = 50)
+    @Column(name = "source_platform", nullable = false, length = 100)
     private String sourcePlatform;
 
     @Column(name = "direct_apply_url", nullable = false, columnDefinition = "TEXT", unique = true)
@@ -51,25 +51,25 @@ public class CachedJobListing {
     @Column(name = "raw_description", columnDefinition = "TEXT")
     private String rawDescription;
 
-    @Column(name = "salary_range", length = 150)
+    @Column(name = "salary_range", length = 255)
     private String salaryRange;
 
     @Column(name = "skills_required", columnDefinition = "TEXT")
     private String skillsRequired;
 
-    @Column(name = "posted_date_ago", length = 100)
+    @Column(name = "posted_date_ago", length = 255)
     private String postedDateAgo;
 
     @Column(name = "ats_match_score")
     private double atsMatchScore;
 
-    @Column(name = "competitiveness", length = 50)
+    @Column(name = "competitiveness", length = 100)
     private String competitiveness;
 
-    @Column(name = "competitiveness_label", length = 150)
+    @Column(name = "competitiveness_label", length = 255)
     private String competitivenessLabel;
 
-    @Column(name = "applicant_count_text", length = 150)
+    @Column(name = "applicant_count_text", length = 255)
     private String applicantCountText;
 
     @Column(name = "posted_days_ago")
@@ -83,29 +83,34 @@ public class CachedJobListing {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
+    private static String safeSub(String val, int maxLen) {
+        if (val == null) return null;
+        return val.length() <= maxLen ? val : val.substring(0, maxLen);
+    }
+
     public static CachedJobListing fromDto(UnifiedJobListingDto dto) {
         String skillsStr = dto.skillsRequired() != null && !dto.skillsRequired().isEmpty()
                 ? String.join(",", dto.skillsRequired())
                 : "";
 
         return CachedJobListing.builder()
-                .id(dto.id())
-                .jobTitle(dto.jobTitle())
-                .companyName(dto.companyName())
+                .id(dto.id() != null ? safeSub(dto.id(), 250) : java.util.UUID.randomUUID().toString())
+                .jobTitle(safeSub(dto.jobTitle() != null ? dto.jobTitle() : "Job Title", 490))
+                .companyName(safeSub(dto.companyName() != null ? dto.companyName() : "Tech Company", 490))
                 .companyLogoUrl(dto.companyLogoUrl())
-                .location(dto.location())
-                .workModel(dto.workModel())
-                .experienceLevel(dto.experienceLevel())
-                .sourcePlatform(dto.sourcePlatform())
+                .location(safeSub(dto.location(), 490))
+                .workModel(safeSub(dto.workModel(), 90))
+                .experienceLevel(safeSub(dto.experienceLevel(), 90))
+                .sourcePlatform(safeSub(dto.sourcePlatform() != null ? dto.sourcePlatform() : "OTHER", 90))
                 .directApplyUrl(dto.directApplyUrl())
                 .rawDescription(dto.rawDescription())
-                .salaryRange(dto.salaryRange())
+                .salaryRange(safeSub(dto.salaryRange(), 250))
                 .skillsRequired(skillsStr)
-                .postedDateAgo(dto.postedDateAgo())
+                .postedDateAgo(safeSub(dto.postedDateAgo(), 250))
                 .atsMatchScore(dto.atsMatchScore())
-                .competitiveness(dto.competitiveness())
-                .competitivenessLabel(dto.competitivenessLabel())
-                .applicantCountText(dto.applicantCountText())
+                .competitiveness(safeSub(dto.competitiveness(), 90))
+                .competitivenessLabel(safeSub(dto.competitivenessLabel(), 250))
+                .applicantCountText(safeSub(dto.applicantCountText(), 250))
                 .postedDaysAgo(dto.postedDaysAgo())
                 .build();
     }
