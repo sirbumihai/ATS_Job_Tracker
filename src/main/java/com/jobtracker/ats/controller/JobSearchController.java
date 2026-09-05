@@ -2,6 +2,7 @@ package com.jobtracker.ats.controller;
 
 import com.jobtracker.ats.dto.ApplicationResponse;
 import com.jobtracker.ats.dto.UnifiedJobListingDto;
+import com.jobtracker.ats.entity.JobChange;
 import com.jobtracker.ats.service.JobSearchAggregatorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,8 @@ public class JobSearchController {
             @RequestParam(required = false, defaultValue = "ALL") String roleCategory,
             @RequestParam(required = false, defaultValue = "ALL") String workModel,
             @RequestParam(required = false, defaultValue = "MATCH_AND_RECENCY") String sortBy,
-            @RequestParam(required = false, defaultValue = "ALL") String datePosted
+            @RequestParam(required = false, defaultValue = "ALL") String datePosted,
+            @RequestParam(required = false, defaultValue = "ACTIVE") String status
     ) {
         UUID activeUserId = headerUserId != null ? headerUserId : userId;
         List<UnifiedJobListingDto> jobs = jobSearchAggregatorService.searchJobs(
@@ -41,7 +43,8 @@ public class JobSearchController {
                 roleCategory,
                 workModel,
                 sortBy,
-                datePosted
+                datePosted,
+                status
         );
         return ResponseEntity.ok(jobs);
     }
@@ -74,6 +77,22 @@ public class JobSearchController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(details);
+    }
+
+    @GetMapping("/{id}/changes")
+    public ResponseEntity<List<JobChange>> getJobChanges(@PathVariable String id) {
+        List<JobChange> changes = jobSearchAggregatorService.getJobChanges(id);
+        return ResponseEntity.ok(changes);
+    }
+
+    @PostMapping("/expire-old-jobs")
+    public ResponseEntity<Map<String, Object>> expireOldJobs() {
+        int expiredCount = jobSearchAggregatorService.markExpiredJobs();
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "message", "Verificare expirare joburi finalizată cu succes.",
+                "expiredCount", expiredCount
+        ));
     }
 
     @PostMapping("/sync-live")

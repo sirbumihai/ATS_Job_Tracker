@@ -1,4 +1,4 @@
-﻿-- Migration V8: Widen column types for cached_live_jobs to prevent truncation errors on long IDs/titles
+-- Migration V8: Widen column types for cached_live_jobs to prevent truncation errors on long IDs/titles
 
 ALTER TABLE cached_live_jobs ALTER COLUMN id TYPE VARCHAR(255);
 ALTER TABLE cached_live_jobs ALTER COLUMN job_title TYPE VARCHAR(500);

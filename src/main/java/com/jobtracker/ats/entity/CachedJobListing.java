@@ -75,6 +75,24 @@ public class CachedJobListing {
     @Column(name = "posted_days_ago")
     private int postedDaysAgo;
 
+    @Column(name = "external_id", length = 255)
+    private String externalId;
+
+    @Column(name = "content_hash", length = 64)
+    private String contentHash;
+
+    @Column(name = "posted_at")
+    private OffsetDateTime postedAt;
+
+    @Column(name = "first_seen_at")
+    private OffsetDateTime firstSeenAt;
+
+    @Column(name = "last_seen_at")
+    private OffsetDateTime lastSeenAt;
+
+    @Column(name = "status", length = 30)
+    private String status;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
@@ -92,6 +110,11 @@ public class CachedJobListing {
         String skillsStr = dto.skillsRequired() != null && !dto.skillsRequired().isEmpty()
                 ? String.join(",", dto.skillsRequired())
                 : "";
+
+        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime posted = dto.postedAt() != null 
+                ? dto.postedAt() 
+                : now.minusDays(Math.max(0, dto.postedDaysAgo()));
 
         return CachedJobListing.builder()
                 .id(dto.id() != null ? safeSub(dto.id(), 250) : java.util.UUID.randomUUID().toString())
@@ -112,6 +135,12 @@ public class CachedJobListing {
                 .competitivenessLabel(safeSub(dto.competitivenessLabel(), 250))
                 .applicantCountText(safeSub(dto.applicantCountText(), 250))
                 .postedDaysAgo(dto.postedDaysAgo())
+                .externalId(safeSub(dto.externalId() != null ? dto.externalId() : dto.id(), 250))
+                .contentHash(dto.contentHash())
+                .postedAt(posted)
+                .firstSeenAt(dto.firstSeenAt() != null ? dto.firstSeenAt() : now)
+                .lastSeenAt(dto.lastSeenAt() != null ? dto.lastSeenAt() : now)
+                .status(dto.status() != null ? safeSub(dto.status(), 25) : "ACTIVE")
                 .build();
     }
 
@@ -143,7 +172,13 @@ public class CachedJobListing {
                 this.competitiveness,
                 this.competitivenessLabel,
                 this.applicantCountText,
-                this.postedDaysAgo
+                this.postedDaysAgo,
+                this.externalId != null ? this.externalId : this.id,
+                this.contentHash,
+                this.postedAt != null ? this.postedAt : (this.createdAt != null ? this.createdAt : OffsetDateTime.now()),
+                this.firstSeenAt != null ? this.firstSeenAt : this.createdAt,
+                this.lastSeenAt != null ? this.lastSeenAt : this.updatedAt,
+                this.status != null ? this.status : "ACTIVE"
         );
     }
 }

@@ -18,10 +18,14 @@ import {
   AlertCircle,
   Users,
   FileText,
-  Check,
-  ChevronRight,
-  TrendingUp,
-  Share2
+  Check, 
+  ChevronRight, 
+  TrendingUp, 
+  Share2,
+  Calendar,
+  History,
+  GitCommit,
+  Database
 } from 'lucide-react';
 
 export default function JobDetailModal({ 
@@ -35,6 +39,48 @@ export default function JobDetailModal({
   const [detailedJob, setDetailedJob] = useState(job);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [jobChanges, setJobChanges] = useState([]);
+  const [loadingChanges, setLoadingChanges] = useState(false);
+  const [showChanges, setShowChanges] = useState(false);
+
+  const formatDateTime = (dtStr) => {
+    if (!dtStr) return 'Nespecificat';
+    try {
+      const d = new Date(dtStr);
+      if (isNaN(d.getTime())) return dtStr;
+      return d.toLocaleString('ro-RO', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dtStr;
+    }
+  };
+
+  const fetchChanges = async () => {
+    if (showChanges) {
+      setShowChanges(false);
+      return;
+    }
+    setShowChanges(true);
+    if (jobChanges.length === 0) {
+      setLoadingChanges(true);
+      try {
+        const res = await fetch(`/api/v1/jobs/${currentJob.id}/changes`);
+        if (res.ok) {
+          const data = await res.json();
+          setJobChanges(data);
+        }
+      } catch (err) {
+        console.warn('Eroare la preluarea istoricului:', err);
+      } finally {
+        setLoadingChanges(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!job) return;
@@ -185,10 +231,22 @@ export default function JobDetailModal({
                     {currentJob.location}
                   </span>
                   <span>•</span>
-                  <span className="flex items-center gap-1 text-gray-500 text-xs">
-                    <Clock className="w-3.5 h-3.5" />
-                    {currentJob.postedDateAgo}
+                  <span className="flex items-center gap-1 text-gray-700 font-bold text-xs" title={`Data postării: ${currentJob.postedAt || currentJob.postedDateAgo}`}>
+                    <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+                    {formatDateTime(currentJob.postedAt) !== 'Nespecificat' ? formatDateTime(currentJob.postedAt) : currentJob.postedDateAgo}
                   </span>
+                  {currentJob.status && (
+                    <>
+                      <span>•</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                        currentJob.status === 'ACTIVE' 
+                          ? 'bg-emerald-100 text-emerald-950 border border-emerald-300' 
+                          : 'bg-gray-100 text-gray-700 border border-gray-300'
+                      }`}>
+                        {currentJob.status === 'ACTIVE' ? 'Activ' : 'Expirat / Arhivat'}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -256,6 +314,73 @@ export default function JobDetailModal({
                 {currentJob.applicantCountText || 'Estimare Normală'}
               </p>
             </div>
+          </div>
+
+          {/* SECȚIUNE PIPELINE DE AUDIT & ISTORIC MODIFICĂRI */}
+          <div className="bg-gray-50 border border-gray-200 rounded-3xl p-4 sm:p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-indigo-600" />
+                <span className="text-xs font-black uppercase tracking-wider text-gray-900">
+                  Audit Lifecycle & Istoric Modificări
+                </span>
+                {currentJob.contentHash && (
+                  <span className="text-[10px] font-mono bg-white text-gray-500 border border-gray-200 px-2 py-0.5 rounded-md hidden sm:inline" title={`SHA-256: ${currentJob.contentHash}`}>
+                    Hash: {currentJob.contentHash.substring(0, 10)}...
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={fetchChanges}
+                className="text-xs font-extrabold text-indigo-700 hover:text-indigo-950 bg-white border border-indigo-200 hover:bg-indigo-50 px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              >
+                <GitCommit className="w-3.5 h-3.5" />
+                <span>{showChanges ? 'Ascunde Istoric' : 'Vezi Istoric Modificări'}</span>
+              </button>
+            </div>
+
+            {showChanges && (
+              <div className="pt-2 border-t border-gray-200/80 space-y-2">
+                {loadingChanges ? (
+                  <div className="py-4 text-center text-xs font-semibold text-gray-500 animate-pulse">
+                    Se încarcă istoricul din baza de date...
+                  </div>
+                ) : jobChanges.length === 0 ? (
+                  <div className="py-3 text-center text-xs text-gray-500 font-medium bg-white rounded-xl border border-gray-100">
+                    Niciun eveniment de modificare înregistrat încă (Job în starea inițială CREATED).
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {jobChanges.map((change) => (
+                      <div 
+                        key={change.id || Math.random()}
+                        className="bg-white border border-gray-200 p-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-2xs"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${
+                            change.changeType === 'CREATED' ? 'bg-emerald-100 text-emerald-950 border border-emerald-300' :
+                            change.changeType === 'CONTENT_UPDATED' ? 'bg-blue-100 text-blue-950 border border-blue-300' :
+                            change.changeType === 'REACTIVATED' ? 'bg-amber-100 text-amber-950 border border-amber-300' :
+                            change.changeType === 'EXPIRED' ? 'bg-rose-100 text-rose-950 border border-rose-300' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {change.changeType}
+                          </span>
+                          <span className="font-semibold text-gray-700">
+                            {change.details || 'Modificare detectată în pipeline'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px] text-gray-400 font-medium shrink-0">
+                          <Clock className="w-3 h-3 text-gray-400" />
+                          <span>{formatDateTime(change.changedAt)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* SECȚIUNE ANALIZĂ ATS COMPARATIVĂ (SKILLS BIFATE VS LIPSĂ) */}

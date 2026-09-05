@@ -48,7 +48,9 @@ import {
   AlertCircle,
   FileText,
   Check,
-  Calendar
+  Calendar,
+  History,
+  GitCommit
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 
@@ -67,10 +69,16 @@ export default function JobSearchPage({
   const [selectedPlatforms, setSelectedPlatforms] = useState([]); // Array de platforme selectate (gol = Toate)
   const [selectedRoleCategories, setSelectedRoleCategories] = useState([]); // Array de roluri selectate (gol = Toate)
   const [selectedDatePosted, setSelectedDatePosted] = useState('ALL'); // ALL, 1, 3, 7, 14, 30 zile
+  const [selectedStatus, setSelectedStatus] = useState('ACTIVE'); // ACTIVE, EXPIRED, ALL
   const [selectedWorkModel, setSelectedWorkModel] = useState('ALL');
   const [selectedLevel, setSelectedLevel] = useState('ALL');
   const [selectedCompetitiveness, setSelectedCompetitiveness] = useState('ALL');
   const [sortBy, setSortBy] = useState('MATCH_AND_RECENCY'); 
+
+  // Audit History state
+  const [auditJobForChanges, setAuditJobForChanges] = useState(null);
+  const [jobChangesList, setJobChangesList] = useState([]);
+  const [loadingChanges, setLoadingChanges] = useState(false); 
   
   // Dropdown-uri deschise
   const [isPlatformDropdownOpen, setIsPlatformDropdownOpen] = useState(false);
@@ -156,6 +164,59 @@ export default function JobSearchPage({
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const formatExactDate = (postedAt, fallbackDaysAgo) => {
+    if (postedAt) {
+      try {
+        const d = new Date(postedAt);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleDateString('ro-RO', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+      } catch {
+        // fallback to days ago
+      }
+    }
+    if (fallbackDaysAgo !== null && fallbackDaysAgo !== undefined) {
+      if (fallbackDaysAgo === 0) return 'Astăzi';
+      if (fallbackDaysAgo === 1) return 'Ieri';
+      return `Acum ${fallbackDaysAgo} zile`;
+    }
+    return 'Recent';
+  };
+
+  const formatDateTime = (dtStr) => {
+    if (!dtStr) return 'Nespecificat';
+    try {
+      const d = new Date(dtStr);
+      if (isNaN(d.getTime())) return dtStr;
+      return d.toLocaleString('ro-RO', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dtStr;
+    }
+  };
+
+  const handleOpenAuditModal = async (job) => {
+    setAuditJobForChanges(job);
+    setLoadingChanges(true);
+    setJobChangesList([]);
+    try {
+      const res = await fetch(`/api/v1/jobs/${job.id}/changes`);
+      if (res.ok) {
+        const data = await res.json();
+        setJobChangesList(data);
+      }
+    } catch (err) {
+      console.warn('Eroare la preluarea istoricului de modificări:', err);
+    } finally {
+      setLoadingChanges(false);
+    }
   };
 
   // 14 PLATFORME REALE CU ICONIȚE ȘI CONTOARE PERMANENTE (FĂRĂ EMOTICOANE)
@@ -274,6 +335,8 @@ export default function JobSearchPage({
       if (selectedLevel && selectedLevel !== 'ALL') params.append('level', selectedLevel);
       if (selectedWorkModel && selectedWorkModel !== 'ALL') params.append('workModel', selectedWorkModel);
       if (selectedDatePosted && selectedDatePosted !== 'ALL') params.append('datePosted', selectedDatePosted);
+      if (selectedStatus && selectedStatus !== 'ALL') params.append('status', selectedStatus);
+      else if (selectedStatus === 'ALL') params.append('status', 'ALL');
       if (sortBy) params.append('sortBy', sortBy);
       params.append('userId', activeUserId);
 
@@ -316,6 +379,7 @@ export default function JobSearchPage({
     setSelectedPlatforms([]);
     setSelectedRoleCategories([]);
     setSelectedDatePosted('ALL');
+    setSelectedStatus('ACTIVE');
     setSelectedWorkModel('ALL');
     setSelectedLevel('ALL');
     setSelectedCompetitiveness('ALL');
@@ -330,11 +394,12 @@ export default function JobSearchPage({
     if (selectedPlatforms.length > 0) count += selectedPlatforms.length;
     if (selectedRoleCategories.length > 0) count += selectedRoleCategories.length;
     if (selectedDatePosted !== 'ALL') count++;
+    if (selectedStatus !== 'ACTIVE') count++;
     if (selectedWorkModel !== 'ALL') count++;
     if (selectedLevel !== 'ALL') count++;
     if (selectedCompetitiveness !== 'ALL') count++;
     return count;
-  }, [keyword, location, selectedPlatforms, selectedRoleCategories, selectedDatePosted, selectedWorkModel, selectedLevel, selectedCompetitiveness]);
+  }, [keyword, location, selectedPlatforms, selectedRoleCategories, selectedDatePosted, selectedStatus, selectedWorkModel, selectedLevel, selectedCompetitiveness]);
 
   useEffect(() => {
     fetchGlobalStats();
@@ -352,6 +417,7 @@ export default function JobSearchPage({
     selectedPlatforms, 
     selectedRoleCategories, 
     selectedDatePosted,
+    selectedStatus,
     selectedWorkModel, 
     selectedLevel, 
     sortBy
@@ -420,6 +486,11 @@ export default function JobSearchPage({
   const filteredAndSortedJobs = useMemo(() => {
     let result = [...jobs];
 
+    // Filtru status (ACTIVE / EXPIRED / ALL) pe client
+    if (selectedStatus !== 'ALL') {
+      result = result.filter(j => (j.status || 'ACTIVE') === selectedStatus);
+    }
+
     // Filtru competitivitate pe client
     if (selectedCompetitiveness !== 'ALL') {
       result = result.filter(j => (j.competitiveness || 'MEDIUM') === selectedCompetitiveness);
@@ -434,12 +505,21 @@ export default function JobSearchPage({
     }
 
     result.sort((a, b) => {
+      if (sortBy === 'POSTED_AT_DESC') {
+        const dateA = a.postedAt ? new Date(a.postedAt).getTime() : 0;
+        const dateB = b.postedAt ? new Date(b.postedAt).getTime() : 0;
+        if (dateA !== dateB) return dateB - dateA;
+        return (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
+      }
       if (sortBy === 'MATCH_SCORE') {
         const diff = b.atsMatchScore - a.atsMatchScore;
         if (diff !== 0) return diff;
         return (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
       }
       if (sortBy === 'NEWEST') {
+        const dateA = a.postedAt ? new Date(a.postedAt).getTime() : 0;
+        const dateB = b.postedAt ? new Date(b.postedAt).getTime() : 0;
+        if (dateA !== 0 && dateB !== 0 && dateA !== dateB) return dateB - dateA;
         const diff = (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
         if (diff !== 0) return diff;
         return b.atsMatchScore - a.atsMatchScore;
@@ -476,7 +556,7 @@ export default function JobSearchPage({
     });
 
     return result;
-  }, [jobs, selectedCompetitiveness, selectedDatePosted, sortBy]);
+  }, [jobs, selectedCompetitiveness, selectedDatePosted, selectedStatus, sortBy]);
 
   // Paginare
   const totalJobs = filteredAndSortedJobs.length;
@@ -833,7 +913,7 @@ export default function JobSearchPage({
         </form>
 
         {/* GRID FILTRE AVANSATE: MULTI-SELECT DROPDOWNS & SELECTOARE PROFESIONALE */}
-        <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+        <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
           
           {/* 1. DROPDOWN MULTI-SELECT PENTRU PLATFORME */}
           <div className="relative" ref={platformDropdownRef}>
@@ -1110,6 +1190,23 @@ export default function JobSearchPage({
             </select>
           </div>
 
+          {/* 7. STATUS JOB & LIFECYCLE (ACTIVE / EXPIRED / TOATE) */}
+          <div>
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-gray-500" />
+              <span>Status Job</span>
+            </label>
+            <select
+              value={selectedStatus}
+              onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
+              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
+            >
+              <option value="ACTIVE">Doar Active (Recente)</option>
+              <option value="EXPIRED">Expirate / Inactive</option>
+              <option value="ALL">Toate Statusurile</option>
+            </select>
+          </div>
+
         </div>
 
         {/* BARA DE SORTARE PROFESIONALĂ (FĂRĂ EMOTICOANE) */}
@@ -1128,8 +1225,9 @@ export default function JobSearchPage({
               className="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-950 font-black rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 cursor-pointer shadow-2xs"
             >
               <option value="MATCH_AND_RECENCY">Recomandate (Scor ATS & Recență)</option>
+              <option value="POSTED_AT_DESC">Dată Exactă Postare (Cele mai noi)</option>
               <option value="MATCH_SCORE">Scor ATS Maxim</option>
-              <option value="NEWEST">Cele Mai Noi</option>
+              <option value="NEWEST">Cele Mai Noi (Zile)</option>
               <option value="SALARY_DESC">Salariu Descrescător</option>
               <option value="LOW_COMPETITION">Competiție Redusă Prioritar</option>
               <option value="JUNIOR_FIRST">Juniori & Stagii Prioritar</option>
@@ -1226,6 +1324,15 @@ export default function JobSearchPage({
                 </button>
               </span>
             )}
+
+            {selectedStatus !== 'ACTIVE' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                <span>Status: <strong>{selectedStatus === 'EXPIRED' ? 'Expirate / Inactive' : 'Toate Statusurile'}</strong></span>
+                <button onClick={() => setSelectedStatus('ACTIVE')} className="hover:text-rose-600 cursor-pointer p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
           </div>
 
           <button
@@ -1317,12 +1424,19 @@ export default function JobSearchPage({
               >
                 <div className="space-y-3.5">
                   
-                  {/* TOP HEADER: PLATFORMĂ & SCOR MATCH DINAMIC */}
+                  {/* TOP HEADER: PLATFORMĂ, STATUS & SCOR MATCH DINAMIC */}
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 ${platformBadge.bg}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${platformBadge.dot}`}></span>
-                      {platformBadge.label}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 ${platformBadge.bg}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${platformBadge.dot}`}></span>
+                        {platformBadge.label}
+                      </span>
+                      {job.status === 'EXPIRED' && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-800 border border-rose-200">
+                          Expirat
+                        </span>
+                      )}
+                    </div>
 
                     <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black border ${
                       job.atsMatchScore >= 80 
@@ -1394,14 +1508,17 @@ export default function JobSearchPage({
                     )}
                   </div>
 
-                  {/* SALARIU & DATA POSTĂRII */}
+                  {/* SALARIU & DATA EXACTĂ POSTĂRII */}
                   <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-100 text-gray-600 font-medium">
                     <span className="font-extrabold text-gray-900">
                       {job.salaryRange}
                     </span>
-                    <span className="flex items-center gap-1 text-gray-500 text-[11px]">
-                      <Clock className="w-3 h-3 text-gray-400" />
-                      {job.postedDateAgo}
+                    <span 
+                      className="flex items-center gap-1 text-gray-500 text-[11px]"
+                      title={job.postedAt ? `Publicat la: ${new Date(job.postedAt).toLocaleString('ro-RO')}` : undefined}
+                    >
+                      <Calendar className="w-3 h-3 text-gray-400" />
+                      {formatExactDate(job.postedAt, job.postedDaysAgo)}
                     </span>
                   </div>
 
@@ -1429,14 +1546,24 @@ export default function JobSearchPage({
                     )}
                   </div>
 
-                  {/* BUTON: VEZI FIȘA COMPLETĂ */}
-                  <button
-                    onClick={() => setSelectedJobForDetails(job)}
-                    className="w-full py-2.5 px-3 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border border-indigo-200/80 shadow-2xs"
-                  >
-                    <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Vezi Fișa Completă & Cerințe</span>
-                  </button>
+                  {/* BUTOANE: VEZI FIȘA COMPLETĂ & AUDIT MODIFICĂRI */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedJobForDetails(job)}
+                      className="flex-1 py-2.5 px-3 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border border-indigo-200/80 shadow-2xs"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Vezi Fișa Completă</span>
+                    </button>
+                    <button
+                      onClick={() => handleOpenAuditModal(job)}
+                      className="py-2.5 px-2.5 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-indigo-600 rounded-2xl text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer border border-gray-200 shadow-2xs"
+                      title="Istoric modificări & audit pipeline"
+                    >
+                      <History className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline text-[11px]">Istoric</span>
+                    </button>
+                  </div>
 
                 </div>
 
@@ -1569,6 +1696,152 @@ export default function JobSearchPage({
           isSaving={savingJobId === selectedJobForDetails.id}
           activeUserId={activeUserId}
         />
+      )}
+
+      {/* MODAL AUDIT LIFECYCLE & ISTORIC MODIFICĂRI */}
+      {auditJobForChanges && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white border border-gray-200 rounded-3xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-gray-950">
+                    Istoric & Audit Pipeline
+                  </h3>
+                  <p className="text-xs text-gray-500 font-medium">
+                    Monitorizare modificări de conținut & ciclu de viață
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAuditJobForChanges(null)}
+                className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-5 overflow-y-auto space-y-4 flex-1 text-xs">
+              {/* Job Info Summary */}
+              <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-200 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-extrabold text-sm text-gray-950">
+                      {auditJobForChanges.jobTitle}
+                    </div>
+                    <div className="text-xs font-semibold text-gray-600 flex items-center gap-1.5 mt-0.5">
+                      <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                      <span>{auditJobForChanges.companyName}</span>
+                      <span>•</span>
+                      <span>{auditJobForChanges.sourcePlatform}</span>
+                    </div>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold border shrink-0 ${
+                    auditJobForChanges.status === 'ACTIVE'
+                      ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                      : 'bg-rose-50 text-rose-900 border-rose-300'
+                  }`}>
+                    {auditJobForChanges.status === 'ACTIVE' ? 'Activ' : 'Expirat / Inactiv'}
+                  </span>
+                </div>
+
+                {/* Content Hash & Timestamps */}
+                <div className="pt-2 border-t border-gray-200/80 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                  <div>
+                    <span className="text-gray-500 font-semibold block">Data Reală Publicare:</span>
+                    <span className="font-bold text-gray-900 flex items-center gap-1 mt-0.5">
+                      <Calendar className="w-3 h-3 text-gray-400" />
+                      {formatDateTime(auditJobForChanges.postedAt)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 font-semibold block">Ultima Verificare (Crawl):</span>
+                    <span className="font-bold text-gray-900 flex items-center gap-1 mt-0.5">
+                      <Clock className="w-3 h-3 text-gray-400" />
+                      {formatDateTime(auditJobForChanges.lastSeenAt || auditJobForChanges.firstSeenAt)}
+                    </span>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-gray-500 font-semibold block">Content Hash (SHA-256):</span>
+                    <code className="font-mono text-[10px] bg-white px-2 py-1 rounded-lg border border-gray-200 block truncate mt-0.5 text-gray-800 select-all">
+                      {auditJobForChanges.contentHash || 'Neindexat'}
+                    </code>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline of Changes */}
+              <div className="space-y-2">
+                <div className="font-bold text-xs uppercase tracking-wider text-gray-600 flex items-center gap-1.5">
+                  <GitCommit className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Jurnal Modificări Înregistrate ({jobChangesList.length})</span>
+                </div>
+
+                {loadingChanges ? (
+                  <div className="py-8 text-center text-gray-500 space-y-2">
+                    <RefreshCw className="w-5 h-5 animate-spin mx-auto text-indigo-600" />
+                    <p className="font-medium">Se încarcă jurnalul de modificări...</p>
+                  </div>
+                ) : jobChangesList.length === 0 ? (
+                  <div className="p-4 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-center text-gray-500 space-y-1">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
+                    <p className="font-bold text-gray-800">Nicio modificare ulterioară</p>
+                    <p className="text-[11px]">
+                      Jobul a fost indexat inițial și conținutul nu a suferit modificări între crawl-uri.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+                    {jobChangesList.map((ch, idx) => {
+                      const typeConfig = {
+                        CREATED: { label: 'Descoperit & Indexat', bg: 'bg-emerald-50 text-emerald-900 border-emerald-300', dot: 'bg-emerald-500' },
+                        CONTENT_UPDATED: { label: 'Conținut Modificat', bg: 'bg-blue-50 text-blue-900 border-blue-300', dot: 'bg-blue-500' },
+                        EXPIRED: { label: 'Marcat ca Expirat', bg: 'bg-rose-50 text-rose-900 border-rose-300', dot: 'bg-rose-500' },
+                        REACTIVATED: { label: 'Reactivat la Recrawling', bg: 'bg-amber-50 text-amber-900 border-amber-300', dot: 'bg-amber-500' }
+                      }[ch.changeType] || { label: ch.changeType, bg: 'bg-gray-100 text-gray-800 border-gray-200', dot: 'bg-gray-400' };
+
+                      return (
+                        <div key={ch.id || idx} className="relative pl-7 flex items-start justify-between gap-3 group">
+                          <div className={`absolute left-2.5 top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white ring-1 ring-gray-300 ${typeConfig.dot}`}></div>
+                          <div className="flex-1 bg-white p-2.5 rounded-xl border border-gray-200/80 shadow-2xs space-y-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${typeConfig.bg}`}>
+                                {typeConfig.label}
+                              </span>
+                              <span className="text-[10px] text-gray-500 font-medium">
+                                {formatDateTime(ch.changedAt)}
+                              </span>
+                            </div>
+                            {ch.newHash && (
+                              <div className="font-mono text-[9px] text-gray-500 truncate" title={`Hash nou: ${ch.newHash}`}>
+                                Hash: {ch.newHash.substring(0, 16)}...
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex justify-end">
+              <button
+                onClick={() => setAuditJobForChanges(null)}
+                className="px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Închide
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

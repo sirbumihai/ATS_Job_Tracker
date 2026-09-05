@@ -1,5 +1,7 @@
 package com.jobtracker.ats.dto;
 
+import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
 
 public record UnifiedJobListingDto(
@@ -10,7 +12,7 @@ public record UnifiedJobListingDto(
     String location,
     String workModel, // "REMOTE", "HYBRID", "ONSITE"
     String experienceLevel, // "INTERNSHIP", "JUNIOR", "MID", "SENIOR"
-    String sourcePlatform, // "LINKEDIN", "STAGIIPEBUNE", "JUNIORS_RO", "EJOBS", "UNDELUCRAM", "GREENHOUSE", "ASHBY", "SMARTRECRUITERS", "REMOTIVE", "ARBEITNOW"
+    String sourcePlatform, // "LINKEDIN", "STAGIIPEBUNE", "JUNIORS_RO", "EJOBS", "UNDELUCRAM", etc.
     String directApplyUrl,
     String rawDescription,
     String salaryRange,
@@ -20,7 +22,48 @@ public record UnifiedJobListingDto(
     String postedDateAgo,
     double atsMatchScore,
     String competitiveness, // "LOW", "MEDIUM", "HIGH"
-    String competitivenessLabel, // "🟢 Șansă Mare (Sub 25 Aplicanți)", "🟡 Competiție Medie", "🔴 Competiție Mare (100+ Aplicanți)"
-    String applicantCountText, // "Peste 100 de aplicanți", "Sub 25 de candidați (Early Applicant)", "50-100 candidați"
-    int postedDaysAgo // 0 for today, 1 for yesterday, 7 for 1 week, etc. for sorting
-) {}
+    String competitivenessLabel,
+    String applicantCountText,
+    int postedDaysAgo,
+    String externalId,
+    String contentHash,
+    OffsetDateTime postedAt,
+    OffsetDateTime firstSeenAt,
+    OffsetDateTime lastSeenAt,
+    String status // "ACTIVE", "EXPIRED"
+) {
+    // Constructor de compatibilitate retroactivă pentru apelurile cu 20 de argumente
+    public UnifiedJobListingDto(
+        String id,
+        String jobTitle,
+        String companyName,
+        String companyLogoUrl,
+        String location,
+        String workModel,
+        String experienceLevel,
+        String sourcePlatform,
+        String directApplyUrl,
+        String rawDescription,
+        String salaryRange,
+        List<String> skillsRequired,
+        List<String> matchingSkills,
+        List<String> missingSkills,
+        String postedDateAgo,
+        double atsMatchScore,
+        String competitiveness,
+        String competitivenessLabel,
+        String applicantCountText,
+        int postedDaysAgo
+    ) {
+        this(
+            id, jobTitle, companyName, companyLogoUrl, location, workModel,
+            experienceLevel, sourcePlatform, directApplyUrl, rawDescription,
+            salaryRange, skillsRequired, matchingSkills, missingSkills,
+            postedDateAgo, atsMatchScore, competitiveness, competitivenessLabel,
+            applicantCountText, postedDaysAgo,
+            id, null, 
+            OffsetDateTime.now().minusDays(Math.max(0, postedDaysAgo)),
+            OffsetDateTime.now(), OffsetDateTime.now(), "ACTIVE"
+        );
+    }
+}
