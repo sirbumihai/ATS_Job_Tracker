@@ -61,7 +61,7 @@ public class JobSearchAggregatorService {
     /**
      * ACTUALIZARE AUTOMATĂ ÎN FUNDAL O DATĂ PE ORĂ (EVERY 60 MINUTES)
      */
-    @Scheduled(fixedRate = 3600000)
+    @Scheduled(fixedRate = 3600000, initialDelay = 3600000)
     public void scheduledHourlyJobRefresh() {
         log.info("[JOB CRAWLER] Rulare automata orara de sincronizare a joburilor...");
         refreshLiveJobs();
@@ -123,35 +123,78 @@ public class JobSearchAggregatorService {
     /**
      * 1. LINKEDIN ROMÂNIA EXTINS: DETECTARE REALĂ A APLICANȚILOR & COMPETIȚIEI
      */
+    private static final List<String> LINKEDIN_USER_AGENTS = List.of(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/123.0.0.0 Safari/537.36"
+    );
+
+    /**
+     * 1. LINKEDIN ROMÂNIA EXTINS: DETECTARE REALĂ A APLICANȚILOR & COMPETIȚIEI (MULTI-PAGE & TOATE SPECIALIZĂRILE)
+     */
     private void scrapeLinkedInExpanded(List<UnifiedJobListingDto> list, Set<String> seenDedupKeys) {
         Map<String, String> searchTiers = new LinkedHashMap<>();
         
-        // INTERNSHIPS
+        // 1. INTERNSHIPS & STAGII (f_E=1)
         searchTiers.put("Software Intern Romania", "f_E=1");
         searchTiers.put("Java Intern Romania", "f_E=1");
+        searchTiers.put("Python Intern Romania", "f_E=1");
         searchTiers.put("Internship IT Romania", "f_E=1");
         searchTiers.put("Data Analyst Intern Romania", "f_E=1");
+        searchTiers.put("QA Intern Romania", "f_E=1");
+        searchTiers.put("DevOps Intern Romania", "f_E=1");
+        searchTiers.put("Cyber Security Intern Romania", "f_E=1");
+        searchTiers.put("Web Developer Intern Romania", "f_E=1");
+        searchTiers.put("Stagiu IT Romania", "f_E=1");
 
-        // JUNIOR / ENTRY LEVEL
+        // 2. JUNIOR / ENTRY LEVEL (f_E=2 - TOATE SPECIALIZĂRILE IT)
         searchTiers.put("Junior Java Developer Romania", "f_E=2");
+        searchTiers.put("Junior Python Developer Romania", "f_E=2");
+        searchTiers.put("Junior C++ Developer Romania", "f_E=2");
+        searchTiers.put("Junior Embedded Romania", "f_E=2");
         searchTiers.put("Junior Backend Developer Romania", "f_E=2");
         searchTiers.put("Junior Full Stack Developer Romania", "f_E=2");
         searchTiers.put("Junior Software Engineer Romania", "f_E=2");
         searchTiers.put("Junior Frontend Developer Romania", "f_E=2");
+        searchTiers.put("Junior React Developer Romania", "f_E=2");
+        searchTiers.put("Junior Angular Developer Romania", "f_E=2");
         searchTiers.put("Junior QA Automation Romania", "f_E=2");
         searchTiers.put("Junior DevOps Engineer Romania", "f_E=2");
+        searchTiers.put("Junior Cloud Engineer Romania", "f_E=2");
         searchTiers.put("Junior Data Analyst Romania", "f_E=2");
+        searchTiers.put("Junior Data Engineer Romania", "f_E=2");
+        searchTiers.put("Junior Machine Learning Romania", "f_E=2");
+        searchTiers.put("Junior AI Engineer Romania", "f_E=2");
+        searchTiers.put("Junior Android Developer Romania", "f_E=2");
+        searchTiers.put("Junior iOS Developer Romania", "f_E=2");
+        searchTiers.put("Junior Mobile Developer Romania", "f_E=2");
+        searchTiers.put("Junior Game Developer Romania", "f_E=2");
         searchTiers.put("Junior IT Support Romania", "f_E=2");
+        searchTiers.put("Junior Helpdesk Romania", "f_E=2");
         searchTiers.put("Junior Business Analyst Romania", "f_E=2");
         searchTiers.put("Junior Cyber Security Romania", "f_E=2");
         searchTiers.put("Junior System Administrator Romania", "f_E=2");
+        searchTiers.put("Junior Network Engineer Romania", "f_E=2");
+        searchTiers.put("Junior SQL Database Romania", "f_E=2");
+        searchTiers.put("Junior UI UX Designer Romania", "f_E=2");
+        searchTiers.put("Graduate Software Engineer Romania", "f_E=2");
+        searchTiers.put("Trainee Software Engineer Romania", "f_E=2");
 
-        // MIDDLE
+        // 3. MIDDLE (f_E=3)
         searchTiers.put("Java Developer Romania", "f_E=3");
+        searchTiers.put("Python Developer Romania", "f_E=3");
         searchTiers.put("Backend Engineer Romania", "f_E=3");
         searchTiers.put("Full Stack Developer Romania", "f_E=3");
+        searchTiers.put("Frontend Developer Romania", "f_E=3");
+        searchTiers.put("React Developer Romania", "f_E=3");
         searchTiers.put("DevOps Engineer Romania", "f_E=3");
+        searchTiers.put("Cloud Engineer Romania", "f_E=3");
         searchTiers.put("Data Engineer Romania", "f_E=3");
+        searchTiers.put("Data Analyst Romania", "f_E=3");
+        searchTiers.put("C++ Developer Romania", "f_E=3");
+        searchTiers.put("Embedded Software Romania", "f_E=3");
+        searchTiers.put("QA Automation Engineer Romania", "f_E=3");
         searchTiers.put("Technical Support Engineer Romania", "f_E=3");
         searchTiers.put("Business Analyst IT Romania", "f_E=3");
         searchTiers.put("Cyber Security Analyst Romania", "f_E=3");
@@ -160,132 +203,173 @@ public class JobSearchAggregatorService {
         searchTiers.put("SAP Consultant Romania", "f_E=3");
         searchTiers.put("UI UX Designer Romania", "f_E=3");
 
-        // SENIOR / LEAD
+        // 4. SENIOR / LEAD (f_E=4)
         searchTiers.put("Senior Java Developer Romania", "f_E=4");
+        searchTiers.put("Senior Python Developer Romania", "f_E=4");
         searchTiers.put("Senior Backend Engineer Romania", "f_E=4");
+        searchTiers.put("Senior Full Stack Developer Romania", "f_E=4");
         searchTiers.put("Lead Software Engineer Romania", "f_E=4");
+        searchTiers.put("Senior DevOps Engineer Romania", "f_E=4");
+        searchTiers.put("Senior Data Engineer Romania", "f_E=4");
+        searchTiers.put("Senior QA Automation Romania", "f_E=4");
         searchTiers.put("Senior Cyber Security Romania", "f_E=4");
         searchTiers.put("IT Project Manager Romania", "f_E=4");
+        searchTiers.put("Software Architect Romania", "f_E=4");
 
         Set<String> seenJobUrls = new HashSet<>();
+        int queryIdx = 0;
 
         for (Map.Entry<String, String> entry : searchTiers.entrySet()) {
             String query = entry.getKey();
             String expFilter = entry.getValue();
-            try {
-                String queryUrl = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=" 
-                        + query.replace(" ", "+") + "&location=Romania&f_TPR=r2592000&" + expFilter + "&start=0";
+            boolean isJuniorOrIntern = expFilter.contains("f_E=1") || expFilter.contains("f_E=2");
+            // Juniori & Interni sunt paginați până la 50 rezultate (3 pagini: 0, 25, 50), Mid/Senior până la 25
+            int[] offsets = isJuniorOrIntern ? new int[]{0, 25, 50} : new int[]{0, 25};
 
-                Document doc = Jsoup.connect(queryUrl)
-                        .userAgent(BROWSER_USER_AGENT)
-                        .header("Accept-Language", "en-US,en;q=0.9")
-                        .timeout(10000)
-                        .get();
+            for (int offset : offsets) {
+                try {
+                    String encodedQuery = java.net.URLEncoder.encode(query, java.nio.charset.StandardCharsets.UTF_8);
+                    String queryUrl = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=" 
+                            + encodedQuery + "&location=Romania&f_TPR=r2592000&" + expFilter + "&start=" + offset;
 
-                Elements cards = doc.select("li div.base-card");
-                for (Element card : cards) {
-                    Element linkEl = card.selectFirst("a.base-card__full-link");
-                    if (linkEl == null) continue;
+                    String ua = LINKEDIN_USER_AGENTS.get((queryIdx + offset) % LINKEDIN_USER_AGENTS.size());
 
-                    String directUrl = linkEl.attr("href");
-                    if (directUrl == null || directUrl.isEmpty()) continue;
-                    
-                    // Curățare URL LinkedIn de parametri lungi de tracking
-                    String cleanUrl = directUrl.contains("?") ? directUrl.split("\\?")[0] : directUrl;
-                    if (seenJobUrls.contains(cleanUrl)) continue;
-                    seenJobUrls.add(cleanUrl);
+                    Document doc = Jsoup.connect(queryUrl)
+                            .userAgent(ua)
+                            .header("Accept-Language", "en-US,en;q=0.9")
+                            .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                            .timeout(10000)
+                            .get();
 
-                    Element titleEl = card.selectFirst(".base-search-card__title");
-                    Element compEl = card.selectFirst(".base-search-card__subtitle");
-                    Element locEl = card.selectFirst(".job-search-card__location");
-                    Element dateEl = card.selectFirst("time.job-search-card__listdate");
-                    Element logoEl = card.selectFirst("img.artdeco-entity-image");
-                    Element benefitEl = card.selectFirst(".job-posting-benefits__text");
-
-                    String title = titleEl != null ? titleEl.text().trim() : query;
-                    String company = compEl != null ? compEl.text().trim() : "Tech Company";
-                    String location = locEl != null ? locEl.text().trim() : "Bucharest, Romania";
-                    String postedDate = dateEl != null ? dateEl.text().trim() : "Postat recent";
-                    String benefitText = benefitEl != null ? benefitEl.text().trim().toLowerCase() : "";
-
-                    String logoUrl = logoEl != null && logoEl.hasAttr("data-delayed-url") ? 
-                            logoEl.attr("data-delayed-url") : 
-                            "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80";
-
-                    // DETECTARE PRECISĂ A NIVELULUI PE BAZA TITLULUI (PRIORITATE REALĂ)
-                    String level = determineExperienceLevel(title, null);
-                    if (level.equals("MID") && expFilter.contains("f_E=1") && (title.toLowerCase().contains("intern") || title.toLowerCase().contains("stagiu") || title.toLowerCase().contains("trainee") || title.toLowerCase().contains("student"))) {
-                        level = "INTERNSHIP";
-                    } else if (level.equals("MID") && expFilter.contains("f_E=4") && (title.toLowerCase().contains("senior") || title.toLowerCase().contains("lead") || title.toLowerCase().contains("principal"))) {
-                        level = "SENIOR";
+                    Elements cards = doc.select("li div.base-card");
+                    if (cards.isEmpty()) {
+                        break; // Nu mai există pagini pentru această căutare
                     }
 
-                    int daysAgo = parseDaysAgo(postedDate);
+                    for (Element card : cards) {
+                        Element linkEl = card.selectFirst("a.base-card__full-link");
+                        if (linkEl == null) continue;
 
-                    // EVALUARE CORECTĂ A COMPETITIVITĂȚII ȘI NUMĂRULUI DE APLICANȚI
-                    boolean isEarlyApplicant = benefitText.contains("early applicant") 
-                            || benefitText.contains("primii 25");
+                        String directUrl = linkEl.attr("href");
+                        if (directUrl == null || directUrl.isEmpty()) continue;
+                        
+                        // Curățare URL LinkedIn de parametri lungi de tracking
+                        String cleanUrl = directUrl.contains("?") ? directUrl.split("\\?")[0] : directUrl;
+                        if (seenJobUrls.contains(cleanUrl)) continue;
+                        seenJobUrls.add(cleanUrl);
 
-                    String compLevel;
-                    String compLabel;
-                    String applicantCountText;
+                        Element titleEl = card.selectFirst(".base-search-card__title");
+                        Element compEl = card.selectFirst(".base-search-card__subtitle");
+                        Element locEl = card.selectFirst(".job-search-card__location");
+                        Element dateEl = card.selectFirst("time.job-search-card__listdate");
+                        Element logoEl = card.selectFirst("img.artdeco-entity-image");
+                        Element benefitEl = card.selectFirst(".job-posting-benefits__text");
 
-                    if (isEarlyApplicant) {
-                        compLevel = "LOW";
-                        compLabel = "Șansă Mare";
-                        applicantCountText = "Sub 25 de candidați";
-                    } else {
-                        // Pe LinkedIn România în IT, postările atrag masiv aplicanți dacă nu au tag-ul "Early Applicant"
-                        if (daysAgo >= 3 || postedDate.toLowerCase().contains("week") || postedDate.toLowerCase().contains("month")) {
-                            compLevel = "HIGH";
-                            compLabel = "Competiție Ridicată";
-                            applicantCountText = "Peste 100 de aplicanți";
-                        } else if (daysAgo >= 1 || isMajorTechBrand(company) || level.equals("JUNIOR") || level.equals("INTERNSHIP")) {
-                            compLevel = "HIGH";
-                            compLabel = "Competiție Ridicată";
-                            applicantCountText = "50-100+ de aplicanți";
-                        } else {
-                            compLevel = "MEDIUM";
-                            compLabel = "Competiție Medie";
-                            applicantCountText = "25-50 de candidați";
+                        String title = titleEl != null ? titleEl.text().trim() : query;
+                        String company = compEl != null ? compEl.text().trim() : "Tech Company";
+                        String location = locEl != null ? locEl.text().trim() : "Bucharest, Romania";
+                        String postedDate = dateEl != null ? dateEl.text().trim() : "Postat recent";
+                        String benefitText = benefitEl != null ? benefitEl.text().trim().toLowerCase() : "";
+
+                        String logoUrl = logoEl != null && logoEl.hasAttr("data-delayed-url") ? 
+                                logoEl.attr("data-delayed-url") : 
+                                "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80";
+
+                        // DETECTARE PRECISĂ A NIVELULUI PE BAZA TITLULUI (PRIORITATE REALĂ)
+                        String level = determineExperienceLevel(title, null);
+                        if (level.equals("MID") && expFilter.contains("f_E=1") && (title.toLowerCase().contains("intern") || title.toLowerCase().contains("stagiu") || title.toLowerCase().contains("trainee") || title.toLowerCase().contains("student"))) {
+                            level = "INTERNSHIP";
+                        } else if (level.equals("MID") && expFilter.contains("f_E=4") && (title.toLowerCase().contains("senior") || title.toLowerCase().contains("lead") || title.toLowerCase().contains("principal"))) {
+                            level = "SENIOR";
                         }
+
+                        int daysAgo = parseDaysAgo(postedDate);
+
+                        // EVALUARE CORECTĂ A COMPETITIVITĂȚII ȘI NUMĂRULUI DE APLICANȚI
+                        boolean isEarlyApplicant = benefitText.contains("early applicant") 
+                                || benefitText.contains("primii 25");
+
+                        String compLevel;
+                        String compLabel;
+                        String applicantCountText;
+
+                        if (isEarlyApplicant) {
+                            compLevel = "LOW";
+                            compLabel = "Șansă Mare";
+                            applicantCountText = "Sub 25 de candidați";
+                        } else {
+                            // Pe LinkedIn România în IT, postările atrag masiv aplicanți dacă nu au tag-ul "Early Applicant"
+                            if (daysAgo >= 3 || postedDate.toLowerCase().contains("week") || postedDate.toLowerCase().contains("month")) {
+                                compLevel = "HIGH";
+                                compLabel = "Competiție Ridicată";
+                                applicantCountText = "Peste 100 de aplicanți";
+                            } else if (daysAgo >= 1 || isMajorTechBrand(company) || level.equals("JUNIOR") || level.equals("INTERNSHIP")) {
+                                compLevel = "HIGH";
+                                compLabel = "Competiție Ridicată";
+                                applicantCountText = "50-100+ de aplicanți";
+                            } else {
+                                compLevel = "MEDIUM";
+                                compLabel = "Competiție Medie";
+                                applicantCountText = "25-50 de candidați";
+                            }
+                        }
+
+                        List<String> skills = extractSkillsFromTitle(title);
+
+                        String desc = "Poziție activă de " + title + " la " + company + " (" + location + "). " +
+                                "Nivel identificat: " + level + ". Competențe asociate: " + String.join(", ", skills) + ". " +
+                                (benefitText.isEmpty() ? "Aplicare directă securizată pe platforma oficială LinkedIn România." : "Beneficii evidențiate: " + benefitText + ". Aplicare directă pe LinkedIn.");
+
+                        String dedupKey = normalizeForDedup(title) + "::" + normalizeForDedup(company);
+                        if (!seenDedupKeys.add(dedupKey)) continue;
+
+                        list.add(new UnifiedJobListingDto(
+                                "li-live-" + UUID.randomUUID().toString().substring(0, 8),
+                                title,
+                                company,
+                                logoUrl,
+                                location,
+                                location.toLowerCase().contains("remote") ? "REMOTE" : "HYBRID",
+                                level,
+                                "LINKEDIN",
+                                cleanUrl,
+                                desc,
+                                "Pachet Salarial Standard LinkedIn",
+                                skills,
+                                Collections.emptyList(),
+                                Collections.emptyList(),
+                                postedDate,
+                                97.0,
+                                compLevel,
+                                compLabel,
+                                applicantCountText,
+                                daysAgo
+                        ));
                     }
 
-                    List<String> skills = extractSkillsFromTitle(title);
+                    // Dacă pagina a avut sub 6 rezultate, am atins finalul
+                    if (cards.size() < 6) {
+                        break;
+                    }
 
-                    String desc = "Poziție activă de " + title + " la " + company + " (" + location + "). " +
-                            "Nivel identificat: " + level + ". Competențe asociate: " + String.join(", ", skills) + ". " +
-                            (benefitText.isEmpty() ? "Aplicare directă securizată pe platforma oficială LinkedIn România." : "Beneficii evidențiate: " + benefitText + ". Aplicare directă pe LinkedIn.");
+                    try {
+                        Thread.sleep(150);
+                    } catch (InterruptedException ignored) {}
 
-                    String dedupKey = normalizeForDedup(title) + "::" + normalizeForDedup(company);
-                    if (!seenDedupKeys.add(dedupKey)) continue;
-
-                    list.add(new UnifiedJobListingDto(
-                            "li-live-" + UUID.randomUUID().toString().substring(0, 8),
-                            title,
-                            company,
-                            logoUrl,
-                            location,
-                            location.toLowerCase().contains("remote") ? "REMOTE" : "HYBRID",
-                            level,
-                            "LINKEDIN",
-                            cleanUrl,
-                            desc,
-                            "Pachet Salarial Standard LinkedIn",
-                            skills,
-                            Collections.emptyList(),
-                            Collections.emptyList(),
-                            postedDate,
-                            97.0,
-                            compLevel,
-                            compLabel,
-                            applicantCountText,
-                            daysAgo
-                    ));
+                } catch (org.jsoup.HttpStatusException hse) {
+                    if (hse.getStatusCode() == 429) {
+                        log.warn("[JOB CRAWLER] LinkedIn rate limit (429) pentru {} (offset={}), temporizare 1.5s", query, offset);
+                        try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
+                    } else {
+                        log.warn("[JOB CRAWLER] LinkedIn scrape fallback pentru {} (offset={}): {}", query, offset, hse.getMessage());
+                    }
+                    break;
+                } catch (Exception e) {
+                    log.warn("[JOB CRAWLER] LinkedIn scrape fallback pentru {} (offset={}): {}", query, offset, e.getMessage());
+                    break;
                 }
-            } catch (Exception e) {
-                log.warn("[JOB CRAWLER] LinkedIn scrape fallback pentru {}: {}", query, e.getMessage());
             }
+            queryIdx++;
         }
         log.info("[JOB CRAWLER] LinkedIn România Extins: {} joburi reale preluate.", seenJobUrls.size());
     }
