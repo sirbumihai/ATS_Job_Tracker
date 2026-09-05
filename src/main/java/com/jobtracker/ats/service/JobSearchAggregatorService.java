@@ -149,6 +149,9 @@ public class JobSearchAggregatorService {
         searchTiers.put("Stagiu IT Romania", "f_E=1");
 
         // 2. JUNIOR / ENTRY LEVEL (f_E=2 - TOATE SPECIALIZĂRILE IT)
+        searchTiers.put("Junior Software Engineer Romania", "f_E=2");
+        searchTiers.put("Junior IT Romania", "f_E=2");
+        searchTiers.put("Junior Developer Romania", "f_E=2");
         searchTiers.put("Junior Java Developer Romania", "f_E=2");
         searchTiers.put("Junior Python Developer Romania", "f_E=2");
         searchTiers.put("Junior C++ Developer Romania", "f_E=2");
@@ -223,16 +226,18 @@ public class JobSearchAggregatorService {
             String query = entry.getKey();
             String expFilter = entry.getValue();
             boolean isJuniorOrIntern = expFilter.contains("f_E=1") || expFilter.contains("f_E=2");
-            // Juniori & Interni sunt paginați până la 50 rezultate (3 pagini: 0, 25, 50), Mid/Senior până la 25
-            int[] offsets = isJuniorOrIntern ? new int[]{0, 25, 50} : new int[]{0, 25};
+            int offset = 0;
+            int consecutiveZeroNew = 0;
+            // Paginare dinamică completă: parcurge TOATE paginile existente (start=0, 25, 50, 75, 100...)
+            int maxPagesPerQuery = isJuniorOrIntern ? 40 : 25;
 
-            for (int offset : offsets) {
+            while (true) {
                 try {
                     String encodedQuery = java.net.URLEncoder.encode(query, java.nio.charset.StandardCharsets.UTF_8);
                     String queryUrl = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=" 
                             + encodedQuery + "&location=Romania&f_TPR=r2592000&" + expFilter + "&start=" + offset;
 
-                    String ua = LINKEDIN_USER_AGENTS.get((queryIdx + offset) % LINKEDIN_USER_AGENTS.size());
+                    String ua = LINKEDIN_USER_AGENTS.get((queryIdx + (offset / 25)) % LINKEDIN_USER_AGENTS.size());
 
                     Document doc = Jsoup.connect(queryUrl)
                             .userAgent(ua)
@@ -246,6 +251,7 @@ public class JobSearchAggregatorService {
                         break; // Nu mai există pagini pentru această căutare
                     }
 
+                    int newJobsThisPage = 0;
                     for (Element card : cards) {
                         Element linkEl = card.selectFirst("a.base-card__full-link");
                         if (linkEl == null) continue;
@@ -257,6 +263,7 @@ public class JobSearchAggregatorService {
                         String cleanUrl = directUrl.contains("?") ? directUrl.split("\\?")[0] : directUrl;
                         if (seenJobUrls.contains(cleanUrl)) continue;
                         seenJobUrls.add(cleanUrl);
+                        newJobsThisPage++;
 
                         Element titleEl = card.selectFirst(".base-search-card__title");
                         Element compEl = card.selectFirst(".base-search-card__subtitle");
@@ -347,8 +354,23 @@ public class JobSearchAggregatorService {
                         ));
                     }
 
-                    // Dacă pagina a avut sub 6 rezultate, am atins finalul
-                    if (cards.size() < 6) {
+                    // Dacă pagina a avut sub 5 rezultate, am atins ultima pagină oficială
+                    if (cards.size() < 5) {
+                        break;
+                    }
+
+                    // Dacă două pagini consecutive aduc 0 joburi noi (toate fiind deja cunoscute), trecem la următorul query
+                    if (newJobsThisPage == 0) {
+                        consecutiveZeroNew++;
+                        if (consecutiveZeroNew >= 2) {
+                            break;
+                        }
+                    } else {
+                        consecutiveZeroNew = 0;
+                    }
+
+                    offset += 25;
+                    if (offset >= maxPagesPerQuery * 25) {
                         break;
                     }
 
@@ -358,8 +380,8 @@ public class JobSearchAggregatorService {
 
                 } catch (org.jsoup.HttpStatusException hse) {
                     if (hse.getStatusCode() == 429) {
-                        log.warn("[JOB CRAWLER] LinkedIn rate limit (429) pentru {} (offset={}), temporizare 1.5s", query, offset);
-                        try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
+                        log.warn("[JOB CRAWLER] LinkedIn rate limit (429) pentru {} (offset={}), temporizare 2s", query, offset);
+                        try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
                     } else {
                         log.warn("[JOB CRAWLER] LinkedIn scrape fallback pentru {} (offset={}): {}", query, offset, hse.getMessage());
                     }
