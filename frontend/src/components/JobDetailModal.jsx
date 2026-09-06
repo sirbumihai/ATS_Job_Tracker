@@ -94,7 +94,9 @@ export default function JobDetailModal({
     // Dacă jobul e de pe LinkedIn și descrierea e scurtă, preluăm detaliile extinse
     if (job.sourcePlatform === 'LINKEDIN' && (!job.rawDescription || job.rawDescription.length < 350)) {
       setLoadingDetails(true);
-      fetch(`/api/v1/jobs/${job.id}/details`)
+      fetch(`/api/v1/jobs/${job.id}/details`, {
+        headers: activeUserId ? { 'X-User-Id': activeUserId } : {}
+      })
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (data && data.rawDescription) {
@@ -108,7 +110,7 @@ export default function JobDetailModal({
     }
 
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [job]);
+  }, [job, activeUserId]);
 
   if (!job) return null;
 
@@ -253,13 +255,13 @@ export default function JobDetailModal({
 
             {/* SCOR ATS MATCH MARE */}
             <div className={`shrink-0 flex items-center gap-2 px-4 py-3 rounded-2xl border self-start ${
-              currentJob.atsMatchScore >= 80 
+              currentJob.atsMatchScore >= 75 
                 ? 'bg-emerald-50 text-emerald-950 border-emerald-300 shadow-sm shadow-emerald-50' 
-                : currentJob.atsMatchScore >= 50 
+                : currentJob.atsMatchScore >= 45 
                 ? 'bg-amber-50 text-amber-950 border-amber-300 shadow-sm shadow-amber-50' 
-                : 'bg-rose-50 text-rose-950 border-rose-300'
+                : 'bg-rose-50 text-rose-950 border-rose-300 shadow-sm shadow-rose-50'
             }`}>
-              <Sparkles className={`w-5 h-5 ${currentJob.atsMatchScore >= 80 ? 'text-emerald-600' : 'text-amber-600'}`} />
+              <Sparkles className={`w-5 h-5 ${currentJob.atsMatchScore >= 75 ? 'text-emerald-600' : currentJob.atsMatchScore >= 45 ? 'text-amber-600' : 'text-rose-600'}`} />
               <div>
                 <div className="text-lg font-black leading-tight">
                   {currentJob.atsMatchScore.toFixed(1)}% Match
@@ -391,7 +393,7 @@ export default function JobDetailModal({
                 Analiză ATS de Compatibilitate cu Profilul Tău
               </h3>
               <span className="text-[11px] font-bold text-indigo-700">
-                65% Skills + 35% Nivel Experiență
+                50% Competențe Tehnice + 50% Nivel de Experiență (cu Penalizare Strictă Senioritate)
               </span>
             </div>
 
@@ -427,15 +429,15 @@ export default function JobDetailModal({
               <span className="font-black text-gray-900">Evaluare Nivel: </span>
               {currentJob.experienceLevel === 'JUNIOR' || currentJob.experienceLevel === 'INTERNSHIP' ? (
                 <span className="text-emerald-800 font-bold">
-                  Poziția este ideală pentru debut de carieră (0-1 ani experiență). Șanse maxime de selecție la interviu!
+                  Poziția este ideală pentru debut de carieră (0-1 ani experiență). Șanse maxime de selecție la interviu! Fără penalizare de vechime.
                 </span>
               ) : currentJob.experienceLevel === 'MID' ? (
                 <span className="text-amber-800 font-bold">
-                  Poziția solicită 2-4 ani de experiență. Scorul ATS a fost ajustat cu penalizare moderată.
+                  Penalizare majoră de nivel: Poziția solicită 2-4 ani de experiență comercială demonstrabilă. Profilul de Junior este penalizat sever din cauza deficitului de vechime cerut de angajator (plafon maxim de compatibilitate aplicat).
                 </span>
               ) : (
                 <span className="text-rose-800 font-bold">
-                  Poziție de Senioritate Ridicată (5+ ani / Lead). Scorul ATS a fost penalizat substanțial din cauza cerințelor de vechime.
+                  Incompatibilitate critică de senioritate: Poziție de nivel Senior / Lead (5+ ani). Sistemele automate ATS descalifică de regulă profilurile fără vechime comercială solidă (scor penalizat drastic).
                 </span>
               )}
             </div>

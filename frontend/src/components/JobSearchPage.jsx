@@ -1439,13 +1439,13 @@ export default function JobSearchPage({
                     </div>
 
                     <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black border ${
-                      job.atsMatchScore >= 80 
+                      job.atsMatchScore >= 75 
                         ? 'bg-emerald-50 text-emerald-900 border-emerald-300' 
-                        : job.atsMatchScore >= 50 
+                        : job.atsMatchScore >= 45 
                         ? 'bg-amber-50 text-amber-900 border-amber-300' 
                         : 'bg-rose-50 text-rose-900 border-rose-300'
                     }`}>
-                      <Sparkles className={`w-3 h-3 ${job.atsMatchScore >= 80 ? 'text-emerald-600' : 'text-amber-600'}`} />
+                      <Sparkles className={`w-3 h-3 ${job.atsMatchScore >= 75 ? 'text-emerald-600' : job.atsMatchScore >= 45 ? 'text-amber-600' : 'text-rose-600'}`} />
                       <span>{job.atsMatchScore.toFixed(1)}% Match</span>
                     </div>
                   </div>

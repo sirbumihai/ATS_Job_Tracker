@@ -71,8 +71,13 @@ public class JobSearchController {
     }
 
     @GetMapping("/{id}/details")
-    public ResponseEntity<UnifiedJobListingDto> getJobDetails(@PathVariable String id) {
-        UnifiedJobListingDto details = jobSearchAggregatorService.getJobDetails(id);
+    public ResponseEntity<UnifiedJobListingDto> getJobDetails(
+            @PathVariable String id,
+            @RequestHeader(value = "X-User-Id", required = false) UUID headerUserId,
+            @RequestParam(required = false) UUID userId
+    ) {
+        UUID activeUserId = headerUserId != null ? headerUserId : userId;
+        UnifiedJobListingDto details = jobSearchAggregatorService.getJobDetails(id, activeUserId);
         if (details == null) {
             return ResponseEntity.notFound().build();
         }

@@ -2224,27 +2224,204 @@ public class JobSearchAggregatorService {
         return capitalize(cleaned);
     }
 
-    private List<String> extractSkillsFromTitle(String title) {
-        String t = title.toLowerCase();
+    public record AtsMatchResult(
+            double finalScore,
+            List<String> matchingSkills,
+            List<String> missingSkills,
+            double skillScore,
+            double experienceScore
+    ) {}
+
+    /**
+     * EVALUARE REALISTĂ ATS CU PENALIZARE STRICTĂ PENTRU JUNIORI LA ROLURI CU EXPERIENȚĂ:
+     * - INTERNSHIP: 100% scor experiență, fără penalizare (rol dedicat debutului).
+     * - JUNIOR: 95% scor experiență, fără penalizare (rol optim pentru 0-2 ani).
+     * - MID-LEVEL: 15% scor experiență, multiplicator penalizare 0.55x, plafon max 48% (deficit critic 2-4 ani).
+     * - SENIOR / LEAD / ARCHITECT: 0% scor experiență, multiplicator penalizare 0.30x, plafon max 25% (descalificare ATS).
+     */
+    public AtsMatchResult evaluateAtsMatch(
+            String experienceLevel,
+            List<String> skillsRequired,
+            String cvLower
+    ) {
+        List<String> matching = new ArrayList<>();
+        List<String> missing = new ArrayList<>();
+
+        if (skillsRequired != null && !skillsRequired.isEmpty()) {
+            for (String skill : skillsRequired) {
+                String sLower = skill.toLowerCase().trim();
+                boolean matches = false;
+
+                if (cvLower.contains(sLower)) {
+                    matches = true;
+                } else if (sLower.contains("java") && !sLower.contains("javascript") && cvLower.contains("java")) {
+                    matches = true;
+                } else if (sLower.contains("spring") && cvLower.contains("spring")) {
+                    matches = true;
+                } else if (sLower.contains("sql") && (cvLower.contains("sql") || cvLower.contains("postgres") || cvLower.contains("mysql"))) {
+                    matches = true;
+                } else if (sLower.contains("docker") && cvLower.contains("docker")) {
+                    matches = true;
+                } else if (sLower.contains("git") && cvLower.contains("git")) {
+                    matches = true;
+                } else if (sLower.contains("react") && cvLower.contains("react")) {
+                    matches = true;
+                } else if (sLower.contains("python") && cvLower.contains("python")) {
+                    matches = true;
+                } else if (sLower.contains("junit") && cvLower.contains("junit")) {
+                    matches = true;
+                } else if (sLower.contains("rest") && cvLower.contains("rest")) {
+                    matches = true;
+                } else if (sLower.contains("microservices") && cvLower.contains("microservices")) {
+                    matches = true;
+                }
+
+                if (matches) {
+                    matching.add(skill);
+                } else {
+                    missing.add(skill);
+                }
+            }
+        }
+
+        double skillMatchRatio = (skillsRequired == null || skillsRequired.isEmpty())
+                ? 0.70
+                : ((double) matching.size() / skillsRequired.size());
+        double skillScore = Math.min(100.0, skillMatchRatio * 100.0);
+
+        // EVALUARE EXPERIENȚĂ & PENALIZARE STRICTĂ PENTRU JUNIORI LA ROLURI CU EXPERIENȚĂ
+        String normLevel = experienceLevel != null ? experienceLevel.toUpperCase().trim() : "MID";
+        double experienceScore;
+        double penaltyMultiplier;
+        double maxScoreCap;
+
+        if ("INTERNSHIP".equals(normLevel)) {
+            experienceScore = 100.0;
+            penaltyMultiplier = 1.0;
+            maxScoreCap = 99.0;
+        } else if ("JUNIOR".equals(normLevel)) {
+            experienceScore = 95.0;
+            penaltyMultiplier = 1.0;
+            maxScoreCap = 98.0;
+        } else if ("MID".equals(normLevel)) {
+            // ROLURI MID-LEVEL: Solicită 2-4 ani de experiență comercială.
+            // Pentru un junior fără experiență, deficitul este substanțial.
+            experienceScore = 15.0;
+            penaltyMultiplier = 0.55; // Penalizare de 45% pe scorul brut
+            maxScoreCap = 48.0;       // Niciun rol Mid nu poate depăși 48% pentru un junior fără experiență
+        } else {
+            // SENIOR / LEAD / ARCHITECT / PRINCIPAL (5+ ani)
+            // Incompatibilitate critică; filtrele automate ATS descalifică.
+            experienceScore = 0.0;
+            penaltyMultiplier = 0.30; // Penalizare masivă de 70%
+            maxScoreCap = 25.0;       // Niciun rol Senior nu poate depăși 25% pentru un junior
+        }
+
+        // Pondere realistă: 50% Competențe Tehnice + 50% Nivel de Experiență
+        double baseScore = (skillScore * 0.50) + (experienceScore * 0.50);
+
+        // Aplicare multiplicator de penalizare de senioritate
+        double penalizedScore = baseScore * penaltyMultiplier;
+
+        // Dacă nu s-a potrivit nicio abilitate tehnică cerută, penalizare adițională
+        if (matching.isEmpty() && skillsRequired != null && !skillsRequired.isEmpty()) {
+            penalizedScore = Math.min(penalizedScore, 18.0);
+        }
+
+        // Aplicare plafon maxim strict (cap) în funcție de nivelul cerut
+        double finalScore = Math.min(maxScoreCap, Math.max(15.0, Math.round(penalizedScore * 10.0) / 10.0));
+
+        return new AtsMatchResult(finalScore, matching, missing, skillScore, experienceScore);
+    }
+
+    private List<String> extractSkills(String title, String description) {
+        String t = title != null ? title.toLowerCase() : "";
+        String d = description != null ? description.toLowerCase() : "";
+        String combined = t + " " + d;
         List<String> skills = new ArrayList<>();
-        if (t.contains("java")) skills.add("Java");
-        if (t.contains("spring")) skills.add("Spring Boot");
-        if (t.contains("react")) skills.add("React");
-        if (t.contains("typescript") || t.contains("frontend")) skills.add("TypeScript");
-        if (t.contains("python") || t.contains("ai") || t.contains("data")) skills.add("Python");
-        if (t.contains("backend") || t.contains("distributed")) skills.add("Microservices");
-        if (t.contains("security") || t.contains("cyber")) skills.add("Cybersecurity");
-        if (t.contains("devops") || t.contains("sre") || t.contains("cloud")) skills.add("Docker");
-        if (t.contains("qa") || t.contains("test")) skills.add("QA Automation");
-        if (t.contains("support") || t.contains("helpdesk")) skills.add("IT Support");
-        if (t.contains("business analyst") || t.contains("analyst")) skills.add("Business Analysis");
-        if (t.contains("scrum") || t.contains("project manager")) skills.add("Agile / Scrum");
-        if (t.contains("sap") || t.contains("erp") || t.contains("salesforce")) skills.add("ERP / SAP");
-        if (t.contains("ui") || t.contains("ux") || t.contains("design")) skills.add("Figma / UI-UX");
+
+        // AI / ML / Data Science / LLMs
+        if (combined.contains("generative ai") || combined.contains("genai") || combined.contains("llm") || combined.contains("rag") || combined.contains("prompt engineering") || combined.contains("agentic")) {
+            skills.add("LLMs & Generative AI");
+        }
+        if (combined.contains("machine learning") || combined.contains("deep learning") || combined.contains("artificial intelligence") || t.contains("ai ") || t.contains("ai engineer")) {
+            skills.add("Machine Learning");
+        }
+        if (combined.contains("pytorch") || combined.contains("tensorflow")) {
+            skills.add("PyTorch / TensorFlow");
+        }
+        if (combined.contains("nlp") || combined.contains("computer vision")) {
+            skills.add("NLP & Deep Learning");
+        }
+
+        // Programming Languages
+        if (t.contains("java ") || t.contains("java/") || t.contains("java-") || t.endsWith("java") || (d.contains("java") && !d.contains("javascript only") && !combined.contains("javascript"))) {
+            skills.add("Java");
+        }
+        if (combined.contains("python")) skills.add("Python");
+        if (combined.contains("c++") || combined.contains("c/c++") || t.contains("embedded")) skills.add("C++ / Embedded");
+        if (combined.contains("c#") || combined.contains(".net") || combined.contains("dotnet")) skills.add(".NET / C#");
+        if (combined.contains("golang") || t.contains("go dev") || t.contains("go engineer")) skills.add("Go");
+        if (combined.contains("rust")) skills.add("Rust");
+        if (combined.contains("typescript")) skills.add("TypeScript");
+        if (combined.contains("javascript") || combined.contains(" js ")) skills.add("JavaScript");
+        if (combined.contains("kotlin") || t.contains("android")) skills.add("Kotlin / Android");
+        if (combined.contains("swift") || t.contains("ios")) skills.add("Swift / iOS");
+
+        // Frameworks & Libraries
+        if (combined.contains("spring") || combined.contains("spring boot")) skills.add("Spring Boot");
+        if (combined.contains("react")) skills.add("React");
+        if (combined.contains("angular")) skills.add("Angular");
+        if (combined.contains("vue")) skills.add("Vue.js");
+        if (combined.contains("node") || combined.contains("nodejs") || combined.contains("express")) skills.add("Node.js");
+        if (combined.contains("django") || combined.contains("fastapi") || combined.contains("flask")) skills.add("FastAPI / Django");
+
+        // Data & Databases
+        if (combined.contains("sql") || combined.contains("postgres") || combined.contains("mysql") || combined.contains("database")) skills.add("SQL");
+        if (combined.contains("mongodb") || combined.contains("nosql")) skills.add("NoSQL / MongoDB");
+        if (combined.contains("kafka") || combined.contains("rabbitmq")) skills.add("Kafka / Messaging");
+        if (combined.contains("data engineer") || combined.contains("etl") || combined.contains("spark") || combined.contains("databricks")) skills.add("Data Pipelines / ETL");
+
+        // Cloud & DevOps
+        if (combined.contains("docker") || combined.contains("container")) skills.add("Docker");
+        if (combined.contains("kubernetes") || combined.contains("k8s")) skills.add("Kubernetes");
+        if (combined.contains("aws") || combined.contains("azure") || combined.contains("gcp") || combined.contains("cloud")) skills.add("Cloud (AWS/Azure/GCP)");
+        if (combined.contains("ci/cd") || combined.contains("devops") || combined.contains("terraform") || combined.contains("jenkins")) skills.add("DevOps & CI/CD");
+        if (combined.contains("linux") || combined.contains("bash")) skills.add("Linux");
+
+        // Architecture & APIs
+        if (combined.contains("microservices") || combined.contains("distributed")) skills.add("Microservices");
+        if (combined.contains("rest api") || combined.contains("restful") || combined.contains("api development") || combined.contains("apis")) skills.add("REST API");
+        if (combined.contains("git") || combined.contains("github") || combined.contains("gitlab")) skills.add("Git");
+
+        // QA & Testing
+        if (combined.contains("qa ") || combined.contains("testing") || combined.contains("automation") || combined.contains("selenium") || combined.contains("cypress") || combined.contains("junit")) {
+            skills.add("QA & Testing");
+        }
+
+        // Security
+        if (combined.contains("security") || combined.contains("cyber") || combined.contains("oauth")) skills.add("Cybersecurity");
+
+        // PM / BA / Agile
+        if (combined.contains("scrum") || combined.contains("agile")) skills.add("Agile / Scrum");
+        if (combined.contains("business analyst") || combined.contains("product owner")) skills.add("Business Analysis");
+        if (combined.contains("ui/ux") || combined.contains("figma") || combined.contains("product design")) skills.add("UI/UX & Figma");
+        if (combined.contains("sap") || combined.contains("erp") || combined.contains("salesforce")) skills.add("ERP / SAP");
+
+        // Fallback dacă nu s-a identificat nimic
         if (skills.isEmpty()) {
             skills.addAll(List.of("Software Engineering", "Git", "REST API", "SQL"));
         }
+
+        // Limităm la primele 6-7 cele mai relevante abilități pentru a nu aglomera fișa
+        if (skills.size() > 7) {
+            return skills.subList(0, 7);
+        }
         return skills;
+    }
+
+    private List<String> extractSkillsFromTitle(String title) {
+        return extractSkills(title, null);
     }
 
     private String capitalize(String str) {
@@ -2420,49 +2597,8 @@ public class JobSearchAggregatorService {
                 }
             }
 
-            // 7. Calcul Dinamic ATS Match
-            List<String> matching = new ArrayList<>();
-            List<String> missing = new ArrayList<>();
-
-            for (String skill : job.skillsRequired()) {
-                String sLower = skill.toLowerCase();
-                if (cvLower.contains(sLower) || 
-                    (sLower.contains("java") && cvLower.contains("java")) ||
-                    (sLower.contains("spring") && cvLower.contains("spring")) ||
-                    (sLower.contains("sql") && (cvLower.contains("sql") || cvLower.contains("postgres"))) ||
-                    (sLower.contains("docker") && cvLower.contains("docker")) ||
-                    (sLower.contains("git") && cvLower.contains("git")) ||
-                    (sLower.contains("react") && cvLower.contains("react")) ||
-                    (sLower.contains("python") && cvLower.contains("python")) ||
-                    (sLower.contains("junit") && cvLower.contains("junit"))) {
-                    matching.add(skill);
-                } else {
-                    missing.add(skill);
-                }
-            }
-
-            // 8. Calcul Dinamic ATS Match bazat pe Skills + Nivel de Experiență (Realist & Riguros)
-            double skillMatchRatio = job.skillsRequired().isEmpty() ? 0.7 : ((double) matching.size() / job.skillsRequired().size());
-            double skillScore = Math.min(100.0, skillMatchRatio * 100.0);
-
-            // Ponderare experiență: profilul candidatului este Junior / Absolvent (0-1 ani)
-            double experienceScore;
-            if ("INTERNSHIP".equalsIgnoreCase(job.experienceLevel())) {
-                experienceScore = 100.0;
-            } else if ("JUNIOR".equalsIgnoreCase(job.experienceLevel())) {
-                experienceScore = 95.0;
-            } else if ("MID".equalsIgnoreCase(job.experienceLevel())) {
-                experienceScore = 55.0; // Cere 2-4 ani experiență
-            } else {
-                experienceScore = 20.0; // Senior / Lead cere 5+ ani
-            }
-
-            // Pondere: 65% competențe tehnice + 35% potrivire nivel de experiență
-            double rawScore = (skillScore * 0.65) + (experienceScore * 0.35);
-            if (matching.isEmpty() && !job.skillsRequired().isEmpty()) {
-                rawScore = Math.min(rawScore, 30.0);
-            }
-            double calculatedMatchScore = Math.min(99.0, Math.max(15.0, Math.round(rawScore * 10.0) / 10.0));
+            // 7. Calcul Dinamic ATS Match Riguros cu Penalizare Strictă de Senioritate pentru Juniori
+            AtsMatchResult matchRes = evaluateAtsMatch(job.experienceLevel(), job.skillsRequired(), cvLower);
 
             results.add(new UnifiedJobListingDto(
                     job.id(),
@@ -2477,10 +2613,10 @@ public class JobSearchAggregatorService {
                     job.rawDescription(),
                     job.salaryRange(),
                     job.skillsRequired(),
-                    matching,
-                    missing,
+                    matchRes.matchingSkills(),
+                    matchRes.missingSkills(),
                     job.postedDateAgo(),
-                    calculatedMatchScore,
+                    matchRes.finalScore(),
                     job.competitiveness(),
                     job.competitivenessLabel(),
                     job.applicantCountText(),
@@ -2961,6 +3097,10 @@ public class JobSearchAggregatorService {
     }
 
     public UnifiedJobListingDto getJobDetails(String id) {
+        return getJobDetails(id, null);
+    }
+
+    public UnifiedJobListingDto getJobDetails(String id, UUID userId) {
         if (id == null) return null;
         UnifiedJobListingDto job = activeLiveJobsCache.stream()
                 .filter(j -> j.id().equals(id))
@@ -2969,8 +3109,11 @@ public class JobSearchAggregatorService {
 
         if (job == null) return null;
 
+        String cvText = getCandidateCvText(userId);
+        String cvLower = cvText.toLowerCase();
+
         // Dacă e job de pe LinkedIn și descrierea este încă rezumatul scurt, extragem descrierea completă
-        if ("LINKEDIN".equalsIgnoreCase(job.sourcePlatform()) && job.rawDescription().length() < 400) {
+        if ("LINKEDIN".equalsIgnoreCase(job.sourcePlatform()) && (job.rawDescription() == null || job.rawDescription().length() < 400)) {
             try {
                 String applyUrl = job.directApplyUrl();
                 java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d{8,12})").matcher(applyUrl);
@@ -2985,6 +3128,10 @@ public class JobSearchAggregatorService {
                     if (descEl != null) {
                         String fullText = descEl.wholeText().trim();
                         if (!fullText.isEmpty()) {
+                            List<String> newSkills = extractSkills(job.jobTitle(), fullText);
+                            String newLevel = determineExperienceLevel(job.jobTitle(), fullText);
+                            AtsMatchResult ats = evaluateAtsMatch(newLevel, newSkills, cvLower);
+
                             UnifiedJobListingDto updated = new UnifiedJobListingDto(
                                     job.id(),
                                     job.jobTitle(),
@@ -2992,16 +3139,16 @@ public class JobSearchAggregatorService {
                                     job.companyLogoUrl(),
                                     job.location(),
                                     job.workModel(),
-                                    job.experienceLevel(),
+                                    newLevel,
                                     job.sourcePlatform(),
                                     job.directApplyUrl(),
                                     fullText,
                                     job.salaryRange(),
-                                    job.skillsRequired(),
-                                    job.matchingSkills(),
-                                    job.missingSkills(),
+                                    newSkills,
+                                    ats.matchingSkills(),
+                                    ats.missingSkills(),
                                     job.postedDateAgo(),
-                                    job.atsMatchScore(),
+                                    ats.finalScore(),
                                     job.competitiveness(),
                                     job.competitivenessLabel(),
                                     job.applicantCountText(),
@@ -3025,7 +3172,36 @@ public class JobSearchAggregatorService {
                 log.warn("[JOB DETAILS] LinkedIn on-demand full description fallback: {}", e.getMessage());
             }
         }
-        return job;
+
+        AtsMatchResult ats = evaluateAtsMatch(job.experienceLevel(), job.skillsRequired(), cvLower);
+        return new UnifiedJobListingDto(
+                job.id(),
+                job.jobTitle(),
+                job.companyName(),
+                job.companyLogoUrl(),
+                job.location(),
+                job.workModel(),
+                job.experienceLevel(),
+                job.sourcePlatform(),
+                job.directApplyUrl(),
+                job.rawDescription(),
+                job.salaryRange(),
+                job.skillsRequired(),
+                ats.matchingSkills(),
+                ats.missingSkills(),
+                job.postedDateAgo(),
+                ats.finalScore(),
+                job.competitiveness(),
+                job.competitivenessLabel(),
+                job.applicantCountText(),
+                job.postedDaysAgo(),
+                job.externalId(),
+                job.contentHash(),
+                job.postedAt(),
+                job.firstSeenAt(),
+                job.lastSeenAt(),
+                job.status()
+        );
     }
 
     private String getCandidateCvText(UUID userId) {
