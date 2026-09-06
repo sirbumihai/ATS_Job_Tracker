@@ -219,7 +219,7 @@ export default function JobSearchPage({
     }
   };
 
-  // 15 PLATFORME REALE CU ICONIȚE ȘI CONTOARE PERMANENTE (FĂRĂ EMOTICOANE)
+  // 8 PLATFORME REALE CU ICONIȚE ȘI CONTOARE PERMANENTE (FĂRĂ EMOTICOANE)
   const platformsConfig = [
     { id: 'DEVJOB_RO', label: 'DevJob.ro (Tech)', icon: Code2, countKey: 'DEVJOB_RO' },
     { id: 'LINKEDIN', label: 'LinkedIn Jobs', icon: ExternalLink, countKey: 'LINKEDIN' },
@@ -228,14 +228,7 @@ export default function JobSearchPage({
     { id: 'STAGIIPEBUNE', label: 'StagiiPeBune.ro', icon: GraduationCap, countKey: 'STAGIIPEBUNE' },
     { id: 'JUNIORS_RO', label: 'Juniors.ro', icon: Briefcase, countKey: 'JUNIORS_RO' },
     { id: 'UNDELUCRAM', label: 'UndeLucram.ro', icon: Building2, countKey: 'UNDELUCRAM' },
-    { id: 'EJOBS', label: 'eJobs.ro', icon: Layers, countKey: 'EJOBS' },
-    { id: 'EU_TECH', label: 'GermanTechJobs (EU)', icon: Globe, countKey: 'EU_TECH' },
-    { id: 'GREENHOUSE', label: 'Greenhouse ATS', icon: ShieldCheck, countKey: 'GREENHOUSE' },
-    { id: 'ASHBY', label: 'AshbyHQ ATS', icon: Zap, countKey: 'ASHBY' },
-    { id: 'SMARTRECRUITERS', label: 'SmartRecruiters', icon: Building2, countKey: 'SMARTRECRUITERS' },
-    { id: 'REMOTIVE', label: 'Remotive Global', icon: Globe, countKey: 'REMOTIVE' },
-    { id: 'WWR', label: 'WeWorkRemotely', icon: Globe, countKey: 'WWR' },
-    { id: 'ARBEITNOW', label: 'Arbeitnow EU', icon: Cpu, countKey: 'ARBEITNOW' }
+    { id: 'EJOBS', label: 'eJobs.ro', icon: Layers, countKey: 'EJOBS' }
   ];
 
   // 27 SPECIALIZĂRI IT CUPRINZĂTOARE (FĂRĂ EMOTICOANE)
@@ -303,10 +296,10 @@ export default function JobSearchPage({
     { name: 'Oradea', region: 'România (Bihor)' },
     { name: 'Craiova', region: 'România (Oltenia)' },
     { name: 'Remote România', region: 'Lucru la distanță (Companii RO)' },
-    { name: 'Remote Europa', region: 'Lucru la distanță (Companii UE)' },
-    { name: 'Germania', region: 'Europa Tech (GermanTechJobs)' },
-    { name: 'Elveția', region: 'Europa Tech (SwissDevJobs)' },
-    { name: 'Uniunea Europeană', region: 'Tech EU (Arbeitnow & Remotive)' }
+    { name: 'România', region: 'Toate orașele (Național)' },
+    { name: 'Remote', region: 'Telemuncă / WFH' },
+    { name: 'Ploiești', region: 'România (Muntenia)' },
+    { name: 'Constanța', region: 'România (Dobrogea)' }
   ];
 
   const fetchGlobalStats = async () => {
@@ -585,8 +578,6 @@ export default function JobSearchPage({
         return { label: 'BestJobs.eu', bg: 'bg-teal-50 text-teal-950 border-teal-300', dot: 'bg-teal-600' };
       case 'HIPO':
         return { label: 'Hipo.ro Trainee', bg: 'bg-amber-50 text-amber-950 border-amber-300', dot: 'bg-amber-600' };
-      case 'EU_TECH':
-        return { label: 'GermanTechJobs (EU)', bg: 'bg-sky-50 text-sky-950 border-sky-300', dot: 'bg-sky-600' };
       case 'LINKEDIN':
         return { label: 'LinkedIn Jobs', bg: 'bg-blue-50 text-blue-900 border-blue-300', dot: 'bg-blue-600' };
       case 'STAGIIPEBUNE':
@@ -597,18 +588,6 @@ export default function JobSearchPage({
         return { label: 'eJobs.ro', bg: 'bg-orange-50 text-orange-900 border-orange-300', dot: 'bg-orange-600' };
       case 'UNDELUCRAM':
         return { label: 'UndeLucram.ro', bg: 'bg-cyan-50 text-cyan-900 border-cyan-300', dot: 'bg-cyan-600' };
-      case 'GREENHOUSE':
-        return { label: 'Greenhouse ATS', bg: 'bg-purple-50 text-purple-900 border-purple-300', dot: 'bg-purple-600' };
-      case 'ASHBY':
-        return { label: 'AshbyHQ ATS', bg: 'bg-violet-50 text-violet-900 border-violet-300', dot: 'bg-violet-600' };
-      case 'SMARTRECRUITERS':
-        return { label: 'SmartRecruiters', bg: 'bg-teal-50 text-teal-900 border-teal-300', dot: 'bg-teal-600' };
-      case 'REMOTIVE':
-        return { label: 'Remotive Global', bg: 'bg-rose-50 text-rose-900 border-rose-300', dot: 'bg-rose-500' };
-      case 'WWR':
-        return { label: 'WeWorkRemotely', bg: 'bg-emerald-50 text-emerald-950 border-emerald-300', dot: 'bg-emerald-600' };
-      case 'ARBEITNOW':
-        return { label: 'Arbeitnow EU', bg: 'bg-slate-100 text-slate-900 border-slate-300', dot: 'bg-slate-600' };
       default:
         return { label: platform, bg: 'bg-gray-100 text-gray-800 border-gray-300', dot: 'bg-gray-500' };
     }
@@ -754,7 +733,7 @@ export default function JobSearchPage({
               Căutare & Agregator Job-uri Multi-Platformă
             </h2>
             <p className="text-xs sm:text-sm text-gray-600 font-medium max-w-3xl leading-relaxed">
-              Explorează oportunități agregate direct din 15 surse reale verificate: DevJob.ro, LinkedIn, BestJobs.eu, Hipo.ro, StagiiPeBune, Juniors.ro, UndeLucram, eJobs, GermanTechJobs (EU), Greenhouse, Ashby, SmartRecruiters, Remotive, WeWorkRemotely și Arbeitnow.
+              Explorează oportunități agregate direct din 8 surse reale verificate: DevJob.ro, LinkedIn, BestJobs.eu, Hipo.ro, StagiiPeBune, Juniors.ro, UndeLucram și eJobs.
             </p>
           </div>
 

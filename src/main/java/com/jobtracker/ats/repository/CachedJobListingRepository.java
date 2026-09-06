@@ -30,4 +30,9 @@ public interface CachedJobListingRepository extends JpaRepository<CachedJobListi
     List<CachedJobListing> findActiveJobsNotSeenSince(@Param("threshold") OffsetDateTime threshold);
 
     long countByStatus(String status);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query("DELETE FROM CachedJobListing j WHERE UPPER(j.sourcePlatform) IN :platforms")
+    int deleteBySourcePlatformIn(@Param("platforms") java.util.Collection<String> platforms);
 }

@@ -69,11 +69,22 @@ public class JobSearchAggregatorService {
     // Cache dinamic în memorie ce conține sute de joburi 100% reale și verificate
     private final List<UnifiedJobListingDto> activeLiveJobsCache = new CopyOnWriteArrayList<>();
 
+    // Platforme eliminate la cererea utilizatorului (agregare curată exclusiv IT relevant)
+    public static final Set<String> REMOVED_PLATFORMS = Set.of(
+            "GREENHOUSE", "ASHBY", "SMARTRECRUITERS", "REMOTIVE", "ARBEITNOW", "WWR", "EU_TECH", "GERMANTECHJOBS", "SWISSDEVJOBS"
+    );
+
     private static final String BROWSER_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
     @PostConstruct
     public void initializeLiveFeed() {
         log.info("[JOB CRAWLER] Initializare feed din baza de date persistenta PostgreSQL...");
+        try {
+            cachedJobListingRepository.deleteBySourcePlatformIn(REMOVED_PLATFORMS);
+            jobStagingRepository.deleteBySourcePlatformIn(REMOVED_PLATFORMS);
+        } catch (Exception e) {
+            log.warn("[JOB CRAWLER] Curatare platforme eliminate: {}", e.getMessage());
+        }
         int loaded = loadJobsFromDatabase();
         log.info("[JOB CRAWLER] Incarcate instantaneu {} joburi din baza de date in cache.", loaded);
 
@@ -133,29 +144,7 @@ public class JobSearchAggregatorService {
         // 7. EJOBS.RO IT MULTI-PAGE LIVE SCRAPING
         scrapeEjobsItMultiPage(freshList, seenDedupKeys);
 
-        // 8. WE WORK REMOTELY (WWR - Premier Global Remote Programming)
-        scrapeWeWorkRemotely(freshList, seenDedupKeys);
-
-        // 9. GERMANTECHJOBS & SWISSDEVJOBS (Europa Tech - Descrieri Complete RSS)
-        scrapeGermanTechJobs(freshList, seenDedupKeys);
-        scrapeSwissDevJobs(freshList, seenDedupKeys);
-
-        // 10. SMARTRECRUITERS LIVE API
-        fetchSmartRecruiters(freshList, seenDedupKeys);
-
-        // 11. ASHBY LIVE APIS
-        fetchAshbyBoards(freshList, seenDedupKeys);
-
-        // 12. GREENHOUSE LIVE APIS
-        fetchGreenhouseBoards(freshList, seenDedupKeys);
-
-        // 13. REMOTIVE LIVE API (Global Remote)
-        fetchRemotiveJobs(freshList, seenDedupKeys);
-
-        // 14. ARBEITNOW LIVE API (EU Tech)
-        fetchArbeitnowJobs(freshList, seenDedupKeys);
-
-        // 15. BESTJOBS.RO / BESTJOBS.EU IT & TECH MULTI-QUERY SCRAPING
+        // 8. BESTJOBS.RO / BESTJOBS.EU IT & TECH MULTI-QUERY SCRAPING
         scrapeBestJobsIt(freshList, seenDedupKeys);
 
         // Salvare persistență: inserăm joburile noi în PostgreSQL
@@ -243,6 +232,7 @@ public class JobSearchAggregatorService {
             List<CachedJobListing> entities = cachedJobListingRepository.findAllOrderedByRecency();
             if (!entities.isEmpty()) {
                 List<UnifiedJobListingDto> dtos = entities.stream()
+                        .filter(j -> j.getSourcePlatform() != null && !REMOVED_PLATFORMS.contains(j.getSourcePlatform().toUpperCase()))
                         .map(CachedJobListing::toDto)
                         .toList();
                 activeLiveJobsCache.clear();
@@ -2710,6 +2700,11 @@ public class JobSearchAggregatorService {
         Map<String, Double> searchRelevanceMap = new HashMap<>();
 
         for (UnifiedJobListingDto job : activeLiveJobsCache) {
+            // Ignorăm orice job ce aparține platformelor eliminate
+            if (job.sourcePlatform() != null && REMOVED_PLATFORMS.contains(job.sourcePlatform().toUpperCase())) {
+                continue;
+            }
+
             // 0. Filtrare după Status (ACTIVE, EXPIRED sau ALL)
             if (!statusUpper.equals("ALL")) {
                 String jStatus = job.status() != null ? job.status().toUpperCase().trim() : "ACTIVE";
@@ -2759,12 +2754,7 @@ public class JobSearchAggregatorService {
             if (!selectedPlatforms.isEmpty()) {
                 boolean matchesPlat = false;
                 for (String p : selectedPlatforms) {
-                    if (p.equals("DIRECT_ATS")) {
-                        if (List.of("GREENHOUSE", "ASHBY", "SMARTRECRUITERS", "LEVER").contains(job.sourcePlatform())) {
-                            matchesPlat = true;
-                            break;
-                        }
-                    } else if (job.sourcePlatform().equalsIgnoreCase(p)) {
+                    if (job.sourcePlatform().equalsIgnoreCase(p)) {
                         matchesPlat = true;
                         break;
                     }
@@ -3024,8 +3014,7 @@ public class JobSearchAggregatorService {
 
         // 13. Europa / Europe
         if (normQuery.contains("europ") || normQuery.contains("germany") || normQuery.contains("germania") || normQuery.contains("elvetia") || normQuery.contains("switzerland")) {
-            return jLoc.contains("europe") || jLoc.contains("germany") || jLoc.contains("switzerland") || jLoc.contains("berlin") || jLoc.contains("munich") || jLoc.contains("zurich") ||
-                   List.of("eu_tech", "arbeitnow", "remotive", "wwr").contains(jPlatform);
+            return jLoc.contains("europe") || jLoc.contains("germany") || jLoc.contains("switzerland") || jLoc.contains("berlin") || jLoc.contains("munich") || jLoc.contains("zurich");
         }
 
         return false;
