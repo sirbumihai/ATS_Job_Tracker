@@ -219,10 +219,11 @@ export default function JobSearchPage({
     }
   };
 
-  // 14 PLATFORME REALE CU ICONIȚE ȘI CONTOARE PERMANENTE (FĂRĂ EMOTICOANE)
+  // 15 PLATFORME REALE CU ICONIȚE ȘI CONTOARE PERMANENTE (FĂRĂ EMOTICOANE)
   const platformsConfig = [
     { id: 'DEVJOB_RO', label: 'DevJob.ro (Tech)', icon: Code2, countKey: 'DEVJOB_RO' },
     { id: 'LINKEDIN', label: 'LinkedIn Jobs', icon: ExternalLink, countKey: 'LINKEDIN' },
+    { id: 'BESTJOBS', label: 'BestJobs.eu IT', icon: Briefcase, countKey: 'BESTJOBS' },
     { id: 'HIPO', label: 'Hipo.ro Trainee & IT', icon: GraduationCap, countKey: 'HIPO' },
     { id: 'STAGIIPEBUNE', label: 'StagiiPeBune.ro', icon: GraduationCap, countKey: 'STAGIIPEBUNE' },
     { id: 'JUNIORS_RO', label: 'Juniors.ro', icon: Briefcase, countKey: 'JUNIORS_RO' },
@@ -580,6 +581,8 @@ export default function JobSearchPage({
     switch (platform) {
       case 'DEVJOB_RO':
         return { label: 'DevJob.ro', bg: 'bg-emerald-50 text-emerald-950 border-emerald-300', dot: 'bg-emerald-600' };
+      case 'BESTJOBS':
+        return { label: 'BestJobs.eu', bg: 'bg-teal-50 text-teal-950 border-teal-300', dot: 'bg-teal-600' };
       case 'HIPO':
         return { label: 'Hipo.ro Trainee', bg: 'bg-amber-50 text-amber-950 border-amber-300', dot: 'bg-amber-600' };
       case 'EU_TECH':
@@ -751,7 +754,7 @@ export default function JobSearchPage({
               Căutare & Agregator Job-uri Multi-Platformă
             </h2>
             <p className="text-xs sm:text-sm text-gray-600 font-medium max-w-3xl leading-relaxed">
-              Explorează oportunități agregate direct din 14 surse reale verificate: DevJob.ro, LinkedIn, Hipo.ro, StagiiPeBune, Juniors.ro, UndeLucram, eJobs, GermanTechJobs (EU), Greenhouse, Ashby, SmartRecruiters, Remotive, WeWorkRemotely și Arbeitnow.
+              Explorează oportunități agregate direct din 15 surse reale verificate: DevJob.ro, LinkedIn, BestJobs.eu, Hipo.ro, StagiiPeBune, Juniors.ro, UndeLucram, eJobs, GermanTechJobs (EU), Greenhouse, Ashby, SmartRecruiters, Remotive, WeWorkRemotely și Arbeitnow.
             </p>
           </div>
 

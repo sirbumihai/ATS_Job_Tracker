@@ -91,8 +91,9 @@ export default function JobDetailModal({
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    // Dacă jobul e de pe LinkedIn și descrierea e scurtă, preluăm detaliile extinse
-    if (job.sourcePlatform === 'LINKEDIN' && (!job.rawDescription || job.rawDescription.length < 350)) {
+    // Dacă jobul e de pe LinkedIn, Hipo sau BestJobs și descrierea e scurtă, preluăm detaliile extinse
+    const needsDetailsFetch = ['LINKEDIN', 'HIPO', 'BESTJOBS'].includes(job.sourcePlatform) && (!job.rawDescription || job.rawDescription.length < 350);
+    if (needsDetailsFetch) {
       setLoadingDetails(true);
       fetch(`/api/v1/jobs/${job.id}/details`, {
         headers: activeUserId ? { 'X-User-Id': activeUserId } : {}
