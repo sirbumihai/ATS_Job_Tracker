@@ -273,11 +273,33 @@ public class JobSearchAggregatorService {
         try {
             List<CachedJobListing> entities = cachedJobListingRepository.findAllOrderedByRecency();
             if (!entities.isEmpty()) {
-                List<UnifiedJobListingDto> dtos = entities.stream()
-                        .filter(j -> j.getSourcePlatform() != null && !REMOVED_PLATFORMS.contains(j.getSourcePlatform().toUpperCase()))
-                        .filter(j -> isStrictlyItJob(j.getJobTitle()))
-                        .map(CachedJobListing::toDto)
-                        .toList();
+                List<String> nonItIds = new ArrayList<>();
+                List<UnifiedJobListingDto> dtos = new ArrayList<>();
+
+                for (CachedJobListing j : entities) {
+                    if (j.getSourcePlatform() != null && REMOVED_PLATFORMS.contains(j.getSourcePlatform().toUpperCase())) {
+                        nonItIds.add(j.getId());
+                    } else if (!isStrictlyItJob(j.getJobTitle())) {
+                        nonItIds.add(j.getId());
+                    } else {
+                        dtos.add(j.toDto());
+                    }
+                }
+
+                // Curățare automată din PostgreSQL a posturilor vechi non-IT pentru a sincroniza DB cu afișajul
+                if (!nonItIds.isEmpty()) {
+                    try {
+                        int batchSize = 500;
+                        for (int i = 0; i < nonItIds.size(); i += batchSize) {
+                            int end = Math.min(i + batchSize, nonItIds.size());
+                            cachedJobListingRepository.deleteAllByIdInBatch(nonItIds.subList(i, end));
+                        }
+                        log.info("[JOB DATABASE CLEANUP] Curățate {} joburi vechi non-IT din baza de date PostgreSQL.", nonItIds.size());
+                    } catch (Exception e) {
+                        log.warn("[JOB DATABASE CLEANUP] Eroare la curățarea joburilor non-IT: {}", e.getMessage());
+                    }
+                }
+
                 activeLiveJobsCache.clear();
                 activeLiveJobsCache.addAll(dtos);
                 return activeLiveJobsCache.size();
