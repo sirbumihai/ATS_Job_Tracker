@@ -123,22 +123,24 @@ public class ApplicationService {
         Optional<CvProfile> primaryCv = cvProfileRepository.findFirstByUserIdAndIsPrimaryTrue(userId)
                 .or(() -> cvProfileRepository.findFirstByUserIdOrderByUpdatedAtDesc(userId));
 
-        // Actualizeaza dinamic scorurile daca este atasat un CV sau exista CV-ul principal
+        // Actualizeaza dinamic scorurile doar daca nu exista deja un scor valid setat (de ex. din motorul ATS de Job Discovery)
         for (Application app : apps) {
-            if (app.getJobPosting() != null && app.getJobPosting().getRawDescription() != null) {
-                String cvText = null;
-                if (app.getCvProfile() != null) {
-                    cvText = buildCvProfileText(app.getCvProfile());
-                } else if (app.getResume() != null) {
-                    cvText = app.getResume().getRawText();
-                } else if (primaryCv.isPresent()) {
-                    cvText = buildCvProfileText(primaryCv.get());
-                    app.setCvProfile(primaryCv.get());
-                }
+            if (app.getSemanticMatchScore() == null || app.getSemanticMatchScore().compareTo(BigDecimal.ZERO) <= 0) {
+                if (app.getJobPosting() != null && app.getJobPosting().getRawDescription() != null) {
+                    String cvText = null;
+                    if (app.getCvProfile() != null) {
+                        cvText = buildCvProfileText(app.getCvProfile());
+                    } else if (app.getResume() != null) {
+                        cvText = app.getResume().getRawText();
+                    } else if (primaryCv.isPresent()) {
+                        cvText = buildCvProfileText(primaryCv.get());
+                        app.setCvProfile(primaryCv.get());
+                    }
 
-                if (cvText != null && !cvText.isBlank()) {
-                    BigDecimal updatedScore = calculateMatchScoreFromText(app.getJobPosting().getRawDescription(), cvText);
-                    app.setSemanticMatchScore(updatedScore);
+                    if (cvText != null && !cvText.isBlank()) {
+                        BigDecimal updatedScore = calculateMatchScoreFromText(app.getJobPosting().getRawDescription(), cvText);
+                        app.setSemanticMatchScore(updatedScore);
+                    }
                 }
             }
         }

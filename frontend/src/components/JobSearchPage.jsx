@@ -68,8 +68,7 @@ export default function JobSearchPage({
   const [location, setLocation] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState([]); // Array de platforme selectate (gol = Toate)
   const [selectedRoleCategories, setSelectedRoleCategories] = useState([]); // Array de roluri selectate (gol = Toate)
-  const [selectedDatePosted, setSelectedDatePosted] = useState('ALL'); // ALL, 1, 3, 7, 14, 30 zile
-  const [selectedDiscovered, setSelectedDiscovered] = useState('ALL'); // ALL, 24H, 48H, 7D
+  const [selectedDatePosted, setSelectedDatePosted] = useState('ALL'); // ALL, 24H, 48H, 7D, 30D
   const [selectedStatus, setSelectedStatus] = useState('ACTIVE'); // ACTIVE, EXPIRED, ALL
   const [selectedWorkModel, setSelectedWorkModel] = useState('ALL');
   const [selectedLevel, setSelectedLevel] = useState('ALL');
@@ -332,8 +331,10 @@ export default function JobSearchPage({
       }
       if (selectedLevel && selectedLevel !== 'ALL') params.append('level', selectedLevel);
       if (selectedWorkModel && selectedWorkModel !== 'ALL') params.append('workModel', selectedWorkModel);
-      if (selectedDatePosted && selectedDatePosted !== 'ALL') params.append('datePosted', selectedDatePosted);
-      if (selectedDiscovered && selectedDiscovered !== 'ALL') params.append('discovered', selectedDiscovered);
+      if (selectedDatePosted && selectedDatePosted !== 'ALL') {
+        params.append('datePosted', selectedDatePosted);
+        params.append('discovered', selectedDatePosted);
+      }
       if (selectedStatus && selectedStatus !== 'ALL') params.append('status', selectedStatus);
       else if (selectedStatus === 'ALL') params.append('status', 'ALL');
       if (sortBy) params.append('sortBy', sortBy);
@@ -378,7 +379,6 @@ export default function JobSearchPage({
     setSelectedPlatforms([]);
     setSelectedRoleCategories([]);
     setSelectedDatePosted('ALL');
-    setSelectedDiscovered('ALL');
     setSelectedStatus('ACTIVE');
     setSelectedWorkModel('ALL');
     setSelectedLevel('ALL');
@@ -394,13 +394,12 @@ export default function JobSearchPage({
     if (selectedPlatforms.length > 0) count += selectedPlatforms.length;
     if (selectedRoleCategories.length > 0) count += selectedRoleCategories.length;
     if (selectedDatePosted !== 'ALL') count++;
-    if (selectedDiscovered !== 'ALL') count++;
     if (selectedStatus !== 'ACTIVE') count++;
     if (selectedWorkModel !== 'ALL') count++;
     if (selectedLevel !== 'ALL') count++;
     if (selectedCompetitiveness !== 'ALL') count++;
     return count;
-  }, [keyword, location, selectedPlatforms, selectedRoleCategories, selectedDatePosted, selectedDiscovered, selectedStatus, selectedWorkModel, selectedLevel, selectedCompetitiveness]);
+  }, [keyword, location, selectedPlatforms, selectedRoleCategories, selectedDatePosted, selectedStatus, selectedWorkModel, selectedLevel, selectedCompetitiveness]);
 
   useEffect(() => {
     fetchGlobalStats();
@@ -418,7 +417,6 @@ export default function JobSearchPage({
     selectedPlatforms, 
     selectedRoleCategories, 
     selectedDatePosted,
-    selectedDiscovered,
     selectedStatus,
     selectedWorkModel, 
     selectedLevel, 
@@ -498,56 +496,41 @@ export default function JobSearchPage({
       result = result.filter(j => (j.competitiveness || 'MEDIUM') === selectedCompetitiveness);
     }
 
-    // Filtru dată postare pe client pentru sincronizare instantanee
+    // Filtru dată postare unificat pe client (pe baza firstSeenAt și postedAt)
     if (selectedDatePosted !== 'ALL') {
-      const maxDays = parseInt(selectedDatePosted, 10);
-      if (!isNaN(maxDays)) {
-        result = result.filter(j => (j.postedDaysAgo ?? -1) >= 0 && (j.postedDaysAgo ?? 0) <= maxDays);
-      }
-    }
-
-    // Filtru descoperite recent (crawler first seen)
-    if (selectedDiscovered !== 'ALL') {
       const now = Date.now();
-      const cutoffHours = selectedDiscovered === '24H' ? 24 : selectedDiscovered === '48H' ? 48 : selectedDiscovered === '7D' ? 168 : null;
+      const cutoffHours = selectedDatePosted === '24H' || selectedDatePosted === '1' ? 24 :
+                          selectedDatePosted === '48H' || selectedDatePosted === '2' || selectedDatePosted === '3' ? 48 :
+                          selectedDatePosted === '7D' || selectedDatePosted === '7' ? 168 :
+                          selectedDatePosted === '30D' || selectedDatePosted === '30' ? 720 : null;
       if (cutoffHours) {
         result = result.filter(j => {
-          if (!j.firstSeenAt) return false;
-          const seenTime = new Date(j.firstSeenAt).getTime();
-          return (now - seenTime) <= cutoffHours * 3600 * 1000;
+          let ts = null;
+          if (j.firstSeenAt) ts = new Date(j.firstSeenAt).getTime();
+          else if (j.postedAt) ts = new Date(j.postedAt).getTime();
+          if (!ts) return false;
+          return (now - ts) <= cutoffHours * 3600 * 1000;
         });
       }
     }
 
     result.sort((a, b) => {
-      if (sortBy === 'FIRST_SEEN_DESC') {
-        const timeA = a.firstSeenAt ? new Date(a.firstSeenAt).getTime() : 0;
-        const timeB = b.firstSeenAt ? new Date(b.firstSeenAt).getTime() : 0;
+      if (sortBy === 'POSTED_AT_DESC' || sortBy === 'NEWEST' || sortBy === 'FIRST_SEEN_DESC' || sortBy === 'DISCOVERED_NEWEST') {
+        const timeA = Math.max(
+          a.firstSeenAt ? new Date(a.firstSeenAt).getTime() : 0,
+          a.postedAt ? new Date(a.postedAt).getTime() : 0
+        );
+        const timeB = Math.max(
+          b.firstSeenAt ? new Date(b.firstSeenAt).getTime() : 0,
+          b.postedAt ? new Date(b.postedAt).getTime() : 0
+        );
         if (timeA !== timeB) return timeB - timeA;
         return b.atsMatchScore - a.atsMatchScore;
-      }
-      if (sortBy === 'POSTED_AT_DESC') {
-        const dateA = a.postedAt ? new Date(a.postedAt).getTime() : 0;
-        const dateB = b.postedAt ? new Date(b.postedAt).getTime() : 0;
-        if (dateA !== 0 && dateB !== 0 && dateA !== dateB) return dateB - dateA;
-        if (dateA !== 0) return -1;
-        if (dateB !== 0) return 1;
-        return (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
       }
       if (sortBy === 'MATCH_SCORE') {
         const diff = b.atsMatchScore - a.atsMatchScore;
         if (diff !== 0) return diff;
         return (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
-      }
-      if (sortBy === 'NEWEST') {
-        const dateA = a.postedAt ? new Date(a.postedAt).getTime() : 0;
-        const dateB = b.postedAt ? new Date(b.postedAt).getTime() : 0;
-        if (dateA !== 0 && dateB !== 0 && dateA !== dateB) return dateB - dateA;
-        if (dateA !== 0) return -1;
-        if (dateB !== 0) return 1;
-        const diff = (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
-        if (diff !== 0) return diff;
-        return b.atsMatchScore - a.atsMatchScore;
       }
       if (sortBy === 'SALARY_DESC') {
         const salA = parseSalaryForSort(a.salaryRange);
@@ -581,7 +564,7 @@ export default function JobSearchPage({
     });
 
     return result;
-  }, [jobs, selectedCompetitiveness, selectedDatePosted, selectedDiscovered, selectedStatus, sortBy]);
+  }, [jobs, selectedCompetitiveness, selectedDatePosted, selectedStatus, sortBy]);
 
   // Paginare
   const totalJobs = filteredAndSortedJobs.length;
@@ -926,7 +909,7 @@ export default function JobSearchPage({
         </form>
 
         {/* GRID FILTRE AVANSATE: MULTI-SELECT DROPDOWNS & SELECTOARE PROFESIONALE */}
-        <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8 gap-3">
+        <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
           
           {/* 1. DROPDOWN MULTI-SELECT PENTRU PLATFORME */}
           <div className="relative" ref={platformDropdownRef}>
@@ -1128,41 +1111,22 @@ export default function JobSearchPage({
             )}
           </div>
 
-          {/* 3. FILTRU NOU: DATA POSTĂRII */}
+          {/* 3. FILTRU UNIFICAT: DATA POSTĂRII */}
           <div>
             <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-gray-500" />
+              <Calendar className="w-3 h-3 text-indigo-600" />
               <span>Data Postării</span>
             </label>
             <select
               value={selectedDatePosted}
               onChange={(e) => { setSelectedDatePosted(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
-            >
-              <option value="ALL">Oricând</option>
-              <option value="1">Ultimele 24 de ore (1 zi)</option>
-              <option value="3">Ultimele 3 zile</option>
-              <option value="7">Ultimele 7 zile (1 săptămână)</option>
-              <option value="14">Ultimele 14 zile (2 săptămâni)</option>
-              <option value="30">Ultimele 30 de zile (1 lună)</option>
-            </select>
-          </div>
-
-          {/* 3b. FILTRU NOU: JOBURI NOI DESCOPERITE DE CRAWLER */}
-          <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-indigo-600" />
-              <span>Găsite de Crawler</span>
-            </label>
-            <select
-              value={selectedDiscovered}
-              onChange={(e) => { setSelectedDiscovered(e.target.value); setCurrentPage(1); }}
               className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-600 cursor-pointer"
             >
-              <option value="ALL">Toate joburile</option>
-              <option value="24H">Ultimele 24h (Noi)</option>
-              <option value="48H">Ultimele 48h (Recente)</option>
+              <option value="ALL">Toate joburile (Oricând)</option>
+              <option value="24H">Ultimele 24 de ore (Noi)</option>
+              <option value="48H">Ultimele 48 de ore</option>
               <option value="7D">Ultima săptămână (7 zile)</option>
+              <option value="30D">Ultima lună (30 de zile)</option>
             </select>
           </div>
 
@@ -1256,10 +1220,8 @@ export default function JobSearchPage({
               className="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-950 font-black rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 cursor-pointer shadow-2xs"
             >
               <option value="MATCH_AND_RECENCY">Recomandate (Scor ATS & Recență)</option>
-              <option value="FIRST_SEEN_DESC">Descoperite Recent de Crawler</option>
-              <option value="POSTED_AT_DESC">Dată Exactă Postare (Cele mai noi)</option>
+              <option value="POSTED_AT_DESC">Data Postării (Cele mai noi)</option>
               <option value="MATCH_SCORE">Scor ATS Maxim</option>
-              <option value="NEWEST">Cele Mai Noi (Zile)</option>
               <option value="SALARY_DESC">Salariu Descrescător</option>
               <option value="LOW_COMPETITION">Competiție Redusă Prioritar</option>
               <option value="JUNIOR_FIRST">Juniori & Stagii Prioritar</option>
@@ -1322,19 +1284,15 @@ export default function JobSearchPage({
             })}
 
             {selectedDatePosted !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
-                <span>Dată: <strong>Ultimele {selectedDatePosted} zile</strong></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-indigo-50 text-indigo-950 border border-indigo-200 shadow-2xs">
+                <Calendar className="w-3 h-3 text-indigo-600" />
+                <span>Data postării: <strong>{
+                  selectedDatePosted === '24H' ? 'Ultimele 24h' :
+                  selectedDatePosted === '48H' ? 'Ultimele 48h' :
+                  selectedDatePosted === '7D' ? 'Ultima săptămână' :
+                  selectedDatePosted === '30D' ? 'Ultima lună' : selectedDatePosted
+                }</strong></span>
                 <button onClick={() => setSelectedDatePosted('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-
-            {selectedDiscovered !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-indigo-100 text-indigo-950 border border-indigo-200 shadow-2xs">
-                <Sparkles className="w-3 h-3 text-indigo-600" />
-                <span>Găsite: <strong>{selectedDiscovered === '24H' ? 'Ultimele 24h' : selectedDiscovered === '48H' ? 'Ultimele 48h' : 'Ultima săptămână'}</strong></span>
-                <button onClick={() => setSelectedDiscovered('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
                 </button>
               </span>

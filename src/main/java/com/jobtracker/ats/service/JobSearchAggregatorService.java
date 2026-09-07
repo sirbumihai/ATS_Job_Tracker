@@ -2767,12 +2767,23 @@ public class JobSearchAggregatorService {
                 .filter(s -> !s.isEmpty() && !s.equals("ALL"))
                 .collect(Collectors.toSet());
 
-        // Date Posted Filter (ex: 1, 3, 7, 14, 30 zile)
-        int maxDaysFilter = -1;
-        if (datePosted != null && !datePosted.isBlank() && !datePosted.equalsIgnoreCase("ALL")) {
-            try {
-                maxDaysFilter = Integer.parseInt(datePosted.trim());
-            } catch (NumberFormatException ignored) {}
+        // Filtrare Unificată Data Postării (pe baza firstSeenAt / postedAt reale)
+        OffsetDateTime dateCutoff = null;
+        String rawDateParam = (discovered != null && !discovered.equalsIgnoreCase("ALL")) ? discovered : datePosted;
+        if (rawDateParam != null && !rawDateParam.isBlank() && !rawDateParam.equalsIgnoreCase("ALL")) {
+            String dp = rawDateParam.toUpperCase().trim();
+            OffsetDateTime now = OffsetDateTime.now();
+            if (dp.equals("24H") || dp.equals("TODAY") || dp.equals("1")) {
+                dateCutoff = now.minusHours(24);
+            } else if (dp.equals("48H") || dp.equals("2") || dp.equals("3")) {
+                dateCutoff = now.minusHours(48);
+            } else if (dp.equals("7D") || dp.equals("WEEK") || dp.equals("7")) {
+                dateCutoff = now.minusDays(7);
+            } else if (dp.equals("14") || dp.equals("14D")) {
+                dateCutoff = now.minusDays(14);
+            } else if (dp.equals("30") || dp.equals("30D") || dp.equals("MONTH")) {
+                dateCutoff = now.minusDays(30);
+            }
         }
 
         List<UnifiedJobListingDto> results = new ArrayList<>();
@@ -2792,21 +2803,16 @@ public class JobSearchAggregatorService {
                 }
             }
 
-            // 0b. Filtrare după Descoperire Recentă (Crawler First Seen)
-            if (discovered != null && !discovered.isBlank() && !discovered.equalsIgnoreCase("ALL")) {
-                OffsetDateTime now = OffsetDateTime.now();
-                OffsetDateTime discCutoff = null;
-                if (discovered.equalsIgnoreCase("24H") || discovered.equalsIgnoreCase("TODAY")) {
-                    discCutoff = now.minusHours(24);
-                } else if (discovered.equalsIgnoreCase("48H")) {
-                    discCutoff = now.minusHours(48);
-                } else if (discovered.equalsIgnoreCase("7D") || discovered.equalsIgnoreCase("WEEK")) {
-                    discCutoff = now.minusDays(7);
+            // 0b. Filtrare Unificată după Data Postării
+            if (dateCutoff != null) {
+                boolean matchesDate = false;
+                if (job.firstSeenAt() != null && !job.firstSeenAt().isBefore(dateCutoff)) {
+                    matchesDate = true;
+                } else if (job.postedAt() != null && !job.postedAt().isBefore(dateCutoff)) {
+                    matchesDate = true;
                 }
-                if (discCutoff != null) {
-                    if (job.firstSeenAt() == null || job.firstSeenAt().isBefore(discCutoff)) {
-                        continue;
-                    }
+                if (!matchesDate) {
+                    continue;
                 }
             }
 
@@ -2864,13 +2870,6 @@ public class JobSearchAggregatorService {
             // 6. Filtrare Nivel Experiență (JUNIOR, MID, SENIOR, INTERNSHIP)
             if (!lvlUpper.equals("ALL")) {
                 if (!job.experienceLevel().equalsIgnoreCase(lvlUpper)) {
-                    continue;
-                }
-            }
-
-            // 7. Filtrare Data Postării (Ultimele N Zile)
-            if (maxDaysFilter >= 0) {
-                if (job.postedDaysAgo() > maxDaysFilter) {
                     continue;
                 }
             }
@@ -3163,34 +3162,17 @@ public class JobSearchAggregatorService {
                 if (cmp != 0) return cmp;
                 return Integer.compare(a.postedDaysAgo(), b.postedDaysAgo());
             });
-            case "FIRST_SEEN_DESC", "DISCOVERED_NEWEST" -> list.sort((a, b) -> {
-                if (a.firstSeenAt() != null && b.firstSeenAt() != null) {
-                    int cmp = b.firstSeenAt().compareTo(a.firstSeenAt());
-                    if (cmp != 0) return cmp;
-                } else if (a.firstSeenAt() != null) {
-                    return -1;
-                } else if (b.firstSeenAt() != null) {
-                    return 1;
-                }
-                return Double.compare(b.atsMatchScore(), a.atsMatchScore());
-            });
-            case "POSTED_AT_DESC", "NEWEST" -> list.sort((a, b) -> {
-                if (a.postedAt() != null && b.postedAt() != null) {
-                    int cmp = b.postedAt().compareTo(a.postedAt());
-                    if (cmp != 0) return cmp;
-                } else if (a.postedAt() != null) {
-                    return -1;
-                } else if (b.postedAt() != null) {
-                    return 1;
-                }
-                if (a.postedDaysAgo() >= 0 && b.postedDaysAgo() >= 0) {
-                    int cmp = Integer.compare(a.postedDaysAgo(), b.postedDaysAgo());
-                    if (cmp != 0) return cmp;
-                } else if (a.postedDaysAgo() >= 0) {
-                    return -1;
-                } else if (b.postedDaysAgo() >= 0) {
-                    return 1;
-                }
+            case "POSTED_AT_DESC", "NEWEST", "FIRST_SEEN_DESC", "DISCOVERED_NEWEST" -> list.sort((a, b) -> {
+                long timeA = 0;
+                if (a.firstSeenAt() != null) timeA = Math.max(timeA, a.firstSeenAt().toInstant().toEpochMilli());
+                if (a.postedAt() != null) timeA = Math.max(timeA, a.postedAt().toInstant().toEpochMilli());
+
+                long timeB = 0;
+                if (b.firstSeenAt() != null) timeB = Math.max(timeB, b.firstSeenAt().toInstant().toEpochMilli());
+                if (b.postedAt() != null) timeB = Math.max(timeB, b.postedAt().toInstant().toEpochMilli());
+
+                int cmp = Long.compare(timeB, timeA);
+                if (cmp != 0) return cmp;
                 return Double.compare(b.atsMatchScore(), a.atsMatchScore());
             });
             case "SALARY_DESC" -> list.sort((a, b) -> {
@@ -3465,6 +3447,12 @@ public class JobSearchAggregatorService {
         String cvText = getCandidateCvText(userId);
         String cvLower = cvText.toLowerCase();
 
+        // Calcul ATS dinamic conform CV-ului utilizatorului activ (100% sincronizat cu căutarea și Kanban)
+        AtsMatchResult userAts = evaluateAtsMatch(job.experienceLevel(), job.skillsRequired(), cvLower);
+        double finalScore = userAts.finalScore();
+        List<String> matchingSkills = userAts.matchingSkills();
+        List<String> missingSkills = userAts.missingSkills();
+
         // Dacă e job de pe LinkedIn și descrierea este încă rezumatul scurt, extragem descrierea completă
         if ("LINKEDIN".equalsIgnoreCase(job.sourcePlatform()) && (job.rawDescription() == null || job.rawDescription().length() < 400)) {
             try {
@@ -3483,7 +3471,6 @@ public class JobSearchAggregatorService {
                         if (!fullText.isEmpty()) {
                             List<String> newSkills = extractSkills(job.jobTitle(), fullText);
                             String newLevel = determineExperienceLevel(job.jobTitle(), fullText);
-                            AtsMatchResult ats = evaluateAtsMatch(newLevel, newSkills, cvLower);
 
                             UnifiedJobListingDto updated = new UnifiedJobListingDto(
                                     job.id(),
@@ -3497,11 +3484,11 @@ public class JobSearchAggregatorService {
                                     job.directApplyUrl(),
                                     fullText,
                                     job.salaryRange(),
-                                    newSkills,
-                                    ats.matchingSkills(),
-                                    ats.missingSkills(),
+                                    newSkills.isEmpty() ? job.skillsRequired() : newSkills,
+                                    matchingSkills,
+                                    missingSkills,
                                     job.postedDateAgo(),
-                                    ats.finalScore(),
+                                    finalScore,
                                     job.competitiveness(),
                                     job.competitivenessLabel(),
                                     job.applicantCountText(),
@@ -3541,14 +3528,14 @@ public class JobSearchAggregatorService {
                     if (!fullText.isEmpty()) {
                         List<String> newSkills = extractSkills(job.jobTitle(), fullText);
                         String newLevel = determineExperienceLevel(job.jobTitle(), fullText);
-                        AtsMatchResult ats = evaluateAtsMatch(newLevel, newSkills, cvLower);
 
                         UnifiedJobListingDto updated = new UnifiedJobListingDto(
                                 job.id(), job.jobTitle(), job.companyName(), job.companyLogoUrl(),
                                 job.location(), job.workModel(), newLevel, job.sourcePlatform(),
-                                job.directApplyUrl(), fullText, job.salaryRange(), newSkills,
-                                ats.matchingSkills(), ats.missingSkills(), job.postedDateAgo(),
-                                ats.finalScore(), job.competitiveness(), job.competitivenessLabel(),
+                                job.directApplyUrl(), fullText, job.salaryRange(),
+                                newSkills.isEmpty() ? job.skillsRequired() : newSkills,
+                                matchingSkills, missingSkills, job.postedDateAgo(),
+                                finalScore, job.competitiveness(), job.competitivenessLabel(),
                                 job.applicantCountText(), job.postedDaysAgo(), job.externalId(),
                                 job.contentHash(), job.postedAt(), job.firstSeenAt(), job.lastSeenAt(),
                                 job.status()
@@ -3577,14 +3564,14 @@ public class JobSearchAggregatorService {
                     if (!fullText.isEmpty()) {
                         List<String> newSkills = extractSkills(job.jobTitle(), fullText);
                         String newLevel = determineExperienceLevel(job.jobTitle(), fullText);
-                        AtsMatchResult ats = evaluateAtsMatch(newLevel, newSkills, cvLower);
 
                         UnifiedJobListingDto updated = new UnifiedJobListingDto(
                                 job.id(), job.jobTitle(), job.companyName(), job.companyLogoUrl(),
                                 job.location(), job.workModel(), newLevel, job.sourcePlatform(),
-                                job.directApplyUrl(), fullText, job.salaryRange(), newSkills,
-                                ats.matchingSkills(), ats.missingSkills(), job.postedDateAgo(),
-                                ats.finalScore(), job.competitiveness(), job.competitivenessLabel(),
+                                job.directApplyUrl(), fullText, job.salaryRange(),
+                                newSkills.isEmpty() ? job.skillsRequired() : newSkills,
+                                matchingSkills, missingSkills, job.postedDateAgo(),
+                                finalScore, job.competitiveness(), job.competitivenessLabel(),
                                 job.applicantCountText(), job.postedDaysAgo(), job.externalId(),
                                 job.contentHash(), job.postedAt(), job.firstSeenAt(), job.lastSeenAt(),
                                 job.status()
@@ -3599,7 +3586,6 @@ public class JobSearchAggregatorService {
             }
         }
 
-        AtsMatchResult ats = evaluateAtsMatch(job.experienceLevel(), job.skillsRequired(), cvLower);
         return new UnifiedJobListingDto(
                 job.id(),
                 job.jobTitle(),
@@ -3613,10 +3599,10 @@ public class JobSearchAggregatorService {
                 job.rawDescription(),
                 job.salaryRange(),
                 job.skillsRequired(),
-                ats.matchingSkills(),
-                ats.missingSkills(),
+                matchingSkills,
+                missingSkills,
                 job.postedDateAgo(),
-                ats.finalScore(),
+                finalScore,
                 job.competitiveness(),
                 job.competitivenessLabel(),
                 job.applicantCountText(),

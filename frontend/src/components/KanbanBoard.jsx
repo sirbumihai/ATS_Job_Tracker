@@ -359,7 +359,7 @@ export default function KanbanBoard({
                           <div className="flex items-center justify-between text-xs">
                             <span className="flex items-center gap-1 font-bold text-emerald-700 text-[11px]">
                               <Sparkles className="w-3 h-3 text-emerald-600" />
-                              {score.toFixed(2)}% Match
+                              {score.toFixed(1)}% Match
                             </span>
                             <span className="text-[9px] text-gray-400 font-medium">Multi-Criteria AI</span>
                           </div>

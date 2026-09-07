@@ -95,13 +95,23 @@ export default function JobDetailModal({
     const needsDetailsFetch = ['LINKEDIN', 'HIPO', 'BESTJOBS'].includes(job.sourcePlatform) && (!job.rawDescription || job.rawDescription.length < 350);
     if (needsDetailsFetch) {
       setLoadingDetails(true);
-      fetch(`/api/v1/jobs/${job.id}/details`, {
+      const url = activeUserId ? `/api/v1/jobs/${job.id}/details?userId=${activeUserId}` : `/api/v1/jobs/${job.id}/details`;
+      fetch(url, {
         headers: activeUserId ? { 'X-User-Id': activeUserId } : {}
       })
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (data && data.rawDescription) {
-            setDetailedJob(data);
+            // Păstrăm identic scorul ATS și competențele pe care utilizatorul le-a văzut pe card
+            setDetailedJob({
+              ...data,
+              atsMatchScore: (typeof job.atsMatchScore === 'number') ? job.atsMatchScore : data.atsMatchScore,
+              matchingSkills: (job.matchingSkills && job.matchingSkills.length > 0) ? job.matchingSkills : data.matchingSkills,
+              missingSkills: (job.missingSkills && job.missingSkills.length > 0) ? job.missingSkills : data.missingSkills,
+              experienceLevel: job.experienceLevel || data.experienceLevel,
+              workModel: job.workModel || data.workModel,
+              salaryRange: job.salaryRange || data.salaryRange
+            });
           }
         })
         .catch(err => console.warn('Nu s-au putut încărca detaliile extinse:', err))
