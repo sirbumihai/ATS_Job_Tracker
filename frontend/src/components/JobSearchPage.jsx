@@ -101,9 +101,17 @@ export default function JobSearchPage({
   // Statistici globale persistente (platforme & contoare)
   const [globalStats, setGlobalStats] = useState({
     platformCounts: {},
-    summaryStats: { junior: 0, intern: 0, remote: 0, highChance: 0 },
+    summaryStats: { junior: 0, intern: 0, remote: 0, highChance: 0, newlyDiscovered: 0 },
     totalLiveJobs: 0
   });
+
+  // Număr joburi noi identificate la ultima sincronizare
+  const newlyDiscoveredCount = useMemo(() => {
+    if (globalStats.summaryStats?.newlyDiscovered !== undefined && globalStats.summaryStats?.newlyDiscovered > 0) {
+      return globalStats.summaryStats.newlyDiscovered;
+    }
+    return jobs.filter(j => j.newlyDiscovered).length;
+  }, [globalStats, jobs]);
 
   // Persistență jobs salvate în localStorage
   const [savedJobIds, setSavedJobIds] = useState(() => {
@@ -496,8 +504,10 @@ export default function JobSearchPage({
       result = result.filter(j => (j.competitiveness || 'MEDIUM') === selectedCompetitiveness);
     }
 
-    // Filtru dată postare unificat pe client (pe baza firstSeenAt și postedAt)
-    if (selectedDatePosted !== 'ALL') {
+    // Filtru dată postare unificat pe client (pe baza firstSeenAt, postedAt sau NOU GĂSIT)
+    if (selectedDatePosted === 'NEWLY_DISCOVERED') {
+      result = result.filter(j => j.newlyDiscovered === true);
+    } else if (selectedDatePosted !== 'ALL') {
       const now = Date.now();
       const cutoffHours = selectedDatePosted === '24H' || selectedDatePosted === '1' ? 24 :
                           selectedDatePosted === '48H' || selectedDatePosted === '2' || selectedDatePosted === '3' ? 48 :
@@ -751,7 +761,7 @@ export default function JobSearchPage({
             </p>
           </div>
 
-          {/* TIMER DE SINCRONIZARE AUTOMATĂ ORARĂ & BUTON REFRESH */}
+          {/* TIMER DE SINCRONIZARE AUTOMATĂ ORARĂ, BUTON QUICK FILTER NOU GĂSIT & BUTON REFRESH */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 self-start md:self-auto">
             <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-semibold text-gray-700">
               <Clock className="w-4 h-4 text-indigo-600" />
@@ -760,6 +770,31 @@ export default function JobSearchPage({
                 {formatCountdown(secondsUntilSync)}
               </span>
             </div>
+
+            {/* BUTON TOGGLE RAPID: DOAR NOU GĂSIT LA ULTIMA SINCRONIZARE */}
+            <button 
+              type="button"
+              onClick={() => {
+                setSelectedDatePosted(prev => prev === 'NEWLY_DISCOVERED' ? 'ALL' : 'NEWLY_DISCOVERED');
+                setCurrentPage(1);
+              }}
+              className={`px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition cursor-pointer border ${
+                selectedDatePosted === 'NEWLY_DISCOVERED'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-md shadow-indigo-200 font-extrabold'
+                  : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50 hover:text-indigo-900 hover:border-indigo-300 shadow-2xs'
+              }`}
+              title="Afișează doar joburile nou găsite la cea mai recentă sincronizare"
+            >
+              <Sparkles className={`w-3.5 h-3.5 ${selectedDatePosted === 'NEWLY_DISCOVERED' ? 'text-amber-300' : 'text-indigo-600'}`} />
+              <span>Doar NOU GĂSIT</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                selectedDatePosted === 'NEWLY_DISCOVERED' 
+                  ? 'bg-white/25 text-white' 
+                  : 'bg-indigo-100 text-indigo-900'
+              }`}>
+                {newlyDiscoveredCount}
+              </span>
+            </button>
 
             <button 
               onClick={handleSyncLive}
@@ -1123,6 +1158,7 @@ export default function JobSearchPage({
               className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-600 cursor-pointer"
             >
               <option value="ALL">Toate joburile (Oricând)</option>
+              <option value="NEWLY_DISCOVERED">⭐ Doar NOU GĂSIT (Ultima Sincronizare)</option>
               <option value="24H">Ultimele 24 de ore (Noi)</option>
               <option value="48H">Ultimele 48 de ore</option>
               <option value="7D">Ultima săptămână (7 zile)</option>
@@ -1284,15 +1320,32 @@ export default function JobSearchPage({
             })}
 
             {selectedDatePosted !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-indigo-50 text-indigo-950 border border-indigo-200 shadow-2xs">
-                <Calendar className="w-3 h-3 text-indigo-600" />
-                <span>Data postării: <strong>{
-                  selectedDatePosted === '24H' ? 'Ultimele 24h' :
-                  selectedDatePosted === '48H' ? 'Ultimele 48h' :
-                  selectedDatePosted === '7D' ? 'Ultima săptămână' :
-                  selectedDatePosted === '30D' ? 'Ultima lună' : selectedDatePosted
-                }</strong></span>
-                <button onClick={() => setSelectedDatePosted('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-extrabold shadow-2xs ${
+                selectedDatePosted === 'NEWLY_DISCOVERED'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                  : 'bg-indigo-50 text-indigo-950 border border-indigo-200'
+              }`}>
+                {selectedDatePosted === 'NEWLY_DISCOVERED' ? (
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                ) : (
+                  <Calendar className="w-3 h-3 text-indigo-600" />
+                )}
+                <span>{
+                  selectedDatePosted === 'NEWLY_DISCOVERED' ? (
+                    <>Doar: <strong>NOU GĂSIT (Ultima Sincronizare)</strong></>
+                  ) : (
+                    <>Data postării: <strong>{
+                      selectedDatePosted === '24H' ? 'Ultimele 24h' :
+                      selectedDatePosted === '48H' ? 'Ultimele 48h' :
+                      selectedDatePosted === '7D' ? 'Ultima săptămână' :
+                      selectedDatePosted === '30D' ? 'Ultima lună' : selectedDatePosted
+                    }</strong></>
+                  )
+                }</span>
+                <button 
+                  onClick={() => { setSelectedDatePosted('ALL'); setCurrentPage(1); }} 
+                  className={`cursor-pointer p-0.5 ml-0.5 ${selectedDatePosted === 'NEWLY_DISCOVERED' ? 'hover:text-amber-200 text-white/80' : 'hover:text-rose-600 text-gray-500'}`}
+                >
                   <X className="w-3 h-3" />
                 </button>
               </span>
@@ -1397,18 +1450,39 @@ export default function JobSearchPage({
       ) : totalJobs === 0 ? (
         <div className="bg-white border border-dashed border-gray-300 p-12 rounded-3xl text-center space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-400 mx-auto flex items-center justify-center">
-            <Search className="w-6 h-6" />
+            {selectedDatePosted === 'NEWLY_DISCOVERED' ? (
+              <Sparkles className="w-6 h-6 text-indigo-600" />
+            ) : (
+              <Search className="w-6 h-6" />
+            )}
           </div>
-          <h3 className="text-base font-bold text-gray-800">Nu am găsit joburi care să corespundă filtrelor selectate</h3>
+          <h3 className="text-base font-bold text-gray-800">
+            {selectedDatePosted === 'NEWLY_DISCOVERED' 
+              ? 'Nu au fost identificate joburi noi la cea mai recentă sincronizare'
+              : 'Nu am găsit joburi care să corespundă filtrelor selectate'}
+          </h3>
           <p className="text-xs text-gray-500 max-w-md mx-auto">
-            Încearcă să relaxezi selecția de platforme sau să schimbi termenul de căutare.
+            {selectedDatePosted === 'NEWLY_DISCOVERED'
+              ? 'Toate joburile scanate erau deja înregistrate în baza de date. Apasă pe «Sincronizează Acum» pentru a relua căutarea live sau comută pe «Toate joburile».'
+              : 'Încearcă să relaxezi selecția de platforme sau să schimbi termenul de căutare.'}
           </p>
-          <button
-            onClick={handleResetFilters}
-            className="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-xl hover:bg-black transition cursor-pointer"
-          >
-            Resetează Toate Filtrele
-          </button>
+          <div className="flex items-center justify-center gap-2 pt-2">
+            {selectedDatePosted === 'NEWLY_DISCOVERED' && (
+              <button
+                type="button"
+                onClick={() => { setSelectedDatePosted('ALL'); setCurrentPage(1); }}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+              >
+                Vezi Toate Joburile
+              </button>
+            )}
+            <button
+              onClick={handleResetFilters}
+              className="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-xl hover:bg-black transition cursor-pointer"
+            >
+              Resetează Filtrele
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

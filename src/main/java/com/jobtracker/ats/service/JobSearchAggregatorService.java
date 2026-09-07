@@ -2882,22 +2882,27 @@ public class JobSearchAggregatorService {
                 .filter(s -> !s.isEmpty() && !s.equals("ALL"))
                 .collect(Collectors.toSet());
 
-        // Filtrare Unificată Data Postării (pe baza firstSeenAt / postedAt reale)
+        // Filtrare Unificată Data Postării (pe baza firstSeenAt / postedAt reale sau NOU GĂSIT)
         OffsetDateTime dateCutoff = null;
+        boolean filterOnlyNewlyDiscovered = false;
         String rawDateParam = (discovered != null && !discovered.equalsIgnoreCase("ALL")) ? discovered : datePosted;
         if (rawDateParam != null && !rawDateParam.isBlank() && !rawDateParam.equalsIgnoreCase("ALL")) {
             String dp = rawDateParam.toUpperCase().trim();
-            OffsetDateTime now = OffsetDateTime.now();
-            if (dp.equals("24H") || dp.equals("TODAY") || dp.equals("1")) {
-                dateCutoff = now.minusHours(24);
-            } else if (dp.equals("48H") || dp.equals("2") || dp.equals("3")) {
-                dateCutoff = now.minusHours(48);
-            } else if (dp.equals("7D") || dp.equals("WEEK") || dp.equals("7")) {
-                dateCutoff = now.minusDays(7);
-            } else if (dp.equals("14") || dp.equals("14D")) {
-                dateCutoff = now.minusDays(14);
-            } else if (dp.equals("30") || dp.equals("30D") || dp.equals("MONTH")) {
-                dateCutoff = now.minusDays(30);
+            if (dp.equals("NEWLY_DISCOVERED") || dp.equals("NEW") || dp.equals("JUST_FOUND")) {
+                filterOnlyNewlyDiscovered = true;
+            } else {
+                OffsetDateTime now = OffsetDateTime.now();
+                if (dp.equals("24H") || dp.equals("TODAY") || dp.equals("1")) {
+                    dateCutoff = now.minusHours(24);
+                } else if (dp.equals("48H") || dp.equals("2") || dp.equals("3")) {
+                    dateCutoff = now.minusHours(48);
+                } else if (dp.equals("7D") || dp.equals("WEEK") || dp.equals("7")) {
+                    dateCutoff = now.minusDays(7);
+                } else if (dp.equals("14") || dp.equals("14D")) {
+                    dateCutoff = now.minusDays(14);
+                } else if (dp.equals("30") || dp.equals("30D") || dp.equals("MONTH")) {
+                    dateCutoff = now.minusDays(30);
+                }
             }
         }
 
@@ -2918,8 +2923,12 @@ public class JobSearchAggregatorService {
                 }
             }
 
-            // 0b. Filtrare Unificată după Data Postării
-            if (dateCutoff != null) {
+            // 0b. Filtrare după NOU GĂSIT sau Data Postării
+            if (filterOnlyNewlyDiscovered) {
+                if (!job.newlyDiscovered()) {
+                    continue;
+                }
+            } else if (dateCutoff != null) {
                 boolean matchesDate = false;
                 if (job.firstSeenAt() != null && !job.firstSeenAt().isBefore(dateCutoff)) {
                     matchesDate = true;
@@ -3018,7 +3027,8 @@ public class JobSearchAggregatorService {
                     job.postedAt(),
                     job.firstSeenAt(),
                     job.lastSeenAt(),
-                    job.status()
+                    job.status(),
+                    job.newlyDiscovered()
             ));
         }
 
@@ -3430,11 +3440,13 @@ public class JobSearchAggregatorService {
         int intern = 0;
         int remote = 0;
         int highChance = 0;
+        int newlyDiscovered = 0;
 
         for (UnifiedJobListingDto job : activeLiveJobsCache) {
             String p = job.sourcePlatform();
             platformCounts.put(p, platformCounts.getOrDefault(p, 0) + 1);
 
+            if (job.newlyDiscovered()) newlyDiscovered++;
             if ("JUNIOR".equalsIgnoreCase(job.experienceLevel())) junior++;
             if ("INTERNSHIP".equalsIgnoreCase(job.experienceLevel())) intern++;
             if ("REMOTE".equalsIgnoreCase(job.workModel())) remote++;
@@ -3447,7 +3459,8 @@ public class JobSearchAggregatorService {
                         "junior", junior,
                         "intern", intern,
                         "remote", remote,
-                        "highChance", highChance
+                        "highChance", highChance,
+                        "newlyDiscovered", newlyDiscovered
                 ),
                 "totalLiveJobs", activeLiveJobsCache.size()
         );
@@ -3613,7 +3626,8 @@ public class JobSearchAggregatorService {
                                     job.postedAt(),
                                     job.firstSeenAt(),
                                     job.lastSeenAt(),
-                                    job.status()
+                                    job.status(),
+                                    job.newlyDiscovered()
                             );
                             int idx = activeLiveJobsCache.indexOf(job);
                             if (idx >= 0) {
@@ -3653,7 +3667,7 @@ public class JobSearchAggregatorService {
                                 finalScore, job.competitiveness(), job.competitivenessLabel(),
                                 job.applicantCountText(), job.postedDaysAgo(), job.externalId(),
                                 job.contentHash(), job.postedAt(), job.firstSeenAt(), job.lastSeenAt(),
-                                job.status()
+                                job.status(), job.newlyDiscovered()
                         );
                         int idx = activeLiveJobsCache.indexOf(job);
                         if (idx >= 0) activeLiveJobsCache.set(idx, updated);
@@ -3689,7 +3703,7 @@ public class JobSearchAggregatorService {
                                 finalScore, job.competitiveness(), job.competitivenessLabel(),
                                 job.applicantCountText(), job.postedDaysAgo(), job.externalId(),
                                 job.contentHash(), job.postedAt(), job.firstSeenAt(), job.lastSeenAt(),
-                                job.status()
+                                job.status(), job.newlyDiscovered()
                         );
                         int idx = activeLiveJobsCache.indexOf(job);
                         if (idx >= 0) activeLiveJobsCache.set(idx, updated);
@@ -3727,7 +3741,8 @@ public class JobSearchAggregatorService {
                 job.postedAt(),
                 job.firstSeenAt(),
                 job.lastSeenAt(),
-                job.status()
+                job.status(),
+                job.newlyDiscovered()
         );
     }
 
