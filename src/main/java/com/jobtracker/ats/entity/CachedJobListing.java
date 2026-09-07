@@ -93,6 +93,10 @@ public class CachedJobListing {
     @Column(name = "status", length = 30)
     private String status;
 
+    @Column(name = "newly_discovered")
+    @Builder.Default
+    private Boolean newlyDiscovered = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
@@ -141,6 +145,7 @@ public class CachedJobListing {
                 .firstSeenAt(dto.firstSeenAt() != null ? dto.firstSeenAt() : now)
                 .lastSeenAt(dto.lastSeenAt() != null ? dto.lastSeenAt() : now)
                 .status(dto.status() != null ? safeSub(dto.status(), 25) : "ACTIVE")
+                .newlyDiscovered(dto.newlyDiscovered())
                 .build();
     }
 
@@ -185,7 +190,8 @@ public class CachedJobListing {
                 this.postedAt,
                 this.firstSeenAt != null ? this.firstSeenAt : this.createdAt,
                 this.lastSeenAt != null ? this.lastSeenAt : this.updatedAt,
-                this.status != null ? this.status : "ACTIVE"
+                this.status != null ? this.status : "ACTIVE",
+                this.newlyDiscovered != null && this.newlyDiscovered
         );
     }
 }

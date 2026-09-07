@@ -30,8 +30,48 @@ public record UnifiedJobListingDto(
     OffsetDateTime postedAt,
     OffsetDateTime firstSeenAt,
     OffsetDateTime lastSeenAt,
-    String status // "ACTIVE", "EXPIRED"
+    String status, // "ACTIVE", "EXPIRED"
+    boolean newlyDiscovered
 ) {
+    // Constructor de compatibilitate retroactivă pentru apelurile cu 26 de argumente
+    public UnifiedJobListingDto(
+        String id,
+        String jobTitle,
+        String companyName,
+        String companyLogoUrl,
+        String location,
+        String workModel,
+        String experienceLevel,
+        String sourcePlatform,
+        String directApplyUrl,
+        String rawDescription,
+        String salaryRange,
+        List<String> skillsRequired,
+        List<String> matchingSkills,
+        List<String> missingSkills,
+        String postedDateAgo,
+        double atsMatchScore,
+        String competitiveness,
+        String competitivenessLabel,
+        String applicantCountText,
+        int postedDaysAgo,
+        String externalId,
+        String contentHash,
+        OffsetDateTime postedAt,
+        OffsetDateTime firstSeenAt,
+        OffsetDateTime lastSeenAt,
+        String status
+    ) {
+        this(
+            id, jobTitle, companyName, companyLogoUrl, location, workModel,
+            experienceLevel, sourcePlatform, directApplyUrl, rawDescription,
+            salaryRange, skillsRequired, matchingSkills, missingSkills,
+            postedDateAgo, atsMatchScore, competitiveness, competitivenessLabel,
+            applicantCountText, postedDaysAgo, externalId, contentHash,
+            postedAt, firstSeenAt, lastSeenAt, status, false
+        );
+    }
+
     // Constructor de compatibilitate retroactivă pentru apelurile cu 20 de argumente
     public UnifiedJobListingDto(
         String id,
@@ -63,7 +103,7 @@ public record UnifiedJobListingDto(
             applicantCountText, postedDaysAgo,
             id, null, 
             postedDaysAgo >= 0 ? OffsetDateTime.now().minusDays(postedDaysAgo) : null,
-            OffsetDateTime.now(), OffsetDateTime.now(), "ACTIVE"
+            OffsetDateTime.now(), OffsetDateTime.now(), "ACTIVE", false
         );
     }
 }

@@ -14,8 +14,10 @@ import {
   Edit3,
   CheckCircle2,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Eye
 } from 'lucide-react';
+import JobDetailModal from './JobDetailModal';
 
 export default function KanbanBoard({ 
   applications = [], 
@@ -39,8 +41,31 @@ export default function KanbanBoard({
   const [cvList, setCvList] = useState([]);
   const [uploadedResumes, setUploadedResumes] = useState([]);
   const [attachingCvAppId, setAttachingCvAppId] = useState(null);
+  const [selectedJobForModal, setSelectedJobForModal] = useState(null);
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
+
+  const handleOpenJobModal = (app) => {
+    setSelectedJobForModal({
+      id: app.jobId || app.id,
+      jobTitle: app.jobTitle,
+      companyName: app.companyName,
+      companyLogoUrl: app.companyLogoUrl || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
+      location: app.location || app.jobLocation || "România",
+      workModel: app.workModel || "REMOTE",
+      experienceLevel: app.experienceLevel || "MID",
+      sourcePlatform: app.sourcePlatform || "OTHER",
+      directApplyUrl: app.jobUrl || "#",
+      rawDescription: app.rawDescription || "Descrierea completă a postului salvat în aplicația de tracking Kanban.",
+      salaryRange: app.salaryRange || "Salariu Nespecificat / Conform Anunț",
+      skillsRequired: app.skillsRequired || [],
+      atsMatchScore: app.semanticMatchScore ? Number(app.semanticMatchScore) : 0,
+      competitiveness: "MEDIUM",
+      competitivenessLabel: "Competiție Medie",
+      applicantCountText: "Candidatură Activă",
+      postedDateAgo: "Salvat în Tracker"
+    });
+  };
 
   // LOAD USER'S SAVED CVS AND UPLOADED RESUMES FOR SELECTION
   const fetchCvProfilesAndResumes = async () => {
@@ -331,11 +356,17 @@ export default function KanbanBoard({
                         
                         {/* CARD TITLE, DRAG HANDLE & DELETE BUTTON */}
                         <div className="flex items-start justify-between gap-1">
-                          <div>
-                            <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-500 block">
+                          <div 
+                            onClick={() => handleOpenJobModal(app)}
+                            className="cursor-pointer group/title flex-1"
+                            title="Apasă pentru a deschide fișa completă a jobului"
+                          >
+                            <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-500 block group-hover/title:text-indigo-600 transition">
                               {app.companyName}
                             </span>
-                            <h4 className="font-bold text-xs text-gray-950 leading-tight mt-0.5">{app.jobTitle}</h4>
+                            <h4 className="font-bold text-xs text-gray-950 leading-tight mt-0.5 group-hover/title:text-indigo-600 transition">
+                              {app.jobTitle}
+                            </h4>
                           </div>
                           <div className="flex items-center gap-1">
                             <button
@@ -429,27 +460,44 @@ export default function KanbanBoard({
                           </div>
                         </div>
 
-                        {/* AI ANALYSIS BUTTON */}
-                        <button
-                          onClick={() => {
-                            const runAi = onRunAiAnalysis || onOpenAnalysis;
-                            if (runAi) runAi(app);
-                          }}
-                          disabled={analyzingAppId === app.id}
-                          className="w-full py-2 px-3 rounded-lg bg-black hover:bg-neutral-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm disabled:opacity-60 cursor-pointer"
-                        >
-                          {analyzingAppId === app.id ? (
-                            <>
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-gray-300" />
-                              Generare Raport AI...
-                            </>
-                          ) : (
-                            <>
-                              <BrainCircuit className="w-3.5 h-3.5" />
-                              Apelează AI Backend Live
-                            </>
-                          )}
-                        </button>
+                        {/* ACTION BUTTONS: VEZI FIȘA & RAPORT AI */}
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenJobModal(app);
+                            }}
+                            className="py-2 px-2.5 rounded-lg border border-gray-200 hover:border-indigo-300 bg-gray-50 hover:bg-indigo-50 text-gray-800 hover:text-indigo-950 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer"
+                            title="Deschide fișa completă a jobului"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>Vezi Fișa</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const runAi = onRunAiAnalysis || onOpenAnalysis;
+                              if (runAi) runAi(app);
+                            }}
+                            disabled={analyzingAppId === app.id}
+                            className="py-2 px-2.5 rounded-lg bg-black hover:bg-neutral-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm disabled:opacity-60 cursor-pointer"
+                            title="Rulează analiza AI Gap & Matching"
+                          >
+                            {analyzingAppId === app.id ? (
+                              <>
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin text-gray-300" />
+                                <span>Analiză...</span>
+                              </>
+                            ) : (
+                              <>
+                                <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
+                                <span>Raport AI</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -599,6 +647,15 @@ export default function KanbanBoard({
                         <td className="py-4 px-4 sm:px-6 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
+                              onClick={() => handleOpenJobModal(app)}
+                              className="px-2.5 py-1.5 rounded-lg border border-gray-200 hover:border-indigo-300 bg-gray-50 hover:bg-indigo-50 text-gray-800 hover:text-indigo-950 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+                              title="Vezi fișa completă a jobului"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>Fișă</span>
+                            </button>
+
+                            <button
                               onClick={() => {
                                 const runAi = onRunAiAnalysis || onOpenAnalysis;
                                 if (runAi) runAi(app);
@@ -649,6 +706,16 @@ export default function KanbanBoard({
           )}
 
         </div>
+      )}
+
+      {/* JOB DETAIL MODAL INTEGRAT ÎN KANBAN */}
+      {selectedJobForModal && (
+        <JobDetailModal
+          job={selectedJobForModal}
+          onClose={() => setSelectedJobForModal(null)}
+          isSaved={true}
+          activeUserId={activeUserId}
+        />
       )}
 
     </div>

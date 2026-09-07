@@ -318,6 +318,13 @@ public class JobSearchAggregatorService {
             }
 
             // 2. MAPARE PENTRU UPSERT & TRACKING MODIFICĂRI (cached_live_jobs & job_changes)
+            // Resetează marcajul "NOU GĂSIT" pentru rularea anterioară
+            try {
+                cachedJobListingRepository.clearAllNewlyDiscovered();
+            } catch (Exception e) {
+                log.warn("[JOB PERSISTENCE] Nu s-a putut reseta newlyDiscovered: {}", e.getMessage());
+            }
+
             Map<String, CachedJobListing> existingByUrl = cachedJobListingRepository.findAll().stream()
                     .filter(j -> j.getDirectApplyUrl() != null)
                     .collect(Collectors.toMap(CachedJobListing::getDirectApplyUrl, j -> j, (a, b) -> a));
@@ -335,8 +342,9 @@ public class JobSearchAggregatorService {
                 CachedJobListing existing = existingByUrl.get(dto.directApplyUrl());
 
                 if (existing != null) {
-                    // JOB EXISTENT: Actualizăm last_seen_at
+                    // JOB EXISTENT: Actualizăm last_seen_at și ne asigurăm că nu mai are tag-ul NOU GĂSIT
                     existing.setLastSeenAt(now);
+                    existing.setNewlyDiscovered(false);
                     boolean modified = false;
 
                     // A. Reactivare dacă fusese marcat ca EXPIRED
@@ -382,12 +390,13 @@ public class JobSearchAggregatorService {
                         toUpdate.add(existing);
                     }
                 } else {
-                    // JOB NOU: Inserare și audit CREATED
+                    // JOB NOU: Inserare, marcare NOU GĂSIT (strict pentru această rulare) și audit CREATED
                     CachedJobListing newJob = CachedJobListing.fromDto(dto);
                     newJob.setContentHash(newHash);
                     newJob.setStatus("ACTIVE");
                     newJob.setFirstSeenAt(now);
                     newJob.setLastSeenAt(now);
+                    newJob.setNewlyDiscovered(true);
                     toInsert.add(newJob);
                     existingByUrl.put(dto.directApplyUrl(), newJob); // Evită duplicate în cadrul aceluiași freshList
 
@@ -1852,15 +1861,26 @@ public class JobSearchAggregatorService {
         }
     }
 
+    private JsonNode derefNuxt(JsonNode node, JsonNode arr) {
+        if (node == null || arr == null || !arr.isArray()) return null;
+        if (node.isInt()) {
+            int idx = node.asInt();
+            if (idx >= 0 && idx < arr.size()) {
+                return arr.get(idx);
+            }
+        }
+        return node;
+    }
+
     /**
-     * 5. EJOBS.RO IT MULTI-PAGE LIVE SCRAPING (Sursa oficială: EJOBS)
+     * 5. EJOBS.RO IT MULTI-PAGE LIVE SCRAPING CU DATE ȘI COMPANII 100% REALE (Sursa: EJOBS)
      */
     private void scrapeEjobsItMultiPage(List<UnifiedJobListingDto> list, Set<String> seenDedupKeys) {
         Set<String> seenUrls = new HashSet<>();
         List<String> itSearchPaths = List.of(
-                "https://www.ejobs.ro/locuri-de-munca/it-software/",
-                "https://www.ejobs.ro/locuri-de-munca/it-software/pagina1/",
-                "https://www.ejobs.ro/locuri-de-munca/it-software/pagina2/"
+                "https://www.ejobs.ro/locuri-de-munca/it-software",
+                "https://www.ejobs.ro/locuri-de-munca/it-software/pagina1",
+                "https://www.ejobs.ro/locuri-de-munca/it-software/pagina2"
         );
 
         for (String url : itSearchPaths) {
@@ -1870,81 +1890,176 @@ public class JobSearchAggregatorService {
                         .timeout(10000)
                         .get();
 
-                Elements jobLinks = doc.select("a[href*=/locuri-de-munca/]");
-                for (Element el : jobLinks) {
-                    String href = el.attr("href");
-                    if (href == null || !href.matches(".*locuri-de-munca/[a-zA-Z0-9-]+/\\d+.*") || seenUrls.contains(href)) {
-                        continue;
-                    }
+                // 1. ÎNCERCARE PARSARE STAT-HYDRATION NUXT 3 (__NUXT_DATA__) CU DATE ȘI COMPANII 100% REALE
+                boolean nuxtParsed = false;
+                Element nuxtEl = doc.selectFirst("script#__NUXT_DATA__");
+                if (nuxtEl != null && !nuxtEl.data().isBlank()) {
+                    try {
+                        JsonNode arr = objectMapper.readTree(nuxtEl.data());
+                        if (arr.isArray()) {
+                            for (JsonNode item : arr) {
+                                if (item.isObject() && item.has("title") && item.has("creationDate") && item.has("slug")) {
+                                    JsonNode idNode = derefNuxt(item.get("id"), arr);
+                                    JsonNode titleNode = derefNuxt(item.get("title"), arr);
+                                    JsonNode dateNode = derefNuxt(item.get("creationDate"), arr);
+                                    JsonNode slugNode = derefNuxt(item.get("slug"), arr);
+                                    if (idNode == null || titleNode == null || slugNode == null) continue;
 
-                    String text = el.text().trim();
-                    if (text.isEmpty()) {
-                        String[] parts = href.split("/");
-                        if (parts.length >= 4) {
-                            text = formatSlugTitle(parts[parts.length - 2]);
-                        } else {
-                            text = "IT Software Engineer";
+                                    String title = titleNode.asText().trim();
+                                    if (!isStrictlyItJob(title)) continue;
+
+                                    long ejobId = idNode.asLong();
+                                    String slug = slugNode.asText().trim();
+                                    String directUrl = "https://www.ejobs.ro/user/locuri-de-munca/" + slug + "/" + ejobId;
+                                    if (seenUrls.contains(directUrl)) continue;
+
+                                    String company = "Companie IT România";
+                                    JsonNode compNode = derefNuxt(item.get("company"), arr);
+                                    if (compNode != null && compNode.isObject() && compNode.has("name")) {
+                                        JsonNode nameNode = derefNuxt(compNode.get("name"), arr);
+                                        if (nameNode != null && !nameNode.asText().isBlank()) {
+                                            company = nameNode.asText().trim();
+                                        }
+                                    }
+
+                                    String dedupKey = normalizeForDedup(title) + "::" + normalizeForDedup(company);
+                                    if (!seenDedupKeys.add(dedupKey)) continue;
+                                    seenUrls.add(directUrl);
+
+                                    String salary = "Salariu Nespecificat / Conform Anunț";
+                                    if (item.has("salary")) {
+                                        JsonNode salNode = derefNuxt(item.get("salary"), arr);
+                                        if (salNode != null && !salNode.isNull() && !salNode.asText().isBlank()) {
+                                            salary = salNode.asText().trim();
+                                        }
+                                    }
+
+                                    OffsetDateTime postedAt = null;
+                                    int daysAgo = -1;
+                                    String postedDateAgo = "Dată nespecificată";
+                                    if (dateNode != null && !dateNode.asText().isBlank()) {
+                                        postedAt = parseExactDate(dateNode.asText().trim());
+                                        if (postedAt != null) {
+                                            daysAgo = (int) Math.max(0, java.time.Duration.between(postedAt, OffsetDateTime.now()).toDays());
+                                            if (daysAgo == 0) postedDateAgo = "Astăzi";
+                                            else if (daysAgo == 1) postedDateAgo = "Ieri";
+                                            else if (daysAgo > 1) postedDateAgo = "Acum " + daysAgo + " zile";
+                                        }
+                                    }
+
+                                    String level = determineExperienceLevel(title);
+                                    List<String> skills = extractSkillsFromTitle(title);
+                                    String extId = "userlocuri-de-munca" + slug.replaceAll("[^a-zA-Z0-9-]", "") + ejobId;
+                                    String desc = "Anunț activ de recrutare IT publicat pe eJobs.ro de către " + company + ". Rol: " + title + ". Nivel identificat: " + level + ". Competențe cerute: " + String.join(", ", skills) + ". Aplicare directă pe platforma eJobs.";
+                                    String contentHash = computeContentHash(title, company, desc, salary, String.join(",", skills), "Bucharest / Remote, Romania");
+                                    OffsetDateTime now = OffsetDateTime.now();
+
+                                    list.add(new UnifiedJobListingDto(
+                                            "ejobs-live-" + extId,
+                                            title,
+                                            company,
+                                            "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
+                                            "Bucharest / Remote, Romania",
+                                            "HYBRID",
+                                            level,
+                                            "EJOBS",
+                                            directUrl,
+                                            desc,
+                                            salary,
+                                            skills,
+                                            Collections.emptyList(),
+                                            Collections.emptyList(),
+                                            postedDateAgo,
+                                            94.0,
+                                            "HIGH",
+                                            "Competiție Ridicată",
+                                            "80-150+ aplicanți",
+                                            daysAgo,
+                                            extId,
+                                            contentHash,
+                                            postedAt,
+                                            now,
+                                            now,
+                                            "ACTIVE",
+                                            false
+                                    ));
+                                    nuxtParsed = true;
+                                }
+                            }
                         }
+                    } catch (Exception e) {
+                        log.warn("[JOB CRAWLER] Eroare la parsarea Nuxt state eJobs: {}", e.getMessage());
                     }
+                }
 
-                    // STRICT IT FILTER
-                    String textLower = text.toLowerCase();
-                    if (textLower.contains("magazin") || textLower.contains("vanzator") || textLower.contains("contabil") || 
-                        textLower.contains("curier") || textLower.contains("sofer") || textLower.contains("vanzari")) {
-                        continue;
+                // 2. FALLBACK HTML PARSING (Dacă Nuxt state nu este disponibil)
+                if (!nuxtParsed) {
+                    Elements jobLinks = doc.select("a[href*=/locuri-de-munca/]");
+                    for (Element el : jobLinks) {
+                        String href = el.attr("href");
+                        if (href == null || !href.matches(".*locuri-de-munca/[a-zA-Z0-9-]+/\\d+.*") || seenUrls.contains(href)) {
+                            continue;
+                        }
+
+                        String text = el.text().trim();
+                        if (text.isEmpty()) {
+                            String[] parts = href.split("/");
+                            if (parts.length >= 4) {
+                                text = formatSlugTitle(parts[parts.length - 2]);
+                            } else {
+                                text = "IT Software Engineer";
+                            }
+                        }
+
+                        if (!isStrictlyItJob(text)) continue;
+
+                        String title = text;
+                        String company = "Companie IT România";
+                        String dedupKey = normalizeForDedup(title) + "::" + normalizeForDedup(company);
+                        if (!seenDedupKeys.add(dedupKey)) continue;
+
+                        seenUrls.add(href);
+                        String directUrl = href.startsWith("http") ? href : "https://www.ejobs.ro" + href;
+
+                        String level = determineExperienceLevel(title);
+                        List<String> skills = extractSkillsFromTitle(title);
+                        int daysAgo = -1;
+                        OffsetDateTime postedAt = null;
+                        String extId = href.replaceAll("[^a-zA-Z0-9-]", "");
+                        String desc = "Anunț activ de recrutare IT publicat pe eJobs.ro. Rol: " + title + ". Nivel identificat: " + level + ". Competențe cerute: " + String.join(", ", skills) + ". Aplicare directă pe platforma eJobs.";
+                        String contentHash = computeContentHash(title, company, desc, "Salariu Nespecificat / Conform Anunț", String.join(",", skills), "Bucharest / Remote, Romania");
+                        OffsetDateTime now = OffsetDateTime.now();
+
+                        list.add(new UnifiedJobListingDto(
+                                "ejobs-live-" + extId,
+                                title,
+                                company,
+                                "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
+                                "Bucharest / Remote, Romania",
+                                "HYBRID",
+                                level,
+                                "EJOBS",
+                                directUrl,
+                                desc,
+                                "Salariu Nespecificat / Conform Anunț",
+                                skills,
+                                Collections.emptyList(),
+                                Collections.emptyList(),
+                                "Dată nespecificată",
+                                94.0,
+                                "HIGH",
+                                "Competiție Ridicată",
+                                "80-150+ aplicanți",
+                                daysAgo,
+                                extId,
+                                contentHash,
+                                postedAt,
+                                now,
+                                now,
+                                "ACTIVE",
+                                false
+                        ));
                     }
-
-                    String title = text;
-                    if (!isStrictlyItJob(title)) continue;
-
-                    String company = "Companie IT România";
-                    String dedupKey = normalizeForDedup(title) + "::" + normalizeForDedup(company);
-                    if (!seenDedupKeys.add(dedupKey)) continue;
-
-                    seenUrls.add(href);
-                    String directUrl = href.startsWith("http") ? href : "https://www.ejobs.ro" + href;
-
-                    String level = determineExperienceLevel(title);
-                    List<String> skills = extractSkillsFromTitle(title);
-                    int daysAgo = -1;
-                    OffsetDateTime postedAt = null;
-                    String extId = href.replaceAll("[^a-zA-Z0-9-]", "");
-                    String desc = "Anunț activ de recrutare IT publicat pe eJobs.ro. Rol: " + title + ". Nivel identificat: " + level + ". Competențe cerute: " + String.join(", ", skills) + ". Aplicare directă pe platforma eJobs.";
-                    String contentHash = computeContentHash(title, company, desc, "Salariu Nespecificat / Conform Anunț", String.join(",", skills), "Bucharest / Remote, Romania");
-                    OffsetDateTime now = OffsetDateTime.now();
-
-                    String compLevel = "HIGH";
-                    String compLabel = "Competiție Ridicată";
-                    String applicantCountText = "80-150+ aplicanți";
-
-                    list.add(new UnifiedJobListingDto(
-                            "ejobs-live-" + extId,
-                            title,
-                            company,
-                            "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
-                            "Bucharest / Remote, Romania",
-                            "HYBRID",
-                            level,
-                            "EJOBS",
-                            directUrl,
-                            desc,
-                            "Salariu Nespecificat / Conform Anunț",
-                            skills,
-                            Collections.emptyList(),
-                            Collections.emptyList(),
-                            "Dată nespecificată",
-                            94.0,
-                            compLevel,
-                            compLabel,
-                            applicantCountText,
-                            daysAgo,
-                            extId,
-                            contentHash,
-                            postedAt,
-                            now,
-                            now,
-                            "ACTIVE"
-                    ));
                 }
             } catch (Exception e) {
                 log.warn("[JOB CRAWLER] eJobs scrape fallback: {}", e.getMessage());

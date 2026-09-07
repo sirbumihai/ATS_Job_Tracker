@@ -14,6 +14,8 @@ import com.jobtracker.ats.repository.CvProfileRepository;
 import com.jobtracker.ats.repository.JobPostingRepository;
 import com.jobtracker.ats.repository.ResumeRepository;
 import com.jobtracker.ats.repository.UserRepository;
+import com.jobtracker.ats.entity.CachedJobListing;
+import com.jobtracker.ats.repository.CachedJobListingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class ApplicationService {
     private final ResumeRepository resumeRepository;
     private final CvProfileRepository cvProfileRepository;
     private final VectorEmbeddingService vectorEmbeddingService;
+    private final CachedJobListingRepository cachedJobListingRepository;
 
     // LISTA DE STOP-WORDS PENTRU FILTRAREA TEXTELOR DE HR SI BENEFICII
     private static final Set<String> COMMON_HR_STOP_WORDS = Set.of(
@@ -308,12 +311,40 @@ public class ApplicationService {
     }
 
     private ApplicationResponse mapToResponse(Application app) {
+        JobPosting jp = app.getJobPosting();
+        String jobUrl = jp != null ? jp.getJobUrl() : null;
+        String rawDesc = jp != null ? jp.getRawDescription() : null;
+        String sourcePlatform = "OTHER";
+        String salaryRange = "Salariu Nespecificat / Conform Anunț";
+        String location = "România";
+        String workModel = "REMOTE";
+        String experienceLevel = "MID";
+        List<String> skills = Collections.emptyList();
+
+        if (jobUrl != null && !jobUrl.isBlank()) {
+            Optional<CachedJobListing> cachedOpt = cachedJobListingRepository.findByDirectApplyUrl(jobUrl);
+            if (cachedOpt.isPresent()) {
+                CachedJobListing c = cachedOpt.get();
+                sourcePlatform = c.getSourcePlatform();
+                if (c.getSalaryRange() != null && !c.getSalaryRange().isBlank()) salaryRange = c.getSalaryRange();
+                if (c.getLocation() != null && !c.getLocation().isBlank()) location = c.getLocation();
+                if (c.getWorkModel() != null && !c.getWorkModel().isBlank()) workModel = c.getWorkModel();
+                if (c.getExperienceLevel() != null && !c.getExperienceLevel().isBlank()) experienceLevel = c.getExperienceLevel();
+                if (c.getSkillsRequired() != null && !c.getSkillsRequired().isBlank()) {
+                    skills = Arrays.stream(c.getSkillsRequired().split(","))
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .toList();
+                }
+            }
+        }
+
         return new ApplicationResponse(
                 app.getId(),
                 app.getUser().getId(),
-                app.getJobPosting().getId(),
-                app.getJobPosting().getCompanyName(),
-                app.getJobPosting().getJobTitle(),
+                jp != null ? jp.getId() : null,
+                jp != null ? jp.getCompanyName() : "Companie",
+                jp != null ? jp.getJobTitle() : "Job Title",
                 app.getResume() != null ? app.getResume().getId() : null,
                 app.getResume() != null ? app.getResume().getFileName() : null,
                 app.getCvProfile() != null ? app.getCvProfile().getId() : null,
@@ -322,7 +353,15 @@ public class ApplicationService {
                 app.getSemanticMatchScore(),
                 app.getNotes(),
                 app.getAppliedDate(),
-                app.getCreatedAt()
+                app.getCreatedAt(),
+                jobUrl,
+                rawDesc,
+                sourcePlatform,
+                salaryRange,
+                location,
+                workModel,
+                experienceLevel,
+                skills
         );
     }
 }

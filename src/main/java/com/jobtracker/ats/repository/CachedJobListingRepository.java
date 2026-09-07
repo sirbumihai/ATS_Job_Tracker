@@ -35,4 +35,9 @@ public interface CachedJobListingRepository extends JpaRepository<CachedJobListi
     @org.springframework.transaction.annotation.Transactional
     @Query("DELETE FROM CachedJobListing j WHERE UPPER(j.sourcePlatform) IN :platforms")
     int deleteBySourcePlatformIn(@Param("platforms") java.util.Collection<String> platforms);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query("UPDATE CachedJobListing j SET j.newlyDiscovered = false WHERE j.newlyDiscovered = true")
+    int clearAllNewlyDiscovered();
 }
