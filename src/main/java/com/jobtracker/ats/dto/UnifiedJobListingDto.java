@@ -62,7 +62,7 @@ public record UnifiedJobListingDto(
             postedDateAgo, atsMatchScore, competitiveness, competitivenessLabel,
             applicantCountText, postedDaysAgo,
             id, null, 
-            OffsetDateTime.now().minusDays(Math.max(0, postedDaysAgo)),
+            postedDaysAgo >= 0 ? OffsetDateTime.now().minusDays(postedDaysAgo) : null,
             OffsetDateTime.now(), OffsetDateTime.now(), "ACTIVE"
         );
     }

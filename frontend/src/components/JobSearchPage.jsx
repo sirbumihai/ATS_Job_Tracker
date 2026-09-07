@@ -69,6 +69,7 @@ export default function JobSearchPage({
   const [selectedPlatforms, setSelectedPlatforms] = useState([]); // Array de platforme selectate (gol = Toate)
   const [selectedRoleCategories, setSelectedRoleCategories] = useState([]); // Array de roluri selectate (gol = Toate)
   const [selectedDatePosted, setSelectedDatePosted] = useState('ALL'); // ALL, 1, 3, 7, 14, 30 zile
+  const [selectedDiscovered, setSelectedDiscovered] = useState('ALL'); // ALL, 24H, 48H, 7D
   const [selectedStatus, setSelectedStatus] = useState('ACTIVE'); // ACTIVE, EXPIRED, ALL
   const [selectedWorkModel, setSelectedWorkModel] = useState('ALL');
   const [selectedLevel, setSelectedLevel] = useState('ALL');
@@ -166,7 +167,10 @@ export default function JobSearchPage({
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const formatExactDate = (postedAt, fallbackDaysAgo) => {
+  const formatExactDate = (postedAt, fallbackDaysAgo, postedDateAgo) => {
+    if (postedDateAgo === 'Dată nespecificată' || fallbackDaysAgo === -1 || (!postedAt && (fallbackDaysAgo === undefined || fallbackDaysAgo === null || fallbackDaysAgo < 0))) {
+      return 'Dată nespecificată';
+    }
     if (postedAt) {
       try {
         const d = new Date(postedAt);
@@ -177,12 +181,12 @@ export default function JobSearchPage({
         // fallback to days ago
       }
     }
-    if (fallbackDaysAgo !== null && fallbackDaysAgo !== undefined) {
+    if (fallbackDaysAgo !== null && fallbackDaysAgo !== undefined && fallbackDaysAgo >= 0) {
       if (fallbackDaysAgo === 0) return 'Astăzi';
       if (fallbackDaysAgo === 1) return 'Ieri';
       return `Acum ${fallbackDaysAgo} zile`;
     }
-    return 'Recent';
+    return 'Dată nespecificată';
   };
 
   const formatDateTime = (dtStr) => {
@@ -329,6 +333,7 @@ export default function JobSearchPage({
       if (selectedLevel && selectedLevel !== 'ALL') params.append('level', selectedLevel);
       if (selectedWorkModel && selectedWorkModel !== 'ALL') params.append('workModel', selectedWorkModel);
       if (selectedDatePosted && selectedDatePosted !== 'ALL') params.append('datePosted', selectedDatePosted);
+      if (selectedDiscovered && selectedDiscovered !== 'ALL') params.append('discovered', selectedDiscovered);
       if (selectedStatus && selectedStatus !== 'ALL') params.append('status', selectedStatus);
       else if (selectedStatus === 'ALL') params.append('status', 'ALL');
       if (sortBy) params.append('sortBy', sortBy);
@@ -373,6 +378,7 @@ export default function JobSearchPage({
     setSelectedPlatforms([]);
     setSelectedRoleCategories([]);
     setSelectedDatePosted('ALL');
+    setSelectedDiscovered('ALL');
     setSelectedStatus('ACTIVE');
     setSelectedWorkModel('ALL');
     setSelectedLevel('ALL');
@@ -388,12 +394,13 @@ export default function JobSearchPage({
     if (selectedPlatforms.length > 0) count += selectedPlatforms.length;
     if (selectedRoleCategories.length > 0) count += selectedRoleCategories.length;
     if (selectedDatePosted !== 'ALL') count++;
+    if (selectedDiscovered !== 'ALL') count++;
     if (selectedStatus !== 'ACTIVE') count++;
     if (selectedWorkModel !== 'ALL') count++;
     if (selectedLevel !== 'ALL') count++;
     if (selectedCompetitiveness !== 'ALL') count++;
     return count;
-  }, [keyword, location, selectedPlatforms, selectedRoleCategories, selectedDatePosted, selectedStatus, selectedWorkModel, selectedLevel, selectedCompetitiveness]);
+  }, [keyword, location, selectedPlatforms, selectedRoleCategories, selectedDatePosted, selectedDiscovered, selectedStatus, selectedWorkModel, selectedLevel, selectedCompetitiveness]);
 
   useEffect(() => {
     fetchGlobalStats();
@@ -411,6 +418,7 @@ export default function JobSearchPage({
     selectedPlatforms, 
     selectedRoleCategories, 
     selectedDatePosted,
+    selectedDiscovered,
     selectedStatus,
     selectedWorkModel, 
     selectedLevel, 
@@ -494,15 +502,36 @@ export default function JobSearchPage({
     if (selectedDatePosted !== 'ALL') {
       const maxDays = parseInt(selectedDatePosted, 10);
       if (!isNaN(maxDays)) {
-        result = result.filter(j => (j.postedDaysAgo ?? 0) <= maxDays);
+        result = result.filter(j => (j.postedDaysAgo ?? -1) >= 0 && (j.postedDaysAgo ?? 0) <= maxDays);
+      }
+    }
+
+    // Filtru descoperite recent (crawler first seen)
+    if (selectedDiscovered !== 'ALL') {
+      const now = Date.now();
+      const cutoffHours = selectedDiscovered === '24H' ? 24 : selectedDiscovered === '48H' ? 48 : selectedDiscovered === '7D' ? 168 : null;
+      if (cutoffHours) {
+        result = result.filter(j => {
+          if (!j.firstSeenAt) return false;
+          const seenTime = new Date(j.firstSeenAt).getTime();
+          return (now - seenTime) <= cutoffHours * 3600 * 1000;
+        });
       }
     }
 
     result.sort((a, b) => {
+      if (sortBy === 'FIRST_SEEN_DESC') {
+        const timeA = a.firstSeenAt ? new Date(a.firstSeenAt).getTime() : 0;
+        const timeB = b.firstSeenAt ? new Date(b.firstSeenAt).getTime() : 0;
+        if (timeA !== timeB) return timeB - timeA;
+        return b.atsMatchScore - a.atsMatchScore;
+      }
       if (sortBy === 'POSTED_AT_DESC') {
         const dateA = a.postedAt ? new Date(a.postedAt).getTime() : 0;
         const dateB = b.postedAt ? new Date(b.postedAt).getTime() : 0;
-        if (dateA !== dateB) return dateB - dateA;
+        if (dateA !== 0 && dateB !== 0 && dateA !== dateB) return dateB - dateA;
+        if (dateA !== 0) return -1;
+        if (dateB !== 0) return 1;
         return (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
       }
       if (sortBy === 'MATCH_SCORE') {
@@ -514,6 +543,8 @@ export default function JobSearchPage({
         const dateA = a.postedAt ? new Date(a.postedAt).getTime() : 0;
         const dateB = b.postedAt ? new Date(b.postedAt).getTime() : 0;
         if (dateA !== 0 && dateB !== 0 && dateA !== dateB) return dateB - dateA;
+        if (dateA !== 0) return -1;
+        if (dateB !== 0) return 1;
         const diff = (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
         if (diff !== 0) return diff;
         return b.atsMatchScore - a.atsMatchScore;
@@ -550,7 +581,7 @@ export default function JobSearchPage({
     });
 
     return result;
-  }, [jobs, selectedCompetitiveness, selectedDatePosted, selectedStatus, sortBy]);
+  }, [jobs, selectedCompetitiveness, selectedDatePosted, selectedDiscovered, selectedStatus, sortBy]);
 
   // Paginare
   const totalJobs = filteredAndSortedJobs.length;
@@ -895,7 +926,7 @@ export default function JobSearchPage({
         </form>
 
         {/* GRID FILTRE AVANSATE: MULTI-SELECT DROPDOWNS & SELECTOARE PROFESIONALE */}
-        <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
+        <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8 gap-3">
           
           {/* 1. DROPDOWN MULTI-SELECT PENTRU PLATFORME */}
           <div className="relative" ref={platformDropdownRef}>
@@ -1117,6 +1148,24 @@ export default function JobSearchPage({
             </select>
           </div>
 
+          {/* 3b. FILTRU NOU: JOBURI NOI DESCOPERITE DE CRAWLER */}
+          <div>
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-indigo-600" />
+              <span>Găsite de Crawler</span>
+            </label>
+            <select
+              value={selectedDiscovered}
+              onChange={(e) => { setSelectedDiscovered(e.target.value); setCurrentPage(1); }}
+              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-600 cursor-pointer"
+            >
+              <option value="ALL">Toate joburile</option>
+              <option value="24H">Ultimele 24h (Noi)</option>
+              <option value="48H">Ultimele 48h (Recente)</option>
+              <option value="7D">Ultima săptămână (7 zile)</option>
+            </select>
+          </div>
+
           {/* 4. NIVEL EXPERIENȚĂ (FĂRĂ EMOTICOANE) */}
           <div>
             <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
@@ -1207,6 +1256,7 @@ export default function JobSearchPage({
               className="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-950 font-black rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 cursor-pointer shadow-2xs"
             >
               <option value="MATCH_AND_RECENCY">Recomandate (Scor ATS & Recență)</option>
+              <option value="FIRST_SEEN_DESC">Descoperite Recent de Crawler</option>
               <option value="POSTED_AT_DESC">Dată Exactă Postare (Cele mai noi)</option>
               <option value="MATCH_SCORE">Scor ATS Maxim</option>
               <option value="NEWEST">Cele Mai Noi (Zile)</option>
@@ -1275,6 +1325,16 @@ export default function JobSearchPage({
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
                 <span>Dată: <strong>Ultimele {selectedDatePosted} zile</strong></span>
                 <button onClick={() => setSelectedDatePosted('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedDiscovered !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-indigo-100 text-indigo-950 border border-indigo-200 shadow-2xs">
+                <Sparkles className="w-3 h-3 text-indigo-600" />
+                <span>Găsite: <strong>{selectedDiscovered === '24H' ? 'Ultimele 24h' : selectedDiscovered === '48H' ? 'Ultimele 48h' : 'Ultima săptămână'}</strong></span>
+                <button onClick={() => setSelectedDiscovered('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
                 </button>
               </span>
@@ -1408,11 +1468,17 @@ export default function JobSearchPage({
                   
                   {/* TOP HEADER: PLATFORMĂ, STATUS & SCOR MATCH DINAMIC */}
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 ${platformBadge.bg}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${platformBadge.dot}`}></span>
                         {platformBadge.label}
                       </span>
+                      {job.firstSeenAt && (Date.now() - new Date(job.firstSeenAt).getTime() <= 48 * 3600 * 1000) && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-2xs">
+                          <Sparkles className="w-2.5 h-2.5" />
+                          NOU GĂSIT
+                        </span>
+                      )}
                       {job.status === 'EXPIRED' && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-800 border border-rose-200">
                           Expirat
@@ -1496,11 +1562,15 @@ export default function JobSearchPage({
                       {job.salaryRange}
                     </span>
                     <span 
-                      className="flex items-center gap-1 text-gray-500 text-[11px]"
-                      title={job.postedAt ? `Publicat la: ${new Date(job.postedAt).toLocaleString('ro-RO')}` : undefined}
+                      className={`flex items-center gap-1 text-[11px] ${
+                        formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo) === 'Dată nespecificată'
+                          ? 'text-gray-400 italic'
+                          : 'text-gray-500'
+                      }`}
+                      title={job.postedAt ? `Publicat la: ${new Date(job.postedAt).toLocaleString('ro-RO')}` : 'Data exactă de publicare nu a fost furnizată de angajator'}
                     >
                       <Calendar className="w-3 h-3 text-gray-400" />
-                      {formatExactDate(job.postedAt, job.postedDaysAgo)}
+                      {formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo)}
                     </span>
                   </div>
 

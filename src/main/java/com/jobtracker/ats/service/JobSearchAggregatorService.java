@@ -183,9 +183,9 @@ public class JobSearchAggregatorService {
         }
     }
 
-    public static OffsetDateTime parseExactDate(String dateStr, int fallbackDaysAgo) {
+    public static OffsetDateTime parseExactDate(String dateStr) {
         if (dateStr == null || dateStr.isBlank()) {
-            return OffsetDateTime.now().minusDays(Math.max(0, fallbackDaysAgo));
+            return null;
         }
         String s = dateStr.trim();
         try {
@@ -219,12 +219,54 @@ public class JobSearchAggregatorService {
             DateTimeFormatter roFmt4 = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.forLanguageTag("ro-RO"));
             return LocalDate.parse(s, roFmt4).atStartOfDay(ZoneOffset.UTC).toOffsetDateTime();
         } catch (Exception ignored) {}
+        // Support pentru formate de tip "25 Aug", "13 Aug", etc. (StagiiPeBune)
+        Matcher dayMonthMatcher = Pattern.compile("^(\\d{1,2})\\s+([A-Za-zăîșțâ]+)$").matcher(s);
+        if (dayMonthMatcher.find()) {
+            int day = Integer.parseInt(dayMonthMatcher.group(1));
+            String mStr = dayMonthMatcher.group(2);
+            int month = parseMonthRomanianOrEnglish(mStr);
+            if (month > 0) {
+                int year = LocalDate.now().getYear();
+                LocalDate ld = LocalDate.of(year, month, day);
+                if (ld.isAfter(LocalDate.now())) {
+                    ld = ld.minusYears(1);
+                }
+                return ld.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime();
+            }
+        }
         if (s.matches("^\\d{10}$")) {
             return Instant.ofEpochSecond(Long.parseLong(s)).atOffset(ZoneOffset.UTC);
         } else if (s.matches("^\\d{13}$")) {
             return Instant.ofEpochMilli(Long.parseLong(s)).atOffset(ZoneOffset.UTC);
         }
-        return OffsetDateTime.now().minusDays(Math.max(0, fallbackDaysAgo));
+        return null;
+    }
+
+    public static OffsetDateTime parseExactDate(String dateStr, int fallbackDaysAgo) {
+        OffsetDateTime parsed = parseExactDate(dateStr);
+        if (parsed != null) return parsed;
+        if (fallbackDaysAgo >= 0 && (dateStr != null && !dateStr.isBlank())) {
+            return OffsetDateTime.now().minusDays(fallbackDaysAgo);
+        }
+        return null;
+    }
+
+    private static int parseMonthRomanianOrEnglish(String mStr) {
+        if (mStr == null) return -1;
+        String m = mStr.toLowerCase().replace("ă", "a").replace("â", "a").replace("î", "i").replace("ș", "s").replace("ț", "t");
+        if (m.startsWith("ian") || m.startsWith("jan")) return 1;
+        if (m.startsWith("feb")) return 2;
+        if (m.startsWith("mar")) return 3;
+        if (m.startsWith("apr")) return 4;
+        if (m.startsWith("mai") || m.startsWith("may")) return 5;
+        if (m.startsWith("iun") || m.startsWith("jun")) return 6;
+        if (m.startsWith("iul") || m.startsWith("jul")) return 7;
+        if (m.startsWith("aug")) return 8;
+        if (m.startsWith("sep") || m.startsWith("sept")) return 9;
+        if (m.startsWith("oct")) return 10;
+        if (m.startsWith("noi") || m.startsWith("nov")) return 11;
+        if (m.startsWith("dec")) return 12;
+        return -1;
     }
 
     public int loadJobsFromDatabase() {
@@ -233,6 +275,7 @@ public class JobSearchAggregatorService {
             if (!entities.isEmpty()) {
                 List<UnifiedJobListingDto> dtos = entities.stream()
                         .filter(j -> j.getSourcePlatform() != null && !REMOVED_PLATFORMS.contains(j.getSourcePlatform().toUpperCase()))
+                        .filter(j -> isStrictlyItJob(j.getJobTitle()))
                         .map(CachedJobListing::toDto)
                         .toList();
                 activeLiveJobsCache.clear();
@@ -624,6 +667,8 @@ public class JobSearchAggregatorService {
                         Element benefitEl = card.selectFirst(".job-posting-benefits__text");
 
                         String title = titleEl != null ? titleEl.text().trim() : query;
+                        if (!isStrictlyItJob(title)) continue;
+
                         String company = compEl != null ? compEl.text().trim() : "Tech Company";
                         String location = locEl != null ? locEl.text().trim() : "Bucharest, Romania";
                         String postedDate = dateEl != null ? dateEl.text().trim() : "Postat recent";
@@ -642,8 +687,18 @@ public class JobSearchAggregatorService {
                             level = "SENIOR";
                         }
 
-                        int daysAgo = parseDaysAgo(postedDate);
-                        OffsetDateTime postedAt = parseExactDate(dtAttr, daysAgo);
+                        int daysAgo = -1;
+                        OffsetDateTime postedAt = parseExactDate(dtAttr);
+                        if (postedAt != null) {
+                            long diff = java.time.temporal.ChronoUnit.DAYS.between(postedAt.toLocalDate(), LocalDate.now());
+                            daysAgo = (int) Math.max(0, diff);
+                        } else {
+                            daysAgo = parseDaysAgo(postedDate);
+                            if (daysAgo >= 0) {
+                                postedAt = OffsetDateTime.now().minusDays(daysAgo);
+                            }
+                        }
+                        String postedDateAgo = daysAgo == 0 ? "Astăzi" : daysAgo == 1 ? "Ieri" : daysAgo > 1 ? (daysAgo + " zile în urmă") : "Dată nespecificată";
 
                         // EVALUARE CORECTĂ A COMPETITIVITĂȚII ȘI NUMĂRULUI DE APLICANȚI
                         boolean isEarlyApplicant = benefitText.contains("early applicant") 
@@ -805,6 +860,7 @@ public class JobSearchAggregatorService {
 
                     String directUrl = "https://stagiipebune.ro" + href;
                     String title = linkEl.text().trim();
+                    if (!isStrictlyItJob(title)) continue;
 
                     // Extragere companie
                     Element compEl = body.selectFirst("p.job-row-sub a.color-link");
@@ -824,7 +880,7 @@ public class JobSearchAggregatorService {
                     // Extragere detalii (salariu, data reală postare, locație)
                     Elements metaSpans = body.select("p.job-row-sub span.muted");
                     String salary = "Stagiu Plătit";
-                    String postedDate = "Postat recent";
+                    String postedDateRaw = "";
                     String location = "Bucharest, Romania";
 
                     for (Element span : metaSpans) {
@@ -832,24 +888,30 @@ public class JobSearchAggregatorService {
                         if (text.toLowerCase().contains("platit") || text.toLowerCase().contains("remunerat") || text.matches(".*\\d+.*RON.*") || text.matches(".*\\d{3,}.*")) {
                             salary = text.replace("•", "").trim();
                         } else if (text.matches(".*\\d+\\s+[A-Za-zăîșțâ]+.*") || text.toLowerCase().contains("aug") || text.toLowerCase().contains("iul") || text.toLowerCase().contains("sep") || text.toLowerCase().contains("mar") || text.toLowerCase().contains("feb")) {
-                            postedDate = "Postat pe " + text.replace("•", "").trim();
+                            postedDateRaw = text.replace("•", "").trim();
                         } else if (text.toLowerCase().contains("bucure") || text.toLowerCase().contains("cluj") || text.toLowerCase().contains("iasi") || text.toLowerCase().contains("timisoara") || text.toLowerCase().contains("remote")) {
                             location = text.replace("•", "").trim();
                         }
                     }
 
                     List<String> skills = extractSkillsFromTitle(title);
-                    int daysAgo = parseDaysAgo(postedDate);
-                    OffsetDateTime postedAt = parseExactDate(postedDate.replace("Postat pe", "").trim(), daysAgo);
+                    OffsetDateTime postedAt = parseExactDate(postedDateRaw);
+                    int daysAgo = -1;
+                    String postedDateAgo = "Dată nespecificată";
+                    if (postedAt != null) {
+                        long diff = java.time.temporal.ChronoUnit.DAYS.between(postedAt.toLocalDate(), LocalDate.now());
+                        daysAgo = (int) Math.max(0, diff);
+                        postedDateAgo = daysAgo == 0 ? "Astăzi" : daysAgo == 1 ? "Ieri" : daysAgo + " zile în urmă";
+                    }
                     String extId = href.replaceAll("[^a-zA-Z0-9-]", "");
                     String desc = "Stagiu oficial de practică și internship publicat pe platforma universitară StagiiPeBune.ro la compania " + company + ". Program dedicat studenților și masteranzilor IT. Aplicare directă prin contul de student.";
                     String contentHash = computeContentHash(title, company, desc, salary, String.join(",", skills), location);
                     OffsetDateTime now = OffsetDateTime.now();
 
                     // Platformă universitară locală (acces restrâns la studenți)
-                    String compLevel = daysAgo <= 4 ? "LOW" : "MEDIUM";
-                    String compLabel = daysAgo <= 4 ? "Șansă Mare" : "Competiție Medie";
-                    String applicantCountText = daysAgo <= 4 ? "Sub 25 de candidați (Studenți)" : "30-50 de candidați";
+                    String compLevel = (daysAgo >= 0 && daysAgo <= 4) ? "LOW" : "MEDIUM";
+                    String compLabel = (daysAgo >= 0 && daysAgo <= 4) ? "Șansă Mare" : "Competiție Medie";
+                    String applicantCountText = (daysAgo >= 0 && daysAgo <= 4) ? "Sub 25 de candidați (Studenți)" : "30-50 de candidați";
 
                     list.add(new UnifiedJobListingDto(
                             "spb-live-" + extId,
@@ -866,7 +928,7 @@ public class JobSearchAggregatorService {
                             skills,
                             Collections.emptyList(),
                             Collections.emptyList(),
-                            postedDate,
+                            postedDateAgo,
                             97.5,
                             compLevel,
                             compLabel,
@@ -923,6 +985,7 @@ public class JobSearchAggregatorService {
                     // Titlu real
                     Element titleEl = item.selectFirst(".job_header_title h3");
                     String title = titleEl != null ? titleEl.text().trim() : "Junior Software Engineer";
+                    if (!isStrictlyItJob(title)) continue;
 
                     // Companie din logo sau titlu
                     Element logoEl = item.selectFirst(".job_header_logo img");
@@ -969,15 +1032,20 @@ public class JobSearchAggregatorService {
                     String salary = "Salariu Nespecificat / Conform Anunț";
                     String level = determineExperienceLevel(title);
                     int daysAgo = parseDaysAgo(postedDate);
-                    OffsetDateTime postedAt = parseExactDate(postedDate, daysAgo);
+                    OffsetDateTime postedAt = null;
+                    String postedDateAgo = "Dată nespecificată";
+                    if (daysAgo >= 0) {
+                        postedAt = OffsetDateTime.now().minusDays(daysAgo);
+                        postedDateAgo = daysAgo == 0 ? "Astăzi" : daysAgo == 1 ? "Ieri" : daysAgo + " zile în urmă";
+                    }
                     String extId = href.replaceAll("[^a-zA-Z0-9-]", "");
                     String desc = "Oportunitate IT pentru juniori și începători publicată pe Juniors.ro la compania " + company + ". Tech stack: " + String.join(", ", tags) + ". Rol dedicat debutului în cariera tech.";
                     String contentHash = computeContentHash(title, company, desc, salary, String.join(",", tags), location);
                     OffsetDateTime now = OffsetDateTime.now();
 
-                    String compLevel = daysAgo <= 2 ? "LOW" : "MEDIUM";
-                    String compLabel = daysAgo <= 2 ? "Șansă Mare" : "Competiție Medie";
-                    String applicantCountText = daysAgo <= 2 ? "Sub 30 de candidați" : "40-75 de candidați";
+                    String compLevel = (daysAgo >= 0 && daysAgo <= 2) ? "LOW" : "MEDIUM";
+                    String compLabel = (daysAgo >= 0 && daysAgo <= 2) ? "Șansă Mare" : "Competiție Medie";
+                    String applicantCountText = (daysAgo >= 0 && daysAgo <= 2) ? "Sub 30 de candidați" : "40-75 de candidați";
 
                     list.add(new UnifiedJobListingDto(
                             "jun-live-" + extId,
@@ -994,7 +1062,7 @@ public class JobSearchAggregatorService {
                             tags,
                             Collections.emptyList(),
                             Collections.emptyList(),
-                            postedDate,
+                            postedDateAgo,
                             96.0,
                             compLevel,
                             compLabel,
@@ -1061,6 +1129,8 @@ public class JobSearchAggregatorService {
                     }
                 }
 
+                if (!isStrictlyItJob(title)) continue;
+
                 // DEDUPLICARE STRICTĂ
                 String dedupKey = normalizeForDedup(title) + "::" + normalizeForDedup(company);
                 if (!seenDedupKeys.add(dedupKey)) continue;
@@ -1077,9 +1147,15 @@ public class JobSearchAggregatorService {
                 Element pubDateEl = item.selectFirst("pubDate");
                 Element guidEl = item.selectFirst("guid");
 
-                int daysAgo = 1;
                 String pubDateStr = pubDateEl != null ? pubDateEl.text().trim() : null;
-                OffsetDateTime postedAt = parseExactDate(pubDateStr, daysAgo);
+                OffsetDateTime postedAt = parseExactDate(pubDateStr);
+                int daysAgo = -1;
+                String postedDateAgo = "Dată nespecificată";
+                if (postedAt != null) {
+                    long diff = java.time.temporal.ChronoUnit.DAYS.between(postedAt.toLocalDate(), LocalDate.now());
+                    daysAgo = (int) Math.max(0, diff);
+                    postedDateAgo = daysAgo == 0 ? "Astăzi" : daysAgo == 1 ? "Ieri" : daysAgo + " zile în urmă";
+                }
                 String extId = guidEl != null && !guidEl.text().isBlank() ? guidEl.text().trim().replaceAll("[^a-zA-Z0-9-]", "") : UUID.randomUUID().toString().substring(0, 8);
                 String fullDesc = cleanDesc.isEmpty() ? "Poziție verificată de software engineering la " + company : cleanDesc;
                 String contentHash = computeContentHash(title, company, fullDesc, salary, String.join(",", skills), "Bucharest / Remote, Romania");
@@ -1104,7 +1180,7 @@ public class JobSearchAggregatorService {
                         skills,
                         Collections.emptyList(),
                         Collections.emptyList(),
-                        pubDateStr != null ? pubDateStr : "Postat recent pe DevJob",
+                        postedDateAgo,
                         95.0,
                         compLevel,
                         compLabel,
@@ -1134,12 +1210,12 @@ public class JobSearchAggregatorService {
                 "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Hardware/Toate-Orasele",
                 "https://www.hipo.ro/locuri-de-munca/cautajob/Telecomunicatii/Toate-Orasele",
                 "https://www.hipo.ro/locuri-de-munca/cautajob/Internet-e-Commerce/Toate-Orasele",
-                "https://www.hipo.ro/locuri-de-munca/cautajob/Toate-Domeniile/Toate-Orasele/junior",
-                "https://www.hipo.ro/locuri-de-munca/cautajob/Toate-Domeniile/Toate-Orasele/internship",
-                "https://www.hipo.ro/locuri-de-munca/cautajob/Toate-Domeniile/Toate-Orasele/developer",
-                "https://www.hipo.ro/locuri-de-munca/cautajob/Toate-Domeniile/Toate-Orasele/java",
-                "https://www.hipo.ro/locuri-de-munca/cautajob/Toate-Domeniile/Toate-Orasele/qa",
-                "https://www.hipo.ro/locuri-de-munca/cautajob/Toate-Domeniile/Toate-Orasele/devops"
+                "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/junior",
+                "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/internship",
+                "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/developer",
+                "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/java",
+                "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/qa",
+                "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/devops"
         );
 
         for (String url : hipoUrls) {
@@ -1161,10 +1237,8 @@ public class JobSearchAggregatorService {
                     if (title.isEmpty()) title = titleEl.text().trim();
                     if (title.isEmpty() || title.equalsIgnoreCase("Inscriere") || title.length() < 3) continue;
 
-                    // Excludere posturi non-IT
-                    String tLower = title.toLowerCase();
-                    if (tLower.contains("curatenie") || tLower.contains("infirmier") || tLower.contains("electrician") || 
-                        tLower.contains("drumuri") || tLower.contains("receptionist") || tLower.contains("economist")) {
+                    // Filtrare strictă IT
+                    if (!isStrictlyItJob(title)) {
                         continue;
                     }
 
@@ -1192,32 +1266,17 @@ public class JobSearchAggregatorService {
                     String cleanHref = href.contains("?") ? href.split("\\?")[0] : href;
                     String directUrl = cleanHref.startsWith("http") ? cleanHref : "https://www.hipo.ro" + cleanHref;
 
-                    // Extragere Dată Exactă din Fișă (ex: "06-09-2026")
-                    Element dateEl = card.selectFirst("i.fa-calendar-alt");
-                    String dateText = dateEl != null ? dateEl.parent().text().trim() : null;
-                    int daysAgo = 1;
-                    OffsetDateTime postedAt;
-                    if (dateText != null && dateText.matches(".*\\b\\d{2}-\\d{2}-\\d{4}\\b.*")) {
-                        Matcher dm = Pattern.compile("(\\d{2}-\\d{2}-\\d{4})").matcher(dateText);
-                        if (dm.find()) {
-                            String exactDate = dm.group(1);
-                            postedAt = parseExactDate(exactDate, 1);
-                            long diff = java.time.temporal.ChronoUnit.DAYS.between(postedAt.toLocalDate(), LocalDate.now());
-                            daysAgo = (int) Math.max(0, Math.min(60, diff));
-                        } else {
-                            postedAt = parseExactDate(null, daysAgo);
-                        }
-                    } else {
-                        postedAt = parseExactDate(null, daysAgo);
-                    }
-
-                    String postedDateAgo = daysAgo == 0 ? "Astăzi" : daysAgo == 1 ? "Ieri" : daysAgo + " zile în urmă";
+                    // Pe Hipo cardul nu oferă data de publicare (calendarul este data limită de aplicare), setăm Dată nespecificată
+                    int daysAgo = -1;
+                    OffsetDateTime postedAt = null;
+                    String postedDateAgo = "Dată nespecificată";
 
                     // Extragere Locație & Mod de Lucru
                     Element locEl = card.selectFirst("i.fa-map-marker-alt");
                     String location = locEl != null ? locEl.parent().text().trim() : "București, România";
                     String workModel = "HYBRID";
                     String locLower = location.toLowerCase();
+                    String tLower = title.toLowerCase();
                     if (tLower.contains("remote") || locLower.contains("remote") || tLower.contains("la distan")) {
                         workModel = "REMOTE";
                         location = "Remote / România";
@@ -1318,6 +1377,7 @@ public class JobSearchAggregatorService {
                     Element titleEl = card.selectFirst("h2");
                     String title = titleEl != null ? titleEl.text().trim() : linkEl.attr("aria-label").trim();
                     if (title.isEmpty() || title.length() < 3) continue;
+                    if (!isStrictlyItJob(title)) continue;
 
                     Element compEl = card.selectFirst(".text-ink-medium");
                     String company = compEl != null ? compEl.text().trim() : "Companie Parteneră BestJobs";
@@ -1350,9 +1410,9 @@ public class JobSearchAggregatorService {
                         location = "Remote / România";
                     }
 
-                    int daysAgo = 1;
-                    OffsetDateTime postedAt = parseExactDate(null, daysAgo);
-                    String postedDateAgo = "Ieri";
+                    int daysAgo = -1;
+                    OffsetDateTime postedAt = null;
+                    String postedDateAgo = "Dată nespecificată";
 
                     String level = determineExperienceLevel(title, null);
                     List<String> skills = extractSkills(title, "");
@@ -1453,8 +1513,8 @@ public class JobSearchAggregatorService {
 
                     String level = determineExperienceLevel(title);
                     List<String> skills = extractSkillsFromTitle(title);
-                    int daysAgo = 2;
-                    OffsetDateTime postedAt = parseExactDate(null, daysAgo);
+                    int daysAgo = -1;
+                    OffsetDateTime postedAt = null;
                     String extId = href.replaceAll("[^a-zA-Z0-9-]", "");
                     String desc = "Rol oficial de " + title + " publicat pe UndeLucram.ro. Nivel identificat: " + level + ". Competențe: " + String.join(", ", skills) + ". Aplicare directă pe platforma angajatorului.";
                     String contentHash = computeContentHash(title, company, desc, "Salariu Nespecificat / Conform Anunț", String.join(",", skills), "Bucharest / Remote, Romania");
@@ -1479,7 +1539,7 @@ public class JobSearchAggregatorService {
                             skills,
                             Collections.emptyList(),
                             Collections.emptyList(),
-                            "Activ pe UndeLucram",
+                            "Dată nespecificată",
                             94.5,
                             compLevel,
                             compLabel,
@@ -1835,6 +1895,8 @@ public class JobSearchAggregatorService {
                     }
 
                     String title = text;
+                    if (!isStrictlyItJob(title)) continue;
+
                     String company = "Companie IT România";
                     String dedupKey = normalizeForDedup(title) + "::" + normalizeForDedup(company);
                     if (!seenDedupKeys.add(dedupKey)) continue;
@@ -1844,8 +1906,8 @@ public class JobSearchAggregatorService {
 
                     String level = determineExperienceLevel(title);
                     List<String> skills = extractSkillsFromTitle(title);
-                    int daysAgo = 3;
-                    OffsetDateTime postedAt = parseExactDate(null, daysAgo);
+                    int daysAgo = -1;
+                    OffsetDateTime postedAt = null;
                     String extId = href.replaceAll("[^a-zA-Z0-9-]", "");
                     String desc = "Anunț activ de recrutare IT publicat pe eJobs.ro. Rol: " + title + ". Nivel identificat: " + level + ". Competențe cerute: " + String.join(", ", skills) + ". Aplicare directă pe platforma eJobs.";
                     String contentHash = computeContentHash(title, company, desc, "Salariu Nespecificat / Conform Anunț", String.join(",", skills), "Bucharest / Remote, Romania");
@@ -1870,7 +1932,7 @@ public class JobSearchAggregatorService {
                             skills,
                             Collections.emptyList(),
                             Collections.emptyList(),
-                            "Postat în ultima lună",
+                            "Dată nespecificată",
                             94.0,
                             compLevel,
                             compLabel,
@@ -2344,7 +2406,7 @@ public class JobSearchAggregatorService {
     }
 
     private int parseDaysAgo(String postedText) {
-        if (postedText == null || postedText.isBlank()) return 5;
+        if (postedText == null || postedText.isBlank()) return -1;
         String t = postedText.toLowerCase();
 
         if (t.contains("astazi") || t.contains("astăzi") || t.contains("today") || t.contains("hour") || t.contains("ore") || t.contains("acum cateva")) {
@@ -2377,7 +2439,7 @@ public class JobSearchAggregatorService {
         if (t.contains("month") || t.contains("luna") || t.contains("lună")) {
             return 28;
         }
-        return 4;
+        return -1;
     }
 
     private boolean isMajorTechBrand(String company) {
@@ -2665,6 +2727,23 @@ public class JobSearchAggregatorService {
             String datePosted,
             String status
     ) {
+        return searchJobs(userId, keyword, location, platform, level, roleCategory, workModel, sortBy, datePosted, status, "ALL");
+    }
+
+    @Transactional(readOnly = true)
+    public List<UnifiedJobListingDto> searchJobs(
+            UUID userId,
+            String keyword,
+            String location,
+            String platform,
+            String level,
+            String roleCategory,
+            String workModel,
+            String sortBy,
+            String datePosted,
+            String status,
+            String discovered
+    ) {
         String cvText = getCandidateCvText(userId);
         String cvLower = cvText.toLowerCase();
 
@@ -2710,6 +2789,24 @@ public class JobSearchAggregatorService {
                 String jStatus = job.status() != null ? job.status().toUpperCase().trim() : "ACTIVE";
                 if (!jStatus.equals(statusUpper)) {
                     continue;
+                }
+            }
+
+            // 0b. Filtrare după Descoperire Recentă (Crawler First Seen)
+            if (discovered != null && !discovered.isBlank() && !discovered.equalsIgnoreCase("ALL")) {
+                OffsetDateTime now = OffsetDateTime.now();
+                OffsetDateTime discCutoff = null;
+                if (discovered.equalsIgnoreCase("24H") || discovered.equalsIgnoreCase("TODAY")) {
+                    discCutoff = now.minusHours(24);
+                } else if (discovered.equalsIgnoreCase("48H")) {
+                    discCutoff = now.minusHours(48);
+                } else if (discovered.equalsIgnoreCase("7D") || discovered.equalsIgnoreCase("WEEK")) {
+                    discCutoff = now.minusDays(7);
+                }
+                if (discCutoff != null) {
+                    if (job.firstSeenAt() == null || job.firstSeenAt().isBefore(discCutoff)) {
+                        continue;
+                    }
                 }
             }
 
@@ -3066,22 +3163,34 @@ public class JobSearchAggregatorService {
                 if (cmp != 0) return cmp;
                 return Integer.compare(a.postedDaysAgo(), b.postedDaysAgo());
             });
-            case "POSTED_AT_DESC" -> list.sort((a, b) -> {
-                if (a.postedAt() != null && b.postedAt() != null) {
-                    int cmp = b.postedAt().compareTo(a.postedAt());
+            case "FIRST_SEEN_DESC", "DISCOVERED_NEWEST" -> list.sort((a, b) -> {
+                if (a.firstSeenAt() != null && b.firstSeenAt() != null) {
+                    int cmp = b.firstSeenAt().compareTo(a.firstSeenAt());
                     if (cmp != 0) return cmp;
+                } else if (a.firstSeenAt() != null) {
+                    return -1;
+                } else if (b.firstSeenAt() != null) {
+                    return 1;
                 }
-                int cmp = Integer.compare(a.postedDaysAgo(), b.postedDaysAgo());
-                if (cmp != 0) return cmp;
                 return Double.compare(b.atsMatchScore(), a.atsMatchScore());
             });
-            case "NEWEST" -> list.sort((a, b) -> {
+            case "POSTED_AT_DESC", "NEWEST" -> list.sort((a, b) -> {
                 if (a.postedAt() != null && b.postedAt() != null) {
                     int cmp = b.postedAt().compareTo(a.postedAt());
                     if (cmp != 0) return cmp;
+                } else if (a.postedAt() != null) {
+                    return -1;
+                } else if (b.postedAt() != null) {
+                    return 1;
                 }
-                int cmp = Integer.compare(a.postedDaysAgo(), b.postedDaysAgo());
-                if (cmp != 0) return cmp;
+                if (a.postedDaysAgo() >= 0 && b.postedDaysAgo() >= 0) {
+                    int cmp = Integer.compare(a.postedDaysAgo(), b.postedDaysAgo());
+                    if (cmp != 0) return cmp;
+                } else if (a.postedDaysAgo() >= 0) {
+                    return -1;
+                } else if (b.postedDaysAgo() >= 0) {
+                    return 1;
+                }
                 return Double.compare(b.atsMatchScore(), a.atsMatchScore());
             });
             case "SALARY_DESC" -> list.sort((a, b) -> {
@@ -3258,22 +3367,86 @@ public class JobSearchAggregatorService {
                 .trim();
     }
 
+    private static final List<String> NON_IT_KEYWORDS = List.of(
+            "vanzari", "vanzator", "vanzare", "sales", "comercial", "merchandiser", "promoter", "casier",
+            "curatenie", "cleaner", "menaj", "curatitor",
+            "sofer", "driver", "curier", "livrator", "conducator auto", "transport marfa",
+            "contabil", "contabilitate", "accounting", "financiar", "financial", "finante", "economist", "credite", "casierie",
+            "medical", "medic", "asistent medical", "infirmier", "farmacist", "farmacie", "stomatolog", "dentist",
+            "magazin", "lucrator comercial", "operator depozit", "picker", "stivuitorist", "manipulant", "depozit", "gestionar", "supply chain",
+            "muncitor", "montator", "sudor", "lacatus", "mecanic", "electrician", "instalator", "strungar", "vopsitor", "tamplar",
+            "bucatar", "ospatar", "barman", "barista", "camerista", "receptie", "receptionist", "hotel", "restaurant",
+            "consilier vanzari", "consilier clienti", "consilier relatii", "relatii clienti", "customer care", "call center",
+            "nutritionist", "terapeut", "psiholog", "educator", "asistent vanzari",
+            "jurist", "avocat", "legal counsel", "notar", "secretara", "secretariat"
+    );
+
+    private static final List<Pattern> IT_ROLE_PATTERNS = List.of(
+            Pattern.compile("\\b(developer|software|engineer|programmer|programator|inginer|coder|coding)\\b"),
+            Pattern.compile("\\b(frontend|front-end|backend|back-end|fullstack|full-stack|web)\\b"),
+            Pattern.compile("\\b(devops|sre|sysadmin|system administrator|administrator sistem|cloud|infrastructure)\\b"),
+            Pattern.compile("\\b(java|python|c\\+\\+|c#|\\.net|dotnet|javascript|typescript|react|angular|vue|node|golang|rust|kotlin|swift|php|ruby)\\b"),
+            Pattern.compile("\\b(qa|tester|testing|testare|quality assurance|automation)\\b"),
+            Pattern.compile("\\b(data analyst|data engineer|data scientist|analist date|database|dba|sql|bi developer|big data|analytics)\\b"),
+            Pattern.compile("\\b(ai|ml|machine learning|deep learning|llm|nlp|computer vision)\\b"),
+            Pattern.compile("\\b(cybersecurity|cyber security|securitate cibernetica|security engineer|infosec|soc analyst)\\b"),
+            Pattern.compile("\\b(scrum master|agile coach|product owner|tech lead|team lead it|it project manager)\\b"),
+            Pattern.compile("\\b(it support|helpdesk|service desk|suport it|tehnician it|suport tehnic it|administrator retea|network engineer)\\b"),
+            Pattern.compile("\\b(it internship|it trainee|software intern|developer intern|internship it|stagiu it|stagiu programare)\\b"),
+            Pattern.compile("\\b(embedded|firmware|iot|microcontroller|hardware engineer|telecom|retele|network)\\b"),
+            Pattern.compile("\\b(ui/ux|ux designer|ui designer|product designer)\\b")
+    );
+
+    private static final Pattern STANDALONE_IT_PATTERN = Pattern.compile("\\b(it|i\\.t\\.)\\b");
+
+    private String normalizeTextForFilter(String text) {
+        if (text == null) return "";
+        return text.toLowerCase()
+                .replace('ă', 'a')
+                .replace('â', 'a')
+                .replace('î', 'i')
+                .replace('ș', 's')
+                .replace('ş', 's')
+                .replace('ț', 't')
+                .replace('ţ', 't')
+                .replaceAll("[^a-z0-9+#.\\s-]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
     private boolean isStrictlyItJob(String title) {
-        if (title == null || title.isBlank()) return false;
-        String t = title.toLowerCase();
-        if (t.contains("vanzat") || t.contains("vǽnz") || t.contains("comercial") || t.contains("farmac") || 
-            t.contains("curat") || t.contains("sofer") || t.contains("contabil") || t.contains("medical") || 
-            t.contains("magazin") || t.contains("lucrator") || t.contains("lucr") || t.contains("gestionar") || 
-            t.contains("muncitor") || t.contains("financiar") || t.contains("aplica acum") || t.contains("aplic") ||
-            (t.contains("full-time") && !t.contains("developer") && !t.contains("engineer"))) {
-            return false;
+        if (title == null || title.isBlank() || title.length() < 3) return false;
+        String t = normalizeTextForFilter(title);
+
+        // 1. Blacklist check - excludere categorică posturi non-IT
+        for (String bad : NON_IT_KEYWORDS) {
+            if (t.contains(bad)) {
+                if ((t.contains("engineer") || t.contains("developer")) &&
+                    (t.contains("software") || t.contains("solutions") || t.contains("tech"))) {
+                    // Caz excepțional tehnic permis
+                } else {
+                    return false;
+                }
+            }
         }
-        return t.contains("developer") || t.contains("engineer") || t.contains("programmer") || t.contains("software") ||
-               t.contains("data") || t.contains("qa") || t.contains("test") || t.contains("devops") || t.contains("cloud") ||
-               t.contains("architect") || t.contains("java") || t.contains("python") || t.contains("react") ||
-               t.contains("support") || t.contains("sap") || t.contains("sysadmin") || t.contains("network") ||
-               t.contains("scrum") || t.contains("frontend") || t.contains("backend") || t.contains("fullstack") ||
-               t.contains("it") || t.contains("intern") || t.contains("trainee") || t.contains("security");
+
+        // 2. Whitelist pattern check
+        for (Pattern p : IT_ROLE_PATTERNS) {
+            if (p.matcher(t).find()) {
+                return true;
+            }
+        }
+
+        // 3. Standalone IT keyword check
+        if (STANDALONE_IT_PATTERN.matcher(t).find()) {
+            if (t.contains("junior") || t.contains("intern") || t.contains("specialist") ||
+                t.contains("consultant") || t.contains("manager") || t.contains("officer") ||
+                t.contains("expert") || t.contains("director")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public UnifiedJobListingDto getJobDetails(String id) {

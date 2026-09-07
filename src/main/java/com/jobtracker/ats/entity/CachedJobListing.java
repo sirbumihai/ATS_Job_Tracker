@@ -114,7 +114,7 @@ public class CachedJobListing {
         OffsetDateTime now = OffsetDateTime.now();
         OffsetDateTime posted = dto.postedAt() != null 
                 ? dto.postedAt() 
-                : now.minusDays(Math.max(0, dto.postedDaysAgo()));
+                : (dto.postedDaysAgo() >= 0 ? now.minusDays(dto.postedDaysAgo()) : null);
 
         return CachedJobListing.builder()
                 .id(dto.id() != null ? safeSub(dto.id(), 250) : java.util.UUID.randomUUID().toString())
@@ -152,6 +152,13 @@ public class CachedJobListing {
                         .toList()
                 : Collections.emptyList();
 
+        String effectivePostedDateAgo = this.postedDateAgo;
+        if (effectivePostedDateAgo == null || effectivePostedDateAgo.isBlank() || (this.postedAt == null && (this.postedDaysAgo < 0 || this.postedDaysAgo > 100))) {
+            if (this.postedAt == null) {
+                effectivePostedDateAgo = "Dată nespecificată";
+            }
+        }
+
         return new UnifiedJobListingDto(
                 this.id,
                 this.jobTitle,
@@ -167,15 +174,15 @@ public class CachedJobListing {
                 skills,
                 Collections.emptyList(),
                 Collections.emptyList(),
-                this.postedDateAgo,
+                effectivePostedDateAgo,
                 this.atsMatchScore,
                 this.competitiveness,
                 this.competitivenessLabel,
                 this.applicantCountText,
-                this.postedDaysAgo,
+                this.postedAt != null ? this.postedDaysAgo : -1,
                 this.externalId != null ? this.externalId : this.id,
                 this.contentHash,
-                this.postedAt != null ? this.postedAt : (this.createdAt != null ? this.createdAt : OffsetDateTime.now()),
+                this.postedAt,
                 this.firstSeenAt != null ? this.firstSeenAt : this.createdAt,
                 this.lastSeenAt != null ? this.lastSeenAt : this.updatedAt,
                 this.status != null ? this.status : "ACTIVE"

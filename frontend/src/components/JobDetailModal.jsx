@@ -234,9 +234,9 @@ export default function JobDetailModal({
                     {currentJob.location}
                   </span>
                   <span>•</span>
-                  <span className="flex items-center gap-1 text-gray-700 font-bold text-xs" title={`Data postării: ${currentJob.postedAt || currentJob.postedDateAgo}`}>
+                  <span className="flex items-center gap-1 text-gray-700 font-bold text-xs" title={currentJob.postedAt ? `Data postării: ${currentJob.postedAt}` : 'Data exactă de publicare nu a fost furnizată de angajator'}>
                     <Calendar className="w-3.5 h-3.5 text-indigo-600" />
-                    {formatDateTime(currentJob.postedAt) !== 'Nespecificat' ? formatDateTime(currentJob.postedAt) : currentJob.postedDateAgo}
+                    {currentJob.postedAt ? (formatDateTime(currentJob.postedAt) !== 'Nespecificat' ? formatDateTime(currentJob.postedAt) : currentJob.postedDateAgo) : (currentJob.postedDateAgo || 'Dată nespecificată')}
                   </span>
                   {currentJob.status && (
                     <>

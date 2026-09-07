@@ -31,7 +31,8 @@ public class JobSearchController {
             @RequestParam(required = false, defaultValue = "ALL") String workModel,
             @RequestParam(required = false, defaultValue = "MATCH_AND_RECENCY") String sortBy,
             @RequestParam(required = false, defaultValue = "ALL") String datePosted,
-            @RequestParam(required = false, defaultValue = "ACTIVE") String status
+            @RequestParam(required = false, defaultValue = "ACTIVE") String status,
+            @RequestParam(required = false, defaultValue = "ALL") String discovered
     ) {
         UUID activeUserId = headerUserId != null ? headerUserId : userId;
         List<UnifiedJobListingDto> jobs = jobSearchAggregatorService.searchJobs(
@@ -44,7 +45,8 @@ public class JobSearchController {
                 workModel,
                 sortBy,
                 datePosted,
-                status
+                status,
+                discovered
         );
         return ResponseEntity.ok(jobs);
     }
