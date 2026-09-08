@@ -1640,13 +1640,15 @@ export default function JobSearchPage({
                       return (
                         <span 
                           key={idx}
-                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border ${
+                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border flex items-center gap-1 ${
                             isMatched 
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs' 
                               : 'bg-gray-50 text-gray-600 border-gray-200'
                           }`}
+                          title={isMatched ? `✓ Competență bifată în CV-ul tău: ${s}` : `Competență cerută de angajator: ${s}`}
                         >
-                          {s}
+                          {isMatched && <Check className="w-2.5 h-2.5 text-emerald-600 shrink-0" />}
+                          <span>{s}</span>
                         </span>
                       );
                     })}
