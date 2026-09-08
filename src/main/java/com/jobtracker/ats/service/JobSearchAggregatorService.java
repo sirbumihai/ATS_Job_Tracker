@@ -417,8 +417,17 @@ public class JobSearchAggregatorService {
                     newJob.setContentHash(newHash);
                     newJob.setStatus("ACTIVE");
                     newJob.setFirstSeenAt(now);
-                    newJob.setLastSeenAt(now);
-                    newJob.setNewlyDiscovered(true);
+                    // Un job este marcat NOU GĂSIT doar dacă este publicat recent (sub 48h / 2 zile)
+                    boolean isRecentlyPosted = true;
+                    if (dto.postedAt() != null) {
+                        long daysOld = java.time.temporal.ChronoUnit.DAYS.between(dto.postedAt().toLocalDate(), LocalDate.now());
+                        if (daysOld > 2) {
+                            isRecentlyPosted = false;
+                        }
+                    } else if (dto.postedDaysAgo() > 2) {
+                        isRecentlyPosted = false;
+                    }
+                    newJob.setNewlyDiscovered(isRecentlyPosted);
                     toInsert.add(newJob);
                     existingByUrl.put(dto.directApplyUrl(), newJob); // Evită duplicate în cadrul aceluiași freshList
 

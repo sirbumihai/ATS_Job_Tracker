@@ -105,13 +105,14 @@ export default function JobSearchPage({
     totalLiveJobs: 0
   });
 
-  // Număr joburi noi identificate la ultima sincronizare
+  // Număr joburi noi identificate la ultima sincronizare și publicate recent (max 48h)
   const newlyDiscoveredCount = useMemo(() => {
-    if (globalStats.summaryStats?.newlyDiscovered !== undefined && globalStats.summaryStats?.newlyDiscovered > 0) {
-      return globalStats.summaryStats.newlyDiscovered;
-    }
-    return jobs.filter(j => j.newlyDiscovered).length;
-  }, [globalStats, jobs]);
+    return jobs.filter(j => {
+      if (!j?.newlyDiscovered) return false;
+      const ts = getJobTimestamp(j);
+      return ts > 0 && (Date.now() - ts) <= 48 * 3600 * 1000;
+    }).length;
+  }, [jobs]);
 
   // Persistență jobs salvate în localStorage
   const [savedJobIds, setSavedJobIds] = useState(() => {
@@ -510,6 +511,13 @@ export default function JobSearchPage({
     return 0;
   };
 
+  // Verificare dacă un job este cu adevărat NOU GĂSIT (descoperit recent ȘI publicat în ultimele 48h)
+  const isJobTrulyNew = (job) => {
+    if (!job?.newlyDiscovered) return false;
+    const ts = getJobTimestamp(job);
+    return ts > 0 && (Date.now() - ts) <= 48 * 3600 * 1000;
+  };
+
   // Filtrare & Sortare flexibilă pe client
   const filteredAndSortedJobs = useMemo(() => {
     let result = [...jobs];
@@ -526,7 +534,7 @@ export default function JobSearchPage({
 
     // Filtru dată postare unificat pe client (pe baza datei reale de publicare)
     if (selectedDatePosted === 'NEWLY_DISCOVERED') {
-      result = result.filter(j => j.newlyDiscovered === true);
+      result = result.filter(j => isJobTrulyNew(j));
     } else if (selectedDatePosted !== 'ALL') {
       const now = Date.now();
       const cutoffHours = selectedDatePosted === '24H' || selectedDatePosted === '1' ? 24 :
@@ -1524,7 +1532,7 @@ export default function JobSearchPage({
                         <span className={`w-1.5 h-1.5 rounded-full ${platformBadge.dot}`}></span>
                         {platformBadge.label}
                       </span>
-                      {job.newlyDiscovered && (
+                      {isJobTrulyNew(job) && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-2xs">
                           <Sparkles className="w-2.5 h-2.5" />
                           NOU GĂSIT

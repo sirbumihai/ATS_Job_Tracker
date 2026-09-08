@@ -191,7 +191,7 @@ public class CachedJobListing {
                 this.firstSeenAt != null ? this.firstSeenAt : this.createdAt,
                 this.lastSeenAt != null ? this.lastSeenAt : this.updatedAt,
                 this.status != null ? this.status : "ACTIVE",
-                this.newlyDiscovered != null && this.newlyDiscovered
+                this.newlyDiscovered != null && this.newlyDiscovered && (this.postedAt == null || !this.postedAt.isBefore(java.time.OffsetDateTime.now().minusHours(48)))
         );
     }
 }
