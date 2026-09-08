@@ -490,6 +490,26 @@ export default function JobSearchPage({
     return monthly;
   };
 
+  // Helper pentru extragerea timestamp-ului real de publicare (cu fallback transparent)
+  const getJobTimestamp = (job) => {
+    if (!job) return 0;
+    // 1. Data reală de publicare (dacă este specificată în format ISO sau dată validă)
+    if (job.postedAt) {
+      const t = new Date(job.postedAt).getTime();
+      if (!isNaN(t) && t > 0) return t;
+    }
+    // 2. Fallback dacă avem număr de zile valid (postedDaysAgo >= 0)
+    if (job.postedDaysAgo !== undefined && job.postedDaysAgo !== null && job.postedDaysAgo >= 0) {
+      return Date.now() - (job.postedDaysAgo * 24 * 3600 * 1000);
+    }
+    // 3. Fallback exclusiv pentru anunțurile fără dată specificată (data descoperirii de crawler)
+    if (job.firstSeenAt) {
+      const t = new Date(job.firstSeenAt).getTime();
+      if (!isNaN(t) && t > 0) return t;
+    }
+    return 0;
+  };
+
   // Filtrare & Sortare flexibilă pe client
   const filteredAndSortedJobs = useMemo(() => {
     let result = [...jobs];
@@ -504,7 +524,7 @@ export default function JobSearchPage({
       result = result.filter(j => (j.competitiveness || 'MEDIUM') === selectedCompetitiveness);
     }
 
-    // Filtru dată postare unificat pe client (pe baza firstSeenAt, postedAt sau NOU GĂSIT)
+    // Filtru dată postare unificat pe client (pe baza datei reale de publicare)
     if (selectedDatePosted === 'NEWLY_DISCOVERED') {
       result = result.filter(j => j.newlyDiscovered === true);
     } else if (selectedDatePosted !== 'ALL') {
@@ -515,9 +535,7 @@ export default function JobSearchPage({
                           selectedDatePosted === '30D' || selectedDatePosted === '30' ? 720 : null;
       if (cutoffHours) {
         result = result.filter(j => {
-          let ts = null;
-          if (j.firstSeenAt) ts = new Date(j.firstSeenAt).getTime();
-          else if (j.postedAt) ts = new Date(j.postedAt).getTime();
+          const ts = getJobTimestamp(j);
           if (!ts) return false;
           return (now - ts) <= cutoffHours * 3600 * 1000;
         });
@@ -526,21 +544,17 @@ export default function JobSearchPage({
 
     result.sort((a, b) => {
       if (sortBy === 'POSTED_AT_DESC' || sortBy === 'NEWEST' || sortBy === 'FIRST_SEEN_DESC' || sortBy === 'DISCOVERED_NEWEST') {
-        const timeA = Math.max(
-          a.firstSeenAt ? new Date(a.firstSeenAt).getTime() : 0,
-          a.postedAt ? new Date(a.postedAt).getTime() : 0
-        );
-        const timeB = Math.max(
-          b.firstSeenAt ? new Date(b.firstSeenAt).getTime() : 0,
-          b.postedAt ? new Date(b.postedAt).getTime() : 0
-        );
-        if (timeA !== timeB) return timeB - timeA;
+        const timeA = getJobTimestamp(a);
+        const timeB = getJobTimestamp(b);
+        if (timeA !== timeB) return timeB - timeA; // Cel mai nou publicat apare primul!
         return b.atsMatchScore - a.atsMatchScore;
       }
       if (sortBy === 'MATCH_SCORE') {
         const diff = b.atsMatchScore - a.atsMatchScore;
         if (diff !== 0) return diff;
-        return (a.postedDaysAgo || 0) - (b.postedDaysAgo || 0);
+        const timeA = getJobTimestamp(a);
+        const timeB = getJobTimestamp(b);
+        return timeB - timeA;
       }
       if (sortBy === 'SALARY_DESC') {
         const salA = parseSalaryForSort(a.salaryRange);
@@ -565,9 +579,14 @@ export default function JobSearchPage({
       if (sortBy === 'COMPANY_AZ') {
         return (a.companyName || '').localeCompare(b.companyName || '');
       }
-      // Implicit: MATCH_AND_RECENCY (Pondere: 70% ATS Match + 30% Recență)
-      const recencyA = Math.max(0, 30 - (a.postedDaysAgo || 0));
-      const recencyB = Math.max(0, 30 - (b.postedDaysAgo || 0));
+      // Implicit: MATCH_AND_RECENCY (Pondere: 70% ATS Match + 30% Recență din data postării)
+      const now = Date.now();
+      const daysOldA = a.postedDaysAgo >= 0 ? a.postedDaysAgo : 
+                       a.postedAt ? Math.floor(Math.max(0, (now - new Date(a.postedAt).getTime()) / (24 * 3600 * 1000))) : 15;
+      const daysOldB = b.postedDaysAgo >= 0 ? b.postedDaysAgo : 
+                       b.postedAt ? Math.floor(Math.max(0, (now - new Date(b.postedAt).getTime()) / (24 * 3600 * 1000))) : 15;
+      const recencyA = Math.max(0, 30 - daysOldA);
+      const recencyB = Math.max(0, 30 - daysOldB);
       const totalA = (a.atsMatchScore * 0.70) + (recencyA * 0.30);
       const totalB = (b.atsMatchScore * 0.70) + (recencyB * 0.30);
       return totalB - totalA;

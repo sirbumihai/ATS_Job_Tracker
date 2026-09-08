@@ -647,8 +647,7 @@ public class JobSearchAggregatorService {
             String expFilter = entry.getValue();
             int offset = 0;
             int consecutiveZeroNew = 0;
-            int consecutiveKnownDbPages = 0;
-            // Paginare dinamică completă: parcurge TOATE paginile existente (start=0, 25, 50, 75, 100...)
+            // Paginare dinamică completă: parcurge paginile existente ordonate cronologic (sortBy=DD)
             // FĂRĂ LIMITĂRI: 40 de pagini egale pentru TOATE nivelurile (Senior, Lead, Mid, Junior, Intern)
             int maxPagesPerQuery = 40;
 
@@ -656,7 +655,7 @@ public class JobSearchAggregatorService {
                 try {
                     String encodedQuery = java.net.URLEncoder.encode(query, java.nio.charset.StandardCharsets.UTF_8);
                     String queryUrl = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=" 
-                            + encodedQuery + "&location=Romania&f_TPR=r2592000&" + expFilter + "&start=" + offset;
+                            + encodedQuery + "&location=Romania&sortBy=DD&f_TPR=r2592000&" + expFilter + "&start=" + offset;
 
                     String ua = LINKEDIN_USER_AGENTS.get((queryIdx + (offset / 25)) % LINKEDIN_USER_AGENTS.size());
 
@@ -815,17 +814,6 @@ public class JobSearchAggregatorService {
                         break;
                     }
 
-                    // CRAWLING DIFERENȚIAL INTELIGENT:
-                    // Dacă cel puțin 70% din joburile de pe pagină există deja în baza de date,
-                    // și 2 pagini consecutive confirmă acest lucru, oprim căutarea pentru acest query!
-                    if (knownDbUrls != null && !knownDbUrls.isEmpty() && knownDbJobsThisPage >= Math.max(3, cards.size() * 0.7)) {
-                        consecutiveKnownDbPages++;
-                        if (consecutiveKnownDbPages >= 2) {
-                            break; // Gata diferența pentru acest query
-                        }
-                    } else {
-                        consecutiveKnownDbPages = 0;
-                    }
 
                     // Dacă două pagini consecutive aduc 0 joburi noi (toate fiind deja cunoscute), trecem la următorul query
                     if (newJobsThisPage == 0) {
@@ -1374,20 +1362,20 @@ public class JobSearchAggregatorService {
     private void scrapeBestJobsIt(List<UnifiedJobListingDto> list, Set<String> seenDedupKeys) {
         Set<String> seenUrls = new HashSet<>();
         List<String> bestJobsUrls = List.of(
-                "https://www.bestjobs.eu/locuri-de-munca/it",
-                "https://www.bestjobs.eu/locuri-de-munca/it-software",
-                "https://www.bestjobs.eu/locuri-de-munca/it-telecomunicatii",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=developer",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=software",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=junior",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=internship",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=java",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=python",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=react",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=qa",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=devops",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=data",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=cloud"
+                "https://www.bestjobs.eu/locuri-de-munca/it?order=date",
+                "https://www.bestjobs.eu/locuri-de-munca/it-software?order=date",
+                "https://www.bestjobs.eu/locuri-de-munca/it-telecomunicatii?order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=developer&order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=software&order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=junior&order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=internship&order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=java&order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=python&order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=react&order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=qa&order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=devops&order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=data&order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=cloud&order=date"
         );
 
         for (String url : bestJobsUrls) {
@@ -1900,9 +1888,10 @@ public class JobSearchAggregatorService {
     private void scrapeEjobsItMultiPage(List<UnifiedJobListingDto> list, Set<String> seenDedupKeys) {
         Set<String> seenUrls = new HashSet<>();
         List<String> itSearchPaths = List.of(
-                "https://www.ejobs.ro/locuri-de-munca/it-software",
-                "https://www.ejobs.ro/locuri-de-munca/it-software/pagina1",
-                "https://www.ejobs.ro/locuri-de-munca/it-software/pagina2"
+                "https://www.ejobs.ro/locuri-de-munca/it-software?sort=date",
+                "https://www.ejobs.ro/locuri-de-munca/it-software/pagina1?sort=date",
+                "https://www.ejobs.ro/locuri-de-munca/it-software/pagina2?sort=date",
+                "https://www.ejobs.ro/locuri-de-munca/it-software/pagina3?sort=date"
         );
 
         for (String url : itSearchPaths) {
@@ -2951,13 +2940,9 @@ public class JobSearchAggregatorService {
                     continue;
                 }
             } else if (dateCutoff != null) {
-                boolean matchesDate = false;
-                if (job.firstSeenAt() != null && !job.firstSeenAt().isBefore(dateCutoff)) {
-                    matchesDate = true;
-                } else if (job.postedAt() != null && !job.postedAt().isBefore(dateCutoff)) {
-                    matchesDate = true;
-                }
-                if (!matchesDate) {
+                long cutoffMilli = dateCutoff.toInstant().toEpochMilli();
+                long jobMilli = getJobEpochMilli(job);
+                if (jobMilli < cutoffMilli) {
                     continue;
                 }
             }
@@ -3310,13 +3295,8 @@ public class JobSearchAggregatorService {
                 return Integer.compare(a.postedDaysAgo(), b.postedDaysAgo());
             });
             case "POSTED_AT_DESC", "NEWEST", "FIRST_SEEN_DESC", "DISCOVERED_NEWEST" -> list.sort((a, b) -> {
-                long timeA = 0;
-                if (a.firstSeenAt() != null) timeA = Math.max(timeA, a.firstSeenAt().toInstant().toEpochMilli());
-                if (a.postedAt() != null) timeA = Math.max(timeA, a.postedAt().toInstant().toEpochMilli());
-
-                long timeB = 0;
-                if (b.firstSeenAt() != null) timeB = Math.max(timeB, b.firstSeenAt().toInstant().toEpochMilli());
-                if (b.postedAt() != null) timeB = Math.max(timeB, b.postedAt().toInstant().toEpochMilli());
+                long timeA = getJobEpochMilli(a);
+                long timeB = getJobEpochMilli(b);
 
                 int cmp = Long.compare(timeB, timeA);
                 if (cmp != 0) return cmp;
@@ -3355,14 +3335,33 @@ public class JobSearchAggregatorService {
                         return Double.compare(relB, relA);
                     }
 
-                    double recencyBoostA = Math.max(0, 30 - a.postedDaysAgo()) * 1.0;
-                    double recencyBoostB = Math.max(0, 30 - b.postedDaysAgo()) * 1.0;
+                    int daysOldA = a.postedDaysAgo() >= 0 ? a.postedDaysAgo() :
+                            a.postedAt() != null ? (int) Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(a.postedAt().toLocalDate(), LocalDate.now())) : 15;
+                    int daysOldB = b.postedDaysAgo() >= 0 ? b.postedDaysAgo() :
+                            b.postedAt() != null ? (int) Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(b.postedAt().toLocalDate(), LocalDate.now())) : 15;
+
+                    double recencyBoostA = Math.max(0, 30 - daysOldA) * 1.0;
+                    double recencyBoostB = Math.max(0, 30 - daysOldB) * 1.0;
                     double totalA = (a.atsMatchScore() * 0.70) + (recencyBoostA * 0.30) + (relA * 0.15);
                     double totalB = (b.atsMatchScore() * 0.70) + (recencyBoostB * 0.30) + (relB * 0.15);
                     return Double.compare(totalB, totalA);
                 });
             }
         }
+    }
+
+    private long getJobEpochMilli(UnifiedJobListingDto job) {
+        if (job == null) return 0;
+        if (job.postedAt() != null) {
+            return job.postedAt().toInstant().toEpochMilli();
+        }
+        if (job.postedDaysAgo() >= 0) {
+            return Instant.now().minusSeconds((long) job.postedDaysAgo() * 86400).toEpochMilli();
+        }
+        if (job.firstSeenAt() != null) {
+            return job.firstSeenAt().toInstant().toEpochMilli();
+        }
+        return 0;
     }
 
     private boolean matchesRoleCategory(UnifiedJobListingDto job, String category) {
@@ -3510,7 +3509,8 @@ public class JobSearchAggregatorService {
             "bucatar", "ospatar", "barman", "barista", "camerista", "receptie", "receptionist", "hotel", "restaurant",
             "consilier vanzari", "consilier clienti", "consilier relatii", "relatii clienti", "customer care", "call center",
             "nutritionist", "terapeut", "psiholog", "educator", "asistent vanzari",
-            "jurist", "avocat", "legal counsel", "notar", "secretara", "secretariat"
+            "jurist", "avocat", "legal counsel", "notar", "secretara", "secretariat",
+            "constructii", "constructie", "santier", "infrastructura rutiera", "drumuri", "poduri", "agronom", "agronomie", "zootehnie", "veterinar", "cadastru", "topograf"
     );
 
     private static final List<Pattern> IT_ROLE_PATTERNS = List.of(
