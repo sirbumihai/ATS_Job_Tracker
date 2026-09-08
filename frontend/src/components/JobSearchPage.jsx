@@ -54,6 +54,54 @@ import {
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 
+// Parser uniform de salarii pentru sortare exactă pe client
+const parseSalaryForSort = (salaryRange) => {
+  if (!salaryRange) return 0;
+  const s = salaryRange.toLowerCase().replace(/\./g, '').replace(/,/g, '');
+  const matches = s.match(/\d{3,6}/g);
+  if (!matches) return 0;
+  let maxVal = 0;
+  for (const m of matches) {
+    const v = parseFloat(m);
+    if (v > maxVal && v < 500000) maxVal = v;
+  }
+  if (maxVal === 0) return 0;
+  const isEur = s.includes('eur') || s.includes('€');
+  const isChf = s.includes('chf');
+  const isAnnual = s.includes('an') || s.includes('year') || maxVal > 35000;
+  let monthly = isAnnual ? maxVal / 12 : maxVal;
+  if (isEur) monthly *= 5.0;
+  else if (isChf) monthly *= 5.2;
+  return monthly;
+};
+
+// Helper pentru extragerea timestamp-ului real de publicare (cu fallback transparent)
+const getJobTimestamp = (job) => {
+  if (!job) return 0;
+  // 1. Data reală de publicare (dacă este specificată în format ISO sau dată validă)
+  if (job.postedAt) {
+    const t = new Date(job.postedAt).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  // 2. Fallback dacă avem număr de zile valid (postedDaysAgo >= 0)
+  if (job.postedDaysAgo !== undefined && job.postedDaysAgo !== null && job.postedDaysAgo >= 0) {
+    return Date.now() - (job.postedDaysAgo * 24 * 3600 * 1000);
+  }
+  // 3. Fallback exclusiv pentru anunțurile fără dată specificată (data descoperirii de crawler)
+  if (job.firstSeenAt) {
+    const t = new Date(job.firstSeenAt).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  return 0;
+};
+
+// Verificare dacă un job este cu adevărat NOU GĂSIT (descoperit recent ȘI publicat în ultimele 48h)
+const isJobTrulyNew = (job) => {
+  if (!job?.newlyDiscovered) return false;
+  const ts = getJobTimestamp(job);
+  return ts > 0 && (Date.now() - ts) <= 48 * 3600 * 1000;
+};
+
 export default function JobSearchPage({ 
   currentUser, 
   onSaveToKanbanSuccess, 
@@ -468,54 +516,6 @@ export default function JobSearchPage({
     } finally {
       setSavingJobId(null);
     }
-  };
-
-  // Parser uniform de salarii pentru sortare exactă pe client
-  const parseSalaryForSort = (salaryRange) => {
-    if (!salaryRange) return 0;
-    const s = salaryRange.toLowerCase().replace(/\./g, '').replace(/,/g, '');
-    const matches = s.match(/\d{3,6}/g);
-    if (!matches) return 0;
-    let maxVal = 0;
-    for (const m of matches) {
-      const v = parseFloat(m);
-      if (v > maxVal && v < 500000) maxVal = v;
-    }
-    if (maxVal === 0) return 0;
-    const isEur = s.includes('eur') || s.includes('€');
-    const isChf = s.includes('chf');
-    const isAnnual = s.includes('an') || s.includes('year') || maxVal > 35000;
-    let monthly = isAnnual ? maxVal / 12 : maxVal;
-    if (isEur) monthly *= 5.0;
-    else if (isChf) monthly *= 5.2;
-    return monthly;
-  };
-
-  // Helper pentru extragerea timestamp-ului real de publicare (cu fallback transparent)
-  const getJobTimestamp = (job) => {
-    if (!job) return 0;
-    // 1. Data reală de publicare (dacă este specificată în format ISO sau dată validă)
-    if (job.postedAt) {
-      const t = new Date(job.postedAt).getTime();
-      if (!isNaN(t) && t > 0) return t;
-    }
-    // 2. Fallback dacă avem număr de zile valid (postedDaysAgo >= 0)
-    if (job.postedDaysAgo !== undefined && job.postedDaysAgo !== null && job.postedDaysAgo >= 0) {
-      return Date.now() - (job.postedDaysAgo * 24 * 3600 * 1000);
-    }
-    // 3. Fallback exclusiv pentru anunțurile fără dată specificată (data descoperirii de crawler)
-    if (job.firstSeenAt) {
-      const t = new Date(job.firstSeenAt).getTime();
-      if (!isNaN(t) && t > 0) return t;
-    }
-    return 0;
-  };
-
-  // Verificare dacă un job este cu adevărat NOU GĂSIT (descoperit recent ȘI publicat în ultimele 48h)
-  const isJobTrulyNew = (job) => {
-    if (!job?.newlyDiscovered) return false;
-    const ts = getJobTimestamp(job);
-    return ts > 0 && (Date.now() - ts) <= 48 * 3600 * 1000;
   };
 
   // Filtrare & Sortare flexibilă pe client
