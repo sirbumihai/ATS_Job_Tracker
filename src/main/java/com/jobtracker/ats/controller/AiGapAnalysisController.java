@@ -80,4 +80,25 @@ public class AiGapAnalysisController {
         Map<String, String> response = aiGapAnalysisService.rewriteSingleBullet(bulletText, context);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/api/v1/ai/match-job")
+    public ResponseEntity<Map<String, Object>> matchJobWithAi(
+            @RequestHeader(value = "X-User-Id", required = false) UUID headerUserId,
+            @RequestBody Map<String, Object> request) {
+        UUID userId = headerUserId;
+        if (userId == null && request.containsKey("userId") && request.get("userId") != null) {
+            try {
+                userId = UUID.fromString(String.valueOf(request.get("userId")));
+            } catch (Exception ignored) {}
+        }
+        if (userId == null) {
+            userId = UUID.fromString("23fe8bdd-08f4-413d-9985-f99c21040b59");
+        }
+        String jobTitle = (String) request.getOrDefault("jobTitle", "");
+        String rawDescription = (String) request.getOrDefault("rawDescription", "");
+        String jobId = (String) request.getOrDefault("jobId", null);
+
+        Map<String, Object> result = aiGapAnalysisService.matchJobWithAi(jobId, jobTitle, rawDescription, userId);
+        return ResponseEntity.ok(result);
+    }
 }

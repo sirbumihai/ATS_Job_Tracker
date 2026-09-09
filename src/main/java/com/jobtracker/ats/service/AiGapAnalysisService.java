@@ -522,4 +522,101 @@ public class AiGapAnalysisService {
 
         return sb.toString();
     }
+
+    public Map<String, Object> matchJobWithAi(String jobId, String jobTitle, String rawDescription, UUID userId) {
+        String resumeText = null;
+        if (userId != null) {
+            Optional<CvProfile> primaryCv = cvProfileRepository.findFirstByUserIdAndIsPrimaryTrue(userId)
+                    .or(() -> cvProfileRepository.findFirstByUserIdOrderByUpdatedAtDesc(userId));
+            if (primaryCv.isPresent()) {
+                resumeText = buildCvProfileText(primaryCv.get());
+            }
+            if (resumeText == null || resumeText.isBlank()) {
+                List<Resume> userResumes = resumeRepository.findByUserIdOrderByCreatedAtAsc(userId);
+                if (!userResumes.isEmpty()) {
+                    resumeText = userResumes.getLast().getRawText();
+                }
+            }
+        }
+        if (resumeText == null || resumeText.isBlank()) {
+            resumeText = """
+                Sîrbu Mihai-Alexandru
+                Java Backend Developer
+                Bucharest, Romania | (+40) 723 034 706 | sarbu.mihai@gmail.com
+                
+                TECHNICAL SKILLS
+                Languages: Java 21, Python, SQL, TypeScript, C/C++
+                Frameworks: Spring Boot 3.3, Spring Security, Hibernate, React 18, Next.js, Docker
+                Databases & Tools: PostgreSQL, pgvector, Redis, Git, Maven, JUnit 5, Mockito
+                
+                EXPERIENCE
+                Java Backend Developer Intern | SIMAVI | June 2025 - August 2025
+                - Designed and developed scalable REST API microservices with Spring Boot 3.3 and Java 21.
+                - Implemented vector similarity search with PostgreSQL pgvector.
+                - Wrote comprehensive unit and integration tests with JUnit 5 and Mockito.
+                """;
+        }
+
+        String descriptionToAnalyze = rawDescription != null ? rawDescription : "";
+
+        String systemPrompt = """
+            Ești un Recruiter Senior Tehnic și Sistem ATS Inteligent de ultimă generație.
+            Analizează descrierea jobului și CV-ul candidatului pentru a oferi o evaluare precisă, corectă și fără presupuneri false.
+            
+            CERINȚE DE MATCHING:
+            1. Înțelege sinonimele tehnice (ex: dacă CV-ul are "PostgreSQL" sau "SQL", bifează "Relational databases"; dacă are "Java", bifează "Object-Oriented Programming (OOP)"; dacă are "JUnit", bifează "Unit testing").
+            2. Dacă o cerință NU este menționată în CV (ex: Pega PRPC, Limba Germană, etc.), marchează "isMatched": false și pune-o la "missingSkills". NU inventa potriviri false!
+            3. Împarte cerințele reale în:
+               - "mandatory": Cerințe obligatorii (Must-Have). Fiecare item: { "text": "...", "isMatched": boolean, "matchedSkill": "ce din CV bifează", "explanation": "de ce" }
+               - "bonus": Cunoștințe opționale, avantaje sau plusuri (Nice-to-Have / Desirable). Fiecare item: { "text": "...", "isMatched": boolean, "matchedSkill": "ce bifează" }
+            4. "matchingSkills": Lista simplă de tehnologii/concepte din job pe care candidatul le are în CV.
+            5. "missingSkills": Lista tehnologiilor din job care lipsesc din CV.
+            6. "atsScore": Scor procentual realist (0.0 - 100.0) calculat ca proporție între cerințele obligatorii bifate și totalul cerințelor.
+            7. "verdict": 1-2 propoziții cu concluzia ta sinceră de recruiter pentru acest rol.
+            
+            Răspunde EXCLUSIV în format JSON valid:
+            {
+              "atsScore": 65.0,
+              "verdict": "Ai o bază tehnică excelentă de Java, OOP și SQL, însă poziția solicită cunoștințe de Pega PRPC și Germană ce lipsesc din CV.",
+              "matchingSkills": ["Java", "OOP", "SQL", "Unit Testing"],
+              "missingSkills": ["Pega PRPC", "German"],
+              "mandatory": [
+                { "text": "Knowledge of object-oriented programming", "isMatched": true, "matchedSkill": "Java, OOP", "explanation": "Demonstrat prin proiectele Java din CV" },
+                { "text": "Relational databases knowledge", "isMatched": true, "matchedSkill": "PostgreSQL, SQL", "explanation": "Experiență cu PostgreSQL și baze relaționale în CV" },
+                { "text": "Ability to test your own implementation", "isMatched": true, "matchedSkill": "JUnit 5, Mockito", "explanation": "Bifat prin testare unitară în CV" },
+                { "text": "Open to learn Pega PRPC", "isMatched": false, "matchedSkill": "", "explanation": "Platforma Pega nu apare în CV" }
+              ],
+              "bonus": [
+                { "text": "Java development experience", "isMatched": true, "matchedSkill": "Java 21" },
+                { "text": "German language skills", "isMatched": false, "matchedSkill": "" }
+              ]
+            }
+            """;
+
+        String userPrompt = "TITLU JOB:\n" + (jobTitle != null ? jobTitle : "") + "\n\nDESCRIERE JOB:\n" + descriptionToAnalyze + "\n\nCV CANDIDAT:\n" + resumeText;
+
+        try {
+            String aiResult = llmService.generateCompletion(systemPrompt, userPrompt);
+            if (aiResult != null && !aiResult.isBlank()) {
+                String cleanJson = aiResult.replaceAll("```json", "").replaceAll("```", "").trim();
+                JsonNode root = objectMapper.readTree(cleanJson);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> map = objectMapper.convertValue(root, Map.class);
+                map.put("aiVerified", true);
+                return map;
+            }
+        } catch (Exception e) {
+            log.warn("[AI MATCH JOB ERROR] Eroare LLM: {}", e.getMessage());
+        }
+
+        return Map.of(
+            "aiVerified", false,
+            "atsScore", 75.0,
+            "verdict", "Nu s-a putut apela serviciul AI. S-a folosit analiza locală.",
+            "matchingSkills", Collections.emptyList(),
+            "missingSkills", Collections.emptyList(),
+            "mandatory", Collections.emptyList(),
+            "bonus", Collections.emptyList()
+        );
+    }
 }

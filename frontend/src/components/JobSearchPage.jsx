@@ -765,40 +765,34 @@ export default function JobSearchPage({
         </div>
       )}
 
-      {/* HERO HEADER & STATS BAR */}
-      <div className="bg-white border border-gray-200/90 shadow-sm p-6 sm:p-8 rounded-3xl space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-emerald-50 text-emerald-900 border border-emerald-300">
-                14 Platforme Sursă (România & Europa)
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-blue-50 text-blue-900 border border-blue-300">
-                Scor ATS Ponderat pe Skills & Experiență
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-indigo-50 text-indigo-900 border border-indigo-300">
-                Filtrare Multi-Platformă & Multi-Specializare
+      {/* HERO HEADER SLIM & MODERN */}
+      <div className="bg-white border border-gray-200/90 shadow-sm p-5 sm:p-6 rounded-3xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight">
+                Căutare & Agregator Job-uri IT
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Live Feed
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">
-              Căutare & Agregator Job-uri Multi-Platformă
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-600 font-medium max-w-3xl leading-relaxed">
-              Explorează oportunități agregate direct din 8 surse reale verificate: DevJob.ro, LinkedIn, BestJobs.eu, Hipo.ro, StagiiPeBune, Juniors.ro, UndeLucram și eJobs.
+            <p className="text-xs text-gray-500 font-semibold mt-0.5">
+              Oportunități agregate în timp real din România & Europa, cu calcul automat de compatibilitate ATS.
             </p>
           </div>
 
-          {/* TIMER DE SINCRONIZARE AUTOMATĂ ORARĂ, BUTON QUICK FILTER NOU GĂSIT & BUTON REFRESH */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 self-start md:self-auto">
-            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-semibold text-gray-700">
-              <Clock className="w-4 h-4 text-indigo-600" />
-              <span>Auto-refresh în:</span>
-              <span className="font-mono font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">
+          {/* CONTROALE RAPIDE: TIMER, DOAR NOU GĂSIT & SINCRONIZARE */}
+          <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-auto">
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-semibold text-gray-700">
+              <Clock className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="text-[11px] font-bold">Auto-refresh:</span>
+              <span className="font-mono font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200 text-xs">
                 {formatCountdown(secondsUntilSync)}
               </span>
             </div>
 
-            {/* BUTON TOGGLE RAPID: DOAR NOU GĂSIT LA ULTIMA SINCRONIZARE */}
             <button 
               type="button"
               onClick={() => {
@@ -826,7 +820,7 @@ export default function JobSearchPage({
             <button 
               onClick={handleSyncLive}
               disabled={loading}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-md shadow-indigo-100 disabled:opacity-50"
+              className="px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-md disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               <span>Sincronizează Acum</span>

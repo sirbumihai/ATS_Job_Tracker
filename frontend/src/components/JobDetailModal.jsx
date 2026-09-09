@@ -32,14 +32,15 @@ import {
   Gift,
   CheckCheck,
   Lightbulb,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw,
+  Bot
 } from 'lucide-react';
 
 // Parser inteligent de Job Description: extragere structurată de cerințe obligatorii, bonus, responsabilități și beneficii
 const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], missingSkills = []) => {
   if (!rawText || rawText.trim().length === 0) {
     return {
-      overview: [],
       mandatoryRequirements: (skillsRequired || []).map(s => ({
         text: `Cunoștințe sau experiență demonstrabilă cu ${s}`,
         matched: (matchingSkills || []).includes(s) ? [s] : [],
@@ -72,38 +73,43 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
     .replace(/\r\n/g, '\n')
     .trim();
 
+  // 1.1 Inserare separatoare înainte de antete comune când textul este compactat (ex: LinkedIn text fără newline)
+  text = text.replace(/([a-z0-9\.\)\!\?])\s*(Main responsibilities|Key responsibilities|Responsibilities|What you will do|Tasks|Activități|Responsabilități|Ce vei face|Required skills|Requirements|Must have|Qualifications|Ce căutăm|Cerințe obligatorii|Cerințe|Desirable skills|Nice to have|Good to have|Bonus|Constituie avantaj|Reprezintă un plus|Avantaje|Compensation & benefits|Benefits|What we offer|Beneficii|Ce oferim)\b/gi, '$1\n\n### $2\n');
+
+  // 1.2 Separare elemente de listă concatenate (ex: "testingWork in teams", "ManagersBug fixing")
+  text = text.replace(/([a-z0-9\.\)])([A-Z][a-z]{3,})/g, '$1\n• $2');
+
   const lines = text.split('\n');
   const sections = {
-    overview: [],
     mandatory: [],
     bonus: [],
     responsibilities: [],
     benefits: []
   };
 
-  let currentSection = 'overview';
+  let currentSection = null;
   let hasFoundExplicitSection = false;
 
   const isHeading = (line) => {
-    const l = line.trim().toLowerCase();
+    const l = line.trim().toLowerCase().replace(/^###\s*/, '').replace(/[:\s]+$/, '');
     return (
-      (line.startsWith('### ') || line.endsWith(':') || line.length < 80) &&
-      /^(cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|competen[tț]e necesare|must have|requirements|what you need|qualifications|who you are|candidate profile|skills & experience|what you bring|ce trebuie s[aă] ai|hard skills|condi[tț]ii|cuno[sș]tin[tț]e necesare|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|preferred qualifications|would be a plus|avantaje|plusuri|op[tț]ional|ce reprezint[aă] un plus|ce constituie avantaj|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|ce presupune rolul|responsibilities|what you will do|your role|key responsibilities|tasks|what you'll be doing|beneficii|ce oferim|ce [iî][tț]i oferim|pachet de beneficii|benefits|what we offer|perks)\b/i.test(l)
+      (line.startsWith('### ') || line.endsWith(':') || line.length < 90) &&
+      /(cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|competen[tț]e|must have|requirements|required skills|what you need|qualifications|who you are|candidate profile|skills & experience|what you bring|ce trebuie s[aă] ai|hard skills|condi[tț]ii|cuno[sș]tin[tț]e|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|desirable skills|preferred qualifications|would be a plus|avantaje|plusuri|op[tț]ional|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|ce presupune rolul|main responsibilities|key responsibilities|responsibilities|what you will do|your role|tasks|what you'll be doing|compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|pachet de beneficii|benefits|what we offer|perks|compensation)/i.test(l)
     );
   };
 
   const getSectionType = (line) => {
     const l = line.toLowerCase();
-    if (/bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|preferred qualifications|would be a plus|plusuri|op[tț]ional|ce constituie avantaj/i.test(l)) {
+    if (/desirable skills|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|preferred qualifications|would be a plus|plusuri|op[tț]ional|ce constituie avantaj/i.test(l)) {
       return 'bonus';
     }
-    if (/cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|must have|requirements|what you need|qualifications|who you are|candidate profile|skills & experience|hard skills|cuno[sș]tin[tț]e necesare/i.test(l)) {
+    if (/required skills|cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|must have|requirements|what you need|qualifications|who you are|candidate profile|skills & experience|hard skills|cuno[sș]tin[tț]e/i.test(l)) {
       return 'mandatory';
     }
-    if (/responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|responsibilities|what you will do|your role|tasks/i.test(l)) {
+    if (/main responsibilities|key responsibilities|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|responsibilities|what you will do|your role|tasks/i.test(l)) {
       return 'responsibilities';
     }
-    if (/beneficii|ce oferim|ce [iî][tț]i oferim|benefits|what we offer|perks/i.test(l)) {
+    if (/compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|benefits|what we offer|perks|compensation/i.test(l)) {
       return 'benefits';
     }
     return null;
@@ -125,14 +131,19 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
     const cleanItem = rawLine.replace(/^###\s*/, '').replace(/^[•\-*–—]\s*/, '').trim();
     if (!cleanItem) continue;
 
-    if (currentSection === 'overview' || currentSection === 'mandatory') {
-      if (/constituie (un )?avantaj|reprezint[aă] (un )?plus|nice to have|would be a plus|bonus/i.test(cleanItem)) {
+    if (currentSection) {
+      if ((currentSection === 'mandatory') && /constituie (un )?avantaj|reprezint[aă] (un )?plus|nice to have|would be a plus|bonus/i.test(cleanItem)) {
         sections.bonus.push(cleanItem);
         continue;
       }
+      sections[currentSection].push(cleanItem);
+    } else {
+      if (/constituie (un )?avantaj|reprezint[aă] (un )?plus|nice to have|bonus/i.test(cleanItem)) {
+        sections.bonus.push(cleanItem);
+      } else if (cleanItem.length > 15 && cleanItem.length < 160 && /candidat|experien|skills|studii|cuno[sș]tin|programare/i.test(cleanItem)) {
+        sections.mandatory.push(cleanItem);
+      }
     }
-
-    sections[currentSection].push(cleanItem);
   }
 
   // Fallback dacă nu s-au găsit cerințe explicite dar avem skillsRequired
@@ -157,7 +168,6 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
   };
 
   return {
-    overview: sections.overview,
     mandatoryRequirements: mapWithSkillMatch(sections.mandatory),
     bonusRequirements: mapWithSkillMatch(sections.bonus),
     responsibilities: sections.responsibilities,
@@ -181,7 +191,9 @@ export default function JobDetailModal({
   const [jobChanges, setJobChanges] = useState([]);
   const [loadingChanges, setLoadingChanges] = useState(false);
   const [showChanges, setShowChanges] = useState(false);
-  const [activeDescriptionTab, setActiveDescriptionTab] = useState('STRUCTURED'); // 'STRUCTURED' | 'ORIGINAL'
+  const [aiAnalysisData, setAiAnalysisData] = useState(null);
+  const [loadingAiAnalysis, setLoadingAiAnalysis] = useState(false);
+  const [aiAnalysisError, setAiAnalysisError] = useState(null);
 
   const formatDateTime = (dtStr) => {
     if (!dtStr) return 'Nespecificat';
@@ -197,6 +209,41 @@ export default function JobDetailModal({
       });
     } catch {
       return dtStr;
+    }
+  };
+
+  const runAiMatch = async () => {
+    setLoadingAiAnalysis(true);
+    setAiAnalysisError(null);
+    try {
+      const res = await fetch('/api/v1/ai/match-job', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(activeUserId ? { 'X-User-Id': activeUserId } : {})
+        },
+        body: JSON.stringify({
+          jobId: currentJob.id,
+          jobTitle: currentJob.jobTitle,
+          rawDescription: currentJob.rawDescription,
+          userId: activeUserId
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && (data.aiVerified || (data.matchingSkills && data.matchingSkills.length > 0))) {
+          setAiAnalysisData(data);
+        } else {
+          setAiAnalysisError("Analiza AI nu a putut fi finalizată.");
+        }
+      } else {
+        setAiAnalysisError("Serviciul AI este indisponibil momentan.");
+      }
+    } catch (err) {
+      console.warn("Eroare AI match:", err);
+      setAiAnalysisError("Eroare de conexiune la AI.");
+    } finally {
+      setLoadingAiAnalysis(false);
     }
   };
 
@@ -245,12 +292,11 @@ export default function JobDetailModal({
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (data) {
-            // Păstrăm identic scorul ATS și competențele pe care utilizatorul le-a văzut pe card
             setDetailedJob({
               ...data,
-              atsMatchScore: (typeof job.atsMatchScore === 'number' && job.atsMatchScore > 0) ? job.atsMatchScore : (data.atsMatchScore || 0),
-              matchingSkills: (job.matchingSkills && job.matchingSkills.length > 0) ? job.matchingSkills : (data.matchingSkills || []),
-              missingSkills: (job.missingSkills && job.missingSkills.length > 0) ? job.missingSkills : (data.missingSkills || []),
+              atsMatchScore: (typeof data.atsMatchScore === 'number' && data.atsMatchScore > 0) ? data.atsMatchScore : (job.atsMatchScore || 0),
+              matchingSkills: (data.matchingSkills && data.matchingSkills.length > 0) ? data.matchingSkills : (job.matchingSkills || []),
+              missingSkills: (data.missingSkills && data.missingSkills.length > 0) ? data.missingSkills : (job.missingSkills || []),
               experienceLevel: job.experienceLevel || data.experienceLevel,
               workModel: job.workModel || data.workModel,
               salaryRange: job.salaryRange || data.salaryRange,
@@ -271,18 +317,30 @@ export default function JobDetailModal({
 
   const currentJob = detailedJob || job;
 
-  const matchingSkills = currentJob.matchingSkills || [];
-  const missingSkills = currentJob.missingSkills || [];
-  const skillsRequired = currentJob.skillsRequired || [];
+  const displayMatchingSkills = (aiAnalysisData?.matchingSkills && aiAnalysisData.matchingSkills.length > 0)
+    ? aiAnalysisData.matchingSkills
+    : (currentJob.matchingSkills || []);
+
+  const displayMissingSkills = (aiAnalysisData?.missingSkills && aiAnalysisData.missingSkills.length > 0)
+    ? aiAnalysisData.missingSkills
+    : (currentJob.missingSkills || []);
+
+  const displayScore = aiAnalysisData?.atsScore != null
+    ? Number(aiAnalysisData.atsScore)
+    : (typeof currentJob.atsMatchScore === 'number' ? currentJob.atsMatchScore : 0);
+
+  const skillsRequired = (aiAnalysisData?.matchingSkills && aiAnalysisData?.missingSkills)
+    ? [...aiAnalysisData.matchingSkills, ...aiAnalysisData.missingSkills]
+    : (currentJob.skillsRequired || []);
 
   const parsedDescription = useMemo(() => {
     return parseJobDescription(
       currentJob.rawDescription,
       skillsRequired,
-      matchingSkills,
-      missingSkills
+      displayMatchingSkills,
+      displayMissingSkills
     );
-  }, [currentJob.rawDescription, skillsRequired, matchingSkills, missingSkills]);
+  }, [currentJob.rawDescription, skillsRequired, displayMatchingSkills, displayMissingSkills]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(currentJob.directApplyUrl);
@@ -568,16 +626,67 @@ export default function JobDetailModal({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 self-start sm:self-auto bg-white/10 px-3.5 py-2 rounded-2xl backdrop-blur-sm border border-white/10">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                <div className="text-right">
-                  <div className="text-xs font-black text-white">{currentJob.atsMatchScore.toFixed(1)}% Match ATS</div>
-                  <div className="text-[10px] text-indigo-200 font-semibold">
-                    {matchingSkills.length} din {matchingSkills.length + missingSkills.length > 0 ? matchingSkills.length + missingSkills.length : currentJob.skillsRequired?.length || 1} cerințe bifate
+              <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={runAiMatch}
+                  disabled={loadingAiAnalysis}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-extrabold text-xs shadow-md transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed border border-indigo-400/40"
+                  title="Analizează semantic cerințele jobului direct cu AI Groq și CV-ul tău"
+                >
+                  {loadingAiAnalysis ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-200" />
+                      <span>Verificare AI în curs...</span>
+                    </>
+                  ) : aiAnalysisData ? (
+                    <>
+                      <Bot className="w-3.5 h-3.5 text-emerald-300" />
+                      <span>Re-analizează cu AI</span>
+                    </>
+                  ) : (
+                    <>
+                      <Bot className="w-3.5 h-3.5 text-indigo-200" />
+                      <span>Verifică & Bifează cu AI</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="flex items-center gap-2 bg-white/10 px-3.5 py-2 rounded-2xl backdrop-blur-sm border border-white/10">
+                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                  <div className="text-right">
+                    <div className="text-xs font-black text-white">{displayScore.toFixed(1)}% Match ATS</div>
+                    <div className="text-[10px] text-indigo-200 font-semibold">
+                      {displayMatchingSkills.length} din {displayMatchingSkills.length + displayMissingSkills.length > 0 ? displayMatchingSkills.length + displayMissingSkills.length : skillsRequired.length || 1} cerințe bifate
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* RAPORT / VERDICT AI RECRUITER DACĂ ESTE ACTIVAT */}
+            {aiAnalysisData?.verdict && (
+              <div className="bg-indigo-900/60 border border-indigo-400/30 rounded-2xl p-3.5 flex items-start gap-3">
+                <div className="p-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 shrink-0 mt-0.5">
+                  <Bot className="w-4 h-4 text-indigo-300" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300">
+                    Verdict Recruiter AI (Analiză Semantică CV)
+                  </span>
+                  <p className="text-xs text-indigo-100 font-medium leading-relaxed">
+                    {aiAnalysisData.verdict}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {aiAnalysisError && (
+              <div className="bg-rose-950/40 border border-rose-500/30 rounded-2xl p-3 text-xs text-rose-300 font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{aiAnalysisError}</span>
+              </div>
+            )}
 
             {/* GRID CU 2 COLOANE CLARE: CE ȘTII vs CE NU ȘTII */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -586,15 +695,15 @@ export default function JobDetailModal({
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    Ce Stăpânești Deja ({matchingSkills.length})
+                    Ce Stăpânești Deja ({displayMatchingSkills.length})
                   </span>
                   <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                     Puncte Forte
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5 min-h-[36px]">
-                  {matchingSkills.length > 0 ? (
-                    matchingSkills.map((skill, idx) => (
+                  {displayMatchingSkills.length > 0 ? (
+                    displayMatchingSkills.map((skill, idx) => (
                       <span 
                         key={idx} 
                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-2xs"
@@ -617,15 +726,15 @@ export default function JobDetailModal({
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
                     <AlertCircle className="w-4 h-4 text-amber-400" />
-                    Ce Nu Ai în CV / De Învățat ({missingSkills.length})
+                    Ce Nu Ai în CV / De Învățat ({displayMissingSkills.length})
                   </span>
                   <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     Gaps de Acoperit
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5 min-h-[36px]">
-                  {missingSkills.length > 0 ? (
-                    missingSkills.map((skill, idx) => (
+                  {displayMissingSkills.length > 0 ? (
+                    displayMissingSkills.map((skill, idx) => (
                       <span 
                         key={idx} 
                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-200 border border-amber-500/40 shadow-2xs"
@@ -666,9 +775,9 @@ export default function JobDetailModal({
             </div>
           </div>
 
-          {/* SECȚIUNE FIȘA POSTULUI & DESCRIERE: COMUTATOR STRUCTURAT VS ORIGINAL */}
-          <div className="space-y-4 pt-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-3">
+          {/* SECȚIUNE FIȘA POSTULUI & CERINȚE DETALIATE */}
+          <div className="space-y-5 pt-2">
+            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-indigo-600" />
                 <div>
@@ -676,37 +785,9 @@ export default function JobDetailModal({
                     Fișa Postului & Cerințe Detaliate
                   </h3>
                   <p className="text-[11px] text-gray-500 font-medium">
-                    {activeDescriptionTab === 'STRUCTURED' ? 'Cerințe extrase și structurate inteligent' : 'Textul original nemodificat de la angajator'}
+                    Cerințe tehnice și responsabilități structurate inteligent
                   </p>
                 </div>
-              </div>
-
-              {/* BUTOANE TAB-URI */}
-              <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-2xl border border-gray-200 self-start sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => setActiveDescriptionTab('STRUCTURED')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-                    activeDescriptionTab === 'STRUCTURED'
-                      ? 'bg-white text-indigo-950 shadow-xs border border-gray-200'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Fișă Structurată</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveDescriptionTab('ORIGINAL')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-                    activeDescriptionTab === 'ORIGINAL'
-                      ? 'bg-white text-indigo-950 shadow-xs border border-gray-200'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5 text-gray-500" />
-                  <span>Text Original</span>
-                </button>
               </div>
             </div>
 
@@ -717,215 +798,277 @@ export default function JobDetailModal({
               </div>
             )}
 
-            {activeDescriptionTab === 'STRUCTURED' ? (
-              <div className="space-y-5">
-
-                {/* 1. PREZENTARE GENERALĂ (OVERVIEW) */}
-                {parsedDescription.overview && parsedDescription.overview.length > 0 && (
-                  <div className="bg-slate-50 border border-slate-200/80 rounded-3xl p-5 space-y-2">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                      <Building2 className="w-4 h-4 text-indigo-600" />
-                      Despre Rol & Companie
-                    </span>
-                    <div className="text-sm text-slate-700 leading-relaxed space-y-2">
-                      {parsedDescription.overview.map((para, idx) => (
-                        <p key={idx}>{para}</p>
-                      ))}
+            {/* CERINȚE OBLIGATORII (MUST-HAVE) */}
+            {((aiAnalysisData?.mandatory && aiAnalysisData.mandatory.length > 0) || parsedDescription.mandatoryRequirements.length > 0) && (
+              <div className="bg-white border-2 border-indigo-100 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
+                <div className="flex items-center justify-between border-b border-indigo-50 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-xl bg-indigo-100/80 text-indigo-700">
+                      <Target className="w-4 h-4" />
                     </div>
-                  </div>
-                )}
-
-                {/* 2. CERINȚE OBLIGATORII (MUST-HAVE) */}
-                <div className="bg-white border-2 border-indigo-100 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
-                  <div className="flex items-center justify-between border-b border-indigo-50 pb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-xl bg-indigo-100/80 text-indigo-700">
-                        <Target className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider">
-                          Cerințe Obligatorii (Must-Have)
-                        </h4>
-                        <span className="text-[11px] text-gray-500 font-semibold">
-                          Competențe și calificări esențiale cerute pentru acest rol
-                        </span>
-                      </div>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                      {parsedDescription.mandatoryRequirements.length} Cerințe
-                    </span>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    {parsedDescription.mandatoryRequirements.length > 0 ? (
-                      parsedDescription.mandatoryRequirements.map((req, idx) => {
-                        const hasMatch = req.matched && req.matched.length > 0;
-                        const hasMissing = req.missing && req.missing.length > 0;
-                        return (
-                          <div 
-                            key={idx}
-                            className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${
-                              hasMatch 
-                                ? 'bg-emerald-50/50 border-emerald-200/80' 
-                                : hasMissing 
-                                ? 'bg-amber-50/40 border-amber-200/80' 
-                                : 'bg-gray-50/70 border-gray-200/80'
-                            }`}
-                          >
-                            <div className="flex items-start gap-2.5 flex-1">
-                              {hasMatch ? (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                              ) : hasMissing ? (
-                                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                              ) : (
-                                <div className="w-2 h-2 rounded-full bg-indigo-400 shrink-0 mt-1.5 ml-1"></div>
-                              )}
-                              <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
-                                {req.text}
-                              </span>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-1.5 shrink-0 self-start sm:self-center">
-                              {hasMatch && (
-                                <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
-                                  <Check className="w-3 h-3 text-emerald-600" />
-                                  <span>Bifat în CV: {req.matched.join(', ')}</span>
-                                </span>
-                              )}
-                              {hasMissing && (
-                                <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
-                                  <BookOpen className="w-3 h-3 text-amber-600" />
-                                  <span>De aprofundat: {req.missing.join(', ')}</span>
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-xs text-gray-500 italic">Nu au fost menționate cerințe stringente.</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* 3. CUNOȘTINȚE BONUS / AVANTAJE (NICE-TO-HAVE) */}
-                {parsedDescription.bonusRequirements && parsedDescription.bonusRequirements.length > 0 && (
-                  <div className="bg-gradient-to-br from-amber-50/50 to-purple-50/30 border-2 border-amber-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
-                    <div className="flex items-center justify-between border-b border-amber-100 pb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-xl bg-amber-100 text-amber-800">
-                          <Award className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-1.5">
-                            <span>Cunoștințe Bonus & Avantaje (Nice-to-Have)</span>
-                            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                          </h4>
-                          <span className="text-[11px] text-gray-500 font-semibold">
-                            Cunoștințe care nu sunt eliminatorii, dar îți oferă un avantaj major la selecție
+                    <div>
+                      <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-2">
+                        <span>Cerințe Obligatorii (Must-Have)</span>
+                        {aiAnalysisData && (
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <Bot className="w-3 h-3 text-indigo-600" />
+                            AI Verified
                           </span>
-                        </div>
-                      </div>
-                      <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
-                        {parsedDescription.bonusRequirements.length} Puncte Bonus
+                        )}
+                      </h4>
+                      <span className="text-[11px] text-gray-500 font-semibold">
+                        Competențe și calificări esențiale cerute pentru acest rol
                       </span>
                     </div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    {aiAnalysisData?.mandatory?.length || parsedDescription.mandatoryRequirements.length} Cerințe
+                  </span>
+                </div>
 
-                    <div className="space-y-2">
-                      {parsedDescription.bonusRequirements.map((bonus, idx) => {
-                        const hasMatch = bonus.matched && bonus.matched.length > 0;
-                        return (
-                          <div 
-                            key={idx}
-                            className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
-                              hasMatch 
-                                ? 'bg-emerald-50/70 border-emerald-300' 
-                                : 'bg-white/80 border-amber-100'
-                            }`}
-                          >
-                            <div className="flex items-start gap-2.5 flex-1">
-                              <Sparkles className={`w-4 h-4 shrink-0 mt-0.5 ${hasMatch ? 'text-emerald-600' : 'text-amber-500'}`} />
-                              <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
-                                {bonus.text}
-                              </span>
-                            </div>
+                <div className="space-y-2.5">
+                  {aiAnalysisData?.mandatory && aiAnalysisData.mandatory.length > 0 ? (
+                    aiAnalysisData.mandatory.map((req, idx) => (
+                      <div 
+                        key={idx}
+                        className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${
+                          req.isMatched 
+                            ? 'bg-emerald-50/60 border-emerald-200' 
+                            : 'bg-amber-50/50 border-amber-200'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2.5 flex-1">
+                          {req.isMatched ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          ) : (
+                            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                          )}
+                          <div className="space-y-1">
+                            <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
+                              {req.text}
+                            </span>
+                            {req.explanation && (
+                              <p className="text-[11px] text-gray-500 italic">
+                                {req.explanation}
+                              </p>
+                            )}
+                          </div>
+                        </div>
 
+                        <div className="flex flex-wrap items-center gap-1.5 shrink-0 self-start sm:self-center">
+                          {req.isMatched ? (
+                            <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
+                              <Check className="w-3 h-3 text-emerald-600" />
+                              <span>{req.matchedSkill ? `Bifat: ${req.matchedSkill}` : 'Bifat în CV'}</span>
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                              <BookOpen className="w-3 h-3 text-amber-600" />
+                              <span>Lipsește din CV</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    parsedDescription.mandatoryRequirements.map((req, idx) => {
+                      const hasMatch = req.matched && req.matched.length > 0;
+                      const hasMissing = req.missing && req.missing.length > 0;
+                      return (
+                        <div 
+                          key={idx}
+                          className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${
+                            hasMatch 
+                              ? 'bg-emerald-50/50 border-emerald-200/80' 
+                              : hasMissing 
+                              ? 'bg-amber-50/40 border-amber-200/80' 
+                              : 'bg-gray-50/70 border-gray-200/80'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 flex-1">
+                            {hasMatch ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                            ) : hasMissing ? (
+                              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                            ) : (
+                              <div className="w-2 h-2 rounded-full bg-indigo-400 shrink-0 mt-1.5 ml-1"></div>
+                            )}
+                            <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
+                              {req.text}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-1.5 shrink-0 self-start sm:self-center">
                             {hasMatch && (
-                              <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1 shrink-0 self-start sm:self-center">
+                              <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
                                 <Check className="w-3 h-3 text-emerald-600" />
-                                <span>Bonus Bifat în Profil!</span>
+                                <span>Bifat în CV: {req.matched.join(', ')}</span>
+                              </span>
+                            )}
+                            {hasMissing && (
+                              <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                                <BookOpen className="w-3 h-3 text-amber-600" />
+                                <span>De aprofundat: {req.missing.join(', ')}</span>
                               </span>
                             )}
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. RESPONSABILITĂȚI PRINCIPALE */}
-                {parsedDescription.responsibilities && parsedDescription.responsibilities.length > 0 && (
-                  <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
-                    <div className="flex items-center gap-2 border-b border-gray-100 pb-2.5">
-                      <div className="p-2 rounded-xl bg-blue-50 text-blue-700">
-                        <Briefcase className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider">
-                          Ce Vei Face în Acest Rol (Responsabilități)
-                        </h4>
-                        <span className="text-[11px] text-gray-500 font-semibold">
-                          Activitățile tale zilnice și proiectele din cadrul echipei
-                        </span>
-                      </div>
-                    </div>
-
-                    <ul className="space-y-2 pl-1">
-                      {parsedDescription.responsibilities.map((resp, idx) => (
-                        <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-gray-700 leading-relaxed">
-                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-2"></div>
-                          <span>{resp}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* 5. BENEFICII & OFERTĂ */}
-                {parsedDescription.benefits && parsedDescription.benefits.length > 0 && (
-                  <div className="bg-emerald-50/40 border border-emerald-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
-                    <div className="flex items-center gap-2 border-b border-emerald-100 pb-2.5">
-                      <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
-                        <Gift className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-black text-emerald-950 uppercase tracking-wider">
-                          Ce Îți Oferă Compania (Beneficii & Pachet)
-                        </h4>
-                        <span className="text-[11px] text-emerald-700 font-semibold">
-                          Perks, asigurare, dezvoltare profesională și condiții de lucru
-                        </span>
-                      </div>
-                    </div>
-
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {parsedDescription.benefits.map((ben, idx) => (
-                        <li key={idx} className="bg-white/80 p-2.5 rounded-xl border border-emerald-100 text-xs font-semibold text-emerald-950 flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>{ben}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
-            ) : (
-              /* TAB TEXT ORIGINAL COMPLET */
+            )}
+
+            {/* CUNOȘTINȚE BONUS / AVANTAJE (NICE-TO-HAVE) */}
+            {((aiAnalysisData?.bonus && aiAnalysisData.bonus.length > 0) || parsedDescription.bonusRequirements.length > 0) && (
+              <div className="bg-gradient-to-br from-amber-50/50 to-purple-50/30 border-2 border-amber-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
+                <div className="flex items-center justify-between border-b border-amber-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-xl bg-amber-100 text-amber-800">
+                      <Award className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-1.5">
+                        <span>Cunoștințe Bonus & Avantaje (Nice-to-Have)</span>
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      </h4>
+                      <span className="text-[11px] text-gray-500 font-semibold">
+                        Cunoștințe care nu sunt eliminatorii, dar îți oferă un avantaj major la selecție
+                      </span>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
+                    {aiAnalysisData?.bonus?.length || parsedDescription.bonusRequirements.length} Puncte Bonus
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {aiAnalysisData?.bonus && aiAnalysisData.bonus.length > 0 ? (
+                    aiAnalysisData.bonus.map((bonus, idx) => (
+                      <div 
+                        key={idx}
+                        className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                          bonus.isMatched 
+                            ? 'bg-emerald-50/70 border-emerald-300' 
+                            : 'bg-white/80 border-amber-100'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2.5 flex-1">
+                          <Sparkles className={`w-4 h-4 shrink-0 mt-0.5 ${bonus.isMatched ? 'text-emerald-600' : 'text-amber-500'}`} />
+                          <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
+                            {bonus.text}
+                          </span>
+                        </div>
+
+                        {bonus.isMatched && (
+                          <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1 shrink-0 self-start sm:self-center">
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            <span>{bonus.matchedSkill ? `Bonus Bifat: ${bonus.matchedSkill}` : 'Bonus Bifat în Profil!'}</span>
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    parsedDescription.bonusRequirements.map((bonus, idx) => {
+                      const hasMatch = bonus.matched && bonus.matched.length > 0;
+                      return (
+                        <div 
+                          key={idx}
+                          className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                            hasMatch 
+                              ? 'bg-emerald-50/70 border-emerald-300' 
+                              : 'bg-white/80 border-amber-100'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 flex-1">
+                            <Sparkles className={`w-4 h-4 shrink-0 mt-0.5 ${hasMatch ? 'text-emerald-600' : 'text-amber-500'}`} />
+                            <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
+                              {bonus.text}
+                            </span>
+                          </div>
+
+                          {hasMatch && (
+                            <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1 shrink-0 self-start sm:self-center">
+                              <Check className="w-3 h-3 text-emerald-600" />
+                              <span>Bonus Bifat în Profil!</span>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* RESPONSABILITĂȚI PRINCIPALE */}
+            {parsedDescription.responsibilities && parsedDescription.responsibilities.length > 0 && (
+              <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
+                <div className="flex items-center gap-2 border-b border-gray-100 pb-2.5">
+                  <div className="p-2 rounded-xl bg-blue-50 text-blue-700">
+                    <Briefcase className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider">
+                      Ce Vei Face în Acest Rol (Responsabilități)
+                    </h4>
+                    <span className="text-[11px] text-gray-500 font-semibold">
+                      Activitățile tale zilnice și proiectele din cadrul echipei
+                    </span>
+                  </div>
+                </div>
+
+                <ul className="space-y-2 pl-1">
+                  {parsedDescription.responsibilities.map((resp, idx) => (
+                    <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-gray-700 leading-relaxed">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-2"></div>
+                      <span>{resp}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* BENEFICII & OFERTĂ */}
+            {parsedDescription.benefits && parsedDescription.benefits.length > 0 && (
+              <div className="bg-emerald-50/40 border border-emerald-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
+                <div className="flex items-center gap-2 border-b border-emerald-100 pb-2.5">
+                  <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+                    <Gift className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-emerald-950 uppercase tracking-wider">
+                      Ce Îți Oferă Compania (Beneficii & Pachet)
+                    </h4>
+                    <span className="text-[11px] text-emerald-700 font-semibold">
+                      Perks, asigurare, dezvoltare profesională și condiții de lucru
+                    </span>
+                  </div>
+                </div>
+
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {parsedDescription.benefits.map((ben, idx) => (
+                    <li key={idx} className="bg-white/80 p-2.5 rounded-xl border border-emerald-100 text-xs font-semibold text-emerald-950 flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>{ben}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* FALLBACK DACĂ NU S-A PUTUT STRUCTURA NICIO SECȚIUNE */}
+            {(!parsedDescription.mandatoryRequirements.length &&
+              (!aiAnalysisData?.mandatory || !aiAnalysisData.mandatory.length) &&
+              !parsedDescription.bonusRequirements.length &&
+              !parsedDescription.responsibilities.length &&
+              !parsedDescription.benefits.length) && (
               <div className="bg-gray-50/80 border border-gray-200 rounded-3xl p-6 leading-relaxed">
                 {formatDescription(currentJob.rawDescription)}
               </div>
             )}
+
           </div>
 
         </div>

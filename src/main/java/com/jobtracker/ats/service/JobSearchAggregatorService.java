@@ -2786,6 +2786,15 @@ public class JobSearchAggregatorService {
         if (combined.contains("ui/ux") || combined.contains("figma") || combined.contains("product design")) skills.add("UI/UX & Figma");
         if (combined.contains("sap") || combined.contains("erp") || combined.contains("salesforce")) skills.add("ERP / SAP");
 
+        // Enterprise, Core CS & Languages
+        if (combined.contains("pega")) skills.add("Pega PRPC");
+        if (combined.contains("oop") || combined.contains("object-oriented") || combined.contains("orientat pe obiect")) skills.add("OOP (Object-Oriented)");
+        if (combined.contains("relational") || combined.contains("baze de date")) skills.add("Relational Databases");
+        if (combined.contains("web technologies") || combined.contains("html") || combined.contains("css")) skills.add("Web Technologies");
+        if (combined.contains("german") || combined.contains("germana") || combined.contains("deutsch")) skills.add("German Language");
+        if (combined.contains("english") || combined.contains("engleza")) skills.add("English Fluency");
+        if (combined.contains("business process") || combined.contains("bpm")) skills.add("BPM & Case Management");
+
         // Fallback dacă nu s-a identificat nimic
         if (skills.isEmpty()) {
             skills.addAll(List.of("Software Engineering", "Git", "REST API", "SQL"));
@@ -3630,6 +3639,8 @@ public class JobSearchAggregatorService {
                         if (!fullText.isEmpty()) {
                             List<String> newSkills = extractSkills(job.jobTitle(), fullText);
                             String newLevel = determineExperienceLevel(job.jobTitle(), fullText);
+                            List<String> effectiveSkills = newSkills.isEmpty() ? job.skillsRequired() : newSkills;
+                            AtsMatchResult updatedAts = evaluateAtsMatch(newLevel, effectiveSkills, cvLower);
 
                             UnifiedJobListingDto updated = new UnifiedJobListingDto(
                                     job.id(),
@@ -3643,11 +3654,11 @@ public class JobSearchAggregatorService {
                                     job.directApplyUrl(),
                                     fullText,
                                     job.salaryRange(),
-                                    newSkills.isEmpty() ? job.skillsRequired() : newSkills,
-                                    matchingSkills,
-                                    missingSkills,
+                                    effectiveSkills,
+                                    updatedAts.matchingSkills(),
+                                    updatedAts.missingSkills(),
                                     job.postedDateAgo(),
-                                    finalScore,
+                                    updatedAts.finalScore(),
                                     job.competitiveness(),
                                     job.competitivenessLabel(),
                                     job.applicantCountText(),
@@ -3688,14 +3699,16 @@ public class JobSearchAggregatorService {
                     if (!fullText.isEmpty()) {
                         List<String> newSkills = extractSkills(job.jobTitle(), fullText);
                         String newLevel = determineExperienceLevel(job.jobTitle(), fullText);
+                        List<String> effectiveSkills = newSkills.isEmpty() ? job.skillsRequired() : newSkills;
+                        AtsMatchResult updatedAts = evaluateAtsMatch(newLevel, effectiveSkills, cvLower);
 
                         UnifiedJobListingDto updated = new UnifiedJobListingDto(
                                 job.id(), job.jobTitle(), job.companyName(), job.companyLogoUrl(),
                                 job.location(), job.workModel(), newLevel, job.sourcePlatform(),
                                 job.directApplyUrl(), fullText, job.salaryRange(),
-                                newSkills.isEmpty() ? job.skillsRequired() : newSkills,
-                                matchingSkills, missingSkills, job.postedDateAgo(),
-                                finalScore, job.competitiveness(), job.competitivenessLabel(),
+                                effectiveSkills,
+                                updatedAts.matchingSkills(), updatedAts.missingSkills(), job.postedDateAgo(),
+                                updatedAts.finalScore(), job.competitiveness(), job.competitivenessLabel(),
                                 job.applicantCountText(), job.postedDaysAgo(), job.externalId(),
                                 job.contentHash(), job.postedAt(), job.firstSeenAt(), job.lastSeenAt(),
                                 job.status(), job.newlyDiscovered()
@@ -3724,14 +3737,16 @@ public class JobSearchAggregatorService {
                     if (!fullText.isEmpty()) {
                         List<String> newSkills = extractSkills(job.jobTitle(), fullText);
                         String newLevel = determineExperienceLevel(job.jobTitle(), fullText);
+                        List<String> effectiveSkills = newSkills.isEmpty() ? job.skillsRequired() : newSkills;
+                        AtsMatchResult updatedAts = evaluateAtsMatch(newLevel, effectiveSkills, cvLower);
 
                         UnifiedJobListingDto updated = new UnifiedJobListingDto(
                                 job.id(), job.jobTitle(), job.companyName(), job.companyLogoUrl(),
                                 job.location(), job.workModel(), newLevel, job.sourcePlatform(),
                                 job.directApplyUrl(), fullText, job.salaryRange(),
-                                newSkills.isEmpty() ? job.skillsRequired() : newSkills,
-                                matchingSkills, missingSkills, job.postedDateAgo(),
-                                finalScore, job.competitiveness(), job.competitivenessLabel(),
+                                effectiveSkills,
+                                updatedAts.matchingSkills(), updatedAts.missingSkills(), job.postedDateAgo(),
+                                updatedAts.finalScore(), job.competitiveness(), job.competitivenessLabel(),
                                 job.applicantCountText(), job.postedDaysAgo(), job.externalId(),
                                 job.contentHash(), job.postedAt(), job.firstSeenAt(), job.lastSeenAt(),
                                 job.status(), job.newlyDiscovered()
