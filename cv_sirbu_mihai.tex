@@ -1,0 +1,138 @@
+\documentclass[10pt,letterpaper]{article}
+
+\usepackage[T1]{fontenc} % Diacritice corecte
+\usepackage[utf8]{inputenc} % UTF-8
+
+\usepackage[left=0.5in,top=0.32in,right=0.5in,bottom=0.32in]{geometry} % Margini optimizate
+\usepackage{enumitem} 
+\setlist[itemize]{nosep, leftmargin=12pt} % Liste compacte, fără spații parazite sau suprapuneri de text
+
+\usepackage{parskip}
+\usepackage{array} % Necesar pentru tabelul de Technical Skills
+
+\linespread{0.94} % Înălțime naturală și aerisită a rândurilor
+\pagestyle{empty} % Fără număr de pagină
+
+% Implementare nativă rSection (fără dependență de fișiere .cls externe)
+\newenvironment{rSection}[1]{
+  \vspace{4pt}
+  {\bfseries\MakeUppercase{#1}}
+  \vspace{2pt}
+  \hrule
+  \vspace{3pt}
+}{
+  \par\vspace{2pt}
+}
+
+% Comanda de titlu de proiect
+\renewcommand{\section}[1]{\par\vspace{3pt}\noindent\textbf{#1}\par\vspace{1pt}}
+
+\usepackage{ebgaramond} % Fontul elegant EB Garamond
+
+% Link-uri curate, colorate elegant, FĂRĂ chenare albastre
+\usepackage{color,hyperref}
+\definecolor{darkblue}{rgb}{0.0,0.0,0.4}
+\hypersetup{
+    colorlinks=true,
+    breaklinks=true,
+    linkcolor=darkblue,
+    urlcolor=darkblue,
+    citecolor=darkblue,
+    pdfborder={0 0 0}
+}
+
+% Asigură compatibilitate 100% cu scannerele ATS
+\pdfgentounicode=1
+
+\begin{document}
+\vspace*{-0.4cm}
+\begin{center}
+    {\Huge \bfseries SÎRBU MIHAI-ALEXANDRU} \\ \vspace{2pt}
+    \small (+40) 723 034 706 \ $|$ \ 
+    \href{mailto:sarbumihai0@gmail.com}{sarbumihai0@gmail.com} \ $|$ \ 
+    \href{https://www.linkedin.com/in/sirbu-mihai-86133b181/}{linkedin.com/in/sirbu-mihai} \ $|$ \ 
+    \href{https://github.com/sirbumihai}{github.com/sirbumihai} \ $|$ \ 
+    Bucharest, Romania
+\end{center}
+
+%----------------------------------------------------------------------------------------
+%	EDUCATION SECTION
+%----------------------------------------------------------------------------------------
+\vspace{-0.2cm}
+\begin{rSection}{Education}
+    \textbf{National University of Science and Technology POLITEHNICA Bucharest} \hfill \textit{Bucharest, Romania} \\
+    Master of Science in Advanced Signal Processing for Multimedia Applications \hfill \textit{October 2026 – July 2028 (Expected)} \\
+    \textit{Faculty of Automatic Control and Computers}
+
+    \vspace{3pt}
+    \textbf{National University of Science and Technology POLITEHNICA Bucharest} \hfill \textit{Bucharest, Romania} \\
+    Bachelor of Science in Systems Engineering and Applied Computer Science \hfill \textit{October 2022 – July 2026} \\
+    \textit{Faculty of Automatic Control and Computers} \\
+    \textbf{Relevant Coursework:} Data Structures and Algorithms, Object-Oriented Programming (Java), Database Systems and SQL, Software Engineering, Operating Systems, Computer Networks, Web Technologies, Machine Learning.
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+%	EXPERIENCE SECTION
+%----------------------------------------------------------------------------------------
+\vspace{-0.2cm}
+\begin{rSection}{Experience}
+\textbf{Software Engineering Intern} \hfill \textit{June 2025 – August 2025} \\
+SIMAVI (Software Imagination \& Vision) \hfill \textit{Bucharest, Romania}
+\begin{itemize}
+    \item Individually managed the \textbf{full software development lifecycle (SDLC)} of a \textbf{full-stack book tracking web application} using \textbf{Java (Spring Boot)} and \textbf{PrimeFaces} across a \textbf{10-week cycle} and \textbf{5 distinct sprints}.
+    \item \textbf{Structured} a \textbf{MySQL database schema} and imported \textbf{over 50,000 book records} from Kaggle, writing \textbf{custom Spring Data JPA} repository queries to handle data retrieval.
+    \item Engineered a \textbf{personalized book recommendation system} and an interactive \textbf{statistics dashboard}, optimizing queries and \textbf{reducing dashboard load times by 40\%}.
+    \item Implemented secure \textbf{user authentication} and \textbf{role-based access control (RBAC)} with \textbf{2 user roles} using \textbf{Spring Security}, securing credentials with \textbf{BCrypt} password hashing for \textbf{100\% of user accounts}.
+\end{itemize}
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+%	PROJECTS SECTION
+%----------------------------------------------------------------------------------------
+\vspace{-0.2cm}
+\begin{rSection}{Projects}
+
+\section{ATS Job Tracker \& AI Career Platform \hfill \normalfont\textit{June 2026 – September 2026}}
+\textbf{Tech:} Java 21, Spring Boot 3.3, PostgreSQL, pgvector, React, Groq LLM, Docker \hfill
+\textbf{Code:} \href{https://github.com/sirbumihai/ATS_Job_Tracker}{github.com/sirbumihai/ATS\_Job\_Tracker}
+\begin{itemize}
+    \item \textbf{Architected and developed} an \textbf{end-to-end job aggregation platform} aggregating \textbf{over 4,700 live IT jobs} from 8 platforms with automated SHA-256 deduplication and lifecycle auditing.
+    \item \textbf{Built} a \textbf{vector similarity search engine} using \textbf{PostgreSQL pgvector} (HNSW indexing) to compute \textbf{sub-15ms semantic matches} between candidate CVs and complex job descriptions.
+    \item \textbf{Integrated Groq LLM (LLaMA 3)} for intelligent semantic gap analysis, resolving technical equivalents (OOP, Relational DBs, Unit Testing) and generating recruiter-level candidate evaluation scores.
+    \item \textbf{Containerized} the full-stack infrastructure with \textbf{Docker Compose}, configuring an \textbf{Nginx reverse proxy} and \textbf{9 versioned Flyway database migrations} for zero-downtime deployment.
+\end{itemize}
+
+\section{3D Medical Image Segmentation \hfill \normalfont\textit{February 2026 – June 2026}}
+\textbf{Tech:} Python, PyTorch, SimpleITK, Flask, Plotly, NumPy, SciPy, Nibabel \hfill
+\textbf{Code:} \href{https://github.com/sirbumihai/3d-medical-image-segmentation}{github.com/sirbumihai/3d-medical-image-segmentation}
+\begin{itemize}
+    \item Engineered a \textbf{3D UNet++ semantic segmentation model} with \textbf{CBAM attention} in \textbf{PyTorch} to automate tumor detection in volumetric DCE-MRI data, achieving a \textbf{0.738 Dice score}.
+    \item \textbf{Architected} a robust \textbf{medical data pipeline} using \textbf{SimpleITK} to preprocess \textbf{1,506 multi-center cases}, standardizing inputs via \textbf{isotropic resampling}, \textbf{z-score normalization}, and 3D augmentations.
+    \item Optimized training for severe class imbalance using \textbf{Hard Negative Mining (HNM)} by injecting \textbf{30\% background patches}, and designed a \textbf{custom Focal-Dice loss} ($\gamma = 2.0$).
+\end{itemize}
+
+\section{OneRep – Fitness Tracking Web Application \hfill \normalfont\textit{October 2025 – January 2026}}
+\textbf{Live:} \href{https://one-rep.vercel.app/}{one-rep.vercel.app} \hfill
+\textbf{Tech:} Next.js, React, TypeScript, Supabase, PostgreSQL, Tailwind
+\begin{itemize}
+    \item \textbf{Created} a \textbf{full-stack fitness tracking platform} that enables users to track \textbf{over 10 fitness metrics} and analyze progress through \textbf{5 interactive dashboards}.
+    \item \textbf{Developed} a \textbf{secure backend} using \textbf{Supabase} and \textbf{PostgreSQL} with \textbf{8 Row-Level Security (RLS)} policies, integrating \textbf{Stripe subscription payments} with webhook handling.
+\end{itemize}
+
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+%	TECHNICAL SKILLS SECTION
+%----------------------------------------------------------------------------------------
+\vspace{-0.2cm}
+\begin{rSection}{Technical Skills}
+\begin{tabular}{@{} >{\bfseries}l @{\hspace{4ex}} l @{}}
+    Languages:       & Java (17/21), Python, SQL (PostgreSQL, MySQL), C/C++, TypeScript, JavaScript, HTML/CSS \\
+    Frameworks:      & Spring Boot 3.3, Spring Security, Spring Data JPA, Hibernate, React, Next.js, Flask \\
+    Databases \& AI: & PostgreSQL, pgvector (HNSW Indexing), MySQL, Supabase, Redis, Groq LLM, PyTorch \\
+    Tools \& DevOps: & Docker, Docker Compose, Git, Linux, Nginx, Postman, Maven, Vite, Flyway, Stripe \\
+    Testing:         & JUnit 5, Mockito, SimpleITK, Jest \\
+\end{tabular}
+\end{rSection}
+
+\end{document}

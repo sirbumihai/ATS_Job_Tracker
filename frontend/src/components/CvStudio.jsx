@@ -41,7 +41,8 @@ import {
   Edit3,
   X,
   Link as LinkIcon,
-  Globe
+  Globe,
+  Copy
 } from 'lucide-react';
 import PolishAiCoach from './PolishAiCoach';
 
@@ -206,6 +207,11 @@ export default function CvStudio({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [parsingPdf, setParsingPdf] = useState(false);
   const [parsedPdfSuccess, setParsedPdfSuccess] = useState(null);
+
+  // LATEX EXPORT & PAGE OVERFLOW STATES
+  const [showLatexModal, setShowLatexModal] = useState(false);
+  const [latexCopied, setLatexCopied] = useState(false);
+  const [pageStats, setPageStats] = useState({ pages: 1, percent: 100, isOverflown: false });
 
   // AGENT OUTPUTS
   const [agent1Output, setAgent1Output] = useState(null);
@@ -902,6 +908,309 @@ export default function CvStudio({
     }, 1000);
   };
 
+  // REAL-TIME PAGE OVERFLOW & HEIGHT CALCULATION
+  useEffect(() => {
+    const updatePageStats = () => {
+      const el = previewRef.current;
+      if (!el) return;
+      
+      // Calculate exact A4 height in pixels relative to 210mm width (ratio 297/210 = 1.4142857)
+      const a4HeightPx = el.offsetWidth * (297 / 210);
+      const scrollHeight = el.scrollHeight;
+      
+      // 4px tolerance for subpixel rendering
+      const isOverflown = scrollHeight > a4HeightPx + 4;
+      const pages = Math.max(1, Math.ceil((scrollHeight - 4) / a4HeightPx));
+      const percent = Math.round((scrollHeight / a4HeightPx) * 100);
+      
+      setPageStats({ pages, percent, isOverflown });
+    };
+
+    updatePageStats();
+
+    let observer;
+    if (typeof ResizeObserver !== 'undefined' && previewRef.current) {
+      observer = new ResizeObserver(() => updatePageStats());
+      observer.observe(previewRef.current);
+    }
+
+    window.addEventListener('resize', updatePageStats);
+    return () => {
+      if (observer) observer.disconnect();
+      window.removeEventListener('resize', updatePageStats);
+    };
+  }, [
+    contactData,
+    educationList,
+    experienceList,
+    projectsList,
+    certificationsList,
+    skillsFields,
+    summaryText,
+    sectionOrder
+  ]);
+
+  // LATEX GENERATION & EXPORT LOGIC
+  const escapeLatex = (str) => {
+    if (!str) return '';
+    return String(str)
+      .replace(/\\/g, '\\textbackslash{}')
+      .replace(/&/g, '\\&')
+      .replace(/%/g, '\\%')
+      .replace(/\$/g, '\\$')
+      .replace(/#/g, '\\#')
+      .replace(/_/g, '\\_')
+      .replace(/\{/g, '\\{')
+      .replace(/\}/g, '\\}')
+      .replace(/~/g, '\\textasciitilde{}')
+      .replace(/\^/g, '\\textasciicircum{}');
+  };
+
+  const formatLatexText = (str) => {
+    if (!str) return '';
+    let text = String(str);
+    const boldMatches = [];
+    text = text.replace(/\*\*(.*?)\*\*/g, (_, match) => {
+      boldMatches.push(match);
+      return `___LATEX_BOLD_${boldMatches.length - 1}___`;
+    });
+
+    text = escapeLatex(text);
+
+    boldMatches.forEach((match, idx) => {
+      text = text.replace(`___LATEX\\_BOLD\\_${idx}___`, `\\textbf{${escapeLatex(match)}}`);
+    });
+
+    return text;
+  };
+
+  const generateLatex = () => {
+    const candidateName = (contactData.fullName || 'RESUME CANDIDATE').toUpperCase();
+
+    const contactParts = [];
+    if (contactData.phone) contactParts.push(escapeLatex(contactData.phone));
+    if (contactData.email) {
+      contactParts.push(`\\href{mailto:${escapeLatex(contactData.email)}}{${escapeLatex(contactData.email)}}`);
+    }
+    if (contactData.linkedin) {
+      const fullUrl = contactData.linkedin.startsWith('http') ? contactData.linkedin : `https://${contactData.linkedin}`;
+      const displayUrl = contactData.linkedin.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+      contactParts.push(`\\href{${fullUrl}}{${escapeLatex(displayUrl)}}`);
+    }
+    if (contactData.github) {
+      const fullUrl = contactData.github.startsWith('http') ? contactData.github : `https://${contactData.github}`;
+      const displayUrl = contactData.github.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+      contactParts.push(`\\href{${fullUrl}}{${escapeLatex(displayUrl)}}`);
+    }
+    if (contactData.location) {
+      contactParts.push(escapeLatex(contactData.location));
+    }
+
+    const contactLine = contactParts.join(' \\ $|$ \\ \n    ');
+
+    let bodySections = '';
+
+    sectionOrder.forEach(secKey => {
+      if (secKey === 'education' && educationList.length > 0) {
+        let eduContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Education}\n';
+        educationList.forEach((edu, idx) => {
+          if (idx > 0) eduContent += '\n    \\vspace{3pt}\n';
+          eduContent += `    \\textbf{${escapeLatex(edu.school)}} \\hfill \\textit{${escapeLatex(edu.location)}} \\\\\n`;
+          eduContent += `    ${escapeLatex(edu.degree)} \\hfill \\textit{${escapeLatex(edu.period)}} \\\\\n`;
+          if (edu.bullets && edu.bullets.length > 0) {
+            edu.bullets.forEach(b => {
+              eduContent += `    ${formatLatexText(b)} \\\\\n`;
+            });
+          }
+        });
+        eduContent += '\\end{rSection}\n\n';
+        bodySections += eduContent;
+      }
+
+      if (secKey === 'experience' && experienceList.length > 0) {
+        let expContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Experience}\n';
+        experienceList.forEach(exp => {
+          expContent += `\\textbf{${escapeLatex(exp.role)}} \\hfill \\textit{${escapeLatex(exp.period)}} \\\\\n`;
+          expContent += `${escapeLatex(exp.company)} \\hfill \\textit{${escapeLatex(exp.location)}}\n`;
+          if (exp.bullets && exp.bullets.length > 0) {
+            expContent += '\\begin{itemize}\n';
+            exp.bullets.forEach(b => {
+              expContent += `    \\item ${formatLatexText(b)}\n`;
+            });
+            expContent += '\\end{itemize}\n';
+          }
+        });
+        expContent += '\\end{rSection}\n\n';
+        bodySections += expContent;
+      }
+
+      if (secKey === 'projects' && projectsList.length > 0) {
+        let projContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Projects}\n';
+        projectsList.forEach(proj => {
+          projContent += `\n\\section{${escapeLatex(proj.title)} \\hfill \\normalfont\\textit{${escapeLatex(proj.period)}}}\n`;
+          const metaParts = [];
+          if (proj.techStack) {
+            metaParts.push(`\\textbf{Tech:} ${escapeLatex(proj.techStack)}`);
+          }
+          if (proj.linkUrl) {
+            const fullLink = proj.linkUrl.startsWith('http') ? proj.linkUrl : `https://${proj.linkUrl}`;
+            const linkDisplay = proj.linkText || proj.linkUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+            const isLive = linkDisplay.includes('vercel') || linkDisplay.includes('app') || linkDisplay.includes('web') || !linkDisplay.includes('github');
+            const label = isLive ? 'Live:' : 'Code:';
+            metaParts.push(`\\textbf{${label}} \\href{${fullLink}}{${escapeLatex(linkDisplay)}}`);
+          }
+          if (metaParts.length > 0) {
+            projContent += `${metaParts.join(' \\hfill ')}\n`;
+          }
+          if (proj.bullets && proj.bullets.length > 0) {
+            projContent += '\\begin{itemize}\n';
+            proj.bullets.forEach(b => {
+              projContent += `    \\item ${formatLatexText(b)}\n`;
+            });
+            projContent += '\\end{itemize}\n';
+          }
+        });
+        projContent += '\n\\end{rSection}\n\n';
+        bodySections += projContent;
+      }
+
+      if (secKey === 'skills' && skillsFields.length > 0) {
+        let skillsContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Technical Skills}\n';
+        skillsContent += '\\begin{tabular}{@{} >{\\bfseries}l @{\\hspace{4ex}} l @{}}\n';
+        skillsFields.forEach((field) => {
+          const cleanLabel = escapeLatex(field.label).replace(/:+$/, '') + ':';
+          const itemsStr = escapeLatex(field.items.join(', '));
+          skillsContent += `    ${cleanLabel.padEnd(16, ' ')} & ${itemsStr} \\\\\n`;
+        });
+        skillsContent += '\\end{tabular}\n\\end{rSection}\n\n';
+        bodySections += skillsContent;
+      }
+
+      if (secKey === 'certifications' && certificationsList.length > 0) {
+        let certContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Certifications}\n';
+        certificationsList.forEach(cert => {
+          certContent += `\\textbf{${escapeLatex(cert.name)}}`;
+          if (cert.issuer) certContent += ` \\ $|$ \\ \\textit{${escapeLatex(cert.issuer)}}`;
+          if (cert.period) certContent += ` \\hfill \\textit{${escapeLatex(cert.period)}}`;
+          certContent += '\\\\\n';
+          if (cert.bullets && cert.bullets.length > 0) {
+            certContent += '\\begin{itemize}\n';
+            cert.bullets.forEach(b => {
+              certContent += `    \\item ${formatLatexText(b)}\n`;
+            });
+            certContent += '\\end{itemize}\n';
+          }
+        });
+        certContent += '\\end{rSection}\n\n';
+        bodySections += certContent;
+      }
+
+      if (secKey === 'summary' && summaryText) {
+        let sumContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Professional Summary}\n';
+        sumContent += `${formatLatexText(summaryText)}\n`;
+        sumContent += '\\end{rSection}\n\n';
+        bodySections += sumContent;
+      }
+    });
+
+    return `\\documentclass[10pt,letterpaper]{article}
+
+\\usepackage[T1]{fontenc} % Diacritice corecte
+\\usepackage[utf8]{inputenc} % UTF-8
+
+\\usepackage[left=0.5in,top=0.32in,right=0.5in,bottom=0.32in]{geometry} % Margini optimizate
+\\usepackage{enumitem} 
+\\setlist[itemize]{nosep, leftmargin=12pt} % Liste compacte, fara spatii parazite
+
+\\usepackage{parskip}
+\\usepackage{array} % Necesar pentru tabelul de Technical Skills
+
+\\linespread{0.94} % Inaltime naturala si aerisita a randurilor
+\\pagestyle{empty} % Fara numar de pagina
+
+% Implementare nativa rSection (fara dependenta de fisiere .cls externe)
+\\newenvironment{rSection}[1]{
+  \\vspace{4pt}
+  {\\bfseries\\MakeUppercase{#1}}
+  \\vspace{2pt}
+  \\hrule
+  \\vspace{3pt}
+}{
+  \\par\\vspace{2pt}
+}
+
+% Comanda de titlu de proiect
+\\renewcommand{\\section}[1]{\\par\\vspace{3pt}\\noindent\\textbf{#1}\\par\\vspace{1pt}}
+
+\\usepackage{ebgaramond} % Fontul elegant EB Garamond
+
+% Link-uri curate, colorate elegant, FARA chenare albastre
+\\usepackage{color,hyperref}
+\\definecolor{darkblue}{rgb}{0.0,0.0,0.4}
+\\hypersetup{
+    colorlinks=true,
+    breaklinks=true,
+    linkcolor=darkblue,
+    urlcolor=darkblue,
+    citecolor=darkblue,
+    pdfborder={0 0 0}
+}
+
+% Asigura compatibilitate 100% cu scannerele ATS
+\\pdfgentounicode=1
+
+\\begin{document}
+\\vspace*{-0.4cm}
+\\begin{center}
+    {\\Huge \\bfseries ${candidateName}} \\\\ \\vspace{2pt}
+    ${contactLine}
+\\end{center}
+
+${bodySections}\\end{document}
+`;
+  };
+
+  const handleDownloadTex = () => {
+    const code = generateLatex();
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const sanitizedName = (contactData.fullName || 'Resume').trim().replace(/\s+/g, '_');
+    a.href = url;
+    a.download = `${sanitizedName}_ATS_Resume.tex`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCopyLatex = async () => {
+    const code = generateLatex();
+    try {
+      await navigator.clipboard.writeText(code);
+      setLatexCopied(true);
+      setTimeout(() => setLatexCopied(false), 3000);
+    } catch (e) {
+      alert("Nu s-a putut copia codul în clipboard.");
+    }
+  };
+
+  const handleOpenOverleaf = () => {
+    const code = generateLatex();
+    const form = document.createElement('form');
+    form.action = 'https://www.overleaf.com/docs';
+    form.method = 'POST';
+    form.target = '_blank';
+
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'snip';
+    input.value = code;
+
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+  };
+
   return (
     <div className="space-y-6 w-full max-w-[210mm] mx-auto pb-16 font-sans">
       
@@ -952,6 +1261,32 @@ export default function CvStudio({
               )}
             </div>
 
+            {/* REAL-TIME PAGE OVERFLOW / COUNT INDICATOR */}
+            <div 
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition border ${
+                pageStats.isOverflown
+                  ? 'bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-400' 
+                  : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              }`}
+              title={
+                pageStats.isOverflown
+                  ? `Atenție: Conținutul depășește 1 pagină A4 (${pageStats.percent}% din Pagina 1). Se recomandă scurtarea textului pentru ca CV-ul să rămână pe o singură pagină.`
+                  : `Conținutul se încadrează pe 1 pagină A4 (${pageStats.percent}% spațiu utilizat).`
+              }
+            >
+              {pageStats.isOverflown ? (
+                <>
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 animate-pulse shrink-0" />
+                  <span>⚠️ {pageStats.pages} Pagini ({pageStats.percent}%)</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>📄 1 Pagină ({pageStats.percent}%)</span>
+                </>
+              )}
+            </div>
+
             {/* POLISH AI COACH TOGGLE BUTTON */}
             <button
               onClick={() => setShowPolishCoach(!showPolishCoach)}
@@ -972,6 +1307,16 @@ export default function CvStudio({
             >
               <Zap className="w-3.5 h-3.5 text-black" />
               Optimizare AI ATS 100%
+            </button>
+
+            {/* LATEX EXPORT & OVERLEAF COMPILER */}
+            <button
+              onClick={() => setShowLatexModal(true)}
+              className="px-3.5 py-1.5 bg-neutral-900 hover:bg-black text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+              title="Deschide LaTeX Studio: Exportă fișierul .tex sau compilează direct în PDF pe Overleaf"
+            >
+              <Code2 className="w-3.5 h-3.5 text-amber-300" />
+              <span>LaTeX (.tex)</span>
             </button>
 
             {/* IMPORT PDF BUTTON */}
@@ -1088,7 +1433,7 @@ export default function CvStudio({
           <div 
             ref={previewRef}
             id="cv-preview-sheet" 
-            className="bg-white text-black shadow-xl rounded-2xl border border-gray-200/90 transition-all"
+            className="bg-white text-black shadow-xl rounded-2xl border border-gray-200/90 transition-all relative"
             style={{ 
               width: '210mm',
               minHeight: '297mm',
@@ -1096,7 +1441,8 @@ export default function CvStudio({
               fontFamily: "'Times New Roman', Times, serif",
               backgroundColor: '#ffffff',
               color: '#000000',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              position: 'relative'
             }}
           >
             
@@ -2198,6 +2544,23 @@ export default function CvStudio({
               return null;
             })}
 
+            {/* VISUAL A4 PAGE BREAK GUIDELINE (EXACTLY AT 297mm) */}
+            <div 
+              className="no-pdf pointer-events-none select-none absolute left-0 right-0 z-30 flex items-center justify-between px-3"
+              style={{
+                top: '297mm',
+                transform: 'translateY(-50%)'
+              }}
+            >
+              <div className={`h-[2px] border-t-2 border-dashed flex-1 ${pageStats.isOverflown ? 'border-rose-500' : 'border-gray-400'}`}></div>
+              <span className={`mx-2 px-2.5 py-0.5 text-white font-sans text-[10px] font-bold rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider ${
+                pageStats.isOverflown ? 'bg-rose-600 animate-pulse' : 'bg-gray-700'
+              }`}>
+                ✂️ Limită Pagina 1 (A4: 297mm) {pageStats.isOverflown ? `— Depășit cu ${pageStats.percent - 100}% (va trece pe Pagina 2)!` : '— Pagina 1 se termină aici'}
+              </span>
+              <div className={`h-[2px] border-t-2 border-dashed flex-1 ${pageStats.isOverflown ? 'border-rose-500' : 'border-gray-400'}`}></div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -2616,6 +2979,96 @@ export default function CvStudio({
                 Anulează
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: LATEX STUDIO & OVERLEAF ================= */}
+      {showLatexModal && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="max-w-3xl w-full my-6 bg-white text-gray-900 rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 font-sans">
+            
+            {/* MODAL HEADER */}
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-neutral-950 text-white">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-amber-400 text-neutral-950 rounded-xl">
+                  <Code2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">LaTeX Studio & PDF Generator</h3>
+                  <p className="text-xs text-gray-300">Format profesional EB Garamond (100% Vectorial ATS, 1 pagină A4)</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowLatexModal(false)}
+                className="p-1.5 hover:bg-neutral-800 rounded-lg text-gray-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* MODAL CONTENT */}
+            <div className="p-6 space-y-4">
+              <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-xs text-amber-900 leading-relaxed flex items-start gap-2.5">
+                <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">De ce LaTeX?</span> Motoarele de compilare TeX generează text pur vectorial cu kerning și spațiere de precizie matematică, citite 100% corect de sistemele ATS (Workday, Taleo, Greenhouse).
+                  Apasă <span className="font-bold">„Deschide pe Overleaf”</span> pentru compilare instantă în cloud, sau <span className="font-bold">„Descarcă .tex”</span> pentru compilare locală!
+                </div>
+              </div>
+
+              {/* ACTION BUTTONS */}
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={handleOpenOverleaf}
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
+                  title="Deschide Overleaf cu codul gata inserat și compilează PDF-ul instant"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>Deschide pe Overleaf (Compilează PDF)</span>
+                </button>
+
+                <button
+                  onClick={handleDownloadTex}
+                  className="px-4 py-2.5 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
+                  title="Descarcă fișierul sursă .tex pe calculator"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Descarcă .tex</span>
+                </button>
+
+                <button
+                  onClick={handleCopyLatex}
+                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-bold text-xs flex items-center gap-2 transition cursor-pointer"
+                  title="Copiază codul LaTeX în clipboard"
+                >
+                  {latexCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-gray-600" />}
+                  <span>{latexCopied ? "Copiat în Clipboard!" : "Copiază Codul"}</span>
+                </button>
+              </div>
+
+              {/* CODE PREVIEW */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs text-gray-500 font-medium">
+                  <span>Previzualizare Cod Sursă LaTeX (.tex):</span>
+                  <span>Sincronizat automat cu datele tale din formular</span>
+                </div>
+                <div className="relative bg-neutral-950 text-neutral-100 p-4 rounded-xl font-mono text-xs overflow-x-auto max-h-80 border border-neutral-800 selection:bg-amber-400 selection:text-neutral-950">
+                  <pre className="whitespace-pre">{generateLatex()}</pre>
+                </div>
+              </div>
+            </div>
+
+            {/* MODAL FOOTER */}
+            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-end">
+              <button
+                onClick={() => setShowLatexModal(false)}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Închide
+              </button>
+            </div>
+
           </div>
         </div>
       )}
