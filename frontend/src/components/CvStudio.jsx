@@ -208,10 +208,15 @@ export default function CvStudio({
   const [parsingPdf, setParsingPdf] = useState(false);
   const [parsedPdfSuccess, setParsedPdfSuccess] = useState(null);
 
-  // LATEX EXPORT & PAGE OVERFLOW STATES
+  // LATEX EXPORT & MULTI-PAGE A4 LAYOUT STATES
   const [showLatexModal, setShowLatexModal] = useState(false);
   const [latexCopied, setLatexCopied] = useState(false);
   const [pageStats, setPageStats] = useState({ pages: 1, percent: 100, isOverflown: false });
+  const [pageLayoutMode, setPageLayoutMode] = useState('auto'); // 'auto' | '1' | '2'
+  const [splitSectionKey, setSplitSectionKey] = useState('skills'); // which section starts on Page 2
+  const [splitProjectIdx, setSplitProjectIdx] = useState(null); // null or number for project sub-split
+
+  const isMultiPage = pageLayoutMode === '2' || (pageLayoutMode === 'auto' && pageStats.isOverflown);
 
   // AGENT OUTPUTS
   const [agent1Output, setAgent1Output] = useState(null);
@@ -911,17 +916,30 @@ export default function CvStudio({
   // REAL-TIME PAGE OVERFLOW & HEIGHT CALCULATION
   useEffect(() => {
     const updatePageStats = () => {
-      const el = previewRef.current;
-      if (!el) return;
+      const page1Content = document.getElementById('cv-page-1-content');
+      const page2Content = document.getElementById('cv-page-2-content');
+      const page1El = document.getElementById('cv-page-1') || previewRef.current;
+      if (!page1El) return;
       
-      // Calculate exact A4 height in pixels relative to 210mm width (ratio 297/210 = 1.4142857)
-      const a4HeightPx = el.offsetWidth * (297 / 210);
-      const scrollHeight = el.scrollHeight;
+      // Calculate exact A4 usable content height (297mm - 28mm padding) vs 210mm width
+      const a4UsableHeightPx = page1El.offsetWidth * ((297 - 28) / 210);
+
+      // Measure true content height
+      let totalContentHeight = 0;
+      if (page1Content) {
+        totalContentHeight += page1Content.scrollHeight;
+      } else {
+        totalContentHeight += page1El.scrollHeight;
+      }
+
+      if (page2Content && isMultiPage) {
+        totalContentHeight += page2Content.scrollHeight;
+      }
       
-      // 4px tolerance for subpixel rendering
-      const isOverflown = scrollHeight > a4HeightPx + 4;
-      const pages = Math.max(1, Math.ceil((scrollHeight - 4) / a4HeightPx));
-      const percent = Math.round((scrollHeight / a4HeightPx) * 100);
+      // 4px tolerance
+      const isOverflown = totalContentHeight > a4UsableHeightPx + 4;
+      const pages = isMultiPage ? 2 : (isOverflown ? 2 : 1);
+      const percent = Math.max(1, Math.round((totalContentHeight / a4UsableHeightPx) * 100));
       
       setPageStats({ pages, percent, isOverflown });
     };
@@ -929,9 +947,14 @@ export default function CvStudio({
     updatePageStats();
 
     let observer;
-    if (typeof ResizeObserver !== 'undefined' && previewRef.current) {
+    const page1Content = document.getElementById('cv-page-1-content');
+    const page2Content = document.getElementById('cv-page-2-content');
+    const page1El = document.getElementById('cv-page-1') || previewRef.current;
+    if (typeof ResizeObserver !== 'undefined') {
       observer = new ResizeObserver(() => updatePageStats());
-      observer.observe(previewRef.current);
+      if (page1Content) observer.observe(page1Content);
+      else if (page1El) observer.observe(page1El);
+      if (page2Content) observer.observe(page2Content);
     }
 
     window.addEventListener('resize', updatePageStats);
@@ -947,7 +970,11 @@ export default function CvStudio({
     certificationsList,
     skillsFields,
     summaryText,
-    sectionOrder
+    sectionOrder,
+    pageLayoutMode,
+    splitSectionKey,
+    splitProjectIdx,
+    isMultiPage
   ]);
 
   // LATEX GENERATION & EXPORT LOGIC
@@ -1211,6 +1238,1172 @@ ${bodySections}\\end{document}
     document.body.removeChild(form);
   };
 
+  // MULTI-PAGE A4 SECTION PARTITIONING
+  const getPageSections = () => {
+    if (!isMultiPage) {
+      return { page1: sectionOrder, page2: [] };
+    }
+    const isSplitAtProjectsSub = splitSectionKey === 'projects' && splitProjectIdx !== null;
+    if (isSplitAtProjectsSub) {
+      const projIndex = sectionOrder.indexOf('projects');
+      return {
+        page1: sectionOrder.slice(0, projIndex + 1),
+        page2: sectionOrder.slice(projIndex)
+      };
+    }
+    const splitIdx = sectionOrder.indexOf(splitSectionKey);
+    const validSplitIdx = splitIdx !== -1 ? splitIdx : Math.max(0, sectionOrder.length - 1);
+    return {
+      page1: sectionOrder.slice(0, validSplitIdx),
+      page2: sectionOrder.slice(validSplitIdx)
+    };
+  };
+
+  const { page1: page1Sections, page2: page2Sections } = getPageSections();
+
+  // DYNAMIC SECTION RENDERER (SHARED ACROSS PAGE 1 AND PAGE 2)
+  const renderSection = (sectionKey, isPage2 = false) => {
+    const sIdx = sectionOrder.indexOf(sectionKey);
+
+    // ------------------- EDUCATION -------------------
+    if (sectionKey === 'education') {
+      return (
+        <div key={`education_${isPage2 ? 'p2' : 'p1'}`} className="mt-3 mb-2 group/sec">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span style={{ 
+                fontWeight: 'bold', 
+                fontSize: '10.5pt', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.8px', 
+                color: '#000000', 
+                fontFamily: 'Arial, Helvetica, sans-serif'
+              }}>
+                Education
+              </span>
+              
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
+                <button onClick={addEducation} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga o noua scoala">+ new</button>
+                {isMultiPage && (
+                  !isPage2 ? (
+                    <button 
+                      onClick={() => { setSplitSectionKey('education'); setSplitProjectIdx(null); }}
+                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune pe Pagina 2"
+                    >
+                      Mută pe Pag. 2 ↷
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => { 
+                        const curIdx = sectionOrder.indexOf('education');
+                        if (curIdx < sectionOrder.length - 1) {
+                          setSplitSectionKey(sectionOrder[curIdx + 1]);
+                        } else {
+                          setPageLayoutMode('1');
+                        }
+                        setSplitProjectIdx(null);
+                      }}
+                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune înapoi pe Pagina 1"
+                    >
+                      ↶ Pagina 1
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+
+            <button onClick={() => deleteSection('education')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+              <Trash2 className="w-3 h-3" /> delete section
+            </button>
+          </div>
+
+          <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+
+          {/* ENTRIES */}
+          {educationList.map((edu, eduIdx) => (
+            <div key={edu.id || eduIdx} className="mt-1 mb-1.5 group/item relative">
+              <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
+                <button onClick={() => moveEducationItem(eduIdx, -1)} disabled={eduIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
+                <button onClick={() => moveEducationItem(eduIdx, 1)} disabled={eduIdx === educationList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+              </div>
+
+              {/* ROW 1: SCHOOL + DATES */}
+              <div className="flex items-baseline justify-between gap-2">
+                <div className="flex items-baseline gap-1.5 flex-1">
+                  <span
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    onBlur={e => {
+                      const updated = [...educationList];
+                      updated[eduIdx].school = e.currentTarget.textContent || "";
+                      setEducationList(updated);
+                    }}
+                    className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                    style={{ fontSize: '9.5pt' }}
+                  >
+                    {edu.school}
+                  </span>
+                  <button 
+                    onClick={() => addEduBullet(eduIdx)}
+                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0"
+                  >
+                    + bullet
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
+                  <span
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    onBlur={e => {
+                      const updated = [...educationList];
+                      updated[eduIdx].period = e.currentTarget.textContent || "";
+                      setEducationList(updated);
+                    }}
+                    className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
+                    style={{ fontSize: '9pt' }}
+                  >
+                    {edu.period || ""}
+                  </span>
+
+                  {selectedTarget?.type === 'item' && selectedTarget?.section === 'education' && selectedTarget?.idx === eduIdx && (
+                    <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); deleteEducation(edu.id); }}
+                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                      >
+                        <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                      </button>
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedTarget({ type: 'item', section: 'education', idx: eduIdx });
+                    }}
+                    className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
+                    title="Delete entry"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+
+              {/* ROW 2: DEGREE + LOCATION */}
+              <div className="flex items-baseline justify-between gap-2">
+                <span
+                  contentEditable={true}
+                  suppressContentEditableWarning={true}
+                  onBlur={e => {
+                    const updated = [...educationList];
+                    updated[eduIdx].degree = e.currentTarget.textContent || "";
+                    setEducationList(updated);
+                  }}
+                  className="italic text-gray-800 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block flex-1"
+                  style={{ fontSize: '9pt' }}
+                >
+                  {edu.degree}
+                </span>
+                <span
+                  contentEditable={true}
+                  suppressContentEditableWarning={true}
+                  onBlur={e => {
+                    const updated = [...educationList];
+                    updated[eduIdx].location = e.currentTarget.textContent || "";
+                    setEducationList(updated);
+                  }}
+                  className="italic text-right text-gray-700 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block shrink-0"
+                  style={{ fontSize: '9pt' }}
+                >
+                  {edu.location}
+                </span>
+              </div>
+
+              {/* BULLETS */}
+              {edu.bullets && edu.bullets.map((b, bIdx) => {
+                const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'education' && selectedTarget?.idx === eduIdx && selectedTarget?.subIdx === bIdx;
+                return (
+                  <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
+                    {isBulletSelected && (
+                      <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); deleteEduBullet(eduIdx, bIdx); }}
+                          className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                        >
+                          <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                        </button>
+                      </div>
+                    )}
+
+                    <span style={{ fontSize: '9pt', lineHeight: '1.3', flexShrink: 0, paddingLeft: '4px' }}>•</span>
+                    <div
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTarget({ type: 'bullet', section: 'education', idx: eduIdx, subIdx: bIdx });
+                      }}
+                      onBlur={e => {
+                        const updated = [...educationList];
+                        updated[eduIdx].bullets[bIdx] = e.currentTarget.textContent || "";
+                        setEducationList(updated);
+                      }}
+                      className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
+                        isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
+                      }`}
+                      style={{ fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}
+                    >
+                      {b}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // ------------------- EXPERIENCE -------------------
+    if (sectionKey === 'experience') {
+      return (
+        <div key={`experience_${isPage2 ? 'p2' : 'p1'}`} className="mt-3.5 mb-2 group/sec">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span style={{ 
+                fontWeight: 'bold', 
+                fontSize: '10.5pt', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.8px', 
+                color: '#000000', 
+                fontFamily: 'Arial, Helvetica, sans-serif'
+              }}>
+                Experience
+              </span>
+              
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
+                <button onClick={addExperience} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga experienta">+ new</button>
+                {isMultiPage && (
+                  !isPage2 ? (
+                    <button 
+                      onClick={() => { setSplitSectionKey('experience'); setSplitProjectIdx(null); }}
+                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune pe Pagina 2"
+                    >
+                      Mută pe Pag. 2 ↷
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => { 
+                        const curIdx = sectionOrder.indexOf('experience');
+                        if (curIdx < sectionOrder.length - 1) {
+                          setSplitSectionKey(sectionOrder[curIdx + 1]);
+                        } else {
+                          setPageLayoutMode('1');
+                        }
+                        setSplitProjectIdx(null);
+                      }}
+                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune înapoi pe Pagina 1"
+                    >
+                      ↶ Pagina 1
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+
+            <button onClick={() => deleteSection('experience')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+              <Trash2 className="w-3 h-3" /> delete section
+            </button>
+          </div>
+
+          <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+
+          {/* ENTRIES */}
+          {experienceList.map((exp, expIdx) => (
+            <div key={exp.id || expIdx} className="mt-1.5 mb-2 group/item relative">
+              <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
+                <button onClick={() => moveExperienceItem(expIdx, -1)} disabled={expIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
+                <button onClick={() => moveExperienceItem(expIdx, 1)} disabled={expIdx === experienceList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+              </div>
+
+              {/* ROW 1: ROLE + DATES */}
+              <div className="flex items-baseline justify-between gap-2">
+                <div className="flex items-baseline gap-1.5 flex-1">
+                  <span
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    onBlur={e => {
+                      const updated = [...experienceList];
+                      updated[expIdx].role = e.currentTarget.textContent || "";
+                      setExperienceList(updated);
+                    }}
+                    className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                    style={{ fontSize: '9.5pt' }}
+                  >
+                    {exp.role}
+                  </span>
+                  <button 
+                    onClick={() => addExpBullet(expIdx)}
+                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0"
+                  >
+                    + bullet
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
+                  <span
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    onBlur={e => {
+                      const updated = [...experienceList];
+                      updated[expIdx].period = e.currentTarget.textContent || "";
+                      setExperienceList(updated);
+                    }}
+                    className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
+                    style={{ fontSize: '9pt' }}
+                  >
+                    {exp.period || ""}
+                  </span>
+
+                  {selectedTarget?.type === 'item' && selectedTarget?.section === 'experience' && selectedTarget?.idx === expIdx && (
+                    <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); deleteExperience(exp.id); }}
+                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                      >
+                        <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                      </button>
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedTarget({ type: 'item', section: 'experience', idx: expIdx });
+                    }}
+                    className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
+                    title="Delete entry"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+
+              {/* ROW 2: COMPANY + LOCATION */}
+              <div className="flex items-baseline justify-between gap-2">
+                <span
+                  contentEditable={true}
+                  suppressContentEditableWarning={true}
+                  onBlur={e => {
+                    const updated = [...experienceList];
+                    updated[expIdx].company = e.currentTarget.textContent || "";
+                    setExperienceList(updated);
+                  }}
+                  className="italic text-gray-800 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block flex-1"
+                  style={{ fontSize: '9pt' }}
+                >
+                  {exp.company}
+                </span>
+                <span
+                  contentEditable={true}
+                  suppressContentEditableWarning={true}
+                  onBlur={e => {
+                    const updated = [...experienceList];
+                    updated[expIdx].location = e.currentTarget.textContent || "";
+                    setExperienceList(updated);
+                  }}
+                  className="italic text-right text-gray-700 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block shrink-0"
+                  style={{ fontSize: '9pt' }}
+                >
+                  {exp.location}
+                </span>
+              </div>
+
+              {/* BULLETS */}
+              {exp.bullets && exp.bullets.map((b, bIdx) => {
+                const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'experience' && selectedTarget?.idx === expIdx && selectedTarget?.subIdx === bIdx;
+                return (
+                  <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
+                    {isBulletSelected && (
+                      <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
+                          className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                        >
+                          <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                        </button>
+                      </div>
+                    )}
+
+                    <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
+                    <div
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTarget({ type: 'bullet', section: 'experience', idx: expIdx, subIdx: bIdx });
+                      }}
+                      onBlur={e => {
+                        const updated = [...experienceList];
+                        updated[expIdx].bullets[bIdx] = e.currentTarget.textContent || "";
+                        setExperienceList(updated);
+                      }}
+                      className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
+                        isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
+                      }`}
+                      style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
+                    >
+                      {b}
+                    </div>
+
+                    <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenBulletRewrite('experience', expIdx, bIdx, b);
+                        }}
+                        className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs"
+                        title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici măsurabile"
+                      >
+                        <Sparkles className="w-2.5 h-2.5 text-amber-600" />
+                        <span>AI XYZ</span>
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
+                        className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
+                        title="Șterge bullet"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // ------------------- PROJECTS -------------------
+    if (sectionKey === 'projects') {
+      const isSplitHere = isMultiPage && splitSectionKey === 'projects' && splitProjectIdx !== null;
+      let projectsToRender = projectsList;
+      let offset = 0;
+      if (isSplitHere) {
+        if (!isPage2) {
+          projectsToRender = projectsList.slice(0, splitProjectIdx);
+          offset = 0;
+        } else {
+          projectsToRender = projectsList.slice(splitProjectIdx);
+          offset = splitProjectIdx;
+        }
+      }
+
+      if (projectsToRender.length === 0) return null;
+
+      return (
+        <div key={`projects_${isPage2 ? 'p2' : 'p1'}`} className="mt-3.5 mb-2 group/sec">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span style={{ 
+                fontWeight: 'bold', 
+                fontSize: '10.5pt', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.8px', 
+                color: '#000000', 
+                fontFamily: 'Arial, Helvetica, sans-serif'
+              }}>
+                Projects {isSplitHere ? (isPage2 ? '(Continuare)' : '') : ''}
+              </span>
+              
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
+                <button onClick={addProject} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga proiect">+ new</button>
+                {isMultiPage && (
+                  !isPage2 ? (
+                    <button 
+                      onClick={() => { setSplitSectionKey('projects'); setSplitProjectIdx(null); }}
+                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune pe Pagina 2"
+                    >
+                      Mută pe Pag. 2 ↷
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => { 
+                        const curIdx = sectionOrder.indexOf('projects');
+                        if (curIdx < sectionOrder.length - 1) {
+                          setSplitSectionKey(sectionOrder[curIdx + 1]);
+                        } else {
+                          setPageLayoutMode('1');
+                        }
+                        setSplitProjectIdx(null);
+                      }}
+                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune înapoi pe Pagina 1"
+                    >
+                      ↶ Pagina 1
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+
+            <button onClick={() => deleteSection('projects')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+              <Trash2 className="w-3 h-3" /> delete section
+            </button>
+          </div>
+
+          <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+
+          {/* ENTRIES */}
+          {projectsToRender.map((proj, localIdx) => {
+            const projIdx = offset + localIdx;
+            return (
+              <div key={proj.id || projIdx} className="mt-1.5 mb-2 group/item relative">
+                <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
+                  <button onClick={() => moveProjectItem(projIdx, -1)} disabled={projIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
+                  <button onClick={() => moveProjectItem(projIdx, 1)} disabled={projIdx === projectsList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+                </div>
+
+                {/* ROW 1: TITLE + TECH STACK + (+ ADD LINK) + (+ BULLET) + DATES */}
+                <div className="flex items-baseline justify-between gap-2">
+                  <div className="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5 flex-1">
+                    <span
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      onBlur={e => {
+                        const updated = [...projectsList];
+                        updated[projIdx].title = e.currentTarget.textContent || "";
+                        setProjectsList(updated);
+                      }}
+                      className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                      style={{ fontSize: '9.5pt' }}
+                    >
+                      {proj.title}
+                    </span>
+                    
+                    <span className="text-gray-400 font-normal">|</span>
+                    
+                    <span
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      onBlur={e => {
+                        const updated = [...projectsList];
+                        updated[projIdx].techStack = e.currentTarget.textContent || "";
+                        setProjectsList(updated);
+                      }}
+                      className="italic text-gray-800 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                      style={{ fontSize: '8.5pt' }}
+                    >
+                      {proj.techStack}
+                    </span>
+
+                    {/* CLICKABLE LINK */}
+                    {proj.linkUrl ? (
+                      <span className="inline-flex items-center gap-1 font-sans text-xs">
+                        <a 
+                          href={proj.linkUrl.startsWith('http') ? proj.linkUrl : `https://${proj.linkUrl}`} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-black underline font-normal hover:text-gray-700"
+                          style={{ fontSize: '8.5pt' }}
+                        >
+                          ({proj.linkText || proj.linkUrl})
+                        </a>
+                        <button 
+                          onClick={() => {
+                            const updated = [...projectsList];
+                            updated[projIdx].linkUrl = "";
+                            updated[projIdx].linkText = "";
+                            setProjectsList(updated);
+                          }}
+                          className="no-pdf text-gray-400 hover:text-rose-600 cursor-pointer"
+                          title="Sterge link"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </span>
+                    ) : (
+                      <button 
+                        onClick={() => {
+                          const url = prompt("Introdu URL-ul proiectului (ex: https://one-rep.vercel.app):");
+                          if (!url) return;
+                          const text = prompt("Introdu textul afisat pentru link (optional, ex: one-rep.vercel.app):", url.replace(/^https?:\/\//, ''));
+                          const updated = [...projectsList];
+                          updated[projIdx].linkUrl = url;
+                          updated[projIdx].linkText = text || url;
+                          setProjectsList(updated);
+                        }}
+                        className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0"
+                      >
+                        + add link
+                      </button>
+                    )}
+
+                    <button 
+                      onClick={() => addProjectBullet(projIdx)}
+                      className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0 ml-1"
+                    >
+                      + bullet
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
+                    <span
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      onBlur={e => {
+                        const updated = [...projectsList];
+                        updated[projIdx].period = e.currentTarget.textContent || "";
+                        setProjectsList(updated);
+                      }}
+                      className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
+                      style={{ fontSize: '9pt' }}
+                    >
+                      {proj.period || ""}
+                    </span>
+
+                    {selectedTarget?.type === 'item' && selectedTarget?.section === 'projects' && selectedTarget?.idx === projIdx && (
+                      <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); deleteProject(proj.id); }}
+                          className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                        >
+                          <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                        </button>
+                      </div>
+                    )}
+
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTarget({ type: 'item', section: 'projects', idx: projIdx });
+                      }}
+                      className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
+                      title="Delete entry"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* BULLETS */}
+                {proj.bullets && proj.bullets.map((b, bIdx) => {
+                  const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'projects' && selectedTarget?.idx === projIdx && selectedTarget?.subIdx === bIdx;
+                  return (
+                    <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
+                      {isBulletSelected && (
+                        <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
+                            className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                          >
+                            <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                          </button>
+                        </div>
+                      )}
+
+                      <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
+                      <div
+                        contentEditable={true}
+                        suppressContentEditableWarning={true}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedTarget({ type: 'bullet', section: 'projects', idx: projIdx, subIdx: bIdx });
+                        }}
+                        onBlur={e => {
+                          const updated = [...projectsList];
+                          updated[projIdx].bullets[bIdx] = e.currentTarget.textContent || "";
+                          setProjectsList(updated);
+                        }}
+                        className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
+                          isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
+                        }`}
+                        style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
+                      >
+                        {b}
+                      </div>
+
+                      <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenBulletRewrite('projects', projIdx, bIdx, b);
+                          }}
+                          className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs"
+                          title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici măsurabile"
+                        >
+                          <Sparkles className="w-2.5 h-2.5 text-amber-600" />
+                          <span>AI XYZ</span>
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
+                          className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
+                          title="Șterge bullet"
+                        >
+                          <Trash2 className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // ------------------- CERTIFICATIONS -------------------
+    if (sectionKey === 'certifications') {
+      return (
+        <div key={`certifications_${isPage2 ? 'p2' : 'p1'}`} className="mt-3.5 mb-2 group/sec">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span style={{ 
+                fontWeight: 'bold', 
+                fontSize: '10.5pt', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.8px', 
+                color: '#000000', 
+                fontFamily: 'Arial, Helvetica, sans-serif'
+              }}>
+                Certifications
+              </span>
+              
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
+                <button onClick={addCertification} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga certificare">+ new</button>
+                {isMultiPage && (
+                  !isPage2 ? (
+                    <button 
+                      onClick={() => { setSplitSectionKey('certifications'); setSplitProjectIdx(null); }}
+                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune pe Pagina 2"
+                    >
+                      Mută pe Pag. 2 ↷
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => { 
+                        const curIdx = sectionOrder.indexOf('certifications');
+                        if (curIdx < sectionOrder.length - 1) {
+                          setSplitSectionKey(sectionOrder[curIdx + 1]);
+                        } else {
+                          setPageLayoutMode('1');
+                        }
+                        setSplitProjectIdx(null);
+                      }}
+                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune înapoi pe Pagina 1"
+                    >
+                      ↶ Pagina 1
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+
+            <button onClick={() => deleteSection('certifications')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+              <Trash2 className="w-3 h-3" /> delete section
+            </button>
+          </div>
+
+          <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+
+          {/* ENTRIES */}
+          {certificationsList.map((cert, certIdx) => (
+            <div key={cert.id || certIdx} className="mt-1.5 mb-2 group/item relative">
+              <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
+                <button onClick={() => moveCertificationItem(certIdx, -1)} disabled={certIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
+                <button onClick={() => moveCertificationItem(certIdx, 1)} disabled={certIdx === certificationsList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+              </div>
+
+              {/* ROW 1: CERT NAME + ISSUER + DATES */}
+              <div className="flex items-baseline justify-between gap-2">
+                <div className="flex items-baseline flex-wrap gap-1.5 flex-1">
+                  <span
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    onBlur={e => {
+                      const updated = [...certificationsList];
+                      updated[certIdx].name = e.currentTarget.textContent || "";
+                      setCertificationsList(updated);
+                    }}
+                    className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                    style={{ fontSize: '9.5pt' }}
+                  >
+                    {cert.name}
+                  </span>
+                  
+                  {cert.issuer && (
+                    <>
+                      <span className="text-gray-400 font-normal">|</span>
+                      <span
+                        contentEditable={true}
+                        suppressContentEditableWarning={true}
+                        onBlur={e => {
+                          const updated = [...certificationsList];
+                          updated[certIdx].issuer = e.currentTarget.textContent || "";
+                          setCertificationsList(updated);
+                        }}
+                        className="italic text-gray-800 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                        style={{ fontSize: '8.5pt' }}
+                      >
+                        {cert.issuer}
+                      </span>
+                    </>
+                  )}
+
+                  <button 
+                    onClick={() => addCertBullet(certIdx)}
+                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0 ml-1"
+                  >
+                    + bullet
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
+                  <span
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    onBlur={e => {
+                      const updated = [...certificationsList];
+                      updated[certIdx].period = e.currentTarget.textContent || "";
+                      setCertificationsList(updated);
+                    }}
+                    className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
+                    style={{ fontSize: '9pt' }}
+                  >
+                    {cert.period || ""}
+                  </span>
+
+                  {selectedTarget?.type === 'item' && selectedTarget?.section === 'certifications' && selectedTarget?.idx === certIdx && (
+                    <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); deleteCertification(cert.id); }}
+                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                      >
+                        <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                      </button>
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedTarget({ type: 'item', section: 'certifications', idx: certIdx });
+                    }}
+                    className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
+                    title="Delete entry"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+
+              {/* BULLETS */}
+              {cert.bullets && cert.bullets.map((b, bIdx) => {
+                const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'certifications' && selectedTarget?.idx === certIdx && selectedTarget?.subIdx === bIdx;
+                return (
+                  <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
+                    {isBulletSelected && (
+                      <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); deleteCertBullet(certIdx, bIdx); }}
+                          className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                        >
+                          <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                        </button>
+                      </div>
+                    )}
+
+                    <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
+                    <div
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTarget({ type: 'bullet', section: 'certifications', idx: certIdx, subIdx: bIdx });
+                      }}
+                      onBlur={e => {
+                        const updated = [...certificationsList];
+                        updated[certIdx].bullets[bIdx] = e.currentTarget.textContent || "";
+                        setCertificationsList(updated);
+                      }}
+                      className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
+                        isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
+                      }`}
+                      style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
+                    >
+                      {b}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // ------------------- TECHNICAL SKILLS -------------------
+    if (sectionKey === 'skills') {
+      return (
+        <div key={`skills_${isPage2 ? 'p2' : 'p1'}`} className="mt-3.5 mb-2 group/sec">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span style={{ 
+                fontWeight: 'bold', 
+                fontSize: '10.5pt', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.8px', 
+                color: '#000000', 
+                fontFamily: 'Arial, Helvetica, sans-serif'
+              }}>
+                Technical Skills
+              </span>
+              
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
+                <button onClick={addSkillField} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga o noua categorie de skill-uri">+ field</button>
+                {isMultiPage && (
+                  !isPage2 ? (
+                    <button 
+                      onClick={() => { setSplitSectionKey('skills'); setSplitProjectIdx(null); }}
+                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune pe Pagina 2"
+                    >
+                      Mută pe Pag. 2 ↷
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => { 
+                        const curIdx = sectionOrder.indexOf('skills');
+                        if (curIdx < sectionOrder.length - 1) {
+                          setSplitSectionKey(sectionOrder[curIdx + 1]);
+                        } else {
+                          setPageLayoutMode('1');
+                        }
+                        setSplitProjectIdx(null);
+                      }}
+                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune înapoi pe Pagina 1"
+                    >
+                      ↶ Pagina 1
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+
+            <button onClick={() => deleteSection('skills')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+              <Trash2 className="w-3 h-3" /> delete section
+            </button>
+          </div>
+
+          <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+
+          {/* SKILLS ROWS */}
+          <div className="space-y-0.5 mt-1 text-black" style={{ fontSize: '8.5pt', lineHeight: '1.4' }}>
+            {skillsFields.map((field, fieldIdx) => (
+              <div key={field.id || fieldIdx} className="group/f relative leading-normal">
+                <div className="no-pdf absolute -left-12 top-0 opacity-0 group-hover/f:opacity-100 transition flex items-center gap-1">
+                  <button onClick={() => moveSkillFieldItem(fieldIdx, -1)} disabled={fieldIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta categoria mai sus">↑</button>
+                  <button onClick={() => moveSkillFieldItem(fieldIdx, 1)} disabled={fieldIdx === skillsFields.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta categoria mai jos">↓</button>
+                </div>
+
+                {/* FIELD LABEL */}
+                <span className="cv-popup-target relative inline font-bold">
+                  {selectedTarget?.type === 'field' && selectedTarget?.idx === fieldIdx && (
+                    <div className="no-pdf absolute bottom-full left-0 mb-1 z-40 animate-in fade-in">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); deleteSkillField(fieldIdx); }}
+                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                      >
+                        <Trash2 className="w-3 h-3 text-gray-500" /> Delete Field
+                      </button>
+                    </div>
+                  )}
+
+                  <span 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    onClick={(e) => { e.stopPropagation(); setSelectedTarget({ type: 'field', idx: fieldIdx }); }}
+                    onBlur={e => {
+                      const cleanText = (e.currentTarget.textContent || "").replace(/:+$/, '').trim();
+                      const updated = [...skillsFields];
+                      updated[fieldIdx].label = cleanText || field.label;
+                      setSkillsFields(updated);
+                    }}
+                    className="outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-0.5 rounded cursor-pointer transition"
+                  >
+                    {field.label}:
+                  </span>
+                </span>
+
+                <span className="ml-1.5"></span>
+
+                {/* INDIVIDUAL SKILL ITEMS */}
+                {field.items.map((item, itemIdx) => {
+                  const isSkillSelected = selectedTarget?.type === 'skill' && selectedTarget?.idx === fieldIdx && selectedTarget?.subIdx === itemIdx;
+                  return (
+                    <span 
+                      key={itemIdx} 
+                      className="cv-popup-target relative inline cursor-pointer"
+                    >
+                      {isSkillSelected && (
+                        <div className="no-pdf absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-40 animate-in fade-in">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); deleteSkillItem(fieldIdx, itemIdx); }}
+                            className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                          >
+                            <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                          </button>
+                        </div>
+                      )}
+
+                      <span
+                        contentEditable={true}
+                        suppressContentEditableWarning={true}
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setSelectedTarget({ type: 'skill', idx: fieldIdx, subIdx: itemIdx });
+                        }}
+                        onBlur={e => {
+                          const updated = [...skillsFields];
+                          updated[fieldIdx].items[itemIdx] = e.currentTarget.textContent || "";
+                          setSkillsFields(updated);
+                        }}
+                        className={`outline-none border px-0.5 rounded transition ${
+                          isSkillSelected 
+                            ? 'border-gray-400 bg-gray-100/40 text-black font-medium' 
+                            : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
+                        }`}
+                      >
+                        {item}
+                      </span>
+                      {itemIdx < field.items.length - 1 && <span className="mr-1">,</span>}
+                    </span>
+                  );
+                })}
+
+                {/* INLINE +ADD INPUT BOX */}
+                {addingSkillFieldIdx === fieldIdx ? (
+                  <span className="inline-block ml-1">
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder="Scrie skill..."
+                      value={newSkillText}
+                      onChange={e => setNewSkillText(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleCommitSkill(fieldIdx);
+                        if (e.key === 'Escape') { setAddingSkillFieldIdx(null); setNewSkillText(""); }
+                      }}
+                      onBlur={() => handleCommitSkill(fieldIdx)}
+                      className="no-pdf border border-gray-400 bg-gray-50 px-1.5 py-0.5 rounded text-[8.5pt] outline-none text-black font-medium w-24 shadow-2xs"
+                    />
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => { setAddingSkillFieldIdx(fieldIdx); setNewSkillText(""); }}
+                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer px-1 hover:bg-gray-100 rounded ml-1 inline"
+                    title={`Adaugă skill în ${field.label}`}
+                  >
+                    + add
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ------------------- SUMMARY -------------------
+    if (sectionKey === 'summary') {
+      return (
+        <div key={`summary_${isPage2 ? 'p2' : 'p1'}`} className="mt-3.5 mb-2 group/sec">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span style={{ 
+                fontWeight: 'bold', 
+                fontSize: '10.5pt', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.8px', 
+                color: '#000000', 
+                fontFamily: 'Arial, Helvetica, sans-serif'
+              }}>
+                Professional Summary
+              </span>
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
+                {isMultiPage && (
+                  !isPage2 ? (
+                    <button 
+                      onClick={() => { setSplitSectionKey('summary'); setSplitProjectIdx(null); }}
+                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune pe Pagina 2"
+                    >
+                      Mută pe Pag. 2 ↷
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => { 
+                        const curIdx = sectionOrder.indexOf('summary');
+                        if (curIdx < sectionOrder.length - 1) {
+                          setSplitSectionKey(sectionOrder[curIdx + 1]);
+                        } else {
+                          setPageLayoutMode('1');
+                        }
+                        setSplitProjectIdx(null);
+                      }}
+                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
+                      title="Mută această secțiune înapoi pe Pagina 1"
+                    >
+                      ↶ Pagina 1
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+            <button onClick={() => deleteSection('summary')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
+              <Trash2 className="w-3 h-3" /> delete section
+            </button>
+          </div>
+          <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
+          <div
+            contentEditable={true}
+            suppressContentEditableWarning={true}
+            onBlur={e => setSummaryText(e.currentTarget.textContent || "")}
+            className="outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1.5 py-0.5 rounded transition cursor-text"
+            style={{ fontSize: '9pt', color: '#000000', textAlign: 'justify', lineHeight: '1.35', fontFamily: 'Arial, Helvetica, sans-serif' }}
+          >
+            {summaryText}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="space-y-6 w-full max-w-[210mm] mx-auto pb-16 font-sans">
       
@@ -1261,30 +2454,61 @@ ${bodySections}\\end{document}
               )}
             </div>
 
-            {/* REAL-TIME PAGE OVERFLOW / COUNT INDICATOR */}
-            <div 
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition border ${
-                pageStats.isOverflown
-                  ? 'bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-400' 
-                  : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-              }`}
-              title={
-                pageStats.isOverflown
-                  ? `Atenție: Conținutul depășește 1 pagină A4 (${pageStats.percent}% din Pagina 1). Se recomandă scurtarea textului pentru ca CV-ul să rămână pe o singură pagină.`
-                  : `Conținutul se încadrează pe 1 pagină A4 (${pageStats.percent}% spațiu utilizat).`
-              }
-            >
-              {pageStats.isOverflown ? (
-                <>
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 animate-pulse shrink-0" />
-                  <span>⚠️ {pageStats.pages} Pagini ({pageStats.percent}%)</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>📄 1 Pagină ({pageStats.percent}%)</span>
-                </>
-              )}
+            {/* REAL-TIME PAGE OVERFLOW / COUNT INDICATOR & A4 LAYOUT CONTROLLER */}
+            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-2xs">
+              <div 
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                  isMultiPage
+                    ? 'bg-amber-100 text-amber-900 border border-amber-300' 
+                    : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                }`}
+                title={
+                  isMultiPage
+                    ? `CV-ul este structurat pe 2 pagini A4 (${pageStats.percent}% conținut raportat la Pag. 1).`
+                    : `CV-ul se încadrează pe 1 pagină A4 (${pageStats.percent}% spațiu utilizat).`
+                }
+              >
+                {isMultiPage ? (
+                  <>
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                    <span>📑 2 Pagini ({pageStats.percent}%)</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                    <span>📄 1 Pagină ({pageStats.percent}%)</span>
+                  </>
+                )}
+              </div>
+
+              {/* MODE TOGGLES */}
+              <button
+                onClick={() => setPageLayoutMode('auto')}
+                className={`px-2 py-1 rounded-md text-xs transition cursor-pointer font-bold ${
+                  pageLayoutMode === 'auto' ? 'bg-white text-black shadow-xs' : 'text-gray-600 hover:text-black'
+                }`}
+                title="Detectează automat: adaugă a doua pagină doar când conținutul depășește prima pagină"
+              >
+                Auto
+              </button>
+              <button
+                onClick={() => setPageLayoutMode('1')}
+                className={`px-2 py-1 rounded-md text-xs transition cursor-pointer font-bold ${
+                  pageLayoutMode === '1' ? 'bg-white text-black shadow-xs' : 'text-gray-600 hover:text-black'
+                }`}
+                title="Forțează vizualizarea strictă pe 1 pagină A4"
+              >
+                1 Pagină
+              </button>
+              <button
+                onClick={() => setPageLayoutMode('2')}
+                className={`px-2 py-1 rounded-md text-xs transition cursor-pointer font-bold ${
+                  pageLayoutMode === '2' ? 'bg-white text-black shadow-xs' : 'text-gray-600 hover:text-black'
+                }`}
+                title="Adaugă Pagina 2 și separă conținutul pe 2 foi fizice A4"
+              >
+                2 Pagini
+              </button>
             </div>
 
             {/* POLISH AI COACH TOGGLE BUTTON */}
@@ -1429,1138 +2653,274 @@ ${bodySections}\\end{document}
             position: 'relative'
           }}
         >
-          {/* EXACT PHYSICAL 210mm A4 SHEET (CLEAN WHITE CARD WITH ROUNDED CORNERS & SHADOW) */}
+          {/* A4 MULTI-PAGE CONTAINER (TARGET FOR DIRECT HTML2PDF DOWNLOAD) */}
           <div 
             ref={previewRef}
             id="cv-preview-sheet" 
-            className="bg-white text-black shadow-xl rounded-2xl border border-gray-200/90 transition-all relative"
+            className="flex flex-col items-center"
             style={{ 
               width: '210mm',
-              minHeight: '297mm',
-              padding: '14mm 16mm',
-              fontFamily: "'Times New Roman', Times, serif",
-              backgroundColor: '#ffffff',
-              color: '#000000',
-              boxSizing: 'border-box',
-              position: 'relative'
+              margin: '0 auto',
+              backgroundColor: 'transparent'
             }}
           >
-            
-            {/* ================= HEADER SECTION (NAME + CONTACT DETAILS) ================= */}
-            <div className="relative group text-center pb-2">
-              
-              {/* EDIT CONTACT BUTTON */}
-              <button 
-                onClick={() => setShowEditContactModal(true)}
-                className="no-pdf absolute right-0 top-0 text-[11px] font-sans text-gray-500 hover:text-black flex items-center gap-1 bg-gray-50 hover:bg-gray-100 px-2.5 py-1 rounded border border-gray-200 shadow-2xs transition cursor-pointer"
-                title="Editează datele de contact ca în formular"
-              >
-                <Edit3 className="w-3.5 h-3.5 text-gray-500" /> Edit Contact
-              </button>
-
-              {/* CANDIDATE FULL NAME IN EDITABLE BOX */}
-              <div 
-                contentEditable={true}
-                suppressContentEditableWarning={true}
-                onBlur={e => setContactData({...contactData, fullName: e.currentTarget.textContent || ""})}
-                className="outline-none font-bold uppercase tracking-wide cursor-text inline-block border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1.5 py-0.5 rounded transition"
-                style={{ 
-                  fontSize: '20pt', 
-                  fontFamily: 'Arial, Helvetica, sans-serif',
-                  letterSpacing: '0.5px',
-                  lineHeight: '1.2'
-                }}
-              >
-                {contactData.fullName}
-              </div>
-
-              {/* CONTACT DETAILS ROW */}
-              <div 
-                className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-black mt-1 font-sans"
-                style={{ fontSize: '9pt' }}
-              >
-                {contactData.phone && <span>{contactData.phone}</span>}
-                
-                {contactData.email && (
-                  <>
-                    <span className="text-gray-400">|</span>
-                    <a href={`mailto:${contactData.email}`} className="text-black underline hover:text-gray-700">{contactData.email}</a>
-                  </>
-                )}
-                
-                {contactData.linkedin && (
-                  <>
-                    <span className="text-gray-400">|</span>
-                    <a href={contactData.linkedin.startsWith('http') ? contactData.linkedin : `https://${contactData.linkedin}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
-                      {contactData.linkedinFull ? contactData.linkedin : 'LinkedIn'}
-                    </a>
-                  </>
-                )}
-                
-                {contactData.github && (
-                  <>
-                    <span className="text-gray-400">|</span>
-                    <a href={contactData.github.startsWith('http') ? contactData.github : `https://${contactData.github}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
-                      {contactData.githubFull ? contactData.github : 'GitHub'}
-                    </a>
-                  </>
-                )}
-
-                {contactData.portfolio && (
-                  <>
-                    <span className="text-gray-400">|</span>
-                    <a href={contactData.portfolio.startsWith('http') ? contactData.portfolio : `https://${contactData.portfolio}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
-                      {contactData.portfolioFull ? contactData.portfolio : 'Portfolio'}
-                    </a>
-                  </>
-                )}
-
-                {contactData.blog && (
-                  <>
-                    <span className="text-gray-400">|</span>
-                    <a href={contactData.blog.startsWith('http') ? contactData.blog : `https://${contactData.blog}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
-                      {contactData.blogFull ? contactData.blog : 'Blog'}
-                    </a>
-                  </>
-                )}
-
-                {contactData.social && (
-                  <>
-                    <span className="text-gray-400">|</span>
-                    <a href={contactData.social.startsWith('http') ? contactData.social : `https://${contactData.social}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
-                      {contactData.socialFull ? contactData.social : 'Social'}
-                    </a>
-                  </>
-                )}
-
-                {contactData.location && (
-                  <>
-                    <span className="text-gray-400">|</span>
-                    <span className="text-gray-700">{contactData.location}</span>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* ================= DYNAMIC SECTIONS ================= */}
-            {sectionOrder.map((sectionKey, sIdx) => {
-              
-              // ------------------- EDUCATION -------------------
-              if (sectionKey === 'education') {
-                return (
-                  <div key="education" className="mt-3.5 mb-2 group/sec">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span style={{ 
-                          fontWeight: 'bold', 
-                          fontSize: '10.5pt', 
-                          textTransform: 'uppercase', 
-                          letterSpacing: '0.8px', 
-                          color: '#000000', 
-                          fontFamily: 'Arial, Helvetica, sans-serif'
-                        }}>
-                          Education
-                        </span>
-                        
-                        {/* LARGER SIZED SEPARATE ARROW BUTTONS */}
-                        <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
-                          <button onClick={addEducation} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga o noua scoala">+ new</button>
-                        </div>
-                      </div>
-
-                      <button onClick={() => deleteSection('education')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-                        <Trash2 className="w-3 h-3" /> delete section
-                      </button>
-                    </div>
-
-                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
-
-                    {/* ENTRIES */}
-                    {educationList.map((edu, eduIdx) => (
-                      <div key={edu.id || eduIdx} className="mt-1.5 mb-1.5 group/item relative">
-                        
-                        {/* 2 SEPARATE HOVER BUTTONS ON LEFT */}
-                        <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
-                          <button onClick={() => moveEducationItem(eduIdx, -1)} disabled={eduIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
-                          <button onClick={() => moveEducationItem(eduIdx, 1)} disabled={eduIdx === educationList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
-                        </div>
-
-                        {/* ROW 1: SCHOOL + DATES */}
-                        <div className="flex items-baseline justify-between gap-2">
-                          <div className="flex items-baseline gap-1.5 flex-1">
-                            <span
-                              contentEditable={true}
-                              suppressContentEditableWarning={true}
-                              onBlur={e => {
-                                const updated = [...educationList];
-                                updated[eduIdx].school = e.currentTarget.textContent || "";
-                                setEducationList(updated);
-                              }}
-                              className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
-                              style={{ fontSize: '9.5pt' }}
-                            >
-                              {edu.school}
-                            </span>
-                            <button 
-                              onClick={() => addEduBullet(eduIdx)}
-                              className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0"
-                            >
-                              + bullet
-                            </button>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
-                            {/* DATES */}
-                            <span
-                              contentEditable={true}
-                              suppressContentEditableWarning={true}
-                              onBlur={e => {
-                                const updated = [...educationList];
-                                updated[eduIdx].period = e.currentTarget.textContent || "";
-                                setEducationList(updated);
-                              }}
-                              className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
-                              style={{ fontSize: '9pt' }}
-                            >
-                              {edu.period || ""}
-                            </span>
-
-                            {/* DIRECT SINGLE DELETE BUTTON */}
-                            {selectedTarget?.type === 'item' && selectedTarget?.section === 'education' && selectedTarget?.idx === eduIdx && (
-                              <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); deleteEducation(edu.id); }}
-                                  className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                                >
-                                  <Trash2 className="w-3 h-3 text-gray-500" /> Delete
-                                </button>
-                              </div>
-                            )}
-
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTarget({ type: 'item', section: 'education', idx: eduIdx });
-                              }}
-                              className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
-                              title="Delete entry"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* ROW 2: DEGREE + LOCATION */}
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span
-                            contentEditable={true}
-                            suppressContentEditableWarning={true}
-                            onBlur={e => {
-                              const updated = [...educationList];
-                              updated[eduIdx].degree = e.currentTarget.textContent || "";
-                              setEducationList(updated);
-                            }}
-                            className="italic text-gray-800 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block flex-1"
-                            style={{ fontSize: '9pt' }}
-                          >
-                            {edu.degree}
-                          </span>
-                          <span
-                            contentEditable={true}
-                            suppressContentEditableWarning={true}
-                            onBlur={e => {
-                              const updated = [...educationList];
-                              updated[eduIdx].location = e.currentTarget.textContent || "";
-                              setEducationList(updated);
-                            }}
-                            className="italic text-right text-gray-700 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block shrink-0"
-                            style={{ fontSize: '9pt' }}
-                          >
-                            {edu.location}
-                          </span>
-                        </div>
-
-                        {/* BULLETS */}
-                        {edu.bullets && edu.bullets.map((b, bIdx) => {
-                          const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'education' && selectedTarget?.idx === eduIdx && selectedTarget?.subIdx === bIdx;
-                          return (
-                            <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
-                              
-                              {/* DIRECT SINGLE DELETE BUTTON */}
-                              {isBulletSelected && (
-                                <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); deleteEduBullet(eduIdx, bIdx); }}
-                                    className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                                  >
-                                    <Trash2 className="w-3 h-3 text-gray-500" /> Delete
-                                  </button>
-                                </div>
-                              )}
-
-                              <span style={{ fontSize: '9pt', lineHeight: '1.3', flexShrink: 0, paddingLeft: '4px' }}>•</span>
-                              <div
-                                contentEditable={true}
-                                suppressContentEditableWarning={true}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedTarget({ type: 'bullet', section: 'education', idx: eduIdx, subIdx: bIdx });
-                                }}
-                                onBlur={e => {
-                                  const updated = [...educationList];
-                                  updated[eduIdx].bullets[bIdx] = e.currentTarget.textContent || "";
-                                  setEducationList(updated);
-                                }}
-                                className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
-                                  isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
-                                }`}
-                                style={{ fontSize: '8.5pt', lineHeight: '1.3', color: '#000000', textAlign: 'justify' }}
-                              >
-                                {b}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                );
-              }
-
-              // ------------------- EXPERIENCE -------------------
-              if (sectionKey === 'experience') {
-                return (
-                  <div key="experience" className="mt-3.5 mb-2 group/sec">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span style={{ 
-                          fontWeight: 'bold', 
-                          fontSize: '10.5pt', 
-                          textTransform: 'uppercase', 
-                          letterSpacing: '0.8px', 
-                          color: '#000000', 
-                          fontFamily: 'Arial, Helvetica, sans-serif'
-                        }}>
-                          Experience
-                        </span>
-                        
-                        {/* LARGER SIZED SEPARATE ARROW BUTTONS */}
-                        <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
-                          <button onClick={addExperience} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga experienta">+ new</button>
-                        </div>
-                      </div>
-
-                      <button onClick={() => deleteSection('experience')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-                        <Trash2 className="w-3 h-3" /> delete section
-                      </button>
-                    </div>
-
-                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
-
-                    {/* ENTRIES */}
-                    {experienceList.map((exp, expIdx) => (
-                      <div key={exp.id || expIdx} className="mt-1.5 mb-2 group/item relative">
-                        
-                        {/* 2 SEPARATE HOVER BUTTONS ON LEFT */}
-                        <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
-                          <button onClick={() => moveExperienceItem(expIdx, -1)} disabled={expIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
-                          <button onClick={() => moveExperienceItem(expIdx, 1)} disabled={expIdx === experienceList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
-                        </div>
-
-                        {/* ROW 1: ROLE + DATES */}
-                        <div className="flex items-baseline justify-between gap-2">
-                          <div className="flex items-baseline gap-1.5 flex-1">
-                            <span
-                              contentEditable={true}
-                              suppressContentEditableWarning={true}
-                              onBlur={e => {
-                                const updated = [...experienceList];
-                                updated[expIdx].role = e.currentTarget.textContent || "";
-                                setExperienceList(updated);
-                              }}
-                              className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
-                              style={{ fontSize: '9.5pt' }}
-                            >
-                              {exp.role}
-                            </span>
-                            <button 
-                              onClick={() => addExpBullet(expIdx)}
-                              className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0"
-                            >
-                              + bullet
-                            </button>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
-                            {/* DATES */}
-                            <span
-                              contentEditable={true}
-                              suppressContentEditableWarning={true}
-                              onBlur={e => {
-                                const updated = [...experienceList];
-                                updated[expIdx].period = e.currentTarget.textContent || "";
-                                setExperienceList(updated);
-                              }}
-                              className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
-                              style={{ fontSize: '9pt' }}
-                            >
-                              {exp.period || ""}
-                            </span>
-
-                            {/* DIRECT SINGLE DELETE BUTTON */}
-                            {selectedTarget?.type === 'item' && selectedTarget?.section === 'experience' && selectedTarget?.idx === expIdx && (
-                              <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); deleteExperience(exp.id); }}
-                                  className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                                >
-                                  <Trash2 className="w-3 h-3 text-gray-500" /> Delete
-                                </button>
-                              </div>
-                            )}
-
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTarget({ type: 'item', section: 'experience', idx: expIdx });
-                              }}
-                              className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
-                              title="Delete entry"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* ROW 2: COMPANY + LOCATION */}
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span
-                            contentEditable={true}
-                            suppressContentEditableWarning={true}
-                            onBlur={e => {
-                              const updated = [...experienceList];
-                              updated[expIdx].company = e.currentTarget.textContent || "";
-                              setExperienceList(updated);
-                            }}
-                            className="italic text-gray-800 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block flex-1"
-                            style={{ fontSize: '9pt' }}
-                          >
-                            {exp.company}
-                          </span>
-                          <span
-                            contentEditable={true}
-                            suppressContentEditableWarning={true}
-                            onBlur={e => {
-                              const updated = [...experienceList];
-                              updated[expIdx].location = e.currentTarget.textContent || "";
-                              setExperienceList(updated);
-                            }}
-                            className="italic text-right text-gray-700 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block shrink-0"
-                            style={{ fontSize: '9pt' }}
-                          >
-                            {exp.location}
-                          </span>
-                        </div>
-
-                        {/* BULLETS */}
-                        {exp.bullets && exp.bullets.map((b, bIdx) => {
-                          const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'experience' && selectedTarget?.idx === expIdx && selectedTarget?.subIdx === bIdx;
-                          return (
-                            <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
-                              
-                              {/* DIRECT SINGLE DELETE BUTTON */}
-                              {isBulletSelected && (
-                                <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
-                                    className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                                  >
-                                    <Trash2 className="w-3 h-3 text-gray-500" /> Delete
-                                  </button>
-                                </div>
-                              )}
-
-                              <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
-                              <div
-                                contentEditable={true}
-                                suppressContentEditableWarning={true}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedTarget({ type: 'bullet', section: 'experience', idx: expIdx, subIdx: bIdx });
-                                }}
-                                onBlur={e => {
-                                  const updated = [...experienceList];
-                                  updated[expIdx].bullets[bIdx] = e.currentTarget.textContent || "";
-                                  setExperienceList(updated);
-                                }}
-                                className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
-                                  isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
-                                }`}
-                                style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
-                              >
-                                {b}
-                              </div>
-
-                              {/* HOVER ACTIONS (AI XYZ REWRITE & DELETE) */}
-                              <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenBulletRewrite('experience', expIdx, bIdx, b);
-                                  }}
-                                  className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs"
-                                  title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici măsurabile"
-                                >
-                                  <Sparkles className="w-2.5 h-2.5 text-amber-600" />
-                                  <span>AI XYZ</span>
-                                </button>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
-                                  className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
-                                  title="Șterge bullet"
-                                >
-                                  <Trash2 className="w-2.5 h-2.5" />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                );
-              }
-
-              // ------------------- PROJECTS -------------------
-              if (sectionKey === 'projects') {
-                return (
-                  <div key="projects" className="mt-3.5 mb-2 group/sec">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span style={{ 
-                          fontWeight: 'bold', 
-                          fontSize: '10.5pt', 
-                          textTransform: 'uppercase', 
-                          letterSpacing: '0.8px', 
-                          color: '#000000', 
-                          fontFamily: 'Arial, Helvetica, sans-serif'
-                        }}>
-                          Projects
-                        </span>
-                        
-                        {/* LARGER SIZED SEPARATE ARROW BUTTONS */}
-                        <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
-                          <button onClick={addProject} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga proiect">+ new</button>
-                        </div>
-                      </div>
-
-                      <button onClick={() => deleteSection('projects')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-                        <Trash2 className="w-3 h-3" /> delete section
-                      </button>
-                    </div>
-
-                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
-
-                    {/* ENTRIES */}
-                    {projectsList.map((proj, projIdx) => (
-                      <div key={proj.id || projIdx} className="mt-1.5 mb-2 group/item relative">
-                        
-                        {/* 2 SEPARATE HOVER BUTTONS ON LEFT */}
-                        <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
-                          <button onClick={() => moveProjectItem(projIdx, -1)} disabled={projIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
-                          <button onClick={() => moveProjectItem(projIdx, 1)} disabled={projIdx === projectsList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
-                        </div>
-
-                        {/* ROW 1: TITLE + TECH STACK + (+ ADD LINK) + (+ BULLET) + DATES */}
-                        <div className="flex items-baseline justify-between gap-2">
-                          <div className="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5 flex-1">
-                            <span
-                              contentEditable={true}
-                              suppressContentEditableWarning={true}
-                              onBlur={e => {
-                                const updated = [...projectsList];
-                                updated[projIdx].title = e.currentTarget.textContent || "";
-                                setProjectsList(updated);
-                              }}
-                              className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
-                              style={{ fontSize: '9.5pt' }}
-                            >
-                              {proj.title}
-                            </span>
-                            
-                            <span className="text-gray-400 font-normal">|</span>
-                            
-                            <span
-                              contentEditable={true}
-                              suppressContentEditableWarning={true}
-                              onBlur={e => {
-                                const updated = [...projectsList];
-                                updated[projIdx].techStack = e.currentTarget.textContent || "";
-                                setProjectsList(updated);
-                              }}
-                              className="italic text-gray-800 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
-                              style={{ fontSize: '8.5pt' }}
-                            >
-                              {proj.techStack}
-                            </span>
-
-                            {/* CLICKABLE LINK */}
-                            {proj.linkUrl ? (
-                              <span className="inline-flex items-center gap-1 font-sans text-xs">
-                                <a 
-                                  href={proj.linkUrl.startsWith('http') ? proj.linkUrl : `https://${proj.linkUrl}`} 
-                                  target="_blank" 
-                                  rel="noreferrer"
-                                  className="text-black underline font-normal hover:text-gray-700"
-                                  style={{ fontSize: '8.5pt' }}
-                                >
-                                  ({proj.linkText || proj.linkUrl})
-                                </a>
-                                <button 
-                                  onClick={() => {
-                                    const updated = [...projectsList];
-                                    updated[projIdx].linkUrl = "";
-                                    updated[projIdx].linkText = "";
-                                    setProjectsList(updated);
-                                  }}
-                                  className="no-pdf text-gray-400 hover:text-rose-600 cursor-pointer"
-                                  title="Sterge link"
-                                >
-                                  <X className="w-2.5 h-2.5" />
-                                </button>
-                              </span>
-                            ) : (
-                              /* + ADD LINK BUTTON */
-                              <button 
-                                onClick={() => {
-                                  const url = prompt("Introdu URL-ul proiectului (ex: https://one-rep.vercel.app):");
-                                  if (!url) return;
-                                  const text = prompt("Introdu textul afisat pentru link (optional, ex: one-rep.vercel.app):", url.replace(/^https?:\/\//, ''));
-                                  const updated = [...projectsList];
-                                  updated[projIdx].linkUrl = url;
-                                  updated[projIdx].linkText = text || url;
-                                  setProjectsList(updated);
-                                }}
-                                className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0"
-                              >
-                                + add link
-                              </button>
-                            )}
-
-                            {/* + BULLET BUTTON */}
-                            <button 
-                              onClick={() => addProjectBullet(projIdx)}
-                              className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0 ml-1"
-                            >
-                              + bullet
-                            </button>
-                          </div>
-
-                          {/* DATES */}
-                          <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
-                            <span
-                              contentEditable={true}
-                              suppressContentEditableWarning={true}
-                              onBlur={e => {
-                                const updated = [...projectsList];
-                                updated[projIdx].period = e.currentTarget.textContent || "";
-                                setProjectsList(updated);
-                              }}
-                              className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
-                              style={{ fontSize: '9pt' }}
-                            >
-                              {proj.period || ""}
-                            </span>
-
-                            {/* DIRECT SINGLE DELETE BUTTON */}
-                            {selectedTarget?.type === 'item' && selectedTarget?.section === 'projects' && selectedTarget?.idx === projIdx && (
-                              <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); deleteProject(proj.id); }}
-                                  className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                                >
-                                  <Trash2 className="w-3 h-3 text-gray-500" /> Delete
-                                </button>
-                              </div>
-                            )}
-
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTarget({ type: 'item', section: 'projects', idx: projIdx });
-                              }}
-                              className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
-                              title="Delete entry"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* BULLETS */}
-                        {proj.bullets && proj.bullets.map((b, bIdx) => {
-                          const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'projects' && selectedTarget?.idx === projIdx && selectedTarget?.subIdx === bIdx;
-                          return (
-                            <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
-                              
-                              {/* DIRECT SINGLE DELETE BUTTON */}
-                              {isBulletSelected && (
-                                <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
-                                    className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                                  >
-                                    <Trash2 className="w-3 h-3 text-gray-500" /> Delete
-                                  </button>
-                                </div>
-                              )}
-
-                              <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
-                              <div
-                                contentEditable={true}
-                                suppressContentEditableWarning={true}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedTarget({ type: 'bullet', section: 'projects', idx: projIdx, subIdx: bIdx });
-                                }}
-                                onBlur={e => {
-                                  const updated = [...projectsList];
-                                  updated[projIdx].bullets[bIdx] = e.currentTarget.textContent || "";
-                                  setProjectsList(updated);
-                                }}
-                                className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
-                                  isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
-                                }`}
-                                style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
-                              >
-                                {b}
-                              </div>
-
-                              {/* HOVER ACTIONS (AI XYZ REWRITE & DELETE) */}
-                              <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenBulletRewrite('projects', projIdx, bIdx, b);
-                                  }}
-                                  className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs"
-                                  title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici măsurabile"
-                                >
-                                  <Sparkles className="w-2.5 h-2.5 text-amber-600" />
-                                  <span>AI XYZ</span>
-                                </button>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
-                                  className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
-                                  title="Șterge bullet"
-                                >
-                                  <Trash2 className="w-2.5 h-2.5" />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                );
-              }
-
-              // ------------------- CERTIFICATIONS -------------------
-              if (sectionKey === 'certifications') {
-                return (
-                  <div key="certifications" className="mt-3.5 mb-2 group/sec">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span style={{ 
-                          fontWeight: 'bold', 
-                          fontSize: '10.5pt', 
-                          textTransform: 'uppercase', 
-                          letterSpacing: '0.8px', 
-                          color: '#000000', 
-                          fontFamily: 'Arial, Helvetica, sans-serif'
-                        }}>
-                          Certifications
-                        </span>
-                        
-                        {/* LARGER SIZED SEPARATE ARROW BUTTONS */}
-                        <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
-                          <button onClick={addCertification} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga certificare">+ new</button>
-                        </div>
-                      </div>
-
-                      <button onClick={() => deleteSection('certifications')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-                        <Trash2 className="w-3 h-3" /> delete section
-                      </button>
-                    </div>
-
-                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
-
-                    {/* ENTRIES */}
-                    {certificationsList.map((cert, certIdx) => (
-                      <div key={cert.id || certIdx} className="mt-1.5 mb-2 group/item relative">
-                        
-                        {/* 2 SEPARATE HOVER BUTTONS ON LEFT */}
-                        <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
-                          <button onClick={() => moveCertificationItem(certIdx, -1)} disabled={certIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
-                          <button onClick={() => moveCertificationItem(certIdx, 1)} disabled={certIdx === certificationsList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
-                        </div>
-
-                        {/* ROW 1: CERT NAME + ISSUER + DATES */}
-                        <div className="flex items-baseline justify-between gap-2">
-                          <div className="flex items-baseline flex-wrap gap-1.5 flex-1">
-                            <span
-                              contentEditable={true}
-                              suppressContentEditableWarning={true}
-                              onBlur={e => {
-                                const updated = [...certificationsList];
-                                updated[certIdx].name = e.currentTarget.textContent || "";
-                                setCertificationsList(updated);
-                              }}
-                              className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
-                              style={{ fontSize: '9.5pt' }}
-                            >
-                              {cert.name}
-                            </span>
-                            
-                            {cert.issuer && (
-                              <>
-                                <span className="text-gray-400 font-normal">|</span>
-                                <span
-                                  contentEditable={true}
-                                  suppressContentEditableWarning={true}
-                                  onBlur={e => {
-                                    const updated = [...certificationsList];
-                                    updated[certIdx].issuer = e.currentTarget.textContent || "";
-                                    setCertificationsList(updated);
-                                  }}
-                                  className="italic text-gray-800 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
-                                  style={{ fontSize: '8.5pt' }}
-                                >
-                                  {cert.issuer}
-                                </span>
-                              </>
-                            )}
-
-                            <button 
-                              onClick={() => addCertBullet(certIdx)}
-                              className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0 ml-1"
-                            >
-                              + bullet
-                            </button>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0 cv-popup-target relative">
-                            {/* DATES */}
-                            <span
-                              contentEditable={true}
-                              suppressContentEditableWarning={true}
-                              onBlur={e => {
-                                const updated = [...certificationsList];
-                                updated[certIdx].period = e.currentTarget.textContent || "";
-                                setCertificationsList(updated);
-                              }}
-                              className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
-                              style={{ fontSize: '9pt' }}
-                            >
-                              {cert.period || ""}
-                            </span>
-
-                            {/* DIRECT SINGLE DELETE BUTTON */}
-                            {selectedTarget?.type === 'item' && selectedTarget?.section === 'certifications' && selectedTarget?.idx === certIdx && (
-                              <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); deleteCertification(cert.id); }}
-                                  className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                                >
-                                  <Trash2 className="w-3 h-3 text-gray-500" /> Delete
-                                </button>
-                              </div>
-                            )}
-
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTarget({ type: 'item', section: 'certifications', idx: certIdx });
-                              }}
-                              className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
-                              title="Delete entry"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* BULLETS */}
-                        {cert.bullets && cert.bullets.map((b, bIdx) => {
-                          const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'certifications' && selectedTarget?.idx === certIdx && selectedTarget?.subIdx === bIdx;
-                          return (
-                            <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
-                              
-                              {/* DIRECT SINGLE DELETE BUTTON */}
-                              {isBulletSelected && (
-                                <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); deleteCertBullet(certIdx, bIdx); }}
-                                    className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                                  >
-                                    <Trash2 className="w-3 h-3 text-gray-500" /> Delete
-                                  </button>
-                                </div>
-                              )}
-
-                              <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
-                              <div
-                                contentEditable={true}
-                                suppressContentEditableWarning={true}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedTarget({ type: 'bullet', section: 'certifications', idx: certIdx, subIdx: bIdx });
-                                }}
-                                onBlur={e => {
-                                  const updated = [...certificationsList];
-                                  updated[certIdx].bullets[bIdx] = e.currentTarget.textContent || "";
-                                  setCertificationsList(updated);
-                                }}
-                                className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
-                                  isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
-                                }`}
-                                style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
-                              >
-                                {b}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                );
-              }
-
-              // ------------------- TECHNICAL SKILLS -------------------
-              if (sectionKey === 'skills') {
-                return (
-                  <div key="skills" className="mt-3.5 mb-2 group/sec">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span style={{ 
-                          fontWeight: 'bold', 
-                          fontSize: '10.5pt', 
-                          textTransform: 'uppercase', 
-                          letterSpacing: '0.8px', 
-                          color: '#000000', 
-                          fontFamily: 'Arial, Helvetica, sans-serif'
-                        }}>
-                          Technical Skills
-                        </span>
-                        
-                        {/* LARGER SIZED SEPARATE ARROW BUTTONS & + FIELD BUTTON */}
-                        <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
-                          <button onClick={addSkillField} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga o noua categorie de skill-uri">+ field</button>
-                        </div>
-                      </div>
-
-                      <button onClick={() => deleteSection('skills')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-                        <Trash2 className="w-3 h-3" /> delete section
-                      </button>
-                    </div>
-
-                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
-
-                    {/* SKILLS ROWS */}
-                    <div className="space-y-0.5 mt-1 text-black" style={{ fontSize: '8.5pt', lineHeight: '1.4' }}>
-                      {skillsFields.map((field, fieldIdx) => (
-                        <div key={field.id || fieldIdx} className="group/f relative leading-normal">
-                          
-                          {/* 2 SEPARATE HOVER BUTTONS ON LEFT */}
-                          <div className="no-pdf absolute -left-12 top-0 opacity-0 group-hover/f:opacity-100 transition flex items-center gap-1">
-                            <button onClick={() => moveSkillFieldItem(fieldIdx, -1)} disabled={fieldIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta categoria mai sus">↑</button>
-                            <button onClick={() => moveSkillFieldItem(fieldIdx, 1)} disabled={fieldIdx === skillsFields.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta categoria mai jos">↓</button>
-                          </div>
-
-                          {/* FIELD LABEL */}
-                          <span className="cv-popup-target relative inline font-bold">
-                            {/* DIRECT SINGLE DELETE BUTTON FOR FIELD */}
-                            {selectedTarget?.type === 'field' && selectedTarget?.idx === fieldIdx && (
-                              <div className="no-pdf absolute bottom-full left-0 mb-1 z-40 animate-in fade-in">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); deleteSkillField(fieldIdx); }}
-                                  className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                                >
-                                  <Trash2 className="w-3 h-3 text-gray-500" /> Delete Field
-                                </button>
-                              </div>
-                            )}
-
-                            <span 
-                              contentEditable={true}
-                              suppressContentEditableWarning={true}
-                              onClick={(e) => { e.stopPropagation(); setSelectedTarget({ type: 'field', idx: fieldIdx }); }}
-                              onBlur={e => {
-                                const cleanText = (e.currentTarget.textContent || "").replace(/:+$/, '').trim();
-                                const updated = [...skillsFields];
-                                updated[fieldIdx].label = cleanText || field.label;
-                                setSkillsFields(updated);
-                              }}
-                              className="outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-0.5 rounded cursor-pointer transition"
-                            >
-                              {field.label}:
-                            </span>
-                          </span>
-
-                          <span className="ml-1.5"></span>
-
-                          {/* INDIVIDUAL SKILL ITEMS */}
-                          {field.items.map((item, itemIdx) => {
-                            const isSkillSelected = selectedTarget?.type === 'skill' && selectedTarget?.idx === fieldIdx && selectedTarget?.subIdx === itemIdx;
-                            return (
-                              <span 
-                                key={itemIdx} 
-                                className="cv-popup-target relative inline cursor-pointer"
-                              >
-                                {/* DIRECT SINGLE DELETE BUTTON FOR SKILL */}
-                                {isSkillSelected && (
-                                  <div className="no-pdf absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-40 animate-in fade-in">
-                                    <button 
-                                      onClick={(e) => { e.stopPropagation(); deleteSkillItem(fieldIdx, itemIdx); }}
-                                      className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                                    >
-                                      <Trash2 className="w-3 h-3 text-gray-500" /> Delete
-                                    </button>
-                                  </div>
-                                )}
-
-                                {/* SKILL TEXT */}
-                                <span
-                                  contentEditable={true}
-                                  suppressContentEditableWarning={true}
-                                  onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    setSelectedTarget({ type: 'skill', idx: fieldIdx, subIdx: itemIdx });
-                                  }}
-                                  onBlur={e => {
-                                    const updated = [...skillsFields];
-                                    updated[fieldIdx].items[itemIdx] = e.currentTarget.textContent || "";
-                                    setSkillsFields(updated);
-                                  }}
-                                  className={`outline-none border px-0.5 rounded transition ${
-                                    isSkillSelected 
-                                      ? 'border-gray-400 bg-gray-100/40 text-black font-medium' 
-                                      : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
-                                  }`}
-                                >
-                                  {item}
-                                </span>
-                                {itemIdx < field.items.length - 1 && <span className="mr-1">,</span>}
-                              </span>
-                            );
-                          })}
-
-                          {/* INLINE +ADD INPUT BOX */}
-                          {addingSkillFieldIdx === fieldIdx ? (
-                            <span className="inline-block ml-1">
-                              <input
-                                type="text"
-                                autoFocus
-                                placeholder="Scrie skill..."
-                                value={newSkillText}
-                                onChange={e => setNewSkillText(e.target.value)}
-                                onKeyDown={e => {
-                                  if (e.key === 'Enter') handleCommitSkill(fieldIdx);
-                                  if (e.key === 'Escape') { setAddingSkillFieldIdx(null); setNewSkillText(""); }
-                                }}
-                                onBlur={() => handleCommitSkill(fieldIdx)}
-                                className="no-pdf border border-gray-400 bg-gray-50 px-1.5 py-0.5 rounded text-[8.5pt] outline-none text-black font-medium w-24 shadow-2xs"
-                              />
-                            </span>
-                          ) : (
-                            /* + ADD BUTTON */
-                            <button
-                              onClick={() => { setAddingSkillFieldIdx(fieldIdx); setNewSkillText(""); }}
-                              className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer px-1 hover:bg-gray-100 rounded ml-1 inline"
-                              title={`Adaugă skill în ${field.label}`}
-                            >
-                              + add
-                            </button>
-                          )}
-
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-
-              // ------------------- SUMMARY -------------------
-              if (sectionKey === 'summary') {
-                return (
-                  <div key="summary" className="mt-3.5 mb-2 group/sec">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span style={{ 
-                          fontWeight: 'bold', 
-                          fontSize: '10.5pt', 
-                          textTransform: 'uppercase', 
-                          letterSpacing: '0.8px', 
-                          color: '#000000', 
-                          fontFamily: 'Arial, Helvetica, sans-serif'
-                        }}>
-                          Professional Summary
-                        </span>
-                        <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                          <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                          <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
-                        </div>
-                      </div>
-                      <button onClick={() => deleteSection('summary')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-                        <Trash2 className="w-3 h-3" /> delete section
-                      </button>
-                    </div>
-                    <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
-                    <div
-                      contentEditable={true}
-                      suppressContentEditableWarning={true}
-                      onBlur={e => setSummaryText(e.currentTarget.textContent || "")}
-                      className="outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1.5 py-0.5 rounded transition cursor-text"
-                      style={{ fontSize: '9pt', color: '#000000', textAlign: 'justify', lineHeight: '1.35', fontFamily: 'Arial, Helvetica, sans-serif' }}
-                    >
-                      {summaryText}
-                    </div>
-                  </div>
-                );
-              }
-
-              return null;
-            })}
-
-            {/* VISUAL A4 PAGE BREAK GUIDELINE (EXACTLY AT 297mm) */}
-            <div 
-              className="no-pdf pointer-events-none select-none absolute left-0 right-0 z-30 flex items-center justify-between px-3"
+            {/* ================= PAGE 1 (A4 PHYSICAL SHEET) ================= */}
+            <div
+              id="cv-page-1"
+              className="bg-white text-black shadow-xl rounded-2xl border border-gray-200/90 transition-all relative w-[210mm] text-left"
               style={{
-                top: '297mm',
-                transform: 'translateY(-50%)'
+                width: '210mm',
+                minHeight: '297mm',
+                padding: '14mm 16mm',
+                fontFamily: "'Times New Roman', Times, serif",
+                backgroundColor: '#ffffff',
+                color: '#000000',
+                boxSizing: 'border-box',
+                position: 'relative'
               }}
             >
-              <div className={`h-[2px] border-t-2 border-dashed flex-1 ${pageStats.isOverflown ? 'border-rose-500' : 'border-gray-400'}`}></div>
-              <span className={`mx-2 px-2.5 py-0.5 text-white font-sans text-[10px] font-bold rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider ${
-                pageStats.isOverflown ? 'bg-rose-600 animate-pulse' : 'bg-gray-700'
-              }`}>
-                ✂️ Limită Pagina 1 (A4: 297mm) {pageStats.isOverflown ? `— Depășit cu ${pageStats.percent - 100}% (va trece pe Pagina 2)!` : '— Pagina 1 se termină aici'}
-              </span>
-              <div className={`h-[2px] border-t-2 border-dashed flex-1 ${pageStats.isOverflown ? 'border-rose-500' : 'border-gray-400'}`}></div>
+              {/* PAGE 1 CONTENT WRAPPER */}
+              <div id="cv-page-1-content">
+                {/* ================= HEADER SECTION (NAME + CONTACT DETAILS) ================= */}
+                <div className="relative group text-center pb-2">
+                  
+                  {/* EDIT CONTACT BUTTON */}
+                  <button 
+                    onClick={() => setShowEditContactModal(true)}
+                    className="no-pdf absolute right-0 top-0 text-[11px] font-sans text-gray-500 hover:text-black flex items-center gap-1 bg-gray-50 hover:bg-gray-100 px-2.5 py-1 rounded border border-gray-200 shadow-2xs transition cursor-pointer"
+                    title="Editează datele de contact ca în formular"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-gray-500" /> Edit Contact
+                  </button>
+
+                  {/* CANDIDATE FULL NAME IN EDITABLE BOX */}
+                  <div 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    onBlur={e => setContactData({...contactData, fullName: e.currentTarget.textContent || ""})}
+                    className="outline-none font-bold uppercase tracking-wide cursor-text inline-block border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1.5 py-0.5 rounded transition"
+                    style={{ 
+                      fontSize: '20pt', 
+                      fontFamily: 'Arial, Helvetica, sans-serif',
+                      letterSpacing: '0.5px',
+                      lineHeight: '1.2'
+                    }}
+                  >
+                    {contactData.fullName}
+                  </div>
+
+                  {/* CONTACT DETAILS ROW */}
+                  <div 
+                    className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-black mt-1 font-sans"
+                    style={{ fontSize: '9pt' }}
+                  >
+                    {contactData.phone && <span>{contactData.phone}</span>}
+                    
+                    {contactData.email && (
+                      <>
+                        <span className="text-gray-400">|</span>
+                        <a href={`mailto:${contactData.email}`} className="text-black underline hover:text-gray-700">{contactData.email}</a>
+                      </>
+                    )}
+                    
+                    {contactData.linkedin && (
+                      <>
+                        <span className="text-gray-400">|</span>
+                        <a href={contactData.linkedin.startsWith('http') ? contactData.linkedin : `https://${contactData.linkedin}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
+                          {contactData.linkedinFull ? contactData.linkedin : 'LinkedIn'}
+                        </a>
+                      </>
+                    )}
+                    
+                    {contactData.github && (
+                      <>
+                        <span className="text-gray-400">|</span>
+                        <a href={contactData.github.startsWith('http') ? contactData.github : `https://${contactData.github}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
+                          {contactData.githubFull ? contactData.github : 'GitHub'}
+                        </a>
+                      </>
+                    )}
+
+                    {contactData.portfolio && (
+                      <>
+                        <span className="text-gray-400">|</span>
+                        <a href={contactData.portfolio.startsWith('http') ? contactData.portfolio : `https://${contactData.portfolio}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
+                          {contactData.portfolioFull ? contactData.portfolio : 'Portfolio'}
+                        </a>
+                      </>
+                    )}
+
+                    {contactData.blog && (
+                      <>
+                        <span className="text-gray-400">|</span>
+                        <a href={contactData.blog.startsWith('http') ? contactData.blog : `https://${contactData.blog}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
+                          {contactData.blogFull ? contactData.blog : 'Blog'}
+                        </a>
+                      </>
+                    )}
+
+                    {contactData.social && (
+                      <>
+                        <span className="text-gray-400">|</span>
+                        <a href={contactData.social.startsWith('http') ? contactData.social : `https://${contactData.social}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
+                          {contactData.socialFull ? contactData.social : 'Social'}
+                        </a>
+                      </>
+                    )}
+
+                    {contactData.location && (
+                      <>
+                        <span className="text-gray-400">|</span>
+                        <span className="text-gray-700">{contactData.location}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* PAGE 1 SECTIONS */}
+                {page1Sections.map(secKey => renderSection(secKey, false))}
+              </div>
+
+              {/* VISUAL PAGE FOOTER BADGE (NO PDF) */}
+              <div className="no-pdf absolute bottom-2 right-4 text-[10px] text-gray-400 font-sans select-none pointer-events-none">
+                📄 Pagina 1 {isMultiPage ? 'din 2' : ''}
+              </div>
+
+              {/* SINGLE-PAGE OVERFLOW BOUNDARY INDICATOR (SHOWN ONLY WHEN ON 1-PAGE MODE AND OVERFLOWN) */}
+              {!isMultiPage && (
+                <div 
+                  className="no-pdf pointer-events-none select-none absolute left-0 right-0 z-30 flex items-center justify-between px-3"
+                  style={{
+                    top: '297mm',
+                    transform: 'translateY(-50%)'
+                  }}
+                >
+                  <div className={`h-[2px] border-t-2 border-dashed flex-1 ${pageStats.isOverflown ? 'border-rose-500' : 'border-gray-300'}`}></div>
+                  <span className={`mx-2 px-2.5 py-0.5 text-white font-sans text-[10px] font-bold rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider ${
+                    pageStats.isOverflown ? 'bg-rose-600 animate-pulse' : 'bg-gray-600'
+                  }`}>
+                    ✂️ Limită Pagina 1 (A4: 297mm) {pageStats.isOverflown ? `— Depășit cu ${pageStats.percent - 100}% (apasă "2 Pagini" sus sau comută pe Auto)!` : '— Pagina 1 se termină aici'}
+                  </span>
+                  <div className={`h-[2px] border-t-2 border-dashed flex-1 ${pageStats.isOverflown ? 'border-rose-500' : 'border-gray-300'}`}></div>
+                </div>
+              )}
             </div>
 
+            {/* ================= PAGE BREAK & CONTROLS (IF MULTI-PAGE) ================= */}
+            {isMultiPage && (
+              <>
+                {/* VISUAL PAGE BREAK CONTROLLER IN UI */}
+                <div className="no-pdf my-6 w-full max-w-[210mm] flex flex-col items-center gap-2 select-none">
+                  <div className="flex items-center gap-3 w-full">
+                    <div className="h-[2px] border-t-2 border-dashed border-amber-400 flex-1"></div>
+                    <div className="bg-amber-50 border border-amber-300 px-4 py-2 rounded-2xl text-xs font-bold text-amber-950 flex flex-wrap items-center justify-center gap-3 shadow-md">
+                      <span className="flex items-center gap-1.5 text-amber-900">
+                        <span>✂️</span> <strong>Întrerupere Pagină A4 (297 mm)</strong>
+                      </span>
+                      <span className="text-amber-300">|</span>
+                      <div className="flex items-center gap-2">
+                        <label className="text-amber-900 font-semibold">Începe Pagina 2 de la:</label>
+                        <select 
+                          value={splitSectionKey} 
+                          onChange={e => {
+                            setSplitSectionKey(e.target.value);
+                            setSplitProjectIdx(null);
+                          }}
+                          className="bg-white border border-amber-300 rounded-lg px-2.5 py-1 text-xs font-bold text-gray-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+                        >
+                          {sectionOrder.map((key) => {
+                            const labels = {
+                              education: 'Education',
+                              experience: 'Work Experience',
+                              projects: 'Projects',
+                              certifications: 'Certifications',
+                              skills: 'Technical Skills',
+                              summary: 'Professional Summary'
+                            };
+                            return (
+                              <option key={key} value={key}>
+                                {labels[key] || key}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+
+                      {splitSectionKey === 'projects' && projectsList.length > 1 && (
+                        <div className="flex items-center gap-2 pl-2 border-l border-amber-200">
+                          <span className="text-[11px] text-amber-900 font-medium">Împarte proiectele:</span>
+                          <select
+                            value={splitProjectIdx === null ? 'all' : splitProjectIdx}
+                            onChange={e => setSplitProjectIdx(e.target.value === 'all' ? null : Number(e.target.value))}
+                            className="bg-white border border-amber-300 rounded px-2 py-0.5 text-xs font-semibold text-gray-800"
+                          >
+                            <option value="all">Toate pe Pagina 2</option>
+                            {projectsList.slice(1).map((_, idx) => (
+                              <option key={idx + 1} value={idx + 1}>
+                                De la #{idx + 2} ({projectsList[idx + 1].name || `Proiect ${idx + 2}`})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                    <div className="h-[2px] border-t-2 border-dashed border-amber-400 flex-1"></div>
+                  </div>
+                  <p className="text-[11px] text-gray-500 font-sans text-center">
+                    Secțiunile de mai jos sunt așezate pe <strong>Pagina 2</strong>. La descărcare PDF sau print se generează automat exact 2 pagini separate fără tăieri de text.
+                  </p>
+                </div>
+
+                {/* EXACT HTML2PDF & PRINT PAGE BREAK ELEMENT */}
+                <div 
+                  className="html2pdf__page-break" 
+                  style={{ 
+                    pageBreakBefore: 'always', 
+                    breakBefore: 'page', 
+                    height: 0, 
+                    margin: 0, 
+                    padding: 0 
+                  }} 
+                />
+
+                {/* ================= PAGE 2 (A4 PHYSICAL SHEET) ================= */}
+                <div
+                  id="cv-page-2"
+                  className="bg-white text-black shadow-xl rounded-2xl border border-gray-200/90 transition-all relative w-[210mm] text-left"
+                  style={{
+                    width: '210mm',
+                    minHeight: '297mm',
+                    padding: '14mm 16mm',
+                    fontFamily: "'Times New Roman', Times, serif",
+                    backgroundColor: '#ffffff',
+                    color: '#000000',
+                    boxSizing: 'border-box',
+                    position: 'relative',
+                    marginTop: isDownloadingPdf ? '0mm' : '24px'
+                  }}
+                >
+                  {/* PAGE 2 HEADER (CONTINUATION) */}
+                  <div className="flex items-center justify-between border-b border-black pb-1 mb-3 text-black font-sans">
+                    <div className="text-[10pt] font-bold uppercase tracking-wider">
+                      {contactData.fullName} <span className="text-gray-500 font-normal normal-case">— Curriculum Vitae (Continuare)</span>
+                    </div>
+                    <div className="text-[9pt] text-gray-500 font-medium">
+                      Pagina 2 din 2
+                    </div>
+                  </div>
+
+                  {/* PAGE 2 CONTENT WRAPPER */}
+                  <div id="cv-page-2-content">
+                    {page2Sections.map(secKey => renderSection(secKey, true))}
+                  </div>
+
+                  {/* VISUAL PAGE FOOTER BADGE (NO PDF) */}
+                  <div className="no-pdf absolute bottom-2 right-4 text-[10px] text-gray-400 font-sans select-none pointer-events-none">
+                    📄 Pagina 2 din 2
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
