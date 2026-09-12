@@ -42,7 +42,8 @@ import {
   X,
   Link as LinkIcon,
   Globe,
-  Copy
+  Copy,
+  ChevronDown
 } from 'lucide-react';
 import PolishAiCoach from './PolishAiCoach';
 
@@ -215,6 +216,7 @@ export default function CvStudio({
   const [pageLayoutMode, setPageLayoutMode] = useState('auto'); // 'auto' | '1' | '2'
   const [splitSectionKey, setSplitSectionKey] = useState('skills'); // which section starts on Page 2
   const [splitProjectIdx, setSplitProjectIdx] = useState(null); // null or number for project sub-split
+  const [showAddSectionDropdown, setShowAddSectionDropdown] = useState(false);
 
   const isMultiPage = pageLayoutMode === '2' || (pageLayoutMode === 'auto' && pageStats.isOverflown);
 
@@ -2404,88 +2406,97 @@ ${bodySections}\\end{document}
     return null;
   };
 
+    const sectionLabels = {
+    education: 'Education',
+    experience: 'Work Experience',
+    projects: 'Projects',
+    certifications: 'Certifications',
+    skills: 'Technical Skills',
+    summary: 'Professional Summary'
+  };
+
+  const missingSections = ['education', 'experience', 'projects', 'certifications', 'skills', 'summary'].filter(
+    key => !sectionOrder.includes(key)
+  );
+
   return (
     <div className="space-y-6 w-full max-w-[210mm] mx-auto pb-16 font-sans">
       
-      {/* MINIMALIST WHITE & BLACK TOOLBAR (MATCHED EXACTLY TO 210mm CV WIDTH) */}
-      <div className="w-full bg-white border border-gray-200/90 shadow-sm p-4 sm:p-5 rounded-2xl space-y-4 text-gray-900">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      {/* ================= MODERN WORKSPACE TOOLBAR ================= */}
+      <div className="w-full bg-white border border-gray-200/90 shadow-xs p-3.5 sm:p-4 rounded-2xl space-y-3.5 text-gray-900">
+        
+        {/* ROW 1: TITLE, STATUS & A4 PAGE CONTROLLER */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             {onNavigateToLibrary && (
               <button
                 onClick={onNavigateToLibrary}
-                className="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-2xs cursor-pointer shrink-0"
+                className="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-black rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer shrink-0"
                 title="Înapoi la lista cu toate CV-urile"
               >
-                <span>←</span> CV-urile Mele
+                <span>←</span> CV-uri
               </button>
             )}
-            <div className="p-2.5 bg-black text-white rounded-xl shrink-0 shadow-sm">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <input 
-                  type="text" 
-                  value={cvTitle} 
-                  onChange={e => setCvTitle(e.target.value)} 
-                  placeholder="Denumire CV..." 
-                  className="font-bold text-base sm:text-lg text-gray-950 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-black outline-none transition px-0.5"
-                  title="Apasă pentru a redenumi această versiune de CV"
-                />
+            
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <div className="p-1.5 bg-black text-white rounded-lg shrink-0 shadow-2xs">
+                <FileText className="w-4 h-4" />
               </div>
-              <p className="text-xs text-gray-500 font-medium">
-                Editare directă în pagină. Modificările se salvează automat în timp real.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* REAL-TIME AUTO-SAVE STATUS INDICATOR */}
-            <div className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs flex items-center gap-1.5">
+              <input 
+                type="text" 
+                value={cvTitle} 
+                onChange={e => setCvTitle(e.target.value)} 
+                placeholder="Denumire CV..." 
+                className="font-bold text-base sm:text-lg text-gray-950 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-black outline-none transition px-0.5"
+                title="Apasă pentru a redenumi această versiune de CV"
+              />
+              
+              {/* REAL-TIME AUTO-SAVE STATUS PILL */}
               {isAutoSaving ? (
-                <span className="text-gray-700 font-medium flex items-center gap-1.5">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-gray-500" /> Se salvează...
+                <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full font-medium">
+                  <RefreshCw className="w-3 h-3 animate-spin text-gray-400" /> Se salvează...
                 </span>
               ) : (
-                <span className="text-emerald-700 font-medium flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Salvat automat
+                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full font-medium">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Salvat
                 </span>
               )}
             </div>
+          </div>
 
-            {/* REAL-TIME PAGE OVERFLOW / COUNT INDICATOR & A4 LAYOUT CONTROLLER */}
-            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-2xs">
-              <div 
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-                  isMultiPage
-                    ? 'bg-amber-100 text-amber-900 border border-amber-300' 
-                    : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                }`}
-                title={
-                  isMultiPage
-                    ? `CV-ul este structurat pe 2 pagini A4 (${pageStats.percent}% conținut raportat la Pag. 1).`
-                    : `CV-ul se încadrează pe 1 pagină A4 (${pageStats.percent}% spațiu utilizat).`
-                }
-              >
-                {isMultiPage ? (
-                  <>
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                    <span>📑 2 Pagini ({pageStats.percent}%)</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                    <span>📄 1 Pagină ({pageStats.percent}%)</span>
-                  </>
-                )}
-              </div>
+          {/* RIGHT: REAL-TIME A4 PAGE CONTROLLER (COMPACT SEGMENTED PILL) */}
+          <div className="flex items-center gap-1.5 self-start sm:self-auto bg-gray-100/90 p-1 rounded-xl border border-gray-200/80 shadow-2xs">
+            <div 
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                isMultiPage
+                  ? 'bg-amber-100 text-amber-900 border border-amber-300/80' 
+                  : 'bg-emerald-100 text-emerald-900 border border-emerald-300/80'
+              }`}
+              title={
+                isMultiPage
+                  ? `CV-ul este structurat pe 2 pagini A4 (${pageStats.percent}% raportat la Pag. 1).`
+                  : `CV-ul se încadrează pe 1 pagină A4 (${pageStats.percent}% spațiu utilizat).`
+              }
+            >
+              {isMultiPage ? (
+                <>
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  <span>📑 2 Pagini ({pageStats.percent}%)</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                  <span>📄 1 Pagină ({pageStats.percent}%)</span>
+                </>
+              )}
+            </div>
 
-              {/* MODE TOGGLES */}
+            {/* SEGMENTED TOGGLE BUTTONS */}
+            <div className="flex items-center bg-gray-200/70 p-0.5 rounded-lg text-xs font-bold">
               <button
                 onClick={() => setPageLayoutMode('auto')}
-                className={`px-2 py-1 rounded-md text-xs transition cursor-pointer font-bold ${
-                  pageLayoutMode === 'auto' ? 'bg-white text-black shadow-xs' : 'text-gray-600 hover:text-black'
+                className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
+                  pageLayoutMode === 'auto' ? 'bg-white text-black shadow-xs' : 'text-gray-500 hover:text-black'
                 }`}
                 title="Detectează automat: adaugă a doua pagină doar când conținutul depășește prima pagină"
               >
@@ -2493,8 +2504,8 @@ ${bodySections}\\end{document}
               </button>
               <button
                 onClick={() => setPageLayoutMode('1')}
-                className={`px-2 py-1 rounded-md text-xs transition cursor-pointer font-bold ${
-                  pageLayoutMode === '1' ? 'bg-white text-black shadow-xs' : 'text-gray-600 hover:text-black'
+                className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
+                  pageLayoutMode === '1' ? 'bg-white text-black shadow-xs' : 'text-gray-500 hover:text-black'
                 }`}
                 title="Forțează vizualizarea strictă pe 1 pagină A4"
               >
@@ -2502,123 +2513,151 @@ ${bodySections}\\end{document}
               </button>
               <button
                 onClick={() => setPageLayoutMode('2')}
-                className={`px-2 py-1 rounded-md text-xs transition cursor-pointer font-bold ${
-                  pageLayoutMode === '2' ? 'bg-white text-black shadow-xs' : 'text-gray-600 hover:text-black'
+                className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
+                  pageLayoutMode === '2' ? 'bg-white text-black shadow-xs' : 'text-gray-500 hover:text-black'
                 }`}
                 title="Adaugă Pagina 2 și separă conținutul pe 2 foi fizice A4"
               >
                 2 Pagini
               </button>
             </div>
+          </div>
+        </div>
 
-            {/* POLISH AI COACH TOGGLE BUTTON */}
-            <button
-              onClick={() => setShowPolishCoach(!showPolishCoach)}
-              className={`px-3.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer ${
-                showPolishCoach 
-                  ? 'bg-black text-white shadow-sm ring-2 ring-amber-400' 
-                  : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-amber-500/20'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-200" />
-              {showPolishCoach ? 'Închide Polish AI' : '✨ Polish AI Coach (95+)'}
-            </button>
+        {/* SUBTLE ROW DIVIDER */}
+        <div className="h-px bg-gray-100" />
 
-            {/* AI OPTIMIZE BUTTON */}
-            <button
-              onClick={() => setShowAiModal(true)}
-              className="px-3.5 py-1.5 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-lg font-semibold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
-            >
-              <Zap className="w-3.5 h-3.5 text-black" />
-              Optimizare AI ATS 100%
-            </button>
+        {/* ROW 2: ACTION TOOLBAR (AI + TOOLS + EXPORT) */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          
+          {/* LEFT CLUSTER: AI SUITE & DOCUMENT TOOLS */}
+          <div className="flex flex-wrap items-center gap-2">
+            
+            {/* AI SUITE CAPSULE */}
+            <div className="flex items-center bg-amber-50/70 border border-amber-200/80 p-0.5 rounded-xl shadow-2xs">
+              <button
+                onClick={() => setShowPolishCoach(!showPolishCoach)}
+                className={`px-3 py-1 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer ${
+                  showPolishCoach 
+                    ? 'bg-black text-white shadow-xs' 
+                    : 'text-amber-900 hover:bg-amber-100/70'
+                }`}
+                title="Deschide panoul Polish AI Coach pentru scor 95+"
+              >
+                <Sparkles className={`w-3.5 h-3.5 ${showPolishCoach ? 'text-amber-300' : 'text-amber-600'}`} />
+                <span>Polish AI</span>
+                <span className="text-[10px] bg-amber-200 text-amber-950 px-1 py-0.2 rounded font-black">95+</span>
+              </button>
 
-            {/* LATEX EXPORT & OVERLEAF COMPILER */}
-            <button
-              onClick={() => setShowLatexModal(true)}
-              className="px-3.5 py-1.5 bg-neutral-900 hover:bg-black text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
-              title="Deschide LaTeX Studio: Exportă fișierul .tex sau compilează direct în PDF pe Overleaf"
-            >
-              <Code2 className="w-3.5 h-3.5 text-amber-300" />
-              <span>LaTeX (.tex)</span>
-            </button>
+              <button
+                onClick={() => setShowAiModal(true)}
+                className="px-3 py-1 text-gray-800 hover:text-black hover:bg-white/80 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                title="Optimizare CV cu AI Groq pe baza cerințelor jobului"
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                <span>Optimizare ATS</span>
+              </button>
+            </div>
 
-            {/* IMPORT PDF BUTTON */}
-            <label className="px-3.5 py-1.5 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-lg font-semibold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition">
-              <Upload className="w-3.5 h-3.5 text-gray-700" />
-              {parsingPdf ? 'Se extrage...' : 'Importă PDF'}
-              <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
-            </label>
+            <div className="hidden sm:block h-5 w-px bg-gray-200" />
 
-            {/* DOWNLOAD PDF WITH EDITABLE FILENAME & ATS VECTOR PRINT */}
-            <div className="flex items-center bg-gray-50 border border-gray-300 rounded-lg pl-2.5 pr-1 py-1 shadow-2xs gap-1">
+            {/* DOCUMENT TOOLS: LATEX & IMPORT */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setShowLatexModal(true)}
+                className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                title="Deschide LaTeX Studio: Exportă fișierul .tex sau compilează direct pe Overleaf"
+              >
+                <Code2 className="w-3.5 h-3.5 text-indigo-600" />
+                <span>LaTeX</span>
+              </button>
+
+              <label className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition">
+                <Upload className="w-3.5 h-3.5 text-gray-600" />
+                <span>{parsingPdf ? 'Se extrage...' : 'Importă'}</span>
+                <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
+              </label>
+
+              {/* RESTORE SECTIONS DROPDOWN (ONLY IF ANY SECTION IS HIDDEN) */}
+              {missingSections.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowAddSectionDropdown(!showAddSectionDropdown)}
+                    className="px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-black border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1 transition cursor-pointer shadow-2xs"
+                    title="Adaugă înapoi secțiunile eliminate"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-gray-600" />
+                    <span>Secțiuni ({missingSections.length})</span>
+                    <ChevronDown className="w-3 h-3 text-gray-500" />
+                  </button>
+
+                  {showAddSectionDropdown && (
+                    <div className="absolute left-0 mt-1.5 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-30 py-1 font-sans text-xs">
+                      <div className="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        Restaurează secțiune
+                      </div>
+                      {missingSections.map(key => (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            restoreSection(key);
+                            setShowAddSectionDropdown(false);
+                          }}
+                          className="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-gray-800 font-medium flex items-center justify-between cursor-pointer"
+                        >
+                          <span>{sectionLabels[key] || key}</span>
+                          <Plus className="w-3 h-3 text-emerald-600" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* RIGHT CLUSTER: EXPORT & PDF DOWNLOAD */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {/* COMPACT FILENAME INPUT */}
+            <div className="hidden sm:flex items-center bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1 text-xs text-gray-700 focus-within:border-gray-400 focus-within:bg-white transition shadow-2xs">
+              <FileText className="w-3.5 h-3.5 text-gray-400 mr-1.5 shrink-0" />
               <input 
                 type="text" 
                 value={pdfCustomName} 
                 onChange={e => setPdfCustomName(e.target.value)} 
                 title="Editează numele fișierului PDF descărcat"
-                placeholder="Nume fișier PDF..." 
-                className="bg-transparent text-xs text-gray-900 outline-none w-24 sm:w-32 font-medium placeholder-gray-400" 
+                placeholder="Nume fișier..." 
+                className="bg-transparent text-xs text-gray-900 outline-none w-28 sm:w-36 font-medium placeholder-gray-400" 
               />
-              <span className="text-gray-400 text-xs mr-1 font-mono select-none">.pdf</span>
-              <button
-                onClick={handlePrintVectorPdf}
-                className="px-2.5 py-1 bg-white hover:bg-gray-100 text-gray-900 border border-gray-300 rounded-md font-bold text-xs flex items-center gap-1 shadow-2xs transition cursor-pointer shrink-0"
-                title="Printează sau salvează ca PDF Vectorial ATS (100% text selectabil)"
-              >
-                <Printer className="w-3.5 h-3.5 text-black" />
-                <span>Vector ATS</span>
-              </button>
-              <button
-                onClick={handleDownloadDirectPdf}
-                disabled={isDownloadingPdf}
-                className="px-2.5 py-1 bg-black hover:bg-neutral-800 text-white rounded-md font-bold text-xs flex items-center gap-1 shadow-sm transition disabled:opacity-60 cursor-pointer shrink-0"
-                title="Descarcă direct fișierul PDF"
-              >
-                {isDownloadingPdf ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
-                <span>Descarcă</span>
-              </button>
+              <span className="text-gray-400 text-xs font-mono select-none">.pdf</span>
             </div>
+
+            {/* VECTOR ATS PRINT */}
+            <button
+              onClick={handlePrintVectorPdf}
+              className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+              title="Printează sau salvează ca PDF Vectorial ATS (100% text selectabil)"
+            >
+              <Printer className="w-3.5 h-3.5 text-gray-600" />
+              <span>Vector ATS</span>
+            </button>
+
+            {/* DIRECT DOWNLOAD */}
+            <button
+              onClick={handleDownloadDirectPdf}
+              disabled={isDownloadingPdf}
+              className="px-4 py-1.5 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition disabled:opacity-60 cursor-pointer"
+              title="Descarcă direct fișierul PDF"
+            >
+              {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              <span>Descarcă</span>
+            </button>
           </div>
         </div>
 
-        {/* RESTORE SECTIONS & ZOOM CONTROLS (MINIMALIST WHITE) */}
-        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100 text-xs">
-          <span className="text-[11px] font-semibold text-gray-500">Adaugă secțiuni:</span>
-          {!sectionOrder.includes('education') && (
-            <button onClick={() => restoreSection('education')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
-              <Plus className="w-3 h-3" /> Education
-            </button>
-          )}
-          {!sectionOrder.includes('experience') && (
-            <button onClick={() => restoreSection('experience')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
-              <Plus className="w-3 h-3" /> Experience
-            </button>
-          )}
-          {!sectionOrder.includes('projects') && (
-            <button onClick={() => restoreSection('projects')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
-              <Plus className="w-3 h-3" /> Projects
-            </button>
-          )}
-          {!sectionOrder.includes('certifications') && (
-            <button onClick={() => restoreSection('certifications')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
-              <Plus className="w-3 h-3" /> Certifications
-            </button>
-          )}
-          {!sectionOrder.includes('skills') && (
-            <button onClick={() => restoreSection('skills')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
-              <Plus className="w-3 h-3" /> Technical Skills
-            </button>
-          )}
-          {!sectionOrder.includes('summary') && (
-            <button onClick={() => restoreSection('summary')} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-md text-[11px] font-medium border border-gray-200 flex items-center gap-1 transition cursor-pointer">
-              <Plus className="w-3 h-3" /> Summary
-            </button>
-          )}
-        </div>
-
+        {/* PARSED PDF SUCCESS BANNER */}
         {parsedPdfSuccess && (
-          <div className="p-3 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl text-xs flex items-center gap-2">
+          <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{parsedPdfSuccess}</span>
           </div>
