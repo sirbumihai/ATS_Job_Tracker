@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   MapPin, 
@@ -229,6 +230,13 @@ export default function JobDetailModal({
       .finally(() => setLoadingCvs(false));
   }, [activeUserId]);
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   const formatDateTime = (dtStr) => {
     if (!dtStr) return 'Nespecificat';
     try {
@@ -438,7 +446,17 @@ export default function JobDetailModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [job, activeUserId]);
 
-  if (!job) return null;
+  // Blocare scroll pe fundal cât timp modalul este deschis
+  useEffect(() => {
+    if (!job) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [job]);
+
+  if (!job || typeof document === 'undefined') return null;
 
   const currentJob = detailedJob || job;
 
@@ -483,6 +501,79 @@ export default function JobDetailModal({
       displayMissingSkills
     );
   }, [currentJob.rawDescription, skillsRequired, displayMatchingSkills, displayMissingSkills]);
+
+  // CERINȚE OBLIGATORII COMPLETE & INTEGRATE: garantează că ABSOLUT TOATE cerințele din anunț sunt afișate și evaluate fără omisiuni
+  const effectiveMandatoryRequirements = useMemo(() => {
+    if (!aiAnalysisData?.mandatory || aiAnalysisData.mandatory.length === 0) {
+      return (parsedDescription.mandatoryRequirements || []).map(req => ({
+        text: req.text,
+        isMatched: req.matched && req.matched.length > 0,
+        matchedSkill: req.matched ? req.matched.join(', ') : '',
+        explanation: req.matched && req.matched.length > 0 ? `Bifat în CV: ${req.matched.join(', ')}` : 'Competență cerută în anunț'
+      }));
+    }
+
+    const items = [...aiAnalysisData.mandatory];
+    const aiTextsLower = items.map(m => (m.text || '').toLowerCase());
+
+    if (parsedDescription.mandatoryRequirements && parsedDescription.mandatoryRequirements.length > 0) {
+      for (const pReq of parsedDescription.mandatoryRequirements) {
+        const pText = (pReq.text || '').toLowerCase().trim();
+        if (pText.length < 8) continue;
+        const alreadyCovered = aiTextsLower.some(aiText =>
+          aiText.includes(pText) || pText.includes(aiText) || (pText.slice(0, 25) === aiText.slice(0, 25))
+        );
+        if (!alreadyCovered) {
+          const isMatched = pReq.matched && pReq.matched.length > 0;
+          items.push({
+            text: pReq.text,
+            isMatched: isMatched,
+            matchedSkill: isMatched ? pReq.matched.join(', ') : '',
+            explanation: isMatched ? `Bifat în CV conform profilului: ${pReq.matched.join(', ')}` : 'Cerință specificată în anunțul de angajare'
+          });
+        }
+      }
+    }
+
+    return items;
+  }, [aiAnalysisData?.mandatory, parsedDescription.mandatoryRequirements]);
+
+  // PUNCTE BONUS & AVANTAJE INTEGRATE (NICE-TO-HAVE)
+  const effectiveBonusRequirements = useMemo(() => {
+    if (!aiAnalysisData?.bonus || aiAnalysisData.bonus.length === 0) {
+      return (parsedDescription.bonusRequirements || []).map(b => ({
+        text: b.text,
+        isMatched: b.matched && b.matched.length > 0,
+        matchedSkill: b.matched ? b.matched.join(', ') : ''
+      }));
+    }
+
+    const items = [...aiAnalysisData.bonus];
+    const aiBonusLower = items.map(b => (b.text || '').toLowerCase());
+
+    if (parsedDescription.bonusRequirements && parsedDescription.bonusRequirements.length > 0) {
+      for (const pBonus of parsedDescription.bonusRequirements) {
+        const pText = (pBonus.text || '').toLowerCase().trim();
+        if (pText.length < 8) continue;
+        const alreadyCovered = aiBonusLower.some(aiText =>
+          aiText.includes(pText) || pText.includes(aiText) || (pText.slice(0, 25) === aiText.slice(0, 25))
+        );
+        if (!alreadyCovered) {
+          const isMatched = pBonus.matched && pBonus.matched.length > 0;
+          items.push({
+            text: pBonus.text,
+            isMatched: isMatched,
+            matchedSkill: isMatched ? pBonus.matched.join(', ') : ''
+          });
+        }
+      }
+    }
+
+    return items;
+  }, [aiAnalysisData?.bonus, parsedDescription.bonusRequirements]);
+
+  const totalMandatoryCount = effectiveMandatoryRequirements.length;
+  const matchedMandatoryCount = effectiveMandatoryRequirements.filter(r => r.isMatched).length;
 
   const displayResponsibilities = (aiAnalysisData?.responsibilities && aiAnalysisData.responsibilities.length > 0)
     ? aiAnalysisData.responsibilities
@@ -540,8 +631,8 @@ export default function JobDetailModal({
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-in fade-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-in fade-in duration-200" onClick={onClose}>
       
       {/* CONTAINER MODAL / SHEET */}
       <div 
@@ -824,7 +915,7 @@ export default function JobDetailModal({
                   <div className="text-right">
                     <div className="text-xs font-black text-white">{displayScore.toFixed(1)}% Match ATS</div>
                     <div className="text-[10px] text-indigo-200 font-semibold">
-                      {displayMatchingSkills.length} din {displayMatchingSkills.length + displayMissingSkills.length > 0 ? displayMatchingSkills.length + displayMissingSkills.length : skillsRequired.length || 1} cerințe bifate
+                      {matchedMandatoryCount} din {totalMandatoryCount > 0 ? totalMandatoryCount : (skillsRequired.length || 1)} cerințe bifate
                     </div>
                   </div>
                 </div>
@@ -976,7 +1067,7 @@ export default function JobDetailModal({
             )}
 
             {/* CERINȚE OBLIGATORII (MUST-HAVE) */}
-            {((aiAnalysisData?.mandatory && aiAnalysisData.mandatory.length > 0) || parsedDescription.mandatoryRequirements.length > 0) && (
+            {effectiveMandatoryRequirements.length > 0 && (
               <div className="bg-white border-2 border-indigo-100 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
                 <div className="flex items-center justify-between border-b border-indigo-50 pb-3">
                   <div className="flex items-center gap-2">
@@ -999,106 +1090,59 @@ export default function JobDetailModal({
                     </div>
                   </div>
                   <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    {aiAnalysisData?.mandatory?.length || parsedDescription.mandatoryRequirements.length} Cerințe
+                    {effectiveMandatoryRequirements.length} Cerințe
                   </span>
                 </div>
 
                 <div className="space-y-2.5">
-                  {aiAnalysisData?.mandatory && aiAnalysisData.mandatory.length > 0 ? (
-                    aiAnalysisData.mandatory.map((req, idx) => (
-                      <div 
-                        key={idx}
-                        className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${
-                          req.isMatched 
-                            ? 'bg-emerald-50/60 border-emerald-200' 
-                            : 'bg-amber-50/50 border-amber-200'
-                        }`}
-                      >
-                        <div className="flex items-start gap-2.5 flex-1">
-                          {req.isMatched ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                          ) : (
-                            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                          )}
-                          <div className="space-y-1">
-                            <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
-                              {req.text}
-                            </span>
-                            {req.explanation && (
-                              <p className="text-[11px] text-gray-500 italic">
-                                {req.explanation}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-1.5 shrink-0 self-start sm:self-center">
-                          {req.isMatched ? (
-                            <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
-                              <Check className="w-3 h-3 text-emerald-600" />
-                              <span>{req.matchedSkill ? `Bifat: ${req.matchedSkill}` : 'Bifat în CV'}</span>
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
-                              <BookOpen className="w-3 h-3 text-amber-600" />
-                              <span>Lipsește din CV</span>
-                            </span>
+                  {effectiveMandatoryRequirements.map((req, idx) => (
+                    <div 
+                      key={idx}
+                      className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${
+                        req.isMatched 
+                          ? 'bg-emerald-50/60 border-emerald-200' 
+                          : 'bg-amber-50/50 border-amber-200'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5 flex-1">
+                        {req.isMatched ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                        ) : (
+                          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        )}
+                        <div className="space-y-1">
+                          <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
+                            {req.text}
+                          </span>
+                          {req.explanation && (
+                            <p className="text-[11px] text-gray-500 italic">
+                              {req.explanation}
+                            </p>
                           )}
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    parsedDescription.mandatoryRequirements.map((req, idx) => {
-                      const hasMatch = req.matched && req.matched.length > 0;
-                      const hasMissing = req.missing && req.missing.length > 0;
-                      return (
-                        <div 
-                          key={idx}
-                          className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${
-                            hasMatch 
-                              ? 'bg-emerald-50/50 border-emerald-200/80' 
-                              : hasMissing 
-                              ? 'bg-amber-50/40 border-amber-200/80' 
-                              : 'bg-gray-50/70 border-gray-200/80'
-                          }`}
-                        >
-                          <div className="flex items-start gap-2.5 flex-1">
-                            {hasMatch ? (
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                            ) : hasMissing ? (
-                              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                            ) : (
-                              <div className="w-2 h-2 rounded-full bg-indigo-400 shrink-0 mt-1.5 ml-1"></div>
-                            )}
-                            <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
-                              {req.text}
-                            </span>
-                          </div>
 
-                          <div className="flex flex-wrap items-center gap-1.5 shrink-0 self-start sm:self-center">
-                            {hasMatch && (
-                              <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
-                                <Check className="w-3 h-3 text-emerald-600" />
-                                <span>Bifat în CV: {req.matched.join(', ')}</span>
-                              </span>
-                            )}
-                            {hasMissing && (
-                              <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
-                                <BookOpen className="w-3 h-3 text-amber-600" />
-                                <span>De aprofundat: {req.missing.join(', ')}</span>
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
+                      <div className="flex flex-wrap items-center gap-1.5 shrink-0 self-start sm:self-center">
+                        {req.isMatched ? (
+                          <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            <span>{req.matchedSkill ? `Bifat: ${req.matchedSkill}` : 'Bifat în CV'}</span>
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                            <BookOpen className="w-3 h-3 text-amber-600" />
+                            <span>Lipsește din CV</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
             {/* CUNOȘTINȚE BONUS / AVANTAJE (NICE-TO-HAVE) */}
-            {((aiAnalysisData?.bonus && aiAnalysisData.bonus.length > 0) || parsedDescription.bonusRequirements.length > 0) && (
+            {effectiveBonusRequirements.length > 0 && (
               <div className="bg-gradient-to-br from-amber-50/50 to-purple-50/30 border-2 border-amber-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
                 <div className="flex items-center justify-between border-b border-amber-100 pb-3">
                   <div className="flex items-center gap-2">
@@ -1116,65 +1160,35 @@ export default function JobDetailModal({
                     </div>
                   </div>
                   <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
-                    {aiAnalysisData?.bonus?.length || parsedDescription.bonusRequirements.length} Puncte Bonus
+                    {effectiveBonusRequirements.length} Puncte Bonus
                   </span>
                 </div>
 
                 <div className="space-y-2">
-                  {aiAnalysisData?.bonus && aiAnalysisData.bonus.length > 0 ? (
-                    aiAnalysisData.bonus.map((bonus, idx) => (
-                      <div 
-                        key={idx}
-                        className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
-                          bonus.isMatched 
-                            ? 'bg-emerald-50/70 border-emerald-300' 
-                            : 'bg-white/80 border-amber-100'
-                        }`}
-                      >
-                        <div className="flex items-start gap-2.5 flex-1">
-                          <Sparkles className={`w-4 h-4 shrink-0 mt-0.5 ${bonus.isMatched ? 'text-emerald-600' : 'text-amber-500'}`} />
-                          <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
-                            {bonus.text}
-                          </span>
-                        </div>
-
-                        {bonus.isMatched && (
-                          <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1 shrink-0 self-start sm:self-center">
-                            <Check className="w-3 h-3 text-emerald-600" />
-                            <span>{bonus.matchedSkill ? `Bonus Bifat: ${bonus.matchedSkill}` : 'Bonus Bifat în Profil!'}</span>
-                          </span>
-                        )}
+                  {effectiveBonusRequirements.map((bonus, idx) => (
+                    <div 
+                      key={idx}
+                      className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                        bonus.isMatched 
+                          ? 'bg-emerald-50/70 border-emerald-300' 
+                          : 'bg-white/80 border-amber-100'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5 flex-1">
+                        <Sparkles className={`w-4 h-4 shrink-0 mt-0.5 ${bonus.isMatched ? 'text-emerald-600' : 'text-amber-500'}`} />
+                        <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
+                          {bonus.text}
+                        </span>
                       </div>
-                    ))
-                  ) : (
-                    parsedDescription.bonusRequirements.map((bonus, idx) => {
-                      const hasMatch = bonus.matched && bonus.matched.length > 0;
-                      return (
-                        <div 
-                          key={idx}
-                          className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
-                            hasMatch 
-                              ? 'bg-emerald-50/70 border-emerald-300' 
-                              : 'bg-white/80 border-amber-100'
-                          }`}
-                        >
-                          <div className="flex items-start gap-2.5 flex-1">
-                            <Sparkles className={`w-4 h-4 shrink-0 mt-0.5 ${hasMatch ? 'text-emerald-600' : 'text-amber-500'}`} />
-                            <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
-                              {bonus.text}
-                            </span>
-                          </div>
 
-                          {hasMatch && (
-                            <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1 shrink-0 self-start sm:self-center">
-                              <Check className="w-3 h-3 text-emerald-600" />
-                              <span>Bonus Bifat în Profil!</span>
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
+                      {bonus.isMatched && (
+                        <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1 shrink-0 self-start sm:self-center">
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span>{bonus.matchedSkill ? `Bonus Bifat: ${bonus.matchedSkill}` : 'Bonus Bifat în Profil!'}</span>
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1315,6 +1329,7 @@ export default function JobDetailModal({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
