@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Building2, 
   Sparkles, 
@@ -22,7 +22,10 @@ import {
   Award,
   XCircle,
   Plus,
-  FolderKanban
+  FolderKanban,
+  ArrowUpDown,
+  RotateCcw,
+  Briefcase
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 
@@ -43,11 +46,17 @@ export default function KanbanBoard({
 }) {
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterScore, setFilterScore] = useState('ALL');
+  const [sortBy, setSortBy] = useState('CUSTOM'); // 'CUSTOM' | 'SCORE_DESC' | 'SCORE_ASC' | 'DATE_DESC' | 'COMPANY_ASC' | 'TITLE_ASC'
+  const [filterScore, setFilterScore] = useState('ALL'); // 'ALL' | 'HIGH' | 'MID' | 'LOW'
+  const [filterWorkModel, setFilterWorkModel] = useState('ALL'); // 'ALL' | 'REMOTE' | 'HYBRID' | 'ONSITE'
+  const [filterCv, setFilterCv] = useState('ALL'); // 'ALL' | 'ATTACHED' | 'UNATTACHED'
   const [mobileSelectedColumn, setMobileSelectedColumn] = useState('SAVED');
+  
+  // DRAG & DROP STATE (FLICKER-FREE STABLE INDEX)
   const [draggedAppId, setDraggedAppId] = useState(null);
-  const [dragOverTarget, setDragOverTarget] = useState(null); // { cardId: string | null, columnKey: string, position: 'top' | 'bottom' }
   const [dragOverColumnKey, setDragOverColumnKey] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+
   const [cvList, setCvList] = useState([]);
   const [uploadedResumes, setUploadedResumes] = useState([]);
   const [attachingCvAppId, setAttachingCvAppId] = useState(null);
@@ -180,16 +189,84 @@ export default function KanbanBoard({
     REJECTED: 'bg-rose-500',
   };
 
-  const filteredApplications = applications.filter(app => {
-    const matchesSearch = (app.companyName || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (app.jobTitle || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const score = Number(app.semanticMatchScore || 0);
-    if (filterScore === 'HIGH') return matchesSearch && score >= 80;
-    if (filterScore === 'MID') return matchesSearch && score >= 50 && score < 80;
-    return matchesSearch;
-  });
+  // FILTER & SORT APPLICATIONS
+  const filteredApplications = useMemo(() => {
+    const list = applications.filter(app => {
+      // 1. Search query (company, title, location)
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const comp = (app.companyName || '').toLowerCase();
+        const title = (app.jobTitle || '').toLowerCase();
+        const loc = (app.jobLocation || app.location || '').toLowerCase();
+        if (!comp.includes(q) && !title.includes(q) && !loc.includes(q)) {
+          return false;
+        }
+      }
 
-  // DRAG AND DROP HANDLERS (TRELLO STYLE INTERACTIVE REORDERING)
+      // 2. Score filter
+      const score = Number(app.semanticMatchScore || 0);
+      if (filterScore === 'HIGH' && score < 80) return false;
+      if (filterScore === 'MID' && (score < 50 || score >= 80)) return false;
+      if (filterScore === 'LOW' && score >= 50) return false;
+
+      // 3. Work model filter
+      if (filterWorkModel !== 'ALL') {
+        const wm = (app.workModel || '').toUpperCase();
+        if (filterWorkModel === 'REMOTE' && !wm.includes('REMOTE')) return false;
+        if (filterWorkModel === 'HYBRID' && (!wm.includes('HYBRID') && !wm.includes('HIBRID'))) return false;
+        if (filterWorkModel === 'ONSITE' && (!wm.includes('SITE') && !wm.includes('BIROU') && !wm.includes('ONSITE'))) return false;
+      }
+
+      // 4. CV filter
+      if (filterCv === 'ATTACHED') {
+        if (!app.cvProfileId && !app.resumeId) return false;
+      } else if (filterCv === 'UNATTACHED') {
+        if (app.cvProfileId || app.resumeId) return false;
+      }
+
+      return true;
+    });
+
+    // 5. Sort
+    if (sortBy === 'CUSTOM') {
+      return list; // Retine ordinea manuala Trello din array
+    }
+
+    const sorted = [...list];
+    if (sortBy === 'SCORE_DESC') {
+      sorted.sort((a, b) => Number(b.semanticMatchScore || 0) - Number(a.semanticMatchScore || 0));
+    } else if (sortBy === 'SCORE_ASC') {
+      sorted.sort((a, b) => Number(a.semanticMatchScore || 0) - Number(b.semanticMatchScore || 0));
+    } else if (sortBy === 'COMPANY_ASC') {
+      sorted.sort((a, b) => (a.companyName || '').localeCompare(b.companyName || ''));
+    } else if (sortBy === 'TITLE_ASC') {
+      sorted.sort((a, b) => (a.jobTitle || '').localeCompare(b.jobTitle || ''));
+    } else if (sortBy === 'DATE_DESC') {
+      sorted.sort((a, b) => {
+        const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tB - tA;
+      });
+    }
+
+    return sorted;
+  }, [applications, searchQuery, filterScore, filterWorkModel, filterCv, sortBy]);
+
+  const isAnyFilterActive = searchQuery.trim() !== '' || 
+    filterScore !== 'ALL' || 
+    filterWorkModel !== 'ALL' || 
+    filterCv !== 'ALL' || 
+    sortBy !== 'CUSTOM';
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setFilterScore('ALL');
+    setFilterWorkModel('ALL');
+    setFilterCv('ALL');
+    setSortBy('CUSTOM');
+  };
+
+  // DRAG AND DROP HANDLERS (FLICKER-FREE WITH STABLE INDEX PLACEHOLDER)
   const handleDragStart = (e, appId) => {
     e.dataTransfer.setData('text/plain', appId);
     e.dataTransfer.effectAllowed = 'move';
@@ -198,51 +275,48 @@ export default function KanbanBoard({
 
   const handleDragEnd = () => {
     setDraggedAppId(null);
-    setDragOverTarget(null);
     setDragOverColumnKey(null);
+    setDragOverIndex(null);
   };
 
-  const handleCardDragOver = (e, targetCardId, columnKey) => {
+  const handleCardDragOver = (e, cardIdx, columnKey) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!draggedAppId || draggedAppId === targetCardId) return;
+    if (!draggedAppId) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
     const midY = rect.top + rect.height / 2;
-    const position = e.clientY < midY ? 'top' : 'bottom';
+    const newIndex = e.clientY < midY ? cardIdx : cardIdx + 1;
 
-    setDragOverTarget({ cardId: targetCardId, columnKey, position });
-    setDragOverColumnKey(columnKey);
-  };
-
-  const handleColumnDragOver = (e, columnKey) => {
-    e.preventDefault();
-    setDragOverColumnKey(columnKey);
-    if (!dragOverTarget || dragOverTarget.columnKey !== columnKey || dragOverTarget.cardId !== null) {
-      setDragOverTarget({ cardId: null, columnKey, position: 'bottom' });
+    if (dragOverColumnKey !== columnKey || dragOverIndex !== newIndex) {
+      setDragOverColumnKey(columnKey);
+      setDragOverIndex(newIndex);
     }
   };
 
-  const handleCardDrop = (e, targetCardId, targetColumnKey) => {
+  const handleColumnDragOver = (e, columnKey, cardsCount) => {
+    e.preventDefault();
+    if (!draggedAppId) return;
+    if (dragOverColumnKey !== columnKey || dragOverIndex !== cardsCount) {
+      setDragOverColumnKey(columnKey);
+      setDragOverIndex(cardsCount);
+    }
+  };
+
+  const handleDropAt = (e, targetColumnKey, insertIndex) => {
     e.preventDefault();
     e.stopPropagation();
     const movingAppId = e.dataTransfer.getData('text/plain') || draggedAppId;
-    if (!movingAppId) return;
+    if (!movingAppId) {
+      handleDragEnd();
+      return;
+    }
 
-    executeMove(movingAppId, targetCardId, targetColumnKey, dragOverTarget?.position || 'bottom');
+    executeMoveToIndex(movingAppId, targetColumnKey, insertIndex);
     handleDragEnd();
   };
 
-  const handleColumnDrop = (e, targetColumnKey) => {
-    e.preventDefault();
-    const movingAppId = e.dataTransfer.getData('text/plain') || draggedAppId;
-    if (!movingAppId) return;
-
-    executeMove(movingAppId, null, targetColumnKey, 'bottom');
-    handleDragEnd();
-  };
-
-  const executeMove = (movingAppId, targetCardId, targetColumnKey, position) => {
+  const executeMoveToIndex = (movingAppId, targetColumnKey, insertIndex) => {
     const currentApps = [...applications];
     const movingIndex = currentApps.findIndex(a => a.id === movingAppId);
     if (movingIndex === -1) return;
@@ -250,44 +324,51 @@ export default function KanbanBoard({
     const movingApp = { ...currentApps[movingIndex] };
     const statusChanged = movingApp.status !== targetColumnKey;
 
-    // Remove movingApp from list
-    currentApps.splice(movingIndex, 1);
-
-    // Update status if column changed
     if (statusChanged) {
       movingApp.status = targetColumnKey;
+    }
+
+    // Eliminam aplicatia mutata din lista
+    const otherApps = currentApps.filter(a => a.id !== movingAppId);
+
+    // Gasim aplicatiile din coloana tinta (fara cea mutata)
+    const targetColApps = otherApps.filter(a => a.status === targetColumnKey);
+
+    let newApps;
+    if (targetColApps.length === 0) {
+      newApps = [...otherApps, movingApp];
+    } else if (insertIndex >= targetColApps.length) {
+      const lastCardId = targetColApps[targetColApps.length - 1].id;
+      const lastCardIdxInAll = otherApps.findIndex(a => a.id === lastCardId);
+      newApps = [
+        ...otherApps.slice(0, lastCardIdxInAll + 1),
+        movingApp,
+        ...otherApps.slice(lastCardIdxInAll + 1)
+      ];
+    } else {
+      const beforeCardId = targetColApps[insertIndex].id;
+      const beforeCardIdxInAll = otherApps.findIndex(a => a.id === beforeCardId);
+      newApps = [
+        ...otherApps.slice(0, beforeCardIdxInAll),
+        movingApp,
+        ...otherApps.slice(beforeCardIdxInAll)
+      ];
+    }
+
+    // Daca era activa o sortare automata, trecem la CUSTOM pentru a pastra ordinea manuala aleasa
+    if (sortBy !== 'CUSTOM') {
+      setSortBy('CUSTOM');
+    }
+
+    if (onReorderApplications) {
+      onReorderApplications(newApps);
+    }
+
+    if (statusChanged) {
       const updateHandler = onUpdateStatus || onStatusChange;
       if (updateHandler) {
         updateHandler(movingAppId, targetColumnKey);
       }
-    }
-
-    if (targetCardId && targetCardId !== movingAppId) {
-      const targetIndex = currentApps.findIndex(a => a.id === targetCardId);
-      if (targetIndex !== -1) {
-        const insertIndex = position === 'top' ? targetIndex : targetIndex + 1;
-        currentApps.splice(insertIndex, 0, movingApp);
-      } else {
-        currentApps.push(movingApp);
-      }
-    } else {
-      // Dropped on column directly or at the bottom of column
-      let lastColumnCardIndex = -1;
-      for (let i = currentApps.length - 1; i >= 0; i--) {
-        if (currentApps[i].status === targetColumnKey) {
-          lastColumnCardIndex = i;
-          break;
-        }
-      }
-      if (lastColumnCardIndex !== -1) {
-        currentApps.splice(lastColumnCardIndex + 1, 0, movingApp);
-      } else {
-        currentApps.push(movingApp);
-      }
-    }
-
-    if (onReorderApplications) {
-      onReorderApplications(currentApps);
     }
   };
 
@@ -336,81 +417,162 @@ export default function KanbanBoard({
     }
   };
 
+  const draggedApp = applications.find(a => a.id === draggedAppId);
+
   return (
     <div className="space-y-4 font-sans text-gray-900">
       
       {/* SEARCH, FILTER & VIEW MODE TOOLBAR */}
       {currentUser && (
-        <div className="bg-white border border-gray-200/90 shadow-sm p-3.5 sm:p-4 rounded-2xl flex flex-col lg:flex-row items-center justify-between gap-3">
+        <div className="bg-white border border-gray-200/90 shadow-sm p-3.5 sm:p-4 rounded-2xl space-y-3">
           
-          {/* SEARCH INPUT */}
-          <div className="relative w-full lg:w-80">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text"
-              placeholder="Cauta companie sau job..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-500 focus:bg-white transition"
-            />
+          {/* TOP ROW: SEARCH + SORT + VIEW MODE */}
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+            
+            {/* SEARCH INPUT */}
+            <div className="relative flex-1 max-w-lg">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input 
+                type="text"
+                placeholder="Cauta dupa companie, titlu sau locatie..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-8 py-2 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-500 focus:bg-white transition"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold p-1 cursor-pointer"
+                  title="Sterge textul cautat"
+                >
+                  &#x2715;
+                </button>
+              )}
+            </div>
+
+            {/* SORT BY DROPDOWN & VIEW MODE */}
+            <div className="flex items-center gap-2.5 flex-wrap justify-between lg:justify-end">
+              
+              {/* SORT BY SELECT */}
+              <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl border border-gray-200 text-xs">
+                <ArrowUpDown className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                <span className="text-[11px] font-bold text-gray-500 shrink-0">Ordoneaza:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-transparent text-gray-900 font-bold text-xs outline-none cursor-pointer"
+                >
+                  <option value="CUSTOM">Ordine Manuala (Drag & Drop)</option>
+                  <option value="SCORE_DESC">Scor ATS (Mare la Mic)</option>
+                  <option value="SCORE_ASC">Scor ATS (Mic la Mare)</option>
+                  <option value="DATE_DESC">Cele mai recente</option>
+                  <option value="COMPANY_ASC">Companie (A - Z)</option>
+                  <option value="TITLE_ASC">Titlu Job (A - Z)</option>
+                </select>
+              </div>
+
+              {/* VIEW MODE TOGGLE (KANBAN VS LIST) */}
+              <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 shrink-0">
+                <button
+                  onClick={() => setViewMode('kanban')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                    viewMode === 'kanban' 
+                      ? 'bg-black text-white shadow-sm' 
+                      : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+                  }`}
+                  title="Vizualizare Kanban Board"
+                >
+                  <Columns className="w-3.5 h-3.5" />
+                  Kanban
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                    viewMode === 'list' 
+                      ? 'bg-black text-white shadow-sm' 
+                      : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+                  }`}
+                  title="Vizualizare Lista Tabelara"
+                >
+                  <List className="w-3.5 h-3.5" />
+                  Lista
+                </button>
+              </div>
+
+            </div>
           </div>
 
-          {/* SCORE FILTERS */}
-          <div className="flex items-center gap-1.5 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
-            <Filter className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-            <span className="text-[11px] font-semibold text-gray-500 shrink-0">Scor:</span>
-            <button 
-              onClick={() => setFilterScore('ALL')}
-              className={`px-3 py-1 rounded-lg text-[11px] font-bold shrink-0 transition cursor-pointer ${
-                filterScore === 'ALL' ? 'bg-black text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Toate ({applications.length})
-            </button>
-            <button 
-              onClick={() => setFilterScore('HIGH')}
-              className={`px-3 py-1 rounded-lg text-[11px] font-bold shrink-0 transition cursor-pointer ${
-                filterScore === 'HIGH' ? 'bg-black text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              &gt; 80% Match
-            </button>
-            <button 
-              onClick={() => setFilterScore('MID')}
-              className={`px-3 py-1 rounded-lg text-[11px] font-bold shrink-0 transition cursor-pointer ${
-                filterScore === 'MID' ? 'bg-black text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              50% - 80%
-            </button>
-          </div>
+          {/* BOTTOM ROW: FILTER PILLS & RESET */}
+          <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-gray-100 text-xs">
+            <div className="flex items-center gap-1 text-gray-500 font-bold text-[11px] shrink-0">
+              <Filter className="w-3.5 h-3.5 text-gray-500" />
+              <span>Filtre:</span>
+            </div>
 
-          {/* VIEW MODE TOGGLE (KANBAN VS LIST) */}
-          <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 shrink-0 self-end lg:self-auto">
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                viewMode === 'kanban' 
-                  ? 'bg-black text-white shadow-sm' 
-                  : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
-              }`}
-              title="Vizualizare Kanban Board"
-            >
-              <Columns className="w-3.5 h-3.5" />
-              Kanban
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                viewMode === 'list' 
-                  ? 'bg-black text-white shadow-sm' 
-                  : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
-              }`}
-              title="Vizualizare Lista Tabelara"
-            >
-              <List className="w-3.5 h-3.5" />
-              Lista
-            </button>
+            {/* FILTER SCOR ATS */}
+            <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
+              <Sparkles className="w-3 h-3 text-emerald-600 shrink-0" />
+              <span className="text-[11px] text-gray-500 font-semibold">Scor:</span>
+              <select
+                value={filterScore}
+                onChange={(e) => setFilterScore(e.target.value)}
+                className="bg-transparent text-gray-900 font-bold text-[11px] outline-none cursor-pointer"
+              >
+                <option value="ALL">Toate scorurile</option>
+                <option value="HIGH">&gt; 80% Match</option>
+                <option value="MID">50% - 80% Match</option>
+                <option value="LOW">&lt; 50% Match</option>
+              </select>
+            </div>
+
+            {/* FILTER MOD DE LUCRU */}
+            <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
+              <Briefcase className="w-3 h-3 text-blue-600 shrink-0" />
+              <span className="text-[11px] text-gray-500 font-semibold">Mod:</span>
+              <select
+                value={filterWorkModel}
+                onChange={(e) => setFilterWorkModel(e.target.value)}
+                className="bg-transparent text-gray-900 font-bold text-[11px] outline-none cursor-pointer"
+              >
+                <option value="ALL">Toate modurile</option>
+                <option value="REMOTE">Remote</option>
+                <option value="HYBRID">Hibrid</option>
+                <option value="ONSITE">On-site</option>
+              </select>
+            </div>
+
+            {/* FILTER CV ASOCIAT */}
+            <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
+              <FileText className="w-3 h-3 text-indigo-600 shrink-0" />
+              <span className="text-[11px] text-gray-500 font-semibold">CV:</span>
+              <select
+                value={filterCv}
+                onChange={(e) => setFilterCv(e.target.value)}
+                className="bg-transparent text-gray-900 font-bold text-[11px] outline-none cursor-pointer"
+              >
+                <option value="ALL">Toate aplicatiile</option>
+                <option value="ATTACHED">Cu CV asociat</option>
+                <option value="UNATTACHED">Fara CV asociat</option>
+              </select>
+            </div>
+
+            {/* COUNT OF RESULTS */}
+            <span className="text-[11px] text-gray-400 font-semibold ml-auto">
+              Afisare: <strong className="text-gray-800">{filteredApplications.length}</strong> din {applications.length}
+            </span>
+
+            {/* RESET FILTERS BUTTON */}
+            {isAnyFilterActive && (
+              <button
+                onClick={handleResetFilters}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-black text-[11px] font-bold transition cursor-pointer"
+                title="Reseteaza toate filtrele si ordonarea"
+              >
+                <RotateCcw className="w-3 h-3 text-gray-500" />
+                <span>Reseteaza</span>
+              </button>
+            )}
+
           </div>
 
         </div>
@@ -425,7 +587,7 @@ export default function KanbanBoard({
           </h2>
           <p className="text-xs text-gray-500 font-medium mt-0.5">
             {viewMode === 'kanban' 
-              ? 'Trage orice card de job in alta coloana pentru a-i actualiza statusul instant si alege CV-ul asociat.'
+              ? 'Trage orice card de job in alta coloana sau reordoneaza-le direct pentru a-ti organiza procesul.'
               : 'Gestioneaza statusul, CV-ul asociat fiecarui job si rapoartele AI intr-un format compact.'}
           </p>
         </div>
@@ -443,7 +605,7 @@ export default function KanbanBoard({
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. KANBAN VIEW (COLUMNS WITH DRAG & DROP & CV SELECTOR) */}
+      {/* 1. KANBAN VIEW (COLUMNS WITH FLICKER-FREE DRAG & DROP & CV SELECTOR) */}
       {/* ========================================================================= */}
       {viewMode === 'kanban' && (
         <>
@@ -477,51 +639,35 @@ export default function KanbanBoard({
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3 sm:gap-4 items-start">
             {kanbanColumns.map((col) => {
               const colApps = filteredApplications.filter(app => app.status === col.key);
+              const cardsWithoutDragged = colApps.filter(app => app.id !== draggedAppId);
               const isMobileVisible = mobileSelectedColumn === col.key;
-              const isDragOver = dragOverColumnKey === col.key;
+              const isDragOverCol = dragOverColumnKey === col.key && Boolean(draggedAppId);
               const ColIcon = col.icon;
-              const draggedApp = applications.find(a => a.id === draggedAppId);
-              const isDraggingOverColumnEnd = dragOverTarget?.columnKey === col.key && dragOverTarget?.cardId === null && draggedAppId && !colApps.some(a => a.id === draggedAppId && colApps[colApps.length - 1]?.id === a.id);
+              const draggedAppOrigin = colApps.find(a => a.id === draggedAppId);
 
-              const renderCardPlaceholder = () => (
-                <div className="rounded-xl border-2 border-dashed border-blue-500 bg-blue-50/70 p-3 space-y-2.5 transition-all select-none pointer-events-none shadow-sm animate-pulse">
-                  <div className="flex items-start justify-between gap-1.5">
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[10px] font-black tracking-wider uppercase text-blue-600 block truncate">
-                        {draggedApp?.companyName || 'Companie'}
-                      </span>
-                      <h4 className="font-bold text-xs sm:text-[13px] text-blue-950 leading-snug mt-0.5 line-clamp-2">
-                        {draggedApp?.jobTitle || 'Pozitie Job'}
-                      </h4>
-                    </div>
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 bg-blue-200 text-blue-900 rounded-full shrink-0">
-                      Plaseaza aici
-                    </span>
-                  </div>
+              // Calculam indexul de inserare stabil pentru placeholder
+              const targetIndex = dragOverIndex !== null 
+                ? Math.min(Math.max(0, dragOverIndex), cardsWithoutDragged.length) 
+                : cardsWithoutDragged.length;
 
-                  {draggedApp?.jobLocation && (
-                    <span className="text-[10px] text-blue-700 block truncate">
-                      {draggedApp.jobLocation}
-                    </span>
-                  )}
-
-                  <div className="py-2 px-2.5 rounded-lg border border-dashed border-blue-300 bg-white/70 flex items-center justify-between text-[11px] font-bold text-blue-800">
-                    <span className="flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-blue-600" />
-                      {draggedApp?.semanticMatchScore ? `${Number(draggedApp.semanticMatchScore).toFixed(0)}% Match ATS` : 'ATS Match'}
-                    </span>
-                    <span className="text-[10px] text-blue-600 font-semibold">+ Pozitie noua</span>
-                  </div>
-                </div>
-              );
+              let displayList = [];
+              if (isDragOverCol) {
+                displayList = [
+                  ...cardsWithoutDragged.slice(0, targetIndex).map((app, i) => ({ type: 'card', app, cardIdx: i })),
+                  { type: 'placeholder', id: '__DROP_PLACEHOLDER__', targetIdx: targetIndex },
+                  ...cardsWithoutDragged.slice(targetIndex).map((app, i) => ({ type: 'card', app, cardIdx: targetIndex + i }))
+                ];
+              } else {
+                displayList = cardsWithoutDragged.map((app, i) => ({ type: 'card', app, cardIdx: i }));
+              }
 
               return (
                 <div 
                   key={col.key} 
-                  onDragOver={(e) => handleColumnDragOver(e, col.key)}
-                  onDrop={(e) => handleColumnDrop(e, col.key)}
+                  onDragOver={(e) => handleColumnDragOver(e, col.key, cardsWithoutDragged.length)}
+                  onDrop={(e) => handleDropAt(e, col.key, cardsWithoutDragged.length)}
                   className={`rounded-2xl border ${col.columnBg} ${col.accentBorder} transition-all duration-200 flex flex-col h-[calc(100vh-230px)] min-h-[500px] max-h-[760px] shadow-xs overflow-hidden ${
-                    isDragOver ? 'ring-2 ring-indigo-600 scale-[1.01] shadow-md' : ''
+                    isDragOverCol ? 'ring-2 ring-indigo-600 scale-[1.01] shadow-md' : ''
                   } ${isMobileVisible ? 'flex' : 'hidden md:flex'}`}
                 >
                   {/* FIXED COLUMN HEADER */}
@@ -537,172 +683,221 @@ export default function KanbanBoard({
 
                   {/* SCROLLABLE CARDS CONTAINER */}
                   <div 
-                    onDragOver={(e) => handleColumnDragOver(e, col.key)}
-                    onDrop={(e) => handleColumnDrop(e, col.key)}
+                    onDragOver={(e) => handleColumnDragOver(e, col.key, cardsWithoutDragged.length)}
+                    onDrop={(e) => handleDropAt(e, col.key, cardsWithoutDragged.length)}
                     className="flex-1 overflow-y-auto p-2.5 sm:p-3 space-y-2.5"
                   >
-                    {colApps.map((app) => {
-                      const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
-                      const isBeingDragged = draggedAppId === app.id;
-                      const isDropTargetTop = dragOverTarget?.cardId === app.id && dragOverTarget?.position === 'top' && draggedAppId !== app.id;
-                      const isDropTargetBottom = dragOverTarget?.cardId === app.id && dragOverTarget?.position === 'bottom' && draggedAppId !== app.id;
-
-                      return (
-                        <React.Fragment key={app.id}>
-                          {isDropTargetTop && renderCardPlaceholder()}
-
-                          <div 
-                            draggable={true}
-                            onDragStart={(e) => handleDragStart(e, app.id)}
-                            onDragEnd={handleDragEnd}
-                            onDragOver={(e) => handleCardDragOver(e, app.id, col.key)}
-                            onDrop={(e) => handleCardDrop(e, app.id, col.key)}
-                            className={`bg-white border border-gray-200/90 rounded-xl p-3 space-y-2.5 relative group shadow-2xs hover:shadow-md hover:border-indigo-200 transition-all text-gray-900 cursor-grab active:cursor-grabbing ${
-                              isBeingDragged ? 'opacity-30 scale-95 border-dashed border-indigo-400' : ''
-                            }`}
+                    {displayList.map((item) => {
+                      // 1. PLACEHOLDER PREVIEW IN THE GRID (STABLE, NO FLICKER)
+                      if (item.type === 'placeholder') {
+                        return (
+                          <div
+                            key="__DROP_PLACEHOLDER__"
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            onDrop={(e) => handleDropAt(e, col.key, item.targetIdx)}
+                            className="rounded-xl border-2 border-dashed border-indigo-500 bg-indigo-50/70 p-3 space-y-2.5 transition-all select-none shadow-xs pointer-events-auto min-h-[110px] flex flex-col justify-between"
                           >
-                            {/* CARD HEADER: COMPANY, TITLE, DELETE & DRAG */}
                             <div className="flex items-start justify-between gap-1.5">
-                              <div 
-                                onClick={() => handleOpenJobModal(app)}
-                                className="cursor-pointer group/title flex-1 min-w-0"
-                                title="Apasa pentru a deschide fisa completa a jobului"
-                              >
-                                <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-500 block truncate group-hover/title:text-indigo-600 transition">
-                                  {app.companyName}
+                              <div className="flex-1 min-w-0">
+                                <span className="text-[10px] font-black tracking-wider uppercase text-indigo-600 block truncate">
+                                  {draggedApp?.companyName || 'Companie'}
                                 </span>
-                                <h4 className="font-bold text-xs sm:text-[13px] text-gray-950 leading-snug mt-0.5 line-clamp-2 group-hover/title:text-indigo-600 transition">
-                                  {app.jobTitle}
+                                <h4 className="font-bold text-xs sm:text-[13px] text-indigo-950 leading-snug mt-0.5 line-clamp-2">
+                                  {draggedApp?.jobTitle || 'Pozitie Job'}
                                 </h4>
                               </div>
-                              <div className="flex items-center gap-0.5 shrink-0">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (window.confirm(`Sigur doresti sa stergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
-                                      onDeleteApplication && onDeleteApplication(app.id);
-                                    }
-                                  }}
-                                  title="Sterge din Tracker"
-                                  className="p-1 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition cursor-pointer"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                                <GripVertical className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 shrink-0" />
-                              </div>
+                              <span className="text-[10px] font-black px-2 py-0.5 bg-indigo-200 text-indigo-900 rounded-full shrink-0">
+                                Plaseaza aici
+                              </span>
                             </div>
 
-                            {/* MATCH SCORE PILL + SLIM PROGRESS */}
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between text-[11px]">
-                                <span className={`inline-flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md text-[10px] ${
-                                  score >= 75 
-                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                    : score >= 50
-                                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                    : 'bg-slate-50 text-slate-700 border border-slate-200'
-                                }`}>
-                                  <Sparkles className="w-2.5 h-2.5 shrink-0" />
-                                  {score.toFixed(0)}% Match ATS
-                                </span>
-                                {app.jobLocation && (
-                                  <span className="text-[10px] text-gray-400 truncate max-w-[100px]" title={app.jobLocation}>
-                                    {app.jobLocation}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden border border-gray-200/60">
-                                <div 
-                                  className={`h-full rounded-full transition-all duration-500 ${
-                                    score >= 75 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-500' : 'bg-slate-400'
-                                  }`} 
-                                  style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
-                                ></div>
-                              </div>
-                            </div>
+                            {draggedApp?.jobLocation && (
+                              <span className="text-[10px] text-indigo-700 block truncate">
+                                {draggedApp.jobLocation}
+                              </span>
+                            )}
 
-                            {/* CV SELECTOR (COMPACT & CLEAN) */}
-                            <div className="flex items-center gap-1 bg-gray-50/80 hover:bg-gray-100/80 px-2 py-1 rounded-lg border border-gray-200/90 text-xs">
-                              <FileText className="w-3 h-3 text-gray-400 shrink-0" />
-                              <select
-                                value={app.cvProfileId ? `CV_${app.cvProfileId}` : (app.resumeId ? `RESUME_${app.resumeId}` : '')}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  if (!val) return;
-                                  if (val.startsWith('CV_')) {
-                                    handleAttachCvProfile(app.id, val.replace('CV_', ''));
-                                  } else if (val.startsWith('RESUME_')) {
-                                    handleAttachResume(app.id, val.replace('RESUME_', ''));
+                            <div className="py-1.5 px-2 rounded-lg border border-dashed border-indigo-300 bg-white/80 flex items-center justify-between text-[11px] font-bold text-indigo-900">
+                              <span className="flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-indigo-600" />
+                                {draggedApp?.semanticMatchScore ? `${Number(draggedApp.semanticMatchScore).toFixed(0)}% Match ATS` : 'ATS Match'}
+                              </span>
+                              <span className="text-[10px] text-indigo-600 font-semibold">+ Pozitie noua</span>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // 2. REGULAR CARD
+                      const { app, cardIdx } = item;
+                      const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
+
+                      return (
+                        <div 
+                          key={app.id}
+                          draggable={true}
+                          onDragStart={(e) => handleDragStart(e, app.id)}
+                          onDragEnd={handleDragEnd}
+                          onDragOver={(e) => handleCardDragOver(e, cardIdx, col.key)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const midY = rect.top + rect.height / 2;
+                            const dropIdx = e.clientY < midY ? cardIdx : cardIdx + 1;
+                            handleDropAt(e, col.key, dropIdx);
+                          }}
+                          className="bg-white border border-gray-200/90 rounded-xl p-3 space-y-2.5 relative group shadow-2xs hover:shadow-md hover:border-indigo-200 transition-all text-gray-900 cursor-grab active:cursor-grabbing"
+                        >
+                          {/* CARD HEADER: COMPANY, TITLE, DELETE & DRAG */}
+                          <div className="flex items-start justify-between gap-1.5">
+                            <div 
+                              onClick={() => handleOpenJobModal(app)}
+                              className="cursor-pointer group/title flex-1 min-w-0"
+                              title="Apasa pentru a deschide fisa completa a jobului"
+                            >
+                              <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-500 block truncate group-hover/title:text-indigo-600 transition">
+                                {app.companyName}
+                              </span>
+                              <h4 className="font-bold text-xs sm:text-[13px] text-gray-950 leading-snug mt-0.5 line-clamp-2 group-hover/title:text-indigo-600 transition">
+                                {app.jobTitle}
+                              </h4>
+                            </div>
+                            <div className="flex items-center gap-0.5 shrink-0">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (window.confirm(`Sigur doresti sa stergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
+                                    onDeleteApplication && onDeleteApplication(app.id);
                                   }
                                 }}
-                                disabled={attachingCvAppId === app.id}
-                                className="bg-transparent text-gray-800 font-semibold outline-none cursor-pointer w-full text-[11px] truncate"
-                                title="Alege CV-ul asociat pentru aceasta aplicatie"
+                                title="Sterge din Tracker"
+                                className="p-1 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition cursor-pointer"
                               >
-                                <option value="">CV Neselectat</option>
-                                {cvList.length > 0 && (
-                                  <optgroup label="CV-uri din Studio">
-                                    {cvList.map((cv) => (
-                                      <option key={cv.id} value={`CV_${cv.id}`}>
-                                        {cv.title} {cv.isPrimary ? '⭐' : ''}
-                                      </option>
-                                    ))}
-                                  </optgroup>
-                                )}
-                                {uploadedResumes.length > 0 && (
-                                  <optgroup label="Fisiere CV Incarcate">
-                                    {uploadedResumes.map((r) => (
-                                      <option key={r.id} value={`RESUME_${r.id}`}>
-                                        {r.fileName}
-                                      </option>
-                                    ))}
-                                  </optgroup>
-                                )}
-                              </select>
-                              {app.cvProfileId && onEditCvInStudio && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEditCvInStudio(app.cvProfileId);
-                                  }}
-                                  className="text-gray-400 hover:text-indigo-600 p-0.5 cursor-pointer shrink-0"
-                                  title="Editeaza acest CV in Studio"
-                                >
-                                  <Edit3 className="w-2.5 h-2.5" />
-                                </button>
-                              )}
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                              <GripVertical className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 shrink-0" />
                             </div>
-
-                            {/* ACTION: VEZI FISA COMPLETA */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenJobModal(app);
-                              }}
-                              className="w-full py-1.5 px-2.5 rounded-lg border border-indigo-100 hover:border-indigo-300 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-950 text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer"
-                              title="Deschide fisa completa si analiza AI a jobului"
-                            >
-                              <Eye className="w-3 h-3 text-indigo-600" />
-                              <span>Vezi Fisa Jobului</span>
-                            </button>
                           </div>
 
-                          {isDropTargetBottom && renderCardPlaceholder()}
-                        </React.Fragment>
+                          {/* MATCH SCORE PILL + SLIM PROGRESS */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className={`inline-flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md text-[10px] ${
+                                score >= 75 
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : score >= 50
+                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                  : 'bg-slate-50 text-slate-700 border border-slate-200'
+                              }`}>
+                                <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                                {score.toFixed(0)}% Match ATS
+                              </span>
+                              {app.jobLocation && (
+                                <span className="text-[10px] text-gray-400 truncate max-w-[100px]" title={app.jobLocation}>
+                                  {app.jobLocation}
+                                </span>
+                              )}
+                            </div>
+                            <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden border border-gray-200/60">
+                              <div 
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                  score >= 75 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-500' : 'bg-slate-400'
+                                }`} 
+                                style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
+                              ></div>
+                            </div>
+                          </div>
+
+                          {/* CV SELECTOR (COMPACT & CLEAN) */}
+                          <div className="flex items-center gap-1 bg-gray-50/80 hover:bg-gray-100/80 px-2 py-1 rounded-lg border border-gray-200/90 text-xs">
+                            <FileText className="w-3 h-3 text-gray-400 shrink-0" />
+                            <select
+                              value={app.cvProfileId ? `CV_${app.cvProfileId}` : (app.resumeId ? `RESUME_${app.resumeId}` : '')}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (!val) return;
+                                if (val.startsWith('CV_')) {
+                                  handleAttachCvProfile(app.id, val.replace('CV_', ''));
+                                } else if (val.startsWith('RESUME_')) {
+                                  handleAttachResume(app.id, val.replace('RESUME_', ''));
+                                }
+                              }}
+                              disabled={attachingCvAppId === app.id}
+                              className="bg-transparent text-gray-800 font-semibold outline-none cursor-pointer w-full text-[11px] truncate"
+                              title="Alege CV-ul asociat pentru aceasta aplicatie"
+                            >
+                              <option value="">CV Neselectat</option>
+                              {cvList.length > 0 && (
+                                <optgroup label="CV-uri din Studio">
+                                  {cvList.map((cv) => (
+                                    <option key={cv.id} value={`CV_${cv.id}`}>
+                                      {cv.title} {cv.isPrimary ? '⭐' : ''}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
+                              {uploadedResumes.length > 0 && (
+                                <optgroup label="Fisiere CV Incarcate">
+                                  {uploadedResumes.map((r) => (
+                                    <option key={r.id} value={`RESUME_${r.id}`}>
+                                      {r.fileName}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
+                            </select>
+                            {app.cvProfileId && onEditCvInStudio && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEditCvInStudio(app.cvProfileId);
+                                }}
+                                className="text-gray-400 hover:text-indigo-600 p-0.5 cursor-pointer shrink-0"
+                                title="Editeaza acest CV in Studio"
+                              >
+                                <Edit3 className="w-2.5 h-2.5" />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* ACTION: VEZI FISA COMPLETA */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenJobModal(app);
+                            }}
+                            className="w-full py-1.5 px-2.5 rounded-lg border border-indigo-100 hover:border-indigo-300 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-950 text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer"
+                            title="Deschide fisa completa si analiza AI a jobului"
+                          >
+                            <Eye className="w-3 h-3 text-indigo-600" />
+                            <span>Vezi Fisa Jobului</span>
+                          </button>
+                        </div>
                       );
                     })}
 
-                    {isDraggingOverColumnEnd && colApps.length > 0 && renderCardPlaceholder()}
+                    {/* Element ascuns pentru a mentine cardul dragat montat in DOM in timpul drag-ului */}
+                    {draggedAppOrigin && (
+                      <div 
+                        key={draggedAppOrigin.id}
+                        draggable={true}
+                        onDragStart={(e) => handleDragStart(e, draggedAppOrigin.id)}
+                        onDragEnd={handleDragEnd}
+                        className="h-0 overflow-hidden opacity-0 pointer-events-none p-0 m-0 border-0" 
+                        aria-hidden="true" 
+                      />
+                    )}
 
-                    {colApps.length === 0 && (
-                      isDragOver && draggedApp ? (
-                        renderCardPlaceholder()
-                      ) : (
-                        <div className="h-40 flex items-center justify-center text-[11px] text-gray-400 italic border border-dashed border-gray-300/80 rounded-xl p-3 text-center">
-                          {currentUser ? 'Plaseaza un job aici' : 'Autentifica-te'}
-                        </div>
-                      )
+                    {/* Stare goala cand coloana nu are aplicatii si nu se trage peste ea */}
+                    {colApps.length === 0 && !isDragOverCol && (
+                      <div className="h-40 flex items-center justify-center text-[11px] text-gray-400 italic border border-dashed border-gray-300/80 rounded-xl p-3 text-center">
+                        {currentUser ? 'Plaseaza un job aici' : 'Autentifica-te'}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -877,7 +1072,7 @@ export default function KanbanBoard({
             <div className="p-12 text-center text-gray-400 space-y-2">
               <Building2 className="w-8 h-8 text-gray-300 mx-auto" />
               <p className="font-semibold text-sm text-gray-700">Nicio aplicatie gasita</p>
-              <p className="text-xs text-gray-400">Incearca sa modifici filtrul de scor sau cautarea.</p>
+              <p className="text-xs text-gray-400">Incearca sa modifici filtrele sau cautarea.</p>
             </div>
           )}
 
