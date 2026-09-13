@@ -644,14 +644,14 @@ export default function JobSearchPage({
     }
   };
 
-  // INDICATOR PROFESIONAL DE COMPETITIVITATE (FĂRĂ EMOTICOANE)
+  // INDICATOR PROFESIONAL DE COMPETITIVITATE (FĂRĂ EMOTICOANE, PARANTEZE SAU DIACRITICE)
   const renderCompetitivenessBadge = (job) => {
     const comp = job.competitiveness || 'MEDIUM';
     if (comp === 'LOW') {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Competiție Redusă (Sub 25 aplicanți)</span>
+          <span>Competitie Redusa</span>
         </span>
       );
     }
@@ -659,14 +659,14 @@ export default function JobSearchPage({
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-rose-50 text-rose-900 border border-rose-300 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-          <span>Competiție Ridicată (100+ aplicanți)</span>
+          <span>Competitie Ridicata</span>
         </span>
       );
     }
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-950 border border-amber-300 shadow-2xs">
         <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-        <span>Competiție Medie (25-50 aplicanți)</span>
+        <span>Competitie Medie</span>
       </span>
     );
   };
@@ -945,8 +945,8 @@ export default function JobSearchPage({
           
           {/* 1. DROPDOWN MULTI-SELECT PENTRU PLATFORME */}
           <div className="relative" ref={platformDropdownRef}>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
-              <Globe className="w-3 h-3 text-gray-500" />
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span>Platforme</span>
             </label>
             <button
@@ -1047,8 +1047,8 @@ export default function JobSearchPage({
 
           {/* 2. DROPDOWN MULTI-SELECT PENTRU SPECIALIZĂRI & ROLURI IT */}
           <div className="relative" ref={roleDropdownRef}>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
-              <Layers className="w-3 h-3 text-gray-500" />
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span>Specializare IT</span>
             </label>
             <button
@@ -1145,8 +1145,8 @@ export default function JobSearchPage({
 
           {/* 3. FILTRU UNIFICAT: DATA POSTĂRII */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-indigo-600" />
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span>Data Postării</span>
             </label>
             <select
@@ -1165,8 +1165,8 @@ export default function JobSearchPage({
 
           {/* 4. NIVEL EXPERIENȚĂ (FĂRĂ EMOTICOANE) */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
-              <GraduationCap className="w-3 h-3 text-gray-500" />
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
+              <GraduationCap className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span>Nivel Experiență</span>
             </label>
             <select
@@ -1184,8 +1184,8 @@ export default function JobSearchPage({
 
           {/* 5. MOD DE LUCRU (FĂRĂ EMOTICOANE) */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
-              <Building2 className="w-3 h-3 text-gray-500" />
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
+              <Briefcase className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span>Mod de Lucru</span>
             </label>
             <select
@@ -1202,8 +1202,8 @@ export default function JobSearchPage({
 
           {/* 6. COMPETITIVITATE & ȘANSE (FĂRĂ EMOTICOANE) */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
-              <Users className="w-3 h-3 text-gray-500" />
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span>Competiție</span>
             </label>
             <select
@@ -1212,16 +1212,16 @@ export default function JobSearchPage({
               className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
             >
               <option value="ALL">Toate Tipurile</option>
-              <option value="LOW">Competiție Redusă (Sub 25)</option>
-              <option value="MEDIUM">Competiție Medie (25-50)</option>
-              <option value="HIGH">Competiție Ridicată (100+)</option>
+              <option value="LOW">Competitie Redusa</option>
+              <option value="MEDIUM">Competitie Medie</option>
+              <option value="HIGH">Competitie Ridicata</option>
             </select>
           </div>
 
           {/* 7. STATUS JOB & LIFECYCLE (ACTIVE / EXPIRED / TOATE) */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-gray-500" />
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span>Status Job</span>
             </label>
             <select
@@ -1778,6 +1778,20 @@ export default function JobSearchPage({
           isSaved={savedJobIds.has(selectedJobForDetails.id)}
           isSaving={savingJobId === selectedJobForDetails.id}
           activeUserId={activeUserId}
+          onUpdateJobScore={(jobId, newScore, aiData) => {
+            setJobs(prevJobs => prevJobs.map(j => {
+              if (j.id === jobId) {
+                return {
+                  ...j,
+                  atsMatchScore: typeof newScore === 'number' ? newScore : j.atsMatchScore,
+                  matchingSkills: (aiData?.matchingSkills && aiData.matchingSkills.length > 0) ? aiData.matchingSkills : j.matchingSkills,
+                  missingSkills: (aiData?.missingSkills && aiData.missingSkills.length > 0) ? aiData.missingSkills : j.missingSkills,
+                  experienceLevel: aiData?.experienceLevel || j.experienceLevel
+                };
+              }
+              return j;
+            }));
+          }}
         />
       )}
 
@@ -1900,6 +1914,11 @@ export default function JobSearchPage({
                                 {formatDateTime(ch.changedAt)}
                               </span>
                             </div>
+                            {ch.details && (
+                              <div className="text-[11px] font-semibold text-gray-800 leading-snug">
+                                {ch.details}
+                              </div>
+                            )}
                             {ch.newHash && (
                               <div className="font-mono text-[9px] text-gray-500 truncate" title={`Hash nou: ${ch.newHash}`}>
                                 Hash: {ch.newHash.substring(0, 16)}...

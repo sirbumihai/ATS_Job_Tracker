@@ -386,6 +386,30 @@ public class JobSearchAggregatorService {
                     // B. Detectare modificări de conținut (Hash Change)
                     if (existing.getContentHash() != null && !existing.getContentHash().equals(newHash)) {
                         String oldHash = existing.getContentHash();
+
+                        List<String> diffs = new ArrayList<>();
+                        if (existing.getJobTitle() != null && !existing.getJobTitle().equalsIgnoreCase(dto.jobTitle())) {
+                            diffs.add("Titlu: \"" + existing.getJobTitle() + "\" ➔ \"" + dto.jobTitle() + "\"");
+                        }
+                        if (existing.getSalaryRange() != null && !existing.getSalaryRange().equalsIgnoreCase(dto.salaryRange())) {
+                            diffs.add("Salariu: \"" + existing.getSalaryRange() + "\" ➔ \"" + (dto.salaryRange() != null ? dto.salaryRange() : "Nespecificat") + "\"");
+                        }
+                        if (existing.getLocation() != null && !existing.getLocation().equalsIgnoreCase(dto.location())) {
+                            diffs.add("Locație: \"" + existing.getLocation() + "\" ➔ \"" + dto.location() + "\"");
+                        }
+                        if (existing.getWorkModel() != null && !existing.getWorkModel().equalsIgnoreCase(dto.workModel())) {
+                            diffs.add("Mod lucru: " + existing.getWorkModel() + " ➔ " + dto.workModel());
+                        }
+                        if (existing.getExperienceLevel() != null && !existing.getExperienceLevel().equalsIgnoreCase(dto.experienceLevel())) {
+                            diffs.add("Nivel: " + existing.getExperienceLevel() + " ➔ " + dto.experienceLevel());
+                        }
+                        int oldLen = existing.getRawDescription() != null ? existing.getRawDescription().length() : 0;
+                        int newLen = dto.rawDescription() != null ? dto.rawDescription().length() : 0;
+                        if (Math.abs(newLen - oldLen) > 20) {
+                            diffs.add("Descriere text: " + (newLen > oldLen ? "+" : "") + (newLen - oldLen) + " caractere");
+                        }
+                        String detailsMessage = diffs.isEmpty() ? "Conținut actualizat de la platformă" : String.join(" | ", diffs);
+
                         existing.setContentHash(newHash);
                         existing.setJobTitle(dto.jobTitle());
                         existing.setCompanyName(dto.companyName());
@@ -403,7 +427,7 @@ public class JobSearchAggregatorService {
                                 .oldHash(oldHash)
                                 .newHash(newHash)
                                 .changeType("CONTENT_UPDATED")
-                                .details("Conținut actualizat de la platformă")
+                                .details(detailsMessage)
                                 .changedAt(now)
                                 .build());
                     }
@@ -2487,21 +2511,22 @@ public class JobSearchAggregatorService {
 
     /**
      * DETERMINĂ STRICT ȘI PRECIS NIVELUL DE EXPERIENȚĂ:
-     * - SENIOR: Titlu Senior / Lead / Principal / Architect / Staff sau cerințe 5+ ani
+     * - SENIOR: Titlu Senior / Lead / Principal / Architect / Staff / Manager / Director sau cerințe 5+ ani
      * - MID: Nespecificat / Software Engineer / Java Developer sau cerințe 2-3+ ani (NU POATE FI JUNIOR)
      * - JUNIOR: Exclusiv dacă titlul specifică clar Junior / Entry-level / Graduate / Începător și NU cere 2-3+ ani
-     * - INTERNSHIP: Intern / Stagiu / Practică / Trainee / Student
+     * - INTERNSHIP: Intern / Stagiu / Practică / Trainee / Student (verificat cu word boundaries pentru a evita potriviri pe "internal")
      */
-    private String determineExperienceLevel(String title, String description) {
+    public static String determineExperienceLevel(String title, String description) {
         if (title == null) return "MID";
         String t = title.toLowerCase();
         String d = description != null ? description.toLowerCase() : "";
         String combined = t + " " + d;
 
-        // 1. Seniority checks (Senior, Lead, Principal, Architect, Staff, Head, Director, Confirmé)
+        // 1. Seniority checks (Senior, Lead, Principal, Architect, Staff, Head, Director, Manager, Confirmé)
         if (t.contains("senior") || t.contains("sr.") || t.contains("sr ") || 
             t.contains("lead") || t.contains("principal") || t.contains("staff") || 
             t.contains("head") || t.contains("architect") || t.contains("director") || 
+            t.contains("manager") || t.contains("management") ||
             t.contains("expert") || t.contains("confirme") || t.contains("confirmé") ||
             combined.matches(".*\\b(?:5\\+|6\\+|7\\+|8\\+|5-7|5-8)\\s*(?:ani|years|yrs)\\b.*")) {
             return "SENIOR";
@@ -2517,17 +2542,14 @@ public class JobSearchAggregatorService {
         }
 
         // 3. Internship checks (Intern, Stagiu, Praktikum, Trainee, Practica, Working Student)
-        if (t.contains("intern") || t.contains("stagiu") || 
-            t.contains("praktikum") || t.contains("trainee") || t.contains("student") || 
-            t.contains("practica")) {
+        // NOTĂ CRITICĂ: Folosim cuvânt întreg (\\b) pentru a evita potriviri eronate pe "internal", "international", "internet"!
+        if (t.matches(".*\\b(?:intern|internship|interns|stagiu|stagiere|stagiari|praktikum|trainee|trainees|student|practica|practică)\\b.*")) {
             return "INTERNSHIP";
         }
 
         // 4. Strict Junior checks (titlul trebuie să conțină explicit Junior / Entry-level / Graduate / Începător)
-        if (t.contains("junior") || t.contains("jr.") || t.contains("jr ") || 
-            t.contains("entry-level") || t.contains("entry level") || 
-            t.contains("fresh grad") || t.contains("graduate") || 
-            t.contains("incepator") || t.contains("începător") || 
+        if (t.matches(".*\\b(?:junior|jr|entry-level|fresh grad|graduate|incepator|începător)\\b.*") ||
+            t.contains("jr.") || t.contains("jr ") || t.contains("entry level") || 
             t.contains("0-1 ani") || t.contains("0-2 ani")) {
             return "JUNIOR";
         }
@@ -2536,7 +2558,7 @@ public class JobSearchAggregatorService {
         return "MID";
     }
 
-    private String determineExperienceLevel(String title) {
+    public static String determineExperienceLevel(String title) {
         return determineExperienceLevel(title, null);
     }
 

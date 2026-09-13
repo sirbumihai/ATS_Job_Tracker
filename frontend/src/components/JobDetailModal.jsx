@@ -188,7 +188,8 @@ export default function JobDetailModal({
   onSaveToKanban, 
   isSaved, 
   isSaving,
-  activeUserId 
+  activeUserId,
+  onUpdateJobScore
 }) {
   const [detailedJob, setDetailedJob] = useState(job);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -245,6 +246,9 @@ export default function JobDetailModal({
           try {
             sessionStorage.setItem(cacheKey, JSON.stringify(data));
           } catch (e) {}
+          if (onUpdateJobScore && typeof onUpdateJobScore === 'function') {
+            onUpdateJobScore(targetJob.id, Number(data.atsScore) || targetJob.atsMatchScore, data);
+          }
         } else {
           setAiAnalysisError("Analiza AI nu a putut fi finalizată.");
         }
@@ -305,6 +309,9 @@ export default function JobDetailModal({
         if (parsed && (parsed.aiVerified || (parsed.mandatory && parsed.mandatory.length > 0))) {
           setAiAnalysisData(parsed);
           hasLoadedFromCache = true;
+          if (onUpdateJobScore && typeof onUpdateJobScore === 'function') {
+            onUpdateJobScore(job.id, Number(parsed.atsScore) || job.atsMatchScore, parsed);
+          }
         }
       }
     } catch (e) {}
@@ -532,36 +539,26 @@ export default function JobDetailModal({
 
             {/* SCOR ATS MATCH MARE */}
             <div className={`shrink-0 flex items-center gap-2 px-4 py-3 rounded-2xl border self-start ${
-              currentJob.atsMatchScore >= 75 
+              displayScore >= 75 
                 ? 'bg-emerald-50 text-emerald-950 border-emerald-300 shadow-sm shadow-emerald-50' 
-                : currentJob.atsMatchScore >= 45 
+                : displayScore >= 45 
                 ? 'bg-amber-50 text-amber-950 border-amber-300 shadow-sm shadow-amber-50' 
                 : 'bg-rose-50 text-rose-950 border-rose-300 shadow-sm shadow-rose-50'
             }`}>
-              <Sparkles className={`w-5 h-5 ${currentJob.atsMatchScore >= 75 ? 'text-emerald-600' : currentJob.atsMatchScore >= 45 ? 'text-amber-600' : 'text-rose-600'}`} />
+              <Sparkles className={`w-5 h-5 ${displayScore >= 75 ? 'text-emerald-600' : displayScore >= 45 ? 'text-amber-600' : 'text-rose-600'}`} />
               <div>
                 <div className="text-lg font-black leading-tight">
-                  {currentJob.atsMatchScore.toFixed(1)}% Match
+                  {displayScore.toFixed(1)}% Match
                 </div>
                 <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  Scor ATS Ponderat
+                  {aiAnalysisData?.aiVerified ? 'Scor ATS Verificat AI' : 'Scor ATS Ponderat'}
                 </div>
               </div>
             </div>
           </div>
 
           {/* GRID METADATE CHEIE */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-gray-50/90 border border-gray-200/80 p-3.5 rounded-2xl space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-                Pachet Salarial
-              </span>
-              <p className="text-xs sm:text-sm font-extrabold text-gray-900 truncate">
-                {currentJob.salaryRange || 'Conform Anunț'}
-              </p>
-            </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="bg-gray-50/90 border border-gray-200/80 p-3.5 rounded-2xl space-y-1">
               <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 flex items-center gap-1">
                 <Globe className="w-3.5 h-3.5 text-blue-600" />
@@ -578,9 +575,9 @@ export default function JobDetailModal({
                 Nivel Experiență
               </span>
               <p className="text-xs sm:text-sm font-extrabold text-gray-900">
-                {currentJob.experienceLevel === 'INTERNSHIP' ? 'Internship' :
-                 currentJob.experienceLevel === 'JUNIOR' ? 'Junior' :
-                 currentJob.experienceLevel === 'SENIOR' ? 'Senior' : 'Mid-Level'}
+                {(aiAnalysisData?.experienceLevel || currentJob.experienceLevel) === 'INTERNSHIP' ? 'Internship' :
+                 (aiAnalysisData?.experienceLevel || currentJob.experienceLevel) === 'JUNIOR' ? 'Junior' :
+                 (aiAnalysisData?.experienceLevel || currentJob.experienceLevel) === 'SENIOR' ? 'Senior' : 'Mid-Level'}
               </p>
             </div>
 
@@ -590,7 +587,7 @@ export default function JobDetailModal({
                 Competiție
               </span>
               <p className="text-xs sm:text-sm font-extrabold text-gray-900 truncate">
-                {currentJob.applicantCountText || 'Estimare Normală'}
+                {currentJob.applicantCountText ? currentJob.applicantCountText.replace(/[()]/g, '').trim() : 'Estimare Normală'}
               </p>
             </div>
           </div>

@@ -577,11 +577,13 @@ public class AiGapAnalysisService {
             5. "matchingSkills": Lista simplă a abilităților / tehnologiilor din cerințe pe care candidatul le are în CV.
             6. "missingSkills": Lista abilităților / tehnologiilor cerute care lipsesc din CV-ul candidatului.
             7. "atsScore": Scor procentual realist (0.0 - 100.0) calculat ca proporție între cerințele obligatorii bifate și totalul cerințelor.
-            8. "verdict": 1-2 propoziții cu concluzia ta sinceră de recruiter pentru acest rol.
+            8. "experienceLevel": Nivelul real de experiență al rolului: "SENIOR" (pentru Manager, Lead, Principal, Architect, Staff, Director sau dacă cere 5+ ani), "MID" (pentru roluri standard/fără prefix sau cu 2-4 ani de experiență), "JUNIOR" (pentru Junior, Entry-level, Graduate, Începător, 0-2 ani), sau "INTERNSHIP" (pentru Intern, Stagiu, Practică, Trainee, Student).
+            9. "verdict": 1-2 propoziții cu concluzia ta sinceră de recruiter pentru acest rol.
             
             Răspunde EXCLUSIV în format JSON valid:
             {
               "atsScore": 65.0,
+              "experienceLevel": "SENIOR",
               "verdict": "Ai o bază tehnică solidă, însă rolul necesită anumite cerințe specifice care lipsesc din CV.",
               "matchingSkills": ["Java", "OOP", "SQL", "Unit Testing"],
               "missingSkills": ["Pega PRPC", "German"],
@@ -616,6 +618,9 @@ public class AiGapAnalysisService {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> map = objectMapper.convertValue(root, Map.class);
                 map.put("aiVerified", true);
+                if (!map.containsKey("experienceLevel") || map.get("experienceLevel") == null) {
+                    map.put("experienceLevel", JobSearchAggregatorService.determineExperienceLevel(jobTitle, descriptionToAnalyze));
+                }
                 return map;
             }
         } catch (Exception e) {
@@ -625,6 +630,7 @@ public class AiGapAnalysisService {
         return Map.of(
             "aiVerified", false,
             "atsScore", 75.0,
+            "experienceLevel", JobSearchAggregatorService.determineExperienceLevel(jobTitle, descriptionToAnalyze),
             "verdict", "Nu s-a putut apela serviciul AI. S-a folosit analiza locală.",
             "matchingSkills", Collections.emptyList(),
             "missingSkills", Collections.emptyList(),
