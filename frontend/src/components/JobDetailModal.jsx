@@ -74,7 +74,7 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
     .trim();
 
   // 1.1 Inserare separatoare înainte de antete comune când textul este compactat (ex: LinkedIn text fără newline)
-  text = text.replace(/([a-z0-9\.\)\!\?])\s*(Main responsibilities|Key responsibilities|Responsibilities|What you will do|Tasks|Activități|Responsabilități|Ce vei face|Required skills|Requirements|Must have|Qualifications|Ce căutăm|Cerințe obligatorii|Cerințe|Desirable skills|Nice to have|Good to have|Bonus|Constituie avantaj|Reprezintă un plus|Avantaje|Compensation & benefits|Benefits|What we offer|Beneficii|Ce oferim)\b/gi, '$1\n\n### $2\n');
+  text = text.replace(/([a-z0-9\.\)\!\?])\s*(Main responsibilities|Key responsibilities|Responsibilities|What you will do|What you'll do|Tasks|Activități|Responsabilități|Ce vei face|Required skills|Requirements|Must have|Qualifications|Ce căutăm|Cerințe obligatorii|Cerințe|Desirable skills|Nice to have|Good to have|Bonus|Constituie avantaj|Reprezintă un plus|Avantaje|Compensation & benefits|Benefits|What we offer|Beneficii|Ce oferim|Who you are|Tech stack|Work mode|About us)\b/gi, '$1\n\n### $2:\n');
 
   // 1.2 Separare elemente de listă concatenate (ex: "testingWork in teams", "ManagersBug fixing")
   text = text.replace(/([a-z0-9\.\)])([A-Z][a-z]{3,})/g, '$1\n• $2');
@@ -94,22 +94,25 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
     const l = line.trim().toLowerCase().replace(/^###\s*/, '').replace(/[:\s]+$/, '');
     return (
       (line.startsWith('### ') || line.endsWith(':') || line.length < 90) &&
-      /(cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|competen[tț]e|must have|requirements|required skills|essential experience|essential skills|what you need|qualifications|who you are|candidate profile|skills & experience|what you bring|ce trebuie s[aă] ai|hard skills|condi[tț]ii|cuno[sș]tin[tț]e|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|desirable skills|desirable experience|preferred qualifications|would be a plus|avantaje|plusuri|op[tț]ional|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|ce presupune rolul|main responsibilities|key responsibilities|responsibilities|what you will do|your role|tasks|what you'll be doing|what success looks like|compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|pachet de beneficii|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion)/i.test(l)
+      /(cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|competen[tț]e|must have|requirements|required skills|essential experience|essential skills|what you need|qualifications|who you are|candidate profile|skills & experience|what you bring|ce trebuie s[aă] ai|hard skills|condi[tț]ii|cuno[sș]tin[tț]e|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|desirable skills|desirable experience|preferred qualifications|would be a plus|avantaje|plusuri|op[tț]ional|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|ce presupune rolul|main responsibilities|key responsibilities|responsibilities|what you will do|what you'll do|your role|tasks|what you'll be doing|what success looks like|compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|pachet de beneficii|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion|tech stack|work mode|about us|despre noi)/i.test(l)
     );
   };
 
   const getSectionType = (line) => {
     const l = line.toLowerCase();
+    if (/about us|work mode|despre noi|mod de lucru/i.test(l)) {
+      return null;
+    }
     if (/compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion/i.test(l)) {
       return 'benefits';
     }
-    if (/desirable skills|desirable experience|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|preferred qualifications|would be a plus|plusuri|op[tț]ional|ce constituie avantaj/i.test(l)) {
+    if (/desirable skills|desirable experience|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|preferred qualifications|would be a plus|plusuri|op[tț]ional|ce constituie avantaj|tech stack/i.test(l)) {
       return 'bonus';
     }
     if (/required skills|essential experience|essential skills|cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|must have|requirements|what you need|qualifications|who you are|candidate profile|skills & experience|hard skills|cuno[sș]tin[tț]e/i.test(l)) {
       return 'mandatory';
     }
-    if (/main responsibilities|key responsibilities|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|responsibilities|what you will do|your role|tasks|what success looks like/i.test(l)) {
+    if (/main responsibilities|key responsibilities|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|responsibilities|what you will do|what you'll do|your role|tasks|what success looks like/i.test(l)) {
       return 'responsibilities';
     }
     return null;
@@ -121,11 +124,11 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
 
     if (isHeading(rawLine)) {
       const detected = getSectionType(rawLine);
+      currentSection = detected;
       if (detected) {
-        currentSection = detected;
         hasFoundExplicitSection = true;
-        continue;
       }
+      continue;
     }
 
     const cleanItem = rawLine.replace(/^###\s*/, '').replace(/^[•\-*–—]\s*/, '').trim();
@@ -243,30 +246,40 @@ export default function JobDetailModal({
     }
   };
 
-  const runAiMatch = async (jobToAnalyze, cvIdToUse) => {
+  const runAiMatch = async (jobToAnalyze, cvIdToUse, forceRefresh = false) => {
     const targetJob = jobToAnalyze || detailedJob || job;
     if (!targetJob || !targetJob.rawDescription || targetJob.rawDescription.trim().length < 50) return;
 
     const cvId = cvIdToUse !== undefined ? cvIdToUse : selectedCvId;
     const cacheKey = `ats_ai_job_${targetJob.id || targetJob.directApplyUrl}_${cvId || 'default'}`;
 
-    try {
-      const cached = sessionStorage.getItem(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed && (parsed.aiVerified || (parsed.mandatory && parsed.mandatory.length > 0))) {
-          const baseLvl = (targetJob.experienceLevel || '').toUpperCase();
-          if ((baseLvl === 'MID' || baseLvl === 'SENIOR') && parsed.experienceLevel === 'JUNIOR') {
-            parsed.experienceLevel = baseLvl;
+    if (!forceRefresh) {
+      try {
+        const cached = sessionStorage.getItem(cacheKey) || sessionStorage.getItem(`ats_ai_job_${targetJob.id || targetJob.directApplyUrl}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const isDescLong = (targetJob.rawDescription?.length || 0) > 800;
+          const isCachedStale = isDescLong && (parsed.atsScore === 0 || (parsed.mandatory?.length || 0) <= 1);
+          if (!isCachedStale && parsed && (parsed.aiVerified || (parsed.mandatory && parsed.mandatory.length > 0))) {
+            const baseLvl = (targetJob.experienceLevel || '').toUpperCase();
+            if ((baseLvl === 'MID' || baseLvl === 'SENIOR') && parsed.experienceLevel === 'JUNIOR') {
+              parsed.experienceLevel = baseLvl;
+            }
+            setAiAnalysisData(parsed);
+            if (onUpdateJobScore && typeof onUpdateJobScore === 'function') {
+              onUpdateJobScore(targetJob.id, Number(parsed.atsScore) || targetJob.atsMatchScore, parsed);
+            }
+            return;
           }
-          setAiAnalysisData(parsed);
-          if (onUpdateJobScore && typeof onUpdateJobScore === 'function') {
-            onUpdateJobScore(targetJob.id, Number(parsed.atsScore) || targetJob.atsMatchScore, parsed);
-          }
-          return;
         }
-      }
-    } catch (e) {}
+      } catch (e) {}
+    } else {
+      try {
+        sessionStorage.removeItem(cacheKey);
+        sessionStorage.removeItem(`ats_ai_job_${targetJob.id || targetJob.directApplyUrl}`);
+        sessionStorage.removeItem(`ats_ai_job_${targetJob.id || targetJob.directApplyUrl}_default`);
+      } catch (e) {}
+    }
 
     setLoadingAiAnalysis(true);
     setAiAnalysisError(null);
@@ -315,7 +328,7 @@ export default function JobDetailModal({
 
   const handleSelectCv = (cvId) => {
     setSelectedCvId(cvId);
-    runAiMatch(currentJob, cvId);
+    runAiMatch(currentJob, cvId, true);
   };
 
   const fetchChanges = async () => {
@@ -355,13 +368,15 @@ export default function JobDetailModal({
     const needsDetailsFetch = !!job.id && (isDescriptionShort || isMissingSkillBreakdown || ['LINKEDIN', 'HIPO', 'BESTJOBS'].includes(job.sourcePlatform));
 
     // Verificare cache AI la deschiderea modalului
-    const cacheKey = `ats_ai_job_${job.id || job.directApplyUrl}`;
+    const cacheKey = `ats_ai_job_${job.id || job.directApplyUrl}_${selectedCvId || 'default'}`;
     let hasLoadedFromCache = false;
     try {
-      const cached = sessionStorage.getItem(cacheKey);
+      const cached = sessionStorage.getItem(cacheKey) || sessionStorage.getItem(`ats_ai_job_${job.id || job.directApplyUrl}`);
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (parsed && (parsed.aiVerified || (parsed.mandatory && parsed.mandatory.length > 0))) {
+        const isDescLong = (job.rawDescription?.length || 0) > 800;
+        const isCachedStale = isDescLong && (parsed.atsScore === 0 || (parsed.mandatory?.length || 0) <= 1);
+        if (!isCachedStale && parsed && (parsed.aiVerified || (parsed.mandatory && parsed.mandatory.length > 0))) {
           const baseLvl = (job.experienceLevel || '').toUpperCase();
           if ((baseLvl === 'MID' || baseLvl === 'SENIOR') && parsed.experienceLevel === 'JUNIOR') {
             parsed.experienceLevel = baseLvl;
@@ -400,22 +415,23 @@ export default function JobDetailModal({
               rawDescription: (data.rawDescription && data.rawDescription.length > (job.rawDescription?.length || 0)) ? data.rawDescription : (job.rawDescription || data.rawDescription)
             };
             setDetailedJob(updated);
-            if (!hasLoadedFromCache) {
-              runAiMatch(updated);
+            const isDescUpdated = data.rawDescription && data.rawDescription.length > (job.rawDescription?.length || 0) + 200;
+            if (!hasLoadedFromCache || isDescUpdated) {
+              runAiMatch(updated, selectedCvId, isDescUpdated);
             }
           } else if (!hasLoadedFromCache) {
-            runAiMatch(job);
+            runAiMatch(job, selectedCvId, false);
           }
         })
         .catch(err => {
           console.warn('Nu s-au putut încărca detaliile extinse:', err);
-          if (!hasLoadedFromCache) runAiMatch(job);
+          if (!hasLoadedFromCache) runAiMatch(job, selectedCvId, false);
         })
         .finally(() => setLoadingDetails(false));
     } else {
       setDetailedJob(job);
       if (!hasLoadedFromCache) {
-        runAiMatch(job);
+        runAiMatch(job, selectedCvId, false);
       }
     }
 
@@ -525,7 +541,7 @@ export default function JobDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex justify-center items-start p-2 sm:p-4 md:p-6 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-in fade-in duration-200">
       
       {/* CONTAINER MODAL / SHEET */}
       <div 
@@ -534,13 +550,18 @@ export default function JobDetailModal({
       >
         
         {/* HEADER BAR FIX CU CLOSE & SHARE */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/80 sticky top-0 z-20 backdrop-blur-md">
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-black text-white">
-              {currentJob.sourcePlatform}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white/95 sticky top-0 z-20 backdrop-blur-md">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className={`px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+              currentJob.sourcePlatform === 'LINKEDIN' ? 'bg-[#0077b5] text-white' :
+              currentJob.sourcePlatform === 'BESTJOBS' ? 'bg-amber-500 text-white' :
+              currentJob.sourcePlatform === 'HIPO' ? 'bg-rose-500 text-white' :
+              'bg-gray-900 text-white'
+            }`}>
+              {currentJob.sourcePlatform || 'JOB'}
             </span>
-            <span className="text-xs text-gray-500 font-semibold">
-              ID: {currentJob.id}
+            <span className="text-xs font-bold text-gray-500 truncate max-w-[200px] sm:max-w-md">
+              {currentJob.companyName}
             </span>
           </div>
 
@@ -775,7 +796,7 @@ export default function JobDetailModal({
               <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
                 <button
                   type="button"
-                  onClick={() => runAiMatch(currentJob, selectedCvId)}
+                  onClick={() => runAiMatch(currentJob, selectedCvId, true)}
                   disabled={loadingAiAnalysis}
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-extrabold text-xs shadow-md transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed border border-indigo-400/40"
                   title="Analizează semantic cerințele jobului direct cu AI Groq și CV-ul selectat"

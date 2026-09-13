@@ -13,6 +13,7 @@ import com.jobtracker.ats.entity.Resume;
 import com.jobtracker.ats.exception.ResourceNotFoundException;
 import com.jobtracker.ats.repository.ApplicationRepository;
 import com.jobtracker.ats.repository.CvProfileRepository;
+import com.jobtracker.ats.repository.JobPostingRepository;
 import com.jobtracker.ats.repository.ResumeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ import java.util.*;
 public class AiGapAnalysisService {
 
     private final ApplicationRepository applicationRepository;
+    private final JobPostingRepository jobPostingRepository;
     private final ResumeRepository resumeRepository;
     private final CvProfileRepository cvProfileRepository;
     private final VectorEmbeddingService vectorEmbeddingService;
@@ -570,6 +572,18 @@ public class AiGapAnalysisService {
         }
 
         String descriptionToAnalyze = rawDescription != null ? rawDescription : "";
+        if (descriptionToAnalyze.length() < 400 && jobId != null) {
+            try {
+                UUID jobUuid = UUID.fromString(jobId);
+                Optional<JobPosting> jpOpt = jobPostingRepository.findById(jobUuid);
+                if (jpOpt.isPresent()) {
+                    String dbDesc = jpOpt.get().getRawDescription();
+                    if (dbDesc != null && dbDesc.length() > descriptionToAnalyze.length()) {
+                        descriptionToAnalyze = dbDesc;
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
 
         String systemPrompt = """
             Ești un Recruiter Senior Tehnic și Sistem ATS Inteligent de ultimă generație.

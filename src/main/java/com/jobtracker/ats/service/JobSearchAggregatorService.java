@@ -3455,12 +3455,20 @@ public class JobSearchAggregatorService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilizatorul nu a fost gasit."));
 
+        String effectiveDesc = jobDto.rawDescription();
+        if ((effectiveDesc == null || effectiveDesc.length() < 400) && jobDto.directApplyUrl() != null && !jobDto.directApplyUrl().isBlank()) {
+            String fetched = fetchFullDescription(jobDto.directApplyUrl(), jobDto.sourcePlatform());
+            if (fetched != null && fetched.length() > 400) {
+                effectiveDesc = fetched;
+            }
+        }
+
         JobPosting jobPosting = JobPosting.builder()
                 .user(user)
                 .jobTitle(jobDto.jobTitle())
                 .companyName(jobDto.companyName())
                 .jobUrl(jobDto.directApplyUrl())
-                .rawDescription(jobDto.rawDescription())
+                .rawDescription(effectiveDesc)
                 .build();
 
         JobPosting savedJob = jobPostingRepository.save(jobPosting);
@@ -3637,15 +3645,79 @@ public class JobSearchAggregatorService {
 
     public UnifiedJobListingDto getJobDetails(String id, UUID userId) {
         if (id == null) return null;
+
+        String cvText = getCandidateCvText(userId);
+        String cvLower = cvText.toLowerCase();
+
         UnifiedJobListingDto job = activeLiveJobsCache.stream()
                 .filter(j -> j.id().equals(id))
                 .findFirst()
                 .orElse(null);
 
-        if (job == null) return null;
+        // Dacă jobul nu este în cache-ul live de căutare, verificăm în baza de date persistentă (joburi salvate în Kanban / aplicate)
+        if (job == null) {
+            try {
+                UUID jobUuid = UUID.fromString(id);
+                Optional<JobPosting> postingOpt = jobPostingRepository.findById(jobUuid);
+                if (postingOpt.isPresent()) {
+                    JobPosting jp = postingOpt.get();
+                    String fullDesc = jp.getRawDescription();
+                    String applyUrl = jp.getJobUrl() != null ? jp.getJobUrl() : "";
+                    String platform = "OTHER";
+                    if (applyUrl.contains("linkedin.com")) platform = "LINKEDIN";
+                    else if (applyUrl.contains("hipo.ro")) platform = "HIPO";
+                    else if (applyUrl.contains("bestjobs.eu")) platform = "BESTJOBS";
 
-        String cvText = getCandidateCvText(userId);
-        String cvLower = cvText.toLowerCase();
+                    // Dacă descrierea salvată este scurtă (< 400 caractere) și avem URL pe platformă, încercăm descărcarea pe loc
+                    if ((fullDesc == null || fullDesc.length() < 400) && !applyUrl.isBlank()) {
+                        String fetched = fetchFullDescription(applyUrl, platform);
+                        if (fetched != null && fetched.length() > 400) {
+                            fullDesc = fetched;
+                            jp.setRawDescription(fullDesc);
+                            jobPostingRepository.save(jp);
+                        }
+                    }
+
+                    String effectiveDesc = fullDesc != null ? fullDesc : "";
+                    List<String> skills = extractSkills(jp.getJobTitle(), effectiveDesc);
+                    String level = determineExperienceLevel(jp.getJobTitle(), effectiveDesc);
+                    AtsMatchResult ats = evaluateAtsMatch(level, skills, cvLower);
+
+                    return new UnifiedJobListingDto(
+                            jp.getId().toString(),
+                            jp.getJobTitle(),
+                            jp.getCompanyName(),
+                            "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
+                            "Romania",
+                            "HYBRID",
+                            level,
+                            platform,
+                            applyUrl,
+                            effectiveDesc,
+                            "Pachet Salarial Standard",
+                            skills,
+                            ats.matchingSkills(),
+                            ats.missingSkills(),
+                            "Salvat in Tracker",
+                            ats.finalScore(),
+                            "MEDIUM",
+                            "Competitie Medie",
+                            "Candidatura Activa",
+                            0,
+                            null,
+                            null,
+                            jp.getCreatedAt(),
+                            jp.getCreatedAt(),
+                            null,
+                            "ACTIVE",
+                            false
+                    );
+                }
+            } catch (Exception e) {
+                log.warn("[JOB DETAILS] Nu s-a putut încărca jobul salvat cu ID-ul {}: {}", id, e.getMessage());
+            }
+            return null;
+        }
 
         // Calcul ATS dinamic conform CV-ului utilizatorului activ (100% sincronizat cu căutarea și Kanban)
         AtsMatchResult userAts = evaluateAtsMatch(job.experienceLevel(), job.skillsRequired(), cvLower);
@@ -3653,143 +3725,49 @@ public class JobSearchAggregatorService {
         List<String> matchingSkills = userAts.matchingSkills();
         List<String> missingSkills = userAts.missingSkills();
 
-        // Dacă e job de pe LinkedIn și descrierea este încă rezumatul scurt, extragem descrierea completă
-        if ("LINKEDIN".equalsIgnoreCase(job.sourcePlatform()) && (job.rawDescription() == null || job.rawDescription().length() < 400)) {
-            try {
-                String applyUrl = job.directApplyUrl();
-                java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d{8,12})").matcher(applyUrl);
-                if (matcher.find()) {
-                    String liId = matcher.group(1);
-                    String guestUrl = "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/" + liId;
-                    Document doc = Jsoup.connect(guestUrl)
-                            .userAgent(BROWSER_USER_AGENT)
-                            .timeout(6000)
-                            .get();
-                    Element descEl = doc.selectFirst(".show-more-less-html__markup");
-                    if (descEl != null) {
-                        String fullText = descEl.wholeText().trim();
-                        if (!fullText.isEmpty()) {
-                            List<String> newSkills = extractSkills(job.jobTitle(), fullText);
-                            String newLevel = determineExperienceLevel(job.jobTitle(), fullText);
-                            List<String> effectiveSkills = newSkills.isEmpty() ? job.skillsRequired() : newSkills;
-                            AtsMatchResult updatedAts = evaluateAtsMatch(newLevel, effectiveSkills, cvLower);
+        // Dacă jobul are descrierea scurtă, extragem descrierea completă la cerere
+        if (job.rawDescription() == null || job.rawDescription().length() < 400) {
+            String fullText = fetchFullDescription(job.directApplyUrl(), job.sourcePlatform());
+            if (fullText != null && fullText.length() > 400) {
+                List<String> newSkills = extractSkills(job.jobTitle(), fullText);
+                String newLevel = determineExperienceLevel(job.jobTitle(), fullText);
+                List<String> effectiveSkills = newSkills.isEmpty() ? job.skillsRequired() : newSkills;
+                AtsMatchResult updatedAts = evaluateAtsMatch(newLevel, effectiveSkills, cvLower);
 
-                            UnifiedJobListingDto updated = new UnifiedJobListingDto(
-                                    job.id(),
-                                    job.jobTitle(),
-                                    job.companyName(),
-                                    job.companyLogoUrl(),
-                                    job.location(),
-                                    job.workModel(),
-                                    newLevel,
-                                    job.sourcePlatform(),
-                                    job.directApplyUrl(),
-                                    fullText,
-                                    job.salaryRange(),
-                                    effectiveSkills,
-                                    updatedAts.matchingSkills(),
-                                    updatedAts.missingSkills(),
-                                    job.postedDateAgo(),
-                                    updatedAts.finalScore(),
-                                    job.competitiveness(),
-                                    job.competitivenessLabel(),
-                                    job.applicantCountText(),
-                                    job.postedDaysAgo(),
-                                    job.externalId(),
-                                    job.contentHash(),
-                                    job.postedAt(),
-                                    job.firstSeenAt(),
-                                    job.lastSeenAt(),
-                                    job.status(),
-                                    job.newlyDiscovered()
-                            );
-                            int idx = activeLiveJobsCache.indexOf(job);
-                            if (idx >= 0) {
-                                activeLiveJobsCache.set(idx, updated);
-                            }
-                            return updated;
-                        }
-                    }
+                UnifiedJobListingDto updated = new UnifiedJobListingDto(
+                        job.id(),
+                        job.jobTitle(),
+                        job.companyName(),
+                        job.companyLogoUrl(),
+                        job.location(),
+                        job.workModel(),
+                        newLevel,
+                        job.sourcePlatform(),
+                        job.directApplyUrl(),
+                        fullText,
+                        job.salaryRange(),
+                        effectiveSkills,
+                        updatedAts.matchingSkills(),
+                        updatedAts.missingSkills(),
+                        job.postedDateAgo(),
+                        updatedAts.finalScore(),
+                        job.competitiveness(),
+                        job.competitivenessLabel(),
+                        job.applicantCountText(),
+                        job.postedDaysAgo(),
+                        job.externalId(),
+                        job.contentHash(),
+                        job.postedAt(),
+                        job.firstSeenAt(),
+                        job.lastSeenAt(),
+                        job.status(),
+                        job.newlyDiscovered()
+                );
+                int idx = activeLiveJobsCache.indexOf(job);
+                if (idx >= 0) {
+                    activeLiveJobsCache.set(idx, updated);
                 }
-            } catch (Exception e) {
-                log.warn("[JOB DETAILS] LinkedIn on-demand full description fallback: {}", e.getMessage());
-            }
-        }
-
-        // B. Dacă e job de pe Hipo și descrierea este încă rezumatul scurt, extragem descrierea completă
-        if ("HIPO".equalsIgnoreCase(job.sourcePlatform()) && (job.rawDescription() == null || job.rawDescription().length() < 350)) {
-            try {
-                Document doc = Jsoup.connect(job.directApplyUrl())
-                        .userAgent(BROWSER_USER_AGENT)
-                        .timeout(6000)
-                        .get();
-                doc.select("script, style, noscript").remove();
-                Element descEl = doc.selectFirst(".content-block-content");
-                if (descEl == null) descEl = doc.selectFirst(".the-content");
-                if (descEl != null) {
-                    String fullText = descEl.wholeText().trim();
-                    if (!fullText.isEmpty()) {
-                        List<String> newSkills = extractSkills(job.jobTitle(), fullText);
-                        String newLevel = determineExperienceLevel(job.jobTitle(), fullText);
-                        List<String> effectiveSkills = newSkills.isEmpty() ? job.skillsRequired() : newSkills;
-                        AtsMatchResult updatedAts = evaluateAtsMatch(newLevel, effectiveSkills, cvLower);
-
-                        UnifiedJobListingDto updated = new UnifiedJobListingDto(
-                                job.id(), job.jobTitle(), job.companyName(), job.companyLogoUrl(),
-                                job.location(), job.workModel(), newLevel, job.sourcePlatform(),
-                                job.directApplyUrl(), fullText, job.salaryRange(),
-                                effectiveSkills,
-                                updatedAts.matchingSkills(), updatedAts.missingSkills(), job.postedDateAgo(),
-                                updatedAts.finalScore(), job.competitiveness(), job.competitivenessLabel(),
-                                job.applicantCountText(), job.postedDaysAgo(), job.externalId(),
-                                job.contentHash(), job.postedAt(), job.firstSeenAt(), job.lastSeenAt(),
-                                job.status(), job.newlyDiscovered()
-                        );
-                        int idx = activeLiveJobsCache.indexOf(job);
-                        if (idx >= 0) activeLiveJobsCache.set(idx, updated);
-                        return updated;
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("[JOB DETAILS] Hipo on-demand full description fallback: {}", e.getMessage());
-            }
-        }
-
-        // C. Dacă e job de pe BestJobs și descrierea este încă rezumatul scurt, extragem descrierea completă
-        if ("BESTJOBS".equalsIgnoreCase(job.sourcePlatform()) && (job.rawDescription() == null || job.rawDescription().length() < 350)) {
-            try {
-                Document doc = Jsoup.connect(job.directApplyUrl())
-                        .userAgent(BROWSER_USER_AGENT)
-                        .timeout(6000)
-                        .get();
-                doc.select("script, style, noscript").remove();
-                Element descEl = doc.selectFirst(".job-description");
-                if (descEl != null) {
-                    String fullText = descEl.wholeText().trim();
-                    if (!fullText.isEmpty()) {
-                        List<String> newSkills = extractSkills(job.jobTitle(), fullText);
-                        String newLevel = determineExperienceLevel(job.jobTitle(), fullText);
-                        List<String> effectiveSkills = newSkills.isEmpty() ? job.skillsRequired() : newSkills;
-                        AtsMatchResult updatedAts = evaluateAtsMatch(newLevel, effectiveSkills, cvLower);
-
-                        UnifiedJobListingDto updated = new UnifiedJobListingDto(
-                                job.id(), job.jobTitle(), job.companyName(), job.companyLogoUrl(),
-                                job.location(), job.workModel(), newLevel, job.sourcePlatform(),
-                                job.directApplyUrl(), fullText, job.salaryRange(),
-                                effectiveSkills,
-                                updatedAts.matchingSkills(), updatedAts.missingSkills(), job.postedDateAgo(),
-                                updatedAts.finalScore(), job.competitiveness(), job.competitivenessLabel(),
-                                job.applicantCountText(), job.postedDaysAgo(), job.externalId(),
-                                job.contentHash(), job.postedAt(), job.firstSeenAt(), job.lastSeenAt(),
-                                job.status(), job.newlyDiscovered()
-                        );
-                        int idx = activeLiveJobsCache.indexOf(job);
-                        if (idx >= 0) activeLiveJobsCache.set(idx, updated);
-                        return updated;
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("[JOB DETAILS] BestJobs on-demand full description fallback: {}", e.getMessage());
+                return updated;
             }
         }
 
@@ -3822,6 +3800,54 @@ public class JobSearchAggregatorService {
                 job.status(),
                 job.newlyDiscovered()
         );
+    }
+
+    public String fetchFullDescription(String applyUrl, String platform) {
+        if (applyUrl == null || applyUrl.isBlank()) return null;
+        try {
+            if ("LINKEDIN".equalsIgnoreCase(platform) || applyUrl.contains("linkedin.com")) {
+                Matcher matcher = Pattern.compile("(\\d{8,12})").matcher(applyUrl);
+                if (matcher.find()) {
+                    String liId = matcher.group(1);
+                    String guestUrl = "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/" + liId;
+                    Document doc = Jsoup.connect(guestUrl)
+                            .userAgent(BROWSER_USER_AGENT)
+                            .timeout(7000)
+                            .get();
+                    Element descEl = doc.selectFirst(".show-more-less-html__markup");
+                    if (descEl != null) {
+                        String fullText = descEl.wholeText().trim();
+                        if (!fullText.isEmpty()) return fullText;
+                    }
+                }
+            } else if ("HIPO".equalsIgnoreCase(platform) || applyUrl.contains("hipo.ro")) {
+                Document doc = Jsoup.connect(applyUrl)
+                        .userAgent(BROWSER_USER_AGENT)
+                        .timeout(7000)
+                        .get();
+                doc.select("script, style, noscript").remove();
+                Element descEl = doc.selectFirst(".content-block-content");
+                if (descEl == null) descEl = doc.selectFirst(".the-content");
+                if (descEl != null) {
+                    String fullText = descEl.wholeText().trim();
+                    if (!fullText.isEmpty()) return fullText;
+                }
+            } else if ("BESTJOBS".equalsIgnoreCase(platform) || applyUrl.contains("bestjobs.eu")) {
+                Document doc = Jsoup.connect(applyUrl)
+                        .userAgent(BROWSER_USER_AGENT)
+                        .timeout(7000)
+                        .get();
+                doc.select("script, style, noscript").remove();
+                Element descEl = doc.selectFirst(".job-description");
+                if (descEl != null) {
+                    String fullText = descEl.wholeText().trim();
+                    if (!fullText.isEmpty()) return fullText;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[ON DEMAND DESC FETCH] Eroare la preluarea descrierii complete pentru {}: {}", applyUrl, e.getMessage());
+        }
+        return null;
     }
 
     private String getCandidateCvText(UUID userId) {
