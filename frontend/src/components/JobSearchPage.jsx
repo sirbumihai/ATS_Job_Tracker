@@ -783,7 +783,7 @@ export default function JobSearchPage({
             </p>
           </div>
 
-          {/* CONTROALE RAPIDE: TIMER, DOAR NOU GĂSIT & SINCRONIZARE */}
+          {/* CONTROALE RAPIDE: TIMER & SINCRONIZARE */}
           <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-auto">
             <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-semibold text-gray-700">
               <Clock className="w-3.5 h-3.5 text-indigo-600" />
@@ -792,30 +792,6 @@ export default function JobSearchPage({
                 {formatCountdown(secondsUntilSync)}
               </span>
             </div>
-
-            <button 
-              type="button"
-              onClick={() => {
-                setSelectedDatePosted(prev => prev === 'NEWLY_DISCOVERED' ? 'ALL' : 'NEWLY_DISCOVERED');
-                setCurrentPage(1);
-              }}
-              className={`px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition cursor-pointer border ${
-                selectedDatePosted === 'NEWLY_DISCOVERED'
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-md shadow-indigo-200 font-extrabold'
-                  : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50 hover:text-indigo-900 hover:border-indigo-300 shadow-2xs'
-              }`}
-              title="Afișează doar joburile nou găsite la cea mai recentă sincronizare"
-            >
-              <Sparkles className={`w-3.5 h-3.5 ${selectedDatePosted === 'NEWLY_DISCOVERED' ? 'text-amber-300' : 'text-indigo-600'}`} />
-              <span>Doar NOU GĂSIT</span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                selectedDatePosted === 'NEWLY_DISCOVERED' 
-                  ? 'bg-white/25 text-white' 
-                  : 'bg-indigo-100 text-indigo-900'
-              }`}>
-                {newlyDiscoveredCount}
-              </span>
-            </button>
 
             <button 
               onClick={handleSyncLive}

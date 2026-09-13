@@ -561,34 +561,47 @@ public class AiGapAnalysisService {
 
         String systemPrompt = """
             Ești un Recruiter Senior Tehnic și Sistem ATS Inteligent de ultimă generație.
-            Analizează descrierea jobului și CV-ul candidatului pentru a oferi o evaluare precisă, corectă și fără presupuneri false.
+            Analizează descrierea jobului și CV-ul candidatului pentru a oferi o evaluare precisă, completă și corect structurată.
             
-            CERINȚE DE MATCHING:
-            1. Înțelege sinonimele tehnice (ex: dacă CV-ul are "PostgreSQL" sau "SQL", bifează "Relational databases"; dacă are "Java", bifează "Object-Oriented Programming (OOP)"; dacă are "JUnit", bifează "Unit testing").
-            2. Dacă o cerință NU este menționată în CV (ex: Pega PRPC, Limba Germană, etc.), marchează "isMatched": false și pune-o la "missingSkills". NU inventa potriviri false!
-            3. Împarte cerințele reale în:
-               - "mandatory": Cerințe obligatorii (Must-Have). Fiecare item: { "text": "...", "isMatched": boolean, "matchedSkill": "ce din CV bifează", "explanation": "de ce" }
-               - "bonus": Cunoștințe opționale, avantaje sau plusuri (Nice-to-Have / Desirable). Fiecare item: { "text": "...", "isMatched": boolean, "matchedSkill": "ce bifează" }
-            4. "matchingSkills": Lista simplă de tehnologii/concepte din job pe care candidatul le are în CV.
-            5. "missingSkills": Lista tehnologiilor din job care lipsesc din CV.
-            6. "atsScore": Scor procentual realist (0.0 - 100.0) calculat ca proporție între cerințele obligatorii bifate și totalul cerințelor.
-            7. "verdict": 1-2 propoziții cu concluzia ta sinceră de recruiter pentru acest rol.
+            EXTRAGERE ȘI SEPARARE STRICTĂ A CONȚINUTULUI:
+            1. "mandatory": Cerințe OBLIGATORII și Calificări esențiale (Must-Have).
+               - Fiecare item: { "text": "descriere cerință clară", "isMatched": boolean, "matchedSkill": "ce din CV bifează", "explanation": "de ce bifează sau ce lipsește" }
+               - Include DOAR cerințe tehnice, ani de experiență, educație sau calificări esențiale. NU include responsabilități de zi cu zi sau beneficii ale companiei aici!
+            2. "bonus": Cunoștințe opționale, avantaje sau plusuri (Nice-to-Have / Desirable).
+               - Fiecare item: { "text": "descriere avantaj", "isMatched": boolean, "matchedSkill": "ce bifează din CV" }
+               - NU include beneficii ale companiei aici (tichete de masă, asigurări, zile libere etc.)!
+            3. "responsibilities": Lista activităților, sarcinilor și responsabilităților zilnice pe care le va face candidatul în acest rol (Ce vei face în rol).
+               - Listă de string-uri curate, concise, fiecare reprezentând o responsabilitate sau sarcină cheie.
+            4. "benefits": Lista beneficiilor, pachetului salarial/extrasalarial și facilităților oferite de angajator (Ce oferă compania).
+               - Ex: tichete de masă, asigurare medicală privată, zile libere suplimentare, program flexibil, buget de training, bonusuri, pensie, echipament, lucru hibrid/remote.
+            5. "matchingSkills": Lista simplă a abilităților / tehnologiilor din cerințe pe care candidatul le are în CV.
+            6. "missingSkills": Lista abilităților / tehnologiilor cerute care lipsesc din CV-ul candidatului.
+            7. "atsScore": Scor procentual realist (0.0 - 100.0) calculat ca proporție între cerințele obligatorii bifate și totalul cerințelor.
+            8. "verdict": 1-2 propoziții cu concluzia ta sinceră de recruiter pentru acest rol.
             
             Răspunde EXCLUSIV în format JSON valid:
             {
               "atsScore": 65.0,
-              "verdict": "Ai o bază tehnică excelentă de Java, OOP și SQL, însă poziția solicită cunoștințe de Pega PRPC și Germană ce lipsesc din CV.",
+              "verdict": "Ai o bază tehnică solidă, însă rolul necesită anumite cerințe specifice care lipsesc din CV.",
               "matchingSkills": ["Java", "OOP", "SQL", "Unit Testing"],
               "missingSkills": ["Pega PRPC", "German"],
               "mandatory": [
-                { "text": "Knowledge of object-oriented programming", "isMatched": true, "matchedSkill": "Java, OOP", "explanation": "Demonstrat prin proiectele Java din CV" },
-                { "text": "Relational databases knowledge", "isMatched": true, "matchedSkill": "PostgreSQL, SQL", "explanation": "Experiență cu PostgreSQL și baze relaționale în CV" },
-                { "text": "Ability to test your own implementation", "isMatched": true, "matchedSkill": "JUnit 5, Mockito", "explanation": "Bifat prin testare unitară în CV" },
-                { "text": "Open to learn Pega PRPC", "isMatched": false, "matchedSkill": "", "explanation": "Platforma Pega nu apare în CV" }
+                { "text": "Demonstrable experience leading an internal IT function", "isMatched": true, "matchedSkill": "Lead Developer", "explanation": "Demonstrat prin proiectele anterioare" },
+                { "text": "Working knowledge of information security (e.g. ISO 27001, GDPR)", "isMatched": false, "matchedSkill": "", "explanation": "Standardele de securitate ISO nu apar în CV" }
               ],
               "bonus": [
-                { "text": "Java development experience", "isMatched": true, "matchedSkill": "Java 21" },
-                { "text": "German language skills", "isMatched": false, "matchedSkill": "" }
+                { "text": "Experience working within a cloud-first environment (Google Cloud)", "isMatched": false, "matchedSkill": "" }
+              ],
+              "responsibilities": [
+                "Define, own and continually evolve the internal IT strategy and support model.",
+                "Oversee the design, implementation and ongoing administration of internal IT infrastructure.",
+                "Act as the operational and technical escalation point for the IT team."
+              ],
+              "benefits": [
+                "Competitive base salary",
+                "Health Care Package and Life Insurance",
+                "Meal Vouchers",
+                "28 days of annual leave and flexible working hours"
               ]
             }
             """;
@@ -616,7 +629,9 @@ public class AiGapAnalysisService {
             "matchingSkills", Collections.emptyList(),
             "missingSkills", Collections.emptyList(),
             "mandatory", Collections.emptyList(),
-            "bonus", Collections.emptyList()
+            "bonus", Collections.emptyList(),
+            "responsibilities", Collections.emptyList(),
+            "benefits", Collections.emptyList()
         );
     }
 }

@@ -94,23 +94,23 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
     const l = line.trim().toLowerCase().replace(/^###\s*/, '').replace(/[:\s]+$/, '');
     return (
       (line.startsWith('### ') || line.endsWith(':') || line.length < 90) &&
-      /(cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|competen[tț]e|must have|requirements|required skills|what you need|qualifications|who you are|candidate profile|skills & experience|what you bring|ce trebuie s[aă] ai|hard skills|condi[tț]ii|cuno[sș]tin[tț]e|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|desirable skills|preferred qualifications|would be a plus|avantaje|plusuri|op[tț]ional|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|ce presupune rolul|main responsibilities|key responsibilities|responsibilities|what you will do|your role|tasks|what you'll be doing|compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|pachet de beneficii|benefits|what we offer|perks|compensation)/i.test(l)
+      /(cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|competen[tț]e|must have|requirements|required skills|essential experience|essential skills|what you need|qualifications|who you are|candidate profile|skills & experience|what you bring|ce trebuie s[aă] ai|hard skills|condi[tț]ii|cuno[sș]tin[tț]e|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|desirable skills|desirable experience|preferred qualifications|would be a plus|avantaje|plusuri|op[tț]ional|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|ce presupune rolul|main responsibilities|key responsibilities|responsibilities|what you will do|your role|tasks|what you'll be doing|what success looks like|compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|pachet de beneficii|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion)/i.test(l)
     );
   };
 
   const getSectionType = (line) => {
     const l = line.toLowerCase();
-    if (/desirable skills|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|preferred qualifications|would be a plus|plusuri|op[tț]ional|ce constituie avantaj/i.test(l)) {
+    if (/compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion/i.test(l)) {
+      return 'benefits';
+    }
+    if (/desirable skills|desirable experience|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|preferred qualifications|would be a plus|plusuri|op[tț]ional|ce constituie avantaj/i.test(l)) {
       return 'bonus';
     }
-    if (/required skills|cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|must have|requirements|what you need|qualifications|who you are|candidate profile|skills & experience|hard skills|cuno[sș]tin[tț]e/i.test(l)) {
+    if (/required skills|essential experience|essential skills|cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|must have|requirements|what you need|qualifications|who you are|candidate profile|skills & experience|hard skills|cuno[sș]tin[tț]e/i.test(l)) {
       return 'mandatory';
     }
-    if (/main responsibilities|key responsibilities|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|responsibilities|what you will do|your role|tasks/i.test(l)) {
+    if (/main responsibilities|key responsibilities|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|responsibilities|what you will do|your role|tasks|what success looks like/i.test(l)) {
       return 'responsibilities';
-    }
-    if (/compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|benefits|what we offer|perks|compensation/i.test(l)) {
-      return 'benefits';
     }
     return null;
   };
@@ -132,6 +132,11 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
     if (!cleanItem) continue;
 
     if (currentSection) {
+      // Redirecționează beneficii evidente către benefits
+      if (/meal voucher|tichete de mas[aă]|health care|medical insurance|asigurare medical[aă]|annual leave|zile de concediu|paid day off|flexible working|program flexibil|sabbatical|bookster|gym membership|pensie/i.test(cleanItem)) {
+        sections.benefits.push(cleanItem);
+        continue;
+      }
       if ((currentSection === 'mandatory') && /constituie (un )?avantaj|reprezint[aă] (un )?plus|nice to have|would be a plus|bonus/i.test(cleanItem)) {
         sections.bonus.push(cleanItem);
         continue;
@@ -212,7 +217,10 @@ export default function JobDetailModal({
     }
   };
 
-  const runAiMatch = async () => {
+  const runAiMatch = async (jobToAnalyze) => {
+    const targetJob = jobToAnalyze || detailedJob || job;
+    if (!targetJob || !targetJob.rawDescription || targetJob.rawDescription.trim().length < 50) return;
+
     setLoadingAiAnalysis(true);
     setAiAnalysisError(null);
     try {
@@ -223,16 +231,20 @@ export default function JobDetailModal({
           ...(activeUserId ? { 'X-User-Id': activeUserId } : {})
         },
         body: JSON.stringify({
-          jobId: currentJob.id,
-          jobTitle: currentJob.jobTitle,
-          rawDescription: currentJob.rawDescription,
+          jobId: targetJob.id,
+          jobTitle: targetJob.jobTitle,
+          rawDescription: targetJob.rawDescription,
           userId: activeUserId
         })
       });
       if (res.ok) {
         const data = await res.json();
-        if (data && (data.aiVerified || (data.matchingSkills && data.matchingSkills.length > 0))) {
+        if (data && (data.aiVerified || (data.matchingSkills && data.matchingSkills.length > 0) || (data.mandatory && data.mandatory.length > 0))) {
           setAiAnalysisData(data);
+          const cacheKey = `ats_ai_job_${targetJob.id || targetJob.directApplyUrl}`;
+          try {
+            sessionStorage.setItem(cacheKey, JSON.stringify(data));
+          } catch (e) {}
         } else {
           setAiAnalysisError("Analiza AI nu a putut fi finalizată.");
         }
@@ -283,6 +295,25 @@ export default function JobDetailModal({
     const isMissingSkillBreakdown = !job.matchingSkills || job.matchingSkills.length === 0;
     const needsDetailsFetch = !!job.id && (isDescriptionShort || isMissingSkillBreakdown || ['LINKEDIN', 'HIPO', 'BESTJOBS'].includes(job.sourcePlatform));
 
+    // Verificare cache AI la deschiderea modalului
+    const cacheKey = `ats_ai_job_${job.id || job.directApplyUrl}`;
+    let hasLoadedFromCache = false;
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && (parsed.aiVerified || (parsed.mandatory && parsed.mandatory.length > 0))) {
+          setAiAnalysisData(parsed);
+          hasLoadedFromCache = true;
+        }
+      }
+    } catch (e) {}
+
+    if (!hasLoadedFromCache) {
+      setAiAnalysisData(null);
+      setAiAnalysisError(null);
+    }
+
     if (needsDetailsFetch) {
       setLoadingDetails(true);
       const url = activeUserId ? `/api/v1/jobs/${job.id}/details?userId=${activeUserId}` : `/api/v1/jobs/${job.id}/details`;
@@ -292,7 +323,7 @@ export default function JobDetailModal({
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (data) {
-            setDetailedJob({
+            const updated = {
               ...data,
               atsMatchScore: (typeof data.atsMatchScore === 'number' && data.atsMatchScore > 0) ? data.atsMatchScore : (job.atsMatchScore || 0),
               matchingSkills: (data.matchingSkills && data.matchingSkills.length > 0) ? data.matchingSkills : (job.matchingSkills || []),
@@ -301,13 +332,25 @@ export default function JobDetailModal({
               workModel: job.workModel || data.workModel,
               salaryRange: job.salaryRange || data.salaryRange,
               rawDescription: (data.rawDescription && data.rawDescription.length > (job.rawDescription?.length || 0)) ? data.rawDescription : (job.rawDescription || data.rawDescription)
-            });
+            };
+            setDetailedJob(updated);
+            if (!hasLoadedFromCache) {
+              runAiMatch(updated);
+            }
+          } else if (!hasLoadedFromCache) {
+            runAiMatch(job);
           }
         })
-        .catch(err => console.warn('Nu s-au putut încărca detaliile extinse:', err))
+        .catch(err => {
+          console.warn('Nu s-au putut încărca detaliile extinse:', err);
+          if (!hasLoadedFromCache) runAiMatch(job);
+        })
         .finally(() => setLoadingDetails(false));
     } else {
       setDetailedJob(job);
+      if (!hasLoadedFromCache) {
+        runAiMatch(job);
+      }
     }
 
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -341,6 +384,14 @@ export default function JobDetailModal({
       displayMissingSkills
     );
   }, [currentJob.rawDescription, skillsRequired, displayMatchingSkills, displayMissingSkills]);
+
+  const displayResponsibilities = (aiAnalysisData?.responsibilities && aiAnalysisData.responsibilities.length > 0)
+    ? aiAnalysisData.responsibilities
+    : (parsedDescription.responsibilities || []);
+
+  const displayBenefits = (aiAnalysisData?.benefits && aiAnalysisData.benefits.length > 0)
+    ? aiAnalysisData.benefits
+    : (parsedDescription.benefits || []);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(currentJob.directApplyUrl);
@@ -798,6 +849,16 @@ export default function JobDetailModal({
               </div>
             )}
 
+            {loadingAiAnalysis && (
+              <div className="p-3 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 border border-indigo-200 rounded-2xl text-xs font-bold text-indigo-900 flex items-center justify-between gap-2 animate-pulse shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-indigo-600 animate-spin" />
+                  <span>AI extrage și separă cerințele, responsabilitățile și beneficiile din anunț...</span>
+                </div>
+                <span className="text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full uppercase font-black">AI Live</span>
+              </div>
+            )}
+
             {/* CERINȚE OBLIGATORII (MUST-HAVE) */}
             {((aiAnalysisData?.mandatory && aiAnalysisData.mandatory.length > 0) || parsedDescription.mandatoryRequirements.length > 0) && (
               <div className="bg-white border-2 border-indigo-100 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
@@ -1003,24 +1064,35 @@ export default function JobDetailModal({
             )}
 
             {/* RESPONSABILITĂȚI PRINCIPALE */}
-            {parsedDescription.responsibilities && parsedDescription.responsibilities.length > 0 && (
+            {displayResponsibilities && displayResponsibilities.length > 0 && (
               <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
-                <div className="flex items-center gap-2 border-b border-gray-100 pb-2.5">
-                  <div className="p-2 rounded-xl bg-blue-50 text-blue-700">
-                    <Briefcase className="w-4 h-4" />
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-xl bg-blue-50 text-blue-700">
+                      <Briefcase className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-2">
+                        <span>Ce Vei Face în Acest Rol (Responsabilități)</span>
+                        {aiAnalysisData?.responsibilities?.length > 0 && (
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <Bot className="w-3 h-3 text-blue-600" />
+                            AI Extracted
+                          </span>
+                        )}
+                      </h4>
+                      <span className="text-[11px] text-gray-500 font-semibold">
+                        Activitățile tale zilnice și proiectele din cadrul echipei
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider">
-                      Ce Vei Face în Acest Rol (Responsabilități)
-                    </h4>
-                    <span className="text-[11px] text-gray-500 font-semibold">
-                      Activitățile tale zilnice și proiectele din cadrul echipei
-                    </span>
-                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                    {displayResponsibilities.length} Activități
+                  </span>
                 </div>
 
                 <ul className="space-y-2 pl-1">
-                  {parsedDescription.responsibilities.map((resp, idx) => (
+                  {displayResponsibilities.map((resp, idx) => (
                     <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-gray-700 leading-relaxed">
                       <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-2"></div>
                       <span>{resp}</span>
@@ -1031,24 +1103,35 @@ export default function JobDetailModal({
             )}
 
             {/* BENEFICII & OFERTĂ */}
-            {parsedDescription.benefits && parsedDescription.benefits.length > 0 && (
+            {displayBenefits && displayBenefits.length > 0 && (
               <div className="bg-emerald-50/40 border border-emerald-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
-                <div className="flex items-center gap-2 border-b border-emerald-100 pb-2.5">
-                  <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
-                    <Gift className="w-4 h-4" />
+                <div className="flex items-center justify-between border-b border-emerald-100 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+                      <Gift className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-emerald-950 uppercase tracking-wider flex items-center gap-2">
+                        <span>Ce Îți Oferă Compania (Beneficii & Pachet)</span>
+                        {aiAnalysisData?.benefits?.length > 0 && (
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <Bot className="w-3 h-3 text-emerald-600" />
+                            AI Extracted
+                          </span>
+                        )}
+                      </h4>
+                      <span className="text-[11px] text-emerald-700 font-semibold">
+                        Perks, asigurare, dezvoltare profesională și condiții de lucru
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-black text-emerald-950 uppercase tracking-wider">
-                      Ce Îți Oferă Compania (Beneficii & Pachet)
-                    </h4>
-                    <span className="text-[11px] text-emerald-700 font-semibold">
-                      Perks, asigurare, dezvoltare profesională și condiții de lucru
-                    </span>
-                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                    {displayBenefits.length} Beneficii
+                  </span>
                 </div>
 
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {parsedDescription.benefits.map((ben, idx) => (
+                  {displayBenefits.map((ben, idx) => (
                     <li key={idx} className="bg-white/80 p-2.5 rounded-xl border border-emerald-100 text-xs font-semibold text-emerald-950 flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                       <span>{ben}</span>
@@ -1062,8 +1145,9 @@ export default function JobDetailModal({
             {(!parsedDescription.mandatoryRequirements.length &&
               (!aiAnalysisData?.mandatory || !aiAnalysisData.mandatory.length) &&
               !parsedDescription.bonusRequirements.length &&
-              !parsedDescription.responsibilities.length &&
-              !parsedDescription.benefits.length) && (
+              (!aiAnalysisData?.bonus || !aiAnalysisData.bonus.length) &&
+              !displayResponsibilities.length &&
+              !displayBenefits.length) && (
               <div className="bg-gray-50/80 border border-gray-200 rounded-3xl p-6 leading-relaxed">
                 {formatDescription(currentJob.rawDescription)}
               </div>
