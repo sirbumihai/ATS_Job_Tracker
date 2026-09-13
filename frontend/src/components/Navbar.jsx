@@ -33,7 +33,7 @@ export default function Navbar({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* LOGO */}
-        <div className="flex items-center gap-2.5 sm:gap-3 cursor-pointer" onClick={() => setActiveTab('kanban')}>
+        <div className="flex items-center gap-2.5 sm:gap-3 cursor-pointer" onClick={() => setActiveTab('tracker')}>
           <div className="p-2 sm:p-2.5 bg-black text-white rounded-xl sm:rounded-2xl shadow-sm">
             <BrainCircuit className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
@@ -50,15 +50,15 @@ export default function Navbar({
         {/* DESKTOP TABS NAVIGATION (4 TABS) */}
         <div className="hidden md:flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200">
           <button
-            onClick={() => setActiveTab('kanban')}
+            onClick={() => setActiveTab('tracker')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
-              activeTab === 'kanban' 
+              activeTab === 'tracker' 
                 ? 'bg-black text-white shadow-sm' 
                 : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
             }`}
           >
             <FolderKanban className="w-3.5 h-3.5 text-blue-600" />
-            Tracker Aplicații
+            Tracker Aplicatii
           </button>
 
           <button
@@ -159,9 +159,9 @@ export default function Navbar({
         <div className="lg:hidden border-t p-4 space-y-3 border-gray-200 bg-white text-gray-900">
           <div className="flex gap-1.5 p-1 rounded-xl border overflow-x-auto bg-gray-100 border-gray-200">
             <button
-              onClick={() => { setActiveTab('kanban'); setMobileMenuOpen(false); }}
+              onClick={() => { setActiveTab('tracker'); setMobileMenuOpen(false); }}
               className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 shrink-0 ${
-                activeTab === 'kanban' ? 'bg-black text-white' : 'text-gray-700'
+                activeTab === 'tracker' ? 'bg-black text-white' : 'text-gray-700'
               }`}
             >
               <FolderKanban className="w-3.5 h-3.5" />

@@ -14,16 +14,17 @@ export default function App() {
       if (path.startsWith('/job-search') || path.startsWith('/jobs')) return 'job_search';
       if (path.startsWith('/cv-library') || path.startsWith('/cv_library')) return 'cv_library';
       if (path.startsWith('/cv-studio') || path.startsWith('/cv_studio')) return 'cv_studio';
-      if (path.startsWith('/kanban')) return 'kanban';
+      if (path.startsWith('/tracker') || path.startsWith('/kanban')) return 'tracker';
       const hash = window.location.hash.toLowerCase();
       if (hash.includes('job-search') || hash.includes('jobs')) return 'job_search';
       if (hash.includes('cv-library') || hash.includes('cv_library')) return 'cv_library';
       if (hash.includes('cv-studio') || hash.includes('cv_studio')) return 'cv_studio';
-      if (hash.includes('kanban')) return 'kanban';
+      if (hash.includes('tracker') || hash.includes('kanban')) return 'tracker';
       const stored = localStorage.getItem('ats_active_tab');
-      if (stored === 'job_search' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'kanban') return stored;
+      if (stored === 'job_search' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'tracker') return stored;
+      if (stored === 'kanban') return 'tracker';
     }
-    return 'kanban';
+    return 'tracker';
   };
 
   const [activeTab, setActiveTab] = useState(getInitialTab);
@@ -34,7 +35,7 @@ export default function App() {
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       localStorage.setItem('ats_active_tab', tab);
-      let targetPath = '/kanban';
+      let targetPath = '/tracker';
       if (tab === 'job_search') targetPath = '/job-search';
       if (tab === 'cv_library') targetPath = '/cv-library';
       if (tab === 'cv_studio') targetPath = '/cv-studio';
@@ -51,6 +52,11 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Redirect /kanban to /tracker if visited directly
+    if (typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/kanban')) {
+      window.history.replaceState({ tab: 'tracker' }, '', '/tracker');
+    }
+
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
       if (path.startsWith('/job-search') || path.startsWith('/jobs')) {
@@ -63,8 +69,8 @@ export default function App() {
         setActiveTab('cv_studio');
         localStorage.setItem('ats_active_tab', 'cv_studio');
       } else {
-        setActiveTab('kanban');
-        localStorage.setItem('ats_active_tab', 'kanban');
+        setActiveTab('tracker');
+        localStorage.setItem('ats_active_tab', 'tracker');
       }
     };
     window.addEventListener('popstate', handlePopState);
@@ -112,7 +118,19 @@ export default function App() {
       });
       if (res.ok) {
         const data = await res.json();
-        setApplications(Array.isArray(data) ? data : []);
+        let list = Array.isArray(data) ? data : [];
+        try {
+          const savedOrder = JSON.parse(localStorage.getItem(`ats_kanban_order_${activeUserId}`) || '[]');
+          if (savedOrder.length > 0) {
+            const orderMap = new Map(savedOrder.map((id, index) => [id, index]));
+            list.sort((a, b) => {
+              const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 999999;
+              const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 999999;
+              return idxA - idxB;
+            });
+          }
+        } catch (e) {}
+        setApplications(list);
       }
     } catch (err) {
       console.error("Eroare la preluarea aplicatiilor:", err);
@@ -125,6 +143,16 @@ export default function App() {
 
   const handleApplicationUpdated = (updatedApp) => {
     setApplications(prev => prev.map(a => a.id === updatedApp.id ? updatedApp : a));
+  };
+
+  const handleReorderApplications = (reorderedApps) => {
+    setApplications(reorderedApps);
+    try {
+      const orderIds = reorderedApps.map(a => a.id);
+      localStorage.setItem(`ats_kanban_order_${activeUserId}`, JSON.stringify(orderIds));
+    } catch (e) {
+      console.warn("Nu s-a putut salva ordinea cardurilor:", e);
+    }
   };
 
   // Status change handler
@@ -283,20 +311,19 @@ export default function App() {
         currentUser={currentUser}
         onLogout={handleLogout}
         onOpenAuth={() => setShowAuthModal(true)}
-        onOpenUpload={() => setShowUploadResumeModal(true)}
-        onOpenAddJob={() => setShowAddJobModal(true)}
       />
 
       {/* CONTINUT PRINCIPAL */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        {/* TAB 1: KANBAN BOARD & LIST (WITH STATS) */}
-        {activeTab === 'kanban' && (
+        {/* TAB 1: TRACKER BOARD & LIST (WITH STATS) */}
+        {activeTab === 'tracker' && (
           <>
             <StatsDashboard applications={applications} />
             <KanbanBoard 
               applications={applications}
               onStatusChange={handleStatusChange}
+              onReorderApplications={handleReorderApplications}
               onOpenAnalysis={handleOpenAiAnalysis}
               onDeleteApplication={handleDeleteApplication}
               onApplicationUpdated={handleApplicationUpdated}
@@ -314,7 +341,7 @@ export default function App() {
             currentUser={currentUser}
             onSaveToKanbanSuccess={fetchApplications}
             onNavigateToStudio={() => handleTabChange('cv_studio')}
-            onNavigateToKanban={() => handleTabChange('kanban')}
+            onNavigateToKanban={() => handleTabChange('tracker')}
           />
         )}
 
