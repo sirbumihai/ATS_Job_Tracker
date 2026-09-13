@@ -2933,6 +2933,12 @@ public class JobSearchAggregatorService {
                 .filter(s -> !s.isEmpty() && !s.equals("ALL"))
                 .collect(Collectors.toSet());
 
+        // Multi-Level Set
+        Set<String> selectedLevels = Arrays.stream(lvlUpper.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty() && !s.equals("ALL"))
+                .collect(Collectors.toSet());
+
         // Filtrare Unificată Data Postării (pe baza firstSeenAt / postedAt reale sau NOU GĂSIT)
         OffsetDateTime dateCutoff = null;
         boolean filterOnlyNewlyDiscovered = false;
@@ -3038,9 +3044,10 @@ public class JobSearchAggregatorService {
                 }
             }
 
-            // 6. Filtrare Nivel Experiență (JUNIOR, MID, SENIOR, INTERNSHIP)
-            if (!lvlUpper.equals("ALL")) {
-                if (!job.experienceLevel().equalsIgnoreCase(lvlUpper)) {
+            // 6. Filtrare Nivel Experiență (JUNIOR, MID, SENIOR, INTERNSHIP - Suport Selecție Multiplă)
+            if (!selectedLevels.isEmpty()) {
+                String jLvl = job.experienceLevel() != null ? job.experienceLevel().toUpperCase().trim() : "MID";
+                if (!selectedLevels.contains(jLvl)) {
                     continue;
                 }
             }

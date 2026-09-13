@@ -116,12 +116,12 @@ export default function JobSearchPage({
   const [location, setLocation] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState([]); // Array de platforme selectate (gol = Toate)
   const [selectedRoleCategories, setSelectedRoleCategories] = useState([]); // Array de roluri selectate (gol = Toate)
+  const [selectedLevels, setSelectedLevels] = useState([]); // Array de nivele selectate (gol = Toate)
+  const [selectedAtsScore, setSelectedAtsScore] = useState('ALL'); // ALL, TOP_80, TOP_60, TOP_40, UNDER_40
   const [selectedDatePosted, setSelectedDatePosted] = useState('ALL'); // ALL, 24H, 48H, 7D, 30D
   const [selectedStatus, setSelectedStatus] = useState('ACTIVE'); // ACTIVE, EXPIRED, ALL
   const [selectedWorkModel, setSelectedWorkModel] = useState('ALL');
-  const [selectedLevel, setSelectedLevel] = useState('ALL');
   const [selectedCompetitiveness, setSelectedCompetitiveness] = useState('ALL');
-  const [sortBy, setSortBy] = useState('MATCH_AND_RECENCY'); 
 
   // Audit History state
   const [auditJobForChanges, setAuditJobForChanges] = useState(null);
@@ -131,6 +131,7 @@ export default function JobSearchPage({
   // Dropdown-uri deschise
   const [isPlatformDropdownOpen, setIsPlatformDropdownOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [isLevelDropdownOpen, setIsLevelDropdownOpen] = useState(false);
   const [platformSearchQuery, setPlatformSearchQuery] = useState('');
   const [roleSearchQuery, setRoleSearchQuery] = useState('');
 
@@ -180,6 +181,7 @@ export default function JobSearchPage({
   const jobsListRef = useRef(null);
   const platformDropdownRef = useRef(null);
   const roleDropdownRef = useRef(null);
+  const levelDropdownRef = useRef(null);
   const keywordInputRef = useRef(null);
   const locationInputRef = useRef(null);
 
@@ -191,6 +193,9 @@ export default function JobSearchPage({
       }
       if (roleDropdownRef.current && !roleDropdownRef.current.contains(e.target)) {
         setIsRoleDropdownOpen(false);
+      }
+      if (levelDropdownRef.current && !levelDropdownRef.current.contains(e.target)) {
+        setIsLevelDropdownOpen(false);
       }
       if (keywordInputRef.current && !keywordInputRef.current.contains(e.target)) {
         setShowKeywordSuggestions(false);
@@ -277,6 +282,35 @@ export default function JobSearchPage({
     } finally {
       setLoadingChanges(false);
     }
+  };
+
+  // 4 NIVELURI DE EXPERIENȚĂ PENTRU MULTI-SELECT
+  const levelsConfig = [
+    { id: 'INTERNSHIP', label: 'Internship / Stagiu' },
+    { id: 'JUNIOR', label: 'Junior (0-2 ani)' },
+    { id: 'MID', label: 'Mid-Level (2-4 ani)' },
+    { id: 'SENIOR', label: 'Senior / Lead (5+ ani)' }
+  ];
+
+  const toggleLevel = (id) => {
+    setSelectedLevels(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(l => l !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+    setCurrentPage(1);
+  };
+
+  const selectAllLevels = () => {
+    setSelectedLevels(['INTERNSHIP', 'JUNIOR', 'MID', 'SENIOR']);
+    setCurrentPage(1);
+  };
+
+  const clearAllLevels = () => {
+    setSelectedLevels([]);
+    setCurrentPage(1);
   };
 
   // 8 PLATFORME REALE CU ICONIȚE ȘI CONTOARE PERMANENTE (FĂRĂ EMOTICOANE)
@@ -386,7 +420,7 @@ export default function JobSearchPage({
       if (selectedRoleCategories.length > 0) {
         params.append('roleCategory', selectedRoleCategories.join(','));
       }
-      if (selectedLevel && selectedLevel !== 'ALL') params.append('level', selectedLevel);
+      if (selectedLevels.length > 0) params.append('level', selectedLevels.join(','));
       if (selectedWorkModel && selectedWorkModel !== 'ALL') params.append('workModel', selectedWorkModel);
       if (selectedDatePosted && selectedDatePosted !== 'ALL') {
         params.append('datePosted', selectedDatePosted);
@@ -394,7 +428,6 @@ export default function JobSearchPage({
       }
       if (selectedStatus && selectedStatus !== 'ALL') params.append('status', selectedStatus);
       else if (selectedStatus === 'ALL') params.append('status', 'ALL');
-      if (sortBy) params.append('sortBy', sortBy);
       params.append('userId', activeUserId);
 
       const res = await fetch(`/api/v1/jobs/search?${params.toString()}`, {
@@ -435,12 +468,12 @@ export default function JobSearchPage({
     setLocation('');
     setSelectedPlatforms([]);
     setSelectedRoleCategories([]);
+    setSelectedLevels([]);
+    setSelectedAtsScore('ALL');
     setSelectedDatePosted('ALL');
     setSelectedStatus('ACTIVE');
     setSelectedWorkModel('ALL');
-    setSelectedLevel('ALL');
     setSelectedCompetitiveness('ALL');
-    setSortBy('MATCH_AND_RECENCY');
     setCurrentPage(1);
   };
 
@@ -450,13 +483,14 @@ export default function JobSearchPage({
     if (location.trim()) count++;
     if (selectedPlatforms.length > 0) count += selectedPlatforms.length;
     if (selectedRoleCategories.length > 0) count += selectedRoleCategories.length;
+    if (selectedLevels.length > 0) count += selectedLevels.length;
+    if (selectedAtsScore !== 'ALL') count++;
     if (selectedDatePosted !== 'ALL') count++;
     if (selectedStatus !== 'ACTIVE') count++;
     if (selectedWorkModel !== 'ALL') count++;
-    if (selectedLevel !== 'ALL') count++;
     if (selectedCompetitiveness !== 'ALL') count++;
     return count;
-  }, [keyword, location, selectedPlatforms, selectedRoleCategories, selectedDatePosted, selectedStatus, selectedWorkModel, selectedLevel, selectedCompetitiveness]);
+  }, [keyword, location, selectedPlatforms, selectedRoleCategories, selectedLevels, selectedAtsScore, selectedDatePosted, selectedStatus, selectedWorkModel, selectedCompetitiveness]);
 
   useEffect(() => {
     fetchGlobalStats();
@@ -473,11 +507,10 @@ export default function JobSearchPage({
     location, 
     selectedPlatforms, 
     selectedRoleCategories, 
+    selectedLevels,
     selectedDatePosted,
     selectedStatus,
-    selectedWorkModel, 
-    selectedLevel, 
-    sortBy
+    selectedWorkModel
   ]);
 
   const handleSearchSubmit = (e) => {
@@ -532,6 +565,22 @@ export default function JobSearchPage({
       result = result.filter(j => (j.competitiveness || 'MEDIUM') === selectedCompetitiveness);
     }
 
+    // Filtru Nivel Experiență (Suport Multiplu pe client)
+    if (selectedLevels.length > 0) {
+      result = result.filter(j => selectedLevels.includes(j.experienceLevel));
+    }
+
+    // Filtru Scor ATS pe client
+    if (selectedAtsScore === 'TOP_80') {
+      result = result.filter(j => (j.atsMatchScore || 0) >= 80);
+    } else if (selectedAtsScore === 'TOP_60') {
+      result = result.filter(j => (j.atsMatchScore || 0) >= 60);
+    } else if (selectedAtsScore === 'TOP_40') {
+      result = result.filter(j => (j.atsMatchScore || 0) >= 40);
+    } else if (selectedAtsScore === 'UNDER_40') {
+      result = result.filter(j => (j.atsMatchScore || 0) < 40);
+    }
+
     // Filtru dată postare unificat pe client (pe baza datei reale de publicare)
     if (selectedDatePosted === 'NEWLY_DISCOVERED') {
       result = result.filter(j => isJobTrulyNew(j));
@@ -550,45 +599,9 @@ export default function JobSearchPage({
       }
     }
 
+    // Sortare optimă: Recomandate (Pondere: 70% ATS Match + 30% Recență din data postării)
+    const now = Date.now();
     result.sort((a, b) => {
-      if (sortBy === 'POSTED_AT_DESC' || sortBy === 'NEWEST' || sortBy === 'FIRST_SEEN_DESC' || sortBy === 'DISCOVERED_NEWEST') {
-        const timeA = getJobTimestamp(a);
-        const timeB = getJobTimestamp(b);
-        if (timeA !== timeB) return timeB - timeA; // Cel mai nou publicat apare primul!
-        return b.atsMatchScore - a.atsMatchScore;
-      }
-      if (sortBy === 'MATCH_SCORE') {
-        const diff = b.atsMatchScore - a.atsMatchScore;
-        if (diff !== 0) return diff;
-        const timeA = getJobTimestamp(a);
-        const timeB = getJobTimestamp(b);
-        return timeB - timeA;
-      }
-      if (sortBy === 'SALARY_DESC') {
-        const salA = parseSalaryForSort(a.salaryRange);
-        const salB = parseSalaryForSort(b.salaryRange);
-        if (salA !== salB) return salB - salA;
-        return b.atsMatchScore - a.atsMatchScore;
-      }
-      if (sortBy === 'LOW_COMPETITION') {
-        const compOrder = { 'LOW': 0, 'MEDIUM': 1, 'HIGH': 2 };
-        const compA = compOrder[a.competitiveness] ?? 1;
-        const compB = compOrder[b.competitiveness] ?? 1;
-        if (compA !== compB) return compA - compB;
-        return b.atsMatchScore - a.atsMatchScore;
-      }
-      if (sortBy === 'JUNIOR_FIRST') {
-        const lvlOrder = { 'INTERNSHIP': 0, 'JUNIOR': 1, 'MID': 2, 'SENIOR': 3 };
-        const lvlA = lvlOrder[a.experienceLevel] ?? 2;
-        const lvlB = lvlOrder[b.experienceLevel] ?? 2;
-        if (lvlA !== lvlB) return lvlA - lvlB;
-        return b.atsMatchScore - a.atsMatchScore;
-      }
-      if (sortBy === 'COMPANY_AZ') {
-        return (a.companyName || '').localeCompare(b.companyName || '');
-      }
-      // Implicit: MATCH_AND_RECENCY (Pondere: 70% ATS Match + 30% Recență din data postării)
-      const now = Date.now();
       const daysOldA = a.postedDaysAgo >= 0 ? a.postedDaysAgo : 
                        a.postedAt ? Math.floor(Math.max(0, (now - new Date(a.postedAt).getTime()) / (24 * 3600 * 1000))) : 15;
       const daysOldB = b.postedDaysAgo >= 0 ? b.postedDaysAgo : 
@@ -601,7 +614,7 @@ export default function JobSearchPage({
     });
 
     return result;
-  }, [jobs, selectedCompetitiveness, selectedDatePosted, selectedStatus, sortBy]);
+  }, [jobs, selectedCompetitiveness, selectedDatePosted, selectedStatus, selectedLevels, selectedAtsScore]);
 
   // Paginare
   const totalJobs = filteredAndSortedJobs.length;
@@ -941,7 +954,7 @@ export default function JobSearchPage({
         </form>
 
         {/* GRID FILTRE AVANSATE: MULTI-SELECT DROPDOWNS & SELECTOARE PROFESIONALE */}
-        <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+        <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
           
           {/* 1. DROPDOWN MULTI-SELECT PENTRU PLATFORME */}
           <div className="relative" ref={platformDropdownRef}>
@@ -1163,23 +1176,88 @@ export default function JobSearchPage({
             </select>
           </div>
 
-          {/* 4. NIVEL EXPERIENȚĂ (FĂRĂ EMOTICOANE) */}
-          <div>
+          {/* 4. DROPDOWN MULTI-SELECT PENTRU NIVEL EXPERIENȚĂ */}
+          <div className="relative" ref={levelDropdownRef}>
             <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
               <GraduationCap className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span>Nivel Experiență</span>
             </label>
-            <select
-              value={selectedLevel}
-              onChange={(e) => { setSelectedLevel(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
+            <button
+              type="button"
+              onClick={() => {
+                setIsLevelDropdownOpen(prev => !prev);
+                setIsPlatformDropdownOpen(false);
+                setIsRoleDropdownOpen(false);
+              }}
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-between transition cursor-pointer ${
+                selectedLevels.length > 0
+                  ? 'bg-indigo-50 border-indigo-300 text-indigo-950 shadow-2xs'
+                  : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100'
+              }`}
             >
-              <option value="ALL">Toate Nivelurile</option>
-              <option value="INTERNSHIP">Internship / Stagiu</option>
-              <option value="JUNIOR">Junior (0-2 ani)</option>
-              <option value="MID">Mid-Level (2-4 ani)</option>
-              <option value="SENIOR">Senior / Lead (5+ ani)</option>
-            </select>
+              <div className="flex items-center gap-1.5 truncate">
+                <GraduationCap className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <span className="truncate">
+                  {selectedLevels.length === 0
+                    ? 'Toate Nivelurile'
+                    : selectedLevels.length === 1
+                    ? levelsConfig.find(l => l.id === selectedLevels[0])?.label || '1 nivel'
+                    : `${selectedLevels.length} niveluri selectate`}
+                </span>
+              </div>
+              <ChevronDown className={`w-3.5 h-3.5 text-gray-500 shrink-0 transition-transform duration-200 ${isLevelDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* MENIU DROPDOWN NIVELURI */}
+            {isLevelDropdownOpen && (
+              <div className="absolute left-0 top-full mt-1.5 w-64 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                <div className="p-2.5 border-b border-gray-100 flex items-center justify-between text-[11px] font-extrabold bg-gray-50/80">
+                  <button
+                    type="button"
+                    onClick={selectAllLevels}
+                    className="text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                  >
+                    Selectează Toate
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearAllLevels}
+                    className="text-gray-500 hover:text-rose-600 cursor-pointer"
+                  >
+                    Deselectează Toate
+                  </button>
+                </div>
+
+                <div className="p-1.5 space-y-1">
+                  {levelsConfig.map((lvl) => {
+                    const isChecked = selectedLevels.includes(lvl.id);
+                    return (
+                      <button
+                        key={lvl.id}
+                        type="button"
+                        onClick={() => toggleLevel(lvl.id)}
+                        className={`w-full px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition cursor-pointer ${
+                          isChecked 
+                            ? 'bg-indigo-50/90 text-indigo-950 font-black' 
+                            : 'hover:bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 truncate">
+                          <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition shrink-0 ${
+                            isChecked 
+                              ? 'bg-indigo-600 border-indigo-600 text-white' 
+                              : 'border-gray-300 bg-white'
+                          }`}>
+                            {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                          </div>
+                          <span className="truncate">{lvl.label}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 5. MOD DE LUCRU (FĂRĂ EMOTICOANE) */}
@@ -1235,32 +1313,25 @@ export default function JobSearchPage({
             </select>
           </div>
 
-        </div>
-
-        {/* BARA DE SORTARE PROFESIONALĂ (FĂRĂ EMOTICOANE) */}
-        <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
-              Criteriu de Sortare:
-            </span>
-          </div>
-
-          <div className="sm:w-72">
+          {/* 8. FILTRU SCOR ATS */}
+          <div>
+            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <span>Scor ATS</span>
+            </label>
             <select
-              value={sortBy}
-              onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-950 font-black rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 cursor-pointer shadow-2xs"
+              value={selectedAtsScore}
+              onChange={(e) => { setSelectedAtsScore(e.target.value); setCurrentPage(1); }}
+              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-600 cursor-pointer"
             >
-              <option value="MATCH_AND_RECENCY">Recomandate (Scor ATS & Recență)</option>
-              <option value="POSTED_AT_DESC">Data Postării (Cele mai noi)</option>
-              <option value="MATCH_SCORE">Scor ATS Maxim</option>
-              <option value="SALARY_DESC">Salariu Descrescător</option>
-              <option value="LOW_COMPETITION">Competiție Redusă Prioritar</option>
-              <option value="JUNIOR_FIRST">Juniori & Stagii Prioritar</option>
-              <option value="COMPANY_AZ">Nume Companie (A - Z)</option>
+              <option value="ALL">Toate Scorurile ATS</option>
+              <option value="TOP_80">Excelent (80%+ Match)</option>
+              <option value="TOP_60">Bun (60%+ Match)</option>
+              <option value="TOP_40">Mediu (40%+ Match)</option>
+              <option value="UNDER_40">Sub 40% Match</option>
             </select>
           </div>
+
         </div>
 
       </div>
@@ -1348,10 +1419,28 @@ export default function JobSearchPage({
               </span>
             )}
 
-            {selectedLevel !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
-                <span>Nivel: <strong>{selectedLevel}</strong></span>
-                <button onClick={() => setSelectedLevel('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
+            {selectedLevels.map(lvlId => {
+              const lvl = levelsConfig.find(item => item.id === lvlId);
+              return (
+                <span key={lvlId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                  <span>Nivel: <strong>{lvl?.label || lvlId}</strong></span>
+                  <button onClick={() => toggleLevel(lvlId)} className="hover:text-rose-600 cursor-pointer p-0.5">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              );
+            })}
+
+            {selectedAtsScore !== 'ALL' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-indigo-50 text-indigo-950 border border-indigo-200 shadow-2xs">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Scor ATS: <strong>{
+                  selectedAtsScore === 'TOP_80' ? '80%+ Match' :
+                  selectedAtsScore === 'TOP_60' ? '60%+ Match' :
+                  selectedAtsScore === 'TOP_40' ? '40%+ Match' :
+                  selectedAtsScore === 'UNDER_40' ? 'Sub 40%' : selectedAtsScore
+                }</strong></span>
+                <button onClick={() => { setSelectedAtsScore('ALL'); setCurrentPage(1); }} className="hover:text-rose-600 cursor-pointer p-0.5 text-gray-500">
                   <X className="w-3 h-3" />
                 </button>
               </span>
@@ -1585,11 +1674,8 @@ export default function JobSearchPage({
                     )}
                   </div>
 
-                  {/* SALARIU & DATA EXACTĂ POSTĂRII */}
-                  <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-100 text-gray-600 font-medium">
-                    <span className="font-extrabold text-gray-900">
-                      {job.salaryRange}
-                    </span>
+                  {/* DATA EXACTĂ POSTĂRII */}
+                  <div className="flex items-center justify-end text-xs pt-1 border-t border-gray-100 text-gray-600 font-medium">
                     <span 
                       className={`flex items-center gap-1 text-[11px] ${
                         formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo) === 'Dată nespecificată'
@@ -1601,32 +1687,6 @@ export default function JobSearchPage({
                       <Calendar className="w-3 h-3 text-gray-400" />
                       {formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo)}
                     </span>
-                  </div>
-
-                  {/* SKILLS REQUIRED & MATCHING */}
-                  <div className="flex flex-wrap gap-1 pt-1">
-                    {job.skillsRequired.slice(0, 4).map((s, idx) => {
-                      const isMatched = job.matchingSkills && job.matchingSkills.includes(s);
-                      return (
-                        <span 
-                          key={idx}
-                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border flex items-center gap-1 ${
-                            isMatched 
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs' 
-                              : 'bg-gray-50 text-gray-600 border-gray-200'
-                          }`}
-                          title={isMatched ? `✓ Competență bifată în CV-ul tău: ${s}` : `Competență cerută de angajator: ${s}`}
-                        >
-                          {isMatched && <Check className="w-2.5 h-2.5 text-emerald-600 shrink-0" />}
-                          <span>{s}</span>
-                        </span>
-                      );
-                    })}
-                    {job.skillsRequired.length > 4 && (
-                      <span className="text-[10px] font-bold text-gray-400 self-center">
-                        +{job.skillsRequired.length - 4}
-                      </span>
-                    )}
                   </div>
 
                   {/* BUTOANE: VEZI FIȘA COMPLETĂ & AUDIT MODIFICĂRI */}

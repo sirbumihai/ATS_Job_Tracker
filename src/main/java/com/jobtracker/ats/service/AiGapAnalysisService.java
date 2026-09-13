@@ -524,17 +524,29 @@ public class AiGapAnalysisService {
     }
 
     public Map<String, Object> matchJobWithAi(String jobId, String jobTitle, String rawDescription, UUID userId) {
+        return matchJobWithAi(jobId, jobTitle, rawDescription, userId, null);
+    }
+
+    public Map<String, Object> matchJobWithAi(String jobId, String jobTitle, String rawDescription, UUID userId, UUID cvProfileId) {
         String resumeText = null;
-        if (userId != null) {
-            Optional<CvProfile> primaryCv = cvProfileRepository.findFirstByUserIdAndIsPrimaryTrue(userId)
-                    .or(() -> cvProfileRepository.findFirstByUserIdOrderByUpdatedAtDesc(userId));
-            if (primaryCv.isPresent()) {
-                resumeText = buildCvProfileText(primaryCv.get());
+        if (cvProfileId != null) {
+            Optional<CvProfile> selectedCv = cvProfileRepository.findById(cvProfileId);
+            if (selectedCv.isPresent()) {
+                resumeText = buildCvProfileText(selectedCv.get());
             }
-            if (resumeText == null || resumeText.isBlank()) {
-                List<Resume> userResumes = resumeRepository.findByUserIdOrderByCreatedAtAsc(userId);
-                if (!userResumes.isEmpty()) {
-                    resumeText = userResumes.getLast().getRawText();
+        }
+        if (resumeText == null || resumeText.isBlank()) {
+            if (userId != null) {
+                Optional<CvProfile> primaryCv = cvProfileRepository.findFirstByUserIdAndIsPrimaryTrue(userId)
+                        .or(() -> cvProfileRepository.findFirstByUserIdOrderByUpdatedAtDesc(userId));
+                if (primaryCv.isPresent()) {
+                    resumeText = buildCvProfileText(primaryCv.get());
+                }
+                if (resumeText == null || resumeText.isBlank()) {
+                    List<Resume> userResumes = resumeRepository.findByUserIdOrderByCreatedAtAsc(userId);
+                    if (!userResumes.isEmpty()) {
+                        resumeText = userResumes.getLast().getRawText();
+                    }
                 }
             }
         }

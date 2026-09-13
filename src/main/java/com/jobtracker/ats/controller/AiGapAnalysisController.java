@@ -98,7 +98,14 @@ public class AiGapAnalysisController {
         String rawDescription = (String) request.getOrDefault("rawDescription", "");
         String jobId = (String) request.getOrDefault("jobId", null);
 
-        Map<String, Object> result = aiGapAnalysisService.matchJobWithAi(jobId, jobTitle, rawDescription, userId);
+        UUID cvProfileId = null;
+        if (request.containsKey("cvProfileId") && request.get("cvProfileId") != null) {
+            try {
+                cvProfileId = UUID.fromString(String.valueOf(request.get("cvProfileId")));
+            } catch (Exception ignored) {}
+        }
+
+        Map<String, Object> result = aiGapAnalysisService.matchJobWithAi(jobId, jobTitle, rawDescription, userId, cvProfileId);
         return ResponseEntity.ok(result);
     }
 }

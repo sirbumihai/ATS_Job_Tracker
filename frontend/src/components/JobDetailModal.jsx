@@ -201,6 +201,31 @@ export default function JobDetailModal({
   const [loadingAiAnalysis, setLoadingAiAnalysis] = useState(false);
   const [aiAnalysisError, setAiAnalysisError] = useState(null);
 
+  // State pentru selectare CV personal pentru comparație
+  const [userCvs, setUserCvs] = useState([]);
+  const [selectedCvId, setSelectedCvId] = useState(null);
+  const [loadingCvs, setLoadingCvs] = useState(false);
+
+  useEffect(() => {
+    if (!activeUserId) return;
+    setLoadingCvs(true);
+    fetch('/api/v1/cv/list', {
+      headers: { 'X-User-Id': activeUserId }
+    })
+      .then(res => res.ok ? res.json() : [])
+      .then(list => {
+        if (Array.isArray(list) && list.length > 0) {
+          setUserCvs(list);
+          const primary = list.find(c => c.isPrimary) || list[0];
+          if (primary) {
+            setSelectedCvId(primary.id);
+          }
+        }
+      })
+      .catch(e => console.warn('Nu s-au putut încărca CV-urile:', e))
+      .finally(() => setLoadingCvs(false));
+  }, [activeUserId]);
+
   const formatDateTime = (dtStr) => {
     if (!dtStr) return 'Nespecificat';
     try {
@@ -218,9 +243,26 @@ export default function JobDetailModal({
     }
   };
 
-  const runAiMatch = async (jobToAnalyze) => {
+  const runAiMatch = async (jobToAnalyze, cvIdToUse) => {
     const targetJob = jobToAnalyze || detailedJob || job;
     if (!targetJob || !targetJob.rawDescription || targetJob.rawDescription.trim().length < 50) return;
+
+    const cvId = cvIdToUse !== undefined ? cvIdToUse : selectedCvId;
+    const cacheKey = `ats_ai_job_${targetJob.id || targetJob.directApplyUrl}_${cvId || 'default'}`;
+
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && (parsed.aiVerified || (parsed.mandatory && parsed.mandatory.length > 0))) {
+          setAiAnalysisData(parsed);
+          if (onUpdateJobScore && typeof onUpdateJobScore === 'function') {
+            onUpdateJobScore(targetJob.id, Number(parsed.atsScore) || targetJob.atsMatchScore, parsed);
+          }
+          return;
+        }
+      }
+    } catch (e) {}
 
     setLoadingAiAnalysis(true);
     setAiAnalysisError(null);
@@ -235,14 +277,14 @@ export default function JobDetailModal({
           jobId: targetJob.id,
           jobTitle: targetJob.jobTitle,
           rawDescription: targetJob.rawDescription,
-          userId: activeUserId
+          userId: activeUserId,
+          cvProfileId: cvId || null
         })
       });
       if (res.ok) {
         const data = await res.json();
         if (data && (data.aiVerified || (data.matchingSkills && data.matchingSkills.length > 0) || (data.mandatory && data.mandatory.length > 0))) {
           setAiAnalysisData(data);
-          const cacheKey = `ats_ai_job_${targetJob.id || targetJob.directApplyUrl}`;
           try {
             sessionStorage.setItem(cacheKey, JSON.stringify(data));
           } catch (e) {}
@@ -261,6 +303,11 @@ export default function JobDetailModal({
     } finally {
       setLoadingAiAnalysis(false);
     }
+  };
+
+  const handleSelectCv = (cvId) => {
+    setSelectedCvId(cvId);
+    runAiMatch(currentJob, cvId);
   };
 
   const fetchChanges = async () => {
@@ -672,15 +719,37 @@ export default function JobDetailModal({
                 <p className="text-xs text-slate-300 mt-1">
                   Comparat în timp real cu profilul tău de CV pentru a-ți evidenția atuurile la interviu
                 </p>
+
+                {/* SELECTOR CV UTILIZATOR PENTRU COMPARARE */}
+                {userCvs.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 mt-2.5 pt-2 border-t border-white/10">
+                    <span className="text-xs font-extrabold text-indigo-300 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                      Compară cu CV-ul:
+                    </span>
+                    <select
+                      value={selectedCvId || ''}
+                      onChange={(e) => handleSelectCv(e.target.value)}
+                      disabled={loadingAiAnalysis}
+                      className="bg-indigo-900/90 hover:bg-indigo-900 border border-indigo-400/50 text-white font-extrabold text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer shadow-sm transition disabled:opacity-50"
+                    >
+                      {userCvs.map((c) => (
+                        <option key={c.id} value={c.id} className="bg-slate-900 text-white py-1">
+                          {c.title || 'CV Personal'} {c.isPrimary ? '⭐ (Principal)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
                 <button
                   type="button"
-                  onClick={runAiMatch}
+                  onClick={() => runAiMatch(currentJob, selectedCvId)}
                   disabled={loadingAiAnalysis}
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-extrabold text-xs shadow-md transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed border border-indigo-400/40"
-                  title="Analizează semantic cerințele jobului direct cu AI Groq și CV-ul tău"
+                  title="Analizează semantic cerințele jobului direct cu AI Groq și CV-ul selectat"
                 >
                   {loadingAiAnalysis ? (
                     <>
