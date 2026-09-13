@@ -434,7 +434,7 @@ export default function KanbanBoard({
     }
   };
 
-  // RENDER CARD PLACEHOLDER (CHENAR DE DIMENSIUNEA UNUI JOB)
+  // RENDER CARD PLACEHOLDER (CHENAR CU DIMENSIUNEA SI STRUCTURA REALA A UNUI JOB)
   const renderCardPlaceholder = (targetCardId, position) => {
     const draggedApp = applications.find(a => a.id === draggedAppId);
     const score = draggedApp?.semanticMatchScore ? Number(draggedApp.semanticMatchScore) : 0;
@@ -454,8 +454,9 @@ export default function KanbanBoard({
           }
           handleDragEnd();
         }}
-        className="rounded-xl border-2 border-dashed border-indigo-500 bg-indigo-50/80 p-3 space-y-2.5 select-none shadow-xs pointer-events-auto min-h-[120px] flex flex-col justify-between transition-all"
+        className="rounded-xl border-2 border-dashed border-indigo-500 bg-indigo-50/80 p-3 space-y-2.5 select-none shadow-xs pointer-events-auto transition-all"
       >
+        {/* 1. HEADER: COMPANIE, TITLU SI BADGE PLASEAZA AICI */}
         <div className="flex items-start justify-between gap-1.5">
           <div className="flex-1 min-w-0">
             <span className="text-[10px] font-black tracking-wider uppercase text-indigo-600 block truncate">
@@ -465,23 +466,44 @@ export default function KanbanBoard({
               {draggedApp?.jobTitle || 'Pozitie Job'}
             </h4>
           </div>
-          <span className="text-[10px] font-black px-2 py-0.5 bg-indigo-200 text-indigo-900 rounded-full shrink-0">
+          <span className="text-[10px] font-black px-2 py-0.5 bg-indigo-200 text-indigo-900 rounded-full shrink-0 whitespace-nowrap">
             Plaseaza aici
           </span>
         </div>
 
-        {draggedApp?.jobLocation && (
-          <span className="text-[10px] text-indigo-700 block truncate">
-            {draggedApp.jobLocation}
-          </span>
-        )}
+        {/* 2. MATCH SCORE PILL + SLIM PROGRESS (IDENTIC CU CARDUL REAL) */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="inline-flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md text-[10px] bg-indigo-100 text-indigo-800 border border-indigo-200 shrink-0">
+              <Sparkles className="w-2.5 h-2.5 shrink-0 text-indigo-600" />
+              {score > 0 ? `${score.toFixed(0)}% Match ATS` : 'ATS Match'}
+            </span>
+            {draggedApp?.jobLocation && (
+              <span className="text-[10px] text-indigo-700/80 truncate max-w-[100px]" title={draggedApp.jobLocation}>
+                {draggedApp.jobLocation}
+              </span>
+            )}
+          </div>
+          <div className="w-full bg-indigo-100 h-1 rounded-full overflow-hidden border border-indigo-200/60">
+            <div 
+              className="h-full bg-indigo-500 rounded-full transition-all duration-500" 
+              style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
+            ></div>
+          </div>
+        </div>
 
-        <div className="py-1.5 px-2 rounded-lg border border-dashed border-indigo-300 bg-white/80 flex items-center justify-between text-[11px] font-bold text-indigo-900">
-          <span className="flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-indigo-600" />
-            {score > 0 ? `${score.toFixed(0)}% Match ATS` : 'ATS Match'}
+        {/* 3. CV ROW PLACEHOLDER (IDENTIC CA INALTIME CU SELECTORUL REAL) */}
+        <div className="flex items-center gap-1.5 bg-white/70 px-2 py-1 rounded-lg border border-dashed border-indigo-200 text-xs">
+          <FileText className="w-3 h-3 text-indigo-400 shrink-0" />
+          <span className="text-[11px] font-semibold text-indigo-800 truncate">
+            {draggedApp?.cvProfileId ? 'CV din Studio' : (draggedApp?.resumeId ? 'Fisier CV' : 'CV Neselectat')}
           </span>
-          <span className="text-[10px] text-indigo-600 font-semibold">+ Pozitie noua</span>
+        </div>
+
+        {/* 4. ACTION BUTTON PLACEHOLDER (IDENTIC CU BUTONUL REAL) */}
+        <div className="w-full py-1.5 px-2.5 rounded-lg border border-dashed border-indigo-300 bg-indigo-100/60 text-indigo-950 text-[11px] font-extrabold flex items-center justify-center gap-1.5 shadow-2xs">
+          <Sparkles className="w-3 h-3 text-indigo-600 shrink-0" />
+          <span className="truncate">Pozitie Noua in Coloana</span>
         </div>
       </div>
     );
