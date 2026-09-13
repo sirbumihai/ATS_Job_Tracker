@@ -1271,12 +1271,12 @@ export default function JobDetailModal({
               {isSaved ? (
                 <>
                   <BookmarkCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Salvat în Kanban</span>
+                  <span>Salvat în Tracker</span>
                 </>
               ) : (
                 <>
                   <Bookmark className="w-4 h-4 text-gray-500" />
-                  <span>{isSaving ? 'Se salvează...' : 'Salvează în Kanban'}</span>
+                  <span>{isSaving ? 'Se salvează...' : 'Salvează în Tracker'}</span>
                 </>
               )}
             </button>

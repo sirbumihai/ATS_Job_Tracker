@@ -540,7 +540,7 @@ export default function JobSearchPage({
           console.warn('Nu s-a putut salva în localStorage:', e);
         }
 
-        setToastMessage(`Jobul „${job.jobTitle}” la ${job.companyName} a fost salvat în Kanban!`);
+        setToastMessage(`Jobul „${job.jobTitle}” la ${job.companyName} a fost salvat în Tracker!`);
         setTimeout(() => setToastMessage(null), 4000);
         if (onSaveToKanbanSuccess) onSaveToKanbanSuccess();
       }
@@ -772,7 +772,7 @@ export default function JobSearchPage({
               onClick={onNavigateToKanban}
               className="ml-2 px-2.5 py-1 bg-white text-black text-xs font-extrabold rounded-lg hover:bg-gray-200 transition cursor-pointer"
             >
-              Vezi în Kanban →
+              Vezi în Tracker →
             </button>
           )}
         </div>
@@ -1724,7 +1724,7 @@ export default function JobSearchPage({
                     {isSaved ? (
                       <>
                         <BookmarkCheck className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Salvat în Kanban</span>
+                        <span>Salvat în Tracker</span>
                       </>
                     ) : (
                       <>

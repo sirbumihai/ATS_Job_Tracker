@@ -20,7 +20,9 @@ import {
   Send,
   Calendar,
   Award,
-  XCircle
+  XCircle,
+  Plus,
+  FolderKanban
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 
@@ -35,7 +37,8 @@ export default function KanbanBoard({
   onStatusChange,
   onDeleteApplication,
   onApplicationUpdated,
-  onEditCvInStudio
+  onEditCvInStudio,
+  onOpenAddJob
 }) {
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
   const [searchQuery, setSearchQuery] = useState('');
@@ -337,19 +340,30 @@ export default function KanbanBoard({
         </div>
       )}
 
-      {/* HEADER WITH INSTRUCTION */}
-      <div className="flex items-center justify-between">
+      {/* HEADER WITH INSTRUCTION & ACTIONS */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-gray-200/80 shadow-2xs">
         <div>
           <h2 className="text-base sm:text-lg font-bold text-gray-950 flex items-center gap-2 tracking-tight">
-            <Building2 className="w-5 h-5 text-gray-900" />
-            {viewMode === 'kanban' ? 'Pipeline Aplicații (Drag & Drop)' : 'Listă Centralizată Aplicații'}
+            <FolderKanban className="w-5 h-5 text-gray-900" />
+            {viewMode === 'kanban' ? 'Tracker & Pipeline Aplicații' : 'Listă Centralizată Aplicații'}
           </h2>
-          <p className="text-xs text-gray-500 font-medium">
+          <p className="text-xs text-gray-500 font-medium mt-0.5">
             {viewMode === 'kanban' 
               ? 'Trage orice card de job în altă coloană pentru a-i actualiza statusul instant și alege CV-ul asociat.'
               : 'Gestionează statusul, CV-ul asociat fiecărui job și rapoartele AI într-un format compact.'}
           </p>
         </div>
+
+        {onOpenAddJob && (
+          <button
+            onClick={onOpenAddJob}
+            className="self-start sm:self-auto px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95 shrink-0"
+            title="Adaugă un job nou manual în tracker"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Adaugă Job</span>
+          </button>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -449,7 +463,7 @@ export default function KanbanBoard({
                                     onDeleteApplication && onDeleteApplication(app.id);
                                   }
                                 }}
-                                title="Șterge din Kanban"
+                                title="Șterge din Tracker"
                                 className="p-1 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition cursor-pointer"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />

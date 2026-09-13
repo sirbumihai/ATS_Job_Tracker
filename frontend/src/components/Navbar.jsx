@@ -57,8 +57,8 @@ export default function Navbar({
                 : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
             }`}
           >
-            <Building2 className="w-3.5 h-3.5" />
-            Kanban
+            <FolderKanban className="w-3.5 h-3.5 text-blue-600" />
+            Tracker Aplicații
           </button>
 
           <button
@@ -101,10 +101,10 @@ export default function Navbar({
         {/* DESKTOP ACTIONS */}
         <div className="hidden lg:flex items-center gap-2.5">
           {currentUser ? (
-            <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
+            <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 border border-gray-200 text-gray-800">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span className="max-w-[120px] truncate">{currentUser.fullName || currentUser.email}</span>
+                <span className="max-w-[140px] truncate">{currentUser.fullName || currentUser.email}</span>
               </div>
               <button 
                 onClick={onLogout}
@@ -123,32 +123,27 @@ export default function Navbar({
               Login
             </button>
           )}
-
-          <button 
-            onClick={onOpenUpload}
-            className="text-xs flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-semibold border transition cursor-pointer bg-white hover:bg-gray-50 text-gray-900 border-gray-300 shadow-2xs"
-          >
-            <Upload className="w-3.5 h-3.5 text-gray-600" />
-            Upload CV
-          </button>
-
-          <button 
-            onClick={onOpenAddJob}
-            className="text-xs flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold transition cursor-pointer bg-black hover:bg-neutral-800 text-white shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Adaugă Job
-          </button>
         </div>
 
         {/* MOBILE HAMBURGER BUTTON */}
         <div className="flex items-center gap-2 lg:hidden">
-          <button 
-            onClick={onOpenAddJob}
-            className="p-2 rounded-xl bg-black text-white text-xs font-bold flex items-center gap-1"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
+          {currentUser ? (
+            <button 
+              onClick={onLogout}
+              title="Deconectare"
+              className="p-2 rounded-xl transition border cursor-pointer bg-gray-100 text-gray-600 border-gray-200"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          ) : (
+            <button 
+              onClick={onOpenAuth}
+              className="text-xs flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold bg-black text-white shadow-sm"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Login
+            </button>
+          )}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 rounded-xl border bg-gray-100 border-gray-200 text-gray-900"
@@ -169,8 +164,8 @@ export default function Navbar({
                 activeTab === 'kanban' ? 'bg-black text-white' : 'text-gray-700'
               }`}
             >
-              <Building2 className="w-3.5 h-3.5" />
-              Kanban
+              <FolderKanban className="w-3.5 h-3.5" />
+              Tracker
             </button>
             <button
               onClick={() => { setActiveTab('job_search'); setMobileMenuOpen(false); }}
@@ -198,23 +193,6 @@ export default function Navbar({
             >
               <FileText className="w-3.5 h-3.5" />
               Studio CV
-            </button>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => { onOpenUpload(); setMobileMenuOpen(false); }}
-              className="flex-1 py-2 text-xs font-semibold rounded-xl border flex items-center justify-center gap-1.5 bg-white border-gray-300 text-gray-800"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              Upload CV
-            </button>
-            <button
-              onClick={() => { onOpenAddJob(); setMobileMenuOpen(false); }}
-              className="flex-1 py-2 text-xs font-bold rounded-xl bg-black text-white flex items-center justify-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Adaugă Job
             </button>
           </div>
         </div>
