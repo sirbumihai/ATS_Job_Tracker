@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  BrainCircuit, 
   Building2, 
   User, 
   LogOut, 
@@ -33,16 +32,13 @@ export default function Navbar({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* LOGO */}
-        <div className="flex items-center gap-2.5 sm:gap-3 cursor-pointer" onClick={() => setActiveTab('tracker')}>
-          <div className="p-2 sm:p-2.5 bg-black text-white rounded-xl sm:rounded-2xl shadow-sm">
-            <BrainCircuit className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
+        <div className="flex items-center cursor-pointer select-none group" onClick={() => setActiveTab('tracker')}>
           <div>
-            <h1 className="font-black text-base sm:text-xl text-gray-950 flex items-center gap-1.5 tracking-tight">
-              ATS AI <span className="font-extrabold text-gray-700">Career Coach</span>
+            <h1 className="font-black text-lg sm:text-2xl text-gray-950 flex items-center gap-1.5 tracking-tight group-hover:text-black transition">
+              JobFlow <span className="text-blue-600 font-black">AI</span>
             </h1>
-            <p className="hidden sm:flex text-[11px] text-gray-500 font-semibold items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Spring Boot 3.3 • React 18
+            <p className="hidden sm:flex text-[11px] text-gray-500 font-semibold items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Tracker Aplicatii & ATS Studio
             </p>
           </div>
         </div>
@@ -57,7 +53,7 @@ export default function Navbar({
                 : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
             }`}
           >
-            <FolderKanban className="w-3.5 h-3.5 text-blue-600" />
+            <FolderKanban className={`w-3.5 h-3.5 ${activeTab === 'tracker' ? 'text-blue-400' : 'text-blue-600'}`} />
             Tracker Aplicatii
           </button>
 
@@ -69,7 +65,7 @@ export default function Navbar({
                 : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
             }`}
           >
-            <Search className="w-3.5 h-3.5 text-amber-500" />
+            <Search className={`w-3.5 h-3.5 ${activeTab === 'job_search' ? 'text-amber-400' : 'text-amber-500'}`} />
             Căutare Job-uri
           </button>
 
@@ -81,7 +77,7 @@ export default function Navbar({
                 : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
             }`}
           >
-            <Files className="w-3.5 h-3.5" />
+            <Files className={`w-3.5 h-3.5 ${activeTab === 'cv_library' ? 'text-emerald-400' : 'text-emerald-600'}`} />
             CV-urile Mele
           </button>
 
@@ -93,7 +89,7 @@ export default function Navbar({
                 : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
             }`}
           >
-            <FileText className="w-3.5 h-3.5" />
+            <FileText className={`w-3.5 h-3.5 ${activeTab === 'cv_studio' ? 'text-purple-400' : 'text-purple-600'}`} />
             Studio CV
           </button>
         </div>
@@ -160,38 +156,38 @@ export default function Navbar({
           <div className="flex gap-1.5 p-1 rounded-xl border overflow-x-auto bg-gray-100 border-gray-200">
             <button
               onClick={() => { setActiveTab('tracker'); setMobileMenuOpen(false); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 shrink-0 ${
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shrink-0 ${
                 activeTab === 'tracker' ? 'bg-black text-white' : 'text-gray-700'
               }`}
             >
-              <FolderKanban className="w-3.5 h-3.5" />
+              <FolderKanban className={`w-3.5 h-3.5 ${activeTab === 'tracker' ? 'text-blue-400' : 'text-blue-600'}`} />
               Tracker
             </button>
             <button
               onClick={() => { setActiveTab('job_search'); setMobileMenuOpen(false); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 shrink-0 ${
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shrink-0 ${
                 activeTab === 'job_search' ? 'bg-black text-white' : 'text-gray-700'
               }`}
             >
-              <Search className="w-3.5 h-3.5" />
+              <Search className={`w-3.5 h-3.5 ${activeTab === 'job_search' ? 'text-amber-400' : 'text-amber-500'}`} />
               Joburi
             </button>
             <button
               onClick={() => { setActiveTab('cv_library'); setMobileMenuOpen(false); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 shrink-0 ${
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shrink-0 ${
                 activeTab === 'cv_library' ? 'bg-black text-white' : 'text-gray-700'
               }`}
             >
-              <Files className="w-3.5 h-3.5" />
+              <Files className={`w-3.5 h-3.5 ${activeTab === 'cv_library' ? 'text-emerald-400' : 'text-emerald-600'}`} />
               CV-uri
             </button>
             <button
               onClick={() => { setActiveTab('cv_studio'); setMobileMenuOpen(false); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1 shrink-0 ${
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shrink-0 ${
                 activeTab === 'cv_studio' ? 'bg-black text-white' : 'text-gray-700'
               }`}
             >
-              <FileText className="w-3.5 h-3.5" />
+              <FileText className={`w-3.5 h-3.5 ${activeTab === 'cv_studio' ? 'text-purple-400' : 'text-purple-600'}`} />
               Studio CV
             </button>
           </div>

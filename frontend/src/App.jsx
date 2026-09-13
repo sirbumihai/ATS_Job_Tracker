@@ -368,7 +368,7 @@ export default function App() {
 
       {/* FOOTER */}
       <footer className="border-t border-gray-200 bg-white py-4 text-center text-xs text-gray-500">
-        <p>ATS AI Career Coach & Engine • Spring Boot 3.3 Java 21 • React 18 • PostgreSQL pgvector</p>
+        <p>JobFlow AI • Tracker & ATS Studio • Spring Boot 3.3 • React 18 • PostgreSQL pgvector</p>
       </footer>
 
       {/* MODALE POPUP */}
