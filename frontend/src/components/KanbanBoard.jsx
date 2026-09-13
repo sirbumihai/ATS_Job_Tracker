@@ -480,6 +480,40 @@ export default function KanbanBoard({
               const isMobileVisible = mobileSelectedColumn === col.key;
               const isDragOver = dragOverColumnKey === col.key;
               const ColIcon = col.icon;
+              const draggedApp = applications.find(a => a.id === draggedAppId);
+              const isDraggingOverColumnEnd = dragOverTarget?.columnKey === col.key && dragOverTarget?.cardId === null && draggedAppId && !colApps.some(a => a.id === draggedAppId && colApps[colApps.length - 1]?.id === a.id);
+
+              const renderCardPlaceholder = () => (
+                <div className="rounded-xl border-2 border-dashed border-blue-500 bg-blue-50/70 p-3 space-y-2.5 transition-all select-none pointer-events-none shadow-sm animate-pulse">
+                  <div className="flex items-start justify-between gap-1.5">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[10px] font-black tracking-wider uppercase text-blue-600 block truncate">
+                        {draggedApp?.companyName || 'Companie'}
+                      </span>
+                      <h4 className="font-bold text-xs sm:text-[13px] text-blue-950 leading-snug mt-0.5 line-clamp-2">
+                        {draggedApp?.jobTitle || 'Pozitie Job'}
+                      </h4>
+                    </div>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 bg-blue-200 text-blue-900 rounded-full shrink-0">
+                      Plaseaza aici
+                    </span>
+                  </div>
+
+                  {draggedApp?.jobLocation && (
+                    <span className="text-[10px] text-blue-700 block truncate">
+                      {draggedApp.jobLocation}
+                    </span>
+                  )}
+
+                  <div className="py-2 px-2.5 rounded-lg border border-dashed border-blue-300 bg-white/70 flex items-center justify-between text-[11px] font-bold text-blue-800">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-blue-600" />
+                      {draggedApp?.semanticMatchScore ? `${Number(draggedApp.semanticMatchScore).toFixed(0)}% Match ATS` : 'ATS Match'}
+                    </span>
+                    <span className="text-[10px] text-blue-600 font-semibold">+ Pozitie noua</span>
+                  </div>
+                </div>
+              );
 
               return (
                 <div 
@@ -515,9 +549,7 @@ export default function KanbanBoard({
 
                       return (
                         <React.Fragment key={app.id}>
-                          {isDropTargetTop && (
-                            <div className="h-1.5 bg-blue-600 rounded-full my-1 shadow-sm transition-all animate-pulse" />
-                          )}
+                          {isDropTargetTop && renderCardPlaceholder()}
 
                           <div 
                             draggable={true}
@@ -656,17 +688,21 @@ export default function KanbanBoard({
                             </button>
                           </div>
 
-                          {isDropTargetBottom && (
-                            <div className="h-1.5 bg-blue-600 rounded-full my-1 shadow-sm transition-all animate-pulse" />
-                          )}
+                          {isDropTargetBottom && renderCardPlaceholder()}
                         </React.Fragment>
                       );
                     })}
 
+                    {isDraggingOverColumnEnd && colApps.length > 0 && renderCardPlaceholder()}
+
                     {colApps.length === 0 && (
-                      <div className="h-40 flex items-center justify-center text-[11px] text-gray-400 italic border border-dashed border-gray-300/80 rounded-xl p-3 text-center">
-                        {currentUser ? 'Plaseaza un job aici' : 'Autentifica-te'}
-                      </div>
+                      isDragOver && draggedApp ? (
+                        renderCardPlaceholder()
+                      ) : (
+                        <div className="h-40 flex items-center justify-center text-[11px] text-gray-400 italic border border-dashed border-gray-300/80 rounded-xl p-3 text-center">
+                          {currentUser ? 'Plaseaza un job aici' : 'Autentifica-te'}
+                        </div>
+                      )
                     )}
                   </div>
                 </div>

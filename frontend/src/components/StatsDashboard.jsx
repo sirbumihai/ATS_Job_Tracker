@@ -1,9 +1,10 @@
 import React from 'react';
-import { Briefcase, Sparkles, TrendingUp, Database } from 'lucide-react';
+import { Briefcase, Sparkles, TrendingUp, Award } from 'lucide-react';
 
 export default function StatsDashboard({ applications = [] }) {
   const applicationsCount = applications.length;
   const interviewingCount = applications.filter(a => a.status === 'INTERVIEWING').length;
+  const offersCount = applications.filter(a => a.status === 'OFFER_RECEIVED').length;
   const scores = applications.map(a => Number(a.semanticMatchScore || 0)).filter(s => s > 0);
   const averageMatchScore = scores.length > 0 
     ? (scores.reduce((acc, curr) => acc + curr, 0) / scores.length).toFixed(1) + '%' 
@@ -47,17 +48,20 @@ export default function StatsDashboard({ applications = [] }) {
         </div>
       </div>
 
-      {/* CARD 4: BAZA DE DATE CV */}
+      {/* CARD 4: OFERTE PRIMITE */}
       <div className="bg-white border border-gray-200/90 shadow-sm p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between text-gray-900 transition hover:shadow-md">
         <div>
-          <p className="text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Baza de Date CV</p>
-          <h3 className="text-xs font-bold text-gray-800 mt-1 truncate flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            PostgreSQL DB Conectat
+          <p className="text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Oferte Primite</p>
+          <h3 className={`text-2xl sm:text-3xl font-black mt-0.5 sm:mt-1 ${offersCount > 0 ? 'text-emerald-600' : 'text-gray-950'}`}>
+            {offersCount}
           </h3>
         </div>
-        <div className="p-2.5 sm:p-3 bg-gray-100 border border-gray-200 rounded-xl sm:rounded-2xl text-gray-900 mt-2 sm:mt-0 self-end sm:self-auto shadow-2xs">
-          <Database className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl mt-2 sm:mt-0 self-end sm:self-auto shadow-2xs ${
+          offersCount > 0 
+            ? 'bg-emerald-50 border border-emerald-200 text-emerald-600' 
+            : 'bg-gray-100 border border-gray-200 text-gray-900'
+        }`}>
+          <Award className="w-5 h-5 sm:w-6 sm:h-6" />
         </div>
       </div>
 
