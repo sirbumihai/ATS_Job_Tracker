@@ -589,7 +589,7 @@ public class AiGapAnalysisService {
             5. "matchingSkills": Lista simplă a abilităților / tehnologiilor din cerințe pe care candidatul le are în CV.
             6. "missingSkills": Lista abilităților / tehnologiilor cerute care lipsesc din CV-ul candidatului.
             7. "atsScore": Scor procentual realist (0.0 - 100.0) calculat ca proporție între cerințele obligatorii bifate și totalul cerințelor.
-            8. "experienceLevel": Nivelul real de experiență al rolului: "SENIOR" (pentru Manager, Lead, Principal, Architect, Staff, Director sau dacă cere 5+ ani), "MID" (pentru roluri standard/fără prefix sau cu 2-4 ani de experiență), "JUNIOR" (pentru Junior, Entry-level, Graduate, Începător, 0-2 ani), sau "INTERNSHIP" (pentru Intern, Stagiu, Practică, Trainee, Student).
+            8. "experienceLevel": Nivelul real de experiență cerut de ROL / ANUNȚ (ATENȚIE: NU este nivelul candidatului din CV!): "SENIOR" (dacă rolul este Manager, Lead, Principal, Architect, Staff, Director sau dacă jobul cere 5+ ani), "MID" (pentru roluri standard fără prefix sau dacă cere 2-4 ani de experiență), "JUNIOR" (EXCLUSIV dacă titlul jobului conține explicit Junior/Entry-Level/Graduate sau dacă anunțul menționează 0-1 ani), sau "INTERNSHIP" (pentru roluri de stagiu/practică). ATENȚIE: Un rol fără prefixul "Junior" sau care cere 2-4 ani ori 3+ ani de experiență este STRICT "MID", NICIODATĂ "JUNIOR"!
             9. "verdict": 1-2 propoziții cu concluzia ta sinceră de recruiter pentru acest rol.
             
             Răspunde EXCLUSIV în format JSON valid:
@@ -630,8 +630,30 @@ public class AiGapAnalysisService {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> map = objectMapper.convertValue(root, Map.class);
                 map.put("aiVerified", true);
-                if (!map.containsKey("experienceLevel") || map.get("experienceLevel") == null) {
-                    map.put("experienceLevel", JobSearchAggregatorService.determineExperienceLevel(jobTitle, descriptionToAnalyze));
+                
+                String deterministicLevel = JobSearchAggregatorService.determineExperienceLevel(jobTitle, descriptionToAnalyze);
+                String aiLevel = map.containsKey("experienceLevel") && map.get("experienceLevel") != null
+                        ? String.valueOf(map.get("experienceLevel")).trim().toUpperCase()
+                        : null;
+
+                // Protecție anti-halucinare: LLM-ul nu are voie să degradeze un rol Mid/Senior la Junior/Internship
+                if ("SENIOR".equals(deterministicLevel)) {
+                    map.put("experienceLevel", "SENIOR");
+                } else if ("MID".equals(deterministicLevel)) {
+                    if ("SENIOR".equals(aiLevel)) {
+                        map.put("experienceLevel", "SENIOR");
+                    } else {
+                        map.put("experienceLevel", "MID");
+                    }
+                } else if ("INTERNSHIP".equals(deterministicLevel)) {
+                    map.put("experienceLevel", "INTERNSHIP");
+                } else {
+                    // deterministicLevel este JUNIOR
+                    if ("SENIOR".equals(aiLevel) || "MID".equals(aiLevel)) {
+                        map.put("experienceLevel", aiLevel);
+                    } else {
+                        map.put("experienceLevel", "JUNIOR");
+                    }
                 }
                 return map;
             }

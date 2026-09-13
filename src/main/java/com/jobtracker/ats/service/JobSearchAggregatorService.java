@@ -2528,15 +2528,18 @@ public class JobSearchAggregatorService {
             t.contains("head") || t.contains("architect") || t.contains("director") || 
             t.contains("manager") || t.contains("management") ||
             t.contains("expert") || t.contains("confirme") || t.contains("confirmé") ||
-            combined.matches(".*\\b(?:5\\+|6\\+|7\\+|8\\+|5-7|5-8)\\s*(?:ani|years|yrs)\\b.*")) {
+            combined.matches(".*\\b(?:5\\+|6\\+|7\\+|8\\+|5-7|5-8)\\s*(?:ani|years|yrs)\\b.*") ||
+            combined.matches(".*\\b(?:minim(?:um)?|cel puțin|cel putin|at least|peste|more than|min\\.?)\\s*(?:of\\s+)?(?:5|6|7|8|9|10)\\s*(?:\\+|-\\s*\\d+)?\\s*(?:ani|years|yrs|an)\\b.*") ||
+            combined.matches(".*\\b(?:5|6|7|8|9|10)\\s*\\+?\\s*(?:ani|years|yrs)\\s*(?:de\\s+)?(?:experiență|experienta|of\\s+experience|professional\\s+experience|relevant\\s+experience)\\b.*")) {
             return "SENIOR";
         }
 
-        // 2. EXPLICIT 2-3+ ANI / MID-LEVEL EXPERIENCE CHECK:
-        // Dacă anunțul sau descrierea specifică 2-3 ani sau 2+ ani de experiență, NU POATE FI JUNIOR!
-        if (combined.matches(".*\\b(?:minim(?:um)?|cel puțin|cel putin|at least)\\s*(?:2|3|4)\\s*(?:\\+|-\\s*\\d+)?\\s*(?:ani|years|yrs|an)\\b.*") ||
+        // 2. EXPLICIT 2-4+ ANI / MID-LEVEL EXPERIENCE CHECK:
+        // Dacă anunțul sau descrierea specifică 2-4 ani sau 2+ ani de experiență, NU POATE FI JUNIOR!
+        if (combined.matches(".*\\b(?:minim(?:um)?|cel puțin|cel putin|at least|peste|more than|min\\.?)\\s*(?:of\\s+)?(?:2|3|4)\\s*(?:\\+|-\\s*\\d+)?\\s*(?:ani|years|yrs|an)\\b.*") ||
             combined.matches(".*\\b[234]\\+\\s*(?:ani|years|yrs)\\b.*") ||
             combined.matches(".*\\b(?:2\\s*-\\s*[345]|3\\s*-\\s*[45])\\s*(?:ani|years|yrs)\\b.*") ||
+            combined.matches(".*\\b(?:2|3|4)\\s*\\+?\\s*(?:ani|years|yrs)\\s*(?:de\\s+)?(?:experiență|experienta|of\\s+experience|professional\\s+experience|relevant\\s+experience|commercial\\s+experience)\\b.*") ||
             t.contains("mid-level") || t.contains("mid level") || t.contains("middle") || t.contains("intermediate")) {
             return "MID";
         }

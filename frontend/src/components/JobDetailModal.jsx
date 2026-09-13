@@ -255,6 +255,10 @@ export default function JobDetailModal({
       if (cached) {
         const parsed = JSON.parse(cached);
         if (parsed && (parsed.aiVerified || (parsed.mandatory && parsed.mandatory.length > 0))) {
+          const baseLvl = (targetJob.experienceLevel || '').toUpperCase();
+          if ((baseLvl === 'MID' || baseLvl === 'SENIOR') && parsed.experienceLevel === 'JUNIOR') {
+            parsed.experienceLevel = baseLvl;
+          }
           setAiAnalysisData(parsed);
           if (onUpdateJobScore && typeof onUpdateJobScore === 'function') {
             onUpdateJobScore(targetJob.id, Number(parsed.atsScore) || targetJob.atsMatchScore, parsed);
@@ -284,6 +288,10 @@ export default function JobDetailModal({
       if (res.ok) {
         const data = await res.json();
         if (data && (data.aiVerified || (data.matchingSkills && data.matchingSkills.length > 0) || (data.mandatory && data.mandatory.length > 0))) {
+          const baseLvl = (targetJob.experienceLevel || '').toUpperCase();
+          if ((baseLvl === 'MID' || baseLvl === 'SENIOR') && data.experienceLevel === 'JUNIOR') {
+            data.experienceLevel = baseLvl;
+          }
           setAiAnalysisData(data);
           try {
             sessionStorage.setItem(cacheKey, JSON.stringify(data));
@@ -354,6 +362,10 @@ export default function JobDetailModal({
       if (cached) {
         const parsed = JSON.parse(cached);
         if (parsed && (parsed.aiVerified || (parsed.mandatory && parsed.mandatory.length > 0))) {
+          const baseLvl = (job.experienceLevel || '').toUpperCase();
+          if ((baseLvl === 'MID' || baseLvl === 'SENIOR') && parsed.experienceLevel === 'JUNIOR') {
+            parsed.experienceLevel = baseLvl;
+          }
           setAiAnalysisData(parsed);
           hasLoadedFromCache = true;
           if (onUpdateJobScore && typeof onUpdateJobScore === 'function') {
@@ -413,6 +425,23 @@ export default function JobDetailModal({
   if (!job) return null;
 
   const currentJob = detailedJob || job;
+
+  const effectiveExperienceLevel = useMemo(() => {
+    const jobLvl = (currentJob.experienceLevel || '').toUpperCase();
+    const aiLvl = (aiAnalysisData?.experienceLevel || '').toUpperCase();
+
+    // Dacă jobul a fost determinat algoritmic ca SENIOR sau MID, nu permitem AI-ului să îl degradeze la JUNIOR sau INTERNSHIP
+    if (jobLvl === 'SENIOR') return 'SENIOR';
+    if (jobLvl === 'MID') {
+      return aiLvl === 'SENIOR' ? 'SENIOR' : 'MID';
+    }
+    if (jobLvl === 'INTERNSHIP') return 'INTERNSHIP';
+    if (jobLvl === 'JUNIOR') {
+      if (aiLvl === 'SENIOR' || aiLvl === 'MID') return aiLvl;
+      return 'JUNIOR';
+    }
+    return aiLvl || jobLvl || 'MID';
+  }, [currentJob.experienceLevel, aiAnalysisData?.experienceLevel]);
 
   const displayMatchingSkills = (aiAnalysisData?.matchingSkills && aiAnalysisData.matchingSkills.length > 0)
     ? aiAnalysisData.matchingSkills
@@ -622,9 +651,9 @@ export default function JobDetailModal({
                 Nivel Experiență
               </span>
               <p className="text-xs sm:text-sm font-extrabold text-gray-900">
-                {(aiAnalysisData?.experienceLevel || currentJob.experienceLevel) === 'INTERNSHIP' ? 'Internship' :
-                 (aiAnalysisData?.experienceLevel || currentJob.experienceLevel) === 'JUNIOR' ? 'Junior' :
-                 (aiAnalysisData?.experienceLevel || currentJob.experienceLevel) === 'SENIOR' ? 'Senior' : 'Mid-Level'}
+                {effectiveExperienceLevel === 'INTERNSHIP' ? 'Internship' :
+                 effectiveExperienceLevel === 'JUNIOR' ? 'Junior' :
+                 effectiveExperienceLevel === 'SENIOR' ? 'Senior' : 'Mid-Level'}
               </p>
             </div>
 
@@ -876,11 +905,11 @@ export default function JobDetailModal({
             {/* EVALUARE NIVEL EXPERIENȚĂ */}
             <div className="text-xs text-slate-200 bg-white/5 p-3 rounded-2xl border border-white/10 leading-relaxed">
               <span className="font-black text-white">Evaluare Nivel: </span>
-              {currentJob.experienceLevel === 'JUNIOR' || currentJob.experienceLevel === 'INTERNSHIP' ? (
+              {effectiveExperienceLevel === 'JUNIOR' || effectiveExperienceLevel === 'INTERNSHIP' ? (
                 <span className="text-emerald-300 font-bold">
                   Poziția este ideală pentru debut de carieră (0-1 ani experiență). Șanse maxime de selecție la interviu! Fără penalizare de vechime.
                 </span>
-              ) : currentJob.experienceLevel === 'MID' ? (
+              ) : effectiveExperienceLevel === 'MID' ? (
                 <span className="text-amber-300 font-bold">
                   Penalizare de nivel: Poziția solicită 2-4 ani de experiență comercială. Profilul de Junior este plafonat automat de algoritmul ATS din cauza deficitului de vechime cerut.
                 </span>

@@ -1841,12 +1841,29 @@ export default function JobSearchPage({
           onUpdateJobScore={(jobId, newScore, aiData) => {
             setJobs(prevJobs => prevJobs.map(j => {
               if (j.id === jobId) {
+                let updatedLevel = j.experienceLevel;
+                if (aiData?.experienceLevel) {
+                  const currentLvl = (j.experienceLevel || '').toUpperCase();
+                  const aiLvl = (aiData.experienceLevel || '').toUpperCase();
+                  if (currentLvl === 'SENIOR') {
+                    updatedLevel = 'SENIOR';
+                  } else if (currentLvl === 'MID') {
+                    updatedLevel = aiLvl === 'SENIOR' ? 'SENIOR' : 'MID';
+                  } else if (currentLvl === 'INTERNSHIP') {
+                    updatedLevel = 'INTERNSHIP';
+                  } else if (currentLvl === 'JUNIOR') {
+                    updatedLevel = (aiLvl === 'SENIOR' || aiLvl === 'MID') ? aiLvl : 'JUNIOR';
+                  } else {
+                    updatedLevel = aiLvl || j.experienceLevel;
+                  }
+                }
+
                 return {
                   ...j,
                   atsMatchScore: typeof newScore === 'number' ? newScore : j.atsMatchScore,
                   matchingSkills: (aiData?.matchingSkills && aiData.matchingSkills.length > 0) ? aiData.matchingSkills : j.matchingSkills,
                   missingSkills: (aiData?.missingSkills && aiData.missingSkills.length > 0) ? aiData.missingSkills : j.missingSkills,
-                  experienceLevel: aiData?.experienceLevel || j.experienceLevel
+                  experienceLevel: updatedLevel
                 };
               }
               return j;
