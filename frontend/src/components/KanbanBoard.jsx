@@ -15,7 +15,12 @@ import {
   CheckCircle2,
   Clock,
   ExternalLink,
-  Eye
+  Eye,
+  Bookmark,
+  Send,
+  Calendar,
+  Award,
+  XCircle
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 
@@ -92,26 +97,81 @@ export default function KanbanBoard({
   }, [activeUserId]);
 
   const kanbanColumns = [
-    { key: 'SAVED', title: 'Salvate', label: 'Salvat' },
-    { key: 'APPLIED', title: 'Aplicat', label: 'Aplicat' },
-    { key: 'INTERVIEWING', title: 'Interviu', label: 'Interviu' },
-    { key: 'OFFER_RECEIVED', title: 'Ofertă', label: 'Ofertă' },
-    { key: 'REJECTED', title: 'Respins', label: 'Respins' },
+    { 
+      key: 'SAVED', 
+      title: 'Salvate', 
+      label: 'Salvat',
+      headerBg: 'bg-slate-100/90 text-slate-800 border-b border-slate-200',
+      columnBg: 'bg-slate-50/70 border-slate-200/90',
+      accentBorder: 'border-t-4 border-t-slate-500',
+      badgeBg: 'bg-white text-slate-800 border border-slate-200 shadow-2xs',
+      iconColor: 'text-slate-600',
+      tabActive: 'bg-slate-800 text-white',
+      icon: Bookmark
+    },
+    { 
+      key: 'APPLIED', 
+      title: 'Aplicat', 
+      label: 'Aplicat',
+      headerBg: 'bg-blue-50 text-blue-900 border-b border-blue-200',
+      columnBg: 'bg-blue-50/40 border-blue-200/80',
+      accentBorder: 'border-t-4 border-t-blue-500',
+      badgeBg: 'bg-white text-blue-900 border border-blue-200 shadow-2xs',
+      iconColor: 'text-blue-600',
+      tabActive: 'bg-blue-600 text-white',
+      icon: Send
+    },
+    { 
+      key: 'INTERVIEWING', 
+      title: 'Interviu', 
+      label: 'Interviu',
+      headerBg: 'bg-amber-50 text-amber-950 border-b border-amber-200',
+      columnBg: 'bg-amber-50/40 border-amber-200/80',
+      accentBorder: 'border-t-4 border-t-amber-500',
+      badgeBg: 'bg-white text-amber-950 border border-amber-200 shadow-2xs',
+      iconColor: 'text-amber-600',
+      tabActive: 'bg-amber-600 text-white',
+      icon: Calendar
+    },
+    { 
+      key: 'OFFER_RECEIVED', 
+      title: 'Ofertă', 
+      label: 'Ofertă',
+      headerBg: 'bg-emerald-50 text-emerald-950 border-b border-emerald-200',
+      columnBg: 'bg-emerald-50/40 border-emerald-200/80',
+      accentBorder: 'border-t-4 border-t-emerald-500',
+      badgeBg: 'bg-white text-emerald-950 border border-emerald-200 shadow-2xs',
+      iconColor: 'text-emerald-600',
+      tabActive: 'bg-emerald-600 text-white',
+      icon: Award
+    },
+    { 
+      key: 'REJECTED', 
+      title: 'Respins', 
+      label: 'Respins',
+      headerBg: 'bg-rose-50 text-rose-950 border-b border-rose-200',
+      columnBg: 'bg-rose-50/40 border-rose-200/80',
+      accentBorder: 'border-t-4 border-t-rose-400',
+      badgeBg: 'bg-white text-rose-950 border border-rose-200 shadow-2xs',
+      iconColor: 'text-rose-600',
+      tabActive: 'bg-rose-600 text-white',
+      icon: XCircle
+    },
   ];
 
   const statusColorMap = {
-    SAVED: 'bg-blue-50 text-blue-700 border-blue-200',
-    APPLIED: 'bg-purple-50 text-purple-700 border-purple-200',
-    INTERVIEWING: 'bg-amber-50 text-amber-700 border-amber-200',
+    SAVED: 'bg-slate-50 text-slate-700 border-slate-200',
+    APPLIED: 'bg-blue-50 text-blue-700 border-blue-200',
+    INTERVIEWING: 'bg-amber-50 text-amber-800 border-amber-200',
     OFFER_RECEIVED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     REJECTED: 'bg-rose-50 text-rose-700 border-rose-200',
   };
 
   const statusDotMap = {
-    SAVED: 'bg-blue-500',
-    APPLIED: 'bg-purple-500',
+    SAVED: 'bg-slate-500',
+    APPLIED: 'bg-blue-600',
     INTERVIEWING: 'bg-amber-500',
-    OFFER_RECEIVED: 'bg-emerald-500',
+    OFFER_RECEIVED: 'bg-emerald-600',
     REJECTED: 'bg-rose-500',
   };
 
@@ -298,32 +358,38 @@ export default function KanbanBoard({
       {viewMode === 'kanban' && (
         <>
           {/* MOBILE COLUMN TAB SELECTOR */}
-          <div className="flex md:hidden overflow-x-auto gap-1.5 p-1 bg-gray-100 rounded-xl border border-gray-200">
+          <div className="flex md:hidden overflow-x-auto gap-1.5 p-1.5 bg-gray-100 rounded-2xl border border-gray-200">
             {kanbanColumns.map((col) => {
               const count = filteredApplications.filter(a => a.status === col.key).length;
+              const ColIcon = col.icon;
+              const isSelected = mobileSelectedColumn === col.key;
               return (
                 <button
                   key={col.key}
                   onClick={() => setMobileSelectedColumn(col.key)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1.5 transition cursor-pointer ${
-                    mobileSelectedColumn === col.key 
-                      ? 'bg-black text-white shadow-sm' 
-                      : 'text-gray-700 hover:text-black'
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 transition cursor-pointer ${
+                    isSelected 
+                      ? `${col.tabActive} shadow-sm font-black` 
+                      : 'text-gray-700 hover:text-black bg-white/70'
                   }`}
                 >
-                  <span>{col.title.split(' ')[0]}</span>
-                  <span className="bg-gray-200 text-gray-800 px-1.5 py-0.2 rounded-full text-[10px]">{count}</span>
+                  <ColIcon className="w-3.5 h-3.5" />
+                  <span>{col.title}</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
+                    isSelected ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-800'
+                  }`}>{count}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* KANBAN GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 sm:gap-4">
+          {/* KANBAN GRID WITH INTERNAL SCROLLING & FIXED TOTAL HEIGHT */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 sm:gap-4 items-start">
             {kanbanColumns.map((col) => {
               const colApps = filteredApplications.filter(app => app.status === col.key);
               const isMobileVisible = mobileSelectedColumn === col.key;
               const isDragOver = dragOverColumnKey === col.key;
+              const ColIcon = col.icon;
 
               return (
                 <div 
@@ -331,97 +397,99 @@ export default function KanbanBoard({
                   onDragOver={(e) => handleDragOver(e, col.key)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, col.key)}
-                  className={`rounded-2xl border border-gray-200/90 bg-gray-100/70 transition-all duration-200 p-3.5 sm:p-4 flex flex-col gap-3 min-h-[460px] ${
-                    isDragOver ? 'ring-2 ring-black scale-[1.01] bg-gray-200/90' : ''
+                  className={`rounded-2xl border ${col.columnBg} ${col.accentBorder} transition-all duration-200 flex flex-col h-[calc(100vh-230px)] min-h-[500px] max-h-[760px] shadow-xs overflow-hidden ${
+                    isDragOver ? 'ring-2 ring-indigo-600 scale-[1.01] shadow-md' : ''
                   } ${isMobileVisible ? 'flex' : 'hidden md:flex'}`}
                 >
-                  <div className="flex items-center justify-between text-xs font-bold text-gray-900 pb-2 border-b border-gray-200">
-                    <span>{col.title}</span>
-                    <span className="bg-white text-gray-800 text-[11px] font-extrabold px-2 py-0.5 rounded-full border border-gray-200 shadow-2xs">{colApps.length}</span>
+                  {/* FIXED COLUMN HEADER */}
+                  <div className={`flex items-center justify-between px-3.5 py-2.5 ${col.headerBg} font-extrabold text-xs shrink-0`}>
+                    <div className="flex items-center gap-1.5">
+                      <ColIcon className={`w-3.5 h-3.5 ${col.iconColor} shrink-0`} />
+                      <span className="truncate">{col.title}</span>
+                    </div>
+                    <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${col.badgeBg}`}>
+                      {colApps.length}
+                    </span>
                   </div>
 
-                  {colApps.map((app) => {
-                    const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
-                    const isBeingDragged = draggedAppId === app.id;
+                  {/* SCROLLABLE CARDS CONTAINER */}
+                  <div className="flex-1 overflow-y-auto p-2.5 sm:p-3 space-y-2.5">
+                    {colApps.map((app) => {
+                      const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
+                      const isBeingDragged = draggedAppId === app.id;
 
-                    return (
-                      <div 
-                        key={app.id}
-                        draggable={true}
-                        onDragStart={(e) => handleDragStart(e, app.id)}
-                        className={`bg-white border border-gray-200 rounded-xl p-3.5 sm:p-4 space-y-3 relative group shadow-2xs hover:shadow-md hover:border-gray-300 cursor-grab active:cursor-grabbing transition-all text-gray-900 ${
-                          isBeingDragged ? 'opacity-40 scale-95 border-black' : ''
-                        }`}
-                      >
-                        
-                        {/* CARD TITLE, DRAG HANDLE & DELETE BUTTON */}
-                        <div className="flex items-start justify-between gap-1">
-                          <div 
-                            onClick={() => handleOpenJobModal(app)}
-                            className="cursor-pointer group/title flex-1"
-                            title="Apasă pentru a deschide fișa completă a jobului"
-                          >
-                            <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-500 block group-hover/title:text-indigo-600 transition">
-                              {app.companyName}
-                            </span>
-                            <h4 className="font-bold text-xs text-gray-950 leading-tight mt-0.5 group-hover/title:text-indigo-600 transition">
-                              {app.jobTitle}
-                            </h4>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (window.confirm(`Sigur dorești să ștergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
-                                  onDeleteApplication && onDeleteApplication(app.id);
-                                }
-                              }}
-                              title="Șterge acest job"
-                              className="p-1 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                            <GripVertical className="w-4 h-4 text-gray-400 group-hover:text-gray-700 shrink-0" />
-                          </div>
-                        </div>
-
-                        {/* MATCH SCORE PROGRESS BAR */}
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="flex items-center gap-1 font-bold text-emerald-700 text-[11px]">
-                              <Sparkles className="w-3 h-3 text-emerald-600" />
-                              {score.toFixed(1)}% Match
-                            </span>
-                            <span className="text-[9px] text-gray-400 font-medium">Multi-Criteria AI</span>
-                          </div>
-                          <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden border border-gray-200">
+                      return (
+                        <div 
+                          key={app.id}
+                          draggable={true}
+                          onDragStart={(e) => handleDragStart(e, app.id)}
+                          className={`bg-white border border-gray-200/90 rounded-xl p-3 space-y-2.5 relative group shadow-2xs hover:shadow-md hover:border-indigo-200 transition-all text-gray-900 cursor-grab active:cursor-grabbing ${
+                            isBeingDragged ? 'opacity-40 scale-95 border-indigo-500' : ''
+                          }`}
+                        >
+                          {/* CARD HEADER: COMPANY, TITLE, DELETE & DRAG */}
+                          <div className="flex items-start justify-between gap-1.5">
                             <div 
-                              className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
-                              style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
-                            ></div>
-                          </div>
-                        </div>
-
-                        {/* DYNAMIC CV SELECTOR DROPDOWN */}
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-[10px] font-semibold text-gray-500">
-                            <span>CV Asociat:</span>
-                            {app.cvProfileId && onEditCvInStudio && (
+                              onClick={() => handleOpenJobModal(app)}
+                              className="cursor-pointer group/title flex-1 min-w-0"
+                              title="Apasă pentru a deschide fișa completă a jobului"
+                            >
+                              <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-500 block truncate group-hover/title:text-indigo-600 transition">
+                                {app.companyName}
+                              </span>
+                              <h4 className="font-bold text-xs sm:text-[13px] text-gray-950 leading-snug mt-0.5 line-clamp-2 group-hover/title:text-indigo-600 transition">
+                                {app.jobTitle}
+                              </h4>
+                            </div>
+                            <div className="flex items-center gap-0.5 shrink-0">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  onEditCvInStudio(app.cvProfileId);
+                                  if (window.confirm(`Sigur dorești să ștergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
+                                    onDeleteApplication && onDeleteApplication(app.id);
+                                  }
                                 }}
-                                className="text-gray-500 hover:text-black flex items-center gap-0.5 cursor-pointer font-bold"
-                                title="Deschide și editează acest CV în Studio"
+                                title="Șterge din Kanban"
+                                className="p-1 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition cursor-pointer"
                               >
-                                <Edit3 className="w-2.5 h-2.5" /> Edit
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
-                            )}
+                              <GripVertical className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 shrink-0" />
+                            </div>
                           </div>
-                          
-                          <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-lg border border-gray-200 text-xs">
-                            <FileText className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+
+                          {/* MATCH SCORE PILL + SLIM PROGRESS */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className={`inline-flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md text-[10px] ${
+                                score >= 75 
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : score >= 50
+                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                  : 'bg-slate-50 text-slate-700 border border-slate-200'
+                              }`}>
+                                <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                                {score.toFixed(0)}% Match ATS
+                              </span>
+                              {app.jobLocation && (
+                                <span className="text-[10px] text-gray-400 truncate max-w-[100px]" title={app.jobLocation}>
+                                  {app.jobLocation}
+                                </span>
+                              )}
+                            </div>
+                            <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden border border-gray-200/60">
+                              <div 
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                  score >= 75 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-500' : 'bg-slate-400'
+                                }`} 
+                                style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
+                              ></div>
+                            </div>
+                          </div>
+
+                          {/* CV SELECTOR (COMPACT & CLEAN) */}
+                          <div className="flex items-center gap-1 bg-gray-50/80 hover:bg-gray-100/80 px-2 py-1 rounded-lg border border-gray-200/90 text-xs">
+                            <FileText className="w-3 h-3 text-gray-400 shrink-0" />
                             <select
                               value={app.cvProfileId ? `CV_${app.cvProfileId}` : (app.resumeId ? `RESUME_${app.resumeId}` : '')}
                               onChange={(e) => {
@@ -434,15 +502,15 @@ export default function KanbanBoard({
                                 }
                               }}
                               disabled={attachingCvAppId === app.id}
-                              className="bg-transparent text-gray-900 font-semibold outline-none cursor-pointer w-full text-[11px] truncate"
-                              title="Alege CV-ul sau fișierul dorit pentru această aplicație"
+                              className="bg-transparent text-gray-800 font-semibold outline-none cursor-pointer w-full text-[11px] truncate"
+                              title="Alege CV-ul asociat pentru această aplicație"
                             >
-                              <option value="">-- Alege CV sau Fișier --</option>
+                              <option value="">CV Neselectat</option>
                               {cvList.length > 0 && (
-                                <optgroup label="CV-uri Create în Studio">
+                                <optgroup label="CV-uri din Studio">
                                   {cvList.map((cv) => (
                                     <option key={cv.id} value={`CV_${cv.id}`}>
-                                      {cv.title} {cv.isPrimary ? '(⭐ Principal)' : ''}
+                                      {cv.title} {cv.isPrimary ? '⭐' : ''}
                                     </option>
                                   ))}
                                 </optgroup>
@@ -451,62 +519,49 @@ export default function KanbanBoard({
                                 <optgroup label="Fișiere CV Încărcate">
                                   {uploadedResumes.map((r) => (
                                     <option key={r.id} value={`RESUME_${r.id}`}>
-                                      Fișier: {r.fileName}
+                                      {r.fileName}
                                     </option>
                                   ))}
                                 </optgroup>
                               )}
                             </select>
+                            {app.cvProfileId && onEditCvInStudio && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEditCvInStudio(app.cvProfileId);
+                                }}
+                                className="text-gray-400 hover:text-indigo-600 p-0.5 cursor-pointer shrink-0"
+                                title="Editează acest CV în Studio"
+                              >
+                                <Edit3 className="w-2.5 h-2.5" />
+                              </button>
+                            )}
                           </div>
-                        </div>
 
-                        {/* ACTION BUTTONS: VEZI FIȘA & RAPORT AI */}
-                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          {/* ACTION: VEZI FIȘA COMPLETĂ */}
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleOpenJobModal(app);
                             }}
-                            className="py-2 px-2.5 rounded-lg border border-gray-200 hover:border-indigo-300 bg-gray-50 hover:bg-indigo-50 text-gray-800 hover:text-indigo-950 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer"
-                            title="Deschide fișa completă a jobului"
+                            className="w-full py-1.5 px-2.5 rounded-lg border border-indigo-100 hover:border-indigo-300 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-950 text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer"
+                            title="Deschide fișa completă și analiza AI a jobului"
                           >
-                            <Eye className="w-3.5 h-3.5 text-indigo-600" />
-                            <span>Vezi Fișa</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const runAi = onRunAiAnalysis || onOpenAnalysis;
-                              if (runAi) runAi(app);
-                            }}
-                            disabled={analyzingAppId === app.id}
-                            className="py-2 px-2.5 rounded-lg bg-black hover:bg-neutral-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm disabled:opacity-60 cursor-pointer"
-                            title="Rulează analiza AI Gap & Matching"
-                          >
-                            {analyzingAppId === app.id ? (
-                              <>
-                                <RefreshCw className="w-3.5 h-3.5 animate-spin text-gray-300" />
-                                <span>Analiză...</span>
-                              </>
-                            ) : (
-                              <>
-                                <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
-                                <span>Raport AI</span>
-                              </>
-                            )}
+                            <Eye className="w-3 h-3 text-indigo-600" />
+                            <span>Vezi Fișa Jobului</span>
                           </button>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
 
-                  {colApps.length === 0 && (
-                    <div className="flex-1 flex items-center justify-center text-xs text-gray-400 italic border border-dashed border-gray-300 rounded-xl p-4 text-center">
-                      {currentUser ? 'Plasează (drag & drop) un job aici' : 'Autentifică-te pentru a muta aplicațiile'}
-                    </div>
-                  )}
+                    {colApps.length === 0 && (
+                      <div className="h-40 flex items-center justify-center text-[11px] text-gray-400 italic border border-dashed border-gray-300/80 rounded-xl p-3 text-center">
+                        {currentUser ? 'Plasează un job aici' : 'Autentifică-te'}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
