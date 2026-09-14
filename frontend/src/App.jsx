@@ -33,6 +33,9 @@ export default function App() {
   // Sync tab with clean URL pathname and localStorage
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
     if (typeof window !== 'undefined') {
       localStorage.setItem('ats_active_tab', tab);
       let targetPath = '/tracker';
@@ -52,6 +55,9 @@ export default function App() {
   };
 
   useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
     // Redirect /kanban to /tracker if visited directly
     if (typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/kanban')) {
       window.history.replaceState({ tab: 'tracker' }, '', '/tracker');

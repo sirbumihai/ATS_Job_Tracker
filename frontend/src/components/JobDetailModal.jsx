@@ -230,13 +230,6 @@ export default function JobDetailModal({
       .finally(() => setLoadingCvs(false));
   }, [activeUserId]);
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
-
   const formatDateTime = (dtStr) => {
     if (!dtStr) return 'Nespecificat';
     try {
@@ -446,13 +439,13 @@ export default function JobDetailModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [job, activeUserId]);
 
-  // Blocare scroll pe fundal cât timp modalul este deschis
+  // Blocare scroll pe fundal cat timp modalul este deschis
   useEffect(() => {
-    if (!job) return;
-    const originalOverflow = document.body.style.overflow;
+    if (!job || typeof document === 'undefined') return;
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = originalOverflow;
+      document.body.style.overflow = (prevOverflow === 'hidden' ? '' : prevOverflow);
     };
   }, [job]);
 
