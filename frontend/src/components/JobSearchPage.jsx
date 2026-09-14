@@ -54,7 +54,21 @@ import {
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 
-// Parser uniform de salarii pentru sortare exactă pe client
+// Helper eliminare diacritice
+const removeDiacritics = (str) => {
+  if (!str) return '';
+  return String(str)
+    .replace(/[aa]/g, 'a')
+    .replace(/[AA]/g, 'A')
+    .replace(/[i]/g, 'i')
+    .replace(/[I]/g, 'I')
+    .replace(/[ss]/g, 's')
+    .replace(/[SS]/g, 'S')
+    .replace(/[tt]/g, 't')
+    .replace(/[TT]/g, 'T');
+};
+
+// Parser uniform de salarii pentru sortare exacta pe client
 const parseSalaryForSort = (salaryRange) => {
   if (!salaryRange) return 0;
   const s = salaryRange.toLowerCase().replace(/\./g, '').replace(/,/g, '');
@@ -78,16 +92,16 @@ const parseSalaryForSort = (salaryRange) => {
 // Helper pentru extragerea timestamp-ului real de publicare (cu fallback transparent)
 const getJobTimestamp = (job) => {
   if (!job) return 0;
-  // 1. Data reală de publicare (dacă este specificată în format ISO sau dată validă)
+  // 1. Data reala de publicare (daca este specificata in format ISO sau data valida)
   if (job.postedAt) {
     const t = new Date(job.postedAt).getTime();
     if (!isNaN(t) && t > 0) return t;
   }
-  // 2. Fallback dacă avem număr de zile valid (postedDaysAgo >= 0)
+  // 2. Fallback daca avem numar de zile valid (postedDaysAgo >= 0)
   if (job.postedDaysAgo !== undefined && job.postedDaysAgo !== null && job.postedDaysAgo >= 0) {
     return Date.now() - (job.postedDaysAgo * 24 * 3600 * 1000);
   }
-  // 3. Fallback exclusiv pentru anunțurile fără dată specificată (data descoperirii de crawler)
+  // 3. Fallback exclusiv pentru anunturile fara data specificata (data descoperirii de crawler)
   if (job.firstSeenAt) {
     const t = new Date(job.firstSeenAt).getTime();
     if (!isNaN(t) && t > 0) return t;
@@ -95,7 +109,7 @@ const getJobTimestamp = (job) => {
   return 0;
 };
 
-// Verificare dacă un job este cu adevărat NOU GĂSIT (descoperit recent ȘI publicat în ultimele 48h)
+// Verificare daca un job este cu adevarat NOU GASIT (descoperit recent SI publicat in ultimele 48h)
 const isJobTrulyNew = (job) => {
   if (!job?.newlyDiscovered) return false;
   const ts = getJobTimestamp(job);
@@ -135,7 +149,7 @@ export default function JobSearchPage({
   const [platformSearchQuery, setPlatformSearchQuery] = useState('');
   const [roleSearchQuery, setRoleSearchQuery] = useState('');
 
-  // Autocomplete sugestii căutare & locație
+  // Autocomplete sugestii cautare & locatie
   const [showKeywordSuggestions, setShowKeywordSuggestions] = useState(false);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
 
@@ -154,7 +168,7 @@ export default function JobSearchPage({
     totalLiveJobs: 0
   });
 
-  // Număr joburi noi identificate la ultima sincronizare și publicate recent (max 48h)
+  // Numar joburi noi identificate la ultima sincronizare si publicate recent (max 48h)
   const newlyDiscoveredCount = useMemo(() => {
     return jobs.filter(j => {
       if (!j?.newlyDiscovered) return false;
@@ -163,7 +177,7 @@ export default function JobSearchPage({
     }).length;
   }, [jobs]);
 
-  // Persistență jobs salvate în localStorage
+  // Persistenta jobs salvate in localStorage
   const [savedJobIds, setSavedJobIds] = useState(() => {
     try {
       const saved = localStorage.getItem('ats_saved_job_ids');
@@ -176,7 +190,7 @@ export default function JobSearchPage({
   const [savingJobId, setSavingJobId] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Timer sincronizare automată orară (60 minute)
+  // Timer sincronizare automata orara (60 minute)
   const [secondsUntilSync, setSecondsUntilSync] = useState(3600);
   const jobsListRef = useRef(null);
   const platformDropdownRef = useRef(null);
@@ -185,7 +199,7 @@ export default function JobSearchPage({
   const keywordInputRef = useRef(null);
   const locationInputRef = useRef(null);
 
-  // Închidere click-outside pentru dropdown-uri și autocomplete
+  // Inchidere click-outside pentru dropdown-uri si autocomplete
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (platformDropdownRef.current && !platformDropdownRef.current.contains(e.target)) {
@@ -229,8 +243,8 @@ export default function JobSearchPage({
   };
 
   const formatExactDate = (postedAt, fallbackDaysAgo, postedDateAgo) => {
-    if (postedDateAgo === 'Dată nespecificată' || fallbackDaysAgo === -1 || (!postedAt && (fallbackDaysAgo === undefined || fallbackDaysAgo === null || fallbackDaysAgo < 0))) {
-      return 'Dată nespecificată';
+    if (postedDateAgo === 'Data nespecificata' || fallbackDaysAgo === -1 || (!postedAt && (fallbackDaysAgo === undefined || fallbackDaysAgo === null || fallbackDaysAgo < 0))) {
+      return 'Data nespecificata';
     }
     if (postedAt) {
       try {
@@ -243,11 +257,11 @@ export default function JobSearchPage({
       }
     }
     if (fallbackDaysAgo !== null && fallbackDaysAgo !== undefined && fallbackDaysAgo >= 0) {
-      if (fallbackDaysAgo === 0) return 'Astăzi';
+      if (fallbackDaysAgo === 0) return 'Astazi';
       if (fallbackDaysAgo === 1) return 'Ieri';
       return `Acum ${fallbackDaysAgo} zile`;
     }
-    return 'Dată nespecificată';
+    return 'Data nespecificata';
   };
 
   const formatDateTime = (dtStr) => {
@@ -278,13 +292,13 @@ export default function JobSearchPage({
         setJobChangesList(data);
       }
     } catch (err) {
-      console.warn('Eroare la preluarea istoricului de modificări:', err);
+      console.warn('Eroare la preluarea istoricului de modificari:', err);
     } finally {
       setLoadingChanges(false);
     }
   };
 
-  // 4 NIVELURI DE EXPERIENȚĂ PENTRU MULTI-SELECT
+  // 4 NIVELURI DE EXPERIENTA PENTRU MULTI-SELECT
   const levelsConfig = [
     { id: 'INTERNSHIP', label: 'Internship / Stagiu' },
     { id: 'JUNIOR', label: 'Junior (0-2 ani)' },
@@ -313,7 +327,7 @@ export default function JobSearchPage({
     setCurrentPage(1);
   };
 
-  // 8 PLATFORME REALE CU ICONIȚE ȘI CONTOARE PERMANENTE (FĂRĂ EMOTICOANE)
+  // 8 PLATFORME REALE CU ICONITE SI CONTOARE PERMANENTE (FARA EMOTICOANE)
   const platformsConfig = [
     { id: 'DEVJOB_RO', label: 'DevJob.ro (Tech)', icon: Code2, countKey: 'DEVJOB_RO' },
     { id: 'LINKEDIN', label: 'LinkedIn Jobs', icon: ExternalLink, countKey: 'LINKEDIN' },
@@ -325,7 +339,7 @@ export default function JobSearchPage({
     { id: 'EJOBS', label: 'eJobs.ro', icon: Layers, countKey: 'EJOBS' }
   ];
 
-  // 27 SPECIALIZĂRI IT CUPRINZĂTOARE (FĂRĂ EMOTICOANE)
+  // 27 SPECIALIZARI IT CUPRINZATOARE (FARA EMOTICOANE)
   const roleCategories = [
     { id: 'JAVA', label: 'Java Engineer', icon: Code2 },
     { id: 'BACKEND', label: 'Backend Engineer', icon: Server },
@@ -355,7 +369,7 @@ export default function JobSearchPage({
     { id: 'UI_UX', label: 'UI/UX & Product Design', icon: Palette }
   ];
 
-  // SUGESTII INTERACTIVE LA CĂUTARE DUPĂ CUVINTE CHEIE
+  // SUGESTII INTERACTIVE LA CAUTARE DUPA CUVINTE CHEIE
   const keywordSuggestions = [
     { title: 'Java Developer', category: 'Backend' },
     { title: 'Spring Boot', category: 'Backend Framework' },
@@ -379,21 +393,21 @@ export default function JobSearchPage({
     { title: 'SQL Developer / DBA', category: 'Baze de Date' }
   ];
 
-  // SUGESTII INTERACTIVE LA CĂUTARE DUPĂ LOCAȚIE
+  // SUGESTII INTERACTIVE LA CAUTARE DUPA LOCATIE
   const locationSuggestions = [
-    { name: 'București', region: 'România (Hub Principal)' },
-    { name: 'Cluj-Napoca', region: 'România (Transilvania Tech)' },
-    { name: 'Timișoara', region: 'România (Banat Tech)' },
-    { name: 'Iași', region: 'România (Moldova Tech)' },
-    { name: 'Brașov', region: 'România (Centru)' },
-    { name: 'Sibiu', region: 'România (Transilvania)' },
-    { name: 'Oradea', region: 'România (Bihor)' },
-    { name: 'Craiova', region: 'România (Oltenia)' },
-    { name: 'Remote România', region: 'Lucru la distanță (Companii RO)' },
-    { name: 'România', region: 'Toate orașele (Național)' },
-    { name: 'Remote', region: 'Telemuncă / WFH' },
-    { name: 'Ploiești', region: 'România (Muntenia)' },
-    { name: 'Constanța', region: 'România (Dobrogea)' }
+    { name: 'Bucuresti', region: 'Romania (Hub Principal)' },
+    { name: 'Cluj-Napoca', region: 'Romania (Transilvania Tech)' },
+    { name: 'Timisoara', region: 'Romania (Banat Tech)' },
+    { name: 'Iasi', region: 'Romania (Moldova Tech)' },
+    { name: 'Brasov', region: 'Romania (Centru)' },
+    { name: 'Sibiu', region: 'Romania (Transilvania)' },
+    { name: 'Oradea', region: 'Romania (Bihor)' },
+    { name: 'Craiova', region: 'Romania (Oltenia)' },
+    { name: 'Remote Romania', region: 'Lucru la distanta (Companii RO)' },
+    { name: 'Romania', region: 'Toate orasele (National)' },
+    { name: 'Remote', region: 'Telemunca / WFH' },
+    { name: 'Ploiesti', region: 'Romania (Muntenia)' },
+    { name: 'Constanta', region: 'Romania (Dobrogea)' }
   ];
 
   const fetchGlobalStats = async () => {
@@ -404,7 +418,7 @@ export default function JobSearchPage({
         setGlobalStats(data);
       }
     } catch (err) {
-      console.warn('Nu s-au putut încărca statisticile globale:', err);
+      console.warn('Nu s-au putut incarca statisticile globale:', err);
     }
   };
 
@@ -451,7 +465,7 @@ export default function JobSearchPage({
       const res = await fetch('/api/v1/jobs/sync-live', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        setToastMessage(`Sincronizare Reușită! ${data.totalLiveJobs || '1500+'} joburi agregate și actualizate.`);
+        setToastMessage(`Sincronizare Reusita! ${data.totalLiveJobs || '1500+'} joburi agregate si actualizate.`);
         setSecondsUntilSync(3600);
         setTimeout(() => setToastMessage(null), 4500);
       }
@@ -496,7 +510,7 @@ export default function JobSearchPage({
     fetchGlobalStats();
   }, []);
 
-  // Căutare debounced (300ms)
+  // Cautare debounced (300ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchJobs();
@@ -537,21 +551,21 @@ export default function JobSearchPage({
         try {
           localStorage.setItem('ats_saved_job_ids', JSON.stringify(Array.from(nextSaved)));
         } catch (e) {
-          console.warn('Nu s-a putut salva în localStorage:', e);
+          console.warn('Nu s-a putut salva in localStorage:', e);
         }
 
-        setToastMessage(`Jobul „${job.jobTitle}” la ${job.companyName} a fost salvat în Tracker!`);
+        setToastMessage(`Jobul „${job.jobTitle}” la ${job.companyName} a fost salvat in Tracker!`);
         setTimeout(() => setToastMessage(null), 4000);
         if (onSaveToKanbanSuccess) onSaveToKanbanSuccess();
       }
     } catch (err) {
-      console.error('Eroare la salvarea în Kanban:', err);
+      console.error('Eroare la salvarea in Kanban:', err);
     } finally {
       setSavingJobId(null);
     }
   };
 
-  // Filtrare & Sortare flexibilă pe client
+  // Filtrare & Sortare flexibila pe client
   const filteredAndSortedJobs = useMemo(() => {
     let result = [...jobs];
 
@@ -565,7 +579,7 @@ export default function JobSearchPage({
       result = result.filter(j => (j.competitiveness || 'MEDIUM') === selectedCompetitiveness);
     }
 
-    // Filtru Nivel Experiență (Suport Multiplu pe client)
+    // Filtru Nivel Experienta (Suport Multiplu pe client)
     if (selectedLevels.length > 0) {
       result = result.filter(j => selectedLevels.includes(j.experienceLevel));
     }
@@ -581,7 +595,7 @@ export default function JobSearchPage({
       result = result.filter(j => (j.atsMatchScore || 0) < 40);
     }
 
-    // Filtru dată postare unificat pe client (pe baza datei reale de publicare)
+    // Filtru data postare unificat pe client (pe baza datei reale de publicare)
     if (selectedDatePosted === 'NEWLY_DISCOVERED') {
       result = result.filter(j => isJobTrulyNew(j));
     } else if (selectedDatePosted !== 'ALL') {
@@ -599,7 +613,7 @@ export default function JobSearchPage({
       }
     }
 
-    // Sortare optimă: Recomandate (Pondere: 70% ATS Match + 30% Recență din data postării)
+    // Sortare optima: Recomandate (Pondere: 70% ATS Match + 30% Recenta din data postarii)
     const now = Date.now();
     result.sort((a, b) => {
       const daysOldA = a.postedDaysAgo >= 0 ? a.postedDaysAgo : 
@@ -657,7 +671,7 @@ export default function JobSearchPage({
     }
   };
 
-  // INDICATOR PROFESIONAL DE COMPETITIVITATE (FĂRĂ EMOTICOANE, PARANTEZE SAU DIACRITICE)
+  // INDICATOR PROFESIONAL DE COMPETITIVITATE (FARA EMOTICOANE, PARANTEZE SAU DIACRITICE)
   const renderCompetitivenessBadge = (job) => {
     const comp = job.competitiveness || 'MEDIUM';
     if (comp === 'LOW') {
@@ -706,7 +720,7 @@ export default function JobSearchPage({
     setCurrentPage(1);
   };
 
-  // Handlers pentru Multi-Select Specializări
+  // Handlers pentru Multi-Select Specializari
   const toggleRoleCategory = (id) => {
     setSelectedRoleCategories(prev => {
       if (prev.includes(id)) {
@@ -745,14 +759,14 @@ export default function JobSearchPage({
     );
   }, [location]);
 
-  // Platforme filtrate în dropdown
+  // Platforme filtrate in dropdown
   const filteredPlatformsList = useMemo(() => {
     if (!platformSearchQuery.trim()) return platformsConfig;
     const q = platformSearchQuery.toLowerCase();
     return platformsConfig.filter(p => p.label.toLowerCase().includes(q));
   }, [platformSearchQuery]);
 
-  // Specializări filtrate în dropdown
+  // Specializari filtrate in dropdown
   const filteredRolesList = useMemo(() => {
     if (!roleSearchQuery.trim()) return roleCategories;
     const q = roleSearchQuery.toLowerCase();
@@ -772,7 +786,7 @@ export default function JobSearchPage({
               onClick={onNavigateToKanban}
               className="ml-2 px-2.5 py-1 bg-white text-black text-xs font-extrabold rounded-lg hover:bg-gray-200 transition cursor-pointer"
             >
-              Vezi în Tracker →
+              Vezi in Tracker →
             </button>
           )}
         </div>
@@ -784,7 +798,7 @@ export default function JobSearchPage({
           <div>
             <div className="flex items-center gap-2.5">
               <h2 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight">
-                Căutare & Agregator Job-uri IT
+                Cautare & Agregator Job-uri IT
               </h2>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -792,7 +806,7 @@ export default function JobSearchPage({
               </span>
             </div>
             <p className="text-xs text-gray-500 font-semibold mt-0.5">
-              Oportunități agregate în timp real din România & Europa, cu calcul automat de compatibilitate ATS.
+              Oportunitati agregate in timp real din Romania & Europa, cu calcul automat de compatibilitate ATS.
             </p>
           </div>
 
@@ -812,19 +826,19 @@ export default function JobSearchPage({
               className="px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-md disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>Sincronizează Acum</span>
+              <span>Sincronizeaza Acum</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* CĂUTARE & FILTRE MULTI-SELECT CU AUTOCOMPLETE */}
+      {/* CAUTARE & FILTRE MULTI-SELECT CU AUTOCOMPLETE */}
       <div className="bg-white border border-gray-200/90 shadow-sm p-6 rounded-3xl space-y-5">
         
-        {/* BARA PRINCIPALĂ DE CĂUTARE CU AUTOCOMPLETE */}
+        {/* BARA PRINCIPALA DE CAUTARE CU AUTOCOMPLETE */}
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-3">
           
-          {/* CÂMP CĂUTARE KEYWORD CU RECOMANDĂRI */}
+          {/* CAMP CAUTARE KEYWORD CU RECOMANDARI */}
           <div className="relative md:col-span-6" ref={keywordInputRef}>
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input 
@@ -852,8 +866,8 @@ export default function JobSearchPage({
             {showKeywordSuggestions && filteredKeywordSuggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-2xl shadow-xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-2">
                 <div className="px-3.5 py-2 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-gray-500">
-                  <span>Recomandări Căutare IT</span>
-                  <span className="text-[10px] font-normal lowercase text-gray-400">apasă pentru selectare</span>
+                  <span>Recomandari Cautare IT</span>
+                  <span className="text-[10px] font-normal lowercase text-gray-400">apasa pentru selectare</span>
                 </div>
                 <div className="max-h-64 overflow-y-auto p-1.5 divide-y divide-gray-50">
                   {filteredKeywordSuggestions.map((item, idx) => (
@@ -882,7 +896,7 @@ export default function JobSearchPage({
             )}
           </div>
 
-          {/* CÂMP CĂUTARE LOCAȚIE CU RECOMANDĂRI */}
+          {/* CAMP CAUTARE LOCATIE CU RECOMANDARI */}
           <div className="relative md:col-span-4" ref={locationInputRef}>
             <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input 
@@ -893,7 +907,7 @@ export default function JobSearchPage({
                 setShowLocationSuggestions(true);
               }}
               onFocus={() => setShowLocationSuggestions(true)}
-              placeholder="Locație (București, Cluj, Timișoara, Remote, Europa)..."
+              placeholder="Locatie (Bucuresti, Cluj, Timisoara, Remote, Europa)..."
               className="w-full pl-11 pr-9 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition"
             />
             {location && (
@@ -906,12 +920,12 @@ export default function JobSearchPage({
               </button>
             )}
 
-            {/* POPUP SUGESTII INTERACTIVE LOCAȚIE */}
+            {/* POPUP SUGESTII INTERACTIVE LOCATIE */}
             {showLocationSuggestions && filteredLocationSuggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-2xl shadow-xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-2">
                 <div className="px-3.5 py-2 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-gray-500">
                   <span>Hub-uri & Regiuni IT</span>
-                  <span className="text-[10px] font-normal lowercase text-gray-400">apasă pentru selectare</span>
+                  <span className="text-[10px] font-normal lowercase text-gray-400">apasa pentru selectare</span>
                 </div>
                 <div className="max-h-64 overflow-y-auto p-1.5 divide-y divide-gray-50">
                   {filteredLocationSuggestions.map((item, idx) => (
@@ -940,7 +954,7 @@ export default function JobSearchPage({
             )}
           </div>
 
-          {/* BUTON CĂUTARE */}
+          {/* BUTON CAUTARE */}
           <div className="md:col-span-2">
             <button 
               type="submit"
@@ -948,7 +962,7 @@ export default function JobSearchPage({
               className="w-full h-full py-3 bg-black hover:bg-gray-800 text-white rounded-2xl text-sm font-extrabold flex items-center justify-center gap-2 transition cursor-pointer shadow-md disabled:opacity-50"
             >
               <Search className="w-4 h-4" />
-              <span>Caută</span>
+              <span>Cauta</span>
             </button>
           </div>
         </form>
@@ -980,7 +994,7 @@ export default function JobSearchPage({
                   {selectedPlatforms.length === 0
                     ? 'Toate Platformele'
                     : selectedPlatforms.length === 1
-                    ? platformsConfig.find(p => p.id === selectedPlatforms[0])?.label || '1 platformă'
+                    ? platformsConfig.find(p => p.id === selectedPlatforms[0])?.label || '1 platforma'
                     : `${selectedPlatforms.length} platforme selectate`}
                 </span>
               </div>
@@ -997,7 +1011,7 @@ export default function JobSearchPage({
                       type="text"
                       value={platformSearchQuery}
                       onChange={(e) => setPlatformSearchQuery(e.target.value)}
-                      placeholder="Filtrează platformă..."
+                      placeholder="Filtreaza platforma..."
                       className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:border-black"
                     />
                   </div>
@@ -1007,14 +1021,14 @@ export default function JobSearchPage({
                       onClick={selectAllPlatforms}
                       className="text-indigo-600 hover:text-indigo-800 cursor-pointer"
                     >
-                      Selectează Toate
+                      Selecteaza Toate
                     </button>
                     <button
                       type="button"
                       onClick={clearAllPlatforms}
                       className="text-gray-500 hover:text-rose-600 cursor-pointer"
                     >
-                      Deselectează Toate
+                      Deselecteaza Toate
                     </button>
                   </div>
                 </div>
@@ -1058,7 +1072,7 @@ export default function JobSearchPage({
             )}
           </div>
 
-          {/* 2. DROPDOWN MULTI-SELECT PENTRU SPECIALIZĂRI & ROLURI IT */}
+          {/* 2. DROPDOWN MULTI-SELECT PENTRU SPECIALIZARI & ROLURI IT */}
           <div className="relative" ref={roleDropdownRef}>
             <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
@@ -1080,7 +1094,7 @@ export default function JobSearchPage({
                 <Layers className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                 <span className="truncate">
                   {selectedRoleCategories.length === 0
-                    ? 'Toate Specializările'
+                    ? 'Toate Specializarile'
                     : selectedRoleCategories.length === 1
                     ? roleCategories.find(r => r.id === selectedRoleCategories[0])?.label || '1 rol'
                     : `${selectedRoleCategories.length} roluri selectate`}
@@ -1089,7 +1103,7 @@ export default function JobSearchPage({
               <ChevronDown className={`w-3.5 h-3.5 text-gray-500 shrink-0 transition-transform duration-200 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* MENIU DROPDOWN SPECIALIZĂRI */}
+            {/* MENIU DROPDOWN SPECIALIZARI */}
             {isRoleDropdownOpen && (
               <div className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
                 <div className="p-2.5 border-b border-gray-100 space-y-2 bg-gray-50/80">
@@ -1099,7 +1113,7 @@ export default function JobSearchPage({
                       type="text"
                       value={roleSearchQuery}
                       onChange={(e) => setRoleSearchQuery(e.target.value)}
-                      placeholder="Filtrează rol (Java, DevOps, etc.)..."
+                      placeholder="Filtreaza rol (Java, DevOps, etc.)..."
                       className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:border-black"
                     />
                   </div>
@@ -1109,14 +1123,14 @@ export default function JobSearchPage({
                       onClick={selectAllRoles}
                       className="text-indigo-600 hover:text-indigo-800 cursor-pointer"
                     >
-                      Selectează Toate
+                      Selecteaza Toate
                     </button>
                     <button
                       type="button"
                       onClick={clearAllRoles}
                       className="text-gray-500 hover:text-rose-600 cursor-pointer"
                     >
-                      Deselectează Toate
+                      Deselecteaza Toate
                     </button>
                   </div>
                 </div>
@@ -1156,31 +1170,31 @@ export default function JobSearchPage({
             )}
           </div>
 
-          {/* 3. FILTRU UNIFICAT: DATA POSTĂRII */}
+          {/* 3. FILTRU UNIFICAT: DATA POSTARII */}
           <div>
             <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-              <span>Data Postării</span>
+              <span>Data Postarii</span>
             </label>
             <select
               value={selectedDatePosted}
               onChange={(e) => { setSelectedDatePosted(e.target.value); setCurrentPage(1); }}
               className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-600 cursor-pointer"
             >
-              <option value="ALL">Toate joburile (Oricând)</option>
-              <option value="NEWLY_DISCOVERED">⭐ Doar NOU GĂSIT (Ultima Sincronizare)</option>
+              <option value="ALL">Toate joburile (Oricand)</option>
+              <option value="NEWLY_DISCOVERED">⭐ Doar NOU GASIT (Ultima Sincronizare)</option>
               <option value="24H">Ultimele 24 de ore (Noi)</option>
               <option value="48H">Ultimele 48 de ore</option>
-              <option value="7D">Ultima săptămână (7 zile)</option>
-              <option value="30D">Ultima lună (30 de zile)</option>
+              <option value="7D">Ultima saptamana (7 zile)</option>
+              <option value="30D">Ultima luna (30 de zile)</option>
             </select>
           </div>
 
-          {/* 4. DROPDOWN MULTI-SELECT PENTRU NIVEL EXPERIENȚĂ */}
+          {/* 4. DROPDOWN MULTI-SELECT PENTRU NIVEL EXPERIENTA */}
           <div className="relative" ref={levelDropdownRef}>
             <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
               <GraduationCap className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-              <span>Nivel Experiență</span>
+              <span>Nivel Experienta</span>
             </label>
             <button
               type="button"
@@ -1217,14 +1231,14 @@ export default function JobSearchPage({
                     onClick={selectAllLevels}
                     className="text-indigo-600 hover:text-indigo-800 cursor-pointer"
                   >
-                    Selectează Toate
+                    Selecteaza Toate
                   </button>
                   <button
                     type="button"
                     onClick={clearAllLevels}
                     className="text-gray-500 hover:text-rose-600 cursor-pointer"
                   >
-                    Deselectează Toate
+                    Deselecteaza Toate
                   </button>
                 </div>
 
@@ -1260,7 +1274,7 @@ export default function JobSearchPage({
             )}
           </div>
 
-          {/* 5. MOD DE LUCRU (FĂRĂ EMOTICOANE) */}
+          {/* 5. MOD DE LUCRU (FARA EMOTICOANE) */}
           <div>
             <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
               <Briefcase className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
@@ -1278,11 +1292,11 @@ export default function JobSearchPage({
             </select>
           </div>
 
-          {/* 6. COMPETITIVITATE & ȘANSE (FĂRĂ EMOTICOANE) */}
+          {/* 6. COMPETITIVITATE & SANSE (FARA EMOTICOANE) */}
           <div>
             <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-              <span>Competiție</span>
+              <span>Competitie</span>
             </label>
             <select
               value={selectedCompetitiveness}
@@ -1347,7 +1361,7 @@ export default function JobSearchPage({
 
             {keyword && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
-                <span>Cuvânt: <strong>"{keyword}"</strong></span>
+                <span>Cuvant: <strong>"{keyword}"</strong></span>
                 <button onClick={() => setKeyword('')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
                 </button>
@@ -1356,7 +1370,7 @@ export default function JobSearchPage({
 
             {location && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
-                <span>Locație: <strong>"{location}"</strong></span>
+                <span>Locatie: <strong>"{location}"</strong></span>
                 <button onClick={() => setLocation('')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
                 </button>
@@ -1367,7 +1381,7 @@ export default function JobSearchPage({
               const p = platformsConfig.find(item => item.id === platId);
               return (
                 <span key={platId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
-                  <span>Platformă: <strong>{p?.label || platId}</strong></span>
+                  <span>Platforma: <strong>{p?.label || platId}</strong></span>
                   <button onClick={() => togglePlatform(platId)} className="hover:text-rose-600 cursor-pointer p-0.5">
                     <X className="w-3 h-3" />
                   </button>
@@ -1400,13 +1414,13 @@ export default function JobSearchPage({
                 )}
                 <span>{
                   selectedDatePosted === 'NEWLY_DISCOVERED' ? (
-                    <>Doar: <strong>NOU GĂSIT (Ultima Sincronizare)</strong></>
+                    <>Doar: <strong>NOU GASIT (Ultima Sincronizare)</strong></>
                   ) : (
-                    <>Data postării: <strong>{
+                    <>Data postarii: <strong>{
                       selectedDatePosted === '24H' ? 'Ultimele 24h' :
                       selectedDatePosted === '48H' ? 'Ultimele 48h' :
-                      selectedDatePosted === '7D' ? 'Ultima săptămână' :
-                      selectedDatePosted === '30D' ? 'Ultima lună' : selectedDatePosted
+                      selectedDatePosted === '7D' ? 'Ultima saptamana' :
+                      selectedDatePosted === '30D' ? 'Ultima luna' : selectedDatePosted
                     }</strong></>
                   )
                 }</span>
@@ -1457,7 +1471,7 @@ export default function JobSearchPage({
 
             {selectedCompetitiveness !== 'ALL' && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
-                <span>Competiție: <strong>{selectedCompetitiveness}</strong></span>
+                <span>Competitie: <strong>{selectedCompetitiveness}</strong></span>
                 <button onClick={() => setSelectedCompetitiveness('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
                 </button>
@@ -1479,7 +1493,7 @@ export default function JobSearchPage({
             className="text-xs font-extrabold text-indigo-700 hover:text-indigo-900 bg-white hover:bg-indigo-50 border border-indigo-200 px-3.5 py-2 rounded-xl transition cursor-pointer shadow-2xs flex items-center gap-1.5"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Resetează Toate Filtrele</span>
+            <span>Reseteaza Toate Filtrele</span>
           </button>
         </div>
       )}
@@ -1488,17 +1502,17 @@ export default function JobSearchPage({
       <div ref={jobsListRef} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
         <div className="flex items-center gap-2">
           <span className="text-lg font-black text-gray-900">
-            {loading ? 'Se caută...' : `${totalJobs} Oportunități Găsite`}
+            {loading ? 'Se cauta...' : `${totalJobs} Oportunitati Gasite`}
           </span>
           <span className="text-xs font-semibold text-gray-500">
-            • Afișare {totalJobs > 0 ? startIndex + 1 : 0} - {endIndex} din {totalJobs}
+            • Afisare {totalJobs > 0 ? startIndex + 1 : 0} - {endIndex} din {totalJobs}
           </span>
         </div>
 
-        {/* DIMENSIUNE PAGINĂ */}
+        {/* DIMENSIUNE PAGINA */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold">
-            <span>Pe pagină:</span>
+            <span>Pe pagina:</span>
             {[12, 24, 48].map((size) => (
               <button
                 key={size}
@@ -1544,13 +1558,13 @@ export default function JobSearchPage({
           </div>
           <h3 className="text-base font-bold text-gray-800">
             {selectedDatePosted === 'NEWLY_DISCOVERED' 
-              ? 'Nu au fost identificate joburi noi la cea mai recentă sincronizare'
-              : 'Nu am găsit joburi care să corespundă filtrelor selectate'}
+              ? 'Nu au fost identificate joburi noi la cea mai recenta sincronizare'
+              : 'Nu am gasit joburi care sa corespunda filtrelor selectate'}
           </h3>
           <p className="text-xs text-gray-500 max-w-md mx-auto">
             {selectedDatePosted === 'NEWLY_DISCOVERED'
-              ? 'Toate joburile scanate erau deja înregistrate în baza de date. Apasă pe «Sincronizează Acum» pentru a relua căutarea live sau comută pe «Toate joburile».'
-              : 'Încearcă să relaxezi selecția de platforme sau să schimbi termenul de căutare.'}
+              ? 'Toate joburile scanate erau deja inregistrate in baza de date. Apasa pe «Sincronizeaza Acum» pentru a relua cautarea live sau comuta pe «Toate joburile».'
+              : 'Incearca sa relaxezi selectia de platforme sau sa schimbi termenul de cautare.'}
           </p>
           <div className="flex items-center justify-center gap-2 pt-2">
             {selectedDatePosted === 'NEWLY_DISCOVERED' && (
@@ -1566,7 +1580,7 @@ export default function JobSearchPage({
               onClick={handleResetFilters}
               className="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-xl hover:bg-black transition cursor-pointer"
             >
-              Resetează Filtrele
+              Reseteaza Filtrele
             </button>
           </div>
         </div>
@@ -1580,11 +1594,12 @@ export default function JobSearchPage({
             return (
               <div 
                 key={job.id} 
-                className="bg-white border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200 rounded-3xl p-5 flex flex-col justify-between space-y-4 group"
+                className="bg-white border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200 rounded-3xl p-5 flex flex-col justify-between group"
               >
-                <div className="space-y-3.5">
+                {/* PARTEA SUPERIOARA: HEADER, LOGO, TITLU, METADATE */}
+                <div className="space-y-3 flex-1 flex flex-col justify-start">
                   
-                  {/* TOP HEADER: PLATFORMĂ, STATUS & SCOR MATCH DINAMIC */}
+                  {/* TOP HEADER: PLATFORMA, STATUS & SCOR MATCH DINAMIC */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 ${platformBadge.bg}`}>
@@ -1594,7 +1609,7 @@ export default function JobSearchPage({
                       {isJobTrulyNew(job) && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-2xs">
                           <Sparkles className="w-2.5 h-2.5" />
-                          NOU GĂSIT
+                          NOU GASIT
                         </span>
                       )}
                       {job.status === 'EXPIRED' && (
@@ -1620,7 +1635,7 @@ export default function JobSearchPage({
                   <div 
                     onClick={() => setSelectedJobForDetails(job)}
                     className="flex items-start gap-3 cursor-pointer group/title"
-                    title="Apasă pentru a deschide fișa completă a postului"
+                    title="Apasa pentru a deschide fisa completa a postului"
                   >
                     <img 
                       src={job.companyLogoUrl} 
@@ -1641,11 +1656,11 @@ export default function JobSearchPage({
                     </div>
                   </div>
 
-                  {/* BADGE-URI DE META-DATE: LOCAȚIE, MOD, NIVEL (FĂRĂ EMOTICOANE) */}
+                  {/* BADGE-URI DE META-DATE: LOCATIE, MOD, NIVEL */}
                   <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-gray-600">
                     <span className="px-2 py-0.5 bg-gray-100 rounded-lg flex items-center gap-1">
                       <MapPin className="w-3 h-3 text-gray-400" />
-                      {job.location}
+                      {removeDiacritics(job.location)}
                     </span>
                     <span className="px-2 py-0.5 bg-gray-100 rounded-lg">
                       {job.workModel === 'REMOTE' ? 'Remote' : job.workModel === 'HYBRID' ? 'Hibrid' : 'On-Site'}
@@ -1662,87 +1677,92 @@ export default function JobSearchPage({
                     </span>
                   </div>
 
-                  {/* INDICATOR DE COMPETITIVITATE & NUMĂR DE CANDIDAȚI (FĂRĂ EMOTICOANE) */}
+                  {/* INDICATOR DE COMPETITIVITATE & NUMAR DE CANDIDATI */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                     {renderCompetitivenessBadge(job)}
 
                     {job.applicantCountText && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-gray-50 text-gray-700 border border-gray-200">
                         <Users className="w-3 h-3 text-gray-500" />
-                        <span>{job.applicantCountText}</span>
+                        <span>{removeDiacritics(job.applicantCountText)}</span>
                       </span>
                     )}
                   </div>
 
-                  {/* DATA EXACTĂ POSTĂRII */}
-                  <div className="flex items-center justify-end text-xs pt-1 border-t border-gray-100 text-gray-600 font-medium">
+                </div>
+
+                {/* PARTEA INFERIOARA: DATA POSTARII & TOATE BUTOANELE DE ACTIUNE FIXATE LA BAZA */}
+                <div className="mt-auto pt-3.5 space-y-2">
+                  
+                  {/* DATA EXACTA A POSTARII */}
+                  <div className="flex items-center justify-end text-xs pb-1 border-b border-gray-100 text-gray-600 font-medium">
                     <span 
                       className={`flex items-center gap-1 text-[11px] ${
-                        formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo) === 'Dată nespecificată'
+                        formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo) === 'Data nespecificata'
                           ? 'text-gray-400 italic'
                           : 'text-gray-500'
                       }`}
-                      title={job.postedAt ? `Publicat la: ${new Date(job.postedAt).toLocaleString('ro-RO')}` : 'Data exactă de publicare nu a fost furnizată de angajator'}
+                      title={job.postedAt ? `Publicat la: ${new Date(job.postedAt).toLocaleString('ro-RO')}` : 'Data exacta de publicare nu a fost furnizata de angajator'}
                     >
                       <Calendar className="w-3 h-3 text-gray-400" />
-                      {formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo)}
+                      {removeDiacritics(formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo))}
                     </span>
                   </div>
 
-                  {/* BUTOANE: VEZI FIȘA COMPLETĂ & AUDIT MODIFICĂRI */}
+                  {/* BUTOANE: VEZI FISA COMPLETA & AUDIT MODIFICARI */}
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedJobForDetails(job)}
                       className="flex-1 py-2.5 px-3 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border border-indigo-200/80 shadow-2xs"
                     >
                       <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>Vezi Fișa Completă</span>
+                      <span>Vezi Fisa Completa</span>
                     </button>
                     <button
                       onClick={() => handleOpenAuditModal(job)}
                       className="py-2.5 px-2.5 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-indigo-600 rounded-2xl text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer border border-gray-200 shadow-2xs"
-                      title="Istoric modificări & audit pipeline"
+                      title="Istoric modificari & audit pipeline"
                     >
                       <History className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline text-[11px]">Istoric</span>
                     </button>
                   </div>
 
-                </div>
+                  {/* BUTOANE ACTIUNI: SALVARE KANBAN & APLICARE DIRECTA */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleSaveToKanban(job)}
+                      disabled={isSaved || isSaving}
+                      className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border ${
+                        isSaved 
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
+                          : 'bg-white hover:bg-gray-50 text-gray-900 border-gray-300 shadow-2xs'
+                      }`}
+                    >
+                      {isSaved ? (
+                        <>
+                          <BookmarkCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Salvat in Tracker</span>
+                        </>
+                      ) : (
+                        <>
+                          <Bookmark className="w-3.5 h-3.5 text-gray-500" />
+                          <span>{isSaving ? 'Se salveaza...' : 'Salveaza'}</span>
+                        </>
+                      )}
+                    </button>
 
-                {/* BUTOANE ACȚIUNI: SALVARE KANBAN & APLICARE DIRECTĂ */}
-                <div className="pt-2 flex items-center gap-2">
-                  <button
-                    onClick={() => handleSaveToKanban(job)}
-                    disabled={isSaved || isSaving}
-                    className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border ${
-                      isSaved 
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
-                        : 'bg-white hover:bg-gray-50 text-gray-900 border-gray-300 shadow-2xs'
-                    }`}
-                  >
-                    {isSaved ? (
-                      <>
-                        <BookmarkCheck className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Salvat în Tracker</span>
-                      </>
-                    ) : (
-                      <>
-                        <Bookmark className="w-3.5 h-3.5 text-gray-500" />
-                        <span>{isSaving ? 'Se salvează...' : 'Salvează'}</span>
-                      </>
-                    )}
-                  </button>
+                    <a 
+                      href={job.directApplyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2.5 px-3 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer shadow-sm shadow-black/10"
+                    >
+                      <span>Aplica pe Site</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
 
-                  <a 
-                    href={job.directApplyUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 py-2.5 px-3 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer shadow-sm shadow-black/10"
-                  >
-                    <span>Aplică pe Site</span>
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </a>
                 </div>
 
               </div>
@@ -1751,11 +1771,11 @@ export default function JobSearchPage({
         </div>
       )}
 
-      {/* PAGINARE ÎN PARTEA DE JOS */}
+      {/* PAGINARE IN PARTEA DE JOS */}
       {!loading && totalPages > 1 && (
         <div className="bg-white border border-gray-200 p-4 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs font-bold text-gray-500">
-            Pagina <span className="text-gray-950 font-black">{currentPage}</span> din <span className="text-gray-950 font-black">{totalPages}</span> ({totalJobs} joburi în total)
+            Pagina <span className="text-gray-950 font-black">{currentPage}</span> din <span className="text-gray-950 font-black">{totalPages}</span> ({totalJobs} joburi in total)
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -1763,7 +1783,7 @@ export default function JobSearchPage({
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
               className="p-2 rounded-xl border border-gray-200 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-gray-700"
-              title="Prima pagină"
+              title="Prima pagina"
             >
               <ChevronsLeft className="w-4 h-4" />
             </button>
@@ -1777,7 +1797,7 @@ export default function JobSearchPage({
               <span>Anterior</span>
             </button>
 
-            {/* BUTOANE NUMEROTATE DE PAGINĂ */}
+            {/* BUTOANE NUMEROTATE DE PAGINA */}
             <div className="flex items-center gap-1 px-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 let pageNum;
@@ -1813,7 +1833,7 @@ export default function JobSearchPage({
               disabled={currentPage === totalPages}
               className="px-3 py-1.5 rounded-xl border border-gray-200 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-xs font-bold flex items-center gap-1 text-gray-700"
             >
-              <span>Următor</span>
+              <span>Urmator</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
 
@@ -1821,7 +1841,7 @@ export default function JobSearchPage({
               onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
               className="p-2 rounded-xl border border-gray-200 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-gray-700"
-              title="Ultima pagină"
+              title="Ultima pagina"
             >
               <ChevronsRight className="w-4 h-4" />
             </button>
@@ -1872,7 +1892,7 @@ export default function JobSearchPage({
         />
       )}
 
-      {/* MODAL AUDIT LIFECYCLE & ISTORIC MODIFICĂRI */}
+      {/* MODAL AUDIT LIFECYCLE & ISTORIC MODIFICARI */}
       {auditJobForChanges && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white border border-gray-200 rounded-3xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
@@ -1887,7 +1907,7 @@ export default function JobSearchPage({
                     Istoric & Audit Pipeline
                   </h3>
                   <p className="text-xs text-gray-500 font-medium">
-                    Monitorizare modificări de conținut & ciclu de viață
+                    Monitorizare modificari de continut & ciclu de viata
                   </p>
                 </div>
               </div>
@@ -1927,7 +1947,7 @@ export default function JobSearchPage({
                 {/* Content Hash & Timestamps */}
                 <div className="pt-2 border-t border-gray-200/80 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                   <div>
-                    <span className="text-gray-500 font-semibold block">Data Reală Publicare:</span>
+                    <span className="text-gray-500 font-semibold block">Data Reala Publicare:</span>
                     <span className="font-bold text-gray-900 flex items-center gap-1 mt-0.5">
                       <Calendar className="w-3 h-3 text-gray-400" />
                       {formatDateTime(auditJobForChanges.postedAt)}
@@ -1953,20 +1973,20 @@ export default function JobSearchPage({
               <div className="space-y-2">
                 <div className="font-bold text-xs uppercase tracking-wider text-gray-600 flex items-center gap-1.5">
                   <GitCommit className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Jurnal Modificări Înregistrate ({jobChangesList.length})</span>
+                  <span>Jurnal Modificari Inregistrate ({jobChangesList.length})</span>
                 </div>
 
                 {loadingChanges ? (
                   <div className="py-8 text-center text-gray-500 space-y-2">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto text-indigo-600" />
-                    <p className="font-medium">Se încarcă jurnalul de modificări...</p>
+                    <p className="font-medium">Se incarca jurnalul de modificari...</p>
                   </div>
                 ) : jobChangesList.length === 0 ? (
                   <div className="p-4 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-center text-gray-500 space-y-1">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
-                    <p className="font-bold text-gray-800">Nicio modificare ulterioară</p>
+                    <p className="font-bold text-gray-800">Nicio modificare ulterioara</p>
                     <p className="text-[11px]">
-                      Jobul a fost indexat inițial și conținutul nu a suferit modificări între crawl-uri.
+                      Jobul a fost indexat initial si continutul nu a suferit modificari intre crawl-uri.
                     </p>
                   </div>
                 ) : (
@@ -1974,7 +1994,7 @@ export default function JobSearchPage({
                     {jobChangesList.map((ch, idx) => {
                       const typeConfig = {
                         CREATED: { label: 'Descoperit & Indexat', bg: 'bg-emerald-50 text-emerald-900 border-emerald-300', dot: 'bg-emerald-500' },
-                        CONTENT_UPDATED: { label: 'Conținut Modificat', bg: 'bg-blue-50 text-blue-900 border-blue-300', dot: 'bg-blue-500' },
+                        CONTENT_UPDATED: { label: 'Continut Modificat', bg: 'bg-blue-50 text-blue-900 border-blue-300', dot: 'bg-blue-500' },
                         EXPIRED: { label: 'Marcat ca Expirat', bg: 'bg-rose-50 text-rose-900 border-rose-300', dot: 'bg-rose-500' },
                         REACTIVATED: { label: 'Reactivat la Recrawling', bg: 'bg-amber-50 text-amber-900 border-amber-300', dot: 'bg-amber-500' }
                       }[ch.changeType] || { label: ch.changeType, bg: 'bg-gray-100 text-gray-800 border-gray-200', dot: 'bg-gray-400' };
@@ -2016,7 +2036,7 @@ export default function JobSearchPage({
                 onClick={() => setAuditJobForChanges(null)}
                 className="px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition cursor-pointer"
               >
-                Închide
+                Inchide
               </button>
             </div>
           </div>

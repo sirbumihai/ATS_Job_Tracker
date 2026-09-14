@@ -66,7 +66,7 @@ export default function Navbar({
             }`}
           >
             <Search className={`w-3.5 h-3.5 ${activeTab === 'job_search' ? 'text-amber-400' : 'text-amber-500'}`} />
-            Căutare Job-uri
+            Cautare Job-uri
           </button>
 
           <button
