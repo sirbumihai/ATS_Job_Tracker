@@ -2428,16 +2428,6 @@ ${bodySections}\\end{document}
         {/* ROW 1: TITLE, STATUS & A4 PAGE CONTROLLER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            {onNavigateToLibrary && (
-              <button
-                onClick={onNavigateToLibrary}
-                className="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-black rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer shrink-0"
-                title="Înapoi la lista cu toate CV-urile"
-              >
-                <span>←</span> CV-uri
-              </button>
-            )}
-            
             <div className="flex items-center gap-2.5 flex-wrap">
               <div className="p-1.5 bg-black text-white rounded-lg shrink-0 shadow-2xs">
                 <FileText className="w-4 h-4" />
@@ -2631,16 +2621,6 @@ ${bodySections}\\end{document}
               />
               <span className="text-gray-400 text-xs font-mono select-none">.pdf</span>
             </div>
-
-            {/* VECTOR ATS PRINT */}
-            <button
-              onClick={handlePrintVectorPdf}
-              className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
-              title="Printează sau salvează ca PDF Vectorial ATS (100% text selectabil)"
-            >
-              <Printer className="w-3.5 h-3.5 text-gray-600" />
-              <span>Vector ATS</span>
-            </button>
 
             {/* DIRECT DOWNLOAD */}
             <button
