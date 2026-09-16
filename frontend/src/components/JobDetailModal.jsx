@@ -38,8 +38,31 @@ import {
   Bot
 } from 'lucide-react';
 
+// Filtru riguros pentru a elimina artefacte web, tag-uri SVG Sketch/Figma sau titluri izolate
+export const isValidRequirementItem = (item) => {
+  if (!item || typeof item !== 'string') return false;
+  const trimmed = item.trim();
+  if (trimmed.length < 8) return false;
+
+  // Nu permitem linii care se termină cu ':' (sunt de fapt sub-antete/subtitluri sau etichete de grup)
+  if (trimmed.endsWith(':')) return false;
+
+  // Nu permitem artefacte de export SVG / grafice (Sketch, Figma, Illustrator)
+  if (/created with sketch/i.test(trimmed) || /created with figma/i.test(trimmed) || /bohemiancoding/i.test(trimmed)) return false;
+  if (/^\d+_[A-Za-z0-9_ -]+$/i.test(trimmed)) return false;
+  if (/\b\d+_[A-Za-z0-9_\- ]+created with sketch\b/i.test(trimmed)) return false;
+
+  // Nu permitem cuvinte izolate de titlu / antet care au scăpat ca cerințe
+  if (/^(knowledge|requirements|qualifications|experience|skills|overview|summary|responsibilities|benefits|cerințe|calificări|responsabilități|beneficii|profil|profilul candidatului|despre rol|activități|ce căutăm|who you are|what you bring)$/i.test(trimmed)) return false;
+
+  // Nu permitem butoane/acțiuni UI sau zgomot de pagină web
+  if (/^(apply now|easy apply|save job|share|share this job|report job|report this job|posted on|full-time|part-time|remote|hybrid|on-site|vezi mai mult|citește mai mult)$/i.test(trimmed)) return false;
+
+  return true;
+};
+
 // Parser inteligent de Job Description: extragere structurată de cerințe obligatorii, bonus, responsabilități și beneficii
-const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], missingSkills = []) => {
+export const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], missingSkills = []) => {
   if (!rawText || rawText.trim().length === 0) {
     return {
       mandatoryRequirements: (skillsRequired || []).map(s => ({
@@ -55,8 +78,13 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
     };
   }
 
-  // 1. Curățare HTML & entități
+  // 1. Curățare HTML, taguri de imagine/SVG & entități
   let text = rawText
+    .replace(/<svg[\s\S]*?<\/svg>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, ' ')
     .replace(/<br\s*[\/]?>/gi, '\n')
     .replace(/<\/p>/gi, '\n\n')
     .replace(/<\/div>/gi, '\n')
@@ -64,7 +92,7 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
     .replace(/<\/li>/gi, '\n')
     .replace(/<h[1-6][^>]*>/gi, '\n\n### ')
     .replace(/<\/h[1-6]>/gi, ':\n')
-    .replace(/<[^>]+>/g, '')
+    .replace(/<[^>]+>/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -74,10 +102,17 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
     .replace(/\r\n/g, '\n')
     .trim();
 
-  // 1.1 Inserare separatoare înainte de antete comune când textul este compactat (ex: LinkedIn text fără newline)
-  text = text.replace(/([a-z0-9\.\)\!\?])\s*(Main responsibilities|Key responsibilities|Responsibilities|What you will do|What you'll do|Tasks|Activități|Responsabilități|Ce vei face|Required skills|Requirements|Must have|Qualifications|Ce căutăm|Cerințe obligatorii|Cerințe|Desirable skills|Nice to have|Good to have|Bonus|Constituie avantaj|Reprezintă un plus|Avantaje|Compensation & benefits|Benefits|What we offer|Beneficii|Ce oferim|Who you are|Tech stack|Work mode|About us)\b/gi, '$1\n\n### $2:\n');
+  // 1.1 Curățare artefacte Sketch, Figma și SVG icons
+  text = text
+    .replace(/.*Created with Sketch\.?.*/gi, '')
+    .replace(/.*Created with Figma\.?.*/gi, '')
+    .replace(/\b\d+_[A-Za-z0-9_\- ]+Created with Sketch\b/gi, '')
+    .replace(/^\s*\d+_[A-Za-z0-9_ -]{2,}\s*$/gm, '');
 
-  // 1.2 Separare elemente de listă concatenate (ex: "testingWork in teams", "ManagersBug fixing")
+  // 1.2 Inserare separatoare înainte de antete comune când textul este compactat (ex: LinkedIn text fără newline)
+  text = text.replace(/([a-z0-9\.\)\!\?])\s*(Main responsibilities|Key responsibilities|Responsibilities|What you will do|What you'll do|Tasks|Activități|Responsabilități|Ce vei face|Required skills|Requirements|Must have|Qualifications|Ce căutăm|Cerințe obligatorii|Cerințe|Desirable skills|Nice to have|Good to have|Bonus|Constituie avantaj|Reprezintă un plus|Avantaje|Compensation & benefits|Benefits|What we offer|Beneficii|Ce oferim|Who you are|Tech stack|Work mode|About us|Knowledge)\b/gi, '$1\n\n### $2:\n');
+
+  // 1.3 Separare elemente de listă concatenate (ex: "testingWork in teams", "ManagersBug fixing")
   text = text.replace(/([a-z0-9\.\)])([A-Z][a-z]{3,})/g, '$1\n• $2');
 
   const lines = text.split('\n');
@@ -93,27 +128,30 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
 
   const isHeading = (line) => {
     const l = line.trim().toLowerCase().replace(/^###\s*/, '').replace(/[:\s]+$/, '');
-    return (
-      (line.startsWith('### ') || line.endsWith(':') || line.length < 90) &&
-      /(cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|competen[tț]e|must have|requirements|required skills|essential experience|essential skills|what you need|qualifications|who you are|candidate profile|skills & experience|what you bring|ce trebuie s[aă] ai|hard skills|condi[tț]ii|cuno[sș]tin[tț]e|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|desirable skills|desirable experience|preferred qualifications|would be a plus|avantaje|plusuri|op[tț]ional|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|ce presupune rolul|main responsibilities|key responsibilities|responsibilities|what you will do|what you'll do|your role|tasks|what you'll be doing|what success looks like|compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|pachet de beneficii|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion|tech stack|work mode|about us|despre noi)/i.test(l)
-    );
+    if (!l) return false;
+    const matchesKeyword = /(cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|competen[tț]e|must have|must-have|requirements|required skills|essential experience|essential skills|what you need|qualifications|who you are|candidate profile|skills & experience|what you bring|ce trebuie s[aă] ai|hard skills|condi[tț]ii|cuno[sș]tin[tț]e|knowledge|technical knowledge|domain knowledge|job knowledge|skills|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|nice-to-have|good to have|desirable skills|desirable experience|preferred qualifications|would be a plus|avantaje|plusuri|op[tț]ional|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|ce presupune rolul|main responsibilities|key responsibilities|responsibilities|what you will do|what you'll do|your role|tasks|what you'll be doing|what success looks like|compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|pachet de beneficii|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion|tech stack|work mode|about us|despre noi)/i.test(l);
+
+    if (line.startsWith('### ') || line.endsWith(':')) {
+      return matchesKeyword || l.length < 40;
+    }
+    return (line.length < 90) && matchesKeyword;
   };
 
   const getSectionType = (line) => {
-    const l = line.toLowerCase();
+    const l = line.toLowerCase().replace(/^###\s*/, '').replace(/[:\s]+$/, '');
     if (/about us|work mode|despre noi|mod de lucru/i.test(l)) {
       return null;
     }
     if (/compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion/i.test(l)) {
       return 'benefits';
     }
-    if (/desirable skills|desirable experience|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|good to have|preferred qualifications|would be a plus|plusuri|op[tț]ional|ce constituie avantaj|tech stack/i.test(l)) {
+    if (/desirable skills|desirable experience|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|nice-to-have|good to have|preferred qualifications|would be a plus|plusuri|op[tț]ional|ce constituie avantaj|tech stack/i.test(l)) {
       return 'bonus';
     }
-    if (/required skills|essential experience|essential skills|cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|must have|requirements|what you need|qualifications|who you are|candidate profile|skills & experience|hard skills|cuno[sș]tin[tț]e/i.test(l)) {
+    if (/required skills|essential experience|essential skills|cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|must have|must-have|requirements|what you need|qualifications|who you are|candidate profile|skills & experience|hard skills|cuno[sș]tin[tț]e|knowledge|technical knowledge|domain knowledge/i.test(l)) {
       return 'mandatory';
     }
-    if (/main responsibilities|key responsibilities|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|responsibilities|what you will do|what you'll do|your role|tasks|what success looks like/i.test(l)) {
+    if (/main responsibilities|key responsibilities|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|ce presupune rolul|responsibilities|what you will do|what you'll do|your role|tasks|what success looks like/i.test(l)) {
       return 'responsibilities';
     }
     return null;
@@ -133,7 +171,7 @@ const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], 
     }
 
     const cleanItem = rawLine.replace(/^###\s*/, '').replace(/^[•\-*–—]\s*/, '').trim();
-    if (!cleanItem) continue;
+    if (!cleanItem || !isValidRequirementItem(cleanItem)) continue;
 
     if (currentSection) {
       // Redirecționează beneficii evidente către benefits
@@ -495,74 +533,50 @@ export default function JobDetailModal({
     );
   }, [currentJob.rawDescription, skillsRequired, displayMatchingSkills, displayMissingSkills]);
 
-  // CERINȚE OBLIGATORII COMPLETE & INTEGRATE: garantează că ABSOLUT TOATE cerințele din anunț sunt afișate și evaluate fără omisiuni
+  // CERINȚE OBLIGATORII (MUST-HAVE): Când AI a evaluat jobul, rezultatele AI sunt sursa autoritară și completă
   const effectiveMandatoryRequirements = useMemo(() => {
-    if (!aiAnalysisData?.mandatory || aiAnalysisData.mandatory.length === 0) {
-      return (parsedDescription.mandatoryRequirements || []).map(req => ({
+    if (aiAnalysisData?.mandatory && aiAnalysisData.mandatory.length > 0) {
+      return aiAnalysisData.mandatory
+        .filter(req => isValidRequirementItem(req?.text))
+        .map(req => ({
+          text: req.text,
+          isMatched: Boolean(req.isMatched),
+          matchedSkill: req.matchedSkill || '',
+          explanation: req.explanation || ''
+        }));
+    }
+
+    // Fallback când analiza AI nu este încă finalizată sau e indisponibilă
+    return (parsedDescription.mandatoryRequirements || [])
+      .filter(req => isValidRequirementItem(req?.text))
+      .map(req => ({
         text: req.text,
         isMatched: req.matched && req.matched.length > 0,
         matchedSkill: req.matched ? req.matched.join(', ') : '',
-        explanation: req.matched && req.matched.length > 0 ? `Bifat în CV: ${req.matched.join(', ')}` : 'Competență cerută în anunț'
+        explanation: req.matched && req.matched.length > 0 ? `Bifat în CV conform profilului: ${req.matched.join(', ')}` : 'Competență cerută în anunț'
       }));
-    }
-
-    const items = [...aiAnalysisData.mandatory];
-    const aiTextsLower = items.map(m => (m.text || '').toLowerCase());
-
-    if (parsedDescription.mandatoryRequirements && parsedDescription.mandatoryRequirements.length > 0) {
-      for (const pReq of parsedDescription.mandatoryRequirements) {
-        const pText = (pReq.text || '').toLowerCase().trim();
-        if (pText.length < 8) continue;
-        const alreadyCovered = aiTextsLower.some(aiText =>
-          aiText.includes(pText) || pText.includes(aiText) || (pText.slice(0, 25) === aiText.slice(0, 25))
-        );
-        if (!alreadyCovered) {
-          const isMatched = pReq.matched && pReq.matched.length > 0;
-          items.push({
-            text: pReq.text,
-            isMatched: isMatched,
-            matchedSkill: isMatched ? pReq.matched.join(', ') : '',
-            explanation: isMatched ? `Bifat în CV conform profilului: ${pReq.matched.join(', ')}` : 'Cerință specificată în anunțul de angajare'
-          });
-        }
-      }
-    }
-
-    return items;
   }, [aiAnalysisData?.mandatory, parsedDescription.mandatoryRequirements]);
 
   // PUNCTE BONUS & AVANTAJE INTEGRATE (NICE-TO-HAVE)
   const effectiveBonusRequirements = useMemo(() => {
-    if (!aiAnalysisData?.bonus || aiAnalysisData.bonus.length === 0) {
-      return (parsedDescription.bonusRequirements || []).map(b => ({
+    if (aiAnalysisData?.bonus && aiAnalysisData.bonus.length > 0) {
+      return aiAnalysisData.bonus
+        .filter(b => isValidRequirementItem(b?.text))
+        .map(b => ({
+          text: b.text,
+          isMatched: Boolean(b.isMatched),
+          matchedSkill: b.matchedSkill || ''
+        }));
+    }
+
+    // Fallback când analiza AI nu este încă finalizată sau e indisponibilă
+    return (parsedDescription.bonusRequirements || [])
+      .filter(b => isValidRequirementItem(b?.text))
+      .map(b => ({
         text: b.text,
         isMatched: b.matched && b.matched.length > 0,
         matchedSkill: b.matched ? b.matched.join(', ') : ''
       }));
-    }
-
-    const items = [...aiAnalysisData.bonus];
-    const aiBonusLower = items.map(b => (b.text || '').toLowerCase());
-
-    if (parsedDescription.bonusRequirements && parsedDescription.bonusRequirements.length > 0) {
-      for (const pBonus of parsedDescription.bonusRequirements) {
-        const pText = (pBonus.text || '').toLowerCase().trim();
-        if (pText.length < 8) continue;
-        const alreadyCovered = aiBonusLower.some(aiText =>
-          aiText.includes(pText) || pText.includes(aiText) || (pText.slice(0, 25) === aiText.slice(0, 25))
-        );
-        if (!alreadyCovered) {
-          const isMatched = pBonus.matched && pBonus.matched.length > 0;
-          items.push({
-            text: pBonus.text,
-            isMatched: isMatched,
-            matchedSkill: isMatched ? pBonus.matched.join(', ') : ''
-          });
-        }
-      }
-    }
-
-    return items;
   }, [aiAnalysisData?.bonus, parsedDescription.bonusRequirements]);
 
   const totalMandatoryCount = effectiveMandatoryRequirements.length;
@@ -586,8 +600,16 @@ export default function JobDetailModal({
   const formatDescription = (rawText) => {
     if (!rawText) return <p className="text-gray-500 italic">Descrierea completă nu este disponibilă.</p>;
 
+    let sanitized = rawText
+      .replace(/<svg[\s\S]*?<\/svg>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/.*Created with Sketch\.?.*/gi, '')
+      .replace(/.*Created with Figma\.?.*/gi, '')
+      .replace(/\b\d+_[A-Za-z0-9_\- ]+Created with Sketch\b/gi, '');
+
     // Împărțire pe paragrafe
-    const paragraphs = rawText.split(/\n\s*\n|\r\n\r\n/);
+    const paragraphs = sanitized.split(/\n\s*\n|\r\n\r\n/);
 
     return paragraphs.map((para, pIdx) => {
       const trimmed = para.trim();
@@ -600,7 +622,7 @@ export default function JobDetailModal({
           <ul key={pIdx} className="my-3 space-y-1.5 list-disc pl-5 text-gray-700 leading-relaxed text-sm">
             {lines.map((line, lIdx) => {
               const cleanLine = line.replace(/^[•\-*]\s*/, '').trim();
-              if (!cleanLine) return null;
+              if (!cleanLine || !isValidRequirementItem(cleanLine)) return null;
               return <li key={lIdx}>{cleanLine}</li>;
             })}
           </ul>
@@ -608,7 +630,7 @@ export default function JobDetailModal({
       }
 
       // Verificare dacă este un antet (Header)
-      if (trimmed.endsWith(':') || trimmed.length < 50 && (trimmed.toLowerCase().includes('cerin') || trimmed.toLowerCase().includes('responsabilit') || trimmed.toLowerCase().includes('benefic') || trimmed.toLowerCase().includes('requirements') || trimmed.toLowerCase().includes('responsibilities'))) {
+      if (trimmed.endsWith(':') || (trimmed.length < 50 && (trimmed.toLowerCase().includes('cerin') || trimmed.toLowerCase().includes('responsabilit') || trimmed.toLowerCase().includes('benefic') || trimmed.toLowerCase().includes('requirements') || trimmed.toLowerCase().includes('responsibilities')))) {
         return (
           <h4 key={pIdx} className="text-sm font-black text-gray-950 uppercase tracking-wider mt-5 mb-2 border-b border-gray-100 pb-1">
             {trimmed}

@@ -585,10 +585,29 @@ public class AiGapAnalysisService {
             } catch (Exception ignored) {}
         }
 
+        // Curatare metadate grafice SVG, Scripturi, Style si artefacte de design (Sketch, Figma)
+        descriptionToAnalyze = descriptionToAnalyze
+                .replaceAll("(?is)<svg.*?</svg>", " ")
+                .replaceAll("(?is)<style.*?</style>", " ")
+                .replaceAll("(?is)<script.*?</script>", " ")
+                .replaceAll("(?is)<noscript.*?</noscript>", " ")
+                .replaceAll("(?is)<iframe.*?</iframe>", " ")
+                .replaceAll("(?i).*?Created with Sketch.*?", "")
+                .replaceAll("(?i).*?Created with Figma.*?", "")
+                .replaceAll("(?i)\\b\\d+_[A-Za-z0-9_\\- ]+Created with Sketch\\b", "")
+                .replaceAll("(?m)^\\s*\\d+_[A-Za-z0-9_ -]{2,}\\s*$", "")
+                .replaceAll("\\n{3,}", "\n\n")
+                .trim();
+
         String systemPrompt = """
             Ești un Recruiter Senior Tehnic și Sistem ATS Inteligent de ultimă generație.
             Analizează exhaustiv descrierea jobului și CV-ul candidatului pentru a oferi o evaluare precisă, 100% completă și fidelă cerințelor angajatorului.
             
+            REGULĂ STRICTĂ DE EXCLUDERE A ARTEFACTELOR TEHNICE / GRAFICE:
+            - Ignoră complet orice denumiri de fișiere/icoane SVG sau artefacte grafice web (ex: "48_Experience Created with Sketch", "48_Artificial Intelligence Created with Sketch", "Created with Sketch", "Created with Figma").
+            - Ignoră cuvinte izolate care sunt doar titluri sau etichete de secțiune (ex: "Knowledge", "Requirements", "Responsibilities", "Skills", "Overview"). Acestea NU sunt cerințe de job de sine stătătoare.
+            - O cerință validă conține o frază/propoziție descriptivă cu privire la ce trebuie să știe sau să fi făcut candidatul.
+
             REGULĂ STRICTĂ DE EXHAUSTIVITATE (EXTRAGERE COMPLETĂ, FĂRĂ OMISIUNI ȘI FĂRĂ REZUMARE):
             1. "mandatory": Cerințe OBLIGATORII și Calificări esențiale (Must-Have).
                - Extrage ABSOLUT TOATE cerințele și criteriile de selecție menționate de angajator în secțiuni precum "Requirements", "Who you are", "Profilul candidatului", "Ce căutăm", "Calificări", "Must Have", "Essential Skills" etc.
@@ -647,6 +666,12 @@ public class AiGapAnalysisService {
                 Map<String, Object> map = objectMapper.convertValue(root, Map.class);
                 map.put("aiVerified", true);
                 
+                filterAiRequirementsList(map, "mandatory");
+                filterAiRequirementsList(map, "bonus");
+                filterAiSimpleList(map, "responsibilities");
+                filterAiSimpleList(map, "benefits");
+                recalculateAtsScore(map);
+
                 String deterministicLevel = JobSearchAggregatorService.determineExperienceLevel(jobTitle, descriptionToAnalyze);
                 String aiLevel = map.containsKey("experienceLevel") && map.get("experienceLevel") != null
                         ? String.valueOf(map.get("experienceLevel")).trim().toUpperCase()
@@ -689,5 +714,60 @@ public class AiGapAnalysisService {
             "responsibilities", Collections.emptyList(),
             "benefits", Collections.emptyList()
         );
+    }
+
+    private static boolean isValidAiRequirementText(String text) {
+        if (text == null) return false;
+        String trimmed = text.trim();
+        if (trimmed.length() < 8) return false;
+        if (trimmed.endsWith(":")) return false;
+        if (trimmed.matches("(?i).*?created with sketch.*?") || trimmed.matches("(?i).*?created with figma.*?") || trimmed.matches("(?i).*?bohemiancoding.*?")) return false;
+        if (trimmed.matches("(?i)^\\d+_[A-Za-z0-9_ -]+$")) return false;
+        if (trimmed.matches("(?i)^(knowledge|requirements|qualifications|experience|skills|overview|summary|responsibilities|benefits|cerințe|calificări|responsabilități|beneficii|profil|profilul candidatului|despre rol|activități|ce căutăm|who you are|what you bring)$")) return false;
+        return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void filterAiRequirementsList(Map<String, Object> map, String key) {
+        Object obj = map.get(key);
+        if (obj instanceof List<?> list) {
+            List<Map<String, Object>> filtered = new ArrayList<>();
+            for (Object item : list) {
+                if (item instanceof Map<?, ?> m) {
+                    Object textObj = m.get("text");
+                    if (textObj != null && isValidAiRequirementText(textObj.toString())) {
+                        filtered.add((Map<String, Object>) m);
+                    }
+                }
+            }
+            map.put(key, filtered);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void filterAiSimpleList(Map<String, Object> map, String key) {
+        Object obj = map.get(key);
+        if (obj instanceof List<?> list) {
+            List<String> filtered = new ArrayList<>();
+            for (Object item : list) {
+                if (item != null && isValidAiRequirementText(item.toString())) {
+                    filtered.add(item.toString().trim());
+                }
+            }
+            map.put(key, filtered);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void recalculateAtsScore(Map<String, Object> map) {
+        Object mandObj = map.get("mandatory");
+        if (mandObj instanceof List<?> list && !list.isEmpty()) {
+            int total = list.size();
+            long matched = list.stream()
+                    .filter(item -> item instanceof Map<?, ?> m && Boolean.TRUE.equals(m.get("isMatched")))
+                    .count();
+            double score = Math.round(((double) matched / total) * 1000.0) / 10.0;
+            map.put("atsScore", score);
+        }
     }
 }

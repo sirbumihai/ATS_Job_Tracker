@@ -3814,9 +3814,12 @@ public class JobSearchAggregatorService {
                             .userAgent(BROWSER_USER_AGENT)
                             .timeout(7000)
                             .get();
+                    doc.select("script, style, noscript, svg, header, footer, nav, iframe").remove();
                     Element descEl = doc.selectFirst(".show-more-less-html__markup");
                     if (descEl != null) {
+                        descEl.select("script, style, noscript, svg, iframe").remove();
                         String fullText = descEl.wholeText().trim();
+                        fullText = sanitizeScrapedDescription(fullText);
                         if (!fullText.isEmpty()) return fullText;
                     }
                 }
@@ -3825,11 +3828,13 @@ public class JobSearchAggregatorService {
                         .userAgent(BROWSER_USER_AGENT)
                         .timeout(7000)
                         .get();
-                doc.select("script, style, noscript").remove();
+                doc.select("script, style, noscript, svg, header, footer, nav, iframe").remove();
                 Element descEl = doc.selectFirst(".content-block-content");
                 if (descEl == null) descEl = doc.selectFirst(".the-content");
                 if (descEl != null) {
+                    descEl.select("script, style, noscript, svg, iframe").remove();
                     String fullText = descEl.wholeText().trim();
+                    fullText = sanitizeScrapedDescription(fullText);
                     if (!fullText.isEmpty()) return fullText;
                 }
             } else if ("BESTJOBS".equalsIgnoreCase(platform) || applyUrl.contains("bestjobs.eu")) {
@@ -3837,10 +3842,12 @@ public class JobSearchAggregatorService {
                         .userAgent(BROWSER_USER_AGENT)
                         .timeout(7000)
                         .get();
-                doc.select("script, style, noscript").remove();
+                doc.select("script, style, noscript, svg, header, footer, nav, iframe").remove();
                 Element descEl = doc.selectFirst(".job-description");
                 if (descEl != null) {
+                    descEl.select("script, style, noscript, svg, iframe").remove();
                     String fullText = descEl.wholeText().trim();
+                    fullText = sanitizeScrapedDescription(fullText);
                     if (!fullText.isEmpty()) return fullText;
                 }
             }
@@ -3848,6 +3855,17 @@ public class JobSearchAggregatorService {
             log.warn("[ON DEMAND DESC FETCH] Eroare la preluarea descrierii complete pentru {}: {}", applyUrl, e.getMessage());
         }
         return null;
+    }
+
+    private String sanitizeScrapedDescription(String text) {
+        if (text == null || text.isBlank()) return "";
+        return text
+                .replaceAll("(?i).*?Created with Sketch\\.?", "")
+                .replaceAll("(?i).*?Created with Figma\\.?", "")
+                .replaceAll("(?i)\\b\\d+_[A-Za-z0-9_\\- ]+Created with Sketch\\b", "")
+                .replaceAll("(?m)^\\s*\\d+_[A-Za-z0-9_ -]{2,}\\s*$", "")
+                .replaceAll("\\n{3,}", "\n\n")
+                .trim();
     }
 
     private String getCandidateCvText(UUID userId) {
