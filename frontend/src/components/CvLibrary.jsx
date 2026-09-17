@@ -191,7 +191,7 @@ export default function CvLibrary({
   // DELETE CV
   const handleDeleteCv = async (cvId, cvTitle, e) => {
     e.stopPropagation();
-    if (!window.confirm(`Sigur dorești să ștergi CV-ul "${cvTitle}"?`)) return;
+    if (!window.confirm(`Sigur doresti sa stergi CV-ul "${cvTitle}"?`)) return;
     try {
       const res = await fetch(`/api/v1/cv/${cvId}`, {
         method: 'DELETE',
@@ -199,7 +199,7 @@ export default function CvLibrary({
       });
       if (res.ok) {
         await fetchCvProfiles();
-        showNotification(`CV-ul "${cvTitle}" a fost șters.`);
+        showNotification(`CV-ul "${cvTitle}" a fost sters.`);
       }
     } catch (err) {
       console.error('Eroare la stergerea CV-ului:', err);
@@ -216,7 +216,7 @@ export default function CvLibrary({
       });
       if (res.ok) {
         await fetchCvProfiles();
-        showNotification('CV-ul a fost setat ca versiune principală implicită.');
+        showNotification('CV-ul a fost setat ca versiune principala implicita.');
       }
     } catch (err) {
       console.error('Eroare la setarea CV-ului principal:', err);
@@ -252,7 +252,7 @@ export default function CvLibrary({
                 CV-urile Mele (CV Library)
               </h2>
               <p className="text-xs text-gray-500 font-medium">
-                Gestionează și personalizează multiple versiuni de CV adaptate pentru fiecare domeniu și rol.
+                Gestioneaza si personalizeaza multiple versiuni de CV adaptate pentru fiecare domeniu si rol.
               </p>
             </div>
           </div>
@@ -263,7 +263,7 @@ export default function CvLibrary({
               className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              Creează CV Nou
+              Creeaza CV Nou
             </button>
           </div>
         </div>
@@ -274,7 +274,7 @@ export default function CvLibrary({
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input 
               type="text"
-              placeholder="Caută în CV-urile tale..."
+              placeholder="Cauta in CV-urile tale..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-500 focus:bg-white transition"
@@ -291,7 +291,7 @@ export default function CvLibrary({
       {loading ? (
         <div className="py-16 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
           <RefreshCw className="w-6 h-6 animate-spin text-gray-900" />
-          <span className="text-xs font-semibold">Se încarcă CV-urile...</span>
+          <span className="text-xs font-semibold">Se incarca CV-urile...</span>
         </div>
       ) : filteredList.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
@@ -308,7 +308,7 @@ export default function CvLibrary({
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-bold text-sm sm:text-base text-gray-950 group-hover:text-black transition">
-                        {cv.title || "CV Fără Titlu"}
+                        {cv.title || "CV Fara Titlu"}
                       </h3>
                       {cv.isPrimary && (
                         <span className="px-2 py-0.5 bg-black text-white text-[10px] font-bold rounded-md flex items-center gap-1 shadow-2xs">
@@ -317,7 +317,7 @@ export default function CvLibrary({
                       )}
                     </div>
                     <p className="text-xs font-semibold text-gray-700">
-                      {cv.fullName || "Fără Nume"}
+                      {cv.fullName || "Fara Nume"}
                     </p>
                   </div>
 
@@ -326,7 +326,7 @@ export default function CvLibrary({
                     {!cv.isPrimary && (
                       <button
                         onClick={(e) => handleSetPrimary(cv.id, e)}
-                        title="Setează ca principal"
+                        title="Seteaza ca principal"
                         className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-amber-500 transition cursor-pointer"
                       >
                         <Star className="w-3.5 h-3.5" />
@@ -334,14 +334,14 @@ export default function CvLibrary({
                     )}
                     <button
                       onClick={(e) => handleDuplicateCv(cv.id, e)}
-                      title="Duplică acest CV"
+                      title="Duplica acest CV"
                       className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition cursor-pointer"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={(e) => handleDeleteCv(cv.id, cv.title, e)}
-                      title="Șterge CV-ul"
+                      title="Sterge CV-ul"
                       className="p-1.5 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -385,7 +385,7 @@ export default function CvLibrary({
                   className="px-3 py-1.5 bg-gray-100 group-hover:bg-black text-gray-800 group-hover:text-white rounded-lg text-xs font-bold flex items-center gap-1 transition shadow-2xs cursor-pointer"
                 >
                   <Edit3 className="w-3 h-3" />
-                  <span>Editează în Studio</span>
+                  <span>Editeaza in Studio</span>
                   <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
@@ -397,9 +397,9 @@ export default function CvLibrary({
         <div className="bg-white border border-gray-200/90 rounded-2xl p-12 text-center space-y-4">
           <FileText className="w-12 h-12 text-gray-300 mx-auto" />
           <div>
-            <h3 className="text-base font-bold text-gray-900">Nu ai niciun CV salvat încă</h3>
+            <h3 className="text-base font-bold text-gray-900">Nu ai niciun CV salvat inca</h3>
             <p className="text-xs text-gray-500 mt-1">
-              Creează primul tău CV sau editează un șablon pentru a începe să personalizezi aplicările.
+              Creeaza primul tau CV sau editeaza un sablon pentru a incepe sa personalizezi aplicarile.
             </p>
           </div>
           <button
@@ -407,7 +407,7 @@ export default function CvLibrary({
             className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            Creează Primul CV
+            Creeaza Primul CV
           </button>
         </div>
       )}
@@ -419,7 +419,7 @@ export default function CvLibrary({
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="font-bold text-base text-gray-950 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-black" />
-                Creează o Versiune Nouă de CV
+                Creeaza o Versiune Noua de CV
               </h3>
               <button 
                 onClick={() => setShowCreateModal(false)}
@@ -443,7 +443,7 @@ export default function CvLibrary({
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-black focus:bg-white transition"
                 />
                 <p className="text-[11px] text-gray-400 mt-1">
-                  Poți crea versiuni specifice pentru diferite domenii, companii sau tehnologii.
+                  Poti crea versiuni specifice pentru diferite domenii, companii sau tehnologii.
                 </p>
               </div>
             </div>
@@ -453,7 +453,7 @@ export default function CvLibrary({
                 onClick={() => setShowCreateModal(false)}
                 className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition cursor-pointer"
               >
-                Anulează
+                Anuleaza
               </button>
               <button
                 onClick={handleCreateCv}
@@ -461,7 +461,7 @@ export default function CvLibrary({
                 className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 {creatingNew ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                <span>{creatingNew ? 'Se creează...' : 'Creează și Editează'}</span>
+                <span>{creatingNew ? 'Se creeaza...' : 'Creeaza si Editeaza'}</span>
               </button>
             </div>
           </div>

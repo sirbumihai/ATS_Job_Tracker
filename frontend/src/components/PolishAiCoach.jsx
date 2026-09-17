@@ -75,8 +75,8 @@ export default function PolishAiCoach({
 
   const getCategoryBadge = (cat) => {
     switch (cat) {
-      case 'IMPACT': return { label: 'Impact Măsurabil (Google XYZ)', bg: 'bg-purple-100 text-purple-800 border-purple-200' };
-      case 'TECH_DEPTH': return { label: 'Adâncime Tehnică & SQL', bg: 'bg-blue-100 text-blue-800 border-blue-200' };
+      case 'IMPACT': return { label: 'Impact Masurabil (Google XYZ)', bg: 'bg-purple-100 text-purple-800 border-purple-200' };
+      case 'TECH_DEPTH': return { label: 'Adancime Tehnica & SQL', bg: 'bg-blue-100 text-blue-800 border-blue-200' };
       case 'STACK': return { label: 'Tech Stack & Cloud', bg: 'bg-emerald-100 text-emerald-800 border-emerald-200' };
       case 'PRODUCTION': return { label: 'Production & Vector AI', bg: 'bg-amber-100 text-amber-800 border-amber-200' };
       case 'ROLE': return { label: 'Aliniere Rol & Concurrency', bg: 'bg-indigo-100 text-indigo-800 border-indigo-200' };
@@ -114,7 +114,7 @@ export default function PolishAiCoach({
               </span>
             </div>
             <p className="text-xs text-gray-500 font-medium mt-0.5">
-              Optimizare asistată live conform Formulei Google X-Y-Z
+              Optimizare asistata live conform Formulei Google X-Y-Z
             </p>
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function PolishAiCoach({
           <button 
             onClick={fetchDiagnosis}
             disabled={loading}
-            title="Recalculează diagnoza"
+            title="Recalculeaza diagnoza"
             className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -160,7 +160,7 @@ export default function PolishAiCoach({
               {currentScore >= 95 ? 'Top 1% Elite Candidate' : 'Strong Candidate (Pushing 95+)'}
             </span>
             <p className="text-[10px] text-gray-400 mt-1">
-              {appliedFixIds.size} din {diagnosis?.suggestions?.length || 5} îmbunătățiri aplicate
+              {appliedFixIds.size} din {diagnosis?.suggestions?.length || 5} imbunatatiri aplicate
             </p>
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function PolishAiCoach({
         </div>
 
         <p className="text-xs text-gray-300 font-medium leading-snug pt-1">
-          {diagnosis?.summaryVerdict || "Scor foarte solid! Aplicarea metricilor cuantificate Google X-Y-Z îți va propulsa profilul în Top 1% candidați."}
+          {diagnosis?.summaryVerdict || "Scor foarte solid! Aplicarea metricilor cuantificate Google X-Y-Z iti va propulsa profilul in Top 1% candidati."}
         </p>
       </div>
 
@@ -222,7 +222,7 @@ export default function PolishAiCoach({
           <div className="flex items-center gap-1.5">
             <Zap className="w-4 h-4 text-amber-500" />
             <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
-              Top 5 Îmbunătățiri de Mare Impact (1-Click Fixes)
+              Top 5 Imbunatatiri de Mare Impact (1-Click Fixes)
             </h4>
           </div>
           {diagnosis?.suggestions && diagnosis.suggestions.length > 0 && appliedFixIds.size < diagnosis.suggestions.length && (
@@ -230,7 +230,7 @@ export default function PolishAiCoach({
               onClick={handleApplyAll}
               className="text-[11px] font-extrabold text-black hover:text-neutral-700 flex items-center gap-1 cursor-pointer bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg transition"
             >
-              <Sparkles className="w-3 h-3 text-amber-500" /> Aplică Toate (Boost 96+)
+              <Sparkles className="w-3 h-3 text-amber-500" /> Aplica Toate (Boost 96+)
             </button>
           )}
         </div>
@@ -307,7 +307,7 @@ export default function PolishAiCoach({
                   <div className="px-3 pb-3.5 pt-1 space-y-2.5 border-t border-gray-100 bg-gray-50/50 text-xs">
                     <div className="space-y-1">
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600">
-                        Înainte (Fără metrici / Pasiv):
+                        Inainte (Fara metrici / Pasiv):
                       </span>
                       <p className="text-gray-500 line-through text-[11px] leading-relaxed bg-rose-50/70 p-2 rounded-lg border border-rose-100">
                         {sug.beforeText}
@@ -316,7 +316,7 @@ export default function PolishAiCoach({
 
                     <div className="space-y-1">
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600" /> După (Formula Google X-Y-Z cu Metrici Reale):
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Dupa (Formula Google X-Y-Z cu Metrici Reale):
                       </span>
                       <p className="text-gray-900 font-medium text-[11px] leading-relaxed bg-white p-2.5 rounded-lg border border-emerald-200 shadow-2xs">
                         {sug.afterText}
@@ -324,7 +324,7 @@ export default function PolishAiCoach({
                     </div>
 
                     <div className="text-[11px] text-gray-500 italic bg-gray-100/80 p-2 rounded-lg">
-                      💡 <strong>De ce contează:</strong> {sug.rationale}
+                      💡 <strong>De ce conteaza:</strong> {sug.rationale}
                     </div>
                   </div>
                 )}

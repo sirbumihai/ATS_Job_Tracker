@@ -726,14 +726,14 @@ export default function CvStudio({
           if (p.title) setCvTitle(p.title);
           if (p.id) setCurrentCvId(p.id);
 
-          const rawName = p.fullName || 'Sîrbu Mihai-Alexandru';
-          const formattedFullName = rawName.replace(/\bSirbu\b/gi, 'Sîrbu');
+          const rawName = p.fullName || 'Sirbu Mihai-Alexandru';
+          const formattedFullName = rawName;
 
           setContactData({
             fullName: formattedFullName,
             email: p.email || 'sarbu.mihai@gmail.com',
             phone: p.phone || '(+40) 723 034 706',
-            location: p.location || 'București, România',
+            location: p.location || 'Bucuresti, Romania',
             linkedin: p.linkedin || 'https://linkedin.com/in/sarbumihai',
             github: p.github || 'https://github.com/sarbumihai'
           });
@@ -774,7 +774,7 @@ export default function CvStudio({
             ]);
           }
         }
-        setParsedPdfSuccess(`CV-ul "${file.name}" a fost importat, structurat pe șablonul Jake Resume și poate fi editat live!`);
+        setParsedPdfSuccess(`CV-ul "${file.name}" a fost importat, structurat pe sablonul Jake Resume si poate fi editat live!`);
         setTimeout(() => setParsedPdfSuccess(null), 6000);
       }
     } catch (err) {
@@ -1144,7 +1144,7 @@ export default function CvStudio({
 
     return `\\documentclass[10pt,letterpaper]{article}
 
-\\usepackage[T1]{fontenc} % Diacritice corecte
+\\usepackage[T1]{fontenc} % Suport font T1
 \\usepackage[utf8]{inputenc} % UTF-8
 
 \\usepackage[left=0.5in,top=0.32in,right=0.5in,bottom=0.32in]{geometry} % Margini optimizate
@@ -1218,7 +1218,7 @@ ${bodySections}\\end{document}
       setLatexCopied(true);
       setTimeout(() => setLatexCopied(false), 3000);
     } catch (e) {
-      alert("Nu s-a putut copia codul în clipboard.");
+      alert("Nu s-a putut copia codul in clipboard.");
     }
   };
 
@@ -1293,9 +1293,9 @@ ${bodySections}\\end{document}
                     <button 
                       onClick={() => { setSplitSectionKey('education'); setSplitProjectIdx(null); }}
                       className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune pe Pagina 2"
+                      title="Muta aceasta sectiune pe Pagina 2"
                     >
-                      Mută pe Pag. 2 ↷
+                      Muta pe Pag. 2 ↷
                     </button>
                   ) : (
                     <button 
@@ -1309,7 +1309,7 @@ ${bodySections}\\end{document}
                         setSplitProjectIdx(null);
                       }}
                       className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune înapoi pe Pagina 1"
+                      title="Muta aceasta sectiune inapoi pe Pagina 1"
                     >
                       ↶ Pagina 1
                     </button>
@@ -1497,9 +1497,9 @@ ${bodySections}\\end{document}
                     <button 
                       onClick={() => { setSplitSectionKey('experience'); setSplitProjectIdx(null); }}
                       className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune pe Pagina 2"
+                      title="Muta aceasta sectiune pe Pagina 2"
                     >
-                      Mută pe Pag. 2 ↷
+                      Muta pe Pag. 2 ↷
                     </button>
                   ) : (
                     <button 
@@ -1513,7 +1513,7 @@ ${bodySections}\\end{document}
                         setSplitProjectIdx(null);
                       }}
                       className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune înapoi pe Pagina 1"
+                      title="Muta aceasta sectiune inapoi pe Pagina 1"
                     >
                       ↶ Pagina 1
                     </button>
@@ -1674,7 +1674,7 @@ ${bodySections}\\end{document}
                           handleOpenBulletRewrite('experience', expIdx, bIdx, b);
                         }}
                         className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs"
-                        title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici măsurabile"
+                        title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici masurabile"
                       >
                         <Sparkles className="w-2.5 h-2.5 text-amber-600" />
                         <span>AI XYZ</span>
@@ -1682,7 +1682,7 @@ ${bodySections}\\end{document}
                       <button 
                         onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
                         className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
-                        title="Șterge bullet"
+                        title="Sterge bullet"
                       >
                         <Trash2 className="w-2.5 h-2.5" />
                       </button>
@@ -1737,9 +1737,9 @@ ${bodySections}\\end{document}
                     <button 
                       onClick={() => { setSplitSectionKey('projects'); setSplitProjectIdx(null); }}
                       className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune pe Pagina 2"
+                      title="Muta aceasta sectiune pe Pagina 2"
                     >
-                      Mută pe Pag. 2 ↷
+                      Muta pe Pag. 2 ↷
                     </button>
                   ) : (
                     <button 
@@ -1753,7 +1753,7 @@ ${bodySections}\\end{document}
                         setSplitProjectIdx(null);
                       }}
                       className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune înapoi pe Pagina 1"
+                      title="Muta aceasta sectiune inapoi pe Pagina 1"
                     >
                       ↶ Pagina 1
                     </button>
@@ -1945,7 +1945,7 @@ ${bodySections}\\end{document}
                             handleOpenBulletRewrite('projects', projIdx, bIdx, b);
                           }}
                           className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs"
-                          title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici măsurabile"
+                          title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici masurabile"
                         >
                           <Sparkles className="w-2.5 h-2.5 text-amber-600" />
                           <span>AI XYZ</span>
@@ -1953,7 +1953,7 @@ ${bodySections}\\end{document}
                         <button 
                           onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
                           className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
-                          title="Șterge bullet"
+                          title="Sterge bullet"
                         >
                           <Trash2 className="w-2.5 h-2.5" />
                         </button>
@@ -1994,9 +1994,9 @@ ${bodySections}\\end{document}
                     <button 
                       onClick={() => { setSplitSectionKey('certifications'); setSplitProjectIdx(null); }}
                       className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune pe Pagina 2"
+                      title="Muta aceasta sectiune pe Pagina 2"
                     >
-                      Mută pe Pag. 2 ↷
+                      Muta pe Pag. 2 ↷
                     </button>
                   ) : (
                     <button 
@@ -2010,7 +2010,7 @@ ${bodySections}\\end{document}
                         setSplitProjectIdx(null);
                       }}
                       className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune înapoi pe Pagina 1"
+                      title="Muta aceasta sectiune inapoi pe Pagina 1"
                     >
                       ↶ Pagina 1
                     </button>
@@ -2188,9 +2188,9 @@ ${bodySections}\\end{document}
                     <button 
                       onClick={() => { setSplitSectionKey('skills'); setSplitProjectIdx(null); }}
                       className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune pe Pagina 2"
+                      title="Muta aceasta sectiune pe Pagina 2"
                     >
-                      Mută pe Pag. 2 ↷
+                      Muta pe Pag. 2 ↷
                     </button>
                   ) : (
                     <button 
@@ -2204,7 +2204,7 @@ ${bodySections}\\end{document}
                         setSplitProjectIdx(null);
                       }}
                       className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune înapoi pe Pagina 1"
+                      title="Muta aceasta sectiune inapoi pe Pagina 1"
                     >
                       ↶ Pagina 1
                     </button>
@@ -2325,7 +2325,7 @@ ${bodySections}\\end{document}
                   <button
                     onClick={() => { setAddingSkillFieldIdx(fieldIdx); setNewSkillText(""); }}
                     className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer px-1 hover:bg-gray-100 rounded ml-1 inline"
-                    title={`Adaugă skill în ${field.label}`}
+                    title={`Adauga skill in ${field.label}`}
                   >
                     + add
                   </button>
@@ -2361,9 +2361,9 @@ ${bodySections}\\end{document}
                     <button 
                       onClick={() => { setSplitSectionKey('summary'); setSplitProjectIdx(null); }}
                       className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune pe Pagina 2"
+                      title="Muta aceasta sectiune pe Pagina 2"
                     >
-                      Mută pe Pag. 2 ↷
+                      Muta pe Pag. 2 ↷
                     </button>
                   ) : (
                     <button 
@@ -2377,7 +2377,7 @@ ${bodySections}\\end{document}
                         setSplitProjectIdx(null);
                       }}
                       className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Mută această secțiune înapoi pe Pagina 1"
+                      title="Muta aceasta sectiune inapoi pe Pagina 1"
                     >
                       ↶ Pagina 1
                     </button>
@@ -2438,13 +2438,13 @@ ${bodySections}\\end{document}
                 onChange={e => setCvTitle(e.target.value)} 
                 placeholder="Denumire CV..." 
                 className="font-bold text-base sm:text-lg text-gray-950 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-black outline-none transition px-0.5"
-                title="Apasă pentru a redenumi această versiune de CV"
+                title="Apasa pentru a redenumi aceasta versiune de CV"
               />
               
               {/* REAL-TIME AUTO-SAVE STATUS PILL */}
               {isAutoSaving ? (
                 <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full font-medium">
-                  <RefreshCw className="w-3 h-3 animate-spin text-gray-400" /> Se salvează...
+                  <RefreshCw className="w-3 h-3 animate-spin text-gray-400" /> Se salveaza...
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full font-medium">
@@ -2465,7 +2465,7 @@ ${bodySections}\\end{document}
               title={
                 isMultiPage
                   ? `CV-ul este structurat pe 2 pagini A4 (${pageStats.percent}% raportat la Pag. 1).`
-                  : `CV-ul se încadrează pe 1 pagină A4 (${pageStats.percent}% spațiu utilizat).`
+                  : `CV-ul se incadreaza pe 1 pagina A4 (${pageStats.percent}% spatiu utilizat).`
               }
             >
               {isMultiPage ? (
@@ -2476,7 +2476,7 @@ ${bodySections}\\end{document}
               ) : (
                 <>
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                  <span>📄 1 Pagină ({pageStats.percent}%)</span>
+                  <span>📄 1 Pagina ({pageStats.percent}%)</span>
                 </>
               )}
             </div>
@@ -2488,7 +2488,7 @@ ${bodySections}\\end{document}
                 className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
                   pageLayoutMode === 'auto' ? 'bg-white text-black shadow-xs' : 'text-gray-500 hover:text-black'
                 }`}
-                title="Detectează automat: adaugă a doua pagină doar când conținutul depășește prima pagină"
+                title="Detecteaza automat: adauga a doua pagina doar cand continutul depaseste prima pagina"
               >
                 Auto
               </button>
@@ -2497,16 +2497,16 @@ ${bodySections}\\end{document}
                 className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
                   pageLayoutMode === '1' ? 'bg-white text-black shadow-xs' : 'text-gray-500 hover:text-black'
                 }`}
-                title="Forțează vizualizarea strictă pe 1 pagină A4"
+                title="Forteaza vizualizarea stricta pe 1 pagina A4"
               >
-                1 Pagină
+                1 Pagina
               </button>
               <button
                 onClick={() => setPageLayoutMode('2')}
                 className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
                   pageLayoutMode === '2' ? 'bg-white text-black shadow-xs' : 'text-gray-500 hover:text-black'
                 }`}
-                title="Adaugă Pagina 2 și separă conținutul pe 2 foi fizice A4"
+                title="Adauga Pagina 2 si separa continutul pe 2 foi fizice A4"
               >
                 2 Pagini
               </button>
@@ -2542,7 +2542,7 @@ ${bodySections}\\end{document}
               <button
                 onClick={() => setShowAiModal(true)}
                 className="px-3 py-1 text-gray-800 hover:text-black hover:bg-white/80 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                title="Optimizare CV cu AI Groq pe baza cerințelor jobului"
+                title="Optimizare CV cu AI Groq pe baza cerintelor jobului"
               >
                 <Zap className="w-3.5 h-3.5 text-amber-500" />
                 <span>Optimizare ATS</span>
@@ -2556,7 +2556,7 @@ ${bodySections}\\end{document}
               <button
                 onClick={() => setShowLatexModal(true)}
                 className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
-                title="Deschide LaTeX Studio: Exportă fișierul .tex sau compilează direct pe Overleaf"
+                title="Deschide LaTeX Studio: Exporta fisierul .tex sau compileaza direct pe Overleaf"
               >
                 <Code2 className="w-3.5 h-3.5 text-indigo-600" />
                 <span>LaTeX</span>
@@ -2564,7 +2564,7 @@ ${bodySections}\\end{document}
 
               <label className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition">
                 <Upload className="w-3.5 h-3.5 text-gray-600" />
-                <span>{parsingPdf ? 'Se extrage...' : 'Importă'}</span>
+                <span>{parsingPdf ? 'Se extrage...' : 'Importa'}</span>
                 <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
               </label>
 
@@ -2574,17 +2574,17 @@ ${bodySections}\\end{document}
                   <button
                     onClick={() => setShowAddSectionDropdown(!showAddSectionDropdown)}
                     className="px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-black border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1 transition cursor-pointer shadow-2xs"
-                    title="Adaugă înapoi secțiunile eliminate"
+                    title="Adauga inapoi sectiunile eliminate"
                   >
                     <Plus className="w-3.5 h-3.5 text-gray-600" />
-                    <span>Secțiuni ({missingSections.length})</span>
+                    <span>Sectiuni ({missingSections.length})</span>
                     <ChevronDown className="w-3 h-3 text-gray-500" />
                   </button>
 
                   {showAddSectionDropdown && (
                     <div className="absolute left-0 mt-1.5 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-30 py-1 font-sans text-xs">
                       <div className="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                        Restaurează secțiune
+                        Restaureaza sectiune
                       </div>
                       {missingSections.map(key => (
                         <button
@@ -2615,8 +2615,8 @@ ${bodySections}\\end{document}
                 type="text" 
                 value={pdfCustomName} 
                 onChange={e => setPdfCustomName(e.target.value)} 
-                title="Editează numele fișierului PDF descărcat"
-                placeholder="Nume fișier..." 
+                title="Editeaza numele fisierului PDF descarcat"
+                placeholder="Nume fisier..." 
                 className="bg-transparent text-xs text-gray-900 outline-none w-28 sm:w-36 font-medium placeholder-gray-400" 
               />
               <span className="text-gray-400 text-xs font-mono select-none">.pdf</span>
@@ -2627,10 +2627,10 @@ ${bodySections}\\end{document}
               onClick={handleDownloadDirectPdf}
               disabled={isDownloadingPdf}
               className="px-4 py-1.5 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition disabled:opacity-60 cursor-pointer"
-              title="Descarcă direct fișierul PDF"
+              title="Descarca direct fisierul PDF"
             >
               {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-              <span>Descarcă</span>
+              <span>Descarca</span>
             </button>
           </div>
         </div>
@@ -2707,7 +2707,7 @@ ${bodySections}\\end{document}
                   <button 
                     onClick={() => setShowEditContactModal(true)}
                     className="no-pdf absolute right-0 top-0 text-[11px] font-sans text-gray-500 hover:text-black flex items-center gap-1 bg-gray-50 hover:bg-gray-100 px-2.5 py-1 rounded border border-gray-200 shadow-2xs transition cursor-pointer"
-                    title="Editează datele de contact ca în formular"
+                    title="Editeaza datele de contact ca in formular"
                   >
                     <Edit3 className="w-3.5 h-3.5 text-gray-500" /> Edit Contact
                   </button>
@@ -2818,7 +2818,7 @@ ${bodySections}\\end{document}
                   <span className={`mx-2 px-2.5 py-0.5 text-white font-sans text-[10px] font-bold rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider ${
                     pageStats.isOverflown ? 'bg-rose-600 animate-pulse' : 'bg-gray-600'
                   }`}>
-                    ✂️ Limită Pagina 1 (A4: 297mm) {pageStats.isOverflown ? `— Depășit cu ${pageStats.percent - 100}% (apasă "2 Pagini" sus sau comută pe Auto)!` : '— Pagina 1 se termină aici'}
+                    ✂️ Limita Pagina 1 (A4: 297mm) {pageStats.isOverflown ? `— Depasit cu ${pageStats.percent - 100}% (apasa "2 Pagini" sus sau comuta pe Auto)!` : '— Pagina 1 se termina aici'}
                   </span>
                   <div className={`h-[2px] border-t-2 border-dashed flex-1 ${pageStats.isOverflown ? 'border-rose-500' : 'border-gray-300'}`}></div>
                 </div>
@@ -2834,11 +2834,11 @@ ${bodySections}\\end{document}
                     <div className="h-[2px] border-t-2 border-dashed border-amber-400 flex-1"></div>
                     <div className="bg-amber-50 border border-amber-300 px-4 py-2 rounded-2xl text-xs font-bold text-amber-950 flex flex-wrap items-center justify-center gap-3 shadow-md">
                       <span className="flex items-center gap-1.5 text-amber-900">
-                        <span>✂️</span> <strong>Întrerupere Pagină A4 (297 mm)</strong>
+                        <span>✂️</span> <strong>Intrerupere Pagina A4 (297 mm)</strong>
                       </span>
                       <span className="text-amber-300">|</span>
                       <div className="flex items-center gap-2">
-                        <label className="text-amber-900 font-semibold">Începe Pagina 2 de la:</label>
+                        <label className="text-amber-900 font-semibold">Incepe Pagina 2 de la:</label>
                         <select 
                           value={splitSectionKey} 
                           onChange={e => {
@@ -2867,7 +2867,7 @@ ${bodySections}\\end{document}
 
                       {splitSectionKey === 'projects' && projectsList.length > 1 && (
                         <div className="flex items-center gap-2 pl-2 border-l border-amber-200">
-                          <span className="text-[11px] text-amber-900 font-medium">Împarte proiectele:</span>
+                          <span className="text-[11px] text-amber-900 font-medium">Imparte proiectele:</span>
                           <select
                             value={splitProjectIdx === null ? 'all' : splitProjectIdx}
                             onChange={e => setSplitProjectIdx(e.target.value === 'all' ? null : Number(e.target.value))}
@@ -2886,7 +2886,7 @@ ${bodySections}\\end{document}
                     <div className="h-[2px] border-t-2 border-dashed border-amber-400 flex-1"></div>
                   </div>
                   <p className="text-[11px] text-gray-500 font-sans text-center">
-                    Secțiunile de mai jos sunt așezate pe <strong>Pagina 2</strong>. La descărcare PDF sau print se generează automat exact 2 pagini separate fără tăieri de text.
+                    Sectiunile de mai jos sunt asezate pe <strong>Pagina 2</strong>. La descarcare PDF sau print se genereaza automat exact 2 pagini separate fara taieri de text.
                   </p>
                 </div>
 
@@ -3123,7 +3123,7 @@ ${bodySections}\\end{document}
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-gray-950">Optimizare AI ATS 100% (Groq Live)</h3>
-                  <p className="text-[11px] text-gray-500">Analiză diferențe ATS + Rescriere adaptată pentru cerințele jobului</p>
+                  <p className="text-[11px] text-gray-500">Analiza diferente ATS + Rescriere adaptata pentru cerintele jobului</p>
                 </div>
               </div>
               <button onClick={() => setShowAiModal(false)} className="p-1 text-gray-400 hover:text-black rounded-lg cursor-pointer">
@@ -3134,7 +3134,7 @@ ${bodySections}\\end{document}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               {applications.length > 0 && (
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Selectează Jobul din Tracker:</label>
+                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Selecteaza Jobul din Tracker:</label>
                   <select 
                     value={selectedJobId}
                     onChange={e => setSelectedJobId(e.target.value)}
@@ -3148,7 +3148,7 @@ ${bodySections}\\end{document}
               )}
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-600 mb-1">Sau introdu cerințe job personalizate:</label>
+                <label className="block text-[10px] font-bold text-gray-600 mb-1">Sau introdu cerinte job personalizate:</label>
                 <input 
                   type="text" 
                   placeholder="ex: Java 21, Spring Boot, Microservices, Kubernetes, Redis"
@@ -3167,12 +3167,12 @@ ${bodySections}\\end{document}
               {isAnalyzing ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin text-gray-300" />
-                  Se rulează Agent 1 (Gap Analyzer) & Agent 2 (Groq LLM Rewriter)...
+                  Se ruleaza Agent 1 (Gap Analyzer) & Agent 2 (Groq LLM Rewriter)...
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-amber-400" />
-                  Rulează Analiza și Rescrierea AI (Groq Live)
+                  Ruleaza Analiza si Rescrierea AI (Groq Live)
                 </>
               )}
             </button>
@@ -3201,7 +3201,7 @@ ${bodySections}\\end{document}
                       </div>
 
                       <div className="p-2.5 bg-white rounded-lg border border-gray-200">
-                        <span className="text-[10px] font-bold text-rose-700 block">Cuvinte Cheie de Adăugat:</span>
+                        <span className="text-[10px] font-bold text-rose-700 block">Cuvinte Cheie de Adaugat:</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {agent1Output.missingSkills.map(s => (
                             <span key={s} className="text-[9px] bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded font-medium">{s}</span>
@@ -3222,7 +3222,7 @@ ${bodySections}\\end{document}
                         onClick={handleApplyAiOptimizations}
                         className="px-2.5 py-1 bg-black hover:bg-neutral-800 text-white rounded-lg font-bold text-[10px] flex items-center gap-1 shadow transition cursor-pointer"
                       >
-                        <Check className="w-3 h-3 text-emerald-400" /> Aplică direct în CV
+                        <Check className="w-3 h-3 text-emerald-400" /> Aplica direct in CV
                       </button>
                     </div>
 
@@ -3265,7 +3265,7 @@ ${bodySections}\\end{document}
                     Rescriere AI • Formula Google X-Y-Z
                   </h3>
                   <p className="text-[11px] text-gray-500">
-                    Alege una dintre cele 3 variante optimizate cu metrici măsurabile
+                    Alege una dintre cele 3 variante optimizate cu metrici masurabile
                   </p>
                 </div>
               </div>
@@ -3278,7 +3278,7 @@ ${bodySections}\\end{document}
             </div>
 
             <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Varianta Curentă:</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Varianta Curenta:</span>
               <p className="text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg border border-gray-200 italic">
                 {activeRewritingBullet.originalText}
               </p>
@@ -3287,7 +3287,7 @@ ${bodySections}\\end{document}
             {activeRewritingBullet.loading ? (
               <div className="py-8 flex flex-col items-center justify-center gap-2 text-gray-500">
                 <RefreshCw className="w-6 h-6 animate-spin text-black" />
-                <span className="text-xs font-semibold">Generare opțiuni Google X-Y-Z în curs...</span>
+                <span className="text-xs font-semibold">Generare optiuni Google X-Y-Z in curs...</span>
               </div>
             ) : activeRewritingBullet.variations ? (
               <div className="space-y-3 pt-1">
@@ -3301,7 +3301,7 @@ ${bodySections}\\end{document}
                         🚀 Impact Maxim (Google XYZ)
                       </span>
                       <span className="text-xs font-bold text-purple-700 opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-                        Selectează <ArrowRight className="w-3.5 h-3.5" />
+                        Selecteaza <ArrowRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
                     <p className="text-xs text-gray-900 font-medium leading-relaxed">
@@ -3317,10 +3317,10 @@ ${bodySections}\\end{document}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
-                        ⚙️ Adâncime Tehnică & Arhitectură
+                        ⚙️ Adancime Tehnica & Arhitectura
                       </span>
                       <span className="text-xs font-bold text-blue-700 opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-                        Selectează <ArrowRight className="w-3.5 h-3.5" />
+                        Selecteaza <ArrowRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
                     <p className="text-xs text-gray-900 font-medium leading-relaxed">
@@ -3336,10 +3336,10 @@ ${bodySections}\\end{document}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        🎯 Formulare Concisă & Directă
+                        🎯 Formulare Concisa & Directa
                       </span>
                       <span className="text-xs font-bold text-emerald-700 opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-                        Selectează <ArrowRight className="w-3.5 h-3.5" />
+                        Selecteaza <ArrowRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
                     <p className="text-xs text-gray-900 font-medium leading-relaxed">
@@ -3355,7 +3355,7 @@ ${bodySections}\\end{document}
                 onClick={() => setActiveRewritingBullet(null)}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-bold text-xs cursor-pointer transition"
               >
-                Anulează
+                Anuleaza
               </button>
             </div>
           </div>
@@ -3375,7 +3375,7 @@ ${bodySections}\\end{document}
                 </div>
                 <div>
                   <h3 className="font-bold text-base">LaTeX Studio & PDF Generator</h3>
-                  <p className="text-xs text-gray-300">Format profesional EB Garamond (100% Vectorial ATS, 1 pagină A4)</p>
+                  <p className="text-xs text-gray-300">Format profesional EB Garamond (100% Vectorial ATS, 1 pagina A4)</p>
                 </div>
               </div>
               <button 
@@ -3391,8 +3391,8 @@ ${bodySections}\\end{document}
               <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-xs text-amber-900 leading-relaxed flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold">De ce LaTeX?</span> Motoarele de compilare TeX generează text pur vectorial cu kerning și spațiere de precizie matematică, citite 100% corect de sistemele ATS (Workday, Taleo, Greenhouse).
-                  Apasă <span className="font-bold">„Deschide pe Overleaf”</span> pentru compilare instantă în cloud, sau <span className="font-bold">„Descarcă .tex”</span> pentru compilare locală!
+                  <span className="font-bold">De ce LaTeX?</span> Motoarele de compilare TeX genereaza text pur vectorial cu kerning si spatiere de precizie matematica, citite 100% corect de sistemele ATS (Workday, Taleo, Greenhouse).
+                  Apasa <span className="font-bold">"Deschide pe Overleaf"</span> pentru compilare instanta in cloud, sau <span className="font-bold">"Descarca .tex"</span> pentru compilare locala!
                 </div>
               </div>
 
@@ -3401,35 +3401,35 @@ ${bodySections}\\end{document}
                 <button
                   onClick={handleOpenOverleaf}
                   className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
-                  title="Deschide Overleaf cu codul gata inserat și compilează PDF-ul instant"
+                  title="Deschide Overleaf cu codul gata inserat si compileaza PDF-ul instant"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  <span>Deschide pe Overleaf (Compilează PDF)</span>
+                  <span>Deschide pe Overleaf (Compileaza PDF)</span>
                 </button>
 
                 <button
                   onClick={handleDownloadTex}
                   className="px-4 py-2.5 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
-                  title="Descarcă fișierul sursă .tex pe calculator"
+                  title="Descarca fisierul sursa .tex pe calculator"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Descarcă .tex</span>
+                  <span>Descarca .tex</span>
                 </button>
 
                 <button
                   onClick={handleCopyLatex}
                   className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-bold text-xs flex items-center gap-2 transition cursor-pointer"
-                  title="Copiază codul LaTeX în clipboard"
+                  title="Copiaza codul LaTeX in clipboard"
                 >
                   {latexCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-gray-600" />}
-                  <span>{latexCopied ? "Copiat în Clipboard!" : "Copiază Codul"}</span>
+                  <span>{latexCopied ? "Copiat in Clipboard!" : "Copiaza Codul"}</span>
                 </button>
               </div>
 
               {/* CODE PREVIEW */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs text-gray-500 font-medium">
-                  <span>Previzualizare Cod Sursă LaTeX (.tex):</span>
+                  <span>Previzualizare Cod Sursa LaTeX (.tex):</span>
                   <span>Sincronizat automat cu datele tale din formular</span>
                 </div>
                 <div className="relative bg-neutral-950 text-neutral-100 p-4 rounded-xl font-mono text-xs overflow-x-auto max-h-80 border border-neutral-800 selection:bg-amber-400 selection:text-neutral-950">
@@ -3444,7 +3444,7 @@ ${bodySections}\\end{document}
                 onClick={() => setShowLatexModal(false)}
                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl text-xs font-bold transition cursor-pointer"
               >
-                Închide
+                Inchide
               </button>
             </div>
 
