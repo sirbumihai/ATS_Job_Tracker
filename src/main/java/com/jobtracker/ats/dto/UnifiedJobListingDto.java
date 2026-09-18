@@ -106,4 +106,19 @@ public record UnifiedJobListingDto(
             OffsetDateTime.now(), OffsetDateTime.now(), "ACTIVE", false
         );
     }
+
+    /**
+     * Returnează o copie a DTO-ului fără rawDescription pentru optimizarea transferului HTTP pe rețea.
+     * Descrierea completă va fi preluată on-demand prin endpoint-ul dedicat de detalii.
+     */
+    public UnifiedJobListingDto withoutRawDescription() {
+        return new UnifiedJobListingDto(
+            id, jobTitle, companyName, companyLogoUrl, location, workModel,
+            experienceLevel, sourcePlatform, directApplyUrl, null,
+            salaryRange, skillsRequired, matchingSkills, missingSkills,
+            postedDateAgo, atsMatchScore, competitiveness, competitivenessLabel,
+            applicantCountText, postedDaysAgo, externalId, contentHash,
+            postedAt, firstSeenAt, lastSeenAt, status, newlyDiscovered
+        );
+    }
 }

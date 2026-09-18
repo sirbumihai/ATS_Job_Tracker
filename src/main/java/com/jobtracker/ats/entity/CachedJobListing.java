@@ -12,7 +12,15 @@ import java.util.Collections;
 import java.util.List;
 
 @Entity
-@Table(name = "cached_live_jobs")
+@Table(name = "cached_live_jobs", indexes = {
+    @Index(name = "idx_cached_jobs_status_last_seen", columnList = "status, last_seen_at"),
+    @Index(name = "idx_cached_jobs_status_posted", columnList = "status, posted_at, created_at"),
+    @Index(name = "idx_cached_jobs_platform", columnList = "source_platform"),
+    @Index(name = "idx_cached_jobs_level", columnList = "experience_level"),
+    @Index(name = "idx_cached_jobs_work_model", columnList = "work_model"),
+    @Index(name = "idx_cached_jobs_newly_discovered", columnList = "newly_discovered"),
+    @Index(name = "idx_cached_jobs_content_hash", columnList = "content_hash")
+})
 @Getter
 @Setter
 @NoArgsConstructor

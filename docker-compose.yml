@@ -6,6 +6,7 @@ services:
       POSTGRES_DB: ats_db
       POSTGRES_USER: ats_user
       POSTGRES_PASSWORD: ats_password
+    restart: unless-stopped
     ports:
       - "5432:5432"
     volumes:
@@ -21,10 +22,12 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: ats_backend_api
+    restart: unless-stopped
     ports:
       - "8080:8080"
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ats_db
       SPRING_DATASOURCE_USERNAME: ats_user
@@ -38,6 +41,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: ats_frontend_ui
+    restart: unless-stopped
     ports:
       - "3000:80"
     depends_on:

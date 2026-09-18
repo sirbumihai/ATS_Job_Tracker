@@ -24,6 +24,8 @@ public interface CachedJobListingRepository extends JpaRepository<CachedJobListi
 
     Optional<CachedJobListing> findByDirectApplyUrl(String directApplyUrl);
 
+    List<CachedJobListing> findByDirectApplyUrlIn(java.util.Collection<String> directApplyUrls);
+
     boolean existsByDirectApplyUrl(String directApplyUrl);
 
     @Query("SELECT j FROM CachedJobListing j WHERE j.status = 'ACTIVE' AND j.lastSeenAt < :threshold")

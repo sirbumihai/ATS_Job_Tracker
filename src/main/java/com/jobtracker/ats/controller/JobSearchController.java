@@ -1,6 +1,8 @@
 package com.jobtracker.ats.controller;
 
+import com.jobtracker.ats.crawler.PlatformScrapeResult;
 import com.jobtracker.ats.dto.ApplicationResponse;
+import com.jobtracker.ats.dto.JobSearchResponse;
 import com.jobtracker.ats.dto.UnifiedJobListingDto;
 import com.jobtracker.ats.entity.JobChange;
 import com.jobtracker.ats.service.JobSearchAggregatorService;
@@ -20,7 +22,7 @@ public class JobSearchController {
     private final JobSearchAggregatorService jobSearchAggregatorService;
 
     @GetMapping("/search")
-    public ResponseEntity<List<UnifiedJobListingDto>> searchJobs(
+    public ResponseEntity<?> searchJobs(
             @RequestHeader(value = "X-User-Id", required = false) UUID headerUserId,
             @RequestParam(required = false) UUID userId,
             @RequestParam(required = false) String keyword,
@@ -32,9 +34,34 @@ public class JobSearchController {
             @RequestParam(required = false, defaultValue = "MATCH_AND_RECENCY") String sortBy,
             @RequestParam(required = false, defaultValue = "ALL") String datePosted,
             @RequestParam(required = false, defaultValue = "ACTIVE") String status,
-            @RequestParam(required = false, defaultValue = "ALL") String discovered
+            @RequestParam(required = false, defaultValue = "ALL") String discovered,
+            @RequestParam(required = false, defaultValue = "ALL") String competitiveness,
+            @RequestParam(required = false, defaultValue = "ALL") String atsScore,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false, defaultValue = "12") Integer size
     ) {
         UUID activeUserId = headerUserId != null ? headerUserId : userId;
+        if (page != null) {
+            JobSearchResponse response = jobSearchAggregatorService.searchJobsPaginated(
+                    activeUserId,
+                    keyword,
+                    location,
+                    platform,
+                    level,
+                    roleCategory,
+                    workModel,
+                    sortBy,
+                    datePosted,
+                    status,
+                    discovered,
+                    competitiveness,
+                    atsScore,
+                    page,
+                    size != null ? size : 12
+            );
+            return ResponseEntity.ok(response);
+        }
+
         List<UnifiedJobListingDto> jobs = jobSearchAggregatorService.searchJobs(
                 activeUserId,
                 keyword,
@@ -104,11 +131,22 @@ public class JobSearchController {
 
     @PostMapping("/sync-live")
     public ResponseEntity<Map<String, Object>> syncLiveJobs() {
+        long start = System.currentTimeMillis();
         int totalJobs = jobSearchAggregatorService.refreshLiveJobs();
+        long duration = System.currentTimeMillis() - start;
+        List<PlatformScrapeResult> reports = jobSearchAggregatorService.getLastExecutionReports();
+
         return ResponseEntity.ok(Map.of(
                 "status", "SUCCESS",
-                "message", "Feed-ul de joburi a fost actualizat cu succes.",
-                "totalLiveJobs", totalJobs
+                "message", "Feed-ul de joburi a fost actualizat cu succes în mod concurent.",
+                "totalLiveJobs", totalJobs,
+                "durationMs", duration,
+                "crawlerReports", reports
         ));
+    }
+
+    @GetMapping("/crawler-status")
+    public ResponseEntity<List<PlatformScrapeResult>> getCrawlerStatus() {
+        return ResponseEntity.ok(jobSearchAggregatorService.getLastExecutionReports());
     }
 }

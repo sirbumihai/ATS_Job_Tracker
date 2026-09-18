@@ -7,7 +7,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "jobs_staging")
+@Table(name = "jobs_staging", indexes = {
+    @Index(name = "idx_jobs_staging_pending", columnList = "processed, crawled_at")
+})
 @Getter
 @Setter
 @NoArgsConstructor

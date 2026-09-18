@@ -153,9 +153,11 @@ export default function JobSearchPage({
   const [showKeywordSuggestions, setShowKeywordSuggestions] = useState(false);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
 
-  // Paginare
+  // Paginare server-side
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -168,14 +170,10 @@ export default function JobSearchPage({
     totalLiveJobs: 0
   });
 
-  // Numar joburi noi identificate la ultima sincronizare si publicate recent (max 48h)
+  // Numar joburi noi identificate la ultima sincronizare si publicate recent (max 48h) din statisticile globale
   const newlyDiscoveredCount = useMemo(() => {
-    return jobs.filter(j => {
-      if (!j?.newlyDiscovered) return false;
-      const ts = getJobTimestamp(j);
-      return ts > 0 && (Date.now() - ts) <= 48 * 3600 * 1000;
-    }).length;
-  }, [jobs]);
+    return globalStats.summaryStats?.newlyDiscovered ?? 0;
+  }, [globalStats]);
 
   // Persistenta jobs salvate in localStorage
   const [savedJobIds, setSavedJobIds] = useState(() => {
@@ -422,7 +420,7 @@ export default function JobSearchPage({
     }
   };
 
-  const fetchJobs = async () => {
+  const fetchJobs = async (targetPage = currentPage) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -442,15 +440,32 @@ export default function JobSearchPage({
       }
       if (selectedStatus && selectedStatus !== 'ALL') params.append('status', selectedStatus);
       else if (selectedStatus === 'ALL') params.append('status', 'ALL');
+      if (selectedCompetitiveness && selectedCompetitiveness !== 'ALL') {
+        params.append('competitiveness', selectedCompetitiveness);
+      }
+      if (selectedAtsScore && selectedAtsScore !== 'ALL') {
+        params.append('atsScore', selectedAtsScore);
+      }
       params.append('userId', activeUserId);
+      params.append('page', targetPage);
+      params.append('size', pageSize);
 
       const res = await fetch(`/api/v1/jobs/search?${params.toString()}`, {
         headers: { 'X-User-Id': activeUserId }
       });
       if (res.ok) {
         const data = await res.json();
-        setJobs(data);
-        setCurrentPage(1);
+        if (Array.isArray(data)) {
+          setJobs(data);
+          setTotalJobs(data.length);
+          setTotalPages(Math.max(1, Math.ceil(data.length / pageSize)));
+        } else {
+          const list = data.content || data.jobs || [];
+          setJobs(list);
+          setTotalJobs(data.totalElements ?? list.length);
+          setTotalPages(data.totalPages ?? Math.max(1, Math.ceil(list.length / pageSize)));
+        }
+        setCurrentPage(targetPage);
       }
     } catch (err) {
       console.error('Eroare la preluarea joburilor:', err);
@@ -510,10 +525,10 @@ export default function JobSearchPage({
     fetchGlobalStats();
   }, []);
 
-  // Cautare debounced (300ms)
+  // Cautare debounced (300ms) - declanșează căutarea pe server cu pagina 1 la orice modificare de filtru
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchJobs();
+      fetchJobs(1);
     }, 300);
     return () => clearTimeout(timer);
   }, [
@@ -524,14 +539,17 @@ export default function JobSearchPage({
     selectedLevels,
     selectedDatePosted,
     selectedStatus,
-    selectedWorkModel
+    selectedWorkModel,
+    selectedCompetitiveness,
+    selectedAtsScore,
+    pageSize
   ]);
 
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     setShowKeywordSuggestions(false);
     setShowLocationSuggestions(false);
-    fetchJobs();
+    fetchJobs(1);
   };
 
   const handleSaveToKanban = async (job) => {
@@ -565,83 +583,14 @@ export default function JobSearchPage({
     }
   };
 
-  // Filtrare & Sortare flexibila pe client
-  const filteredAndSortedJobs = useMemo(() => {
-    let result = [...jobs];
-
-    // Filtru status (ACTIVE / EXPIRED / ALL) pe client
-    if (selectedStatus !== 'ALL') {
-      result = result.filter(j => (j.status || 'ACTIVE') === selectedStatus);
-    }
-
-    // Filtru competitivitate pe client
-    if (selectedCompetitiveness !== 'ALL') {
-      result = result.filter(j => (j.competitiveness || 'MEDIUM') === selectedCompetitiveness);
-    }
-
-    // Filtru Nivel Experienta (Suport Multiplu pe client)
-    if (selectedLevels.length > 0) {
-      result = result.filter(j => selectedLevels.includes(j.experienceLevel));
-    }
-
-    // Filtru Scor ATS pe client
-    if (selectedAtsScore === 'TOP_80') {
-      result = result.filter(j => (j.atsMatchScore || 0) >= 80);
-    } else if (selectedAtsScore === 'TOP_60') {
-      result = result.filter(j => (j.atsMatchScore || 0) >= 60);
-    } else if (selectedAtsScore === 'TOP_40') {
-      result = result.filter(j => (j.atsMatchScore || 0) >= 40);
-    } else if (selectedAtsScore === 'UNDER_40') {
-      result = result.filter(j => (j.atsMatchScore || 0) < 40);
-    }
-
-    // Filtru data postare unificat pe client (pe baza datei reale de publicare)
-    if (selectedDatePosted === 'NEWLY_DISCOVERED') {
-      result = result.filter(j => isJobTrulyNew(j));
-    } else if (selectedDatePosted !== 'ALL') {
-      const now = Date.now();
-      const cutoffHours = selectedDatePosted === '24H' || selectedDatePosted === '1' ? 24 :
-                          selectedDatePosted === '48H' || selectedDatePosted === '2' || selectedDatePosted === '3' ? 48 :
-                          selectedDatePosted === '7D' || selectedDatePosted === '7' ? 168 :
-                          selectedDatePosted === '30D' || selectedDatePosted === '30' ? 720 : null;
-      if (cutoffHours) {
-        result = result.filter(j => {
-          const ts = getJobTimestamp(j);
-          if (!ts) return false;
-          return (now - ts) <= cutoffHours * 3600 * 1000;
-        });
-      }
-    }
-
-    // Sortare optima: Recomandate (Pondere: 70% ATS Match + 30% Recenta din data postarii)
-    const now = Date.now();
-    result.sort((a, b) => {
-      const daysOldA = a.postedDaysAgo >= 0 ? a.postedDaysAgo : 
-                       a.postedAt ? Math.floor(Math.max(0, (now - new Date(a.postedAt).getTime()) / (24 * 3600 * 1000))) : 15;
-      const daysOldB = b.postedDaysAgo >= 0 ? b.postedDaysAgo : 
-                       b.postedAt ? Math.floor(Math.max(0, (now - new Date(b.postedAt).getTime()) / (24 * 3600 * 1000))) : 15;
-      const recencyA = Math.max(0, 30 - daysOldA);
-      const recencyB = Math.max(0, 30 - daysOldB);
-      const totalA = (a.atsMatchScore * 0.70) + (recencyA * 0.30);
-      const totalB = (b.atsMatchScore * 0.70) + (recencyB * 0.30);
-      return totalB - totalA;
-    });
-
-    return result;
-  }, [jobs, selectedCompetitiveness, selectedDatePosted, selectedStatus, selectedLevels, selectedAtsScore]);
-
-  // Paginare
-  const totalJobs = filteredAndSortedJobs.length;
-  const totalPages = Math.max(1, Math.ceil(totalJobs / pageSize));
+  // Paginare server-side & indici de afisare
   const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, totalJobs);
-  const currentJobs = useMemo(() => {
-    return filteredAndSortedJobs.slice(startIndex, endIndex);
-  }, [filteredAndSortedJobs, startIndex, endIndex]);
+  const endIndex = Math.min(startIndex + jobs.length, totalJobs);
+  const currentJobs = jobs;
 
   const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
+    if (newPage >= 1 && newPage <= totalPages && newPage !== currentPage) {
+      fetchJobs(newPage);
       if (jobsListRef.current) {
         jobsListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
