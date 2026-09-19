@@ -25,7 +25,11 @@ import {
   FolderKanban,
   ArrowUpDown,
   RotateCcw,
-  Briefcase
+  Briefcase,
+  Download,
+  StickyNote,
+  X,
+  Save
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 
@@ -63,6 +67,136 @@ export default function KanbanBoard({
   const [selectedJobForModal, setSelectedJobForModal] = useState(null);
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
+
+  // NOTES & DETAILS MODAL STATE
+  const [editingNotesApp, setEditingNotesApp] = useState(null);
+  const [noteFormText, setNoteFormText] = useState('');
+  const [noteFormDate, setNoteFormDate] = useState('');
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [trackerToast, setTrackerToast] = useState(null);
+
+  const handleOpenNotesModal = (app) => {
+    setEditingNotesApp(app);
+    setNoteFormText(app.notes || '');
+    setNoteFormDate(app.appliedDate ? String(app.appliedDate).split('T')[0] : '');
+  };
+
+  const handleCloseNotesModal = () => {
+    setEditingNotesApp(null);
+    setNoteFormText('');
+    setNoteFormDate('');
+  };
+
+  const handleSaveNotes = async (e) => {
+    if (e) e.preventDefault();
+    if (!editingNotesApp) return;
+
+    setIsSavingNotes(true);
+    try {
+      const res = await fetch(`/api/v1/applications/${editingNotesApp.id}/notes`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': activeUserId
+        },
+        body: JSON.stringify({
+          notes: noteFormText,
+          appliedDate: noteFormDate || null
+        })
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        if (onApplicationUpdated) {
+          onApplicationUpdated(updated);
+        }
+        setTrackerToast(`Notitele pentru ${editingNotesApp.companyName} au fost salvate!`);
+        setTimeout(() => setTrackerToast(null), 3500);
+        handleCloseNotesModal();
+      } else {
+        setTrackerToast('Eroare la salvarea notitelor.');
+        setTimeout(() => setTrackerToast(null), 3500);
+      }
+    } catch (err) {
+      console.error('Eroare la salvarea notitelor:', err);
+      setTrackerToast('Eroare de conexiune la salvarea notitelor.');
+      setTimeout(() => setTrackerToast(null), 3500);
+    } finally {
+      setIsSavingNotes(false);
+    }
+  };
+
+  // EXPORT CANDIDATURI IN FORMAT CSV COMPATIBIL EXCEL (UTF-8 BOM)
+  const handleExportCsv = () => {
+    const appsToExport = filteredApplications.length > 0 ? filteredApplications : applications;
+    if (!appsToExport || appsToExport.length === 0) {
+      setTrackerToast('Nu exista aplicatii de exportat.');
+      setTimeout(() => setTrackerToast(null), 3000);
+      return;
+    }
+
+    const statusLabels = {
+      SAVED: 'Salvat',
+      APPLIED: 'Aplicat',
+      INTERVIEWING: 'Interviu',
+      OFFER_RECEIVED: 'Oferta Primita',
+      REJECTED: 'Respins',
+      WITHDRAWN: 'Retras'
+    };
+
+    const headers = [
+      'Companie',
+      'Titlu Job',
+      'Status',
+      'Scor Match ATS (%)',
+      'Mod Lucru',
+      'Locatie',
+      'Salariu',
+      'Data Aplicarii',
+      'CV Utilizat',
+      'Notite',
+      'Link Job'
+    ];
+
+    const escapeCsv = (str) => {
+      if (str === null || str === undefined) return '""';
+      const s = String(str).replace(/"/g, '""');
+      return `"${s}"`;
+    };
+
+    const rows = appsToExport.map(a => {
+      const score = a.semanticMatchScore ? Number(a.semanticMatchScore).toFixed(1) : 'N/A';
+      const cvName = a.cvProfileTitle || a.resumeFileName || (a.cvProfileId ? 'CV Studio' : (a.resumeId ? 'Fisier CV' : 'Nespecificat'));
+      return [
+        escapeCsv(a.companyName || ''),
+        escapeCsv(a.jobTitle || ''),
+        escapeCsv(statusLabels[a.status] || a.status || ''),
+        escapeCsv(score),
+        escapeCsv(a.workModel || ''),
+        escapeCsv(a.jobLocation || a.location || ''),
+        escapeCsv(a.salaryRange || ''),
+        escapeCsv(a.appliedDate || (a.createdAt ? new Date(a.createdAt).toLocaleDateString('ro-RO') : '')),
+        escapeCsv(cvName),
+        escapeCsv(a.notes || ''),
+        escapeCsv(a.jobUrl || '')
+      ].join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.map(h => `"${h}"`).join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `jobflow_aplicatii_${today}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setTrackerToast(`${appsToExport.length} aplicatii au fost exportate cu succes in CSV!`);
+    setTimeout(() => setTrackerToast(null), 4000);
+  };
 
   const handleOpenJobModal = (app) => {
     setSelectedJobForModal({
@@ -589,6 +723,15 @@ export default function KanbanBoard({
                 </button>
               </div>
 
+              {/* EXPORT CSV BUTTON */}
+              <button
+                onClick={handleExportCsv}
+                className="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 text-gray-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95"
+                title="Descarca lista aplicatiilor in format CSV compatibil Excel"
+              >
+                <Download className="w-3.5 h-3.5 text-gray-600" />
+                <span>Exporta CSV</span>
+              </button>
             </div>
           </div>
 
@@ -895,19 +1038,57 @@ export default function KanbanBoard({
                               )}
                             </div>
 
-                            {/* ACTION: VEZI FISA COMPLETA */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenJobModal(app);
-                              }}
-                              className="w-full py-1.5 px-2.5 rounded-lg border border-indigo-100 hover:border-indigo-300 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-950 text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer"
-                              title="Deschide fisa completa si analiza AI a jobului"
-                            >
-                              <Eye className="w-3 h-3 text-indigo-600" />
-                              <span>Vezi Fisa Jobului</span>
-                            </button>
+                            {/* NOTITE SNIPPET (DACA EXISTA) */}
+                            {app.notes && (
+                              <div 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenNotesModal(app);
+                                }}
+                                className="bg-amber-50/90 hover:bg-amber-100/90 border border-amber-200/90 text-amber-950 rounded-lg p-2 text-[11px] cursor-pointer flex items-start gap-1.5 transition shadow-2xs group/note"
+                                title="Apasa pentru a vizualiza sau edita notitele"
+                              >
+                                <StickyNote className="w-3 h-3 text-amber-600 mt-0.5 shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="line-clamp-2 text-[10px] font-medium leading-relaxed italic text-amber-900">
+                                    "{app.notes}"
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* ACTION BUTTONS: NOTITE & VEZI FISA */}
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenNotesModal(app);
+                                }}
+                                className={`flex-1 py-1.5 px-2 rounded-lg border text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer shadow-2xs ${
+                                  app.notes 
+                                    ? 'bg-amber-50/70 hover:bg-amber-100/80 border-amber-200 text-amber-900' 
+                                    : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700'
+                                }`}
+                                title="Adauga sau editeaza notite si data aplicarii"
+                              >
+                                <StickyNote className={`w-3 h-3 ${app.notes ? 'text-amber-600' : 'text-gray-400'}`} />
+                                <span>{app.notes ? 'Notite' : 'Notita'}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenJobModal(app);
+                                }}
+                                className="flex-1 py-1.5 px-2 rounded-lg border border-indigo-100 hover:border-indigo-300 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-950 text-[11px] font-extrabold flex items-center justify-center gap-1 transition shadow-2xs cursor-pointer"
+                                title="Deschide fisa completa si analiza AI a jobului"
+                              >
+                                <Eye className="w-3 h-3 text-indigo-600" />
+                                <span>Fisa</span>
+                              </button>
+                            </div>
                           </div>
 
                           {/* PREVIEW PLACEHOLDER BELOW CARD */}
@@ -1082,6 +1263,19 @@ export default function KanbanBoard({
                         <td className="py-4 px-4 sm:px-6 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
+                              onClick={() => handleOpenNotesModal(app)}
+                              className={`px-2.5 py-1.5 rounded-lg border font-bold text-xs flex items-center gap-1 transition cursor-pointer ${
+                                app.notes 
+                                  ? 'border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900' 
+                                  : 'border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700'
+                              }`}
+                              title="Vezi sau editeaza notitele aplicatiei"
+                            >
+                              <StickyNote className={`w-3.5 h-3.5 ${app.notes ? 'text-amber-600' : 'text-gray-400'}`} />
+                              <span>{app.notes ? 'Notite' : 'Notita'}</span>
+                            </button>
+
+                            <button
                               onClick={() => handleOpenJobModal(app)}
                               className="px-2.5 py-1.5 rounded-lg border border-gray-200 hover:border-indigo-300 bg-gray-50 hover:bg-indigo-50 text-gray-800 hover:text-indigo-950 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
                               title="Vezi fisa completa a jobului"
@@ -1129,6 +1323,112 @@ export default function KanbanBoard({
           isSaved={true}
           activeUserId={activeUserId}
         />
+      )}
+
+      {/* MODAL EDITARE NOTITE SI DETALII APLICATIE */}
+      {editingNotesApp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs font-sans">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            
+            {/* MODAL HEADER */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/70">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-amber-100 text-amber-800 rounded-xl">
+                  <StickyNote className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-black text-gray-950">Notite & Detalii Candidatura</h3>
+                  <p className="text-[11px] text-gray-500 font-medium truncate max-w-xs">
+                    {editingNotesApp.jobTitle} • {editingNotesApp.companyName}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseNotesModal}
+                className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-200/60 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* MODAL FORM */}
+            <form onSubmit={handleSaveNotes} className="p-5 space-y-4">
+              
+              {/* DATA APLICARII / INTERVIULUI */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                  <span>Data Aplicarii sau Interviului</span>
+                </label>
+                <input
+                  type="date"
+                  value={noteFormDate}
+                  onChange={(e) => setNoteFormDate(e.target.value)}
+                  className="w-full px-3 py-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-black focus:ring-1 focus:ring-black transition cursor-pointer"
+                />
+              </div>
+
+              {/* TEXTAREA NOTITE */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                    <Edit3 className="w-3.5 h-3.5 text-gray-400" />
+                    <span>Notite Personale</span>
+                  </label>
+                  <span className="text-[10px] text-gray-400 font-medium">
+                    {noteFormText.length} caractere
+                  </span>
+                </div>
+                <textarea
+                  rows={6}
+                  value={noteFormText}
+                  onChange={(e) => setNoteFormText(e.target.value)}
+                  placeholder="Noteaza aici detalii cheie: feedback recruiter, intrebari adresate la interviu, salariu discutat, cerinte tehnice de recapitulat..."
+                  className="w-full p-3 text-xs leading-relaxed bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-black focus:ring-1 focus:ring-black transition resize-none placeholder:text-gray-400 font-medium"
+                />
+              </div>
+
+              {/* ACTIONS */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={handleCloseNotesModal}
+                  className="px-4 py-2 text-xs font-bold text-gray-600 hover:text-black rounded-xl hover:bg-gray-100 transition cursor-pointer"
+                >
+                  Anuleaza
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingNotes}
+                  className="px-5 py-2 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
+                >
+                  {isSavingNotes ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Se salveaza...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Salveaza Notite</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* TOAST FEEDBACK NOTIFICATION */}
+      {trackerToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-black text-white px-4 py-3 rounded-2xl shadow-xl border border-gray-800 flex items-center gap-2.5 text-xs font-bold animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{trackerToast}</span>
+        </div>
       )}
 
     </div>

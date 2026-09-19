@@ -237,6 +237,19 @@ public class ApplicationService {
         log.info("[APPLICATION SERVICE] Aplicatia cu ID-ul {} a fost starsa cu succes.", applicationId);
     }
 
+    @Transactional
+    public ApplicationResponse updateApplicationNotes(UUID applicationId, String notes, LocalDate appliedDate) {
+        Application app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Aplicatia cu ID-ul " + applicationId + " nu a fost gasita."));
+        app.setNotes(notes);
+        if (appliedDate != null) {
+            app.setAppliedDate(appliedDate);
+        }
+        Application savedApp = applicationRepository.save(app);
+        log.info("[APPLICATION SERVICE] Notitele pentru aplicatia {} au fost actualizate.", applicationId);
+        return mapToResponse(savedApp);
+    }
+
     public BigDecimal calculateMultiCriteriaMatchScore(JobPosting job, Resume resume) {
         if (resume == null || resume.getRawText() == null || resume.getRawText().isBlank() || job == null || job.getRawDescription() == null || job.getRawDescription().isBlank()) {
             throw new ResourceNotFoundException("Nu s-a gasit niciun CV valid sau descriere de job pentru calcularea scorului ATS.");

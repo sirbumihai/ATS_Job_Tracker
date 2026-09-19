@@ -2,6 +2,7 @@ package com.jobtracker.ats.controller;
 
 import com.jobtracker.ats.dto.ApplicationResponse;
 import com.jobtracker.ats.dto.CreateApplicationRequest;
+import com.jobtracker.ats.dto.UpdateApplicationNotesRequest;
 import com.jobtracker.ats.entity.Application.ApplicationStatus;
 import com.jobtracker.ats.service.ApplicationService;
 import jakarta.validation.Valid;
@@ -67,6 +68,19 @@ public class ApplicationController {
     @GetMapping("/{id}")
     public ResponseEntity<ApplicationResponse> getApplicationById(@PathVariable UUID id) {
         ApplicationResponse response = applicationService.getApplicationById(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/notes")
+    public ResponseEntity<ApplicationResponse> updateApplicationNotes(
+            @PathVariable UUID id,
+            @RequestBody UpdateApplicationNotesRequest request) {
+
+        ApplicationResponse response = applicationService.updateApplicationNotes(
+                id,
+                request.notes(),
+                request.appliedDate()
+        );
         return ResponseEntity.ok(response);
     }
 
