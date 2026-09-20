@@ -50,7 +50,8 @@ import {
   Check,
   Calendar,
   History,
-  GitCommit
+  GitCommit,
+  Download
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 
@@ -583,6 +584,67 @@ export default function JobSearchPage({
     }
   };
 
+  // EXPORT JOBURI CAUTATE IN FORMAT CSV (RFC 4180 + UTF-8 BOM)
+  const handleExportJobsCsv = () => {
+    if (!jobs || jobs.length === 0) {
+      setToastMessage('Nu exista joburi afisate de exportat.');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
+    const headers = [
+      'Companie',
+      'Titlu Job',
+      'Platforma',
+      'Locatie',
+      'Mod Lucru',
+      'Salariu',
+      'Nivel Experienta',
+      'Scor Match ATS (%)',
+      'Competitivitate',
+      'Data Publicarii',
+      'URL Anunt'
+    ];
+
+    const escapeCsv = (str) => {
+      if (str === null || str === undefined) return '""';
+      const s = String(str).replace(/"/g, '""');
+      return `"${s}"`;
+    };
+
+    const rows = jobs.map(j => {
+      const score = j.atsMatchScore !== undefined && j.atsMatchScore !== null ? Number(j.atsMatchScore).toFixed(0) : 'N/A';
+      return [
+        escapeCsv(j.companyName || ''),
+        escapeCsv(j.jobTitle || ''),
+        escapeCsv(j.sourcePlatform || ''),
+        escapeCsv(j.location || ''),
+        escapeCsv(j.workModel || ''),
+        escapeCsv(j.salaryRange || 'Nespecificat'),
+        escapeCsv(j.experienceLevel || ''),
+        escapeCsv(score),
+        escapeCsv(j.competitivenessLabel || j.competitiveness || ''),
+        escapeCsv(j.postedDateAgo || (j.postedAt ? new Date(j.postedAt).toLocaleDateString('ro-RO') : '')),
+        escapeCsv(j.directApplyUrl || '')
+      ].join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.map(h => `"${h}"`).join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `jobflow_joburi_gasite_${today}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setToastMessage(`${jobs.length} job-uri au fost exportate cu succes in CSV!`);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
   // Paginare server-side & indici de afisare
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + jobs.length, totalJobs);
@@ -915,6 +977,104 @@ export default function JobSearchPage({
             </button>
           </div>
         </form>
+
+        {/* BARA FILTRE RAPIDE POPULARE */}
+        <div className="flex items-center gap-1.5 flex-wrap pt-3 pb-1 border-t border-gray-100 text-xs">
+          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1 flex items-center gap-1">
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            Filtre Rapide:
+          </span>
+
+          {/* CHIP: DOAR REMOTE */}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedWorkModel(prev => prev === 'REMOTE' ? 'ALL' : 'REMOTE');
+              setCurrentPage(1);
+            }}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+              selectedWorkModel === 'REMOTE'
+                ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                : 'bg-gray-100 hover:bg-gray-200/80 border-gray-200 text-gray-700'
+            }`}
+          >
+            <Globe className="w-3 h-3" />
+            <span>Doar Remote</span>
+          </button>
+
+          {/* CHIP: NOI ASTAZI (24H) */}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedDatePosted(prev => prev === '24H' ? 'ALL' : '24H');
+              setCurrentPage(1);
+            }}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+              selectedDatePosted === '24H'
+                ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                : 'bg-gray-100 hover:bg-gray-200/80 border-gray-200 text-gray-700'
+            }`}
+          >
+            <Clock className="w-3 h-3" />
+            <span>Noi Astazi (24h)</span>
+          </button>
+
+          {/* CHIP: JUNIOR & STAGII */}
+          <button
+            type="button"
+            onClick={() => {
+              const isJuniorSelected = selectedLevels.includes('JUNIOR') && selectedLevels.includes('INTERNSHIP');
+              if (isJuniorSelected) {
+                setSelectedLevels([]);
+              } else {
+                setSelectedLevels(['INTERNSHIP', 'JUNIOR']);
+              }
+              setCurrentPage(1);
+            }}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+              selectedLevels.includes('JUNIOR') && selectedLevels.includes('INTERNSHIP')
+                ? 'bg-purple-600 border-purple-600 text-white shadow-xs'
+                : 'bg-gray-100 hover:bg-gray-200/80 border-gray-200 text-gray-700'
+            }`}
+          >
+            <GraduationCap className="w-3 h-3" />
+            <span>Junior & Stagii</span>
+          </button>
+
+          {/* CHIP: TOP MATCH ATS (>80%) */}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedAtsScore(prev => prev === 'TOP_80' ? 'ALL' : 'TOP_80');
+              setCurrentPage(1);
+            }}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+              selectedAtsScore === 'TOP_80'
+                ? 'bg-emerald-700 border-emerald-700 text-white shadow-xs'
+                : 'bg-gray-100 hover:bg-gray-200/80 border-gray-200 text-gray-700'
+            }`}
+          >
+            <Sparkles className="w-3 h-3" />
+            <span>Top Match (&gt;80%)</span>
+          </button>
+
+          {/* CHIP: COMPETITIE REDUSA */}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedCompetitiveness(prev => prev === 'LOW' ? 'ALL' : 'LOW');
+              setCurrentPage(1);
+            }}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+              selectedCompetitiveness === 'LOW'
+                ? 'bg-amber-600 border-amber-600 text-white shadow-xs'
+                : 'bg-gray-100 hover:bg-gray-200/80 border-gray-200 text-gray-700'
+            }`}
+          >
+            <Users className="w-3 h-3" />
+            <span>Competitie Redusa</span>
+          </button>
+        </div>
 
         {/* GRID FILTRE AVANSATE: MULTI-SELECT DROPDOWNS & SELECTOARE PROFESIONALE */}
         <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
@@ -1458,18 +1618,31 @@ export default function JobSearchPage({
           </span>
         </div>
 
-        {/* DIMENSIUNE PAGINA */}
+        {/* CONTROALE REZULTATE: EXPORT CSV & DIMENSIUNE PAGINA */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold">
-            <span>Pe pagina:</span>
+          {/* BUTON EXPORT CSV */}
+          <button
+            type="button"
+            onClick={handleExportJobsCsv}
+            disabled={loading || totalJobs === 0}
+            className="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 text-gray-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Exporta joburile afisate in format CSV compatibil Excel"
+          >
+            <Download className="w-3.5 h-3.5 text-gray-600" />
+            <span>Exporta CSV</span>
+          </button>
+
+          {/* DIMENSIUNE PAGINA */}
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold bg-gray-50 p-1 rounded-xl border border-gray-200">
+            <span className="px-1.5">Pe pagina:</span>
             {[12, 24, 48].map((size) => (
               <button
                 key={size}
                 onClick={() => { setPageSize(size); setCurrentPage(1); }}
                 className={`px-2.5 py-1 rounded-lg text-xs font-extrabold transition cursor-pointer ${
                   pageSize === size 
-                    ? 'bg-black text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-black text-white shadow-xs' 
+                    : 'text-gray-700 hover:bg-gray-200/70'
                 }`}
               >
                 {size}
