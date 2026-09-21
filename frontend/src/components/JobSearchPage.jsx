@@ -326,10 +326,11 @@ export default function JobSearchPage({
     setCurrentPage(1);
   };
 
-  // 8 PLATFORME REALE CU ICONITE SI CONTOARE PERMANENTE (FARA EMOTICOANE)
+  // 9 PLATFORME REALE CU ICONITE SI CONTOARE PERMANENTE (FARA EMOTICOANE)
   const platformsConfig = [
     { id: 'DEVJOB_RO', label: 'DevJob.ro (Tech)', icon: Code2, countKey: 'DEVJOB_RO' },
     { id: 'LINKEDIN', label: 'LinkedIn Jobs', icon: ExternalLink, countKey: 'LINKEDIN' },
+    { id: 'GITHUB_COMMUNITY', label: 'GitHub Early Careers (EU & Intl)', icon: Globe, countKey: 'GITHUB_COMMUNITY' },
     { id: 'BESTJOBS', label: 'BestJobs.eu IT', icon: Briefcase, countKey: 'BESTJOBS' },
     { id: 'HIPO', label: 'Hipo.ro Trainee & IT', icon: GraduationCap, countKey: 'HIPO' },
     { id: 'STAGIIPEBUNE', label: 'StagiiPeBune.ro', icon: GraduationCap, countKey: 'STAGIIPEBUNE' },
@@ -669,6 +670,8 @@ export default function JobSearchPage({
         return { label: 'Hipo.ro Trainee', bg: 'bg-amber-50 text-amber-950 border-amber-300', dot: 'bg-amber-600' };
       case 'LINKEDIN':
         return { label: 'LinkedIn Jobs', bg: 'bg-blue-50 text-blue-900 border-blue-300', dot: 'bg-blue-600' };
+      case 'GITHUB_COMMUNITY':
+        return { label: 'GitHub Early Careers', bg: 'bg-purple-50 text-purple-950 border-purple-300', dot: 'bg-purple-600' };
       case 'STAGIIPEBUNE':
         return { label: 'StagiiPeBune.ro', bg: 'bg-teal-50 text-teal-900 border-teal-300', dot: 'bg-teal-500' };
       case 'JUNIORS_RO':

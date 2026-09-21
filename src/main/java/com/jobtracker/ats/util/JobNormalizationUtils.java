@@ -459,8 +459,8 @@ public final class JobNormalizationUtils {
         if (normQuery.contains("remote")) {
             return jModel.contains("remote") || jLoc.contains("remote");
         }
-        if (normQuery.contains("europ") || normQuery.contains("germany") || normQuery.contains("germania") || normQuery.contains("elvetia") || normQuery.contains("switzerland")) {
-            return jLoc.contains("europe") || jLoc.contains("germany") || jLoc.contains("switzerland") || jLoc.contains("berlin") || jLoc.contains("munich") || jLoc.contains("zurich");
+        if (normQuery.contains("europ") || normQuery.contains("germany") || normQuery.contains("germania") || normQuery.contains("elvetia") || normQuery.contains("switzerland") || normQuery.contains("uk") || normQuery.contains("london") || normQuery.contains("netherlands") || normQuery.contains("olanda") || normQuery.contains("amsterdam")) {
+            return jLoc.contains("europe") || jLoc.contains("germany") || jLoc.contains("switzerland") || jLoc.contains("berlin") || jLoc.contains("munich") || jLoc.contains("zurich") || jLoc.contains("united kingdom") || jLoc.contains("london") || jLoc.contains("netherlands") || jLoc.contains("amsterdam") || "github_community".equals(jPlatform);
         }
 
         return false;
