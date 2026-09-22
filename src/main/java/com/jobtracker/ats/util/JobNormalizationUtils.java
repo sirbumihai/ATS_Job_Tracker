@@ -52,7 +52,7 @@ public final class JobNormalizationUtils {
             Pattern.compile("\\b(ai|ml|machine learning|deep learning|llm|nlp|computer vision)\\b"),
             Pattern.compile("\\b(cybersecurity|cyber security|securitate cibernetica|security engineer|infosec|soc analyst)\\b"),
             Pattern.compile("\\b(scrum master|agile coach|product owner|tech lead|team lead it|it project manager)\\b"),
-            Pattern.compile("\\b(it support|helpdesk|service desk|suport it|tehnician it|suport tehnic it|administrator retea|network engineer)\\b"),
+            Pattern.compile("\\b(it support|technical support|tech support|application support|desktop support|helpdesk|service desk|suport tehnic|suport it|tehnician it|tehnician suport|administrator retea|network engineer|l1 support|l2 support|tier 1|tier 2)\\b"),
             Pattern.compile("\\b(it internship|it trainee|software intern|developer intern|internship it|stagiu it|stagiu programare)\\b"),
             Pattern.compile("\\b(embedded|firmware|iot|microcontroller|hardware engineer|telecom|retele|network)\\b"),
             Pattern.compile("\\b(ui/ux|ux designer|ui designer|product designer)\\b")
@@ -365,6 +365,20 @@ public final class JobNormalizationUtils {
         if (combined.contains("english") || combined.contains("engleza")) skills.add("English Fluency");
         if (combined.contains("business process") || combined.contains("bpm")) skills.add("BPM & Case Management");
 
+        // Tech Support, Helpdesk & Infrastructure
+        if (combined.contains("helpdesk") || combined.contains("service desk") || combined.contains("servicedesk") || combined.contains("tech support") || combined.contains("it support") || combined.contains("suport tehnic") || combined.contains("troubleshooting")) {
+            skills.add("IT Support & Troubleshooting");
+        }
+        if (combined.contains("active directory") || combined.contains("office 365") || combined.contains("m365") || combined.contains("azure ad") || combined.contains("entra")) {
+            skills.add("Active Directory & M365");
+        }
+        if (combined.contains("servicenow") || combined.contains("jira service") || combined.contains("itil") || combined.contains("ticketing")) {
+            skills.add("ITIL & Ticketing Systems");
+        }
+        if (combined.contains("hardware") || combined.contains("networking") || combined.contains("retele") || combined.contains("cisco") || combined.contains("dns") || combined.contains("dhcp")) {
+            skills.add("Hardware & Networking");
+        }
+
         if (skills.isEmpty()) {
             skills.addAll(List.of("Software Engineering", "Git", "REST API", "SQL"));
         }
@@ -398,6 +412,7 @@ public final class JobNormalizationUtils {
             case "junior", "entry" -> list.addAll(List.of("junior", "entry-level", "entry level", "incepator", "graduate"));
             case "ai", "ml" -> list.addAll(List.of("ai", "ml", "machine learning", "deep learning", "llm", "data science"));
             case "db", "database", "dba" -> list.addAll(List.of("database", "dba", "sql", "postgres", "oracle", "mysql"));
+            case "support", "helpdesk", "servicedesk" -> list.addAll(List.of("support", "helpdesk", "servicedesk", "service desk", "suport tehnic", "suport it", "tech support", "it support"));
             default -> {}
         }
         return list;
@@ -517,7 +532,7 @@ public final class JobNormalizationUtils {
             case "CLOUD_SECURITY", "CYBERSECURITY" -> title.contains("security") || desc.contains("threat") || desc.contains("cryptography") || desc.contains("vulnerability") || title.contains("cyber") || title.contains("penetration");
             case "QA_TESTING", "AUTOMATION_TEST" -> title.contains("qa") || title.contains("test") || title.contains("quality") || skills.contains("selenium") || skills.contains("playwright") || skills.contains("cypress") || skills.contains("testing");
             case "BUSINESS_ANALYST" -> title.contains("business analyst") || title.contains("product owner") || title.contains("requirements") || skills.contains("business analysis");
-            case "TECH_SUPPORT" -> title.contains("support") || title.contains("helpdesk") || title.contains("servicedesk") || title.contains("suport tehnic") || title.contains("it service");
+            case "TECH_SUPPORT" -> title.contains("support") || title.contains("helpdesk") || title.contains("servicedesk") || title.contains("service desk") || title.contains("suport tehnic") || title.contains("it service");
             case "SYSADMIN_NETWORK" -> title.contains("system admin") || title.contains("sysadmin") || title.contains("network") || title.contains("administrator de sistem") || title.contains("infrastructure");
             case "SCRUM_PM" -> title.contains("scrum master") || title.contains("project manager") || title.contains("agile coach") || title.contains("delivery manager");
             case "DBA_SQL" -> title.contains("database") || title.contains("dba") || title.contains("sql developer") || title.contains("oracle") || title.contains("postgres");

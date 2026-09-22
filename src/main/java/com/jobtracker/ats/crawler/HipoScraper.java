@@ -37,7 +37,9 @@ public class HipoScraper implements JobScraper {
                 "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/developer",
                 "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/java",
                 "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/qa",
-                "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/devops"
+                "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/devops",
+                "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Hardware/Toate-Orasele/support",
+                "https://www.hipo.ro/locuri-de-munca/cautajob/IT-Software/Toate-Orasele/support"
         );
 
         for (String url : hipoUrls) {

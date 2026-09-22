@@ -48,23 +48,40 @@ public class LinkedInScraper implements JobScraper {
     public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
         long startTime = System.currentTimeMillis();
 
-        // 24 de căutări cheie de impact maxim (acoperă 100% din ecosistemul tech din România)
+        // Căutări cheie de impact maxim (acoperă 100% din ecosistemul tech și support din România)
         List<SearchQuery> searchQueries = List.of(
-                // 1. Internship & Stagii (f_E=1)
+                // 1. Internship, Stagii & Trainee (f_E=1)
                 new SearchQuery("Internship IT Romania", "f_E=1"),
                 new SearchQuery("Software Intern Romania", "f_E=1"),
                 new SearchQuery("Stagiu IT Romania", "f_E=1"),
+                new SearchQuery("Working Student Romania", "f_E=1"),
+                new SearchQuery("Trainee IT Romania", "f_E=1"),
 
                 // 2. Junior / Entry-Level (f_E=2)
                 new SearchQuery("Junior Developer Romania", "f_E=2"),
                 new SearchQuery("Junior Software Engineer Romania", "f_E=2"),
                 new SearchQuery("Junior Java Developer Romania", "f_E=2"),
+                new SearchQuery("Junior Python Developer Romania", "f_E=2"),
+                new SearchQuery("Junior .NET Developer Romania", "f_E=2"),
+                new SearchQuery("Junior C++ Developer Romania", "f_E=2"),
                 new SearchQuery("Junior Frontend React Romania", "f_E=2"),
+                new SearchQuery("Junior Full Stack Developer Romania", "f_E=2"),
                 new SearchQuery("Junior QA Automation Romania", "f_E=2"),
                 new SearchQuery("Junior Data Analyst Romania", "f_E=2"),
+                new SearchQuery("Junior DevOps Engineer Romania", "f_E=2"),
+                new SearchQuery("Junior Cyber Security Romania", "f_E=2"),
+                new SearchQuery("Junior Embedded Romania", "f_E=2"),
+                new SearchQuery("Junior Mobile Developer Romania", "f_E=2"),
                 new SearchQuery("Graduate Software Engineer Romania", "f_E=2"),
 
-                // 3. Middle / General Core IT (f_E=3)
+                // 3. Technical Support & Helpdesk (f_E=2 & f_E=3)
+                new SearchQuery("Junior IT Support Romania", "f_E=2"),
+                new SearchQuery("Technical Support Specialist Romania", "f_E=2"),
+                new SearchQuery("IT Helpdesk Romania", "f_E=2"),
+                new SearchQuery("Application Support Romania", "f_E=2"),
+                new SearchQuery("Technical Support Engineer Romania", "f_E=3"),
+
+                // 4. Middle / General Core IT (f_E=3)
                 new SearchQuery("Software Engineer Romania", "f_E=3"),
                 new SearchQuery("Java Developer Romania", "f_E=3"),
                 new SearchQuery("Python Developer Romania", "f_E=3"),
@@ -77,7 +94,7 @@ public class LinkedInScraper implements JobScraper {
                 new SearchQuery("Cyber Security Analyst Romania", "f_E=3"),
                 new SearchQuery("Embedded C++ Romania", "f_E=3"),
 
-                // 4. Senior & Lead (f_E=4)
+                // 5. Senior & Lead (f_E=4)
                 new SearchQuery("Senior Software Engineer Romania", "f_E=4"),
                 new SearchQuery("Senior Java Developer Romania", "f_E=4"),
                 new SearchQuery("Tech Lead Romania", "f_E=4"),
