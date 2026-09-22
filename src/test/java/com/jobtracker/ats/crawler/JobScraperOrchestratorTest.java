@@ -141,4 +141,33 @@ class JobScraperOrchestratorTest {
         assertEquals("FAILED", failingReport.status());
         assertTrue(failingReport.errorMessage().contains("Simulated HTTP 503"));
     }
+
+    @Test
+    @DisplayName("scrapeAll reține rezultatele parțiale chiar dacă un scraper eșuează după ce a adăugat câteva joburi")
+    void testScrapeAllSalvagesPartialResults() {
+        JobScraper partialFailingScraper = new JobScraper() {
+            @Override
+            public String getPlatformName() {
+                return "PARTIAL_PLATFORM";
+            }
+
+            @Override
+            public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
+                freshList.add(createJob("j20", "Data Engineer", "Snowflake", "PARTIAL_PLATFORM"));
+                freshList.add(createJob("j21", "ML Engineer", "OpenAI", "PARTIAL_PLATFORM"));
+                throw new RuntimeException("Network drop after collecting 2 jobs");
+            }
+        };
+
+        JobScraperOrchestrator orchestrator = new JobScraperOrchestrator(List.of(partialFailingScraper));
+        List<UnifiedJobListingDto> results = orchestrator.scrapeAll(Collections.emptySet());
+
+        assertNotNull(results);
+        assertEquals(2, results.size());
+        assertEquals("j20", results.get(0).id());
+        assertEquals("j21", results.get(1).id());
+
+        PlatformScrapeResult report = orchestrator.getLastExecutionReports().get(0);
+        assertEquals("FAILED", report.status());
+    }
 }
