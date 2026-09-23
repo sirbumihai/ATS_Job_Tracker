@@ -131,8 +131,8 @@ public class EmailParserService {
 
             String userPrompt = String.format("EXPEDITOR: %s\nSUBIECT: %s\nSNIPPET: %s", sender, subject, bodySnippet);
 
-            // Generare compactă (max 120 tokens, temperature 0.0) pentru cost minim și viteză instantanee
-            String aiJson = openAiLlmService.generateCompletion(systemPrompt, userPrompt, 120, 0.0);
+            // Generare compactă (max 600 tokens) pentru a preveni trunchierea JSON-ului
+            String aiJson = openAiLlmService.generateCompletion(systemPrompt, userPrompt, 600, 0.0);
             if (aiJson != null && !aiJson.isBlank()) {
                 String cleaned = aiJson.replaceAll("```json", "").replaceAll("```", "").trim();
                 JsonNode root = objectMapper.readTree(cleaned);
@@ -179,6 +179,108 @@ public class EmailParserService {
             log.warn("[AI EMAIL PARSER] Clasificarea AI nu a putut fi finalizată ({}), folosim fallback deterministic.", e.getMessage());
         }
         return null;
+    }
+
+    public record CandidateEmailItem(
+            int id,
+            String sender,
+            String subject,
+            String bodySnippet
+    ) {}
+
+    public java.util.Map<Integer, ParsedJobEmail> classifyBatchWithAi(java.util.List<CandidateEmailItem> batch) {
+        if (openAiLlmService == null || !openAiLlmService.isConfigured() || batch == null || batch.isEmpty()) {
+            return java.util.Collections.emptyMap();
+        }
+
+        try {
+            String systemPrompt = """
+                    Ești un clasificator ATS strict. Analizează cele câteva emailuri numerotate și determină pentru FIECARE dacă este o comunicare de recrutare/candidatură a utilizatorului.
+                    Răspunde STRICT cu un ARRAY JSON valid:
+                    [
+                      {
+                        "id": 1,
+                        "isRecruitment": boolean,
+                        "company": "NumeCompanie sau null",
+                        "jobTitle": "TitluRol sau null",
+                        "status": "APPLIED" | "INTERVIEWING" | "REJECTED" | "OFFER_RECEIVED" | "NONE"
+                      }
+                    ]
+                    REGULI PRECISE:
+                    1. isRecruitment este true DOAR dacă candidatul a aplicat, este în interviu, este respins sau a primit ofertă de muncă.
+                    2. isRecruitment este FALSE pentru: newslettere, alerte joburi recomandate, promoții/reduceri, confirmări comenzi/bănci.
+                    3. status="OFFER_RECEIVED" se setează DOAR dacă este o ofertă oficială de muncă/contract. NICIODATĂ pentru reduceri, promoții sau respingeri ("nu vă putem oferi")!
+                    4. status="INTERVIEWING" pentru invitație la interviu, screening call, teste tehnice.
+                    5. status="REJECTED" pentru respingere/refuz.
+                    6. status="APPLIED" pentru confirmare primire candidatură.
+                    """;
+
+            StringBuilder userPromptBuilder = new StringBuilder();
+            for (CandidateEmailItem item : batch) {
+                userPromptBuilder.append(String.format("ID %d:\nEXPEDITOR: %s\nSUBIECT: %s\nSNIPPET: %s\n\n",
+                        item.id(), item.sender(), item.subject(), item.bodySnippet()));
+            }
+
+            // Generare compactă pentru întregul batch (max 1000 tokens)
+            String aiJson = openAiLlmService.generateCompletion(systemPrompt, userPromptBuilder.toString().trim(), 1000, 0.0);
+            if (aiJson != null && !aiJson.isBlank()) {
+                String cleaned = aiJson.replaceAll("```json", "").replaceAll("```", "").trim();
+                JsonNode arrayNode = objectMapper.readTree(cleaned);
+                if (arrayNode.isArray()) {
+                    java.util.Map<Integer, ParsedJobEmail> resultMap = new java.util.HashMap<>();
+                    for (JsonNode root : arrayNode) {
+                        int id = root.path("id").asInt(-1);
+                        boolean isRec = root.path("isRecruitment").asBoolean(false);
+                        if (!isRec) {
+                            resultMap.put(id, new ParsedJobEmail(false, null, null, null, "AI_REJECTED", null));
+                            continue;
+                        }
+
+                        String statusStr = root.path("status").asText("APPLIED");
+                        ApplicationStatus status = switch (statusStr.toUpperCase(Locale.ROOT)) {
+                            case "OFFER_RECEIVED" -> ApplicationStatus.OFFER_RECEIVED;
+                            case "INTERVIEWING" -> ApplicationStatus.INTERVIEWING;
+                            case "REJECTED" -> ApplicationStatus.REJECTED;
+                            default -> ApplicationStatus.APPLIED;
+                        };
+
+                        CandidateEmailItem origItem = batch.stream().filter(b -> b.id() == id).findFirst().orElse(null);
+                        String origSubject = origItem != null ? origItem.subject() : "";
+                        String origBody = origItem != null ? origItem.bodySnippet() : "";
+                        String origSender = origItem != null ? origItem.sender() : "";
+
+                        if (status == ApplicationStatus.OFFER_RECEIVED && FALSE_OFFER_PATTERN.matcher((origSubject + " " + origBody).toLowerCase(Locale.ROOT)).find()) {
+                            status = ApplicationStatus.REJECTED;
+                        }
+
+                        String comp = root.path("company").asText(null);
+                        if ("null".equalsIgnoreCase(comp) || comp == null || comp.isBlank()) {
+                            comp = extractCompany(origSender, origSubject, origBody);
+                        }
+
+                        String title = root.path("jobTitle").asText(null);
+                        if ("null".equalsIgnoreCase(title) || title == null || title.isBlank()) {
+                            title = extractJobTitle(origSubject, origBody);
+                        }
+
+                        String snippet = origSubject.length() > 80 ? origSubject.substring(0, 80) + "..." : origSubject;
+
+                        resultMap.put(id, new ParsedJobEmail(
+                                true,
+                                comp != null ? cleanCompany(comp) : "Companie Parteneră",
+                                title != null && !title.isBlank() ? title.trim() : "Software Position",
+                                status,
+                                "AI_HIGH",
+                                snippet
+                        ));
+                    }
+                    return resultMap;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[AI EMAIL BATCH PARSER] Batch-ul AI nu a putut fi procesat ({}), se va folosi fallback deterministic.", e.getMessage());
+        }
+        return java.util.Collections.emptyMap();
     }
 
     private ParsedJobEmail parseDeterministic(String sender, String subject, String bodyText) {

@@ -98,7 +98,19 @@ public class GmailSyncService {
                     .map(s -> s.toLowerCase(Locale.ROOT).trim())
                     .collect(java.util.stream.Collectors.toSet());
 
-            // Parcurgem mesajele de la cele mai noi la cele mai vechi
+            record CandidateEmailRecord(
+                    int id,
+                    String sender,
+                    String subject,
+                    String body,
+                    String snippet,
+                    LocalDate emailDate
+            ) {}
+
+            List<CandidateEmailRecord> candidateList = new ArrayList<>();
+            int idCounter = 1;
+
+            // 1. Colectăm toate emailurile candidate relevante din plicuri
             for (int i = messages.length - 1; i >= 0; i--) {
                 Message msg = messages[i];
                 try {
@@ -110,19 +122,49 @@ public class GmailSyncService {
                         continue;
                     }
 
-                    // Descărcăm corpul mesajului doar pentru cele câteva zeci de emailuri potențial relevante
                     String body = extractMessageBody(msg);
                     LocalDate emailDate = extractEmailDate(msg);
+                    String snippet = body.length() > 350 ? body.substring(0, 350) : body;
 
-                    EmailParserService.ParsedJobEmail parsed = emailParserService.parse(sender, subject, body);
-                    if (!parsed.isRecruitmentEmail()) {
-                        continue;
-                    }
-
-                    processMatchedEmail(user, userApps, parsed, sender, subject, emailDate, request.isAutoCreateMissing(), result);
-
+                    candidateList.add(new CandidateEmailRecord(idCounter++, sender, subject, body, snippet, emailDate));
                 } catch (Exception msgEx) {
-                    log.debug("[GMAIL SYNC] Eroare la procesarea unui mesaj individual: {}", msgEx.getMessage());
+                    log.debug("[GMAIL SYNC] Eroare la citirea plicului mesajului: {}", msgEx.getMessage());
+                }
+            }
+
+            log.info("[GMAIL SYNC] Colectate {} emailuri candidate de recrutare pentru {}. Procesare eficientă în loturi...", candidateList.size(), request.getEmail());
+
+            // 2. Procesăm candidații în loturi de câte 4 emailuri pentru a reduce apelurile LLM cu 75% și a garanta încadrarea sub 8k TPM
+            int chunkSize = 4;
+            for (int i = 0; i < candidateList.size(); i += chunkSize) {
+                List<CandidateEmailRecord> chunk = candidateList.subList(i, Math.min(i + chunkSize, candidateList.size()));
+                List<EmailParserService.CandidateEmailItem> batchItems = chunk.stream()
+                        .map(c -> new EmailParserService.CandidateEmailItem(c.id(), c.sender(), c.subject(), c.snippet()))
+                        .toList();
+
+                Map<Integer, EmailParserService.ParsedJobEmail> aiBatchResults = emailParserService.classifyBatchWithAi(batchItems);
+
+                for (CandidateEmailRecord item : chunk) {
+                    try {
+                        EmailParserService.ParsedJobEmail parsed = aiBatchResults.get(item.id());
+                        if (parsed == null) {
+                            parsed = emailParserService.parse(item.sender(), item.subject(), item.body());
+                        }
+
+                        if (!parsed.isRecruitmentEmail()) {
+                            continue;
+                        }
+
+                        processMatchedEmail(user, userApps, parsed, item.sender(), item.subject(), item.emailDate(), request.isAutoCreateMissing(), result);
+                    } catch (Exception e) {
+                        log.debug("[GMAIL SYNC] Eroare la aplicarea rezultatului pentru un mesaj: {}", e.getMessage());
+                    }
+                }
+
+                if (i + chunkSize < candidateList.size()) {
+                    try {
+                        Thread.sleep(300);
+                    } catch (InterruptedException ignored) {}
                 }
             }
 
