@@ -81,7 +81,14 @@ public class LinkedInScraper implements JobScraper {
                 new SearchQuery("Application Support Romania", "f_E=2"),
                 new SearchQuery("Technical Support Engineer Romania", "f_E=3"),
 
-                // 4. Middle / General Core IT (f_E=3)
+                // 4. Business Analyst & Product (f_E=2 & f_E=3)
+                new SearchQuery("Junior Business Analyst Romania", "f_E=2"),
+                new SearchQuery("IT Business Analyst Romania", "f_E=2"),
+                new SearchQuery("Junior Functional Analyst Romania", "f_E=2"),
+                new SearchQuery("Junior Product Owner Romania", "f_E=2"),
+                new SearchQuery("Business Analyst Romania", "f_E=3"),
+
+                // 5. Middle / General Core IT (f_E=3)
                 new SearchQuery("Software Engineer Romania", "f_E=3"),
                 new SearchQuery("Java Developer Romania", "f_E=3"),
                 new SearchQuery("Python Developer Romania", "f_E=3"),

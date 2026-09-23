@@ -29,9 +29,11 @@ import {
   Download,
   StickyNote,
   X,
-  Save
+  Save,
+  Mail
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
+import GmailSyncModal from './GmailSyncModal';
 
 export default function KanbanBoard({ 
   applications = [], 
@@ -46,8 +48,10 @@ export default function KanbanBoard({
   onDeleteApplication,
   onApplicationUpdated,
   onEditCvInStudio,
-  onOpenAddJob
+  onOpenAddJob,
+  onRefreshApplications
 }) {
+  const [isGmailModalOpen, setIsGmailModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('CUSTOM'); // 'CUSTOM' | 'SCORE_DESC' | 'SCORE_ASC' | 'DATE_DESC' | 'COMPANY_ASC' | 'TITLE_ASC'
@@ -731,6 +735,16 @@ export default function KanbanBoard({
               >
                 <Download className="w-3.5 h-3.5 text-gray-600" />
                 <span>Exporta CSV</span>
+              </button>
+
+              {/* GMAIL SYNC BUTTON */}
+              <button
+                onClick={() => setIsGmailModalOpen(true)}
+                className="px-3 py-1.5 bg-red-50 hover:bg-red-100/80 border border-red-200 hover:border-red-300 text-red-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95"
+                title="Sincronizeaza automat statusul aplicatiilor din emailurile Gmail"
+              >
+                <Mail className="w-3.5 h-3.5 text-red-600" />
+                <span>Sincronizeaza Gmail</span>
               </button>
             </div>
           </div>
@@ -1422,6 +1436,18 @@ export default function KanbanBoard({
           </div>
         </div>
       )}
+
+      {/* GMAIL ATS AUTO-SYNC MODAL */}
+      <GmailSyncModal 
+        isOpen={isGmailModalOpen}
+        onClose={() => setIsGmailModalOpen(false)}
+        onSyncComplete={() => {
+          if (onRefreshApplications) onRefreshApplications();
+          setTrackerToast('Sincronizarea cu Gmail a fost finalizată cu succes!');
+          setTimeout(() => setTrackerToast(null), 4000);
+        }}
+        activeUserId={activeUserId}
+      />
 
       {/* TOAST FEEDBACK NOTIFICATION */}
       {trackerToast && (

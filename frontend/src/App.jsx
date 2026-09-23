@@ -337,6 +337,7 @@ export default function App() {
               analyzingAppId={analyzingAppId}
               onOpenAddJob={() => setShowAddJobModal(true)}
               currentUser={currentUser}
+              onRefreshApplications={fetchApplications}
             />
           </>
         )}

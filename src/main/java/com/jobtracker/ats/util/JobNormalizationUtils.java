@@ -51,7 +51,7 @@ public final class JobNormalizationUtils {
             Pattern.compile("\\b(data analyst|data engineer|data scientist|analist date|database|dba|sql|bi developer|big data|analytics)\\b"),
             Pattern.compile("\\b(ai|ml|machine learning|deep learning|llm|nlp|computer vision)\\b"),
             Pattern.compile("\\b(cybersecurity|cyber security|securitate cibernetica|security engineer|infosec|soc analyst)\\b"),
-            Pattern.compile("\\b(scrum master|agile coach|product owner|tech lead|team lead it|it project manager)\\b"),
+            Pattern.compile("\\b(business analyst|it business analyst|analist business|functional analyst|analist functional|junior ba|it ba|scrum master|agile coach|product owner|tech lead|team lead it|it project manager)\\b"),
             Pattern.compile("\\b(it support|technical support|tech support|application support|desktop support|helpdesk|service desk|suport tehnic|suport it|tehnician it|tehnician suport|administrator retea|network engineer|l1 support|l2 support|tier 1|tier 2)\\b"),
             Pattern.compile("\\b(it internship|it trainee|software intern|developer intern|internship it|stagiu it|stagiu programare)\\b"),
             Pattern.compile("\\b(embedded|firmware|iot|microcontroller|hardware engineer|telecom|retele|network)\\b"),
@@ -352,7 +352,9 @@ public final class JobNormalizationUtils {
 
         // PM / BA / Agile
         if (combined.contains("scrum") || combined.contains("agile")) skills.add("Agile / Scrum");
-        if (combined.contains("business analyst") || combined.contains("product owner")) skills.add("Business Analysis");
+        if (combined.contains("business analyst") || combined.contains("product owner") || combined.contains("business analysis")) skills.add("Business Analysis");
+        if (combined.contains("user stories") || combined.contains("use cases") || combined.contains("jira") || combined.contains("confluence")) skills.add("User Stories & Jira");
+        if (combined.contains("bpmn") || combined.contains("flowchart") || combined.contains("uml") || combined.contains("process mapping")) skills.add("BPMN & Process Modeling");
         if (combined.contains("ui/ux") || combined.contains("figma") || combined.contains("product design")) skills.add("UI/UX & Figma");
         if (combined.contains("sap") || combined.contains("erp") || combined.contains("salesforce")) skills.add("ERP / SAP");
 
@@ -413,6 +415,7 @@ public final class JobNormalizationUtils {
             case "ai", "ml" -> list.addAll(List.of("ai", "ml", "machine learning", "deep learning", "llm", "data science"));
             case "db", "database", "dba" -> list.addAll(List.of("database", "dba", "sql", "postgres", "oracle", "mysql"));
             case "support", "helpdesk", "servicedesk" -> list.addAll(List.of("support", "helpdesk", "servicedesk", "service desk", "suport tehnic", "suport it", "tech support", "it support"));
+            case "ba", "business analyst" -> list.addAll(List.of("business analyst", "analist business", "functional analyst", "product owner", "business analysis"));
             default -> {}
         }
         return list;
@@ -531,7 +534,7 @@ public final class JobNormalizationUtils {
             case "DEVOPS" -> title.contains("devops") || title.contains("sre") || title.contains("reliability") || desc.contains("kubernetes") || skills.contains("site reliability");
             case "CLOUD_SECURITY", "CYBERSECURITY" -> title.contains("security") || desc.contains("threat") || desc.contains("cryptography") || desc.contains("vulnerability") || title.contains("cyber") || title.contains("penetration");
             case "QA_TESTING", "AUTOMATION_TEST" -> title.contains("qa") || title.contains("test") || title.contains("quality") || skills.contains("selenium") || skills.contains("playwright") || skills.contains("cypress") || skills.contains("testing");
-            case "BUSINESS_ANALYST" -> title.contains("business analyst") || title.contains("product owner") || title.contains("requirements") || skills.contains("business analysis");
+            case "BUSINESS_ANALYST" -> title.contains("business analyst") || title.contains("product owner") || title.contains("analist business") || title.contains("functional analyst") || title.contains("analist functional") || title.contains("requirements") || skills.contains("business analysis");
             case "TECH_SUPPORT" -> title.contains("support") || title.contains("helpdesk") || title.contains("servicedesk") || title.contains("service desk") || title.contains("suport tehnic") || title.contains("it service");
             case "SYSADMIN_NETWORK" -> title.contains("system admin") || title.contains("sysadmin") || title.contains("network") || title.contains("administrator de sistem") || title.contains("infrastructure");
             case "SCRUM_PM" -> title.contains("scrum master") || title.contains("project manager") || title.contains("agile coach") || title.contains("delivery manager");

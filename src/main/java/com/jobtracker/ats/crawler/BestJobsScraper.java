@@ -44,7 +44,8 @@ public class BestJobsScraper implements JobScraper {
                 "https://www.bestjobs.eu/locuri-de-munca?keyword=data&order=date",
                 "https://www.bestjobs.eu/locuri-de-munca?keyword=cloud&order=date",
                 "https://www.bestjobs.eu/locuri-de-munca?keyword=support&order=date",
-                "https://www.bestjobs.eu/locuri-de-munca?keyword=helpdesk&order=date"
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=helpdesk&order=date",
+                "https://www.bestjobs.eu/locuri-de-munca?keyword=business+analyst&order=date"
         );
 
         for (String url : bestJobsUrls) {

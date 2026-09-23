@@ -143,6 +143,11 @@
 			<artifactId>jsoup</artifactId>
 			<version>1.17.2</version>
 		</dependency>
+		<!-- Spring Boot Starter Mail (Jakarta Mail & Angus Mail for IMAP/SSL) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 
 		<!-- Testing Dependencies -->
 		<dependency>

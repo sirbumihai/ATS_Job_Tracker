@@ -27,6 +27,11 @@ class JobNormalizationUtilsTest {
         assertTrue(JobNormalizationUtils.isStrictlyItJob("Application Support Analyst"));
         assertTrue(JobNormalizationUtils.isStrictlyItJob("Desktop Support Technician"));
 
+        // Business Analyst & Product
+        assertTrue(JobNormalizationUtils.isStrictlyItJob("Junior Business Analyst"));
+        assertTrue(JobNormalizationUtils.isStrictlyItJob("IT Business Analyst"));
+        assertTrue(JobNormalizationUtils.isStrictlyItJob("Functional Analyst"));
+
         // Posturi non-IT respinse
         assertFalse(JobNormalizationUtils.isStrictlyItJob("Casier Magazin Comercial"));
         assertFalse(JobNormalizationUtils.isStrictlyItJob("Șofer Curier Distribuție"));
@@ -69,6 +74,10 @@ class JobNormalizationUtilsTest {
         List<String> supportSyns = JobNormalizationUtils.expandTechSynonyms("support");
         assertTrue(supportSyns.contains("helpdesk"));
         assertTrue(supportSyns.contains("suport tehnic"));
+
+        List<String> baSyns = JobNormalizationUtils.expandTechSynonyms("ba");
+        assertTrue(baSyns.contains("business analyst"));
+        assertTrue(baSyns.contains("product owner"));
     }
 
     @Test
