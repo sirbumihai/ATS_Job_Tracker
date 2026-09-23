@@ -203,24 +203,26 @@ export default function KanbanBoard({
   };
 
   const handleOpenJobModal = (app) => {
+    const isGmail = app.sourcePlatform === 'GMAIL' || Boolean(app.rawDescription && app.rawDescription.includes('GMAIL'));
     setSelectedJobForModal({
       id: app.jobId || app.id,
       jobTitle: app.jobTitle,
       companyName: app.companyName,
-      companyLogoUrl: app.companyLogoUrl || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80",
+      companyLogoUrl: app.companyLogoUrl || (isGmail ? "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" : "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=80"),
       location: app.location || app.jobLocation || "Romania",
       workModel: app.workModel || "REMOTE",
       experienceLevel: app.experienceLevel || "MID",
-      sourcePlatform: app.sourcePlatform || "OTHER",
+      sourcePlatform: isGmail ? "GMAIL" : (app.sourcePlatform || "OTHER"),
       directApplyUrl: app.jobUrl || "#",
-      rawDescription: app.rawDescription || "Descrierea completa a postului salvat in aplicatia de tracking.",
-      salaryRange: app.salaryRange || "Salariu Nespecificat / Conform Anunt",
+      rawDescription: app.rawDescription || "Descrierea completă a postului salvat în aplicația de tracking.",
+      salaryRange: app.salaryRange || "Salariu Nespecificat / Conform Anunț",
       skillsRequired: app.skillsRequired || [],
       atsMatchScore: app.semanticMatchScore ? Number(app.semanticMatchScore) : 0,
       competitiveness: "MEDIUM",
-      competitivenessLabel: "Competitie Medie",
-      applicantCountText: "Candidatura Activa",
-      postedDateAgo: "Salvat in Tracker"
+      competitivenessLabel: isGmail ? "Email Recrutare" : "Competiție Medie",
+      applicantCountText: isGmail ? "Sincronizat din Gmail" : "Candidatură Activă",
+      postedDateAgo: app.appliedDate ? `Email din ${app.appliedDate}` : "Salvat în Tracker",
+      postedAt: app.appliedDate ? `${app.appliedDate}T12:00:00Z` : null
     });
   };
 
@@ -973,8 +975,8 @@ export default function KanbanBoard({
 
                             {/* MATCH SCORE PILL + SLIM PROGRESS */}
                             <div className="space-y-1">
-                              <div className="flex items-center justify-between text-[11px]">
-                                <span className={`inline-flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md text-[10px] ${
+                              <div className="flex items-center justify-between text-[11px] gap-1">
+                                <span className={`inline-flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md text-[10px] shrink-0 ${
                                   score >= 75 
                                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                   : score >= 50
@@ -984,11 +986,21 @@ export default function KanbanBoard({
                                   <Sparkles className="w-2.5 h-2.5 shrink-0" />
                                   {score.toFixed(0)}% Match ATS
                                 </span>
-                                {app.jobLocation && (
-                                  <span className="text-[10px] text-gray-400 truncate max-w-[100px]" title={app.jobLocation}>
-                                    {app.jobLocation}
-                                  </span>
-                                )}
+                                
+                                <div className="flex items-center gap-1 min-w-0">
+                                  {app.appliedDate && (
+                                    <span className="inline-flex items-center gap-1 font-bold text-[10px] text-gray-600 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md truncate" title={`Data aplicării: ${app.appliedDate}`}>
+                                      <Calendar className="w-2.5 h-2.5 text-gray-500 shrink-0" />
+                                      <span>{app.appliedDate}</span>
+                                    </span>
+                                  )}
+                                  {(app.sourcePlatform === 'GMAIL' || (app.rawDescription && app.rawDescription.includes('GMAIL'))) && (
+                                    <span className="inline-flex items-center gap-1 font-black text-[10px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md shrink-0" title="Detectat automat prin sincronizare Gmail">
+                                      <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
+                                      <span>Gmail</span>
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden border border-gray-200/60">
                                 <div 
@@ -1448,6 +1460,18 @@ export default function KanbanBoard({
         }}
         activeUserId={activeUserId}
       />
+
+      {/* JOB DETAIL MODAL (FIȘĂ COMPLETĂ JOB + ANALIZĂ AI + EMAIL GMAIL) */}
+      {selectedJobForModal && (
+        <JobDetailModal 
+          job={selectedJobForModal}
+          onClose={() => setSelectedJobForModal(null)}
+          onSaveToKanban={() => {}}
+          isSaved={true}
+          isSaving={false}
+          activeUserId={activeUserId}
+        />
+      )}
 
       {/* TOAST FEEDBACK NOTIFICATION */}
       {trackerToast && (

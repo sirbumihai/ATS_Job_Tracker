@@ -430,9 +430,16 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                             {detail.companyName?.substring(0, 2).toUpperCase() || 'CP'}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-extrabold text-gray-900 truncate">
-                              {detail.companyName}
-                            </p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-extrabold text-gray-900 truncate">
+                                {detail.companyName}
+                              </p>
+                              {detail.emailDate && (
+                                <span className="text-[10px] font-bold text-gray-600 bg-white border border-gray-200 px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+                                  <span>📅 {detail.emailDate}</span>
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[11px] text-gray-500 truncate" title={detail.emailSubject}>
                               {detail.jobTitle} • {detail.emailSubject}
                             </p>

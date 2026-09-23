@@ -39,17 +39,21 @@ public class EmailParserService {
 
     // 1. Zgomot comercial / marketing / finante / comenzi (0 tokens - eliminare instantanee)
     private static final Pattern NON_RECRUITMENT_PATTERN = Pattern.compile(
-            "(?i)\\b(?:factur[aă]|invoice|chitan[tț][aă]|comanda ta|awb|curier|sameday|fan courier|" +
-            "dpd|gls|livrare|tracking number|revolut|banca transilvania|ing bank|raiffeisen|bcr|brd|" +
-            "paypal|extras de cont|card de credit|imprumut|credit nevoi personale|" +
+            "(?i)\\b(?:factur[aă]|invoice|chitan[tț][aă]|comanda|comand[aă]|order confirmation|awb|curier|sameday|fan courier|" +
+            "dpd|gls|cargus|livrare|expediere|tracking number|revolut|banca transilvania|ing bank|raiffeisen|bcr|brd|cec bank|" +
+            "paypal|plata|plata cu cardul|tranzactie|extras de cont|card de credit|imprumut|credit nevoi personale|" +
             "superbet|betano|unibet|pacanele|cazinou|" +
-            "reducere|reducerea de|voucher|cod promotional|promo[tț]ie|black friday|" +
+            "reducere|reducerea de|voucher|cod promotional|cod promo[tț]ional|promo[tț]ie|promotie|black friday|" +
             "oferta s[aă]pt[aă]m[aă]nii|ofert[aă] special[aă]|ofert[aă] exclusiv[aă]|discount|cashback|" +
             "abonament|re[iî]nnoire abonament|netflix|spotify|youtube premium|google cloud alert|" +
             "security alert|codul t[aă]u de securitate|resetare parol[aă]|confirm[aă] contul|" +
-            "who viewed your profile|a vizualizat profilul|a ad[aă]ugat un articol|" +
+            "who viewed your profile|a vizualizat profilul|a ad[aă]ugat un articol|invita[tț]ie de conectare|" +
+            "invitation to connect|felicit[aă]ri pentru|congratulate|actualiz[aă]ri de la re[tț]eaua ta|" +
+            "persoane pe care le-ai putea cunoa[sș]te|new connection|s-a conectat cu tine|" +
             "job alert|alert[aă] de joburi|noi joburi pentru tine|jobs you may be interested in|" +
-            "recomandate pentru tine|top oportunit[aă][tț]i|newsletter|dezabonare|unsubscribe)\\b"
+            "recomandate pentru tine|top oportunit[aă][tț]i|newsletter|dezabonare|unsubscribe|" +
+            "angajatori de top|salariile din|vezi cine te-a c[aă]utat|t[aâ]rg de carier[aă]|eveniment|webinar|" +
+            "sfaturi de carier[aă]|actualizeaz[aă]-[tț]i cv|actualizeaza cv|companii care angajeaz[aă]|jobul s[aă]pt[aă]m[aă]nii)\\b"
     );
 
     // 2. Clauze de excludere pentru false oferte (ex: respingeri sau promoții care conțin 'oferi')
@@ -316,6 +320,21 @@ public class EmailParserService {
         );
     }
 
+    public ParsedJobEmail parseFastOrDeterministic(String sender, String subject, String bodyText) {
+        if (isDefiniteNonRecruitmentEmail(sender, subject)) {
+            return new ParsedJobEmail(false, null, null, null, "NONE", null);
+        }
+
+        ParsedJobEmail det = parseDeterministic(sender, subject, bodyText);
+        // Dacă este clar recrutare și am extras o companie validă specifică, returnăm direct cu 0 tokeni și 0 latență AI
+        if (det.isRecruitmentEmail() && det.companyName() != null 
+                && !det.companyName().equalsIgnoreCase("Companie Parteneră") 
+                && !"NONE".equals(det.confidence())) {
+            return det;
+        }
+        return null; // necesită analiză AI pentru disambiguare
+    }
+
     public boolean isCandidateRecruitmentEmail(String sender, String subject, java.util.Set<String> knownCompanies) {
         if (sender == null) sender = "";
         if (subject == null) subject = "";
@@ -328,10 +347,11 @@ public class EmailParserService {
         String sLower = sender.toLowerCase(Locale.ROOT);
         String subLower = subject.toLowerCase(Locale.ROOT);
 
-        // LinkedIn: doar aplicări / candidaturi, nu alerte sau recomandări săptămânale de joburi
-        if (sLower.contains("linkedin.com")) {
-            return subLower.contains("applied") || subLower.contains("application") || subLower.contains("aplicat")
-                    || subLower.contains("candidat") || subLower.contains("interview") || subLower.contains("interviu");
+        // LinkedIn: doar aplicări / candidaturi autentice trimise, nu recomandări sau alerte
+        if (sLower.contains("linkedin.com") || sLower.contains("linkedin")) {
+            return subLower.contains("applied to") || subLower.contains("application to") || subLower.contains("application was sent")
+                    || subLower.contains("application has been") || subLower.contains("aplicat la") || subLower.contains("candidatura ta")
+                    || subLower.contains("interview") || subLower.contains("interviu");
         }
 
         // Platforme ATS internaționale
@@ -343,34 +363,38 @@ public class EmailParserService {
             return true;
         }
 
-        // Platforme locale din România (eJobs, BestJobs, Hipo) - excludem alertele de joburi generice
+        // Platforme locale din România (eJobs, BestJobs, Hipo) - DOAR aplicări specifice ale utilizatorului
         if (sLower.contains("ejobs.ro") || sLower.contains("bestjobs.eu") || sLower.contains("hipo.ro")) {
-            if (subLower.contains("alert") || subLower.contains("recomandat") || subLower.contains("newsletter")) {
-                return false;
-            }
+            return subLower.contains("ai aplicat") || subLower.contains("candidatura ta la")
+                    || subLower.contains("aplicat cu succes") || subLower.contains("mesaj de la")
+                    || subLower.contains("angajatorul a vizualizat") || subLower.contains("stadiul candidaturii")
+                    || subLower.contains("interviu");
+        }
+
+        // Expeditor HR / Recrutare directă
+        if (sLower.contains("recruiting@") || sLower.contains("recruitment@") || sLower.contains("recruiter@")
+                || sLower.contains("careers@") || sLower.contains("cariere@") || sLower.contains("talent@")
+                || sLower.contains("hiring@") || sLower.contains("jobs@") || sLower.contains("hr@")
+                || sLower.contains("resurseumane@") || sLower.contains("resurse umane")) {
             return true;
         }
 
-        // Expeditor HR / Recrutare
-        if (sLower.contains("recruiting") || sLower.contains("recruitment") || sLower.contains("recruiter")
-                || sLower.contains("careers") || sLower.contains("cariere") || sLower.contains("talent")
-                || sLower.contains("hiring") || sLower.contains("jobs@") || sLower.contains("hr@")
-                || sLower.contains("hr.") || sLower.contains("people team") || sLower.contains("resurse umane")) {
-            return true;
-        }
-
-        // Subiect relevant pentru candidaturi / interviuri / oferte / respingeri
-        if (subLower.contains("applied") || subLower.contains("application") || subLower.contains("aplicat")
-                || subLower.contains("aplicație") || subLower.contains("aplicatie") || subLower.contains("candidat")
-                || subLower.contains("candidatur") || subLower.contains("interview") || subLower.contains("interviu")
-                || subLower.contains("screening") || subLower.contains("job offer") || subLower.contains("oferta de angajare")
-                || subLower.contains("ofertă de angajare") || subLower.contains("postul de") || subLower.contains("rolul de")
-                || subLower.contains("career opportunity") || subLower.contains("unfortunately") || subLower.contains("regretam")
-                || subLower.contains("regretăm") || subLower.contains("nu vom continua") || subLower.contains("thank you for applying")
-                || subLower.contains("am primit candidatura") || subLower.contains("multumim pentru") || subLower.contains("mulțumim pentru")
-                || subLower.contains("assessment") || subLower.contains("codility") || subLower.contains("hackerrank")
-                || subLower.contains("recruitment") || subLower.contains("recrutare") || subLower.contains("next steps")
-                || subLower.contains("statusul candidaturii") || subLower.contains("procesul de recrutare")) {
+        // Subiect specific de recrutare/candidaturi
+        if (subLower.contains("thank you for applying") || subLower.contains("application received")
+                || subLower.contains("your application") || subLower.contains("candidatura ta a fost")
+                || subLower.contains("am primit candidatura") || subLower.contains("invitație la interviu")
+                || subLower.contains("invitatie la interviu") || subLower.contains("interviu tehnic")
+                || subLower.contains("screening call") || subLower.contains("schedule an interview")
+                || subLower.contains("programare interviu") || subLower.contains("oferta de angajare")
+                || subLower.contains("ofertă de angajare") || subLower.contains("job offer")
+                || subLower.contains("formal offer") || subLower.contains("statusul candidaturii")
+                || subLower.contains("statusul aplicatiei") || subLower.contains("statusul aplicației")
+                || subLower.contains("procesul de recrutare") || subLower.contains("multumim pentru aplicatie")
+                || subLower.contains("mulțumim pentru aplicație") || subLower.contains("multumim pentru candidatura")
+                || subLower.contains("mulțumim pentru candidatură") || subLower.contains("multumim pentru interesul acordat")
+                || subLower.contains("mulțumim pentru interesul acordat") || subLower.contains("nu vom continua procesul")
+                || subLower.contains("unfortunately") || subLower.contains("regretam sa te informam")
+                || subLower.contains("regretăm să te informăm")) {
             return true;
         }
 
@@ -449,6 +473,18 @@ public class EmailParserService {
     }
 
     private String extractCompany(String sender, String subject, String bodyText) {
+        // 0. LinkedIn specific: "Your application to X was sent / has been submitted"
+        Matcher li1 = PATTERN_LINKEDIN_1.matcher(subject);
+        if (li1.find()) {
+            String cand = li1.group(1).trim();
+            if (isValidCompanyCandidate(cand)) return cand;
+        }
+        Matcher li2 = PATTERN_LINKEDIN_2.matcher(subject);
+        if (li2.find()) {
+            String cand = li2.group(1).trim();
+            if (isValidCompanyCandidate(cand)) return cand;
+        }
+
         // A. Căutare din expeditori tip Workday / Greenhouse (ex: "Endava Careers <careers@endava.com>")
         Matcher senderMatcher = Pattern.compile("(?i)\"?([A-Za-z0-9&.\\s-]{2,30})\\s*(?:careers|recruitment|talent|jobs|hr)?\"?\\s*<").matcher(sender);
         if (senderMatcher.find()) {

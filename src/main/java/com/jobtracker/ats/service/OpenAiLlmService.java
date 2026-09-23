@@ -19,11 +19,10 @@ public class OpenAiLlmService {
     private final String apiKey;
     private final String defaultModel;
 
-    // LISTA DE MODELE ACTIVE REALE PE GROQCLOUD CU LIMITĂ RIDICATĂ DE TOKENI (30k TPM)
+    // LISTA DE MODELE ACTIVE REALE VERIFICATE PE GROQCLOUD (FĂRĂ ERORI 404)
     private static final List<String> ACTIVE_GROQ_MODELS = List.of(
-            "llama-3.1-8b-instant",
+            "qwen/qwen3.8-27b",
             "openai/gpt-oss-20b",
-            "llama-3.3-70b-versatile",
             "openai/gpt-oss-120b"
     );
 
@@ -32,7 +31,7 @@ public class OpenAiLlmService {
     public OpenAiLlmService(
             RestClient.Builder restClientBuilder,
             @Value("${spring.ai.groq.api-key:${SPRING_AI_GROQ_API_KEY:}}") String apiKey,
-            @Value("${spring.ai.groq.model:${SPRING_AI_GROQ_MODEL:llama-3.1-8b-instant}}") String defaultModel) {
+            @Value("${spring.ai.groq.model:${SPRING_AI_GROQ_MODEL:qwen/qwen3.8-27b}}") String defaultModel) {
         this.restClient = restClientBuilder.build();
         this.apiKey = apiKey;
         this.defaultModel = defaultModel;

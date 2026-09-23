@@ -350,6 +350,8 @@ public class ApplicationService {
                             .toList();
                 }
             }
+        } else if (rawDesc != null && rawDesc.contains("GMAIL")) {
+            sourcePlatform = "GMAIL";
         }
 
         return new ApplicationResponse(

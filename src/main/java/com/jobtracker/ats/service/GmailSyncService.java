@@ -132,39 +132,55 @@ public class GmailSyncService {
                 }
             }
 
-            log.info("[GMAIL SYNC] Colectate {} emailuri candidate de recrutare pentru {}. Procesare eficientă în loturi...", candidateList.size(), request.getEmail());
+            log.info("[GMAIL SYNC] Colectate {} emailuri candidate de recrutare pentru {}. Rezolvare rapidă...", candidateList.size(), request.getEmail());
 
-            // 2. Procesăm candidații în loturi de câte 4 emailuri pentru a reduce apelurile LLM cu 75% și a garanta încadrarea sub 8k TPM
-            int chunkSize = 4;
-            for (int i = 0; i < candidateList.size(); i += chunkSize) {
-                List<CandidateEmailRecord> chunk = candidateList.subList(i, Math.min(i + chunkSize, candidateList.size()));
-                List<EmailParserService.CandidateEmailItem> batchItems = chunk.stream()
-                        .map(c -> new EmailParserService.CandidateEmailItem(c.id(), c.sender(), c.subject(), c.snippet()))
-                        .toList();
-
-                Map<Integer, EmailParserService.ParsedJobEmail> aiBatchResults = emailParserService.classifyBatchWithAi(batchItems);
-
-                for (CandidateEmailRecord item : chunk) {
-                    try {
-                        EmailParserService.ParsedJobEmail parsed = aiBatchResults.get(item.id());
-                        if (parsed == null) {
-                            parsed = emailParserService.parse(item.sender(), item.subject(), item.body());
-                        }
-
-                        if (!parsed.isRecruitmentEmail()) {
-                            continue;
-                        }
-
-                        processMatchedEmail(user, userApps, parsed, item.sender(), item.subject(), item.emailDate(), request.isAutoCreateMissing(), result);
-                    } catch (Exception e) {
-                        log.debug("[GMAIL SYNC] Eroare la aplicarea rezultatului pentru un mesaj: {}", e.getMessage());
+            // 2. Fast-Path Deterministic: verificăm dacă putem parsa direct cu acuratețe 100% fără a consuma tokeni AI
+            List<CandidateEmailRecord> ambiguousList = new ArrayList<>();
+            for (CandidateEmailRecord item : candidateList) {
+                EmailParserService.ParsedJobEmail fastParsed = emailParserService.parseFastOrDeterministic(item.sender(), item.subject(), item.body());
+                if (fastParsed != null) {
+                    if (fastParsed.isRecruitmentEmail()) {
+                        processMatchedEmail(user, userApps, fastParsed, item.sender(), item.subject(), item.emailDate(), item.body(), request.isAutoCreateMissing(), result);
                     }
+                } else {
+                    ambiguousList.add(item);
                 }
+            }
 
-                if (i + chunkSize < candidateList.size()) {
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException ignored) {}
+            // 3. Procesăm doar emailurile ambigue rămase (dacă există) în loturi mici cu modelul AI Qwen3.8-27b
+            if (!ambiguousList.isEmpty()) {
+                log.info("[GMAIL SYNC] {} emailuri ambigue trimise la clasificatorul AI în loturi compacte...", ambiguousList.size());
+                int chunkSize = 4;
+                for (int i = 0; i < ambiguousList.size(); i += chunkSize) {
+                    List<CandidateEmailRecord> chunk = ambiguousList.subList(i, Math.min(i + chunkSize, ambiguousList.size()));
+                    List<EmailParserService.CandidateEmailItem> batchItems = chunk.stream()
+                            .map(c -> new EmailParserService.CandidateEmailItem(c.id(), c.sender(), c.subject(), c.snippet()))
+                            .toList();
+
+                    Map<Integer, EmailParserService.ParsedJobEmail> aiBatchResults = emailParserService.classifyBatchWithAi(batchItems);
+
+                    for (CandidateEmailRecord item : chunk) {
+                        try {
+                            EmailParserService.ParsedJobEmail parsed = aiBatchResults.get(item.id());
+                            if (parsed == null) {
+                                parsed = emailParserService.parse(item.sender(), item.subject(), item.body());
+                            }
+
+                            if (!parsed.isRecruitmentEmail()) {
+                                continue;
+                            }
+
+                            processMatchedEmail(user, userApps, parsed, item.sender(), item.subject(), item.emailDate(), item.body(), request.isAutoCreateMissing(), result);
+                        } catch (Exception e) {
+                            log.debug("[GMAIL SYNC] Eroare la aplicarea rezultatului pentru un mesaj: {}", e.getMessage());
+                        }
+                    }
+
+                    if (i + chunkSize < ambiguousList.size()) {
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException ignored) {}
+                    }
                 }
             }
 
@@ -198,7 +214,7 @@ public class GmailSyncService {
     }
 
     private void processMatchedEmail(User user, List<Application> userApps, EmailParserService.ParsedJobEmail parsed,
-                                     String sender, String subject, LocalDate emailDate, boolean autoCreateMissing,
+                                     String sender, String subject, LocalDate emailDate, String body, boolean autoCreateMissing,
                                      GmailSyncResult result) {
         result.setMatchedEmails(result.getMatchedEmails() + 1);
 
@@ -214,16 +230,26 @@ public class GmailSyncService {
                 if (newStatus == ApplicationStatus.APPLIED && app.getAppliedDate() == null) {
                     app.setAppliedDate(emailDate);
                 }
-                String noteUpdate = "\n[Gmail Sync " + LocalDate.now() + "] Status actualizat automat la "
-                        + newStatus + " din emailul: \"" + parsed.snippet() + "\"";
+                String noteUpdate = "\n[Gmail Sync " + (emailDate != null ? emailDate : LocalDate.now()) + "] Status actualizat automat la "
+                        + newStatus + " din emailul: \"" + parsed.snippet() + "\" (" + sender + ")";
                 app.setNotes((app.getNotes() != null ? app.getNotes() : "") + noteUpdate);
+
+                // Îmbogățim descrierea jobului dacă era minimă sau generică
+                if (app.getJobPosting() != null) {
+                    JobPosting jp = app.getJobPosting();
+                    String currentDesc = jp.getRawDescription();
+                    if (currentDesc == null || currentDesc.isBlank() || currentDesc.startsWith("Aplicație detectată automat")) {
+                        jp.setRawDescription(buildGmailJobDescription(sender, subject, emailDate, newStatus, body));
+                        jobPostingRepository.save(jp);
+                    }
+                }
 
                 applicationRepository.save(app);
                 result.setUpdatedApplications(result.getUpdatedApplications() + 1);
 
                 result.getSyncDetails().add(SyncItemDetail.builder()
-                        .companyName(app.getJobPosting().getCompanyName())
-                        .jobTitle(app.getJobPosting().getJobTitle())
+                        .companyName(app.getJobPosting() != null ? app.getJobPosting().getCompanyName() : parsed.companyName())
+                        .jobTitle(app.getJobPosting() != null ? app.getJobPosting().getJobTitle() : parsed.jobTitle())
                         .oldStatus(oldStatus.name())
                         .newStatus(newStatus.name())
                         .emailSubject(subject)
@@ -233,11 +259,13 @@ public class GmailSyncService {
                         .build());
             }
         } else if (autoCreateMissing) {
+            String fullJobDescription = buildGmailJobDescription(sender, subject, emailDate, parsed.detectedStatus(), body);
+
             JobPosting newJob = JobPosting.builder()
                     .user(user)
                     .companyName(parsed.companyName())
                     .jobTitle(parsed.jobTitle())
-                    .rawDescription("Aplicație detectată automat prin sincronizare Gmail din emailul: " + subject)
+                    .rawDescription(fullJobDescription)
                     .jobUrl(null)
                     .build();
             JobPosting savedJob = jobPostingRepository.save(newJob);
@@ -248,7 +276,7 @@ public class GmailSyncService {
                     .status(parsed.detectedStatus())
                     .appliedDate(emailDate)
                     .semanticMatchScore(BigDecimal.valueOf(80.00))
-                    .notes("[Gmail Sync " + LocalDate.now() + "] Candidatură detectată automat din emailul: \""
+                    .notes("[Gmail Sync " + (emailDate != null ? emailDate : LocalDate.now()) + "] Candidatură detectată automat din emailul: \""
                             + parsed.snippet() + "\" (" + sender + ")")
                     .build();
             Application savedApp = applicationRepository.save(newApp);
@@ -266,6 +294,28 @@ public class GmailSyncService {
                     .actionTaken("CREATED")
                     .build());
         }
+    }
+
+    private String buildGmailJobDescription(String sender, String subject, LocalDate emailDate, ApplicationStatus status, String body) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("📩 EMAIL DE RECRUTARE GMAIL (Sincronizat Automat)\n");
+        sb.append("============================================================\n");
+        sb.append("📅 Data Primirii: ").append(emailDate != null ? emailDate.toString() : "Dată Nespecificată").append("\n");
+        sb.append("👤 Expeditor: ").append(sender != null && !sender.isBlank() ? sender : "Nespecificat").append("\n");
+        sb.append("📌 Subiect: ").append(subject != null && !subject.isBlank() ? subject : "Fără Subiect").append("\n");
+        sb.append("🏷️ Status Detectat: ").append(status != null ? status.name() : "APPLIED").append("\n");
+        sb.append("============================================================\n\n");
+        sb.append("📝 CONȚINUT COMPLET EMAIL:\n");
+        sb.append("------------------------------------------------------------\n");
+        String clean = body != null ? body.trim() : "";
+        if (clean.length() > 5000) {
+            sb.append(clean, 0, 5000).append("\n\n[... Trunchiat pentru afișare optimizată ...]");
+        } else if (!clean.isEmpty()) {
+            sb.append(clean);
+        } else {
+            sb.append("(Corpul mesajului nu conține text adițional)");
+        }
+        return sb.toString();
     }
 
     private Properties getImapProperties() {
@@ -376,7 +426,7 @@ public class GmailSyncService {
                     sb.append(extractTextFromMultipart(childMp)).append(" ");
                 }
             }
-            if (sb.length() > 50000) {
+            if (sb.length() > 6000) {
                 break;
             }
         }
