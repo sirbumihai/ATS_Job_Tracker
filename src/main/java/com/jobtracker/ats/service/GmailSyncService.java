@@ -53,7 +53,6 @@ public class GmailSyncService {
         }
     }
 
-    @Transactional
     public GmailSyncResult syncWithGmail(UUID userId, GmailSyncRequest request) {
         User user = resolveUser(userId);
         Properties props = getImapProperties();
@@ -83,91 +82,45 @@ public class GmailSyncService {
             log.info("[GMAIL SYNC] Identificate {} mesaje primite în ultimele {} zile pentru {}", messages.length, days, request.getEmail());
             result.setEmailsScanned(messages.length);
 
+            if (messages.length > 0) {
+                // Pre-încărcare rapidă a plicurilor (Envelope) în batch printr-o singură comandă IMAP
+                FetchProfile fp = new FetchProfile();
+                fp.add(FetchProfile.Item.ENVELOPE);
+                fp.add(FetchProfile.Item.FLAGS);
+                fp.add(FetchProfile.Item.CONTENT_INFO);
+                inbox.fetch(messages, fp);
+            }
+
             List<Application> userApps = applicationRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+            Set<String> knownCompanies = userApps.stream()
+                    .map(a -> a.getJobPosting() != null ? a.getJobPosting().getCompanyName() : null)
+                    .filter(Objects::nonNull)
+                    .map(s -> s.toLowerCase(Locale.ROOT).trim())
+                    .collect(java.util.stream.Collectors.toSet());
 
             // Parcurgem mesajele de la cele mai noi la cele mai vechi
             for (int i = messages.length - 1; i >= 0; i--) {
                 Message msg = messages[i];
                 try {
-                    String sender = msg.getFrom() != null && msg.getFrom().length > 0 ? msg.getFrom()[0].toString() : "";
+                    String sender = extractSender(msg);
                     String subject = msg.getSubject() != null ? msg.getSubject() : "";
+
+                    // Filtrare rapidă pe baza headerelor în memorie: evităm descărcarea corpurilor pentru emailuri irelevante
+                    if (!emailParserService.isCandidateRecruitmentEmail(sender, subject, knownCompanies)) {
+                        continue;
+                    }
+
+                    // Descărcăm corpul mesajului doar pentru cele câteva zeci de emailuri potențial relevante
                     String body = extractMessageBody(msg);
                     LocalDate emailDate = extractEmailDate(msg);
 
                     EmailParserService.ParsedJobEmail parsed = emailParserService.parse(sender, subject, body);
-
                     if (!parsed.isRecruitmentEmail()) {
                         continue;
                     }
 
-                    result.setMatchedEmails(result.getMatchedEmails() + 1);
+                    processMatchedEmail(user, userApps, parsed, sender, subject, emailDate, request.isAutoCreateMissing(), result);
 
-                    // Căutăm dacă există deja o aplicație pentru această companie
-                    Optional<Application> existingAppOpt = findMatchingApplication(userApps, parsed.companyName());
-
-                    if (existingAppOpt.isPresent()) {
-                        Application app = existingAppOpt.get();
-                        ApplicationStatus oldStatus = app.getStatus();
-                        ApplicationStatus newStatus = parsed.detectedStatus();
-
-                        if (shouldUpgradeStatus(oldStatus, newStatus)) {
-                            app.setStatus(newStatus);
-                            if (newStatus == ApplicationStatus.APPLIED && app.getAppliedDate() == null) {
-                                app.setAppliedDate(emailDate);
-                            }
-                            String noteUpdate = "\n[Gmail Sync " + LocalDate.now() + "] Status actualizat automat la "
-                                    + newStatus + " din emailul: \"" + parsed.snippet() + "\"";
-                            app.setNotes((app.getNotes() != null ? app.getNotes() : "") + noteUpdate);
-
-                            applicationRepository.save(app);
-                            result.setUpdatedApplications(result.getUpdatedApplications() + 1);
-
-                            result.getSyncDetails().add(SyncItemDetail.builder()
-                                    .companyName(app.getJobPosting().getCompanyName())
-                                    .jobTitle(app.getJobPosting().getJobTitle())
-                                    .oldStatus(oldStatus.name())
-                                    .newStatus(newStatus.name())
-                                    .emailSubject(subject)
-                                    .sender(sender)
-                                    .emailDate(emailDate)
-                                    .actionTaken("UPDATED")
-                                    .build());
-                        }
-                    } else if (request.isAutoCreateMissing()) {
-                        // Creare aplicație nouă descoperită exclusiv prin email
-                        JobPosting newJob = JobPosting.builder()
-                                .user(user)
-                                .companyName(parsed.companyName())
-                                .jobTitle(parsed.jobTitle())
-                                .rawDescription("Aplicație detectată automat prin sincronizare Gmail din emailul: " + subject)
-                                .jobUrl(null)
-                                .build();
-                        JobPosting savedJob = jobPostingRepository.save(newJob);
-
-                        Application newApp = Application.builder()
-                                .user(user)
-                                .jobPosting(savedJob)
-                                .status(parsed.detectedStatus())
-                                .appliedDate(emailDate)
-                                .semanticMatchScore(BigDecimal.valueOf(80.00))
-                                .notes("[Gmail Sync " + LocalDate.now() + "] Candidatură detectată automat din emailul: \""
-                                        + parsed.snippet() + "\" (" + sender + ")")
-                                .build();
-                        Application savedApp = applicationRepository.save(newApp);
-                        userApps.add(savedApp);
-
-                        result.setCreatedApplications(result.getCreatedApplications() + 1);
-                        result.getSyncDetails().add(SyncItemDetail.builder()
-                                .companyName(savedJob.getCompanyName())
-                                .jobTitle(savedJob.getJobTitle())
-                                .oldStatus("NONE")
-                                .newStatus(newApp.getStatus().name())
-                                .emailSubject(subject)
-                                .sender(sender)
-                                .emailDate(emailDate)
-                                .actionTaken("CREATED")
-                                .build());
-                    }
                 } catch (Exception msgEx) {
                     log.debug("[GMAIL SYNC] Eroare la procesarea unui mesaj individual: {}", msgEx.getMessage());
                 }
@@ -178,7 +131,7 @@ public class GmailSyncService {
             result.setMessage("Sincronizare finalizată cu succes. " + result.getUpdatedApplications() + " aplicații actualizate, "
                     + result.getCreatedApplications() + " candidaturi noi adăugate automat.");
 
-            log.info("[GMAIL SYNC] Finalizat pentru {}: {} actualizate, {} create din {} emailuri de recrutare.",
+            log.info("[GMAIL SYNC] Finalizat pentru {}: {} actualizate, {} create din {} emailuri de recrutare potrivite.",
                     request.getEmail(), result.getUpdatedApplications(), result.getCreatedApplications(), result.getMatchedEmails());
 
         } catch (AuthenticationFailedException e) {
@@ -192,14 +145,95 @@ public class GmailSyncService {
         return result;
     }
 
+    private String extractSender(Message msg) {
+        try {
+            Address[] from = msg.getFrom();
+            if (from != null && from.length > 0) {
+                return from[0].toString();
+            }
+        } catch (Exception ignored) {}
+        return "";
+    }
+
+    private void processMatchedEmail(User user, List<Application> userApps, EmailParserService.ParsedJobEmail parsed,
+                                     String sender, String subject, LocalDate emailDate, boolean autoCreateMissing,
+                                     GmailSyncResult result) {
+        result.setMatchedEmails(result.getMatchedEmails() + 1);
+
+        Optional<Application> existingAppOpt = findMatchingApplication(userApps, parsed.companyName());
+
+        if (existingAppOpt.isPresent()) {
+            Application app = existingAppOpt.get();
+            ApplicationStatus oldStatus = app.getStatus();
+            ApplicationStatus newStatus = parsed.detectedStatus();
+
+            if (shouldUpgradeStatus(oldStatus, newStatus)) {
+                app.setStatus(newStatus);
+                if (newStatus == ApplicationStatus.APPLIED && app.getAppliedDate() == null) {
+                    app.setAppliedDate(emailDate);
+                }
+                String noteUpdate = "\n[Gmail Sync " + LocalDate.now() + "] Status actualizat automat la "
+                        + newStatus + " din emailul: \"" + parsed.snippet() + "\"";
+                app.setNotes((app.getNotes() != null ? app.getNotes() : "") + noteUpdate);
+
+                applicationRepository.save(app);
+                result.setUpdatedApplications(result.getUpdatedApplications() + 1);
+
+                result.getSyncDetails().add(SyncItemDetail.builder()
+                        .companyName(app.getJobPosting().getCompanyName())
+                        .jobTitle(app.getJobPosting().getJobTitle())
+                        .oldStatus(oldStatus.name())
+                        .newStatus(newStatus.name())
+                        .emailSubject(subject)
+                        .sender(sender)
+                        .emailDate(emailDate)
+                        .actionTaken("UPDATED")
+                        .build());
+            }
+        } else if (autoCreateMissing) {
+            JobPosting newJob = JobPosting.builder()
+                    .user(user)
+                    .companyName(parsed.companyName())
+                    .jobTitle(parsed.jobTitle())
+                    .rawDescription("Aplicație detectată automat prin sincronizare Gmail din emailul: " + subject)
+                    .jobUrl(null)
+                    .build();
+            JobPosting savedJob = jobPostingRepository.save(newJob);
+
+            Application newApp = Application.builder()
+                    .user(user)
+                    .jobPosting(savedJob)
+                    .status(parsed.detectedStatus())
+                    .appliedDate(emailDate)
+                    .semanticMatchScore(BigDecimal.valueOf(80.00))
+                    .notes("[Gmail Sync " + LocalDate.now() + "] Candidatură detectată automat din emailul: \""
+                            + parsed.snippet() + "\" (" + sender + ")")
+                    .build();
+            Application savedApp = applicationRepository.save(newApp);
+            userApps.add(savedApp);
+
+            result.setCreatedApplications(result.getCreatedApplications() + 1);
+            result.getSyncDetails().add(SyncItemDetail.builder()
+                    .companyName(savedJob.getCompanyName())
+                    .jobTitle(savedJob.getJobTitle())
+                    .oldStatus("NONE")
+                    .newStatus(newApp.getStatus().name())
+                    .emailSubject(subject)
+                    .sender(sender)
+                    .emailDate(emailDate)
+                    .actionTaken("CREATED")
+                    .build());
+        }
+    }
+
     private Properties getImapProperties() {
         Properties props = new Properties();
         props.put("mail.store.protocol", "imaps");
         props.put("mail.imaps.host", "imap.gmail.com");
         props.put("mail.imaps.port", "993");
         props.put("mail.imaps.ssl.enable", "true");
-        props.put("mail.imaps.timeout", "10000");
-        props.put("mail.imaps.connectiontimeout", "10000");
+        props.put("mail.imaps.timeout", "15000");
+        props.put("mail.imaps.connectiontimeout", "15000");
         return props;
     }
 
@@ -263,11 +297,17 @@ public class GmailSyncService {
 
     private String extractMessageBody(Message msg) {
         try {
-            Object content = msg.getContent();
-            if (content instanceof String s) {
-                return s;
-            } else if (content instanceof MimeMultipart mp) {
-                return extractTextFromMultipart(mp);
+            if (msg.isMimeType("text/plain")) {
+                Object c = msg.getContent();
+                return c != null ? c.toString() : "";
+            } else if (msg.isMimeType("text/html")) {
+                Object c = msg.getContent();
+                return c != null ? org.jsoup.Jsoup.parse(c.toString()).text() : "";
+            } else if (msg.isMimeType("multipart/*")) {
+                Object c = msg.getContent();
+                if (c instanceof MimeMultipart mp) {
+                    return extractTextFromMultipart(mp);
+                }
             }
         } catch (Exception ignored) {}
         return "";
@@ -278,15 +318,24 @@ public class GmailSyncService {
         for (int i = 0; i < mp.getCount(); i++) {
             BodyPart bp = mp.getBodyPart(i);
             if (bp.isMimeType("text/plain")) {
-                sb.append(bp.getContent().toString()).append(" ");
+                Object c = bp.getContent();
+                if (c != null) sb.append(c.toString()).append(" ");
             } else if (bp.isMimeType("text/html")) {
                 // Dacă nu am extras deja text simplu, extragem din HTML
                 if (sb.isEmpty()) {
-                    String html = bp.getContent().toString();
-                    sb.append(org.jsoup.Jsoup.parse(html).text()).append(" ");
+                    Object c = bp.getContent();
+                    if (c != null) {
+                        sb.append(org.jsoup.Jsoup.parse(c.toString()).text()).append(" ");
+                    }
                 }
-            } else if (bp.getContent() instanceof MimeMultipart childMp) {
-                sb.append(extractTextFromMultipart(childMp)).append(" ");
+            } else if (bp.isMimeType("multipart/*")) {
+                Object c = bp.getContent();
+                if (c instanceof MimeMultipart childMp) {
+                    sb.append(extractTextFromMultipart(childMp)).append(" ");
+                }
+            }
+            if (sb.length() > 50000) {
+                break;
             }
         }
         return sb.toString().trim();

@@ -81,4 +81,28 @@ class EmailParserServiceTest {
 
         assertFalse(result.isRecruitmentEmail());
     }
+
+    @Test
+    @DisplayName("Fast prefilter: identifică corect emailurile candidate de recrutare și ignoră spamul/marketingul")
+    void testIsCandidateRecruitmentEmail() {
+        java.util.Set<String> knownCompanies = java.util.Set.of("Google", "Microsoft");
+
+        // Pozitive
+        assertTrue(emailParserService.isCandidateRecruitmentEmail(
+                "jobs-noreply@linkedin.com", "Your application to Endava has been sent", java.util.Collections.emptySet()));
+        assertTrue(emailParserService.isCandidateRecruitmentEmail(
+                "no-reply@greenhouse.io", "Application received", java.util.Collections.emptySet()));
+        assertTrue(emailParserService.isCandidateRecruitmentEmail(
+                "talent@startup.io", "Invitation to technical interview", java.util.Collections.emptySet()));
+        assertTrue(emailParserService.isCandidateRecruitmentEmail(
+                "custom@domain.com", "Important update from Microsoft recruitment team", knownCompanies));
+
+        // Negative (spam, newslettere, alerte)
+        assertFalse(emailParserService.isCandidateRecruitmentEmail(
+                "newsletter@dailytech.com", "Top 10 tech news this week", knownCompanies));
+        assertFalse(emailParserService.isCandidateRecruitmentEmail(
+                "updates@linkedin.com", "Alex and 5 others viewed your profile", knownCompanies));
+        assertFalse(emailParserService.isCandidateRecruitmentEmail(
+                "alerts@ejobs.ro", "Joburi recomandate pentru tine astăzi", knownCompanies));
+    }
 }

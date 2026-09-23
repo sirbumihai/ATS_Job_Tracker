@@ -65,6 +65,74 @@ public class EmailParserService {
         );
     }
 
+    public boolean isCandidateRecruitmentEmail(String sender, String subject, java.util.Set<String> knownCompanies) {
+        if (sender == null) sender = "";
+        if (subject == null) subject = "";
+        String sLower = sender.toLowerCase(Locale.ROOT);
+        String subLower = subject.toLowerCase(Locale.ROOT);
+
+        // LinkedIn: doar aplicări / candidaturi, nu alerte sau recomandări săptămânale de joburi
+        if (sLower.contains("linkedin.com")) {
+            return subLower.contains("applied") || subLower.contains("application") || subLower.contains("aplicat")
+                    || subLower.contains("candidat") || subLower.contains("interview") || subLower.contains("interviu");
+        }
+
+        // Platforme ATS internaționale
+        if (sLower.contains("greenhouse.io") || sLower.contains("lever.co") || sLower.contains("smartrecruiters.com")
+                || sLower.contains("myworkday") || sLower.contains("workday") || sLower.contains("ashbyhq.com")
+                || sLower.contains("taleo.net") || sLower.contains("icims.com") || sLower.contains("recruitee.com")
+                || sLower.contains("workable.com") || sLower.contains("personio") || sLower.contains("bamboohr.com")
+                || sLower.contains("breezy.hr") || sLower.contains("jobvite.com") || sLower.contains("join.com")) {
+            return true;
+        }
+
+        // Platforme locale din România (eJobs, BestJobs, Hipo) - excludem alertele de joburi generice
+        if (sLower.contains("ejobs.ro") || sLower.contains("bestjobs.eu") || sLower.contains("hipo.ro")) {
+            if (subLower.contains("alert") || subLower.contains("recomandat") || subLower.contains("newsletter")) {
+                return false;
+            }
+            return true;
+        }
+
+        // Expeditor HR / Recrutare
+        if (sLower.contains("recruiting") || sLower.contains("recruitment") || sLower.contains("recruiter")
+                || sLower.contains("careers") || sLower.contains("cariere") || sLower.contains("talent")
+                || sLower.contains("hiring") || sLower.contains("jobs@") || sLower.contains("hr@")
+                || sLower.contains("hr.") || sLower.contains("people team") || sLower.contains("resurse umane")) {
+            return true;
+        }
+
+        // Subiect relevant pentru candidaturi / interviuri / oferte / respingeri
+        if (subLower.contains("applied") || subLower.contains("application") || subLower.contains("aplicat")
+                || subLower.contains("aplicație") || subLower.contains("aplicatie") || subLower.contains("candidat")
+                || subLower.contains("candidatur") || subLower.contains("interview") || subLower.contains("interviu")
+                || subLower.contains("screening") || subLower.contains("job offer") || subLower.contains("oferta de angajare")
+                || subLower.contains("ofertă de angajare") || subLower.contains("postul de") || subLower.contains("rolul de")
+                || subLower.contains("career opportunity") || subLower.contains("unfortunately") || subLower.contains("regretam")
+                || subLower.contains("regretăm") || subLower.contains("nu vom continua") || subLower.contains("thank you for applying")
+                || subLower.contains("am primit candidatura") || subLower.contains("multumim pentru") || subLower.contains("mulțumim pentru")
+                || subLower.contains("assessment") || subLower.contains("codility") || subLower.contains("hackerrank")
+                || subLower.contains("recruitment") || subLower.contains("recrutare") || subLower.contains("next steps")
+                || subLower.contains("statusul candidaturii") || subLower.contains("procesul de recrutare")) {
+            return true;
+        }
+
+        // Companie existentă pe bordul utilizatorului
+        if (knownCompanies != null && !knownCompanies.isEmpty()) {
+            for (String comp : knownCompanies) {
+                if (comp != null && comp.trim().length() >= 3) {
+                    String clean = comp.toLowerCase(Locale.ROOT).trim();
+                    if (sLower.contains(clean) || subLower.contains(clean)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+
     private boolean isRecruitmentEmail(String senderLower, String subLower, String combined) {
         if (senderLower.contains("linkedin.com") && (subLower.contains("applied") || subLower.contains("application") || subLower.contains("aplicat"))) return true;
         if (senderLower.contains("greenhouse.io") || senderLower.contains("lever.co") || senderLower.contains("smartrecruiters.com") || senderLower.contains("myworkday") || senderLower.contains("workday")) return true;

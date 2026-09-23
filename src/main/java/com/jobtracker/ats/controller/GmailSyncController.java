@@ -51,7 +51,15 @@ public class GmailSyncController {
             @RequestParam(required = false) UUID userId,
             @Valid @RequestBody GmailSyncRequest request) {
         log.info("[GMAIL CONTROLLER] Cerere de sincronizare primită pentru {}", request.getEmail());
-        GmailSyncResult result = gmailSyncService.syncWithGmail(userId, request);
-        return ResponseEntity.ok(result);
+        try {
+            GmailSyncResult result = gmailSyncService.syncWithGmail(userId, request);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("[GMAIL CONTROLLER] Eroare la sincronizare: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(GmailSyncResult.builder()
+                    .success(false)
+                    .message("Eroare la sincronizare: " + e.getMessage())
+                    .build());
+        }
     }
 }

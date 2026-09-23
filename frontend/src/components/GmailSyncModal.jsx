@@ -68,7 +68,14 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), appPassword: appPassword.trim() })
       });
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      let data;
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        throw new Error(`Serverul a returnat un răspuns neașteptat (status ${res.status}).`);
+      }
+
       setTestResult({
         success: data.success,
         message: data.message || (data.success ? 'Conexiune reușită!' : 'Eroare la conectare')
@@ -76,7 +83,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
     } catch (err) {
       setTestResult({
         success: false,
-        message: 'Eroare de rețea la testarea conexiunii: ' + err.message
+        message: 'Eroare la testarea conexiunii: ' + err.message
       });
     } finally {
       setIsTesting(false);
@@ -120,7 +127,14 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
         })
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      let data;
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        throw new Error(`Serverul a returnat codul ${res.status} (${res.statusText || 'Timeout proxy/rețea'}). Verifică dacă sincronizarea s-a executat.`);
+      }
+
       setSyncResult(data);
 
       if (data.success && onSyncComplete) {
