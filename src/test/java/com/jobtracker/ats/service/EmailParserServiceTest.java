@@ -104,5 +104,39 @@ class EmailParserServiceTest {
                 "updates@linkedin.com", "Alex and 5 others viewed your profile", knownCompanies));
         assertFalse(emailParserService.isCandidateRecruitmentEmail(
                 "alerts@ejobs.ro", "Joburi recomandate pentru tine astăzi", knownCompanies));
+        assertFalse(emailParserService.isCandidateRecruitmentEmail(
+                "support@revolut.com", "Extras de cont și confirmare card", knownCompanies));
+    }
+
+    @Test
+    @DisplayName("Protecție anti-false-offer: un refuz care conține 'nu putem oferi' este clasificat REJECTED, NU OFFER")
+    void testRejectionWithOfferWordIsNotOffer() {
+        String sender = "HR Team <hr@techcompany.com>";
+        String subject = "Update privind candidatura ta la TechCompany";
+        String body = "Bună ziua, vă mulțumim pentru interes. Din păcate, după analizarea candidaturilor, nu vă putem oferi poziția în acest moment.";
+
+        EmailParserService.ParsedJobEmail result = emailParserService.parse(sender, subject, body);
+
+        assertTrue(result.isRecruitmentEmail());
+        assertEquals(ApplicationStatus.REJECTED, result.detectedStatus(), "Nu trebuie să clasifice drept ofertă o scrisoare de respingere!");
+        assertNotEquals(ApplicationStatus.OFFER_RECEIVED, result.detectedStatus());
+    }
+
+    @Test
+    @DisplayName("Protecție anti-false-positives: facturile, comenzile și alertele sunt eliminate complet")
+    void testIgnoreCommercialAndFinancialEmails() {
+        String sender1 = "comenzi@emag.ro";
+        String subject1 = "Confirmare comandă și factură fiscală";
+        String body1 = "Comanda ta a fost predată curierului Sameday.";
+
+        EmailParserService.ParsedJobEmail res1 = emailParserService.parse(sender1, subject1, body1);
+        assertFalse(res1.isRecruitmentEmail());
+
+        String sender2 = "newsletter@altex.ro";
+        String subject2 = "Oferta săptămânii: reducere 20% la laptopuri";
+        String body2 = "Vezi cele mai tari reduceri!";
+
+        EmailParserService.ParsedJobEmail res2 = emailParserService.parse(sender2, subject2, body2);
+        assertFalse(res2.isRecruitmentEmail());
     }
 }

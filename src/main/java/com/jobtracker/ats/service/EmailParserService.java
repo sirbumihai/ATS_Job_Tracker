@@ -1,7 +1,10 @@
 package com.jobtracker.ats.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jobtracker.ats.entity.Application.ApplicationStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Locale;
@@ -12,6 +15,19 @@ import java.util.regex.Pattern;
 @Slf4j
 public class EmailParserService {
 
+    private final OpenAiLlmService openAiLlmService;
+    private final ObjectMapper objectMapper;
+
+    @Autowired(required = false)
+    public EmailParserService(OpenAiLlmService openAiLlmService, ObjectMapper objectMapper) {
+        this.openAiLlmService = openAiLlmService;
+        this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+    }
+
+    public EmailParserService() {
+        this(null, new ObjectMapper());
+    }
+
     public record ParsedJobEmail(
             boolean isRecruitmentEmail,
             String companyName,
@@ -20,6 +36,39 @@ public class EmailParserService {
             String confidence,
             String snippet
     ) {}
+
+    // 1. Zgomot comercial / marketing / finante / comenzi (0 tokens - eliminare instantanee)
+    private static final Pattern NON_RECRUITMENT_PATTERN = Pattern.compile(
+            "(?i)\\b(?:factur[aă]|invoice|chitan[tț][aă]|comanda ta|awb|curier|sameday|fan courier|" +
+            "dpd|gls|livrare|tracking number|revolut|banca transilvania|ing bank|raiffeisen|bcr|brd|" +
+            "paypal|extras de cont|card de credit|imprumut|credit nevoi personale|" +
+            "superbet|betano|unibet|pacanele|cazinou|" +
+            "reducere|reducerea de|voucher|cod promotional|promo[tț]ie|black friday|" +
+            "oferta s[aă]pt[aă]m[aă]nii|ofert[aă] special[aă]|ofert[aă] exclusiv[aă]|discount|cashback|" +
+            "abonament|re[iî]nnoire abonament|netflix|spotify|youtube premium|google cloud alert|" +
+            "security alert|codul t[aă]u de securitate|resetare parol[aă]|confirm[aă] contul|" +
+            "who viewed your profile|a vizualizat profilul|a ad[aă]ugat un articol|" +
+            "job alert|alert[aă] de joburi|noi joburi pentru tine|jobs you may be interested in|" +
+            "recomandate pentru tine|top oportunit[aă][tț]i|newsletter|dezabonare|unsubscribe)\\b"
+    );
+
+    // 2. Clauze de excludere pentru false oferte (ex: respingeri sau promoții care conțin 'oferi')
+    private static final Pattern FALSE_OFFER_PATTERN = Pattern.compile(
+            "(?i)\\b(?:nu (?:putem|v[aă] putem|avem posibilitatea) (?:s[aă] )?(?:[iî][tț]i )?oferim|" +
+            "unable to offer|cannot offer|can't offer|not able to offer|decided not to offer|" +
+            "oferte (?:noi|recomandate|disponibile|de joburi|s[aă]pt[aă]m[aă]nale)|" +
+            "ofert[aă] (?:special[aă]|promo[tț]ional[aă]|comercial[aă]|de cursuri|de abonament)|" +
+            "din p[aă]cate|din pacate|regret[aă]m|regretam|unfortunately|other candidates|al[tț]i candida[tț]i)\\b"
+    );
+
+    // 3. Oferte autentice și clare de angajare
+    private static final Pattern GENUINE_OFFER_PATTERN = Pattern.compile(
+            "(?i)\\b(?:formal (?:job )?offer|official (?:job )?offer|congratulations on your offer|" +
+            "pleased to offer you the (?:position|role)|excited to offer you the (?:position|role)|" +
+            "oferta (?:noastr[aă] )?ferm[aă] de angajare|ofert[aă] de angajare pentru pozi[tț]ia|" +
+            "ne bucur[aă]m s[aă] [iî][tț]i transmitem oferta|contractul individual de munc[aă]|" +
+            "letter of employment offer)\\b"
+    );
 
     // Regex-uri pentru extragere Companie din Subiecte uzuale ATS
     private static final Pattern PATTERN_LINKEDIN_1 = Pattern.compile("(?i)(?:application to|aplicat la)\\s+([^\\n\\r–—|]+?)(?:\\s+has been|\\s+a fost|\\s+for|$)");
@@ -33,6 +82,106 @@ public class EmailParserService {
         if (bodyText == null) bodyText = "";
         if (sender == null) sender = "";
 
+        // Pasul 1: Verificare eliminare zgomot (0 tokens)
+        if (isDefiniteNonRecruitmentEmail(sender, subject)) {
+            return new ParsedJobEmail(false, null, null, null, "NONE", null);
+        }
+
+        // Pasul 2: Extragere snippet scurt (max 350 caractere) pentru apel AI cu cost minim de tokeni
+        String snippet = bodyText.length() > 350 ? bodyText.substring(0, 350) : bodyText;
+
+        // Pasul 3: Clasificare inteligentă AI (dacă e disponibil)
+        ParsedJobEmail aiResult = classifyWithAi(sender, subject, snippet);
+        if (aiResult != null) {
+            return aiResult;
+        }
+
+        // Pasul 4: Fallback deterministic robust & precis
+        return parseDeterministic(sender, subject, bodyText);
+    }
+
+    private boolean isDefiniteNonRecruitmentEmail(String sender, String subject) {
+        String combined = (sender + " " + subject).toLowerCase(Locale.ROOT);
+        return NON_RECRUITMENT_PATTERN.matcher(combined).find();
+    }
+
+    private ParsedJobEmail classifyWithAi(String sender, String subject, String bodySnippet) {
+        if (openAiLlmService == null || !openAiLlmService.isConfigured()) {
+            return null;
+        }
+
+        try {
+            String systemPrompt = """
+                    Ești un clasificator ATS strict. Analizează emailul și determină dacă este legat de procesul de selecție/angajare al destinatarului.
+                    Răspunde DOAR cu JSON:
+                    {
+                      "isRecruitment": boolean,
+                      "company": "NumeCompanie sau null",
+                      "jobTitle": "TitluRol sau null",
+                      "status": "APPLIED" | "INTERVIEWING" | "REJECTED" | "OFFER_RECEIVED" | "NONE"
+                    }
+                    REGULI PRECISE:
+                    1. isRecruitment este true DOAR dacă candidatul a aplicat, participă la interviu, a fost respins sau a primit ofertă de angajare.
+                    2. isRecruitment este FALSE pentru: newslettere, alerte joburi recomandate, oferte de reducere/promoții, confirmări comenzi/bănci.
+                    3. status="OFFER_RECEIVED" se setează DOAR dacă este o ofertă oficială de muncă/contract. NICIODATĂ pentru reduceri, promoții sau respingeri ("nu vă putem oferi")!
+                    4. status="INTERVIEWING" pentru invitație la interviu, screening call, teste tehnice.
+                    5. status="REJECTED" pentru respingere/refuz.
+                    6. status="APPLIED" pentru confirmare primire candidatură.
+                    """;
+
+            String userPrompt = String.format("EXPEDITOR: %s\nSUBIECT: %s\nSNIPPET: %s", sender, subject, bodySnippet);
+
+            // Generare compactă (max 120 tokens, temperature 0.0) pentru cost minim și viteză instantanee
+            String aiJson = openAiLlmService.generateCompletion(systemPrompt, userPrompt, 120, 0.0);
+            if (aiJson != null && !aiJson.isBlank()) {
+                String cleaned = aiJson.replaceAll("```json", "").replaceAll("```", "").trim();
+                JsonNode root = objectMapper.readTree(cleaned);
+                boolean isRec = root.path("isRecruitment").asBoolean(false);
+                if (!isRec) {
+                    return new ParsedJobEmail(false, null, null, null, "AI_REJECTED", null);
+                }
+
+                String statusStr = root.path("status").asText("APPLIED");
+                ApplicationStatus status = switch (statusStr.toUpperCase(Locale.ROOT)) {
+                    case "OFFER_RECEIVED" -> ApplicationStatus.OFFER_RECEIVED;
+                    case "INTERVIEWING" -> ApplicationStatus.INTERVIEWING;
+                    case "REJECTED" -> ApplicationStatus.REJECTED;
+                    default -> ApplicationStatus.APPLIED;
+                };
+
+                // Protecție anti-false-offer chiar și pentru AI
+                if (status == ApplicationStatus.OFFER_RECEIVED && FALSE_OFFER_PATTERN.matcher((subject + " " + bodySnippet).toLowerCase(Locale.ROOT)).find()) {
+                    status = ApplicationStatus.REJECTED;
+                }
+
+                String comp = root.path("company").asText(null);
+                if ("null".equalsIgnoreCase(comp) || comp == null || comp.isBlank()) {
+                    comp = extractCompany(sender, subject, bodySnippet);
+                }
+
+                String title = root.path("jobTitle").asText(null);
+                if ("null".equalsIgnoreCase(title) || title == null || title.isBlank()) {
+                    title = extractJobTitle(subject, bodySnippet);
+                }
+
+                String snippet = subject.length() > 80 ? subject.substring(0, 80) + "..." : subject;
+
+                return new ParsedJobEmail(
+                        true,
+                        comp != null ? cleanCompany(comp) : "Companie Parteneră",
+                        title != null && !title.isBlank() ? title.trim() : "Software Position",
+                        status,
+                        "AI_HIGH",
+                        snippet
+                );
+            }
+        } catch (Exception e) {
+            log.warn("[AI EMAIL PARSER] Clasificarea AI nu a putut fi finalizată ({}), folosim fallback deterministic.", e.getMessage());
+        }
+        return null;
+    }
+
+    private ParsedJobEmail parseDeterministic(String sender, String subject, String bodyText) {
         String subLower = subject.toLowerCase(Locale.ROOT);
         String bodyLower = bodyText.toLowerCase(Locale.ROOT);
         String senderLower = sender.toLowerCase(Locale.ROOT);
@@ -68,6 +217,12 @@ public class EmailParserService {
     public boolean isCandidateRecruitmentEmail(String sender, String subject, java.util.Set<String> knownCompanies) {
         if (sender == null) sender = "";
         if (subject == null) subject = "";
+
+        // Eliminare instantanee dacă se potrivește cu zgomot comercial, bănci, facturi sau alerte
+        if (isDefiniteNonRecruitmentEmail(sender, subject)) {
+            return false;
+        }
+
         String sLower = sender.toLowerCase(Locale.ROOT);
         String subLower = subject.toLowerCase(Locale.ROOT);
 
@@ -132,7 +287,6 @@ public class EmailParserService {
         return false;
     }
 
-
     private boolean isRecruitmentEmail(String senderLower, String subLower, String combined) {
         if (senderLower.contains("linkedin.com") && (subLower.contains("applied") || subLower.contains("application") || subLower.contains("aplicat"))) return true;
         if (senderLower.contains("greenhouse.io") || senderLower.contains("lever.co") || senderLower.contains("smartrecruiters.com") || senderLower.contains("myworkday") || senderLower.contains("workday")) return true;
@@ -151,30 +305,44 @@ public class EmailParserService {
     private ApplicationStatus classifyStatus(String subLower, String bodyLower) {
         String combined = subLower + " " + bodyLower;
 
-        // 1. Ofertă de angajare
-        if (subLower.contains("job offer") || subLower.contains("offer letter") || subLower.contains("oferta de angajare") || subLower.contains("ofertă de angajare") ||
-            combined.contains("pleased to offer you") || combined.contains("congratulations on your offer") || combined.contains("ne face o deosebita placere sa iti oferim")) {
+        // Verificăm dacă este respingere (sau mențiune că nu putem oferi o poziție)
+        boolean isRejection = combined.contains("unfortunately") || combined.contains("not moving forward")
+                || combined.contains("not be moving forward") || combined.contains("nu vom continua")
+                || combined.contains("regretam sa te informam") || combined.contains("regretăm să te informăm")
+                || combined.contains("after careful consideration") || combined.contains("other candidates")
+                || combined.contains("alți candidați") || combined.contains("alti candidati")
+                || combined.contains("decided to proceed with") || combined.contains("candidatura ta nu a fost selectata")
+                || combined.contains("nu a fost selectată") || combined.contains("nu a fost selectata")
+                || combined.contains("nu vă putem oferi") || combined.contains("nu va putem oferi")
+                || combined.contains("nu putem oferi") || combined.contains("unable to offer")
+                || combined.contains("cannot offer");
+
+        // 1. Ofertă de angajare (STRICTĂ: interzisă dacă e respingere sau dacă apare un context de ofertă falsă)
+        boolean hasGenuineOffer = GENUINE_OFFER_PATTERN.matcher(combined).find()
+                || ((subLower.contains("job offer") || subLower.contains("formal offer") || subLower.contains("contract de muncă") || subLower.contains("contract de munca"))
+                    && !FALSE_OFFER_PATTERN.matcher(combined).find());
+
+        if (hasGenuineOffer && !isRejection) {
             return ApplicationStatus.OFFER_RECEIVED;
         }
 
         // 2. Invitație la interviu / screening
-        if (subLower.contains("interview") || subLower.contains("interviu") || subLower.contains("screening call") ||
-            combined.contains("invitation to interview") || combined.contains("invitatie la interviu") || combined.contains("invitație la interviu") ||
-            combined.contains("schedule a call") || combined.contains("schedule an interview") || combined.contains("programare interviu") ||
-            combined.contains("technical interview") || combined.contains("interviu tehnic") || combined.contains("discutie tehnica") ||
-            combined.contains("video call") || combined.contains("availability for a chat") || combined.contains("next round")) {
+        if (subLower.contains("interview") || subLower.contains("interviu") || subLower.contains("screening call")
+                || combined.contains("invitation to interview") || combined.contains("invitatie la interviu")
+                || combined.contains("invitație la interviu") || combined.contains("schedule a call")
+                || combined.contains("schedule an interview") || combined.contains("programare interviu")
+                || combined.contains("technical interview") || combined.contains("interviu tehnic")
+                || combined.contains("discutie tehnica") || combined.contains("video call")
+                || combined.contains("availability for a chat") || combined.contains("next round")) {
             return ApplicationStatus.INTERVIEWING;
         }
 
         // 3. Respingere
-        if (combined.contains("unfortunately") || combined.contains("not moving forward") || combined.contains("not be moving forward") ||
-            combined.contains("nu vom continua") || combined.contains("regretam sa te informam") || combined.contains("regretăm să te informăm") ||
-            combined.contains("after careful consideration") || combined.contains("other candidates") || combined.contains("decided to proceed with") ||
-            combined.contains("candidatura ta nu a fost selectata") || combined.contains("nu a fost selectată")) {
+        if (isRejection) {
             return ApplicationStatus.REJECTED;
         }
 
-        // 4. Confirmare aplicare (Default pentru email de aplicare)
+        // 4. Confirmare aplicare (Default)
         return ApplicationStatus.APPLIED;
     }
 

@@ -39,8 +39,16 @@ public class OpenAiLlmService {
         this.defaultModel = defaultModel;
     }
 
+    public boolean isConfigured() {
+        return apiKey != null && !apiKey.isBlank() && !apiKey.contains("dummy");
+    }
+
     public String generateCompletion(String systemPrompt, String userPrompt) {
-        if (apiKey == null || apiKey.isBlank()) {
+        return generateCompletion(systemPrompt, userPrompt, 8192, 0.0);
+    }
+
+    public String generateCompletion(String systemPrompt, String userPrompt, int maxTokens, double temperature) {
+        if (!isConfigured()) {
             throw new IllegalStateException("Cheia API Groq (SPRING_AI_GROQ_API_KEY) nu este configurata in mediu.");
         }
 
@@ -66,8 +74,8 @@ public class OpenAiLlmService {
                                 Map.of("role", "system", "content", systemPrompt),
                                 Map.of("role", "user", "content", userPrompt)
                         ),
-                        "temperature", 0.0,
-                        "max_tokens", 8192
+                        "temperature", temperature,
+                        "max_tokens", maxTokens
                 );
 
                 @SuppressWarnings("unchecked")
