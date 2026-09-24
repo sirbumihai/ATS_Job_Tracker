@@ -12,7 +12,8 @@ import {
   Search,
   FileText,
   FolderKanban,
-  Files
+  Files,
+  FileSignature
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -91,6 +92,18 @@ export default function Navbar({
           >
             <FileText className={`w-3.5 h-3.5 ${activeTab === 'cv_studio' ? 'text-purple-400' : 'text-purple-600'}`} />
             Studio CV
+          </button>
+
+          <button
+            onClick={() => setActiveTab('cover_letter')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+              activeTab === 'cover_letter' 
+                ? 'bg-black text-white shadow-sm' 
+                : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+            }`}
+          >
+            <FileSignature className={`w-3.5 h-3.5 ${activeTab === 'cover_letter' ? 'text-blue-400' : 'text-blue-600'}`} />
+            Cover Letter
           </button>
         </div>
 
@@ -189,6 +202,15 @@ export default function Navbar({
             >
               <FileText className={`w-3.5 h-3.5 ${activeTab === 'cv_studio' ? 'text-purple-400' : 'text-purple-600'}`} />
               Studio CV
+            </button>
+            <button
+              onClick={() => { setActiveTab('cover_letter'); setMobileMenuOpen(false); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shrink-0 ${
+                activeTab === 'cover_letter' ? 'bg-black text-white' : 'text-gray-700'
+              }`}
+            >
+              <FileSignature className={`w-3.5 h-3.5 ${activeTab === 'cover_letter' ? 'text-blue-400' : 'text-blue-600'}`} />
+              Scrisoare
             </button>
           </div>
         </div>

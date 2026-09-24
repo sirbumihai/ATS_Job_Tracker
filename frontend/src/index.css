@@ -118,18 +118,20 @@ h1, h2, h3, h4, h5, h6 {
     visibility: hidden;
   }
   
-  #cv-preview-sheet, #cv-preview-sheet * {
+  #cv-preview-sheet, #cv-preview-sheet *,
+  #cover-letter-paper, #cover-letter-paper * {
     visibility: visible;
   }
   
-  #cv-preview-sheet {
+  #cv-preview-sheet,
+  #cover-letter-paper {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
     max-width: 210mm !important;
     margin: 0 auto !important;
-    padding: 12mm 15mm !important;
+    padding: 15mm 20mm !important;
     box-shadow: none !important;
     border: none !important;
     transform: none !important;

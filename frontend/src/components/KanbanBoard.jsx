@@ -30,7 +30,8 @@ import {
   StickyNote,
   X,
   Save,
-  Mail
+  Mail,
+  FileSignature
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 import GmailSyncModal from './GmailSyncModal';
@@ -48,6 +49,7 @@ export default function KanbanBoard({
   onDeleteApplication,
   onApplicationUpdated,
   onEditCvInStudio,
+  onOpenCoverLetter,
   onOpenAddJob,
   onRefreshApplications
 }) {
@@ -1114,6 +1116,21 @@ export default function KanbanBoard({
                                 <Eye className="w-3 h-3 text-indigo-600" />
                                 <span>Fisa</span>
                               </button>
+
+                              {onOpenCoverLetter && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOpenCoverLetter(app.id);
+                                  }}
+                                  className="flex-1 py-1.5 px-2 rounded-lg border border-blue-100 hover:border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-950 text-[11px] font-extrabold flex items-center justify-center gap-1 transition shadow-2xs cursor-pointer"
+                                  title="Generează Scrisoare de Intenție pentru acest job"
+                                >
+                                  <FileSignature className="w-3 h-3 text-blue-600" />
+                                  <span>Scrisoare</span>
+                                </button>
+                              )}
                             </div>
                           </div>
 
