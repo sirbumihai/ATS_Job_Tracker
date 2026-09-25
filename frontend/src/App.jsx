@@ -6,6 +6,7 @@ import CvLibrary from './components/CvLibrary';
 import CvStudio from './components/CvStudio';
 import JobSearchPage from './components/JobSearchPage';
 import CoverLetterGenerator from './components/CoverLetterGenerator';
+import GithubReadmeStudio from './components/GithubReadmeStudio';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
 
 export default function App() {
@@ -16,15 +17,17 @@ export default function App() {
       if (path.startsWith('/cv-library') || path.startsWith('/cv_library')) return 'cv_library';
       if (path.startsWith('/cv-studio') || path.startsWith('/cv_studio')) return 'cv_studio';
       if (path.startsWith('/cover-letter') || path.startsWith('/cover_letter')) return 'cover_letter';
+      if (path.startsWith('/github-readme') || path.startsWith('/github_readme') || path.startsWith('/readme')) return 'github_readme';
       if (path.startsWith('/tracker') || path.startsWith('/kanban')) return 'tracker';
       const hash = window.location.hash.toLowerCase();
       if (hash.includes('job-search') || hash.includes('jobs')) return 'job_search';
       if (hash.includes('cv-library') || hash.includes('cv_library')) return 'cv_library';
       if (hash.includes('cv-studio') || hash.includes('cv_studio')) return 'cv_studio';
       if (hash.includes('cover-letter') || hash.includes('cover_letter')) return 'cover_letter';
+      if (hash.includes('github-readme') || hash.includes('github_readme') || hash.includes('readme')) return 'github_readme';
       if (hash.includes('tracker') || hash.includes('kanban')) return 'tracker';
       const stored = localStorage.getItem('ats_active_tab');
-      if (stored === 'job_search' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'tracker') return stored;
+      if (stored === 'job_search' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
       if (stored === 'kanban') return 'tracker';
     }
     return 'tracker';
@@ -47,6 +50,7 @@ export default function App() {
       if (tab === 'cv_library') targetPath = '/cv-library';
       if (tab === 'cv_studio') targetPath = '/cv-studio';
       if (tab === 'cover_letter') targetPath = '/cover-letter';
+      if (tab === 'github_readme') targetPath = '/github-readme';
       
       if (window.location.pathname !== targetPath) {
         window.history.pushState({ tab }, '', targetPath);
@@ -87,6 +91,9 @@ export default function App() {
       } else if (path.startsWith('/cover-letter') || path.startsWith('/cover_letter')) {
         setActiveTab('cover_letter');
         localStorage.setItem('ats_active_tab', 'cover_letter');
+      } else if (path.startsWith('/github-readme') || path.startsWith('/github_readme') || path.startsWith('/readme')) {
+        setActiveTab('github_readme');
+        localStorage.setItem('ats_active_tab', 'github_readme');
       } else {
         setActiveTab('tracker');
         localStorage.setItem('ats_active_tab', 'tracker');
@@ -393,6 +400,13 @@ export default function App() {
             initialApplicationId={selectedCoverLetterAppId}
             onNavigateToStudio={() => handleTabChange('cv_studio')}
             onNavigateToKanban={() => handleTabChange('tracker')}
+          />
+        )}
+
+        {/* TAB 6: GITHUB PROFILE README STUDIO (NON-AI & AUTHENTIC) */}
+        {activeTab === 'github_readme' && (
+          <GithubReadmeStudio 
+            currentUser={currentUser}
           />
         )}
 

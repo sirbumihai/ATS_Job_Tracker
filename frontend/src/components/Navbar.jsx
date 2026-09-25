@@ -13,7 +13,8 @@ import {
   FileText,
   FolderKanban,
   Files,
-  FileSignature
+  FileSignature,
+  Github
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -104,6 +105,18 @@ export default function Navbar({
           >
             <FileSignature className={`w-3.5 h-3.5 ${activeTab === 'cover_letter' ? 'text-blue-400' : 'text-blue-600'}`} />
             Cover Letter
+          </button>
+
+          <button
+            onClick={() => setActiveTab('github_readme')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+              activeTab === 'github_readme' 
+                ? 'bg-black text-white shadow-sm' 
+                : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+            }`}
+          >
+            <Github className={`w-3.5 h-3.5 ${activeTab === 'github_readme' ? 'text-emerald-400' : 'text-gray-900'}`} />
+            GitHub README
           </button>
         </div>
 
@@ -211,6 +224,15 @@ export default function Navbar({
             >
               <FileSignature className={`w-3.5 h-3.5 ${activeTab === 'cover_letter' ? 'text-blue-400' : 'text-blue-600'}`} />
               Scrisoare
+            </button>
+            <button
+              onClick={() => { setActiveTab('github_readme'); setMobileMenuOpen(false); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shrink-0 ${
+                activeTab === 'github_readme' ? 'bg-black text-white' : 'text-gray-700'
+              }`}
+            >
+              <Github className={`w-3.5 h-3.5 ${activeTab === 'github_readme' ? 'text-emerald-400' : 'text-gray-900'}`} />
+              GitHub
             </button>
           </div>
         </div>
