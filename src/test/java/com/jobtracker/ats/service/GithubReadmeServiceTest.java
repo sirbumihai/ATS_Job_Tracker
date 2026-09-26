@@ -108,12 +108,18 @@ class GithubReadmeServiceTest {
 
         assertNotNull(response);
         assertNotNull(response.fullMarkdown());
-        assertTrue(response.fullMarkdown().contains("Hi, I'm Mihai Sîrbu"));
+        assertTrue(response.fullMarkdown().contains("# Mihai Sîrbu"));
         assertTrue(response.fullMarkdown().contains("Java_21"));
         assertTrue(response.fullMarkdown().contains("Spring_Boot_3"));
         assertTrue(response.fullMarkdown().contains("ATS Job Tracker"));
         assertTrue(response.fullMarkdown().contains("github-readme-stats"));
         assertFalse(response.antiAiHighlights().isEmpty());
+        // Verify 100% emoji-free
+        assertFalse(response.fullMarkdown().contains("👋"));
+        assertFalse(response.fullMarkdown().contains("🚀"));
+        assertFalse(response.fullMarkdown().contains("⚡"));
+        assertFalse(response.fullMarkdown().contains("🔨"));
+        assertFalse(response.fullMarkdown().contains("👉"));
     }
 
     @Test
@@ -178,5 +184,25 @@ class GithubReadmeServiceTest {
         assertTrue(response.fullMarkdown().contains("ATS Job Tracker Engine"));
         assertTrue(response.fullMarkdown().contains("Backend & Distributed Systems Engineer"));
         assertEquals(2, response.antiAiHighlights().size());
+        // Verify 100% emoji-free
+        assertFalse(response.fullMarkdown().contains("👋"));
+        assertFalse(response.fullMarkdown().contains("🚀"));
+        assertFalse(response.fullMarkdown().contains("⚡"));
+        assertFalse(response.fullMarkdown().contains("🔨"));
+        assertFalse(response.fullMarkdown().contains("👉"));
+    }
+
+    @Test
+    @DisplayName("stripEmojis elimină toate emoticoanele și simbolurile juvenile din text")
+    void testStripEmojis() {
+        String input = "Hi 👋! Building 🚀 high-throughput systems ⚡ with tools 🛠️ and charts 📊. Check 👉 [repo](url)!";
+        String cleaned = GithubReadmeService.stripEmojis(input);
+        assertFalse(cleaned.contains("👋"));
+        assertFalse(cleaned.contains("🚀"));
+        assertFalse(cleaned.contains("⚡"));
+        assertFalse(cleaned.contains("🛠"));
+        assertFalse(cleaned.contains("📊"));
+        assertFalse(cleaned.contains("👉"));
+        assertTrue(cleaned.contains("Building high-throughput systems with tools and charts. Check [repo](url)!"));
     }
 }

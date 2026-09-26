@@ -160,10 +160,11 @@ export default function GithubReadmeStudio({ currentUser }) {
   const [generating, setGenerating] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [antiAiTips, setAntiAiTips] = useState([
-    'Zero formulări artificiale pompoase ("passionate visionary", "transformative synergy").',
-    'Metrici inginerești reale (latență P99, cereri concurente, indici de baze de date).',
-    'Insigne Shields.io flat-square minimaliste și lizibile.',
-    'Focus pe arhitectură software concretă și proiecte verificabile pe GitHub.'
+    'Design Senior 100% Non-AI: Fără emoticoane (fără rachete, unelte, fețe zâmbitoare sau degete indicatoare).',
+    'Structură inginerească clară: Focus activ, stack tehnic grupat pe categorii, proiecte cu metrici concrete.',
+    'Zero clișee corporatiste ("passionate developer", "crafting seamless experiences", "transformative synergy").',
+    'Insigne Shields.io flat-square discrete cu logo-uri oficiale de brand.',
+    'Metrici tehnice măsurabile (latență P99, cereri concurente, indici de baze de date, acoperire de teste).'
   ]);
 
   // Load CV profiles from backend
@@ -242,53 +243,80 @@ export default function GithubReadmeStudio({ currentUser }) {
     );
   };
 
-  // Build Badges String
+  // Emoji stripper helper
+  const stripEmojis = (str) => {
+    if (!str) return '';
+    return str
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}]/gu, '')
+      .replace(/[👋🚀⚡🛠📊📫👉🔨🔭📚💬✨]/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  };
+
+  // Build Badges String grouped by domain categories
   const badgesString = useMemo(() => {
+    const sections = [];
     const allBadgesMap = new Map();
     Object.values(TECH_CATALOG).flat().forEach(t => allBadgesMap.set(t.name, t.badge));
-    return selectedTechs
-      .map(name => allBadgesMap.get(name) || `![${name}](https://img.shields.io/badge/${encodeURIComponent(name)}-1e293b?style=flat-square)`)
-      .join(' ');
+
+    Object.entries(TECH_CATALOG).forEach(([category, techs]) => {
+      const selectedInCategory = techs.filter(t => selectedTechs.includes(t.name));
+      if (selectedInCategory.length > 0) {
+        const badgesRow = selectedInCategory.map(t => t.badge).join(' ');
+        sections.push(`#### ${category}\n${badgesRow}`);
+      }
+    });
+
+    const knownTechNames = Object.values(TECH_CATALOG).flat().map(t => t.name);
+    const customTechs = selectedTechs.filter(t => !knownTechNames.includes(t));
+    if (customTechs.length > 0) {
+      const customRow = customTechs
+        .map(name => `![${name}](https://img.shields.io/badge/${encodeURIComponent(name)}-1e293b?style=flat-square)`)
+        .join(' ');
+      sections.push(`#### Instrumente & Biblioteci\n${customRow}`);
+    }
+
+    return sections.join('\n\n');
   }, [selectedTechs]);
 
-  // Generate full markdown dynamically
+  // Generate full markdown dynamically with senior typography and 0 emojis
   const generatedMarkdown = useMemo(() => {
     const cleanUser = githubUsername.trim() || 'username';
 
     const lines = [];
-    lines.push(`# Hi, I'm ${candidateName} 👋\n`);
-    lines.push(`### **${headline}**\n`);
-    lines.push(`${bioText}\n`);
+    lines.push(`# ${candidateName}\n`);
+    lines.push(`**${headline}**\n`);
+    if (bioText) lines.push(`${bioText}\n`);
 
     if (techPhilosophy) {
       lines.push(`> **Engineering Mindset**: ${techPhilosophy}\n`);
     }
 
     lines.push('---\n');
-    lines.push('### ⚡ **What I\'m Doing**\n');
-    if (building) lines.push(`- 🔭 **Currently Building**: ${building}`);
-    if (learning) lines.push(`- 📚 **Currently Exploring**: ${learning}`);
-    if (collaborating) lines.push(`- 💬 **Ask me about**: ${collaborating}`);
+    lines.push('## Current Focus\n');
+    if (building) lines.push(`- **Active Development**: ${building}`);
+    if (learning) lines.push(`- **Technical Deep-Dives**: ${learning}`);
+    if (collaborating) lines.push(`- **Architecture & Discussions**: ${collaborating}`);
     lines.push('\n---\n');
 
-    lines.push('### 🛠 **Tech Stack & Tooling**\n');
+    lines.push('## Tech Stack & Tooling\n');
     lines.push(`${badgesString}\n`);
 
     if (projects.length > 0) {
       lines.push('---\n');
-      lines.push('### 🚀 **Featured Engineering Projects**\n');
+      lines.push('## Featured Engineering Projects\n');
       projects.forEach(p => {
-        lines.push(`### 🔨 **${p.title}**`);
+        lines.push(`### ${p.title}`);
         if (p.techStack) lines.push(`\`${p.techStack}\`\n`);
         p.bullets.forEach(b => lines.push(`- ${b}`));
-        if (p.linkUrl) lines.push(`\n👉 [Explore Code Repository](${p.linkUrl})`);
+        if (p.linkUrl) lines.push(`\n[View Repository](${p.linkUrl})\n`);
         lines.push('');
       });
     }
 
     if (includeStats || includeLanguages || includeStreak) {
       lines.push('---\n');
-      lines.push('### 📊 **GitHub Activity & Stats**\n');
+      lines.push('## GitHub Metrics\n');
       lines.push('<p align="center">');
       if (includeStats) {
         lines.push(`  <img src="https://github-readme-stats.vercel.app/api?username=${cleanUser}&show_icons=true&theme=${statsTheme}&hide_border=true&count_private=true" alt="GitHub Stats" height="155" />`);
@@ -306,14 +334,14 @@ export default function GithubReadmeStudio({ currentUser }) {
     }
 
     lines.push('---\n');
-    lines.push('### 📫 **Get in Touch**\n');
+    lines.push('## Connect\n');
     const contactBadges = [];
     if (linkedinUrl) contactBadges.push(`[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat-square&logo=linkedin&logoColor=white)](${linkedinUrl})`);
-    if (email) contactBadges.push(`[![Email](https://img.shields.io/badge/Email-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:${email})`);
+    if (email) contactBadges.push(`[![Email](https://img.shields.io/badge/Email-${encodeURIComponent(email)}-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:${email})`);
     if (portfolioUrl) contactBadges.push(`[![Portfolio](https://img.shields.io/badge/Portfolio-000000?style=flat-square&logo=aboutdotme&logoColor=white)](${portfolioUrl})`);
     lines.push(contactBadges.join(' '));
 
-    return lines.join('\n');
+    return stripEmojis(lines.join('\n'));
   }, [
     candidateName, headline, bioText, techPhilosophy,
     building, learning, collaborating,
@@ -410,11 +438,11 @@ export default function GithubReadmeStudio({ currentUser }) {
             </h2>
             <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              100% Non-AI & Recruiter-Proof
+              Senior Clean · Zero Emoticoane · 100% Non-AI
             </span>
           </div>
           <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-3xl">
-            Creează un README.md autentic, profesional și non-AI pentru profilul tău de GitHub. Fără clișee corporatiste, axat pe arhitectură reală, metrici măsurabile și stack tehnic verificabil.
+            Creează un README.md autentic, sobru și non-AI pentru profilul tău de GitHub. Fără emoticoane juvenile sau clișee corporatiste, axat pe arhitectură reală, metrici măsurabile și stack tehnic structurat pe domenii.
           </p>
         </div>
 
@@ -833,6 +861,7 @@ export default function GithubReadmeStudio({ currentUser }) {
                     h1: ({node, ...props}) => <h1 className={`text-2xl sm:text-3xl font-bold pb-2 border-b mb-4 ${previewTheme === 'dark' ? 'text-white border-[#30363d]' : 'text-gray-900 border-gray-200'}`} {...props} />,
                     h2: ({node, ...props}) => <h2 className={`text-xl font-bold pb-1 border-b mt-6 mb-3 ${previewTheme === 'dark' ? 'text-white border-[#30363d]' : 'text-gray-900 border-gray-200'}`} {...props} />,
                     h3: ({node, ...props}) => <h3 className={`text-base font-bold mt-4 mb-2 ${previewTheme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`} {...props} />,
+                    h4: ({node, ...props}) => <h4 className={`text-xs font-bold uppercase tracking-wider mt-4 mb-2 ${previewTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} {...props} />,
                     p: ({node, ...props}) => <p className={`text-xs sm:text-sm my-2 leading-relaxed ${previewTheme === 'dark' ? 'text-[#c9d1d9]' : 'text-gray-700'}`} {...props} />,
                     ul: ({node, ...props}) => <ul className="list-disc pl-5 my-2 space-y-1 text-xs sm:text-sm" {...props} />,
                     li: ({node, ...props}) => <li className={`${previewTheme === 'dark' ? 'text-[#c9d1d9]' : 'text-gray-700'}`} {...props} />,

@@ -24,6 +24,20 @@ public class GithubReadmeService {
     private final ObjectMapper objectMapper;
 
     private static final Pattern THINK_TAG_PATTERN = Pattern.compile("<think>[\\s\\S]*?</think>", Pattern.CASE_INSENSITIVE);
+    private static final Pattern EMOJI_PATTERN = Pattern.compile(
+            "[\\x{1F600}-\\x{1F64F}\\x{1F300}-\\x{1F5FF}\\x{1F680}-\\x{1F6FF}\\x{1F700}-\\x{1F77F}\\x{1F780}-\\x{1F7FF}" +
+            "\\x{1F800}-\\x{1F8FF}\\x{1F900}-\\x{1F9FF}\\x{1FA00}-\\x{1FA6F}\\x{1FA70}-\\x{1FAFF}\\x{2600}-\\x{26FF}" +
+            "\\x{2700}-\\x{27BF}\\x{FE00}-\\x{FE0F}]"
+    );
+
+    public static String stripEmojis(String text) {
+        if (text == null) return "";
+        String cleaned = EMOJI_PATTERN.matcher(text).replaceAll("");
+        cleaned = cleaned.replace("\uFFFD", "—");
+        cleaned = cleaned.replaceAll("—{2,}", "—");
+        cleaned = cleaned.replaceAll("—\\?+", "—");
+        return cleaned.replaceAll("[ \\t]{2,}", " ");
+    }
 
     public GithubReadmeResponse generateReadme(UUID userId, GithubReadmeRequest request) {
         log.info("[GITHUB README] Generare README pentru userId={}, request={}", userId, request);
@@ -197,11 +211,12 @@ public class GithubReadmeService {
             Generate a clean, high-impact, 100% NON-AI sounding GitHub Profile README.
 
             STRICT ANTI-AI & AUTHENTICITY RULES:
-            1. NO AI BUZZWORDS: Ban words like 'passionate coder', 'crafting seamless experiences', 'delving deep into the realm of', 'transformative synergy', 'journey', 'unwavering commitment', 'spearheaded'.
-            2. SOUND LIKE A REAL ENGINEER: Concise, pragmatic, concrete, and grounded. Focus on architecture, concurrency, throughput, reliability, clean code, and actual tools.
-            3. REAL METRICS & ARCHITECTURE: Always highlight concrete engineering decisions and numbers (e.g. 'P99 latency', 'concurrent requests', 'virtual threads', 'sub-15ms').
-            4. CLEAN MARKDOWN FORMATTING: Output proper Markdown with clear headings, badges, bullet points, and project cards.
-            5. Return ONLY a valid JSON object matching the schema below. No markdown fences or conversational explanations.
+            1. ABSOLUTELY ZERO EMOJIS: Do NOT output any emojis anywhere in the markdown (no waving hands, rockets, hammers, tools, charts, fire, pins, etc.). Pure typographic engineering style only.
+            2. NO AI BUZZWORDS: Ban words like 'passionate coder', 'crafting seamless experiences', 'delving deep into the realm of', 'transformative synergy', 'journey', 'unwavering commitment', 'spearheaded'.
+            3. SOUND LIKE A REAL ENGINEER: Concise, pragmatic, concrete, and grounded. Focus on architecture, concurrency, throughput, reliability, clean code, and actual tools.
+            4. REAL METRICS & ARCHITECTURE: Always highlight concrete engineering decisions and numbers (e.g. 'P99 latency', 'concurrent requests', 'virtual threads', 'sub-15ms').
+            5. CLEAN MARKDOWN FORMATTING: Output proper Markdown with clear headings (## Title), badges, bullet points, and project cards.
+            6. Return ONLY a valid JSON object matching the schema below. No markdown fences or conversational explanations.
 
             JSON Schema:
             {
@@ -247,28 +262,29 @@ public class GithubReadmeService {
         String cleanedJson = cleanJsonFences(rawResponse);
         JsonNode root = objectMapper.readTree(cleanedJson);
 
-        String headline = getText(root, "headline", "Hi, I'm " + candidateName + " 👋 | Backend & Systems Engineer");
-        String bioSection = getText(root, "bioSection", "Software Engineer focused on high-throughput backend services, distributed systems, and clean architectural design.");
-        String techPhilosophy = getText(root, "techPhilosophy", "I prioritize predictable latency, type safety, test coverage, and pragmatic system design.");
+        String headline = stripEmojis(getText(root, "headline", candidateName + " | Backend & Systems Engineer"));
+        String bioSection = stripEmojis(getText(root, "bioSection", "Software Engineer focused on high-throughput backend services, distributed systems, and clean architectural design."));
+        String techPhilosophy = stripEmojis(getText(root, "techPhilosophy", "I prioritize predictable latency, type safety, test coverage, and pragmatic system design."));
 
         List<String> antiAiTips = new ArrayList<>();
         if (root.has("antiAiTips") && root.get("antiAiTips").isArray()) {
             for (JsonNode t : root.get("antiAiTips")) {
-                antiAiTips.add(t.asText());
+                antiAiTips.add(stripEmojis(t.asText()));
             }
         }
         if (antiAiTips.isEmpty()) {
             antiAiTips.addAll(List.of(
-                    "Zero cuvinte pompoase de tip AI ('passionate visionary', 'synergistic transformation').",
-                    "Metrici tehnice măsurabile (latență P99, cereri concurente, indici de baze de date).",
-                    "Insigne Shields.io flat-square minimaliste în loc de 50 de culori stridente.",
-                    "Focus pe decizii de arhitectură software reale și cod verificabil."
+                    "Design Senior 100% Non-AI: Fără emoticoane (fără rachete, unelte, fețe zâmbitoare sau degete indicatoare).",
+                    "Structură inginerească clară: Focus activ, stack tehnic grupat pe categorii, proiecte cu metrici concrete.",
+                    "Zero clișee corporatiste ('passionate developer', 'crafting seamless experiences', 'transformative synergy').",
+                    "Insigne Shields.io flat-square discrete cu logo-uri oficiale de brand.",
+                    "Metrici tehnice măsurabile (latență P99, cereri concurente, indici de baze de date, acoperire de teste)."
             ));
         }
 
-        String building = root.has("statusLines") && root.get("statusLines").has("building") ? root.get("statusLines").get("building").asText() : "Scalable backend architectures and cloud microservices";
-        String learning = root.has("statusLines") && root.get("statusLines").has("learning") ? root.get("statusLines").get("learning").asText() : "High-concurrency distributed systems & database internals";
-        String collaborating = root.has("statusLines") && root.get("statusLines").has("collaborating") ? root.get("statusLines").get("collaborating").asText() : "Backend architecture, REST APIs, or performance tuning";
+        String building = stripEmojis(root.has("statusLines") && root.get("statusLines").has("building") ? root.get("statusLines").get("building").asText() : "Scalable backend architectures and cloud microservices");
+        String learning = stripEmojis(root.has("statusLines") && root.get("statusLines").has("learning") ? root.get("statusLines").get("learning").asText() : "High-concurrency distributed systems & database internals");
+        String collaborating = stripEmojis(root.has("statusLines") && root.get("statusLines").has("collaborating") ? root.get("statusLines").get("collaborating").asText() : "Backend architecture, REST APIs, or performance tuning");
 
         // Build Markdown blocks
         String badgesMarkdown = buildBadgesMarkdown(technologies);
@@ -279,15 +295,15 @@ public class GithubReadmeService {
         StringBuilder projSb = new StringBuilder();
         if (root.has("refinedProjects") && root.get("refinedProjects").isArray()) {
             for (JsonNode p : root.get("refinedProjects")) {
-                String title = p.has("title") ? p.get("title").asText() : "Project";
-                String stack = p.has("techStack") ? p.get("techStack").asText() : "";
-                projSb.append("### 🔨 **").append(title).append("**\n");
+                String title = stripEmojis(p.has("title") ? p.get("title").asText() : "Project");
+                String stack = stripEmojis(p.has("techStack") ? p.get("techStack").asText() : "");
+                projSb.append("### ").append(title).append("\n");
                 if (!stack.isBlank()) {
                     projSb.append("`").append(stack).append("`\n\n");
                 }
                 if (p.has("bullets") && p.get("bullets").isArray()) {
                     for (JsonNode b : p.get("bullets")) {
-                        projSb.append("- ").append(b.asText()).append("\n");
+                        projSb.append("- ").append(stripEmojis(b.asText())).append("\n");
                     }
                 }
                 projSb.append("\n");
@@ -353,14 +369,15 @@ public class GithubReadmeService {
         );
 
         List<String> antiAiTips = List.of(
-                "Zero clișee AI ('passionate visionary', 'synergistic transformation').",
-                "Metrici tehnice măsurabile (latență P99, cereri concurente, indici de baze de date).",
-                "Insigne Shields.io flat-square minimaliste în loc de 50 de culori stridente.",
-                "Focus pe decizii de arhitectură software reale și cod verificabil."
+                "Design Senior 100% Non-AI: Fără emoticoane (fără rachete, unelte, fețe zâmbitoare sau degete indicatoare).",
+                "Structură inginerească clară: Focus activ, stack tehnic grupat pe categorii, proiecte cu metrici concrete.",
+                "Zero clișee corporatiste ('passionate developer', 'crafting seamless experiences', 'transformative synergy').",
+                "Insigne Shields.io flat-square discrete cu logo-uri oficiale de brand.",
+                "Metrici tehnice măsurabile (latență P99, cereri concurente, indici de baze de date, acoperire de teste)."
         );
 
         return new GithubReadmeResponse(
-                fullMarkdown,
+                stripEmojis(fullMarkdown),
                 headline,
                 bioSection,
                 badgesMarkdown,
@@ -378,10 +395,12 @@ public class GithubReadmeService {
             String badges, String projects, String stats, String contact) {
 
         StringBuilder sb = new StringBuilder();
-        sb.append("# Hi, I'm ").append(candidateName).append(" 👋\n\n");
-        sb.append("### **").append(headline).append("**\n\n");
+        sb.append("# ").append(candidateName).append("\n\n");
+        sb.append("**").append(headline).append("**\n\n");
 
-        sb.append(bio).append("\n\n");
+        if (bio != null && !bio.isBlank()) {
+            sb.append(bio).append("\n\n");
+        }
 
         if (philosophy != null && !philosophy.isBlank()) {
             sb.append("> **Engineering Mindset**: ").append(philosophy).append("\n\n");
@@ -390,52 +409,86 @@ public class GithubReadmeService {
         sb.append("---\n\n");
 
         // Focus & Activity
-        sb.append("### ⚡ **What I'm Doing**\n\n");
-        sb.append("- 🔭 **Currently Building**: ").append(building).append("\n");
-        sb.append("- 📚 **Currently Exploring**: ").append(learning).append("\n");
-        sb.append("- 💬 **Ask me about**: ").append(collaborating).append("\n\n");
+        sb.append("## Current Focus\n\n");
+        sb.append("- **Active Development**: ").append(building).append("\n");
+        sb.append("- **Technical Deep-Dives**: ").append(learning).append("\n");
+        sb.append("- **Architecture & Discussions**: ").append(collaborating).append("\n\n");
 
         // Tech Stack
         sb.append("---\n\n");
-        sb.append("### 🛠 **Tech Stack & Tooling**\n\n");
+        sb.append("## Tech Stack & Tooling\n\n");
         sb.append(badges).append("\n\n");
 
         // Featured Projects
         if (projects != null && !projects.isBlank()) {
             sb.append("---\n\n");
-            sb.append("### 🚀 **Featured Engineering Projects**\n\n");
+            sb.append("## Featured Engineering Projects\n\n");
             sb.append(projects).append("\n\n");
         }
 
         // GitHub Stats
         if (stats != null && !stats.isBlank()) {
             sb.append("---\n\n");
-            sb.append("### 📊 **GitHub Activity & Stats**\n\n");
+            sb.append("## GitHub Metrics\n\n");
             sb.append(stats).append("\n\n");
         }
 
         // Contact
         sb.append("---\n\n");
-        sb.append("### 📫 **Get in Touch**\n\n");
+        sb.append("## Connect\n\n");
         sb.append(contact).append("\n");
 
-        return sb.toString();
+        return stripEmojis(sb.toString().trim());
     }
 
     private String buildBadgesMarkdown(List<String> technologies) {
         StringBuilder sb = new StringBuilder();
         Map<String, String> badgeMap = getPredefinedBadges();
 
-        for (String tech : technologies) {
-            String matchKey = tech.toLowerCase().trim();
-            String badge = badgeMap.get(matchKey);
-            if (badge != null) {
-                sb.append(badge).append(" ");
-            } else {
-                String safeName = tech.replace("-", "--").replace(" ", "_");
-                sb.append(String.format("![%s](https://img.shields.io/badge/%s-1e293b?style=flat-square) ", tech, safeName));
+        Map<String, List<String>> categories = new LinkedHashMap<>();
+        categories.put("Languages & Runtime", List.of("java", "python", "sql", "typescript", "javascript", "c++", "c/c++"));
+        categories.put("Backend & Architecture", List.of("spring boot", "spring", "spring cloud", "rest api", "microservices"));
+        categories.put("Databases & Storage", List.of("postgresql", "pgvector", "redis"));
+        categories.put("DevOps & Testing", List.of("docker", "git", "github actions", "linux", "junit", "mockito"));
+        categories.put("Frontend & Web", List.of("react", "tailwind css"));
+
+        Set<String> assigned = new HashSet<>();
+
+        for (Map.Entry<String, List<String>> entry : categories.entrySet()) {
+            List<String> matchedBadges = new ArrayList<>();
+            for (String tech : technologies) {
+                String key = tech.toLowerCase().trim();
+                if (entry.getValue().contains(key)) {
+                    String b = badgeMap.get(key);
+                    if (b != null) {
+                        matchedBadges.add(b);
+                        assigned.add(key);
+                    }
+                }
+            }
+            if (!matchedBadges.isEmpty()) {
+                sb.append("#### ").append(entry.getKey()).append("\n");
+                sb.append(String.join(" ", matchedBadges)).append("\n\n");
             }
         }
+
+        List<String> leftovers = new ArrayList<>();
+        for (String tech : technologies) {
+            String key = tech.toLowerCase().trim();
+            if (!assigned.contains(key)) {
+                String b = badgeMap.get(key);
+                if (b == null) {
+                    String safeName = tech.replace("-", "--").replace(" ", "_");
+                    b = String.format("![%s](https://img.shields.io/badge/%s-1e293b?style=flat-square)", tech, safeName);
+                }
+                leftovers.add(b);
+            }
+        }
+        if (!leftovers.isEmpty()) {
+            sb.append("#### Tools & Libraries\n");
+            sb.append(String.join(" ", leftovers)).append("\n\n");
+        }
+
         return sb.toString().trim();
     }
 
@@ -468,17 +521,17 @@ public class GithubReadmeService {
     private String buildProjectsMarkdown(List<ProjectItem> projects) {
         StringBuilder sb = new StringBuilder();
         for (ProjectItem p : projects) {
-            sb.append("### 🔨 **").append(p.title()).append("**\n");
+            sb.append("### ").append(stripEmojis(p.title())).append("\n");
             if (p.techStack() != null && !p.techStack().isBlank()) {
-                sb.append("`").append(p.techStack()).append("`\n\n");
+                sb.append("`").append(stripEmojis(p.techStack())).append("`\n\n");
             }
             if (p.bullets() != null) {
                 for (String b : p.bullets()) {
-                    sb.append("- ").append(b).append("\n");
+                    sb.append("- ").append(stripEmojis(b)).append("\n");
                 }
             }
             if (p.linkUrl() != null && !p.linkUrl().isBlank()) {
-                sb.append("\n👉 [Explore Code Repository](").append(p.linkUrl()).append(")\n");
+                sb.append("\n[View Repository](").append(p.linkUrl()).append(")\n");
             }
             sb.append("\n");
         }
