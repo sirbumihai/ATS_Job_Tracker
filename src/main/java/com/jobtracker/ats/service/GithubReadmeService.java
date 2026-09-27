@@ -36,7 +36,9 @@ public class GithubReadmeService {
         cleaned = cleaned.replace("\uFFFD", "—");
         cleaned = cleaned.replaceAll("—{2,}", "—");
         cleaned = cleaned.replaceAll("—\\?+", "—");
-        return cleaned.replaceAll("[ \\t]{2,}", " ");
+        cleaned = cleaned.replaceAll("[^\\S\\r\\n]{2,}", " ");
+        cleaned = cleaned.replaceAll("\\n{3,}", "\n\n");
+        return cleaned.trim();
     }
 
     public GithubReadmeResponse generateReadme(UUID userId, GithubReadmeRequest request) {
@@ -294,20 +296,25 @@ public class GithubReadmeService {
         // Build Projects section
         StringBuilder projSb = new StringBuilder();
         if (root.has("refinedProjects") && root.get("refinedProjects").isArray()) {
+            List<String> aiBlocks = new ArrayList<>();
             for (JsonNode p : root.get("refinedProjects")) {
+                StringBuilder bld = new StringBuilder();
                 String title = stripEmojis(p.has("title") ? p.get("title").asText() : "Project");
                 String stack = stripEmojis(p.has("techStack") ? p.get("techStack").asText() : "");
-                projSb.append("### ").append(title).append("\n");
+                bld.append("#### ").append(title).append("\n\n");
                 if (!stack.isBlank()) {
-                    projSb.append("`").append(stack).append("`\n\n");
+                    bld.append("`").append(stack).append("`\n\n");
                 }
                 if (p.has("bullets") && p.get("bullets").isArray()) {
+                    List<String> bulletList = new ArrayList<>();
                     for (JsonNode b : p.get("bullets")) {
-                        projSb.append("- ").append(stripEmojis(b.asText())).append("\n");
+                        bulletList.add("- " + stripEmojis(b.asText()));
                     }
+                    bld.append(String.join("\n", bulletList));
                 }
-                projSb.append("\n");
+                aiBlocks.add(bld.toString().trim());
             }
+            projSb.append(String.join("\n\n---\n\n", aiBlocks));
         } else {
             projSb.append(buildProjectsMarkdown(projects));
         }
@@ -394,51 +401,53 @@ public class GithubReadmeService {
             String building, String learning, String collaborating,
             String badges, String projects, String stats, String contact) {
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("# ").append(candidateName).append("\n\n");
-        sb.append("**").append(headline).append("**\n\n");
+        List<String> sections = new ArrayList<>();
 
+        // 1. Header Block
+        sections.add("# " + candidateName + "\n\n### " + headline);
+
+        // 2. Bio & Mindset
+        StringBuilder bioSb = new StringBuilder();
         if (bio != null && !bio.isBlank()) {
-            sb.append(bio).append("\n\n");
+            bioSb.append(bio.trim());
         }
-
         if (philosophy != null && !philosophy.isBlank()) {
-            sb.append("> **Engineering Mindset**: ").append(philosophy).append("\n\n");
+            if (!bioSb.isEmpty()) bioSb.append("\n\n");
+            bioSb.append("> **Engineering Mindset**: ").append(philosophy.trim());
+        }
+        if (!bioSb.isEmpty()) {
+            sections.add(bioSb.toString());
         }
 
-        sb.append("---\n\n");
+        // 3. Current Focus
+        StringBuilder focusSb = new StringBuilder();
+        focusSb.append("### Current Focus\n\n");
+        focusSb.append("- **Active Development**: ").append(building).append("\n");
+        focusSb.append("- **Technical Deep-Dives**: ").append(learning).append("\n");
+        focusSb.append("- **Architecture & Discussions**: ").append(collaborating);
+        sections.add(focusSb.toString());
 
-        // Focus & Activity
-        sb.append("## Current Focus\n\n");
-        sb.append("- **Active Development**: ").append(building).append("\n");
-        sb.append("- **Technical Deep-Dives**: ").append(learning).append("\n");
-        sb.append("- **Architecture & Discussions**: ").append(collaborating).append("\n\n");
+        // 4. Tech Stack & Tooling
+        if (badges != null && !badges.isBlank()) {
+            sections.add("### Tech Stack & Tooling\n\n" + badges.trim());
+        }
 
-        // Tech Stack
-        sb.append("---\n\n");
-        sb.append("## Tech Stack & Tooling\n\n");
-        sb.append(badges).append("\n\n");
-
-        // Featured Projects
+        // 5. Featured Projects
         if (projects != null && !projects.isBlank()) {
-            sb.append("---\n\n");
-            sb.append("## Featured Engineering Projects\n\n");
-            sb.append(projects).append("\n\n");
+            sections.add("### Featured Engineering Projects\n\n" + projects.trim());
         }
 
-        // GitHub Stats
+        // 6. GitHub Stats
         if (stats != null && !stats.isBlank()) {
-            sb.append("---\n\n");
-            sb.append("## GitHub Metrics\n\n");
-            sb.append(stats).append("\n\n");
+            sections.add("### GitHub Metrics\n\n" + stats.trim());
         }
 
-        // Contact
-        sb.append("---\n\n");
-        sb.append("## Connect\n\n");
-        sb.append(contact).append("\n");
+        // 7. Contact
+        if (contact != null && !contact.isBlank()) {
+            sections.add("### Connect\n\n" + contact.trim());
+        }
 
-        return stripEmojis(sb.toString().trim());
+        return stripEmojis(String.join("\n\n---\n\n", sections));
     }
 
     private String buildBadgesMarkdown(List<String> technologies) {
@@ -467,7 +476,7 @@ public class GithubReadmeService {
                 }
             }
             if (!matchedBadges.isEmpty()) {
-                sb.append("#### ").append(entry.getKey()).append("\n");
+                sb.append("**").append(entry.getKey()).append("**\n\n");
                 sb.append(String.join(" ", matchedBadges)).append("\n\n");
             }
         }
@@ -485,7 +494,7 @@ public class GithubReadmeService {
             }
         }
         if (!leftovers.isEmpty()) {
-            sb.append("#### Tools & Libraries\n");
+            sb.append("**Tools & Libraries**\n\n");
             sb.append(String.join(" ", leftovers)).append("\n\n");
         }
 
@@ -519,23 +528,26 @@ public class GithubReadmeService {
     }
 
     private String buildProjectsMarkdown(List<ProjectItem> projects) {
-        StringBuilder sb = new StringBuilder();
+        List<String> projBlocks = new ArrayList<>();
         for (ProjectItem p : projects) {
-            sb.append("### ").append(stripEmojis(p.title())).append("\n");
+            StringBuilder sb = new StringBuilder();
+            sb.append("#### ").append(stripEmojis(p.title())).append("\n\n");
             if (p.techStack() != null && !p.techStack().isBlank()) {
                 sb.append("`").append(stripEmojis(p.techStack())).append("`\n\n");
             }
             if (p.bullets() != null) {
+                List<String> bulletList = new ArrayList<>();
                 for (String b : p.bullets()) {
-                    sb.append("- ").append(stripEmojis(b)).append("\n");
+                    bulletList.add("- " + stripEmojis(b));
                 }
+                sb.append(String.join("\n", bulletList));
             }
             if (p.linkUrl() != null && !p.linkUrl().isBlank()) {
-                sb.append("\n[View Repository](").append(p.linkUrl()).append(")\n");
+                sb.append("\n\n[View Repository](").append(p.linkUrl()).append(")");
             }
-            sb.append("\n");
+            projBlocks.add(sb.toString().trim());
         }
-        return sb.toString().trim();
+        return String.join("\n\n---\n\n", projBlocks);
     }
 
     private String buildStatsMarkdown(String username, String theme, boolean stats, boolean langs, boolean streak) {

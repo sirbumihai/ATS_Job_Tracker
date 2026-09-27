@@ -243,13 +243,14 @@ export default function GithubReadmeStudio({ currentUser }) {
     );
   };
 
-  // Emoji stripper helper
+  // Emoji stripper helper (preserves newlines and markdown structure!)
   const stripEmojis = (str) => {
     if (!str) return '';
     return str
       .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}]/gu, '')
       .replace(/[👋🚀⚡🛠📊📫👉🔨🔭📚💬✨]/g, '')
-      .replace(/\s{2,}/g, ' ')
+      .replace(/[^\S\r\n]{2,}/g, ' ') // ONLY horizontal whitespace! Never touch newlines!
+      .replace(/\n{3,}/g, '\n\n') // Normalize multiple empty lines to max 2
       .trim();
   };
 
@@ -263,7 +264,7 @@ export default function GithubReadmeStudio({ currentUser }) {
       const selectedInCategory = techs.filter(t => selectedTechs.includes(t.name));
       if (selectedInCategory.length > 0) {
         const badgesRow = selectedInCategory.map(t => t.badge).join(' ');
-        sections.push(`#### ${category}\n${badgesRow}`);
+        sections.push(`**${category}**\n\n${badgesRow}`);
       }
     });
 
@@ -273,75 +274,101 @@ export default function GithubReadmeStudio({ currentUser }) {
       const customRow = customTechs
         .map(name => `![${name}](https://img.shields.io/badge/${encodeURIComponent(name)}-1e293b?style=flat-square)`)
         .join(' ');
-      sections.push(`#### Instrumente & Biblioteci\n${customRow}`);
+      sections.push(`**Instrumente & Biblioteci**\n\n${customRow}`);
     }
 
     return sections.join('\n\n');
   }, [selectedTechs]);
 
-  // Generate full markdown dynamically with senior typography and 0 emojis
+  // Generate full markdown dynamically with senior typography, clean spacing, and 0 emojis
   const generatedMarkdown = useMemo(() => {
     const cleanUser = githubUsername.trim() || 'username';
 
-    const lines = [];
-    lines.push(`# ${candidateName}\n`);
-    lines.push(`**${headline}**\n`);
-    if (bioText) lines.push(`${bioText}\n`);
+    const sections = [];
 
-    if (techPhilosophy) {
-      lines.push(`> **Engineering Mindset**: ${techPhilosophy}\n`);
+    // Header Block
+    let headerBlock = `# ${candidateName}\n\n### ${headline}`;
+    sections.push(headerBlock);
+
+    // Bio
+    if (bioText && bioText.trim()) {
+      sections.push(bioText.trim());
     }
 
-    lines.push('---\n');
-    lines.push('## Current Focus\n');
-    if (building) lines.push(`- **Active Development**: ${building}`);
-    if (learning) lines.push(`- **Technical Deep-Dives**: ${learning}`);
-    if (collaborating) lines.push(`- **Architecture & Discussions**: ${collaborating}`);
-    lines.push('\n---\n');
+    // Engineering Mindset Quote
+    if (techPhilosophy && techPhilosophy.trim()) {
+      sections.push(`> **Engineering Mindset**: ${techPhilosophy.trim()}`);
+    }
 
-    lines.push('## Tech Stack & Tooling\n');
-    lines.push(`${badgesString}\n`);
+    // Current Focus
+    const focusItems = [];
+    if (building && building.trim()) focusItems.push(`- **Active Development**: ${building.trim()}`);
+    if (learning && learning.trim()) focusItems.push(`- **Technical Deep-Dives**: ${learning.trim()}`);
+    if (collaborating && collaborating.trim()) focusItems.push(`- **Architecture & Discussions**: ${collaborating.trim()}`);
+    if (focusItems.length > 0) {
+      sections.push(`### Current Focus\n\n${focusItems.join('\n')}`);
+    }
 
+    // Tech Stack
+    if (badgesString && badgesString.trim()) {
+      sections.push(`### Tech Stack & Tooling\n\n${badgesString.trim()}`);
+    }
+
+    // Featured Projects
     if (projects.length > 0) {
-      lines.push('---\n');
-      lines.push('## Featured Engineering Projects\n');
-      projects.forEach(p => {
-        lines.push(`### ${p.title}`);
-        if (p.techStack) lines.push(`\`${p.techStack}\`\n`);
-        p.bullets.forEach(b => lines.push(`- ${b}`));
-        if (p.linkUrl) lines.push(`\n[View Repository](${p.linkUrl})\n`);
-        lines.push('');
+      const projectBlocks = projects.map(p => {
+        const parts = [];
+        parts.push(`#### ${p.title}`);
+        if (p.techStack && p.techStack.trim()) {
+          parts.push(`\`${p.techStack.trim()}\``);
+        }
+        if (Array.isArray(p.bullets) && p.bullets.length > 0) {
+          parts.push(p.bullets.map(b => `- ${b.trim()}`).join('\n'));
+        }
+        if (p.linkUrl && p.linkUrl.trim()) {
+          parts.push(`[View Repository](${p.linkUrl.trim()})`);
+        }
+        return parts.join('\n\n');
       });
+      sections.push(`### Featured Engineering Projects\n\n${projectBlocks.join('\n\n---\n\n')}`);
     }
 
+    // GitHub Stats
     if (includeStats || includeLanguages || includeStreak) {
-      lines.push('---\n');
-      lines.push('## GitHub Metrics\n');
-      lines.push('<p align="center">');
+      const statsParts = [];
+      statsParts.push('<p align="center">');
       if (includeStats) {
-        lines.push(`  <img src="https://github-readme-stats.vercel.app/api?username=${cleanUser}&show_icons=true&theme=${statsTheme}&hide_border=true&count_private=true" alt="GitHub Stats" height="155" />`);
+        statsParts.push(`  <img src="https://github-readme-stats.vercel.app/api?username=${cleanUser}&show_icons=true&theme=${statsTheme}&hide_border=true&count_private=true" alt="GitHub Stats" height="150" />`);
       }
       if (includeLanguages) {
-        lines.push(`  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=${cleanUser}&layout=compact&theme=${statsTheme}&hide_border=true" alt="Top Languages" height="155" />`);
+        statsParts.push(`  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=${cleanUser}&layout=compact&theme=${statsTheme}&hide_border=true" alt="Top Languages" height="150" />`);
       }
-      lines.push('</p>\n');
+      statsParts.push('</p>');
 
       if (includeStreak) {
-        lines.push('<p align="center">');
-        lines.push(`  <img src="https://github-readme-streak-stats.herokuapp.com/?user=${cleanUser}&theme=${statsTheme}&hide_border=true" alt="GitHub Streak" />`);
-        lines.push('</p>\n');
+        statsParts.push('<p align="center">');
+        statsParts.push(`  <img src="https://github-readme-streak-stats.herokuapp.com/?user=${cleanUser}&theme=${statsTheme}&hide_border=true" alt="GitHub Streak" />`);
+        statsParts.push('</p>');
       }
+      sections.push(`### GitHub Metrics\n\n${statsParts.join('\n')}`);
     }
 
-    lines.push('---\n');
-    lines.push('## Connect\n');
+    // Contact
     const contactBadges = [];
-    if (linkedinUrl) contactBadges.push(`[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat-square&logo=linkedin&logoColor=white)](${linkedinUrl})`);
-    if (email) contactBadges.push(`[![Email](https://img.shields.io/badge/Email-${encodeURIComponent(email)}-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:${email})`);
-    if (portfolioUrl) contactBadges.push(`[![Portfolio](https://img.shields.io/badge/Portfolio-000000?style=flat-square&logo=aboutdotme&logoColor=white)](${portfolioUrl})`);
-    lines.push(contactBadges.join(' '));
+    if (linkedinUrl && linkedinUrl.trim()) {
+      contactBadges.push(`[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat-square&logo=linkedin&logoColor=white)](${linkedinUrl.trim()})`);
+    }
+    if (email && email.trim()) {
+      contactBadges.push(`[![Email](https://img.shields.io/badge/Email-${encodeURIComponent(email.trim())}-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:${email.trim()})`);
+    }
+    if (portfolioUrl && portfolioUrl.trim()) {
+      contactBadges.push(`[![Portfolio](https://img.shields.io/badge/Portfolio-000000?style=flat-square&logo=aboutdotme&logoColor=white)](${portfolioUrl.trim()})`);
+    }
+    if (contactBadges.length > 0) {
+      sections.push(`### Connect\n\n${contactBadges.join(' ')}`);
+    }
 
-    return stripEmojis(lines.join('\n'));
+    return stripEmojis(sections.join('\n\n---\n\n'));
   }, [
     candidateName, headline, bioText, techPhilosophy,
     building, learning, collaborating,
@@ -858,19 +885,19 @@ export default function GithubReadmeStudio({ currentUser }) {
               <div className="p-6 sm:p-10 leading-relaxed font-sans prose prose-slate max-w-none">
                 <ReactMarkdown
                   components={{
-                    h1: ({node, ...props}) => <h1 className={`text-2xl sm:text-3xl font-bold pb-2 border-b mb-4 ${previewTheme === 'dark' ? 'text-white border-[#30363d]' : 'text-gray-900 border-gray-200'}`} {...props} />,
+                    h1: ({node, ...props}) => <h1 className={`text-2xl sm:text-3xl font-extrabold pb-2 border-b mb-3 ${previewTheme === 'dark' ? 'text-white border-[#30363d]' : 'text-gray-900 border-gray-200'}`} {...props} />,
                     h2: ({node, ...props}) => <h2 className={`text-xl font-bold pb-1 border-b mt-6 mb-3 ${previewTheme === 'dark' ? 'text-white border-[#30363d]' : 'text-gray-900 border-gray-200'}`} {...props} />,
-                    h3: ({node, ...props}) => <h3 className={`text-base font-bold mt-4 mb-2 ${previewTheme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`} {...props} />,
-                    h4: ({node, ...props}) => <h4 className={`text-xs font-bold uppercase tracking-wider mt-4 mb-2 ${previewTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} {...props} />,
-                    p: ({node, ...props}) => <p className={`text-xs sm:text-sm my-2 leading-relaxed ${previewTheme === 'dark' ? 'text-[#c9d1d9]' : 'text-gray-700'}`} {...props} />,
-                    ul: ({node, ...props}) => <ul className="list-disc pl-5 my-2 space-y-1 text-xs sm:text-sm" {...props} />,
-                    li: ({node, ...props}) => <li className={`${previewTheme === 'dark' ? 'text-[#c9d1d9]' : 'text-gray-700'}`} {...props} />,
+                    h3: ({node, ...props}) => <h3 className={`text-lg font-bold pb-1 border-b mt-6 mb-3 ${previewTheme === 'dark' ? 'text-white border-[#30363d]' : 'text-gray-900 border-gray-200'}`} {...props} />,
+                    h4: ({node, ...props}) => <h4 className={`text-sm font-bold mt-4 mb-1.5 ${previewTheme === 'dark' ? 'text-indigo-300' : 'text-indigo-950'}`} {...props} />,
+                    p: ({node, ...props}) => <p className={`text-xs sm:text-sm my-2.5 leading-relaxed ${previewTheme === 'dark' ? 'text-[#c9d1d9]' : 'text-gray-700'}`} {...props} />,
+                    ul: ({node, ...props}) => <ul className="list-disc pl-5 my-2.5 space-y-1.5 text-xs sm:text-sm" {...props} />,
+                    li: ({node, ...props}) => <li className={`${previewTheme === 'dark' ? 'text-[#c9d1d9]' : 'text-gray-700'} leading-relaxed`} {...props} />,
                     blockquote: ({node, ...props}) => (
-                      <blockquote className={`border-l-4 pl-3 py-1 my-3 text-xs italic ${
+                      <blockquote className={`border-l-4 pl-3.5 py-1.5 my-3.5 text-xs italic ${
                         previewTheme === 'dark' ? 'border-indigo-500 bg-[#161b22] text-[#8b949e]' : 'border-indigo-600 bg-gray-50 text-gray-600'
                       }`} {...props} />
                     ),
-                    hr: () => <hr className={`my-6 ${previewTheme === 'dark' ? 'border-[#30363d]' : 'border-gray-200'}`} />,
+                    hr: () => <hr className={`my-5 border-t ${previewTheme === 'dark' ? 'border-[#30363d]' : 'border-gray-200'}`} />,
                     code: ({node, inline, ...props}) => inline ? (
                       <code className={`px-1.5 py-0.5 rounded text-xs font-mono font-semibold ${
                         previewTheme === 'dark' ? 'bg-[#161b22] text-indigo-300' : 'bg-gray-100 text-indigo-700'
@@ -879,7 +906,10 @@ export default function GithubReadmeStudio({ currentUser }) {
                       <code className="block p-3 rounded-lg text-xs font-mono bg-[#161b22] overflow-x-auto" {...props} />
                     ),
                     img: ({node, ...props}) => (
-                      <img className="inline-block max-w-full my-1 rounded" alt={props.alt || ''} {...props} />
+                      <img className="inline-block mr-1.5 mb-1.5 align-middle rounded max-w-full" alt={props.alt || ''} {...props} />
+                    ),
+                    strong: ({node, ...props}) => (
+                      <strong className={`font-bold ${previewTheme === 'dark' ? 'text-gray-100' : 'text-gray-950'}`} {...props} />
                     ),
                     a: ({node, ...props}) => (
                       <a className="text-blue-400 hover:underline font-semibold" target="_blank" rel="noopener noreferrer" {...props} />
