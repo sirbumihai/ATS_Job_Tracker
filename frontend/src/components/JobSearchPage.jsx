@@ -51,9 +51,12 @@ import {
   Calendar,
   History,
   GitCommit,
-  Download
+  Download,
+  Send,
+  Bell
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
+import OutreachCrmModal from './OutreachCrmModal';
 
 // Helper eliminare diacritice
 const removeDiacritics = (str) => {
@@ -121,10 +124,13 @@ export default function JobSearchPage({
   currentUser, 
   onSaveToKanbanSuccess, 
   onNavigateToStudio,
-  onNavigateToKanban
+  onNavigateToKanban,
+  onOpenDigestModal
 }) {
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
+
+  const [outreachSearchJob, setOutreachSearchJob] = useState(null);
 
   // Search & Filter state
   const [keyword, setKeyword] = useState('');
@@ -1780,6 +1786,15 @@ export default function JobSearchPage({
                       )}
                     </button>
 
+                    <button
+                      onClick={() => setOutreachSearchJob(job)}
+                      className="py-2.5 px-3 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 rounded-xl text-xs font-black flex items-center justify-center gap-1 transition cursor-pointer shadow-2xs"
+                      title="Outreach Recruiter: Notă LinkedIn (<300 caractere), Cold Email"
+                    >
+                      <Send className="w-3.5 h-3.5 text-purple-600" />
+                      <span>Outreach</span>
+                    </button>
+
                     <a 
                       href={job.directApplyUrl}
                       target="_blank"
@@ -2069,6 +2084,15 @@ export default function JobSearchPage({
             </div>
           </div>
         </div>
+      )}
+
+      {/* OUTREACH CRM MODAL PENTRU JOB DIN SEARCH */}
+      {outreachSearchJob && (
+        <OutreachCrmModal
+          isOpen={!!outreachSearchJob}
+          onClose={() => setOutreachSearchJob(null)}
+          initialJobData={outreachSearchJob}
+        />
       )}
 
     </div>

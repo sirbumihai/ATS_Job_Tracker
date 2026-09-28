@@ -9,12 +9,15 @@ import CoverLetterGenerator from './components/CoverLetterGenerator';
 import GithubReadmeStudio from './components/GithubReadmeStudio';
 import MarketInsightsPage from './components/MarketInsightsPage';
 import LinkedInOptimizerPage from './components/LinkedInOptimizerPage';
+import SkillRoadmapPage from './components/SkillRoadmapPage';
+import DailyDigestModal from './components/DailyDigestModal';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
 
 export default function App() {
   const getInitialTab = () => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
+      if (path.startsWith('/roadmap') || path.startsWith('/skill-roadmap')) return 'skill_roadmap';
       if (path.startsWith('/linkedin') || path.startsWith('/linkedin-optimizer')) return 'linkedin_optimizer';
       if (path.startsWith('/job-search') || path.startsWith('/jobs')) return 'job_search';
       if (path.startsWith('/market-insights') || path.startsWith('/insights') || path.startsWith('/radar')) return 'market_insights';
@@ -24,6 +27,7 @@ export default function App() {
       if (path.startsWith('/github-readme') || path.startsWith('/github_readme') || path.startsWith('/readme')) return 'github_readme';
       if (path.startsWith('/tracker') || path.startsWith('/kanban')) return 'tracker';
       const hash = window.location.hash.toLowerCase();
+      if (hash.includes('roadmap')) return 'skill_roadmap';
       if (hash.includes('linkedin')) return 'linkedin_optimizer';
       if (hash.includes('job-search') || hash.includes('jobs')) return 'job_search';
       if (hash.includes('market-insights') || hash.includes('radar')) return 'market_insights';
@@ -33,7 +37,7 @@ export default function App() {
       if (hash.includes('github-readme') || hash.includes('github_readme') || hash.includes('readme')) return 'github_readme';
       if (hash.includes('tracker') || hash.includes('kanban')) return 'tracker';
       const stored = localStorage.getItem('ats_active_tab');
-      if (stored === 'linkedin_optimizer' || stored === 'job_search' || stored === 'market_insights' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
+      if (stored === 'skill_roadmap' || stored === 'linkedin_optimizer' || stored === 'job_search' || stored === 'market_insights' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
       if (stored === 'kanban') return 'tracker';
     }
     return 'tracker';
@@ -52,6 +56,7 @@ export default function App() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('ats_active_tab', tab);
       let targetPath = '/tracker';
+      if (tab === 'skill_roadmap') targetPath = '/roadmap';
       if (tab === 'linkedin_optimizer') targetPath = '/linkedin-optimizer';
       if (tab === 'job_search') targetPath = '/job-search';
       if (tab === 'market_insights') targetPath = '/market-insights';
@@ -87,7 +92,13 @@ export default function App() {
 
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
-      if (path.startsWith('/job-search') || path.startsWith('/jobs')) {
+      if (path.startsWith('/roadmap') || path.startsWith('/skill-roadmap')) {
+        setActiveTab('skill_roadmap');
+        localStorage.setItem('ats_active_tab', 'skill_roadmap');
+      } else if (path.startsWith('/linkedin') || path.startsWith('/linkedin-optimizer')) {
+        setActiveTab('linkedin_optimizer');
+        localStorage.setItem('ats_active_tab', 'linkedin_optimizer');
+      } else if (path.startsWith('/job-search') || path.startsWith('/jobs')) {
         setActiveTab('job_search');
         localStorage.setItem('ats_active_tab', 'job_search');
       } else if (path.startsWith('/market-insights') || path.startsWith('/insights') || path.startsWith('/radar')) {
@@ -130,6 +141,7 @@ export default function App() {
   const [showAddJobModal, setShowAddJobModal] = useState(false);
   const [showUploadResumeModal, setShowUploadResumeModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
+  const [showDailyDigestModal, setShowDailyDigestModal] = useState(false);
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [analyzingAppId, setAnalyzingAppId] = useState(null);
 
@@ -348,6 +360,7 @@ export default function App() {
         currentUser={currentUser}
         onLogout={handleLogout}
         onOpenAuth={() => setShowAuthModal(true)}
+        onOpenDigestModal={() => setShowDailyDigestModal(true)}
       />
 
       {/* CONTINUT PRINCIPAL */}
@@ -381,6 +394,7 @@ export default function App() {
             onSaveToKanbanSuccess={fetchApplications}
             onNavigateToStudio={() => handleTabChange('cv_studio')}
             onNavigateToKanban={() => handleTabChange('tracker')}
+            onOpenDigestModal={() => setShowDailyDigestModal(true)}
           />
         )}
 
@@ -389,6 +403,7 @@ export default function App() {
           <MarketInsightsPage 
             currentUser={currentUser}
             onNavigateToJobSearch={() => handleTabChange('job_search')}
+            onNavigateToSkillRoadmap={() => handleTabChange('skill_roadmap')}
           />
         )}
 
@@ -436,6 +451,14 @@ export default function App() {
           />
         )}
 
+        {/* TAB 8: SKILL ROADMAPS (7-DAY LABS & CV INTEGRATION) */}
+        {activeTab === 'skill_roadmap' && (
+          <SkillRoadmapPage 
+            currentUser={currentUser}
+            onNavigateToCvLibrary={() => handleTabChange('cv_library')}
+          />
+        )}
+
       </main>
 
       {/* FOOTER */}
@@ -473,6 +496,11 @@ export default function App() {
         isOpen={showAiModal}
         onClose={() => setShowAiModal(false)}
         analysis={selectedAnalysis}
+      />
+
+      <DailyDigestModal
+        isOpen={showDailyDigestModal}
+        onClose={() => setShowDailyDigestModal(false)}
       />
 
     </div>

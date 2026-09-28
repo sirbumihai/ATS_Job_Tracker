@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 import GmailSyncModal from './GmailSyncModal';
+import OutreachCrmModal from './OutreachCrmModal';
 
 export default function KanbanBoard({ 
   applications = [], 
@@ -71,6 +72,7 @@ export default function KanbanBoard({
   const [uploadedResumes, setUploadedResumes] = useState([]);
   const [attachingCvAppId, setAttachingCvAppId] = useState(null);
   const [selectedJobForModal, setSelectedJobForModal] = useState(null);
+  const [outreachApp, setOutreachApp] = useState(null);
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
 
@@ -1131,6 +1133,19 @@ export default function KanbanBoard({
                                   <span>Scrisoare</span>
                                 </button>
                               )}
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOutreachApp(app);
+                                }}
+                                className="flex-1 py-1.5 px-2 rounded-lg border border-purple-200 hover:border-purple-300 bg-purple-50/70 hover:bg-purple-100 text-purple-950 text-[11px] font-extrabold flex items-center justify-center gap-1 transition shadow-2xs cursor-pointer"
+                                title="Outreach Recruiter: Notă LinkedIn (<300 caractere), Cold Email & Cadence"
+                              >
+                                <Send className="w-3 h-3 text-purple-600" />
+                                <span>Outreach</span>
+                              </button>
                             </div>
                           </div>
 
@@ -1487,6 +1502,15 @@ export default function KanbanBoard({
           isSaved={true}
           isSaving={false}
           activeUserId={activeUserId}
+        />
+      )}
+
+      {/* OUTREACH CRM MODAL (NOTE LINKEDIN, COLD EMAIL, CADENCE) */}
+      {outreachApp && (
+        <OutreachCrmModal 
+          isOpen={!!outreachApp}
+          onClose={() => setOutreachApp(null)}
+          application={outreachApp}
         />
       )}
 

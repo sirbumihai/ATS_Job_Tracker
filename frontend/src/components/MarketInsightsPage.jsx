@@ -57,7 +57,7 @@ const DOMAIN_ICONS = {
   GENERAL_SOFTWARE: Code
 };
 
-export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch }) {
+export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch, onNavigateToSkillRoadmap }) {
   const [levelFilter, setLevelFilter] = useState('JUNIOR'); // JUNIOR, MID, SENIOR, ALL
   const [locationFilter, setLocationFilter] = useState('RO_ONLY'); // RO_ONLY, RO_AND_REMOTE, ALL
   const [activeOnly, setActiveOnly] = useState(false);
@@ -234,6 +234,15 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
               >
                 <Search className="w-3.5 h-3.5 text-blue-400" />
                 Vezi Joburile Live în Căutare
+              </button>
+            )}
+            {onNavigateToSkillRoadmap && (
+              <button
+                onClick={onNavigateToSkillRoadmap}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white transition shadow-sm cursor-pointer"
+              >
+                <GraduationCap className="w-3.5 h-3.5 text-purple-200" />
+                Învață cu Roadmap de 7 Zile
               </button>
             )}
           </div>

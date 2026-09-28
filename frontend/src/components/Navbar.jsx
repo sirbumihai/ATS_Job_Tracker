@@ -16,7 +16,9 @@ import {
   FileSignature,
   Github,
   Compass,
-  Linkedin
+  Linkedin,
+  GraduationCap,
+  Bell
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -26,7 +28,8 @@ export default function Navbar({
   onLogout, 
   onOpenAuth, 
   onOpenUpload, 
-  onOpenAddJob 
+  onOpenAddJob,
+  onOpenDigestModal
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isWhiteTheme = true;
@@ -144,10 +147,37 @@ export default function Navbar({
             <Linkedin className={`w-3.5 h-3.5 ${activeTab === 'linkedin_optimizer' ? 'text-blue-400' : 'text-[#0a66c2]'}`} />
             LinkedIn Optimizer
           </button>
+
+          <button
+            onClick={() => setActiveTab('skill_roadmap')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+              activeTab === 'skill_roadmap' 
+                ? 'bg-black text-white shadow-sm' 
+                : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+            }`}
+          >
+            <GraduationCap className={`w-3.5 h-3.5 ${activeTab === 'skill_roadmap' ? 'text-purple-400' : 'text-purple-600'}`} />
+            Skill Roadmaps
+          </button>
         </div>
 
         {/* DESKTOP ACTIONS */}
         <div className="hidden lg:flex items-center gap-2.5">
+          {onOpenDigestModal && (
+            <button
+              onClick={onOpenDigestModal}
+              title="Configurează și testează Daily Job Digest (09:00 AM)"
+              className="px-3 py-1.5 rounded-xl border border-amber-300/80 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-2xs group"
+            >
+              <div className="relative">
+                <Bell className="w-3.5 h-3.5 text-amber-600 group-hover:scale-110 transition-transform" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500"></span>
+              </div>
+              <span>Daily Digest</span>
+            </button>
+          )}
+
           {currentUser ? (
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 border border-gray-200 text-gray-800">
@@ -278,6 +308,24 @@ export default function Navbar({
               <Linkedin className={`w-3.5 h-3.5 ${activeTab === 'linkedin_optimizer' ? 'text-blue-400' : 'text-[#0a66c2]'}`} />
               LinkedIn
             </button>
+            <button
+              onClick={() => { setActiveTab('skill_roadmap'); setMobileMenuOpen(false); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shrink-0 ${
+                activeTab === 'skill_roadmap' ? 'bg-black text-white' : 'text-gray-700'
+              }`}
+            >
+              <GraduationCap className={`w-3.5 h-3.5 ${activeTab === 'skill_roadmap' ? 'text-purple-400' : 'text-purple-600'}`} />
+              Roadmaps
+            </button>
+            {onOpenDigestModal && (
+              <button
+                onClick={() => { onOpenDigestModal(); setMobileMenuOpen(false); }}
+                className="flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shrink-0 bg-amber-50 text-amber-900 border border-amber-200"
+              >
+                <Bell className="w-3.5 h-3.5 text-amber-600" />
+                Digest
+              </button>
+            )}
           </div>
         </div>
       )}
