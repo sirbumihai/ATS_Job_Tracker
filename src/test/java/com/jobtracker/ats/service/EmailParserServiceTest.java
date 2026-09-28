@@ -139,4 +139,33 @@ class EmailParserServiceTest {
         EmailParserService.ParsedJobEmail res2 = emailParserService.parse(sender2, subject2, body2);
         assertFalse(res2.isRecruitmentEmail());
     }
+
+    @Test
+    @DisplayName("Identifică corect ING din Workday, titlul rolului și statusul REJECTED (fără REQ sau Software Position)")
+    void testWorkdayIngRejection() {
+        String sender = "ing@myworkday.com";
+        String subject = "Your ING Application to REQ-10121542 Engineering Intern - Agentic AI domain";
+        String body = "Hi Mihai-Alexandru, Thanks for your interest in the Engineering Intern - Agentic AI domain position here at ING. We really appreciate you taking the time to apply. Please don't be disheartened, but we’ve decided to move forward with other candidates this time. We were very impressed by your talents and see lots of potential. We believe you've got a lot to offer a team like ours at ING.";
+
+        EmailParserService.ParsedJobEmail result = emailParserService.parse(sender, subject, body);
+
+        assertTrue(result.isRecruitmentEmail());
+        assertEquals("ING", result.companyName());
+        assertEquals("Engineering Intern - Agentic AI domain", result.jobTitle());
+        assertEquals(ApplicationStatus.REJECTED, result.detectedStatus());
+    }
+
+    @Test
+    @DisplayName("Clasifică confirmarea BestJobs ca APPLIED, ignorând mențiunea opțională de interviu video cu Bestie")
+    void testBestJobsAppliedNotInterview() {
+        String sender = "BestJobs <noreply@bestjobs.eu>";
+        String subject = "Ai aplicat cu succes la acest job!";
+        String body = "Ai aplicat cu succes la jobul de Software Developer la Endava. De asemenea, îți reamintim că înregistrarea unui interviu video cu Bestie constituie un avantaj.";
+
+        EmailParserService.ParsedJobEmail result = emailParserService.parse(sender, subject, body);
+
+        assertTrue(result.isRecruitmentEmail());
+        assertEquals(ApplicationStatus.APPLIED, result.detectedStatus(), "Mențiunea opțională de Bestie nu trebuie să seteze statusul ca INTERVIEW!");
+        assertNotEquals(ApplicationStatus.INTERVIEWING, result.detectedStatus());
+    }
 }

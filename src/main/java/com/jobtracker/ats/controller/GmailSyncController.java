@@ -62,4 +62,24 @@ public class GmailSyncController {
                     .build());
         }
     }
+
+    @PostMapping("/repair")
+    @Operation(summary = "Repară candidaturile Gmail afectate de parsare anterioară", description = "Recitește descrierile de email salvate și corectează numele de companii (ex: REQ -> ING), titlurile de job și statusurile greșite")
+    public ResponseEntity<?> repairGmailApps(@RequestParam(required = false) UUID userId) {
+        log.info("[GMAIL CONTROLLER] Cerere de reparare date Gmail primită");
+        try {
+            int count = gmailSyncService.repairExistingCorruptedGmailApplications(userId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "repaired", count,
+                    "message", "Au fost verificate și curățate " + count + " candidaturi Gmail."
+            ));
+        } catch (Exception e) {
+            log.error("[GMAIL CONTROLLER] Eroare la reparare: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "message", "Eroare la repararea candidaturilor: " + e.getMessage()
+            ));
+        }
+    }
 }

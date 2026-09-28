@@ -55,6 +55,14 @@ public class GmailSyncService {
 
     public GmailSyncResult syncWithGmail(UUID userId, GmailSyncRequest request) {
         User user = resolveUser(userId);
+        
+        // Auto-repară aplicațiile corupte anterior de parsare eronată înainte de noua scanare
+        try {
+            repairExistingCorruptedGmailApplications(user.getId());
+        } catch (Exception e) {
+            log.warn("[GMAIL SYNC] Nu s-a putut rula auto-repararea preliminară: {}", e.getMessage());
+        }
+
         Properties props = getImapProperties();
         Session session = Session.getInstance(props);
 
@@ -316,6 +324,117 @@ public class GmailSyncService {
             sb.append("(Corpul mesajului nu conține text adițional)");
         }
         return sb.toString();
+    }
+
+    @Transactional
+    public int repairExistingCorruptedGmailApplications(UUID userId) {
+        User user = resolveUser(userId);
+        List<Application> userApps = applicationRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        int repairedCount = 0;
+
+        for (Application app : userApps) {
+            JobPosting jp = app.getJobPosting();
+            if (jp == null) continue;
+
+            String rawDesc = jp.getRawDescription();
+            String notes = app.getNotes() != null ? app.getNotes() : "";
+            String comp = jp.getCompanyName() != null ? jp.getCompanyName() : "";
+            String title = jp.getJobTitle() != null ? jp.getJobTitle() : "";
+
+            boolean isGmailApp = notes.contains("Gmail Sync")
+                    || (rawDesc != null && (rawDesc.contains("EMAIL DE RECRUTARE GMAIL") || rawDesc.contains("GMAIL (Sincronizat Automat)")))
+                    || "REQ".equalsIgnoreCase(comp)
+                    || comp.toLowerCase().contains("care ai aplicat")
+                    || comp.toLowerCase().contains("acest job")
+                    || "Software Position".equalsIgnoreCase(title)
+                    || title.toLowerCase().contains("cu succes la acest job");
+
+            if (!isGmailApp) continue;
+
+            boolean changed = false;
+            String sender = "";
+            String subject = "";
+            String body = "";
+
+            if (rawDesc != null) {
+                java.util.regex.Matcher mSender = java.util.regex.Pattern.compile("👤\\s*Expeditor:\\s*([^\\n\\r]+)").matcher(rawDesc);
+                if (mSender.find()) sender = mSender.group(1).trim();
+
+                java.util.regex.Matcher mSubj = java.util.regex.Pattern.compile("📌\\s*Subiect:\\s*([^\\n\\r]+)").matcher(rawDesc);
+                if (mSubj.find()) subject = mSubj.group(1).trim();
+
+                if (rawDesc.contains("CONȚINUT COMPLET EMAIL:")) {
+                    String[] parts = rawDesc.split("CONȚINUT COMPLET EMAIL:[\\s\\S]*?-{10,}");
+                    if (parts.length > 1) {
+                        body = parts[1].trim();
+                    }
+                } else {
+                    body = rawDesc;
+                }
+            }
+
+            if (sender.isBlank() && !notes.isBlank()) {
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\(([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})\\)").matcher(notes);
+                if (m.find()) sender = m.group(1);
+            }
+
+            EmailParserService.ParsedJobEmail reParsed = emailParserService.parseFastOrDeterministic(sender, subject, body);
+            if (reParsed == null) {
+                reParsed = emailParserService.parse(sender, subject, body);
+            }
+
+            if (reParsed != null) {
+                String newComp = reParsed.companyName();
+                String newTitle = reParsed.jobTitle();
+                ApplicationStatus newStatus = reParsed.detectedStatus();
+
+                // 1. Corectare Nume Companie dacă era corupt sau generic
+                if (newComp != null && !newComp.isBlank() && !newComp.equalsIgnoreCase("Companie Parteneră")) {
+                    if ("REQ".equalsIgnoreCase(comp)
+                            || comp.toLowerCase().contains("care ai aplicat")
+                            || comp.toLowerCase().contains("acest job")
+                            || comp.toLowerCase().contains("companie partener")
+                            || !comp.equalsIgnoreCase(newComp)) {
+                        jp.setCompanyName(newComp);
+                        changed = true;
+                    }
+                }
+
+                // 2. Corectare Titlu Job dacă era corupt sau generic
+                if (newTitle != null && !newTitle.isBlank() && !newTitle.equalsIgnoreCase("Software Position")) {
+                    if ("Software Position".equalsIgnoreCase(title)
+                            || title.toLowerCase().contains("cu succes la acest job")
+                            || !title.equalsIgnoreCase(newTitle)) {
+                        jp.setJobTitle(newTitle);
+                        changed = true;
+                    }
+                }
+
+                // 3. Corectare Status (în special falsuri BestJobs sau respingeri ING)
+                if (app.getStatus() == ApplicationStatus.INTERVIEWING) {
+                    if (newStatus == ApplicationStatus.APPLIED || (rawDesc != null && rawDesc.contains("Bestie"))) {
+                        app.setStatus(ApplicationStatus.APPLIED);
+                        changed = true;
+                    }
+                }
+
+                if (newStatus == ApplicationStatus.REJECTED && app.getStatus() != ApplicationStatus.REJECTED) {
+                    app.setStatus(ApplicationStatus.REJECTED);
+                    changed = true;
+                }
+            }
+
+            if (changed) {
+                jobPostingRepository.save(jp);
+                applicationRepository.save(app);
+                repairedCount++;
+            }
+        }
+
+        if (repairedCount > 0) {
+            log.info("[GMAIL REPAIR] Reparate {} candidaturi pentru utilizatorul {}", repairedCount, user.getEmail());
+        }
+        return repairedCount;
     }
 
     private Properties getImapProperties() {

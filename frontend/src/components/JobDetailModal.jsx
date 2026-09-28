@@ -246,6 +246,7 @@ export default function JobDetailModal({
   const [aiAnalysisData, setAiAnalysisData] = useState(null);
   const [loadingAiAnalysis, setLoadingAiAnalysis] = useState(false);
   const [aiAnalysisError, setAiAnalysisError] = useState(null);
+  const [copiedEmailBody, setCopiedEmailBody] = useState(false);
 
   // State pentru selectare CV personal pentru comparație
   const [userCvs, setUserCvs] = useState([]);
@@ -292,6 +293,12 @@ export default function JobDetailModal({
   const runAiMatch = async (jobToAnalyze, cvIdToUse, forceRefresh = false) => {
     const targetJob = jobToAnalyze || detailedJob || job;
     if (!targetJob || !targetJob.rawDescription || targetJob.rawDescription.trim().length < 50) return;
+
+    // IMPORTANT: Nu rulăm NICIODATĂ analiza AI pe emailurile Gmail
+    const isTargetGmail = targetJob.sourcePlatform === 'GMAIL' 
+      || (typeof targetJob.rawDescription === 'string' && (targetJob.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || targetJob.rawDescription.includes('GMAIL (Sincronizat Automat)')))
+      || (typeof targetJob.notes === 'string' && targetJob.notes.includes('[Gmail Sync'));
+    if (isTargetGmail) return;
 
     const cvId = cvIdToUse !== undefined ? cvIdToUse : selectedCvId;
     const cacheKey = `ats_ai_job_${targetJob.id || targetJob.directApplyUrl}_${cvId || 'default'}`;
@@ -405,6 +412,18 @@ export default function JobDetailModal({
     };
     window.addEventListener('keydown', handleKeyDown);
 
+    // Dacă este job extras din Gmail, nu apelăm niciun model AI și afișăm direct emailul
+    const isTargetGmail = job.sourcePlatform === 'GMAIL' 
+      || (typeof job.rawDescription === 'string' && (job.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || job.rawDescription.includes('GMAIL (Sincronizat Automat)')))
+      || (typeof job.notes === 'string' && job.notes.includes('[Gmail Sync'));
+
+    if (isTargetGmail) {
+      setDetailedJob(job);
+      setAiAnalysisData(null);
+      setAiAnalysisError(null);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+
     // Preluăm detaliile extinse dacă descrierea este scurtă/placeholder sau lipsesc competențele de matching
     const isDescriptionShort = !job.rawDescription || job.rawDescription.length < 350 || job.rawDescription.includes('Descrierea completă a postului salvat');
     const isMissingSkillBreakdown = !job.matchingSkills || job.matchingSkills.length === 0;
@@ -494,6 +513,62 @@ export default function JobDetailModal({
   if (!job || typeof document === 'undefined') return null;
 
   const currentJob = detailedJob || job;
+
+  const isGmailJob = useMemo(() => {
+    if (!currentJob) return false;
+    return currentJob.sourcePlatform === 'GMAIL' 
+      || (typeof currentJob.rawDescription === 'string' && (currentJob.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || currentJob.rawDescription.includes('GMAIL (Sincronizat Automat)')))
+      || (typeof currentJob.notes === 'string' && currentJob.notes.includes('[Gmail Sync'));
+  }, [currentJob]);
+
+  const emailData = useMemo(() => {
+    if (!isGmailJob || !currentJob) return null;
+    const raw = currentJob.rawDescription || '';
+    const notes = currentJob.notes || '';
+
+    let sender = '';
+    let subject = '';
+    let date = currentJob.appliedDate || '';
+    let status = currentJob.status || 'APPLIED';
+    let body = '';
+
+    const senderMatch = raw.match(/👤\s*Expeditor:\s*([^\n\r]+)/i);
+    if (senderMatch) sender = senderMatch[1].trim();
+
+    const subjectMatch = raw.match(/📌\s*Subiect:\s*([^\n\r]+)/i);
+    if (subjectMatch) subject = subjectMatch[1].trim();
+
+    const dateMatch = raw.match(/📅\s*Data Primirii:\s*([^\n\r]+)/i);
+    if (dateMatch) date = dateMatch[1].trim();
+
+    const statusMatch = raw.match(/🏷️\s*Status Detectat:\s*([^\n\r]+)/i);
+    if (statusMatch) status = statusMatch[1].trim();
+
+    if (raw.includes('CONȚINUT COMPLET EMAIL:')) {
+      const parts = raw.split(/CONȚINUT COMPLET EMAIL:[\s\S]*?-{10,}/i);
+      if (parts.length > 1) {
+        body = parts[1].trim();
+      }
+    }
+
+    if (!body) {
+      body = raw
+        .replace(/📩 EMAIL DE RECRUTARE GMAIL[\s\S]*?={10,}/gi, '')
+        .replace(/============================================================/g, '')
+        .trim();
+    }
+
+    if (!sender && notes) {
+      const noteSenderMatch = notes.match(/\(([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\)/);
+      if (noteSenderMatch) sender = noteSenderMatch[1];
+    }
+
+    if (!subject) {
+      subject = currentJob.jobTitle || 'Email Recrutare';
+    }
+
+    return { sender, subject, date, status, body };
+  }, [isGmailJob, currentJob]);
 
   const effectiveExperienceLevel = useMemo(() => {
     const jobLvl = (currentJob.experienceLevel || '').toUpperCase();
@@ -663,12 +738,14 @@ export default function JobDetailModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white/95 sticky top-0 z-20 backdrop-blur-md">
           <div className="flex items-center gap-2.5 min-w-0">
             <span className={`px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+              isGmailJob ? 'bg-red-600 text-white flex items-center gap-1.5' :
               currentJob.sourcePlatform === 'LINKEDIN' ? 'bg-[#0077b5] text-white' :
               currentJob.sourcePlatform === 'BESTJOBS' ? 'bg-amber-500 text-white' :
               currentJob.sourcePlatform === 'HIPO' ? 'bg-rose-500 text-white' :
               'bg-gray-900 text-white'
             }`}>
-              {currentJob.sourcePlatform || 'JOB'}
+              {isGmailJob && <Mail className="w-3.5 h-3.5 shrink-0" />}
+              <span>{isGmailJob ? 'GMAIL ATS' : (currentJob.sourcePlatform || 'JOB')}</span>
             </span>
             <span className="text-xs font-bold text-gray-500 truncate max-w-[200px] sm:max-w-md">
               {currentJob.companyName}
@@ -698,8 +775,90 @@ export default function JobDetailModal({
         {/* SCROLLABLE BODY */}
         <div className="overflow-y-auto p-6 sm:p-8 space-y-6 flex-1 scrollbar-thin">
 
-          {/* TITLU & COMPANIE */}
-          <div className="flex flex-col sm:flex-row sm:items-start gap-4 justify-between">
+          {isGmailJob ? (
+            /* DEDICATED GMAIL EMAIL CLIENT VIEW (NO AI ANALYSIS, NO FAKE MATCH SCORES, NO FAKE REQUIREMENTS) */
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* EMAIL BANNER & SENDER DETAILS */}
+              <div className="bg-gradient-to-br from-red-50/70 via-white to-gray-50/80 border border-red-200/90 rounded-3xl p-6 sm:p-7 space-y-4 shadow-xs">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-red-600 text-white flex items-center gap-1.5 shadow-xs">
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>EMAIL DE RECRUTARE GMAIL</span>
+                  </span>
+                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider border ${
+                    emailData?.status === 'INTERVIEWING' ? 'bg-purple-100 text-purple-900 border-purple-300' :
+                    emailData?.status === 'OFFER_RECEIVED' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
+                    emailData?.status === 'REJECTED' ? 'bg-rose-100 text-rose-900 border-rose-300' :
+                    'bg-blue-100 text-blue-900 border-blue-300'
+                  }`}>
+                    {emailData?.status === 'INTERVIEWING' ? 'Invitație Interviu' :
+                     emailData?.status === 'OFFER_RECEIVED' ? 'Ofertă Primită' :
+                     emailData?.status === 'REJECTED' ? 'Respins / Negativ' : 'Aplicat (Confirmare)'}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <h2 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight leading-snug">
+                    {emailData?.subject || currentJob.jobTitle}
+                  </h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
+                    <div className="bg-white border border-gray-200 p-3.5 rounded-2xl shadow-2xs space-y-1">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">🏢 Companie</span>
+                      <p className="font-extrabold text-gray-950 text-sm truncate">{currentJob.companyName}</p>
+                    </div>
+                    <div className="bg-white border border-gray-200 p-3.5 rounded-2xl shadow-2xs space-y-1">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">👤 Expeditor (De la)</span>
+                      <p className="font-extrabold text-indigo-700 text-xs sm:text-sm truncate" title={emailData?.sender}>
+                        {emailData?.sender || 'Nespecificat'}
+                      </p>
+                    </div>
+                    <div className="bg-white border border-gray-200 p-3.5 rounded-2xl shadow-2xs space-y-1">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">📅 Data Primirii</span>
+                      <p className="font-extrabold text-gray-800 text-xs sm:text-sm">
+                        {emailData?.date || 'Nespecificată'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* EMAIL BODY CONTENT (CLEAN, NO AI HALLUCINATIONS) */}
+              <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+                <div className="px-6 py-4 bg-gray-50/90 border-b border-gray-200 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-600" />
+                    <h3 className="text-xs font-black text-gray-900 uppercase tracking-wider">
+                      Conținut Integral al Emailului Primit
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(emailData?.body || '');
+                      setCopiedEmailBody(true);
+                      setTimeout(() => setCopiedEmailBody(false), 2000);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 text-xs font-bold text-gray-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                  >
+                    {copiedEmailBody ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-gray-500" />}
+                    <span>{copiedEmailBody ? 'Copiat!' : 'Copiază Text'}</span>
+                  </button>
+                </div>
+
+                <div className="p-6 sm:p-8 font-sans text-sm text-gray-800 leading-relaxed whitespace-pre-wrap selection:bg-red-100 bg-gray-50/20 font-normal">
+                  {emailData?.body ? (
+                    emailData.body
+                  ) : (
+                    <p className="text-gray-400 italic">Mesajul nu conține text adițional în corpul emailului.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* TITLU & COMPANIE */}
+              <div className="flex flex-col sm:flex-row sm:items-start gap-4 justify-between">
             <div className="flex items-start gap-4">
               <img 
                 src={currentJob.companyLogoUrl} 
@@ -1304,22 +1463,25 @@ export default function JobDetailModal({
 
           </div>
 
-        </div>
+          </>
+        )}
+
+      </div>
 
         {/* FOOTER FIX CU ACȚIUNI RAPIDE */}
         <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
           <div className="flex items-center gap-2 text-xs text-gray-500 font-semibold text-center sm:text-left flex-wrap">
-            <span>Platformă Sursă: <strong className="text-gray-900">{currentJob.sourcePlatform || 'DIRECT'}</strong></span>
-            {currentJob.appliedDate && (
+            <span>Platformă: <strong className="text-gray-900">{isGmailJob ? 'Gmail Sync' : (currentJob.sourcePlatform || 'DIRECT')}</strong></span>
+            {(currentJob.appliedDate || emailData?.date) && (
               <>
                 <span>•</span>
                 <span className="inline-flex items-center gap-1 text-gray-700 font-bold">
                   <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                  <span>{currentJob.appliedDate}</span>
+                  <span>{currentJob.appliedDate || emailData?.date}</span>
                 </span>
               </>
             )}
-            <span>• Verificat & Validat</span>
+            <span>• {isGmailJob ? 'Email Original Sincronizat' : 'Verificat & Validat'}</span>
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto flex-wrap justify-end">

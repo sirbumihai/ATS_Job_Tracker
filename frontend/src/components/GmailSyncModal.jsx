@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Mail, 
@@ -17,7 +17,9 @@ import {
   EyeOff,
   Sparkles,
   Bot,
-  Check
+  Check,
+  XCircle,
+  Wrench
 } from 'lucide-react';
 
 export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, activeUserId }) {
@@ -30,10 +32,21 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
 
   const [isTesting, setIsTesting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isCancelled, setIsCancelled] = useState(false);
+  const [syncStep, setSyncStep] = useState(1);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  const [isRepairing, setIsRepairing] = useState(false);
+  const [repairResult, setRepairResult] = useState(null);
+
   const [testResult, setTestResult] = useState(null); // { success: boolean, message: string }
   const [syncResult, setSyncResult] = useState(null); // GmailSyncResult object
   const [errorMsg, setErrorMsg] = useState(null);
   const [showHelp, setShowHelp] = useState(false);
+
+  const abortControllerRef = useRef(null);
+  const timerRef = useRef(null);
+  const stepTimerRef = useRef(null);
 
   // Incarcă credențialele memorate local
   useEffect(() => {
@@ -109,14 +122,63 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
     }
   };
 
+  const handleCancelSync = () => {
+    if (abortControllerRef.current) {
+      try {
+        abortControllerRef.current.abort();
+      } catch (e) {}
+    }
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (stepTimerRef.current) clearInterval(stepTimerRef.current);
+    setIsSyncing(false);
+    setIsCancelled(true);
+    setErrorMsg(null);
+  };
+
+  const handleRepairCorrupted = async () => {
+    setIsRepairing(true);
+    setRepairResult(null);
+    setErrorMsg(null);
+    try {
+      const url = activeUserId 
+        ? `/api/v1/integrations/gmail/repair?userId=${activeUserId}`
+        : '/api/v1/integrations/gmail/repair';
+      const res = await fetch(url, { method: 'POST' });
+      const data = await res.json();
+      setRepairResult(data);
+      if (onSyncComplete) onSyncComplete();
+    } catch (err) {
+      setErrorMsg('Eroare la repararea candidaturilor: ' + err.message);
+    } finally {
+      setIsRepairing(false);
+    }
+  };
+
   const handleRunSync = async () => {
     if (!email || !appPassword) {
       setErrorMsg('Te rugăm să completezi emailul și parola de aplicație.');
       return;
     }
     setErrorMsg(null);
+    setIsCancelled(false);
     setIsSyncing(true);
     setSyncResult(null);
+    setRepairResult(null);
+    setSyncStep(1);
+    setElapsedSeconds(0);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    // Timer pentru secundar și pași de progres
+    const startTimestamp = Date.now();
+    timerRef.current = setInterval(() => {
+      const secs = Math.floor((Date.now() - startTimestamp) / 1000);
+      setElapsedSeconds(secs);
+      if (secs >= 2 && secs < 5) setSyncStep(2);
+      else if (secs >= 5 && secs < 9) setSyncStep(3);
+      else if (secs >= 9) setSyncStep(4);
+    }, 1000);
 
     // Salvează credențialele dacă este bifat
     if (rememberCredentials) {
@@ -138,6 +200,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           email: email.trim(),
           appPassword: appPassword.trim(),
@@ -154,14 +217,21 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
         throw new Error(`Serverul a returnat codul ${res.status} (${res.statusText || 'Timeout proxy/rețea'}). Verifică dacă sincronizarea s-a executat.`);
       }
 
+      setSyncStep(5);
       setSyncResult(data);
 
       if (data.success && onSyncComplete) {
         onSyncComplete();
       }
     } catch (err) {
-      setErrorMsg('Eroare la sincronizarea cu Gmail: ' + err.message);
+      if (err.name === 'AbortError') {
+        setIsCancelled(true);
+      } else {
+        setErrorMsg('Eroare la sincronizarea cu Gmail: ' + err.message);
+      }
     } finally {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (stepTimerRef.current) clearInterval(stepTimerRef.current);
       setIsSyncing(false);
     }
   };
@@ -361,6 +431,146 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
             </div>
           </div>
 
+          {/* BANNER REPARARE RAPIDĂ A CANDIDATURILOR EXISTENTE */}
+          <div className="bg-indigo-50/70 border border-indigo-200/90 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0 text-indigo-700">
+                <Wrench className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-extrabold text-indigo-950">Curățare & Auto-Reparare Erori Gmail</p>
+                <p className="text-[11px] text-indigo-800/80 truncate">
+                  Corectează automat numele eronate ("REQ", "care ai aplicat") și falsele interviuri.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleRepairCorrupted}
+              disabled={isRepairing || isSyncing}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shrink-0 transition cursor-pointer shadow-xs disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {isRepairing && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+              <span>{isRepairing ? 'Se curăță...' : 'Repară Datele'}</span>
+            </button>
+          </div>
+
+          {repairResult && (
+            <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-center gap-3 text-xs text-indigo-900 font-bold animate-in fade-in duration-200">
+              <CheckCircle2 className="w-5 h-5 shrink-0 text-indigo-600" />
+              <span>{repairResult.message || `Au fost verificate și reparate ${repairResult.repaired || 0} candidaturi.`}</span>
+            </div>
+          )}
+
+          {/* CARD DE PROGRES REAL-TIME & FEEDBACK LIVE ÎN TIMPUL SINCRONIZĂRII */}
+          {isSyncing && (
+            <div className="p-5 sm:p-6 bg-gradient-to-br from-indigo-50/80 via-white to-red-50/50 border-2 border-indigo-300 rounded-3xl space-y-4 shadow-sm animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-sm text-gray-950">
+                      Sincronizare în Desfășurare...
+                    </h4>
+                    <p className="text-[11px] text-gray-500 font-medium">
+                      Procesare automată a emailurilor de recrutare
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold bg-white px-3 py-1 rounded-full border border-indigo-200 text-indigo-700 shadow-2xs">
+                    ⏱️ {elapsedSeconds}s
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCancelSync}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                    title="Oprește imediat procesul"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                    <span>Oprește</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* BARA DE PROGRES VIZUALĂ */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[11px] font-bold text-gray-600 px-0.5">
+                  <span>Pasul {syncStep} din 5</span>
+                  <span>{Math.min(95, syncStep * 20)}%</span>
+                </div>
+                <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-200 shadow-inner">
+                  <div 
+                    className="h-full bg-indigo-600 rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${Math.min(95, Math.max(15, syncStep * 20))}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* LISTA PAȘILOR DE SCANARE */}
+              <div className="grid grid-cols-1 gap-2 pt-1">
+                {[
+                  { step: 1, title: 'Conectare IMAP securizată la imap.gmail.com (Port 993 SSL)' },
+                  { step: 2, title: `Căutare și scanare plicuri mesaje primite în ultimele ${daysToLookBack} zile` },
+                  { step: 3, title: 'Filtrare inteligentă anteturi și identificare platforme ATS (LinkedIn, BestJobs, etc.)' },
+                  { step: 4, title: 'Clasificare deterministă status (Aplicat, Interviu, Respins, Ofertă)' },
+                  { step: 5, title: 'Salvare securizată și actualizare board Kanban în timp real' }
+                ].map((item) => {
+                  const isDone = syncStep > item.step;
+                  const isCurrent = syncStep === item.step;
+                  return (
+                    <div 
+                      key={item.step} 
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition ${
+                        isCurrent 
+                          ? 'bg-white border border-indigo-200 shadow-xs font-bold text-indigo-950' 
+                          : isDone 
+                          ? 'text-emerald-800 font-semibold bg-emerald-50/50' 
+                          : 'text-gray-400 font-normal'
+                      }`}
+                    >
+                      {isDone ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      ) : isCurrent ? (
+                        <RefreshCw className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border border-gray-300 text-[10px] flex items-center justify-center font-bold text-gray-400 shrink-0">
+                          {item.step}
+                        </div>
+                      )}
+                      <span className="flex-1 truncate sm:whitespace-normal">{item.title}</span>
+                      {isCurrent && (
+                        <span className="text-[10px] bg-indigo-100 text-indigo-900 font-black px-2 py-0.5 rounded-full shrink-0 animate-pulse">
+                          În lucru
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* BANNER ANULAT / OPRIT DE UTILIZATOR */}
+          {isCancelled && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-3 text-xs text-amber-900 font-bold animate-in fade-in duration-200">
+              <div className="flex items-center gap-2.5">
+                <AlertCircle className="w-5 h-5 shrink-0 text-amber-600" />
+                <span>Sincronizarea a fost oprită manual. Datele descărcate anterior sunt în siguranță.</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCancelled(false)}
+                className="text-amber-800 hover:text-amber-950 text-xs underline font-extrabold cursor-pointer"
+              >
+                Închide
+              </button>
+            </div>
+          )}
+
           {/* MESAJE DE EROARE / TEST */}
           {errorMsg && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-xs text-red-800 font-semibold">
@@ -473,7 +683,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
 
         </div>
 
-        {/* FOOTER FIX CU ACȚIUNI RAPIDE (STIL JOB DETAIL MODAL) */}
+        {/* FOOTER FIX CU ACȚIUNI RAPIDE */}
         <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
           <button
             type="button"
@@ -494,24 +704,26 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
               Închide
             </button>
 
-            <button
-              type="button"
-              onClick={handleRunSync}
-              disabled={isTesting || isSyncing}
-              className="flex-1 sm:flex-none px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md disabled:opacity-50 active:scale-95"
-            >
-              {isSyncing ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Se sincronizează...</span>
-                </>
-              ) : (
-                <>
-                  <Mail className="w-4 h-4" />
-                  <span>Sincronizează Acum</span>
-                </>
-              )}
-            </button>
+            {isSyncing ? (
+              <button
+                type="button"
+                onClick={handleCancelSync}
+                className="flex-1 sm:flex-none px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md active:scale-95"
+              >
+                <XCircle className="w-4 h-4" />
+                <span>Oprește Sincronizarea</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleRunSync}
+                disabled={isTesting || isSyncing}
+                className="flex-1 sm:flex-none px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md disabled:opacity-50 active:scale-95"
+              >
+                <Mail className="w-4 h-4" />
+                <span>Sincronizează Acum</span>
+              </button>
+            )}
           </div>
         </div>
 

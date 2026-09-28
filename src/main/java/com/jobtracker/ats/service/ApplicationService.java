@@ -350,7 +350,7 @@ public class ApplicationService {
                             .toList();
                 }
             }
-        } else if (rawDesc != null && rawDesc.contains("GMAIL")) {
+        } else if ((rawDesc != null && rawDesc.contains("GMAIL")) || (app.getNotes() != null && app.getNotes().contains("Gmail Sync"))) {
             sourcePlatform = "GMAIL";
         }
 

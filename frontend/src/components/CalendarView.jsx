@@ -485,10 +485,17 @@ export default function CalendarView({
 
                       {/* SCORE + ACTIONS ROW */}
                       <div className="flex items-center justify-between pt-1 border-t border-gray-200/60 text-xs">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                          <Sparkles className="w-2.5 h-2.5 text-emerald-600" />
-                          {score.toFixed(0)}% Match
-                        </span>
+                        {isGmail ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 px-1.5 py-0.5 rounded border border-red-200">
+                            <Mail className="w-2.5 h-2.5 text-red-600" />
+                            Email Recrutare
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                            <Sparkles className="w-2.5 h-2.5 text-emerald-600" />
+                            {score.toFixed(0)}% Match
+                          </span>
+                        )}
 
                         <div className="flex items-center gap-1">
                           <button

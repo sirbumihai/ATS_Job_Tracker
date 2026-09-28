@@ -78,6 +78,19 @@ export default function KanbanBoard({
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
 
+  const getEmailSender = (app) => {
+    if (!app) return null;
+    if (app.rawDescription) {
+      const m = app.rawDescription.match(/👤\s*Expeditor:\s*([^\n\r]+)/i);
+      if (m) return m[1].trim();
+    }
+    if (app.notes) {
+      const m = app.notes.match(/\(([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\)/);
+      if (m) return m[1].trim();
+    }
+    return null;
+  };
+
   const [trackerToast, setTrackerToast] = useState(null);
 
   // EXPORT CANDIDATURI IN FORMAT CSV COMPATIBIL EXCEL (UTF-8 BOM)
@@ -941,6 +954,10 @@ export default function KanbanBoard({
                   >
                     {colApps.map((app) => {
                       const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
+                      const isGmail = app.sourcePlatform === 'GMAIL' 
+                        || (app.rawDescription && app.rawDescription.includes('GMAIL'))
+                        || (app.notes && app.notes.includes('[Gmail Sync'));
+                      const emailSender = isGmail ? getEmailSender(app) : null;
                       const isBeingDragged = draggedAppId === app.id;
                       const isDropTargetTop = dragOverTarget?.cardId === app.id && dragOverTarget?.position === 'top' && draggedAppId !== app.id;
                       const isDropTargetBottom = dragOverTarget?.cardId === app.id && dragOverTarget?.position === 'bottom' && draggedAppId !== app.id;
@@ -974,7 +991,7 @@ export default function KanbanBoard({
                                   <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-500 truncate group-hover/title:text-indigo-600 transition">
                                     {app.companyName}
                                   </span>
-                                  {(app.sourcePlatform === 'GMAIL' || (app.rawDescription && app.rawDescription.includes('GMAIL'))) && (
+                                  {isGmail && (
                                     <span className="inline-flex items-center gap-0.5 font-black text-[9px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded-full shrink-0" title="Detectat automat prin sincronizare Gmail">
                                       <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
                                       <span>Gmail</span>
@@ -1002,36 +1019,53 @@ export default function KanbanBoard({
                               </div>
                             </div>
 
-                            {/* MATCH SCORE PILL + SLIM PROGRESS */}
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between text-[11px] gap-1">
-                                <span className={`inline-flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md text-[10px] shrink-0 ${
-                                  score >= 75 
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : score >= 50
-                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                  : 'bg-slate-50 text-slate-700 border border-slate-200'
-                                }`}>
-                                  <Sparkles className="w-2.5 h-2.5 shrink-0" />
-                                  {score.toFixed(0)}% Match ATS
-                                </span>
-                                
-                                {app.appliedDate && (
-                                  <span className="inline-flex items-center gap-1 font-bold text-[10px] text-gray-600 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md shrink-0" title={`Data aplicării: ${app.appliedDate}`}>
-                                    <Calendar className="w-2.5 h-2.5 text-gray-500 shrink-0" />
-                                    <span>{app.appliedDate}</span>
+                            {/* MATCH SCORE PILL OR GMAIL SENDER PILL */}
+                            {isGmail ? (
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between text-[11px] gap-1">
+                                  <span className="inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded-md text-[10px] bg-red-50 text-red-700 border border-red-200 shrink-0 truncate max-w-[170px]" title={emailSender ? `Expeditor: ${emailSender}` : 'Sincronizat automat din Gmail'}>
+                                    <Mail className="w-2.5 h-2.5 shrink-0 text-red-600" />
+                                    <span className="truncate">{emailSender ? `De la: ${emailSender}` : 'Email Recrutare'}</span>
                                   </span>
-                                )}
+                                  {app.appliedDate && (
+                                    <span className="inline-flex items-center gap-1 font-bold text-[10px] text-gray-600 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md shrink-0" title={`Data: ${app.appliedDate}`}>
+                                      <Calendar className="w-2.5 h-2.5 text-gray-500 shrink-0" />
+                                      <span>{app.appliedDate}</span>
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden border border-gray-200/60">
-                                <div 
-                                  className={`h-full rounded-full transition-all duration-500 ${
-                                    score >= 75 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-500' : 'bg-slate-400'
-                                  }`} 
-                                  style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
-                                ></div>
+                            ) : (
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between text-[11px] gap-1">
+                                  <span className={`inline-flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md text-[10px] shrink-0 ${
+                                    score >= 75 
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : score >= 50
+                                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    : 'bg-slate-50 text-slate-700 border border-slate-200'
+                                  }`}>
+                                    <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                                    {score.toFixed(0)}% Match ATS
+                                  </span>
+                                  
+                                  {app.appliedDate && (
+                                    <span className="inline-flex items-center gap-1 font-bold text-[10px] text-gray-600 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md shrink-0" title={`Data aplicării: ${app.appliedDate}`}>
+                                      <Calendar className="w-2.5 h-2.5 text-gray-500 shrink-0" />
+                                      <span>{app.appliedDate}</span>
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden border border-gray-200/60">
+                                  <div 
+                                    className={`h-full rounded-full transition-all duration-500 ${
+                                      score >= 75 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-500' : 'bg-slate-400'
+                                    }`} 
+                                    style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
+                                  ></div>
+                                </div>
                               </div>
-                            </div>
+                            )}
 
                             {/* CV SELECTOR (COMPACT & CLEAN) */}
                             <div className="flex items-center gap-1 bg-gray-50/80 hover:bg-gray-100/80 px-2 py-1 rounded-lg border border-gray-200/90 text-xs">
@@ -1188,6 +1222,10 @@ export default function KanbanBoard({
                 <tbody className="divide-y divide-gray-100 text-xs">
                   {filteredApplications.map((app) => {
                     const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
+                    const isGmail = app.sourcePlatform === 'GMAIL' 
+                      || (app.rawDescription && app.rawDescription.includes('GMAIL'))
+                      || (app.notes && app.notes.includes('[Gmail Sync'));
+                    const emailSender = isGmail ? getEmailSender(app) : null;
                     return (
                       <tr key={app.id} className="hover:bg-gray-50/70 transition-colors group">
                         
@@ -1198,7 +1236,7 @@ export default function KanbanBoard({
                               <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
                                 {app.companyName}
                               </span>
-                              {(app.sourcePlatform === 'GMAIL' || (app.rawDescription && app.rawDescription.includes('GMAIL'))) && (
+                              {isGmail && (
                                 <span className="inline-flex items-center gap-1 font-black text-[9px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full" title="Detectat automat prin sincronizare Gmail">
                                   <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
                                   <span>Gmail</span>
@@ -1246,21 +1284,28 @@ export default function KanbanBoard({
 
                         {/* 3. SCOR MATCH AI */}
                         <td className="py-4 px-4">
-                          <div className="w-36 space-y-1">
-                            <div className="flex items-center justify-between">
-                              <span className="flex items-center gap-1 font-bold text-emerald-700 text-xs">
-                                <Sparkles className="w-3 h-3 text-emerald-600" />
-                                {score.toFixed(1)}%
-                              </span>
-                              <span className="text-[10px] text-gray-400 font-medium">ATS Match</span>
+                          {isGmail ? (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 text-red-800 border border-red-200 text-xs font-bold max-w-[160px] truncate" title={emailSender ? `Expeditor: ${emailSender}` : 'Email Recrutare Gmail'}>
+                              <Mail className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                              <span className="truncate">{emailSender ? emailSender : 'Email Recrutare'}</span>
                             </div>
-                            <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden border border-gray-200">
-                              <div 
-                                className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
-                                style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
-                              ></div>
+                          ) : (
+                            <div className="w-36 space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-1 font-bold text-emerald-700 text-xs">
+                                  <Sparkles className="w-3 h-3 text-emerald-600" />
+                                  {score.toFixed(1)}%
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-medium">ATS Match</span>
+                              </div>
+                              <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden border border-gray-200">
+                                <div 
+                                  className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
+                                  style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
+                                ></div>
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </td>
 
                         {/* 4. CV ASOCIAT DROPDOWN */}
