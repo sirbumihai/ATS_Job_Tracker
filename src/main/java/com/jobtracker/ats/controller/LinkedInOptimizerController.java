@@ -38,7 +38,22 @@ public class LinkedInOptimizerController {
 
     @GetMapping("/demo-profile")
     public ResponseEntity<LinkedInProfileDto> getDemoProfile() {
-        log.info("[LINKEDIN OPTIMIZER] Încărcare profil demonstrativ (Sirbu Mihai)");
+        log.info("[LINKEDIN OPTIMIZER] Încărcare profil demonstrativ inițial (Sirbu Mihai)");
         return ResponseEntity.ok(linkedInOptimizerService.getDemoProfile());
+    }
+
+    @GetMapping("/all-star-profile")
+    public ResponseEntity<LinkedInProfileDto> getAllStarProfile() {
+        log.info("[LINKEDIN OPTIMIZER] Încărcare profil complet All-Star 100/100 (Sirbu Mihai)");
+        return ResponseEntity.ok(linkedInOptimizerService.getAllStarProfile());
+    }
+
+    @PostMapping("/sync-cv")
+    public ResponseEntity<com.jobtracker.ats.dto.linkedin.LinkedInCvSyncResponse> syncWithCv(
+            @RequestBody com.jobtracker.ats.dto.linkedin.LinkedInCvSyncRequest request) {
+        log.info("[LINKEDIN OPTIMIZER] Sincronizare profil LinkedIn cu datele din CV");
+        com.jobtracker.ats.dto.linkedin.LinkedInCvSyncResponse response =
+                linkedInOptimizerService.mergeCvIntoProfile(request.profile(), request.cv());
+        return ResponseEntity.ok(response);
     }
 }

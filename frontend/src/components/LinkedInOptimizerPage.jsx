@@ -31,7 +31,12 @@ import {
   Code2,
   FolderGit2,
   FileText,
-  BookmarkCheck
+  BookmarkCheck,
+  Palette,
+  Sliders,
+  CheckCheck,
+  Trash2,
+  ChevronDown
 } from 'lucide-react';
 
 export default function LinkedInOptimizerPage({ currentUser }) {
@@ -42,15 +47,34 @@ export default function LinkedInOptimizerPage({ currentUser }) {
   const [dragOver, setDragOver] = useState(false);
   const [copiedKey, setCopiedKey] = useState(null);
   const [targetDomain, setTargetDomain] = useState('BACKEND');
+  const [profileMode, setProfileMode] = useState('all_star'); // 'current' | 'all_star'
+  
+  // Modale & Interacțiuni
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [addSkillModalOpen, setAddSkillModalOpen] = useState(false);
   const [newSkillText, setNewSkillText] = useState('');
+  const [editHeadlineModalOpen, setEditHeadlineModalOpen] = useState(false);
+  const [tempHeadline, setTempHeadline] = useState('');
+  const [editAboutModalOpen, setEditAboutModalOpen] = useState(false);
+  const [tempAbout, setTempAbout] = useState('');
+  const [bannerPickerOpen, setBannerPickerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('action_plan'); // 'action_plan', 'headlines', 'about', 'star_projects', 'boolean_search', 'skills', 'tips'
   const [completedSteps, setCompletedSteps] = useState({});
 
-  // Încarcă automat profilul demonstrativ Sirbu Mihai la pornire
+  // Sincronizare CV Library
+  const [cvList, setCvList] = useState([]);
+  const [selectedCvId, setSelectedCvId] = useState('');
+  const [syncingCv, setSyncingCv] = useState(false);
+  const [syncMessage, setSyncMessage] = useState(null);
+
+  const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
+  const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
+
+  // Încărcare inițială
   useEffect(() => {
-    loadDemoProfile();
+    loadAllStarProfile();
+    fetchUserCvs();
+    
     // Încarcă starea checklist-ului din localStorage
     try {
       const savedSteps = localStorage.getItem('linkedin_action_steps');
@@ -59,6 +83,25 @@ export default function LinkedInOptimizerPage({ currentUser }) {
       console.warn('Could not read saved checklist steps', e);
     }
   }, []);
+
+  const fetchUserCvs = async () => {
+    try {
+      const res = await fetch('/api/v1/cv/list', {
+        headers: { 'X-User-Id': activeUserId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : [];
+        setCvList(list);
+        if (list.length > 0) {
+          const primary = list.find(c => c.isPrimary) || list[0];
+          setSelectedCvId(primary.id);
+        }
+      }
+    } catch (err) {
+      console.error('Eroare la preluarea CV-urilor din bibliotecă:', err);
+    }
+  };
 
   const toggleStep = (stepId) => {
     const updated = { ...completedSteps, [stepId]: !completedSteps[stepId] };
@@ -72,6 +115,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
 
   const loadDemoProfile = async () => {
     setLoading(true);
+    setProfileMode('current');
     try {
       const res = await fetch('/api/v1/linkedin/demo-profile');
       if (res.ok) {
@@ -86,6 +130,65 @@ export default function LinkedInOptimizerPage({ currentUser }) {
     }
   };
 
+  const loadAllStarProfile = async () => {
+    setLoading(true);
+    setProfileMode('all_star');
+    try {
+      const res = await fetch('/api/v1/linkedin/all-star-profile');
+      if (res.ok) {
+        const data = await res.json();
+        setProfile(data);
+        triggerOptimization(data);
+      } else {
+        loadDemoProfile();
+      }
+    } catch (err) {
+      console.error('Eroare la încărcarea profilului All-Star:', err);
+      loadDemoProfile();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSyncWithSelectedCv = async () => {
+    if (!selectedCvId && cvList.length === 0) {
+      alert('Nu ai niciun CV în bibliotecă pentru a sincroniza.');
+      return;
+    }
+    const targetCv = cvList.find(c => c.id === selectedCvId) || cvList[0];
+    if (!targetCv) return;
+
+    setSyncingCv(true);
+    setSyncMessage(null);
+    try {
+      const res = await fetch('/api/v1/linkedin/sync-cv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profile: profile,
+          cv: targetCv
+        })
+      });
+      if (res.ok) {
+        const syncRes = await res.json();
+        setProfile(syncRes.profile);
+        triggerOptimization(syncRes.profile);
+        setSyncMessage({
+          text: syncRes.message || 'Sincronizat cu succes!',
+          imported: syncRes.importedItems || []
+        });
+        setTimeout(() => setSyncMessage(null), 8000);
+      } else {
+        alert('Nu s-a putut sincroniza profilul cu CV-ul selectat.');
+      }
+    } catch (err) {
+      console.error('Eroare la sincronizarea cu CV-ul:', err);
+      alert('A apărut o eroare la sincronizare.');
+    } finally {
+      setSyncingCv(false);
+    }
+  };
+
   const handleFileUpload = async (file) => {
     if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
       alert('Te rugăm să încarci un fișier PDF exportat din LinkedIn.');
@@ -93,6 +196,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
     }
 
     setLoading(true);
+    setProfileMode('current');
     const formData = new FormData();
     formData.append('file', file);
 
@@ -171,6 +275,16 @@ export default function LinkedInOptimizerPage({ currentUser }) {
     triggerOptimization(updated);
   };
 
+  const removeSkillFromProfile = (skillName) => {
+    if (!profile || !profile.skills) return;
+    const updated = {
+      ...profile,
+      skills: profile.skills.filter(s => s.toLowerCase() !== skillName.toLowerCase())
+    };
+    setProfile(updated);
+    triggerOptimization(updated);
+  };
+
   const handleManualAddSkill = (e) => {
     e.preventDefault();
     if (newSkillText.trim()) {
@@ -180,129 +294,238 @@ export default function LinkedInOptimizerPage({ currentUser }) {
     }
   };
 
+  const handleSaveHeadline = () => {
+    if (tempHeadline.trim()) {
+      applyHeadline(tempHeadline.trim());
+      setEditHeadlineModalOpen(false);
+    }
+  };
+
+  const handleSaveAbout = () => {
+    if (tempAbout.trim()) {
+      applyAbout(tempAbout.trim());
+      setEditAboutModalOpen(false);
+    }
+  };
+
+  const toggleCreatorMode = () => {
+    if (!profile) return;
+    const updated = { ...profile, isCreatorMode: !profile.isCreatorMode };
+    setProfile(updated);
+    triggerOptimization(updated);
+  };
+
+  const toggleOpenToWork = () => {
+    if (!profile) return;
+    const updated = { ...profile, isOpenToWork: !profile.isOpenToWork };
+    setProfile(updated);
+    triggerOptimization(updated);
+  };
+
+  const setBannerStyle = (styleName) => {
+    if (!profile) return;
+    const updated = { ...profile, bannerTheme: styleName };
+    setProfile(updated);
+    setBannerPickerOpen(false);
+  };
+
+  const getBannerBackground = () => {
+    const theme = profile?.bannerTheme || 'tech_terminal';
+    switch (theme) {
+      case 'upb_academic':
+        return 'bg-gradient-to-r from-[#002f6c] via-[#004b87] to-[#0a66c2]';
+      case 'minimalist_slate':
+        return 'bg-gradient-to-r from-slate-900 via-slate-800 to-zinc-900';
+      case 'cloud_violet':
+        return 'bg-gradient-to-r from-[#1e1b4b] via-[#2e1065] to-[#3b0764]';
+      case 'tech_terminal':
+      default:
+        return 'bg-gradient-to-r from-gray-950 via-neutral-900 to-[#0a192f]';
+    }
+  };
+
   return (
     <div className="space-y-8 pb-16 font-sans">
       
-      {/* HERO BANNER & 3-STEP GUIDE */}
+      {/* HERO BANNER & CV SYNC TOOLBAR */}
       <section className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-xs relative overflow-hidden">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-gradient-to-bl from-blue-100/50 via-sky-50/30 to-transparent rounded-full pointer-events-none blur-2xl"></div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-[#0077b5]/10 text-[#0077b5] border border-[#0077b5]/20">
-              <Linkedin className="w-3.5 h-3.5 fill-[#0077b5]" />
-              Optimizator Profil LinkedIn • Ghid Strategic Recruiter 2026
-            </div>
-            <h1 className="text-2xl sm:text-4xl font-black text-gray-950 tracking-tight leading-tight">
-              Transformă-ți Profilul LinkedIn într-un <span className="text-[#0a66c2] underline decoration-blue-200 decoration-wavy">Magnet pentru Recruiteri</span>
-            </h1>
-            <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-              Algoritmul LinkedIn Recruiter funcționează pe căutări semantice și booleene. Află exact ce secțiuni trebuie să adaugi, formulele dovedite de titlu și planul de acțiune pas cu pas pentru a primi oferte directe de Junior Software Engineer.
-            </p>
-          </div>
-
-          <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-3">
-            <button
-              onClick={loadDemoProfile}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-blue-50 hover:bg-blue-100 text-[#0a66c2] transition border border-blue-200 cursor-pointer shadow-xs"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              Încarcă Profil Demo (Sirbu Mihai)
-            </button>
-            <button
-              onClick={() => triggerOptimization()}
-              disabled={optimizing}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#0a66c2] hover:bg-[#004182] text-white transition shadow-sm cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${optimizing ? 'animate-spin' : ''}`} />
-              Re-evaluează cu AI
-            </button>
-          </div>
-        </div>
-
-        {/* 3-STEP EXPLANATION STRIP */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-6 border-t border-gray-100">
-          <div className="bg-gray-50/90 border border-gray-200/80 p-4 rounded-2xl flex items-start gap-3.5">
-            <span className="w-7 h-7 rounded-xl bg-black text-white font-black text-xs flex items-center justify-center shrink-0">
-              1
-            </span>
-            <div>
-              <p className="text-xs font-black text-gray-900 uppercase tracking-wide">Open the Resources menu</p>
-              <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                Pe profilul tău LinkedIn, apasă pe butonul <strong className="text-gray-900">„Resources”</strong> (sau „More / Mai multe” de sub headline).
+        <div className="relative z-10 space-y-6">
+          
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-3 max-w-3xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-[#0077b5]/10 text-[#0077b5] border border-[#0077b5]/20">
+                <Linkedin className="w-3.5 h-3.5 fill-[#0077b5]" />
+                Optimizator Profil LinkedIn & Sincronizare CV Studio
+              </div>
+              <h1 className="text-2xl sm:text-4xl font-black text-gray-950 tracking-tight leading-tight">
+                Profil LinkedIn <span className="text-[#0a66c2] underline decoration-blue-200 decoration-wavy">Magnet pentru Recruiteri</span> & Cross-Sync CV
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                Combină datele oficiale din CV-ul tău (SIMAVI, ATS Job Tracker, 3D Medical Image Segmentation) cu algoritmul LinkedIn Recruiter 2026 pentru a genera un profil de autoritate maximă (100/100 All-Star).
               </p>
             </div>
-          </div>
 
-          <div className="bg-gray-50/90 border border-gray-200/80 p-4 rounded-2xl flex items-start gap-3.5">
-            <span className="w-7 h-7 rounded-xl bg-black text-white font-black text-xs flex items-center justify-center shrink-0">
-              2
-            </span>
-            <div>
-              <p className="text-xs font-black text-gray-900 uppercase tracking-wide">Choose „Save to PDF”</p>
-              <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                LinkedIn descarcă instant un export curat și complet în format PDF cu datele profilului tău.
-              </p>
+            {/* QUICK ACTIONS & VIEW MODE SWITCHER */}
+            <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-2.5">
+              
+              <div className="bg-gray-100 p-1 rounded-2xl flex gap-1 border border-gray-200 shadow-2xs">
+                <button
+                  onClick={loadAllStarProfile}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    profileMode === 'all_star'
+                      ? 'bg-black text-white shadow-xs'
+                      : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                  Profil All-Star (100/100)
+                </button>
+                <button
+                  onClick={loadDemoProfile}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    profileMode === 'current'
+                      ? 'bg-black text-white shadow-xs'
+                      : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+                  }`}
+                >
+                  <Eye className="w-3.5 h-3.5 text-gray-600" />
+                  Profilul Curent
+                </button>
+              </div>
+
+              <button
+                onClick={() => triggerOptimization()}
+                disabled={optimizing}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#0a66c2] hover:bg-[#004182] text-white transition shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${optimizing ? 'animate-spin' : ''}`} />
+                Re-evaluează Scorul ATS
+              </button>
+
             </div>
           </div>
 
-          <div className="bg-blue-50/60 border border-blue-200/80 p-4 rounded-2xl flex items-start gap-3.5">
-            <span className="w-7 h-7 rounded-xl bg-[#0a66c2] text-white font-black text-xs flex items-center justify-center shrink-0">
-              3
-            </span>
-            <div>
-              <p className="text-xs font-black text-blue-950 uppercase tracking-wide">Drop the file above</p>
-              <p className="text-xs text-blue-900 mt-1 leading-relaxed">
-                Trage PDF-ul în zona de mai jos — îți reconstruim profilul și îl audităm pe baza cerințelor reale din piață.
-              </p>
+          {/* CV SELECTOR & DEEP SYNC BAR */}
+          <div className="bg-gradient-to-r from-blue-50/80 via-sky-50/50 to-indigo-50/60 border border-blue-200 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black uppercase text-blue-950 tracking-wider">
+                  Sincronizează Profilul cu un CV din Bibliotecă
+                </h4>
+                <p className="text-xs text-blue-900 mt-0.5">
+                  Importă automat proiectele STAR, experiența de internship și competențele tehnice fără a le tasta manual.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              <select
+                value={selectedCvId}
+                onChange={(e) => setSelectedCvId(e.target.value)}
+                className="px-3.5 py-2 text-xs font-bold bg-white text-gray-900 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
+              >
+                {cvList.length > 0 ? (
+                  cvList.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title || 'CV Fără Titlu'} {c.isPrimary ? '★ (Principal)' : ''}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">Sîrbu Mihai-Alexandru (CV Principal Tehnic)</option>
+                )}
+              </select>
+
+              <button
+                onClick={handleSyncWithSelectedCv}
+                disabled={syncingCv}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition flex items-center gap-1.5 shadow-xs cursor-pointer whitespace-nowrap disabled:opacity-50"
+              >
+                <Sparkles className={`w-3.5 h-3.5 ${syncingCv ? 'animate-spin' : ''}`} />
+                {syncingCv ? 'Se fuzionează...' : 'Sincronizează cu CV-ul'}
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* DRAG & DROP UPLOAD BOX */}
-        <div 
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-              handleFileUpload(e.dataTransfer.files[0]);
-            }
-          }}
-          className={`mt-6 p-8 border-2 border-dashed rounded-2xl text-center transition flex flex-col items-center justify-center gap-3 cursor-pointer ${
-            dragOver 
-              ? 'border-[#0a66c2] bg-blue-50/70 scale-[1.005]' 
-              : 'border-gray-300 hover:border-gray-400 bg-gray-50/60'
-          }`}
-          onClick={() => document.getElementById('linkedin-pdf-input')?.click()}
-        >
-          <input 
-            type="file" 
-            id="linkedin-pdf-input" 
-            accept=".pdf" 
-            className="hidden" 
-            onChange={(e) => {
-              if (e.target.files && e.target.files.length > 0) {
-                handleFileUpload(e.target.files[0]);
+          {/* SYNC NOTIFICATION BANNER */}
+          {syncMessage && (
+            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs flex items-start justify-between gap-3 animate-in fade-in">
+              <div className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">{syncMessage.text}</p>
+                  {syncMessage.imported && syncMessage.imported.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-1.5">
+                      {syncMessage.imported.map((item, idx) => (
+                        <span key={idx} className="bg-white px-2 py-0.5 rounded-md font-semibold text-[11px] border border-emerald-200">
+                          ✓ {item}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button 
+                onClick={() => setSyncMessage(null)}
+                className="text-emerald-700 hover:text-emerald-950 p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* DRAG & DROP UPLOAD BOX */}
+          <div 
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                handleFileUpload(e.dataTransfer.files[0]);
               }
-            }} 
-          />
-          <div className="w-12 h-12 rounded-2xl bg-blue-100/70 text-[#0a66c2] flex items-center justify-center shadow-xs">
-            <Upload className="w-6 h-6" />
+            }}
+            className={`p-6 border-2 border-dashed rounded-2xl text-center transition flex flex-col items-center justify-center gap-2 cursor-pointer ${
+              dragOver 
+                ? 'border-[#0a66c2] bg-blue-50/70 scale-[1.005]' 
+                : 'border-gray-300 hover:border-gray-400 bg-gray-50/60'
+            }`}
+            onClick={() => document.getElementById('linkedin-pdf-input')?.click()}
+          >
+            <input 
+              type="file" 
+              id="linkedin-pdf-input" 
+              accept=".pdf" 
+              className="hidden" 
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  handleFileUpload(e.target.files[0]);
+                }
+              }} 
+            />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-100/70 text-[#0a66c2] flex items-center justify-center shadow-2xs">
+                <Upload className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-bold text-gray-900">
+                  {loading ? 'Se analizează PDF-ul LinkedIn...' : 'Ai descărcat un nou PDF din LinkedIn? Trage fișierul aici'}
+                </p>
+                <p className="text-[11px] text-gray-500">
+                  Folosește Resources ➔ Save to PDF de pe LinkedIn pentru a compara cu starea ta live.
+                </p>
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-bold text-gray-900">
-              {loading ? 'Se analizează PDF-ul LinkedIn...' : 'Apasă aici sau trage fișierul PDF salvat din LinkedIn'}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Suportă exporturile oficiale generate de LinkedIn (dimensiune maximă 15MB)
-            </p>
-          </div>
+
         </div>
       </section>
 
-      {/* MAIN TWO-COLUMN SPLIT: LINKEDIN UI REPLICA (LEFT) & AI ADVISOR (RIGHT) */}
+      {/* MAIN TWO-COLUMN SPLIT: INTERACTIVE LINKEDIN UI REPLICA (LEFT) & AI ADVISOR (RIGHT) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* LEFT COLUMN: PIXEL-PERFECT LINKEDIN DESKTOP PROFILE UI (7/12) */}
@@ -310,22 +533,78 @@ export default function LinkedInOptimizerPage({ currentUser }) {
           
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black uppercase tracking-wider text-gray-400">Previzualizare Live</span>
-              <span className="text-xs font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="text-xs font-black uppercase tracking-wider text-gray-400">Previzualizare Profil Live</span>
+              <span className="text-xs font-bold text-gray-700 bg-gray-100 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
                 <Eye className="w-3 h-3 text-[#0a66c2]" />
-                Exact LinkedIn Desktop UI
+                {profileMode === 'all_star' ? 'All-Star Demo (Recomandat 100/100)' : 'Profilul Tău Curent'}
               </span>
             </div>
-            <span className="text-[11px] text-gray-400">Actualizat în timp real când adopți sugestii</span>
+            
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setBannerPickerOpen(!bannerPickerOpen)}
+                className="text-xs font-bold text-gray-600 hover:text-black flex items-center gap-1 p-1 rounded-lg hover:bg-gray-100 cursor-pointer"
+                title="Alege Tema Banner-ului"
+              >
+                <Palette className="w-3.5 h-3.5 text-blue-600" />
+                <span className="hidden sm:inline">Schimbă Banner</span>
+              </button>
+            </div>
           </div>
+
+          {/* BANNER THEME SELECTOR MODAL / DROPDOWN */}
+          {bannerPickerOpen && (
+            <div className="p-4 rounded-2xl bg-white border border-gray-200 shadow-md flex items-center justify-between gap-2 flex-wrap">
+              <span className="text-xs font-bold text-gray-700">Alege Stilul Banner-ului Tehnic:</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setBannerStyle('tech_terminal')}
+                  className="px-2.5 py-1 text-xs font-bold rounded-lg bg-gray-900 text-emerald-400 border border-gray-700 hover:scale-105 transition cursor-pointer"
+                >
+                  Terminal Java
+                </button>
+                <button
+                  onClick={() => setBannerStyle('upb_academic')}
+                  className="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#004b87] text-white border border-blue-400 hover:scale-105 transition cursor-pointer"
+                >
+                  UPB Academic Blue
+                </button>
+                <button
+                  onClick={() => setBannerStyle('minimalist_slate')}
+                  className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-slate-200 border border-slate-600 hover:scale-105 transition cursor-pointer"
+                >
+                  Minimalist Slate
+                </button>
+                <button
+                  onClick={() => setBannerStyle('cloud_violet')}
+                  className="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#2e1065] text-purple-300 border border-purple-500 hover:scale-105 transition cursor-pointer"
+                >
+                  Cloud & Microservices
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* MAIN PROFILE CARD */}
           <div className="bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-xs relative group">
             
             {/* LINKEDIN COVER BANNER */}
-            <div className="h-32 sm:h-44 w-full bg-[#1d3557] relative">
+            <div className={`h-32 sm:h-44 w-full relative transition-colors duration-300 ${getBannerBackground()}`}>
+              <div className="absolute inset-0 p-4 flex flex-col justify-between text-white/80 pointer-events-none">
+                <div className="text-[11px] font-mono tracking-wider text-emerald-400/90 font-bold">
+                  // Java 21 • Spring Boot 3 • PostgreSQL pgvector • Docker • Distributed Systems
+                </div>
+                <div className="text-right text-[10px] font-mono opacity-40">
+                  National University of Science and Technology POLITEHNICA Bucharest
+                </div>
+              </div>
+
               <div className="absolute top-3 right-3">
-                <button className="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-gray-700 flex items-center justify-center shadow-md transition cursor-pointer">
+                <button 
+                  onClick={() => setBannerPickerOpen(!bannerPickerOpen)}
+                  className="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-gray-700 flex items-center justify-center shadow-md transition cursor-pointer"
+                  title="Personalizează Banner-ul"
+                >
                   <Edit3 className="w-4 h-4" />
                 </button>
               </div>
@@ -340,7 +619,11 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-4 border-white bg-[#1b2a41] text-white flex items-center justify-center text-3xl sm:text-4xl font-black shadow-md">
                     {profile?.fullName ? profile.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'SM'}
                   </div>
-                  <div className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-emerald-500 border-2 border-white" title="Activ"></div>
+                  {profile?.isOpenToWork && (
+                    <div className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider border-2 border-white shadow-xs">
+                      Open to Work
+                    </div>
+                  )}
                 </div>
 
                 {/* UNIVERSITY LOGO BADGE */}
@@ -348,7 +631,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   <div className="w-8 h-8 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center font-black text-xs text-gray-700">
                     UP
                   </div>
-                  <span className="text-xs font-bold text-gray-900 hidden sm:inline max-w-[180px] leading-tight">
+                  <span className="text-xs font-bold text-gray-900 hidden sm:inline max-w-[200px] leading-tight">
                     Universitatea POLITEHNICA din București
                   </span>
                 </div>
@@ -363,10 +646,32 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   <ShieldCheck className="w-5 h-5 text-gray-500 fill-gray-100" title="Verificat" />
                 </div>
 
-                {/* HEADLINE */}
-                <p className="text-sm text-gray-800 font-normal leading-snug">
-                  {profile?.headline || 'Student la Universitatea POLITEHNICA din Bucuresti'}
-                </p>
+                {/* HEADLINE WITH EDIT BUTTON */}
+                <div className="flex items-start justify-between gap-3 pt-0.5 group/h">
+                  <p className="text-sm text-gray-800 font-normal leading-snug">
+                    {profile?.headline || 'Junior Software Engineer | Java 21 & Spring Boot 3 | UPB Automatica & Calculatoare'}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setTempHeadline(profile?.headline || '');
+                      setEditHeadlineModalOpen(true);
+                    }}
+                    className="p-1 rounded-full text-gray-400 hover:text-black opacity-0 group-hover/h:opacity-100 transition cursor-pointer shrink-0"
+                    title="Editează Headline"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* CREATOR TOPICS */}
+                {profile?.isCreatorMode && (
+                  <p className="text-xs text-gray-500 font-medium pt-0.5">
+                    Discută despre{' '}
+                    <span className="font-semibold text-gray-700">
+                      {profile.creatorTopics ? profile.creatorTopics.join(' ') : '#java #springboot #backend #algorithms #softwareengineering'}
+                    </span>
+                  </p>
+                )}
 
                 {/* LOCATION & CONTACT INFO */}
                 <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 pt-1">
@@ -388,26 +693,42 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 </div>
               </div>
 
-              {/* ACTION PILLS */}
+              {/* ACTION PILLS & TOGGLES */}
               <div className="flex flex-wrap items-center gap-2 pt-4">
-                <button className="px-4 py-1.5 rounded-full text-sm font-bold bg-[#0a66c2] hover:bg-[#004182] text-white transition shadow-2xs cursor-pointer">
-                  Open to
+                <button 
+                  onClick={toggleOpenToWork}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition shadow-2xs cursor-pointer ${
+                    profile?.isOpenToWork 
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
+                      : 'bg-[#0a66c2] hover:bg-[#004182] text-white'
+                  }`}
+                >
+                  {profile?.isOpenToWork ? '✓ Open to Work activ' : 'Open to'}
                 </button>
-                <button className="px-4 py-1.5 rounded-full text-sm font-bold bg-white hover:bg-blue-50 text-[#0a66c2] border border-[#0a66c2] transition shadow-2xs cursor-pointer">
-                  Add profile section
+
+                <button 
+                  onClick={toggleCreatorMode}
+                  className="px-4 py-1.5 rounded-full text-xs font-bold bg-white hover:bg-blue-50 text-[#0a66c2] border border-[#0a66c2] transition shadow-2xs cursor-pointer"
+                >
+                  {profile?.isCreatorMode ? 'Creator Mode: Pornit' : 'Pornește Creator Mode'}
                 </button>
-                <button className="px-4 py-1.5 rounded-full text-sm font-bold bg-white hover:bg-blue-50 text-[#0a66c2] border border-[#0a66c2] transition shadow-2xs cursor-pointer">
-                  Enhance profile
-                </button>
-                <button className="px-4 py-1.5 rounded-full text-sm font-bold bg-white hover:bg-gray-100 text-gray-600 border border-gray-400 transition shadow-2xs cursor-pointer">
-                  Resources
+
+                <button 
+                  onClick={() => {
+                    setTempHeadline(profile?.headline || '');
+                    setEditHeadlineModalOpen(true);
+                  }}
+                  className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-400 transition shadow-2xs cursor-pointer flex items-center gap-1"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  Editează Profil
                 </button>
               </div>
 
             </div>
           </div>
 
-          {/* FEATURED SECTION (ÎN PRIM-PLAN) - CRITICAL DIFFERENTIATOR (+30% VIEWS) */}
+          {/* FEATURED SECTION (ÎN PRIM-PLAN) */}
           <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -418,7 +739,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   </span>
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Vitrina ta tehnică vizuală: proiecte de pe GitHub, CV PDF și realizări concrete.
+                  Vitrina ta tehnică vizuală: proiecte de pe GitHub, demo-uri live și CV PDF.
                 </p>
               </div>
               <button 
@@ -463,7 +784,10 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-950">About (Despre)</h3>
               <button 
-                onClick={() => setActiveTab('about')}
+                onClick={() => {
+                  setTempAbout(profile?.about || '');
+                  setEditAboutModalOpen(true);
+                }}
                 title="Editează secțiunea About"
                 className="p-1.5 rounded-full hover:bg-gray-100 text-gray-600 transition cursor-pointer"
               >
@@ -485,6 +809,62 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             )}
           </div>
 
+          {/* EXPERIENCE CARD (PROFESSIONAL INTERNSHIP / ROLES) */}
+          <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
+                  Experience (Experiență Profesională)
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                    Validare Practică
+                  </span>
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Internship-urile și proiectele în echipă demonstrează adaptarea la rigorile industriei.
+                </p>
+              </div>
+              <button 
+                onClick={() => setActiveTab('action_plan')}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-600 transition cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 divide-y divide-gray-100">
+              {profile?.experience && profile.experience.length > 0 ? (
+                profile.experience.map((exp, idx) => (
+                  <div key={idx} className={`space-y-2 ${idx > 0 ? 'pt-4' : ''}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-950 leading-tight">
+                          {exp.title}
+                        </h4>
+                        <p className="text-xs font-semibold text-gray-700 mt-0.5">
+                          {exp.company}
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          {exp.period} • {exp.location}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-gray-700 leading-relaxed whitespace-pre-line bg-gray-50/70 p-3 rounded-xl border border-gray-200/70">
+                      {exp.description}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div 
+                  onClick={handleSyncWithSelectedCv}
+                  className="py-4 text-center text-xs text-gray-400 border border-dashed rounded-xl cursor-pointer hover:border-blue-300 hover:text-blue-600 transition"
+                >
+                  + Nu ai nicio experiență listată. Apasă pe „Sincronizează cu CV-ul” pentru a importa automat internship-ul SIMAVI!
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* PROJECTS CARD (GOOGLE XYZ / STAR FORMATTED) */}
           <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
@@ -492,11 +872,11 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
                   Projects (Proiecte Tehnice)
                   <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                    Dovadă Practică
+                    Formule STAR
                   </span>
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Substitutul principal pentru experiența în corporație pentru studenți și juniori.
+                  Proiecte complexe cu cod deschis și arhitectură scalabilă (Java 21, Spring Boot, PyTorch).
                 </p>
               </div>
               <button 
@@ -517,7 +897,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                           {proj.title}
                         </h4>
                         <p className="text-[11px] text-gray-500 mt-0.5">
-                          {proj.timePeriod} • Asociat cu {proj.associatedWith}
+                          {proj.timePeriod} • {proj.associatedWith}
                         </p>
                       </div>
                       {proj.url && (
@@ -528,7 +908,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                           className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition flex items-center gap-1 shrink-0"
                         >
                           <FolderGit2 className="w-3.5 h-3.5 text-gray-600" />
-                          GitHub
+                          Link Proiect
                         </a>
                       )}
                     </div>
@@ -566,9 +946,6 @@ export default function LinkedInOptimizerPage({ currentUser }) {
               <div className="flex items-center gap-1">
                 <button className="p-1.5 rounded-full hover:bg-gray-100 text-gray-600 transition cursor-pointer">
                   <Plus className="w-4 h-4" />
-                </button>
-                <button className="p-1.5 rounded-full hover:bg-gray-100 text-gray-600 transition cursor-pointer">
-                  <Edit3 className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -608,11 +985,16 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             </div>
           </div>
 
-          {/* SKILLS CARD */}
+          {/* SKILLS CARD WITH QUICK REMOVE & ADD */}
           <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-gray-950">Skills & Endorsements</h3>
+                <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
+                  Skills & Endorsements
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                    {profile?.skills?.length || 0} competențe
+                  </span>
+                </h3>
                 <p className="text-xs text-gray-500">Fixează Top 3 Pinned Skills (Java, Spring Boot, SQL)</p>
               </div>
               <div className="flex items-center gap-2">
@@ -629,7 +1011,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             <div className="space-y-2.5 divide-y divide-gray-100">
               {profile?.skills && profile.skills.length > 0 ? (
                 profile.skills.map((sk, idx) => (
-                  <div key={idx} className={`flex items-center justify-between ${idx > 0 ? 'pt-2.5' : ''}`}>
+                  <div key={idx} className={`flex items-center justify-between group/sk ${idx > 0 ? 'pt-2.5' : ''}`}>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-gray-900">{sk}</span>
                       {idx < 3 && (
@@ -638,7 +1020,16 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-gray-400">Aptitudine listată</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-gray-400">Aptitudine listată</span>
+                      <button
+                        onClick={() => removeSkillFromProfile(sk)}
+                        className="text-gray-300 hover:text-rose-600 transition p-1 cursor-pointer opacity-0 group-hover/sk:opacity-100"
+                        title="Șterge aptitudinea"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))
               ) : (
@@ -663,7 +1054,9 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                       <Award className="w-4 h-4 text-amber-500 shrink-0" />
                       <span className="text-xs font-bold text-gray-800">{cert}</span>
                     </div>
-                    <span className="text-[11px] text-gray-400 font-semibold">Verificat</span>
+                    <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-semibold border border-emerald-200">
+                      Verificat
+                    </span>
                   </div>
                 ))}
               </div>
@@ -707,7 +1100,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             <div className="flex items-center gap-5">
               <div className="relative w-20 h-20 rounded-2xl bg-neutral-800/80 border border-neutral-700 flex flex-col items-center justify-center shrink-0">
                 <span className="text-2xl font-black text-white">
-                  {optimizationResult?.overallScore || 50}
+                  {optimizationResult?.overallScore || 85}
                 </span>
                 <span className="text-[10px] text-gray-400 font-bold uppercase">din 100</span>
               </div>
@@ -1236,6 +1629,112 @@ export default function LinkedInOptimizerPage({ currentUser }) {
 
       </div>
 
+      {/* EDIT HEADLINE MODAL */}
+      {editHeadlineModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl border border-gray-200 w-full max-w-lg p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-[#0a66c2]" />
+                Editează Headline Profil
+              </h3>
+              <button 
+                onClick={() => setEditHeadlineModalOpen(false)}
+                className="p-1 rounded-lg text-gray-400 hover:text-black transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <label className="font-semibold text-gray-700">Titlu Profil (Headline)</label>
+                <span className={`font-mono font-bold ${tempHeadline.length > 220 ? 'text-rose-600' : 'text-gray-400'}`}>
+                  {tempHeadline.length} / 220 caractere
+                </span>
+              </div>
+              <textarea
+                value={tempHeadline}
+                onChange={(e) => setTempHeadline(e.target.value)}
+                rows={3}
+                className="w-full p-3 text-xs font-bold text-gray-900 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                placeholder="Ex: Junior Software Engineer | Java 21 & Spring Boot | Student @ UPB..."
+              />
+              <p className="text-[11px] text-gray-500">
+                Sfat: Folosește separatorul `|` și include rolul dorit + stiva tehnică principală.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditHeadlineModalOpen(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition cursor-pointer"
+              >
+                Anulează
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveHeadline}
+                disabled={!tempHeadline.trim()}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-black text-white hover:bg-neutral-800 transition cursor-pointer disabled:opacity-50"
+              >
+                Salvează în Profil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT ABOUT MODAL */}
+      {editAboutModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl border border-gray-200 w-full max-w-xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-[#0a66c2]" />
+                Editează Secțiunea About (Despre)
+              </h3>
+              <button 
+                onClick={() => setEditAboutModalOpen(false)}
+                className="p-1 rounded-lg text-gray-400 hover:text-black transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-gray-700">Rezumat Profesional</label>
+              <textarea
+                value={tempAbout}
+                onChange={(e) => setTempAbout(e.target.value)}
+                rows={10}
+                className="w-full p-3 text-xs text-gray-900 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black leading-relaxed"
+                placeholder="Scrie povestea ta profesională, proiectele realizate și datele de contact..."
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditAboutModalOpen(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition cursor-pointer"
+              >
+                Anulează
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAbout}
+                disabled={!tempAbout.trim()}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-black text-white hover:bg-neutral-800 transition cursor-pointer disabled:opacity-50"
+              >
+                Salvează în Profil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CONTACT INFO MODAL */}
       {contactModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
@@ -1265,15 +1764,24 @@ export default function LinkedInOptimizerPage({ currentUser }) {
 
               <div className="space-y-1">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-emerald-600" /> Număr de Telefon
+                </span>
+                <p className="text-sm font-bold text-gray-900 bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                  {profile?.phone || '(+40) 723 034 706'}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
                   <Linkedin className="w-3.5 h-3.5 text-[#0a66c2]" /> Profil LinkedIn
                 </span>
                 <a 
-                  href={profile?.linkedinUrl || 'https://www.linkedin.com/in/sirbu-mihai-86133b181'} 
+                  href={profile?.linkedinUrl || 'https://www.linkedin.com/in/sirbu-mihai'} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-xs font-bold text-[#0a66c2] hover:underline bg-blue-50/50 p-2.5 rounded-xl border border-blue-200 flex items-center justify-between"
                 >
-                  <span className="truncate">{profile?.linkedinUrl || 'www.linkedin.com/in/sirbu-mihai-86133b181'}</span>
+                  <span className="truncate">{profile?.linkedinUrl || 'www.linkedin.com/in/sirbu-mihai'}</span>
                   <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                 </a>
               </div>

@@ -1,5 +1,8 @@
 package com.jobtracker.ats.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jobtracker.ats.dto.CvProfileDto;
 import com.jobtracker.ats.dto.linkedin.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -87,6 +90,286 @@ public class LinkedInOptimizerService {
                         )
                 )
         );
+    }
+
+    public LinkedInProfileDto getAllStarProfile() {
+        return new LinkedInProfileDto(
+                "Sîrbu Mihai-Alexandru",
+                "Junior Software Engineer | Java 21 & Spring Boot 3 | Student @ UPB Automatica & Calculatoare | Building Scalable Systems & AI Platforms",
+                "București, România",
+                "sarbumihai0@gmail.com",
+                "https://www.linkedin.com/in/sirbu-mihai",
+                "(+40) 723 034 706",
+                "500+ conexiuni",
+                "Sunt student în cadrul Facultății de Automatică și Calculatoare (Universitatea POLITEHNICA din București), dedicat ingineriei software, sistemelor backend robuste și scalabile și optimizării algoritmice.\n\n" +
+                "🛠️ Ce construiesc și ce știu să fac:\n" +
+                "• Backend & Arhitectură: Java 21, Spring Boot 3, RESTful APIs, arhitecturi orientate pe microservicii, principii Clean Architecture și SOLID.\n" +
+                "• Baze de Date & Persistență: PostgreSQL, Microsoft SQL Server, indexare avansată B-Tree, modelare relațională 3NF, optimizare interogări SQL și căutare vectorială cu pgvector.\n" +
+                "• DevOps & Cloud: Docker Compose, Git & GitHub workflows, Maven, Nginx, Linux, migrații Flyway și pipeline-uri CI/CD.\n" +
+                "• Proiecte Reprezentative: Am proiectat și implementat ATS Job Tracker (Spring Boot 3 + PostgreSQL pgvector + React + Docker), un sistem distribuit cu web crawling concurent și potrivire semantică a joburilor.\n\n" +
+                "💼 Experiență practică:\n" +
+                "Am activat ca Software Engineering Intern la SIMAVI (Software Imagination & Vision), gestionând întregul ciclu SDLC pentru o aplicație full-stack în Java (Spring Boot) și optimizând interogările JPA pe baze de date cu 50.000+ înregistrări.\n\n" +
+                "🎯 Obiectiv curent: Deschis pentru oportunități de Junior Software Engineer / Junior Backend Developer sau colaborări tehnice cu echipe ambițioase.\n\n" +
+                "📫 Contact direct: sarbumihai0@gmail.com | Bucuros să mă conectez cu colegi din industrie, mentori și tech recruiters!",
+                List.of(
+                        new LinkedInEducationDto(
+                                "National University of Science and Technology POLITEHNICA Bucharest",
+                                "Master of Science in Advanced Signal Processing for Multimedia Applications",
+                                "octombrie 2026 – iulie 2028 (Expected)",
+                                "UP"
+                        ),
+                        new LinkedInEducationDto(
+                                "National University of Science and Technology POLITEHNICA Bucharest",
+                                "Bachelor of Science in Systems Engineering and Applied Computer Science • Faculty of Automatic Control and Computers",
+                                "octombrie 2022 – iulie 2026",
+                                "UP"
+                        )
+                ),
+                List.of(
+                        new LinkedInExperienceDto(
+                                "Software Engineering Intern",
+                                "SIMAVI (Software Imagination & Vision)",
+                                "iunie 2025 – august 2025 (3 luni)",
+                                "București, România • Hibrid",
+                                "• Am gestionat individual întregul ciclu de dezvoltare (SDLC) pentru o aplicație web full-stack în Java (Spring Boot) și PrimeFaces de-a lungul a 5 sprinturi Agile.\n" +
+                                "• Am proiectat schema bazei de date MySQL și am importat peste 50.000 de înregistrări, optimizând interogările Spring Data JPA și reducând timpul de încărcare al dashboard-ului cu 40%.\n" +
+                                "• Am implementat fluxul complet de autentificare și autorizare securizată (RBAC cu 2 roluri) folosind Spring Security și hashing de parole BCrypt."
+                        )
+                ),
+                List.of(
+                        "Java", "Spring Boot", "PostgreSQL", "pgvector", "Docker", "REST API", "SQL",
+                        "Git & GitHub", "OOP & Clean Code", "Spring Security", "Spring Data JPA", "Hibernate",
+                        "React", "TypeScript", "Python", "PyTorch", "Linux", "Nginx", "Microservices",
+                        "Algorithms", "Data Structures", "JUnit 5", "Mockito", "Flyway", "Maven"
+                ),
+                List.of("Română (Nativ)", "Engleză (Professional)", "Germană (Elementary)"),
+                List.of(
+                        "Problem Solving (Intermediate) - HackerRank",
+                        "Java (Basic & Intermediate) - HackerRank",
+                        "SQL & Relational Databases (3NF & Tuning)"
+                ),
+                List.of(
+                        new LinkedInProjectDto(
+                                "ATS Job Tracker & AI Career Platform",
+                                "Platformă full-stack de căutare și analiză automată a ofertelor de muncă IT din România. Arhitectură modulară cu Spring Boot 3 și Java 21, bază de date PostgreSQL cu pgvector (HNSW Indexing) pentru potrivire semantică sub 15ms, containerizare Docker Compose și frontend React.",
+                                "iunie 2026 – septembrie 2026",
+                                "https://github.com/sirbumihai/ATS_Job_Tracker",
+                                List.of("Java 21", "Spring Boot 3.3", "PostgreSQL", "pgvector", "Docker", "React", "Groq LLM"),
+                                "Facultatea de Automatică și Calculatoare, UPB"
+                        ),
+                        new LinkedInProjectDto(
+                                "3D Medical Image Segmentation (PyTorch)",
+                                "Model de segmentare semantică 3D UNet++ cu mecanism de atenție CBAM în PyTorch pentru detecția automată a tumorilor din date volumetrice DCE-MRI (Dice score 0.738). Pipeline medical de date cu SimpleITK pentru 1.506 cazuri multi-centru.",
+                                "februarie 2026 – iunie 2026",
+                                "https://github.com/sirbumihai/3d-medical-image-segmentation",
+                                List.of("Python", "PyTorch", "SimpleITK", "Flask", "NumPy", "SciPy"),
+                                "Universitatea POLITEHNICA din București"
+                        ),
+                        new LinkedInProjectDto(
+                                "OneRep – Fitness Tracking Web Application",
+                                "Aplicație web full-stack de monitorizare fitness și analitică avansată. Backend securizat în Supabase și PostgreSQL cu 8 politici Row-Level Security (RLS) și integrare plăți Stripe prin webhooks.",
+                                "octombrie 2025 – ianuarie 2026",
+                                "https://one-rep.vercel.app/",
+                                List.of("Next.js", "React", "TypeScript", "Supabase", "PostgreSQL", "Tailwind CSS", "Stripe"),
+                                "Proiect Independent"
+                        )
+                ),
+                List.of(
+                        new LinkedInFeaturedDto(
+                                "ATS Job Tracker - Repozitoriu GitHub & Arhitectură",
+                                "LINK",
+                                "https://github.com/sirbumihai/ATS_Job_Tracker",
+                                "github.com • Proiect Open-Source Full-Stack",
+                                "Proiect de Top"
+                        ),
+                        new LinkedInFeaturedDto(
+                                "OneRep - Fitness Web App (Live Demo)",
+                                "LINK",
+                                "https://one-rep.vercel.app/",
+                                "one-rep.vercel.app • Next.js & Supabase Platform",
+                                "Demo Live"
+                        ),
+                        new LinkedInFeaturedDto(
+                                "CV Tehnic Software Engineer 2026 (Format PDF)",
+                                "DOCUMENT",
+                                "#",
+                                "Format curat de 1 pagină optimizat pentru sistemele ATS",
+                                "CV Descărcabil"
+                        )
+                ),
+                "tech_terminal",
+                true,
+                true,
+                List.of("#java", "#springboot", "#backend", "#algorithms", "#softwareengineering")
+        );
+    }
+
+    public LinkedInCvSyncResponse mergeCvIntoProfile(LinkedInProfileDto current, CvProfileDto cv) {
+        if (cv == null) {
+            return new LinkedInCvSyncResponse(current != null ? current : getDemoProfile(), List.of(), 0, "CV-ul selectat este nul.");
+        }
+
+        List<String> imported = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Nume, email, phone, location
+        String fullName = (cv.fullName() != null && !cv.fullName().isBlank()) ? cv.fullName() : (current != null ? current.fullName() : "Sirbu Mihai");
+        String email = (cv.email() != null && !cv.email().isBlank()) ? cv.email() : (current != null ? current.email() : "");
+        String phone = (cv.phone() != null && !cv.phone().isBlank()) ? cv.phone() : (current != null ? current.phone() : "");
+        String location = (cv.location() != null && !cv.location().isBlank()) ? cv.location() : (current != null ? current.location() : "București, România");
+        String linkedinUrl = (cv.linkedin() != null && !cv.linkedin().isBlank()) ? cv.linkedin() : (current != null ? current.linkedinUrl() : "");
+
+        // Skills merge
+        Set<String> mergedSkills = new LinkedHashSet<>();
+        if (current != null && current.skills() != null) {
+            mergedSkills.addAll(current.skills());
+        }
+        addSkillsFromCsv(mergedSkills, cv.skillsLanguages());
+        addSkillsFromCsv(mergedSkills, cv.skillsFrameworks());
+        addSkillsFromCsv(mergedSkills, cv.skillsDatabases());
+        addSkillsFromCsv(mergedSkills, cv.skillsDevops());
+        imported.add(mergedSkills.size() + " Aptitudini Tehnice");
+
+        // Experience merge
+        List<LinkedInExperienceDto> experiences = new ArrayList<>();
+        if (cv.workExperienceJson() != null && !cv.workExperienceJson().isBlank()) {
+            try {
+                JsonNode arr = mapper.readTree(cv.workExperienceJson());
+                if (arr.isArray()) {
+                    for (JsonNode node : arr) {
+                        String role = node.path("role").asText("");
+                        String company = node.path("company").asText("");
+                        String period = node.path("period").asText("");
+                        String loc = node.path("location").asText("");
+                        List<String> bullets = new ArrayList<>();
+                        if (node.has("bullets") && node.path("bullets").isArray()) {
+                            for (JsonNode b : node.path("bullets")) bullets.add(b.asText());
+                        }
+                        String desc = bullets.isEmpty() ? node.path("description").asText("") : String.join("\n• ", bullets);
+                        if (!desc.startsWith("• ") && !bullets.isEmpty()) desc = "• " + desc;
+                        if (!role.isBlank() || !company.isBlank()) {
+                            experiences.add(new LinkedInExperienceDto(role, company, period, loc, desc));
+                        }
+                    }
+                    if (!experiences.isEmpty()) {
+                        imported.add(experiences.size() + " Poziții de Experiență Profesională (Internship)");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("[CV SYNC] Eroare la parsarea experienței din CV: {}", e.getMessage());
+            }
+        }
+        if (experiences.isEmpty() && current != null && current.experience() != null) {
+            experiences.addAll(current.experience());
+        }
+
+        // Projects merge
+        List<LinkedInProjectDto> projects = new ArrayList<>();
+        if (cv.projectsJson() != null && !cv.projectsJson().isBlank()) {
+            try {
+                JsonNode arr = mapper.readTree(cv.projectsJson());
+                if (arr.isArray()) {
+                    for (JsonNode node : arr) {
+                        String title = node.path("title").asText("");
+                        String period = node.path("period").asText("");
+                        String techStack = node.path("techStack").asText("");
+                        String linkUrl = node.path("linkUrl").asText("");
+                        List<String> bullets = new ArrayList<>();
+                        if (node.has("bullets") && node.path("bullets").isArray()) {
+                            for (JsonNode b : node.path("bullets")) bullets.add(b.asText());
+                        }
+                        String desc = bullets.isEmpty() ? node.path("description").asText("") : String.join("\n• ", bullets);
+                        if (!desc.startsWith("• ") && !bullets.isEmpty()) desc = "• " + desc;
+                        List<String> techList = Arrays.stream(techStack.split(","))
+                                .map(String::trim)
+                                .filter(s -> !s.isBlank())
+                                .toList();
+                        if (!title.isBlank()) {
+                            projects.add(new LinkedInProjectDto(title, desc, period, linkUrl, techList, "Facultatea de Automatică și Calculatoare, UPB"));
+                        }
+                    }
+                    if (!projects.isEmpty()) {
+                        imported.add(projects.size() + " Proiecte Tehnice cu Formule STAR");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("[CV SYNC] Eroare la parsarea proiectelor din CV: {}", e.getMessage());
+            }
+        }
+        if (projects.isEmpty() && current != null && current.projects() != null) {
+            projects.addAll(current.projects());
+        }
+
+        // Education merge
+        List<LinkedInEducationDto> education = new ArrayList<>();
+        if (cv.educationJson() != null && !cv.educationJson().isBlank()) {
+            try {
+                JsonNode arr = mapper.readTree(cv.educationJson());
+                if (arr.isArray()) {
+                    for (JsonNode node : arr) {
+                        String school = node.path("school").asText("");
+                        String degree = node.path("degree").asText("");
+                        String period = node.path("period").asText("");
+                        String logo = school.toLowerCase().contains("politehnica") ? "UP" : "UN";
+                        if (!school.isBlank()) {
+                            education.add(new LinkedInEducationDto(school, degree, period, logo));
+                        }
+                    }
+                    if (!education.isEmpty()) {
+                        imported.add(education.size() + " Înregistrări Academice");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("[CV SYNC] Eroare la parsarea educației din CV: {}", e.getMessage());
+            }
+        }
+        if (education.isEmpty() && current != null && current.education() != null) {
+            education.addAll(current.education());
+        }
+
+        String about = (current != null && current.about() != null && !current.about().isBlank()) 
+                ? current.about() 
+                : (cv.summary() != null ? cv.summary() : "");
+
+        LinkedInProfileDto merged = new LinkedInProfileDto(
+                fullName,
+                current != null && current.headline() != null ? current.headline() : "Junior Software Engineer | Java 21 & Spring Boot 3 | UPB Automatica & Calculatoare",
+                location,
+                email,
+                linkedinUrl,
+                phone,
+                "500+ conexiuni",
+                about,
+                education,
+                experiences,
+                new ArrayList<>(mergedSkills),
+                current != null && current.languages() != null ? current.languages() : List.of("Engleză (Professional)", "Germană (Elementary)"),
+                current != null && current.certifications() != null ? current.certifications() : List.of("Problem Solving (Intermediate) - HackerRank", "SQL & Relational Databases Certification"),
+                projects,
+                current != null && current.featured() != null ? current.featured() : List.of(),
+                current != null && current.bannerTheme() != null ? current.bannerTheme() : "tech_terminal",
+                true,
+                true,
+                List.of("#java", "#springboot", "#backend", "#algorithms", "#softwareengineering")
+        );
+
+        return new LinkedInCvSyncResponse(
+                merged,
+                imported,
+                imported.size(),
+                "Profilul LinkedIn a fost sincronizat cu succes din CV-ul: " + (cv.title() != null ? cv.title() : "CV Principal")
+        );
+    }
+
+    private void addSkillsFromCsv(Set<String> set, String raw) {
+        if (raw == null || raw.isBlank()) return;
+        String[] parts = raw.split("[,;•|]");
+        for (String p : parts) {
+            String trimmed = p.trim();
+            if (!trimmed.isEmpty() && trimmed.length() < 40) {
+                set.add(trimmed);
+            }
+        }
     }
 
     public LinkedInOptimizationResult optimizeProfile(LinkedInOptimizationRequest request) {
