@@ -71,6 +71,22 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
   const [selectedDomain, setSelectedDomain] = useState(null);
   const [modalTab, setModalTab] = useState('requirements'); // 'requirements', 'comparison', 'roadmap', 'sample_jobs'
 
+  // Filtrare pe categorii de tehnologii (Limbaje, Frameworks, Cloud, Baze de Date etc.)
+  const [universalSkillCategory, setUniversalSkillCategory] = useState('ALL');
+  const [modalSkillCategory, setModalSkillCategory] = useState('ALL');
+
+  const SKILL_CATEGORIES = [
+    { id: 'ALL', label: 'Toate Tehnologiile' },
+    { id: 'Limbaje de Programare', label: 'Limbaje' },
+    { id: 'Frameworks & Web', label: 'Frameworks & Web' },
+    { id: 'Baze de Date', label: 'Baze de Date' },
+    { id: 'Cloud & DevOps', label: 'Cloud & DevOps' },
+    { id: 'AI & Data', label: 'AI & Data Science' },
+    { id: 'QA & Testare', label: 'QA & Testare' },
+    { id: 'Sisteme & Securitate', label: 'Securitate & Sisteme' },
+    { id: 'Unelte & Metodologii', label: 'Unelte & Agile' }
+  ];
+
   const activeUserId = currentUser?.userId || currentUser?.id || null;
 
   const fetchInsights = async (
@@ -552,37 +568,78 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
       {/* UNIVERSAL TOP SKILLS RADAR STRIP */}
       {data?.universalTopSkills && data.universalTopSkills.length > 0 && (
         <section className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-blue-600" />
-                Top Competențe Solicitate Universal în IT ({levelFilter} • {locationFilter === 'RO_ONLY' ? 'România' : 'Extins'})
+                Frecvența Tehnologiilor în Descrierile Reale de Joburi ({levelFilter} • {locationFilter === 'RO_ONLY' ? 'România' : 'Extins'})
               </h3>
-              <p className="text-xs text-gray-500">Tehnologiile care apar cel mai frecvent în toate anunțurile de angajare analizate.</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Extrase direct din cerințele oficiale ale anunțurilor de recrutare din România (fără estimări generice sau etichete sintetice).
+              </p>
             </div>
-            <span className="text-[11px] font-bold text-gray-400">Ponderea în descrieri</span>
+            <span className="text-[11px] font-bold text-gray-400">
+              {data.universalTopSkills.length} tehnologii detectate
+            </span>
+          </div>
+
+          {/* CATEGORY FILTER PILLS */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 border-b border-gray-100">
+            {SKILL_CATEGORIES.map((cat) => {
+              const countInCat = cat.id === 'ALL'
+                ? data.universalTopSkills.length
+                : data.universalTopSkills.filter(s => s.category === cat.id).length;
+              if (countInCat === 0 && cat.id !== 'ALL') return null;
+
+              const active = universalSkillCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setUniversalSkillCategory(cat.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                    active
+                      ? 'bg-black text-white shadow-xs'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                  }`}
+                >
+                  <span>{cat.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${active ? 'bg-neutral-700 text-gray-200' : 'bg-gray-200 text-gray-600'}`}>
+                    {countInCat}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-2">
-            {data.universalTopSkills.map((sk) => (
-              <div 
-                key={sk.skill}
-                className="bg-gray-50/80 border border-gray-200/70 p-3 rounded-2xl flex flex-col justify-between hover:bg-gray-100 transition"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-900 truncate max-w-[100px]" title={sk.skill}>
-                    {sk.skill}
-                  </span>
-                  <span className="text-[11px] font-black text-blue-600">{sk.percentage}%</span>
+            {data.universalTopSkills
+              .filter(sk => universalSkillCategory === 'ALL' || sk.category === universalSkillCategory)
+              .map((sk) => (
+                <div 
+                  key={sk.skill}
+                  className="bg-gray-50/80 border border-gray-200/70 p-3 rounded-2xl flex flex-col justify-between hover:bg-gray-100 transition group"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-bold text-gray-900 truncate" title={sk.skill}>
+                        {sk.skill}
+                      </span>
+                      <span className="text-[11px] font-black text-blue-600 shrink-0">{sk.percentage}%</span>
+                    </div>
+                    {sk.category && (
+                      <span className="inline-block text-[9px] font-semibold text-gray-500 uppercase tracking-wider bg-gray-200/60 px-1.5 py-0.5 rounded">
+                        {sk.category}
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden mt-2.5">
+                    <div 
+                      className="bg-blue-600 h-full rounded-full transition-all duration-500" 
+                      style={{ width: `${Math.min(100, sk.percentage * 2)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-gray-400 mt-1">{sk.count} poziții cerute</span>
                 </div>
-                <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden mt-2.5">
-                  <div 
-                    className="bg-blue-600 h-full rounded-full transition-all duration-500" 
-                    style={{ width: `${Math.min(100, sk.percentage * 1.5)}%` }}
-                  />
-                </div>
-                <span className="text-[10px] text-gray-400 mt-1">{sk.count} apariții</span>
-              </div>
             ))}
           </div>
         </section>
@@ -896,21 +953,66 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
 
                   {/* TOP SKILLS FREQUENCY */}
                   <div className="bg-white p-5 rounded-2xl border border-gray-200 space-y-3">
-                    <h4 className="text-xs font-black uppercase text-gray-500 tracking-wider flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4 text-blue-600" />
-                      Frecvența Tehnologiilor în Descrierile Reale ({levelFilter} • {locationFilter === 'RO_ONLY' ? 'România' : 'Extins'})
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                      {selectedDomain.topSkills?.map((sk) => (
-                        <div key={sk.skill} className="p-2.5 rounded-xl bg-gray-50 border border-gray-200">
-                          <div className="flex justify-between items-center text-xs font-bold text-gray-900">
-                            <span className="truncate" title={sk.skill}>{sk.skill}</span>
-                            <span className="text-blue-600">{sk.percentage}%</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <h4 className="text-xs font-black uppercase text-gray-500 tracking-wider flex items-center gap-2">
+                        <BarChart3 className="w-4 h-4 text-blue-600" />
+                        Frecvența Tehnologiilor în Descrierile Reale ({levelFilter} • {locationFilter === 'RO_ONLY' ? 'România' : 'Extins'})
+                      </h4>
+                      <span className="text-[11px] text-gray-400 font-semibold">
+                        {selectedDomain.topSkills?.length || 0} tehnologii identificate
+                      </span>
+                    </div>
+
+                    {/* CATEGORY PILLS FOR MODAL */}
+                    {selectedDomain.topSkills && selectedDomain.topSkills.length > 0 && (
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 border-b border-gray-100">
+                        {SKILL_CATEGORIES.map((cat) => {
+                          const countInCat = cat.id === 'ALL'
+                            ? selectedDomain.topSkills.length
+                            : selectedDomain.topSkills.filter(s => s.category === cat.id).length;
+                          if (countInCat === 0 && cat.id !== 'ALL') return null;
+                          const active = modalSkillCategory === cat.id;
+                          return (
+                            <button
+                              key={cat.id}
+                              onClick={() => setModalSkillCategory(cat.id)}
+                              className={`px-2.5 py-1 rounded-full text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+                                active
+                                  ? 'bg-black text-white'
+                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                              }`}
+                            >
+                              <span>{cat.label}</span>
+                              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${active ? 'bg-neutral-700 text-gray-200' : 'bg-gray-200 text-gray-600'}`}>
+                                {countInCat}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 pt-1">
+                      {selectedDomain.topSkills
+                        ?.filter(sk => modalSkillCategory === 'ALL' || sk.category === modalSkillCategory)
+                        .map((sk) => (
+                          <div key={sk.skill} className="p-3 rounded-xl bg-gray-50/90 border border-gray-200 flex flex-col justify-between hover:bg-gray-100 transition">
+                            <div className="space-y-1">
+                              <div className="flex justify-between items-center text-xs font-bold text-gray-900 gap-1">
+                                <span className="truncate" title={sk.skill}>{sk.skill}</span>
+                                <span className="text-blue-600 shrink-0">{sk.percentage}%</span>
+                              </div>
+                              {sk.category && (
+                                <span className="inline-block text-[9px] font-semibold text-gray-500 uppercase tracking-wider bg-gray-200/60 px-1.5 py-0.5 rounded">
+                                  {sk.category}
+                                </span>
+                              )}
+                            </div>
+                            <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden mt-2.5">
+                              <div className="bg-blue-600 h-full rounded-full" style={{ width: `${Math.min(100, sk.percentage * 2)}%` }} />
+                            </div>
+                            <span className="text-[10px] text-gray-400 mt-1">{sk.count} cerințe în descrieri</span>
                           </div>
-                          <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden mt-1.5">
-                            <div className="bg-blue-600 h-full rounded-full" style={{ width: `${sk.percentage}%` }} />
-                          </div>
-                        </div>
                       ))}
                     </div>
                   </div>

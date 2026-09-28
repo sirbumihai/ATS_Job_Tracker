@@ -282,111 +282,140 @@ public final class JobNormalizationUtils {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
+    public record TechSkillDefinition(String name, String category, Pattern pattern) {}
+
+    public static final List<TechSkillDefinition> TECH_SKILL_DEFINITIONS = List.of(
+            // --- LIMBAJE DE PROGRAMARE ---
+            new TechSkillDefinition("Python", "Limbaje de Programare", Pattern.compile("(?i)\\b(python|py)\\b")),
+            new TechSkillDefinition("Java", "Limbaje de Programare", Pattern.compile("(?i)\\b(java)\\b(?!\\s*script)")),
+            new TechSkillDefinition("JavaScript", "Limbaje de Programare", Pattern.compile("(?i)\\b(javascript|js|es6)\\b")),
+            new TechSkillDefinition("TypeScript", "Limbaje de Programare", Pattern.compile("(?i)\\b(typescript|ts)\\b")),
+            new TechSkillDefinition("C# / .NET", "Limbaje de Programare", Pattern.compile("(?i)(\\bc#|\\bcsharp\\b|\\.net\\b|dotnet\\b|asp\\.net)")),
+            new TechSkillDefinition("C++", "Limbaje de Programare", Pattern.compile("(?i)(\\bc\\+\\+|\\bcpp\\b|\\bc / c\\+\\+)")),
+            new TechSkillDefinition("C (Embedded)", "Limbaje de Programare", Pattern.compile("(?i)\\b(embedded\\s+c|embedded\\s+systems|c\\s+developer|firmware)\\b")),
+            new TechSkillDefinition("SQL", "Limbaje de Programare", Pattern.compile("(?i)\\b(sql|pl/sql|t-sql)\\b")),
+            new TechSkillDefinition("Go", "Limbaje de Programare", Pattern.compile("(?i)\\b(golang|go\\s+developer|go\\s+engineer)\\b")),
+            new TechSkillDefinition("Rust", "Limbaje de Programare", Pattern.compile("(?i)\\b(rust)\\b")),
+            new TechSkillDefinition("Kotlin", "Limbaje de Programare", Pattern.compile("(?i)\\b(kotlin|android\\s+sdk)\\b")),
+            new TechSkillDefinition("Swift", "Limbaje de Programare", Pattern.compile("(?i)\\b(swift|swiftui|ios\\s+developer)\\b")),
+            new TechSkillDefinition("PHP", "Limbaje de Programare", Pattern.compile("(?i)\\b(php|laravel|symfony)\\b")),
+            new TechSkillDefinition("Bash / Shell", "Limbaje de Programare", Pattern.compile("(?i)\\b(bash|shell\\s+scripting|powershell)\\b")),
+            new TechSkillDefinition("Ruby", "Limbaje de Programare", Pattern.compile("(?i)\\b(ruby|rails|ruby\\s+on\\s+rails)\\b")),
+            new TechSkillDefinition("Scala", "Limbaje de Programare", Pattern.compile("(?i)\\b(scala)\\b")),
+
+            // --- FRAMEWORKS & WEB ---
+            new TechSkillDefinition("Spring Boot", "Frameworks & Web", Pattern.compile("(?i)\\b(spring\\s+boot|spring\\s+framework|spring\\s+security|spring\\s+mvc)\\b")),
+            new TechSkillDefinition("React", "Frameworks & Web", Pattern.compile("(?i)\\b(react|reactjs|react\\.js)\\b")),
+            new TechSkillDefinition("Angular", "Frameworks & Web", Pattern.compile("(?i)\\b(angular|angularjs|angular\\s*\\d+)\\b")),
+            new TechSkillDefinition("Vue.js", "Frameworks & Web", Pattern.compile("(?i)\\b(vue|vuejs|vue\\.js)\\b")),
+            new TechSkillDefinition("Node.js", "Frameworks & Web", Pattern.compile("(?i)\\b(node|nodejs|node\\.js|expressjs|express\\.js|nestjs)\\b")),
+            new TechSkillDefinition("Next.js", "Frameworks & Web", Pattern.compile("(?i)\\b(next\\.js|nextjs)\\b")),
+            new TechSkillDefinition("FastAPI / Django", "Frameworks & Web", Pattern.compile("(?i)\\b(django|fastapi|flask)\\b")),
+            new TechSkillDefinition("HTML/CSS & Tailwind", "Frameworks & Web", Pattern.compile("(?i)\\b(html|css|tailwind|bootstrap|sass|scss)\\b")),
+            new TechSkillDefinition("REST API", "Frameworks & Web", Pattern.compile("(?i)\\b(rest\\s+api|restful|api\\s+design|apis|graphql)\\b")),
+            new TechSkillDefinition("Microservices", "Frameworks & Web", Pattern.compile("(?i)\\b(microservices|microservice|distributed\\s+systems)\\b")),
+
+            // --- BAZE DE DATE ---
+            new TechSkillDefinition("PostgreSQL", "Baze de Date", Pattern.compile("(?i)\\b(postgres|postgresql)\\b")),
+            new TechSkillDefinition("MySQL", "Baze de Date", Pattern.compile("(?i)\\b(mysql)\\b")),
+            new TechSkillDefinition("MongoDB", "Baze de Date", Pattern.compile("(?i)\\b(mongodb|mongo|nosql)\\b")),
+            new TechSkillDefinition("Redis", "Baze de Date", Pattern.compile("(?i)\\b(redis)\\b")),
+            new TechSkillDefinition("Oracle DB", "Baze de Date", Pattern.compile("(?i)\\b(oracle\\s+db|oracle\\s+database)\\b")),
+            new TechSkillDefinition("SQL Server", "Baze de Date", Pattern.compile("(?i)\\b(sql\\s+server|mssql)\\b")),
+            new TechSkillDefinition("Elasticsearch", "Baze de Date", Pattern.compile("(?i)\\b(elasticsearch|elastic\\s+search)\\b")),
+            new TechSkillDefinition("Snowflake", "Baze de Date", Pattern.compile("(?i)\\b(snowflake)\\b")),
+
+            // --- CLOUD & DEVOPS ---
+            new TechSkillDefinition("Docker", "Cloud & DevOps", Pattern.compile("(?i)\\b(docker|containerization|containers)\\b")),
+            new TechSkillDefinition("Kubernetes", "Cloud & DevOps", Pattern.compile("(?i)\\b(kubernetes|k8s|helm)\\b")),
+            new TechSkillDefinition("AWS", "Cloud & DevOps", Pattern.compile("(?i)\\b(aws|amazon\\s+web\\s+services)\\b")),
+            new TechSkillDefinition("Microsoft Azure", "Cloud & DevOps", Pattern.compile("(?i)\\b(azure|microsoft\\s+azure)\\b")),
+            new TechSkillDefinition("Google Cloud (GCP)", "Cloud & DevOps", Pattern.compile("(?i)\\b(gcp|google\\s+cloud)\\b")),
+            new TechSkillDefinition("Linux", "Cloud & DevOps", Pattern.compile("(?i)\\b(linux|ubuntu|debian|centos|redhat|rhel)\\b")),
+            new TechSkillDefinition("Terraform", "Cloud & DevOps", Pattern.compile("(?i)\\b(terraform|infrastructure\\s+as\\s+code|iac)\\b")),
+            new TechSkillDefinition("CI/CD", "Cloud & DevOps", Pattern.compile("(?i)\\b(ci/cd|ci-cd|continuous\\s+integration|jenkins|github\\s+actions|gitlab\\s+ci)\\b")),
+            new TechSkillDefinition("Kafka / RabbitMQ", "Cloud & DevOps", Pattern.compile("(?i)\\b(kafka|rabbitmq|message\\s+queue|event-driven)\\b")),
+
+            // --- AI, ML & DATA ---
+            new TechSkillDefinition("Machine Learning", "AI & Data", Pattern.compile("(?i)\\b(machine\\s+learning|ml\\b|artificial\\s+intelligence)\\b")),
+            new TechSkillDefinition("Deep Learning", "AI & Data", Pattern.compile("(?i)\\b(deep\\s+learning|neural\\s+networks)\\b")),
+            new TechSkillDefinition("LLMs & Generative AI", "AI & Data", Pattern.compile("(?i)\\b(llm|llms|generative\\s+ai|genai|rag|prompt\\s+engineering|langchain|pgvector)\\b")),
+            new TechSkillDefinition("PyTorch / TensorFlow", "AI & Data", Pattern.compile("(?i)\\b(pytorch|tensorflow|keras)\\b")),
+            new TechSkillDefinition("Pandas & NumPy", "AI & Data", Pattern.compile("(?i)\\b(pandas|numpy|scikit-learn|data\\s+analysis)\\b")),
+            new TechSkillDefinition("Apache Spark / PySpark", "AI & Data", Pattern.compile("(?i)\\b(spark|pyspark|databricks)\\b")),
+            new TechSkillDefinition("Data Pipelines / ETL", "AI & Data", Pattern.compile("(?i)\\b(etl|data\\s+pipeline|data\\s+pipelines|airflow)\\b")),
+            new TechSkillDefinition("Power BI & Tableau", "AI & Data", Pattern.compile("(?i)\\b(power\\s+bi|powerbi|tableau)\\b")),
+
+            // --- QA & TESTARE ---
+            new TechSkillDefinition("QA & Testing", "QA & Testare", Pattern.compile("(?i)\\b(qa\\b|software\\s+testing|test\\s+cases|manual\\s+testing|quality\\s+assurance)\\b")),
+            new TechSkillDefinition("Test Automation", "QA & Testare", Pattern.compile("(?i)\\b(automation|test\\s+automation|automated\\s+testing)\\b")),
+            new TechSkillDefinition("Selenium / Playwright / Cypress", "QA & Testare", Pattern.compile("(?i)\\b(selenium|playwright|cypress)\\b")),
+            new TechSkillDefinition("JUnit & Mockito", "QA & Testare", Pattern.compile("(?i)\\b(junit|mockito|pytest|testng)\\b")),
+            new TechSkillDefinition("Postman", "QA & Testare", Pattern.compile("(?i)\\b(postman|api\\s+testing)\\b")),
+
+            // --- SUPORT, SECURITATE & SISTEME ---
+            new TechSkillDefinition("IT Support & Troubleshooting", "Sisteme & Securitate", Pattern.compile("(?i)\\b(helpdesk|service\\s+desk|servicedesk|technical\\s+support|tech\\s+support|suport\\s+tehnic|it\\s+support|troubleshooting)\\b")),
+            new TechSkillDefinition("Active Directory & M365", "Sisteme & Securitate", Pattern.compile("(?i)\\b(active\\s+directory|azure\\s+ad|entra|office\\s+365|m365)\\b")),
+            new TechSkillDefinition("Networking & Hardware", "Sisteme & Securitate", Pattern.compile("(?i)\\b(networking|hardware|cisco|lan/wan|tcp/ip|dns|dhcp)\\b")),
+            new TechSkillDefinition("ServiceNow & ITIL", "Sisteme & Securitate", Pattern.compile("(?i)\\b(servicenow|itil|ticketing)\\b")),
+            new TechSkillDefinition("Cybersecurity", "Sisteme & Securitate", Pattern.compile("(?i)\\b(cybersecurity|cyber\\s+security|infosec|soc\\b|siem|pentesting|vulnerability)\\b")),
+
+            // --- UNELTE & METODOLOGII ---
+            new TechSkillDefinition("Git & GitHub", "Unelte & Metodologii", Pattern.compile("(?i)\\b(git\\b|github|gitlab)\\b")),
+            new TechSkillDefinition("Jira & Agile / Scrum", "Unelte & Metodologii", Pattern.compile("(?i)\\b(jira|scrum|agile|confluence|kanban)\\b")),
+            new TechSkillDefinition("OOP & Clean Code", "Unelte & Metodologii", Pattern.compile("(?i)\\b(oop|object-oriented|clean\\s+code|solid\\b|design\\s+patterns)\\b")),
+            new TechSkillDefinition("UI/UX & Figma", "Unelte & Metodologii", Pattern.compile("(?i)\\b(figma|ui/ux|ux\\s+design|product\\s+design)\\b")),
+            new TechSkillDefinition("Business Analysis & BPMN", "Unelte & Metodologii", Pattern.compile("(?i)\\b(business\\s+analysis|business\\s+analyst|bpmn|user\\s+stories|requirements)\\b")),
+            new TechSkillDefinition("ERP & SAP", "Unelte & Metodologii", Pattern.compile("(?i)\\b(sap\\b|erp|salesforce)\\b"))
+    );
+
+    public static String getSkillCategory(String skillName) {
+        if (skillName == null) return "General";
+        for (TechSkillDefinition def : TECH_SKILL_DEFINITIONS) {
+            if (def.name().equalsIgnoreCase(skillName)) {
+                return def.category();
+            }
+        }
+        return "General";
+    }
+
     public static List<String> extractSkills(String title, String description) {
         String t = title != null ? title.toLowerCase() : "";
         String d = description != null ? description.toLowerCase() : "";
+        // Eliminare reziduuri vechi de fallback parazit dacă există în descriere
+        d = d.replaceAll("(?i)competențe asociate:\\s*software engineering,\\s*git,\\s*rest api,\\s*sql\\.?", "")
+             .replaceAll("(?i)tech stack & domenii:\\s*software engineering,\\s*git,\\s*rest api,\\s*sql\\.?", "")
+             .replaceAll("(?i)competențe cerute:\\s*software engineering,\\s*git,\\s*rest api,\\s*sql\\.?", "");
+
         String combined = t + " " + d;
         List<String> skills = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
 
-        // AI / ML / Data Science / LLMs
-        if (combined.contains("generative ai") || combined.contains("genai") || combined.contains("llm") || combined.contains("rag") || combined.contains("prompt engineering") || combined.contains("agentic")) {
-            skills.add("LLMs & Generative AI");
-        }
-        if (combined.contains("machine learning") || combined.contains("deep learning") || combined.contains("artificial intelligence") || t.contains("ai ") || t.contains("ai engineer")) {
-            skills.add("Machine Learning");
-        }
-        if (combined.contains("pytorch") || combined.contains("tensorflow")) {
-            skills.add("PyTorch / TensorFlow");
-        }
-        if (combined.contains("nlp") || combined.contains("computer vision")) {
-            skills.add("NLP & Deep Learning");
+        for (TechSkillDefinition def : TECH_SKILL_DEFINITIONS) {
+            if (def.pattern().matcher(combined).find()) {
+                if (seen.add(def.name())) {
+                    skills.add(def.name());
+                }
+            }
         }
 
-        // Programming Languages
-        if (t.contains("java ") || t.contains("java/") || t.contains("java-") || t.endsWith("java") || (d.contains("java") && !d.contains("javascript only") && !combined.contains("javascript"))) {
-            skills.add("Java");
-        }
-        if (combined.contains("python")) skills.add("Python");
-        if (combined.contains("c++") || combined.contains("c/c++") || t.contains("embedded")) skills.add("C++ / Embedded");
-        if (combined.contains("c#") || combined.contains(".net") || combined.contains("dotnet")) skills.add(".NET / C#");
-        if (combined.contains("golang") || t.contains("go dev") || t.contains("go engineer")) skills.add("Go");
-        if (combined.contains("rust")) skills.add("Rust");
-        if (combined.contains("typescript")) skills.add("TypeScript");
-        if (combined.contains("javascript") || combined.contains(" js ")) skills.add("JavaScript");
-        if (combined.contains("kotlin") || t.contains("android")) skills.add("Kotlin / Android");
-        if (combined.contains("swift") || t.contains("ios")) skills.add("Swift / iOS");
-
-        // Frameworks & Libraries
-        if (combined.contains("spring") || combined.contains("spring boot")) skills.add("Spring Boot");
-        if (combined.contains("react")) skills.add("React");
-        if (combined.contains("angular")) skills.add("Angular");
-        if (combined.contains("vue")) skills.add("Vue.js");
-        if (combined.contains("node") || combined.contains("nodejs") || combined.contains("express")) skills.add("Node.js");
-        if (combined.contains("django") || combined.contains("fastapi") || combined.contains("flask")) skills.add("FastAPI / Django");
-
-        // Data & Databases
-        if (combined.contains("sql") || combined.contains("postgres") || combined.contains("mysql") || combined.contains("database")) skills.add("SQL");
-        if (combined.contains("mongodb") || combined.contains("nosql")) skills.add("NoSQL / MongoDB");
-        if (combined.contains("kafka") || combined.contains("rabbitmq")) skills.add("Kafka / Messaging");
-        if (combined.contains("data engineer") || combined.contains("etl") || combined.contains("spark") || combined.contains("databricks")) skills.add("Data Pipelines / ETL");
-
-        // Cloud & DevOps
-        if (combined.contains("docker") || combined.contains("container")) skills.add("Docker");
-        if (combined.contains("kubernetes") || combined.contains("k8s")) skills.add("Kubernetes");
-        if (combined.contains("aws") || combined.contains("azure") || combined.contains("gcp") || combined.contains("cloud")) skills.add("Cloud (AWS/Azure/GCP)");
-        if (combined.contains("ci/cd") || combined.contains("devops") || combined.contains("terraform") || combined.contains("jenkins")) skills.add("DevOps & CI/CD");
-        if (combined.contains("linux") || combined.contains("bash")) skills.add("Linux");
-
-        // Architecture & APIs
-        if (combined.contains("microservices") || combined.contains("distributed")) skills.add("Microservices");
-        if (combined.contains("rest api") || combined.contains("restful") || combined.contains("api development") || combined.contains("apis")) skills.add("REST API");
-        if (combined.contains("git") || combined.contains("github") || combined.contains("gitlab")) skills.add("Git");
-
-        // QA & Testing
-        if (combined.contains("qa ") || combined.contains("testing") || combined.contains("automation") || combined.contains("selenium") || combined.contains("cypress") || combined.contains("junit")) {
-            skills.add("QA & Testing");
-        }
-
-        // Security
-        if (combined.contains("security") || combined.contains("cyber") || combined.contains("oauth")) skills.add("Cybersecurity");
-
-        // PM / BA / Agile
-        if (combined.contains("scrum") || combined.contains("agile")) skills.add("Agile / Scrum");
-        if (combined.contains("business analyst") || combined.contains("product owner") || combined.contains("business analysis")) skills.add("Business Analysis");
-        if (combined.contains("user stories") || combined.contains("use cases") || combined.contains("jira") || combined.contains("confluence")) skills.add("User Stories & Jira");
-        if (combined.contains("bpmn") || combined.contains("flowchart") || combined.contains("uml") || combined.contains("process mapping")) skills.add("BPMN & Process Modeling");
-        if (combined.contains("ui/ux") || combined.contains("figma") || combined.contains("product design")) skills.add("UI/UX & Figma");
-        if (combined.contains("sap") || combined.contains("erp") || combined.contains("salesforce")) skills.add("ERP / SAP");
-
-        // Enterprise, Core CS & Languages
-        if (combined.contains("pega")) skills.add("Pega PRPC");
-        if (combined.contains("oop") || combined.contains("object-oriented") || combined.contains("orientat pe obiect")) skills.add("OOP (Object-Oriented)");
-        if (combined.contains("relational") || combined.contains("baze de date")) skills.add("Relational Databases");
-        if (combined.contains("web technologies") || combined.contains("html") || combined.contains("css")) skills.add("Web Technologies");
-        if (combined.contains("german") || combined.contains("germana") || combined.contains("deutsch")) skills.add("German Language");
-        if (combined.contains("english") || combined.contains("engleza")) skills.add("English Fluency");
-        if (combined.contains("business process") || combined.contains("bpm")) skills.add("BPM & Case Management");
-
-        // Tech Support, Helpdesk & Infrastructure
-        if (combined.contains("helpdesk") || combined.contains("service desk") || combined.contains("servicedesk") || combined.contains("tech support") || combined.contains("it support") || combined.contains("suport tehnic") || combined.contains("troubleshooting")) {
-            skills.add("IT Support & Troubleshooting");
-        }
-        if (combined.contains("active directory") || combined.contains("office 365") || combined.contains("m365") || combined.contains("azure ad") || combined.contains("entra")) {
-            skills.add("Active Directory & M365");
-        }
-        if (combined.contains("servicenow") || combined.contains("jira service") || combined.contains("itil") || combined.contains("ticketing")) {
-            skills.add("ITIL & Ticketing Systems");
-        }
-        if (combined.contains("hardware") || combined.contains("networking") || combined.contains("retele") || combined.contains("cisco") || combined.contains("dns") || combined.contains("dhcp")) {
-            skills.add("Hardware & Networking");
-        }
-
+        // Daca nu am gasit nimic explicit in descriere/titlu, derivam contextul dupa titlu (fara fallback fals)
         if (skills.isEmpty()) {
-            skills.addAll(List.of("Software Engineering", "Git", "REST API", "SQL"));
+            if (t.contains("developer") || t.contains("programmer") || t.contains("software engineer") || t.contains("inginer software")) {
+                skills.addAll(List.of("Git & GitHub", "OOP & Clean Code", "REST API"));
+            } else if (t.contains("qa") || t.contains("test") || t.contains("quality")) {
+                skills.addAll(List.of("QA & Testing", "Test Automation"));
+            } else if (t.contains("support") || t.contains("helpdesk") || t.contains("suport")) {
+                skills.addAll(List.of("IT Support & Troubleshooting", "Networking & Hardware"));
+            } else if (t.contains("data") || t.contains("date")) {
+                skills.addAll(List.of("SQL", "Data Pipelines / ETL"));
+            } else if (t.contains("intern") || t.contains("stagiu") || t.contains("trainee")) {
+                skills.addAll(List.of("Git & GitHub", "OOP & Clean Code"));
+            }
         }
 
-        if (skills.size() > 7) {
-            return skills.subList(0, 7);
+        if (skills.size() > 10) {
+            return skills.subList(0, 10);
         }
         return skills;
     }

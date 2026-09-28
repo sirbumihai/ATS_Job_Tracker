@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import com.jobtracker.ats.util.JobNormalizationUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -747,9 +748,7 @@ public class MarketInsightsService {
         }
 
         for (CachedJobListing job : targetPool) {
-            List<String> skills = (job.getSkillsRequired() != null && !job.getSkillsRequired().isBlank())
-                    ? Arrays.asList(job.getSkillsRequired().split(","))
-                    : Collections.emptyList();
+            List<String> skills = JobNormalizationUtils.extractSkills(job.getJobTitle(), job.getRawDescription());
             DomainCategory category = DomainCategory.classify(job.getJobTitle(), job.getRawDescription(), skills);
             domainMap.get(category).add(job);
         }
@@ -807,9 +806,9 @@ public class MarketInsightsService {
                 compLevel = "Ridicată";
             }
 
-            // Top skills pentru domeniu (filtrate pe nivelul selectat)
+            // Top skills pentru domeniu (filtrate pe nivelul selectat, pana la 16 tehnologii)
             List<CachedJobListing> jobsForSkills = filterJobsByLevel(domainJobs, level);
-            List<SkillFrequencyDto> topSkills = calculateTopSkills(jobsForSkills, 7);
+            List<SkillFrequencyDto> topSkills = calculateTopSkills(jobsForSkills, 16);
 
             // DEDUPLICARE STRICTA PE COMPANIE pentru sampleJobs:
             // Ne asiguram ca NICIODATA nu apar joburi de la aceeasi firma in lista de exemple!
@@ -882,8 +881,8 @@ public class MarketInsightsService {
                 .limit(4)
                 .toList();
 
-        // Universal top skills pe intreg pool-ul filtrat
-        List<SkillFrequencyDto> universalSkills = calculateTopSkills(filterJobsByLevel(targetPool, level), 12);
+        // Universal top skills pe intreg pool-ul filtrat (pana la 24 tehnologii reale)
+        List<SkillFrequencyDto> universalSkills = calculateTopSkills(filterJobsByLevel(targetPool, level), 24);
 
         return new MarketInsightsResponse(
                 totalAnalyzed,
@@ -1032,13 +1031,12 @@ public class MarketInsightsService {
         Map<String, Integer> freqMap = new HashMap<>();
 
         for (CachedJobListing job : jobs) {
-            if (job.getSkillsRequired() != null && !job.getSkillsRequired().isBlank()) {
-                String[] parts = job.getSkillsRequired().split(",");
-                for (String p : parts) {
-                    String clean = p.trim();
-                    if (!clean.isEmpty() && clean.length() > 1) {
-                        freqMap.merge(clean, 1, Integer::sum);
-                    }
+            // Extragere din titlu + descriere folosind dictionarul granular de tehnologii reale
+            List<String> extracted = JobNormalizationUtils.extractSkills(job.getJobTitle(), job.getRawDescription());
+            Set<String> uniquePerJob = new HashSet<>(extracted);
+            for (String clean : uniquePerJob) {
+                if (!clean.equalsIgnoreCase("Software Engineering") && clean.length() > 1) {
+                    freqMap.merge(clean, 1, Integer::sum);
                 }
             }
         }
@@ -1048,7 +1046,8 @@ public class MarketInsightsService {
                 .limit(limit)
                 .map(e -> {
                     double pct = Math.round((e.getValue() * 1000.0) / total) / 10.0;
-                    return new SkillFrequencyDto(e.getKey(), e.getValue(), pct);
+                    String category = JobNormalizationUtils.getSkillCategory(e.getKey());
+                    return new SkillFrequencyDto(e.getKey(), e.getValue(), pct, category);
                 })
                 .toList();
     }
