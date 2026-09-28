@@ -13,6 +13,60 @@ import SkillRoadmapPage from './components/SkillRoadmapPage';
 import CareerAnalyticsPage from './components/CareerAnalyticsPage';
 import DailyDigestModal from './components/DailyDigestModal';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
+import { Plus, Upload, Bell } from 'lucide-react';
+
+const TAB_METADATA = {
+  tracker: {
+    title: 'Tracker Aplicații',
+    subtitle: 'Pipeline Kanban & Monitorizare Status Joburi',
+    category: 'Pipeline'
+  },
+  job_search: {
+    title: 'Căutare Job-uri',
+    subtitle: 'Agregator Multi-Platformă & Scraping în Timp Real',
+    category: 'Piață IT'
+  },
+  market_insights: {
+    title: 'Radar Piață IT',
+    subtitle: 'Statistici Reale & Frecvență Tehnologii România',
+    category: 'Statistici'
+  },
+  cv_library: {
+    title: 'CV-urile Mele',
+    subtitle: 'Bază de Profiluri ATS & PDF Upload',
+    category: 'Documente'
+  },
+  cv_studio: {
+    title: 'Studio CV & Match 100%',
+    subtitle: 'Editor Vizual & Generator PDF Vectorial ATS',
+    category: 'Optimizare ATS'
+  },
+  cover_letter: {
+    title: 'Generator Scrisori de Intenție',
+    subtitle: 'Cover Letter Personalizat pe Cerințele Jobului',
+    category: 'AI Assistant'
+  },
+  github_readme: {
+    title: 'GitHub README Studio',
+    subtitle: 'Profil Developer Autentic & Carduri Tehnice',
+    category: 'Branding Dev'
+  },
+  linkedin_optimizer: {
+    title: 'LinkedIn Profile Optimizer',
+    subtitle: 'Import PDF, Replică Desktop & Audit 100/100 All-Star',
+    category: 'LinkedIn'
+  },
+  skill_roadmap: {
+    title: '7-Day Skill Gap Roadmaps',
+    subtitle: 'Laboratoare Practice & Injectare 1-Click în CV',
+    category: 'Educație'
+  },
+  career_analytics: {
+    title: 'Carieră, Funnel & Gamified XP',
+    subtitle: 'Pâlnie de Conversie, Diagnostic Bottleneck & Quests',
+    category: 'Analytics'
+  }
+};
 
 export default function App() {
   const getInitialTab = () => {
@@ -357,10 +411,16 @@ export default function App() {
     }
   };
 
+  const currentTabInfo = TAB_METADATA[activeTab] || {
+    title: 'JobFlow AI',
+    subtitle: 'Tracker & ATS Studio',
+    category: 'Platformă'
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 flex flex-col font-sans selection:bg-black selection:text-white">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col lg:flex-row font-sans selection:bg-black selection:text-white">
       
-      {/* NAVBAR */}
+      {/* SIDEBAR NAVIGATION (Desktop Sidebar + Mobile Header/Drawer) */}
       <Navbar 
         activeTab={activeTab}
         setActiveTab={handleTabChange}
@@ -370,8 +430,58 @@ export default function App() {
         onOpenDigestModal={() => setShowDailyDigestModal(true)}
       />
 
-      {/* CONTINUT PRINCIPAL */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* CONTINUT PRINCIPAL (Coloana Dreapta pe Desktop) */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden bg-[#f8fafc]">
+        
+        {/* DESKTOP TOP BAR CU TITLU PAGINĂ ȘI BREADCRUMB */}
+        <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3.5 bg-white border-b border-slate-200/90 sticky top-0 z-20 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">
+              {currentTabInfo.category}
+            </span>
+            <div className="h-4 w-px bg-gray-200" />
+            <div>
+              <h2 className="text-base font-black text-gray-950 tracking-tight leading-none">
+                {currentTabInfo.title}
+              </h2>
+              <p className="text-[11px] text-gray-500 font-medium mt-0.5">
+                {currentTabInfo.subtitle}
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Context Actions */}
+          <div className="flex items-center gap-2.5">
+            {activeTab === 'tracker' && (
+              <>
+                <button
+                  onClick={() => setShowUploadResumeModal(true)}
+                  className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                >
+                  <Upload className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Încarcă CV</span>
+                </button>
+                <button
+                  onClick={() => setShowAddJobModal(true)}
+                  className="px-3 py-1.5 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5 text-white" />
+                  <span>Adaugă Job</span>
+                </button>
+              </>
+            )}
+
+            {currentUser && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100/80 border border-gray-200 text-gray-700">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="max-w-[150px] truncate">{currentUser.fullName || currentUser.email}</span>
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* CONTINUT PRINCIPAL */}
+        <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
         {/* TAB 1: TRACKER BOARD & LIST (WITH STATS) */}
         {activeTab === 'tracker' && (
@@ -477,12 +587,13 @@ export default function App() {
           />
         )}
 
-      </main>
+        </main>
 
-      {/* FOOTER */}
-      <footer className="border-t border-gray-200 bg-white py-4 text-center text-xs text-gray-500">
-        <p>JobFlow AI • Tracker & ATS Studio • Spring Boot 3.3 • React 18 • PostgreSQL pgvector</p>
-      </footer>
+        {/* FOOTER */}
+        <footer className="border-t border-gray-200 bg-white py-4 text-center text-xs text-gray-500">
+          <p>JobFlow AI • Tracker & ATS Studio • Spring Boot 3.3 • React 18 • PostgreSQL pgvector</p>
+        </footer>
+      </div>
 
       {/* MODALE POPUP */}
       <AuthModal 
