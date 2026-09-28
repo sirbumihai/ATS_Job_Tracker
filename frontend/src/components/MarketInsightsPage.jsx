@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   TrendingUp, 
   Search, 
@@ -126,15 +127,24 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
     fetchInsights(levelFilter, locationFilter, activeOnly);
   }, [levelFilter, locationFilter, activeOnly]);
 
-  // Lock scroll cand modalul este deschis
+  // Lock scroll si inchidere la tasta Escape cand modalul este deschis (exact ca in Tracker)
   useEffect(() => {
-    if (selectedDomain) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!selectedDomain || typeof document === 'undefined') return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setSelectedDomain(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
     return () => {
-      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = (prevBodyOverflow === 'hidden' ? '' : prevBodyOverflow);
+      document.documentElement.style.overflow = (prevHtmlOverflow === 'hidden' ? '' : prevHtmlOverflow);
     };
   }, [selectedDomain]);
 
@@ -703,17 +713,17 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                 <div
                   key={domain.id}
                   onClick={() => { setSelectedDomain(domain); setModalTab('requirements'); }}
-                  className="bg-white border border-gray-200 hover:border-gray-400 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group"
+                  className="bg-white border border-gray-200/90 hover:border-indigo-300 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group"
                 >
                   <div className="space-y-4">
                     {/* TOP LINE: ICON + BADGES */}
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-800 group-hover:bg-black group-hover:text-white transition">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-800 group-hover:bg-gray-900 group-hover:text-white transition shrink-0">
                           <IconComp className="w-5 h-5" />
                         </div>
-                        <div>
-                          <h3 className="font-black text-gray-950 text-base leading-tight group-hover:text-blue-600 transition">
+                        <div className="min-w-0">
+                          <h3 className="font-black text-gray-950 text-base leading-tight group-hover:text-indigo-600 transition truncate">
                             {domain.title}
                           </h3>
                           <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">
@@ -725,21 +735,21 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
 
                     {/* METRICS ROW */}
                     <div className="grid grid-cols-3 gap-2 py-2 border-y border-gray-100 text-center">
-                      <div>
+                      <div className="bg-gray-50/80 rounded-xl p-2 border border-gray-100">
                         <p className="text-[10px] text-gray-400 font-bold uppercase">Joburi {levelFilter}</p>
-                        <p className="text-base font-black text-gray-950 mt-0.5">
+                        <p className="text-sm font-black text-gray-950 mt-0.5">
                           {domain.levelJobCount}
                         </p>
                       </div>
-                      <div>
+                      <div className="bg-gray-50/80 rounded-xl p-2 border border-gray-100">
                         <p className="text-[10px] text-gray-400 font-bold uppercase">Competitie</p>
-                        <p className={`text-[11px] font-black mt-1 px-1.5 py-0.5 rounded-md inline-block border ${compInfo.color}`}>
+                        <p className={`text-[10px] font-black mt-1 px-1.5 py-0.5 rounded-md inline-block border ${compInfo.color}`}>
                           {compInfo.label}
                         </p>
                       </div>
-                      <div>
+                      <div className="bg-gray-50/80 rounded-xl p-2 border border-gray-100">
                         <p className="text-[10px] text-gray-400 font-bold uppercase">Scor Oportunitate</p>
-                        <p className={`text-base font-black mt-0.5 ${domain.opportunityScore >= 70 ? 'text-emerald-700' : 'text-blue-700'}`}>
+                        <p className={`text-sm font-black mt-0.5 ${domain.opportunityScore >= 70 ? 'text-emerald-700' : 'text-indigo-700'}`}>
                           {domain.opportunityScore}<span className="text-[10px] text-gray-400 font-normal">/100</span>
                         </p>
                       </div>
@@ -796,7 +806,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                         {domain.topSkills?.slice(0, 5).map((sk) => (
                           <span 
                             key={sk.skill} 
-                            className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-gray-100 text-gray-800 border border-gray-200"
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-gray-50 text-gray-800 border border-gray-200"
                           >
                             {sk.skill} <span className="text-gray-400 font-semibold">{sk.percentage}%</span>
                           </span>
@@ -806,12 +816,12 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                   </div>
 
                   {/* BOTTOM CTA BUTTON */}
-                  <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-gray-900 group-hover:text-blue-600 transition">
+                  <div className="mt-4 pt-3.5 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-gray-900 group-hover:text-indigo-600 transition">
                     <span className="flex items-center gap-1.5">
-                      <BookOpen className="w-4 h-4 text-blue-600" />
-                      Vezi Ce Se Cere & Joburi Reale
+                      <BookOpen className="w-4 h-4 text-indigo-600" />
+                      Fisa Specializare & Cerinte
                     </span>
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition text-gray-400 group-hover:text-indigo-600" />
                   </div>
                 </div>
               );
@@ -821,24 +831,27 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
       </section>
 
       {/* DETAIL MODAL ("CE TREBUIE SA STII PENTRU ACEST ROL") */}
-      {selectedDomain && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+      {selectedDomain && typeof document !== 'undefined' && createPortal(
+        <div 
+          onClick={() => setSelectedDomain(null)}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+        >
           <div 
-            className="bg-white rounded-3xl border border-gray-200 w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            className="bg-white rounded-3xl border border-gray-200 w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* MODAL HEADER */}
-            <div className="p-6 border-b border-gray-200 flex items-start justify-between bg-gradient-to-r from-gray-50 via-white to-white shrink-0">
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-black text-white flex items-center justify-center shrink-0 shadow-sm">
+            <div className="p-5 sm:p-6 border-b border-gray-200 flex items-start justify-between bg-white shrink-0">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-gray-900 text-white flex items-center justify-center shrink-0 shadow-sm">
                   {(() => {
                     const IconComp = DOMAIN_ICONS[selectedDomain.id] || Code;
-                    return <IconComp className="w-6 h-6 text-blue-400" />;
+                    return <IconComp className="w-5 h-5 text-indigo-400" />;
                   })()}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg sm:text-2xl font-black text-gray-950 tracking-tight">
+                    <h2 className="text-lg sm:text-xl font-black text-gray-950 tracking-tight">
                       {selectedDomain.title}
                     </h2>
                     <span className={`text-xs font-black px-2.5 py-0.5 rounded-full border ${getOpportunityColor(selectedDomain.opportunityScore)}`}>
@@ -851,7 +864,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                       </span>
                     )}
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1 max-w-2xl">
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-2xl">
                     {selectedDomain.tagLine}
                   </p>
                 </div>
@@ -859,20 +872,21 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
 
               <button
                 onClick={() => setSelectedDomain(null)}
-                className="p-2 rounded-xl text-gray-400 hover:text-black hover:bg-gray-100 transition cursor-pointer"
+                className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
+                title="Inchide fereastra (Esc)"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* MODAL TABS */}
-            <div className="px-6 border-b border-gray-200 bg-white flex gap-2 shrink-0 overflow-x-auto">
+            <div className="px-6 border-b border-gray-200 bg-gray-50/70 flex gap-1.5 shrink-0 overflow-x-auto">
               <button
                 onClick={() => setModalTab('requirements')}
                 className={`py-3 px-3 text-xs font-bold border-b-2 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   modalTab === 'requirements'
-                    ? 'border-black text-black'
-                    : 'border-transparent text-gray-500 hover:text-black'
+                    ? 'border-indigo-600 text-indigo-700 bg-white font-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
                 }`}
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -882,8 +896,8 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                 onClick={() => setModalTab('comparison')}
                 className={`py-3 px-3 text-xs font-bold border-b-2 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   modalTab === 'comparison'
-                    ? 'border-black text-black'
-                    : 'border-transparent text-gray-500 hover:text-black'
+                    ? 'border-indigo-600 text-indigo-700 bg-white font-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
                 }`}
               >
                 <SlidersHorizontal className="w-4 h-4 text-blue-600" />
@@ -893,8 +907,8 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                 onClick={() => setModalTab('roadmap')}
                 className={`py-3 px-3 text-xs font-bold border-b-2 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   modalTab === 'roadmap'
-                    ? 'border-black text-black'
-                    : 'border-transparent text-gray-500 hover:text-black'
+                    ? 'border-indigo-600 text-indigo-700 bg-white font-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
                 }`}
               >
                 <Compass className="w-4 h-4 text-purple-600" />
@@ -904,8 +918,8 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                 onClick={() => setModalTab('sample_jobs')}
                 className={`py-3 px-3 text-xs font-bold border-b-2 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   modalTab === 'sample_jobs'
-                    ? 'border-black text-black'
-                    : 'border-transparent text-gray-500 hover:text-black'
+                    ? 'border-indigo-600 text-indigo-700 bg-white font-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
                 }`}
               >
                 <Briefcase className="w-4 h-4 text-amber-600" />
@@ -1177,41 +1191,55 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                   </div>
 
                   {selectedDomain.sampleJobs && selectedDomain.sampleJobs.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       {selectedDomain.sampleJobs.map((job) => (
-                        <div key={job.id} className="bg-white p-4 rounded-2xl border border-gray-200 space-y-3 flex flex-col justify-between shadow-2xs hover:border-black transition">
+                        <div 
+                          key={job.id} 
+                          className="bg-white p-4 rounded-xl border border-gray-200/90 space-y-2.5 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-indigo-200 transition text-gray-900"
+                        >
                           <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-black uppercase text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+                            <div className="flex items-center justify-between gap-1.5">
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 truncate">
+                                {job.companyName}
+                              </span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                                job.sourcePlatform === 'LINKEDIN' ? 'bg-[#0077b5]/10 text-[#0077b5] border border-[#0077b5]/20' :
+                                job.sourcePlatform === 'BESTJOBS' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
+                                'bg-gray-100 text-gray-700 border border-gray-200'
+                              }`}>
                                 {job.sourcePlatform}
                               </span>
-                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                                {job.experienceLevel}
-                              </span>
                             </div>
-                            <h4 className="font-black text-gray-950 text-sm line-clamp-1" title={job.jobTitle}>
+                            <h4 className="font-bold text-xs sm:text-[13px] text-gray-950 leading-snug line-clamp-2" title={job.jobTitle}>
                               {job.jobTitle}
                             </h4>
-                            <p className="text-xs text-gray-800 flex items-center gap-1.5 font-bold">
-                              <Building2 className="w-3.5 h-3.5 text-blue-600" />
-                              {job.companyName}
-                            </p>
-                            <p className="text-[11px] text-gray-500 flex items-center gap-1">
-                              <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                              {job.location} • {job.workModel}
-                            </p>
+                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500 flex-wrap pt-0.5">
+                              <span className="inline-flex items-center gap-1 font-medium bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded-md">
+                                <MapPin className="w-2.5 h-2.5 text-gray-400" />
+                                {job.location || 'Romania'}
+                              </span>
+                              <span className="inline-flex items-center gap-1 font-medium bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded-md">
+                                <Briefcase className="w-2.5 h-2.5 text-gray-400" />
+                                {job.workModel || 'On-site'}
+                              </span>
+                              <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                                {job.experienceLevel || 'MID'}
+                              </span>
+                            </div>
                           </div>
 
                           {job.directApplyUrl && (
-                            <a
-                              href={job.directApplyUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-bold transition shadow-xs cursor-pointer"
-                            >
-                              <span>Vezi Anuntul / Aplica Direct</span>
-                              <ExternalLink className="w-3 h-3 text-blue-400" />
-                            </a>
+                            <div className="pt-2 border-t border-gray-100">
+                              <a
+                                href={job.directApplyUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-gray-900 hover:bg-black text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5 text-indigo-300" />
+                                <span>Vezi Anuntul / Aplica</span>
+                              </a>
+                            </div>
                           )}
                         </div>
                       ))}
@@ -1223,7 +1251,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                       </p>
                       <button
                         onClick={() => setLocationFilter('RO_AND_REMOTE')}
-                        className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition cursor-pointer"
+                        className="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition cursor-pointer"
                       >
                         Comuta pe Romania & Remote
                       </button>
@@ -1248,7 +1276,8 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
