@@ -14,7 +14,8 @@ import {
   FolderKanban,
   Files,
   FileSignature,
-  Github
+  Github,
+  Compass
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -69,6 +70,18 @@ export default function Navbar({
           >
             <Search className={`w-3.5 h-3.5 ${activeTab === 'job_search' ? 'text-amber-400' : 'text-amber-500'}`} />
             Cautare Job-uri
+          </button>
+
+          <button
+            onClick={() => setActiveTab('market_insights')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+              activeTab === 'market_insights' 
+                ? 'bg-black text-white shadow-sm' 
+                : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+            }`}
+          >
+            <Compass className={`w-3.5 h-3.5 ${activeTab === 'market_insights' ? 'text-blue-400' : 'text-blue-600'}`} />
+            Radar Piață IT
           </button>
 
           <button
@@ -197,6 +210,15 @@ export default function Navbar({
             >
               <Search className={`w-3.5 h-3.5 ${activeTab === 'job_search' ? 'text-amber-400' : 'text-amber-500'}`} />
               Joburi
+            </button>
+            <button
+              onClick={() => { setActiveTab('market_insights'); setMobileMenuOpen(false); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shrink-0 ${
+                activeTab === 'market_insights' ? 'bg-black text-white' : 'text-gray-700'
+              }`}
+            >
+              <Compass className={`w-3.5 h-3.5 ${activeTab === 'market_insights' ? 'text-blue-400' : 'text-blue-600'}`} />
+              Radar IT
             </button>
             <button
               onClick={() => { setActiveTab('cv_library'); setMobileMenuOpen(false); }}
