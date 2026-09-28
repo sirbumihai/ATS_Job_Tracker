@@ -36,6 +36,7 @@ public class GithubReadmeService {
         cleaned = cleaned.replace("\uFFFD", "—");
         cleaned = cleaned.replaceAll("—{2,}", "—");
         cleaned = cleaned.replaceAll("—\\?+", "—");
+        cleaned = cleaned.replaceAll("[\\t ]+([.,!?;:])", "$1");
         cleaned = cleaned.replaceAll("[^\\S\\r\\n]{2,}", " ");
         cleaned = cleaned.replaceAll("\\n{3,}", "\n\n");
         return cleaned.trim();
