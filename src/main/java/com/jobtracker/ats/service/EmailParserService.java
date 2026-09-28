@@ -420,6 +420,7 @@ public class EmailParserService {
                     || combinedText.contains("aplic") || combinedText.contains("apply")
                     || combinedText.contains("interview") || combinedText.contains("interviu")
                     || combinedText.contains("talent") || combinedText.contains("hiring")
+                    || combinedText.contains("recruitment") || combinedText.contains("recruit")
                     || combinedText.contains("hr");
 
             if (hasJobKeyword) {
