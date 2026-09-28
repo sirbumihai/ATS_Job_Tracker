@@ -956,7 +956,7 @@ export default function KanbanBoard({
                   <div 
                     onDragOver={(e) => handleColumnDragOver(e, col.key)}
                     onDrop={(e) => handleColumnDrop(e, col.key)}
-                    className="flex-1 overflow-y-auto p-2.5 sm:p-3 space-y-2.5 flex flex-col"
+                    className="flex-1 overflow-y-auto p-2.5 sm:p-3 space-y-2.5 min-h-0"
                   >
                     {colApps.map((app) => {
                       const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
@@ -978,7 +978,7 @@ export default function KanbanBoard({
                             onDragEnd={handleDragEnd}
                             onDragOver={(e) => handleCardDragOver(e, app.id, col.key)}
                             onDrop={(e) => handleCardDrop(e, app.id, col.key)}
-                            className={`bg-white border rounded-xl p-3 space-y-2.5 relative group shadow-2xs hover:shadow-md transition-all text-gray-900 cursor-grab active:cursor-grabbing overflow-hidden w-full min-w-0 ${
+                            className={`bg-white border rounded-xl p-3 space-y-2.5 relative group shadow-2xs hover:shadow-md transition-all text-gray-900 cursor-grab active:cursor-grabbing w-full min-w-0 ${
                               isBeingDragged 
                                 ? 'opacity-40 border-2 border-dashed border-indigo-400 bg-indigo-50/30 shadow-none' 
                                 : 'border-gray-200/90 hover:border-indigo-200'
