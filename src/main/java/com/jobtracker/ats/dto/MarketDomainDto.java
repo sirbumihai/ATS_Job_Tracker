@@ -17,9 +17,14 @@ public record MarketDomainDto(
     int opportunityScore,
     String opportunityBadge,
     String competitionLevel,
+    String salaryEstimate,
+    String interviewFormat,
     List<SkillFrequencyDto> topSkills,
     List<DomainRequirementCategoryDto> requirementsChecklist,
     SeniorityComparisonDto seniorityComparison,
     List<RoadmapStageDto> preparationRoadmap,
-    List<SampleJobDto> sampleJobs
+    List<SampleJobDto> sampleJobs,
+    int userMatchScore,
+    List<String> userMatchingSkills,
+    List<String> userMissingSkills
 ) {}

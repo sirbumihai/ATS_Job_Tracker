@@ -2,13 +2,14 @@ package com.jobtracker.ats.service;
 
 import com.jobtracker.ats.dto.*;
 import com.jobtracker.ats.entity.CachedJobListing;
+import com.jobtracker.ats.entity.CvProfile;
 import com.jobtracker.ats.repository.CachedJobListingRepository;
+import com.jobtracker.ats.repository.CvProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 public class MarketInsightsService {
 
     private final CachedJobListingRepository cachedJobListingRepository;
+    private final CvProfileRepository cvProfileRepository;
 
     // Cache in memorie pentru a raspunde ultra-rapid (<15ms)
     private final AtomicReference<List<CachedJobListing>> rawJobsCache = new AtomicReference<>(null);
@@ -32,6 +34,13 @@ public class MarketInsightsService {
                 "Modele de limbaj (LLMs), rețele neurale, algoritmi predictivi și analiză statistică avansată.",
                 "Brain",
                 Pattern.compile("(?i)(data scientist|machine learning|ai |artificial intelligence|deep learning|llm|nlp|data science|computer vision|prompt engineer)"),
+                "Live Coding Python / Algoritmi Matematici + Discuție Arhitectură RAG / Modele ML + Proiect Portofoliu",
+                Map.of(
+                        "JUNIOR", "5.000 - 8.500 RON net",
+                        "MID", "9.500 - 17.000 RON net",
+                        "SENIOR", "18.000 - 30.000+ RON net",
+                        "ALL", "5.000 - 25.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Educație & Diplomă", "GraduationCap", List.of(
                                 "Diplomă de Licență / Masterat în Informatică, Matematică, Statistică sau Inteligență Artificială",
@@ -72,6 +81,13 @@ public class MarketInsightsService {
                 "Infrastructură automată, containere, pipeline-uri CI/CD, observabilitate și disponibilitate 99.99%.",
                 "Cloud",
                 Pattern.compile("(?i)(devops|sre|cloud|infrastructure|reliability|terraform|kubernetes|platform engineer|site reliability|helm|ansible)"),
+                "Scenarii de Troubleshooting Linux / Rețele + Hands-on Docker & Kubernetes + Scripting Bash/Terraform",
+                Map.of(
+                        "JUNIOR", "4.800 - 8.000 RON net",
+                        "MID", "9.500 - 16.500 RON net",
+                        "SENIOR", "17.500 - 28.000+ RON net",
+                        "ALL", "4.800 - 25.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Sisteme de Operare & Rețelistică", "Terminal", List.of(
                                 "Cunoștințe avansate de Linux (Ubuntu/Debian, RedHat), comenzi bash și shell scripting",
@@ -109,6 +125,13 @@ public class MarketInsightsService {
                 "Logică de business scalabilă, API-uri REST/gRPC, microservicii, arhitecturi distribuite și tranzacții ACID.",
                 "Server",
                 Pattern.compile("(?i)(backend|back-end|java|python|\\.net|c#|golang|php|node|scala|ruby|django|flask|spring|laravel)"),
+                "Live Coding Algoritmic (LeetCode Easy/Medium) + Întrebări OOP, SQL & Tranzacții + System Design de API-uri",
+                Map.of(
+                        "JUNIOR", "4.500 - 7.500 RON net",
+                        "MID", "8.500 - 15.000 RON net",
+                        "SENIOR", "16.000 - 26.000+ RON net",
+                        "ALL", "4.500 - 24.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Limbaje de Programare Principale", "Code", List.of(
                                 "Java (Java 17/21) sau C# (.NET 8) sau Python / Go / Node.js",
@@ -149,6 +172,13 @@ public class MarketInsightsService {
                 "Pipeline-uri masive de date (ETL/ELT), data warehouses, streaming de date în timp real și business analytics.",
                 "Database",
                 Pattern.compile("(?i)(data engineer|etl|big data|databricks|bigquery|data analyst|analist date|reporting|business intelligence|bi developer|snowflake|spark)"),
+                "Interogări Complexe SQL (Window Functions, CTE) + Scripting Python/PySpark + Modelare Dimensională",
+                Map.of(
+                        "JUNIOR", "4.800 - 8.000 RON net",
+                        "MID", "9.000 - 16.000 RON net",
+                        "SENIOR", "16.500 - 27.000+ RON net",
+                        "ALL", "4.800 - 24.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Baze de Date & SQL Avansat", "Database", List.of(
                                 "SQL la nivel avansat (Window functions, CTE-uri, optimizare planuri de execuție)",
@@ -186,6 +216,13 @@ public class MarketInsightsService {
                 "Asigurarea calității software, testare automată end-to-end, framework-uri de testare și integrare în pipeline-uri CI.",
                 "CheckCircle2",
                 Pattern.compile("(?i)(qa|test|automation engineer|quality assurance|tester|sdet|quality engineer|testare)"),
+                "Scenarii de Testare Funcțională + Exercițiu Practic de Automatizare UI/API (Playwright/Postman) + Întrebări SQL",
+                Map.of(
+                        "JUNIOR", "3.800 - 6.200 RON net",
+                        "MID", "7.000 - 12.500 RON net",
+                        "SENIOR", "13.000 - 20.000+ RON net",
+                        "ALL", "3.800 - 18.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Fundamente de Testare Software", "CheckSquare", List.of(
                                 "Tipuri de testare: Funcțională, Regresie, Smoke, Sanity, Integrare, E2E, Performanță",
@@ -226,6 +263,13 @@ public class MarketInsightsService {
                 "Protecția infrastructurii digitale, monitorizare SOC, analiză de vulnerabilități și răspuns la incidente cibernetice.",
                 "ShieldCheck",
                 Pattern.compile("(?i)(security|cyber|infosec|soc analyst|pentest|vulnerability|appsec|cloud security|penetration)"),
+                "Analiză de Loguri și Alerte SIEM + Întrebări Rețele / OWASP Top 10 + Scenarii de Incident Response",
+                Map.of(
+                        "JUNIOR", "4.800 - 8.000 RON net",
+                        "MID", "9.500 - 16.000 RON net",
+                        "SENIOR", "17.000 - 28.000+ RON net",
+                        "ALL", "4.800 - 25.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Fundamente de Securitate & Rețele", "Shield", List.of(
                                 "Protocoale de rețea securizate: TLS/SSL, IPsec, SSH, DNSSEC",
@@ -265,6 +309,13 @@ public class MarketInsightsService {
                 "Interfețe utilizator moderne, responsive, performanță web, componente accesibile și experiență vizuală impecabilă.",
                 "Layout",
                 Pattern.compile("(?i)(frontend|front-end|react|angular|vue|ui developer|web developer|next\\.?js|tailwindcss)"),
+                "Live Coding JS/React + Implementare Componentă UI din Figma + Întrebări CSS & State Management",
+                Map.of(
+                        "JUNIOR", "4.000 - 7.000 RON net",
+                        "MID", "8.000 - 14.000 RON net",
+                        "SENIOR", "15.000 - 24.000+ RON net",
+                        "ALL", "4.000 - 22.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Limbaje Web & Core Fundamentals", "Globe", List.of(
                                 "HTML5 semantic, CSS3 modern (Flexbox, Grid, CSS Variables, animatii)",
@@ -306,6 +357,13 @@ public class MarketInsightsService {
                 "Dezvoltare end-to-end completă: interfețe reactive frontend, servicii backend, baze de date și deploy.",
                 "Layers",
                 Pattern.compile("(?i)(fullstack|full-stack|full stack)"),
+                "Live Coding Full-Stack (Frontend UI + Endpoint REST + Conectare DB) + Întrebări Arhitectură",
+                Map.of(
+                        "JUNIOR", "4.500 - 7.500 RON net",
+                        "MID", "8.500 - 15.000 RON net",
+                        "SENIOR", "16.000 - 25.000+ RON net",
+                        "ALL", "4.500 - 24.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Frontend Stack", "Layout", List.of(
                                 "React sau Angular sau Vue.js cu TypeScript",
@@ -346,6 +404,13 @@ public class MarketInsightsService {
                 "Software pentru dispozitive fizice, microcontrollere, sisteme auto (Automotive), IoT și firmware de performanță.",
                 "Cpu",
                 Pattern.compile("(?i)(embedded|firmware|iot|microcontroller|c\\+\\+|autosar|rtos|hardware engineer)"),
+                "Întrebări Aprofundate C (Pointeri, Structuri, Biți) + Protocoale Hardware (SPI/I2C/CAN) + Debugging",
+                Map.of(
+                        "JUNIOR", "4.800 - 8.000 RON net",
+                        "MID", "9.000 - 15.500 RON net",
+                        "SENIOR", "16.000 - 26.000+ RON net",
+                        "ALL", "4.800 - 25.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Limbaje de Programare de Nivel Scăzut", "Code", List.of(
                                 "C și C++ (C++14/C++17/C++20) orientate pe memorie limitată și performanță maximă",
@@ -384,6 +449,13 @@ public class MarketInsightsService {
                 "Aplicații native și cross-platform pentru smartphone-uri, performanță pe baterie și experiență tactilă fluidă.",
                 "Smartphone",
                 Pattern.compile("(?i)(android|ios|mobile|flutter|swift|kotlin|react native)"),
+                "Live Coding UI (Compose/SwiftUI) + Consum API REST & Arhitectură MVVM + Discuție Proiecte Demo",
+                Map.of(
+                        "JUNIOR", "4.500 - 7.500 RON net",
+                        "MID", "8.500 - 14.500 RON net",
+                        "SENIOR", "15.500 - 25.000+ RON net",
+                        "ALL", "4.500 - 23.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Dezvoltare Nativă Android", "Smartphone", List.of(
                                 "Kotlin modern (Coroutines, Flow), Android SDK",
@@ -424,6 +496,13 @@ public class MarketInsightsService {
                 "Mentenanță echipamente, suport pentru utilizatori, administrare Active Directory, rețele și ticketing ITIL.",
                 "Headphones",
                 Pattern.compile("(?i)(support|helpdesk|servicedesk|sysadmin|system admin|network|desktop support|tehnician|administrator retea|administrator sistem)"),
+                "Scenarii Practice de Troubleshooting Windows/Linux + Întrebări Rețele (DNS/DHCP) + Simulare Tichet Suport",
+                Map.of(
+                        "JUNIOR", "3.500 - 5.500 RON net",
+                        "MID", "6.000 - 10.000 RON net",
+                        "SENIOR", "10.500 - 16.000+ RON net",
+                        "ALL", "3.500 - 15.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Sisteme de Operare & Desktop Support", "Monitor", List.of(
                                 "Windows 10/11 Pro/Enterprise și macOS la nivel avansat de troubleshooting",
@@ -465,6 +544,13 @@ public class MarketInsightsService {
                 "Traducerea nevoilor de business în specificații tehnice, prioritizare backlog, ghidare echipe Scrum și livrare de valoare.",
                 "Briefcase",
                 Pattern.compile("(?i)(product owner|scrum master|business analyst|product manager|analist business|functional analyst|agile coach)"),
+                "Studiu de Caz de Produs + Redactare User Story cu Acceptance Criteria + Întrebări Comportamentale (STAR)",
+                Map.of(
+                        "JUNIOR", "4.500 - 7.000 RON net",
+                        "MID", "8.500 - 14.500 RON net",
+                        "SENIOR", "15.000 - 24.000+ RON net",
+                        "ALL", "4.500 - 22.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Analiză de Business & Cerințe", "FileText", List.of(
                                 "Scriere de User Stories clare cu Criterii de Acceptanță (Acceptance Criteria)",
@@ -506,6 +592,13 @@ public class MarketInsightsService {
                 "Fundamente de inginerie software, algoritmi, structuri de date, bune practici de cod și adaptabilitate polivalentă.",
                 "Code",
                 Pattern.compile("(?i)(software engineer|software developer|graduate software|inginer software|programator|software architect|coder)"),
+                "Live Coding Algoritmic pe Structuri de Date (Arrays, HashMaps, Trees) + Întrebări Concepte OOP & Git",
+                Map.of(
+                        "JUNIOR", "4.500 - 7.500 RON net",
+                        "MID", "8.500 - 15.000 RON net",
+                        "SENIOR", "16.000 - 26.000+ RON net",
+                        "ALL", "4.500 - 24.000 RON net"
+                ),
                 List.of(
                         new DomainRequirementCategoryDto("Fundamente Computer Science", "BookOpen", List.of(
                                 "Structuri de date esențiale: Liste, HashMaps, Arbori, Grafuri, Stive, Cozi",
@@ -546,11 +639,14 @@ public class MarketInsightsService {
         public final String tagLine;
         public final String icon;
         public final Pattern titlePattern;
+        public final String interviewFormat;
+        public final Map<String, String> salaryBenchmarks;
         public final List<DomainRequirementCategoryDto> requirements;
         public final SeniorityComparisonDto seniority;
         public final List<RoadmapStageDto> roadmap;
 
         DomainCategory(String id, String title, String tagLine, String icon, Pattern titlePattern,
+                       String interviewFormat, Map<String, String> salaryBenchmarks,
                        List<DomainRequirementCategoryDto> requirements, SeniorityComparisonDto seniority,
                        List<RoadmapStageDto> roadmap) {
             this.id = id;
@@ -558,9 +654,16 @@ public class MarketInsightsService {
             this.tagLine = tagLine;
             this.icon = icon;
             this.titlePattern = titlePattern;
+            this.interviewFormat = interviewFormat;
+            this.salaryBenchmarks = salaryBenchmarks;
             this.requirements = requirements;
             this.seniority = seniority;
             this.roadmap = roadmap;
+        }
+
+        public String getSalaryEstimate(String level) {
+            String lvlKey = (level != null && !level.isBlank()) ? level.toUpperCase() : "ALL";
+            return salaryBenchmarks.getOrDefault(lvlKey, salaryBenchmarks.getOrDefault("ALL", "Conform Grilă Salarială"));
         }
 
         public static DomainCategory classify(String title, String desc, List<String> skills) {
@@ -569,7 +672,7 @@ public class MarketInsightsService {
 
             // Verificare directa pe baza de regex title
             for (DomainCategory cat : values()) {
-                if (cat == GENERAL_SOFTWARE) continue; // verificam pe cel general ultimul
+                if (cat == GENERAL_SOFTWARE) continue;
                 if (cat.titlePattern.matcher(t).find()) {
                     return cat;
                 }
@@ -610,16 +713,22 @@ public class MarketInsightsService {
         return allJobs;
     }
 
-    public MarketInsightsResponse getMarketInsights(String levelFilter, boolean activeOnly) {
+    public MarketInsightsResponse getMarketInsights(String levelFilter, String locationFilter, boolean activeOnly, UUID userId) {
         String level = (levelFilter == null || levelFilter.isBlank()) ? "JUNIOR" : levelFilter.toUpperCase().trim();
+        String locFilter = (locationFilter == null || locationFilter.isBlank()) ? "RO_ONLY" : locationFilter.toUpperCase().trim();
+
         List<CachedJobListing> allJobs = getCachedOrFetchJobs(false);
 
-        List<CachedJobListing> targetPool = allJobs;
+        // 1. Filtrare dupa status activ daca se doreste
+        List<CachedJobListing> pool = allJobs;
         if (activeOnly) {
-            targetPool = targetPool.stream()
+            pool = pool.stream()
                     .filter(j -> "ACTIVE".equalsIgnoreCase(j.getStatus()))
                     .toList();
         }
+
+        // 2. Filtrare dupa Locatie (RO_ONLY, RO_AND_REMOTE, ALL)
+        List<CachedJobListing> targetPool = filterJobsByLocation(pool, locFilter);
 
         long totalAnalyzed = targetPool.size();
         long totalJunior = targetPool.stream().filter(this::isJuniorOrIntern).count();
@@ -627,6 +736,9 @@ public class MarketInsightsService {
         long totalSenior = targetPool.stream().filter(j -> "SENIOR".equalsIgnoreCase(j.getExperienceLevel())).count();
         long totalLowComp = targetPool.stream().filter(this::isLowCompetition).count();
         double overallLowCompPct = totalAnalyzed > 0 ? Math.round((totalLowComp * 1000.0) / totalAnalyzed) / 10.0 : 0.0;
+
+        // Preluare skill-uri din CV-ul utilizatorului (daca exista) pentru analiza de match personalizat
+        Set<String> userCvSkills = getUserCvSkills(userId);
 
         // Clasificare joburi pe domenii
         Map<DomainCategory, List<CachedJobListing>> domainMap = new EnumMap<>(DomainCategory.class);
@@ -646,7 +758,6 @@ public class MarketInsightsService {
         List<MarketDomainDto> domainDtos = new ArrayList<>();
         int maxLevelVolume = 1;
 
-        // Mai intai gasim maximul pentru calcul scor oportunitate
         for (DomainCategory cat : DomainCategory.values()) {
             List<CachedJobListing> domainJobs = domainMap.get(cat);
             int countInLevel = getJobsCountForLevel(domainJobs, level);
@@ -696,16 +807,34 @@ public class MarketInsightsService {
                 compLevel = "Ridicată";
             }
 
-            // Top skills pentru domeniu (filtrate pe nivel daca se doreste)
+            // Top skills pentru domeniu (filtrate pe nivelul selectat)
             List<CachedJobListing> jobsForSkills = filterJobsByLevel(domainJobs, level);
             List<SkillFrequencyDto> topSkills = calculateTopSkills(jobsForSkills, 7);
 
-            // Joburi demo reprezentative
-            List<SampleJobDto> sampleJobs = jobsForSkills.stream()
-                    .filter(j -> j.getJobTitle() != null && !j.getJobTitle().isBlank())
-                    .limit(4)
-                    .map(this::toSampleJobDto)
-                    .toList();
+            // DEDUPLICARE STRICTA PE COMPANIE pentru sampleJobs:
+            // Ne asiguram ca NICIODATA nu apar joburi de la aceeasi firma in lista de exemple!
+            List<SampleJobDto> sampleJobs = pickDiverseSampleJobs(jobsForSkills, 8);
+
+            // Estimare salariala pentru nivelul curent
+            String salaryEst = cat.getSalaryEstimate(level);
+
+            // Match personalizat cu CV-ul utilizatorului
+            List<String> matchingSkills = new ArrayList<>();
+            List<String> missingSkills = new ArrayList<>();
+            int userMatchScore = 0;
+
+            if (!userCvSkills.isEmpty() && !topSkills.isEmpty()) {
+                int totalTop = Math.min(5, topSkills.size());
+                for (int i = 0; i < totalTop; i++) {
+                    String skName = topSkills.get(i).skill();
+                    if (hasSkillInCv(userCvSkills, skName)) {
+                        matchingSkills.add(skName);
+                    } else {
+                        missingSkills.add(skName);
+                    }
+                }
+                userMatchScore = (int) Math.round(((double) matchingSkills.size() / totalTop) * 100.0);
+            }
 
             domainDtos.add(new MarketDomainDto(
                     cat.id,
@@ -722,11 +851,16 @@ public class MarketInsightsService {
                     opportunityScore,
                     opportunityBadge,
                     compLevel,
+                    salaryEst,
+                    cat.interviewFormat,
                     topSkills,
                     cat.requirements,
                     cat.seniority,
                     cat.roadmap,
-                    sampleJobs
+                    sampleJobs,
+                    userMatchScore,
+                    matchingSkills,
+                    missingSkills
             ));
         }
 
@@ -748,7 +882,7 @@ public class MarketInsightsService {
                 .limit(4)
                 .toList();
 
-        // Universal top skills pe intreg pool-ul
+        // Universal top skills pe intreg pool-ul filtrat
         List<SkillFrequencyDto> universalSkills = calculateTopSkills(filterJobsByLevel(targetPool, level), 12);
 
         return new MarketInsightsResponse(
@@ -759,6 +893,7 @@ public class MarketInsightsService {
                 totalLowComp,
                 overallLowCompPct,
                 level,
+                locFilter,
                 topSweetSpots,
                 mostInDemand,
                 lowestCompetition,
@@ -767,13 +902,85 @@ public class MarketInsightsService {
         );
     }
 
-    public MarketDomainDto getDomainDetails(String domainId, String levelFilter) {
-        String level = (levelFilter == null || levelFilter.isBlank()) ? "JUNIOR" : levelFilter.toUpperCase().trim();
-        MarketInsightsResponse insights = getMarketInsights(level, false);
+    public MarketDomainDto getDomainDetails(String domainId, String levelFilter, String locationFilter, UUID userId) {
+        MarketInsightsResponse insights = getMarketInsights(levelFilter, locationFilter, false, userId);
         return insights.domains().stream()
                 .filter(d -> d.id().equalsIgnoreCase(domainId))
                 .findFirst()
                 .orElse(insights.domains().get(0));
+    }
+
+    private List<SampleJobDto> pickDiverseSampleJobs(List<CachedJobListing> jobs, int limit) {
+        if (jobs == null || jobs.isEmpty()) return Collections.emptyList();
+
+        Set<String> seenCompanies = new HashSet<>();
+        List<SampleJobDto> diverse = new ArrayList<>();
+        List<CachedJobListing> overflow = new ArrayList<>();
+
+        for (CachedJobListing j : jobs) {
+            if (j.getJobTitle() == null || j.getJobTitle().isBlank()) continue;
+            String comp = normalizeCompanyName(j.getCompanyName());
+            if (!comp.isEmpty() && seenCompanies.add(comp)) {
+                diverse.add(toSampleJobDto(j));
+                if (diverse.size() >= limit) break;
+            } else {
+                overflow.add(j);
+            }
+        }
+
+        // Daca nu am gasit suficiente companii distincte, completam pana la minim 4 sau limita
+        if (diverse.size() < 4 && !overflow.isEmpty()) {
+            for (CachedJobListing ov : overflow) {
+                diverse.add(toSampleJobDto(ov));
+                if (diverse.size() >= Math.min(4, limit)) break;
+            }
+        }
+
+        return diverse;
+    }
+
+    private String normalizeCompanyName(String name) {
+        if (name == null) return "";
+        return name.toLowerCase()
+                .replaceAll("(?i)\\b(srl|sa|romania|gmbh|inc|ltd|solutions|technologies|group)\\b", "")
+                .replaceAll("[^a-z0-9]", "")
+                .trim();
+    }
+
+    private boolean isRomaniaJob(CachedJobListing j) {
+        if (j == null) return false;
+        String loc = j.getLocation() != null ? j.getLocation().toLowerCase() : "";
+        String platform = j.getSourcePlatform() != null ? j.getSourcePlatform().toUpperCase() : "";
+
+        // Platforme 100% romanesti
+        if (Set.of("DEVJOB_RO", "STAGIIPEBUNE", "JUNIORS_RO", "UNDELUCRAM", "EJOBS", "HIPO", "BESTJOBS").contains(platform)) {
+            return true;
+        }
+
+        // Orase si regiuni din Romania
+        return loc.contains("romania") || loc.contains("românia") || loc.contains("bucur") || loc.contains("bucharest")
+                || loc.contains("cluj") || loc.contains("timis") || loc.contains("iasi") || loc.contains("iași")
+                || loc.contains("brasov") || loc.contains("brașov") || loc.contains("sibiu") || loc.contains("craiova")
+                || loc.contains("oradea") || loc.contains("constant") || loc.contains("galati") || loc.contains("galați")
+                || loc.contains("ploiesti") || loc.contains("ploiești") || loc.contains("pitesti") || loc.contains("pitești")
+                || loc.contains("mures") || loc.contains("mureș") || loc.contains("suceava") || loc.contains("arad")
+                || loc.contains("bacau") || loc.contains("bacău") || loc.contains("baia mare");
+    }
+
+    private boolean isRemoteJob(CachedJobListing j) {
+        if (j == null) return false;
+        String loc = j.getLocation() != null ? j.getLocation().toLowerCase() : "";
+        String wm = j.getWorkModel() != null ? j.getWorkModel().toUpperCase() : "";
+        return wm.contains("REMOTE") || loc.contains("remote");
+    }
+
+    private List<CachedJobListing> filterJobsByLocation(List<CachedJobListing> jobs, String locFilter) {
+        if ("RO_ONLY".equalsIgnoreCase(locFilter)) {
+            return jobs.stream().filter(this::isRomaniaJob).toList();
+        } else if ("RO_AND_REMOTE".equalsIgnoreCase(locFilter)) {
+            return jobs.stream().filter(j -> isRomaniaJob(j) || isRemoteJob(j)).toList();
+        }
+        return jobs;
     }
 
     private boolean isJuniorOrIntern(CachedJobListing j) {
@@ -788,7 +995,7 @@ public class MarketInsightsService {
         }
         if (j.getApplicantCountText() != null) {
             String act = j.getApplicantCountText().toLowerCase();
-            return act.contains("fii printre") || act.contains("early") || act.contains("sub 10") || act.contains("fewer than 10");
+            return act.contains("fii printre") || act.contains("early") || act.contains("sub 10") || act.contains("fewer than 10") || act.contains("sub 25");
         }
         return false;
     }
@@ -844,6 +1051,48 @@ public class MarketInsightsService {
                     return new SkillFrequencyDto(e.getKey(), e.getValue(), pct);
                 })
                 .toList();
+    }
+
+    private Set<String> getUserCvSkills(UUID userId) {
+        if (userId == null) return Collections.emptySet();
+        try {
+            Optional<CvProfile> profileOpt = cvProfileRepository.findFirstByUserIdAndIsPrimaryTrue(userId)
+                    .or(() -> cvProfileRepository.findFirstByUserIdOrderByUpdatedAtDesc(userId));
+            if (profileOpt.isEmpty()) return Collections.emptySet();
+
+            CvProfile p = profileOpt.get();
+            Set<String> set = new HashSet<>();
+            addSkillsToSet(set, p.getSkillsLanguages());
+            addSkillsToSet(set, p.getSkillsFrameworks());
+            addSkillsToSet(set, p.getSkillsDatabases());
+            addSkillsToSet(set, p.getSkillsDevops());
+            return set;
+        } catch (Exception e) {
+            log.warn("[MARKET INSIGHTS] Eroare la preluarea CV-ului utilizatorului {}: {}", userId, e.getMessage());
+            return Collections.emptySet();
+        }
+    }
+
+    private void addSkillsToSet(Set<String> set, String raw) {
+        if (raw == null || raw.isBlank()) return;
+        String[] tokens = raw.split("[,;\\n/|]");
+        for (String t : tokens) {
+            String s = t.trim().toLowerCase();
+            if (!s.isEmpty()) {
+                set.add(s);
+            }
+        }
+    }
+
+    private boolean hasSkillInCv(Set<String> userSkills, String skillName) {
+        if (userSkills.isEmpty() || skillName == null) return false;
+        String sk = skillName.toLowerCase();
+        for (String u : userSkills) {
+            if (u.contains(sk) || sk.contains(u)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private SampleJobDto toSampleJobDto(CachedJobListing j) {

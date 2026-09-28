@@ -10,6 +10,7 @@ public record MarketInsightsResponse(
     long totalLowCompetitionJobs,
     double overallLowCompetitionPct,
     String selectedLevel,
+    String selectedLocation,
     List<MarketDomainDto> topSweetSpots,
     List<MarketDomainDto> mostInDemand,
     List<MarketDomainDto> lowestCompetition,
