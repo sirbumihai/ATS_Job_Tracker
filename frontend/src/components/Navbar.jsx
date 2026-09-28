@@ -18,7 +18,8 @@ import {
   Compass,
   Linkedin,
   GraduationCap,
-  Bell
+  Bell,
+  Trophy
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -158,6 +159,18 @@ export default function Navbar({
           >
             <GraduationCap className={`w-3.5 h-3.5 ${activeTab === 'skill_roadmap' ? 'text-purple-400' : 'text-purple-600'}`} />
             Skill Roadmaps
+          </button>
+
+          <button
+            onClick={() => setActiveTab('career_analytics')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+              activeTab === 'career_analytics' 
+                ? 'bg-black text-white shadow-sm' 
+                : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+            }`}
+          >
+            <Trophy className={`w-3.5 h-3.5 ${activeTab === 'career_analytics' ? 'text-amber-400' : 'text-amber-500'}`} />
+            Carieră & XP
           </button>
         </div>
 
@@ -316,6 +329,15 @@ export default function Navbar({
             >
               <GraduationCap className={`w-3.5 h-3.5 ${activeTab === 'skill_roadmap' ? 'text-purple-400' : 'text-purple-600'}`} />
               Roadmaps
+            </button>
+            <button
+              onClick={() => { setActiveTab('career_analytics'); setMobileMenuOpen(false); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shrink-0 ${
+                activeTab === 'career_analytics' ? 'bg-black text-white' : 'text-gray-700'
+              }`}
+            >
+              <Trophy className={`w-3.5 h-3.5 ${activeTab === 'career_analytics' ? 'text-amber-400' : 'text-amber-500'}`} />
+              Carieră
             </button>
             {onOpenDigestModal && (
               <button

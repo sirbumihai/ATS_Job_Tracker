@@ -15,7 +15,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-export default function StatsDashboard({ applications = [] }) {
+export default function StatsDashboard({ applications = [], onNavigateToCareer }) {
   const [showDetailedAnalytics, setShowDetailedAnalytics] = useState(false);
 
   const applicationsCount = applications.length;
@@ -138,13 +138,26 @@ export default function StatsDashboard({ applications = [] }) {
                 {interviewRate}% Rata Interviuri
               </span>
             </div>
-            <div className="flex items-center gap-1 text-[11px] text-gray-500">
-              <span>{showDetailedAnalytics ? 'Ascunde' : 'Extinde detalii'}</span>
-              {showDetailedAnalytics ? (
-                <ChevronUp className="w-3.5 h-3.5 text-gray-500" />
-              ) : (
-                <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+            <div className="flex items-center gap-3">
+              {onNavigateToCareer && (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigateToCareer();
+                  }}
+                  className="text-[11px] font-extrabold text-amber-700 hover:text-amber-900 bg-amber-100/70 hover:bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md transition flex items-center gap-1 cursor-pointer"
+                >
+                  🏆 Funnel Complet & XP
+                </span>
               )}
+              <div className="flex items-center gap-1 text-[11px] text-gray-500">
+                <span>{showDetailedAnalytics ? 'Ascunde' : 'Extinde detalii'}</span>
+                {showDetailedAnalytics ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                )}
+              </div>
             </div>
           </button>
 

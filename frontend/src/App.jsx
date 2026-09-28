@@ -10,6 +10,7 @@ import GithubReadmeStudio from './components/GithubReadmeStudio';
 import MarketInsightsPage from './components/MarketInsightsPage';
 import LinkedInOptimizerPage from './components/LinkedInOptimizerPage';
 import SkillRoadmapPage from './components/SkillRoadmapPage';
+import CareerAnalyticsPage from './components/CareerAnalyticsPage';
 import DailyDigestModal from './components/DailyDigestModal';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
 
@@ -17,6 +18,7 @@ export default function App() {
   const getInitialTab = () => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
+      if (path.startsWith('/career') || path.startsWith('/funnel') || path.startsWith('/analytics')) return 'career_analytics';
       if (path.startsWith('/roadmap') || path.startsWith('/skill-roadmap')) return 'skill_roadmap';
       if (path.startsWith('/linkedin') || path.startsWith('/linkedin-optimizer')) return 'linkedin_optimizer';
       if (path.startsWith('/job-search') || path.startsWith('/jobs')) return 'job_search';
@@ -27,6 +29,7 @@ export default function App() {
       if (path.startsWith('/github-readme') || path.startsWith('/github_readme') || path.startsWith('/readme')) return 'github_readme';
       if (path.startsWith('/tracker') || path.startsWith('/kanban')) return 'tracker';
       const hash = window.location.hash.toLowerCase();
+      if (hash.includes('career') || hash.includes('funnel')) return 'career_analytics';
       if (hash.includes('roadmap')) return 'skill_roadmap';
       if (hash.includes('linkedin')) return 'linkedin_optimizer';
       if (hash.includes('job-search') || hash.includes('jobs')) return 'job_search';
@@ -37,7 +40,7 @@ export default function App() {
       if (hash.includes('github-readme') || hash.includes('github_readme') || hash.includes('readme')) return 'github_readme';
       if (hash.includes('tracker') || hash.includes('kanban')) return 'tracker';
       const stored = localStorage.getItem('ats_active_tab');
-      if (stored === 'skill_roadmap' || stored === 'linkedin_optimizer' || stored === 'job_search' || stored === 'market_insights' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
+      if (stored === 'career_analytics' || stored === 'skill_roadmap' || stored === 'linkedin_optimizer' || stored === 'job_search' || stored === 'market_insights' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
       if (stored === 'kanban') return 'tracker';
     }
     return 'tracker';
@@ -56,6 +59,7 @@ export default function App() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('ats_active_tab', tab);
       let targetPath = '/tracker';
+      if (tab === 'career_analytics') targetPath = '/career';
       if (tab === 'skill_roadmap') targetPath = '/roadmap';
       if (tab === 'linkedin_optimizer') targetPath = '/linkedin-optimizer';
       if (tab === 'job_search') targetPath = '/job-search';
@@ -92,7 +96,10 @@ export default function App() {
 
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
-      if (path.startsWith('/roadmap') || path.startsWith('/skill-roadmap')) {
+      if (path.startsWith('/career') || path.startsWith('/funnel') || path.startsWith('/analytics')) {
+        setActiveTab('career_analytics');
+        localStorage.setItem('ats_active_tab', 'career_analytics');
+      } else if (path.startsWith('/roadmap') || path.startsWith('/skill-roadmap')) {
         setActiveTab('skill_roadmap');
         localStorage.setItem('ats_active_tab', 'skill_roadmap');
       } else if (path.startsWith('/linkedin') || path.startsWith('/linkedin-optimizer')) {
@@ -369,7 +376,10 @@ export default function App() {
         {/* TAB 1: TRACKER BOARD & LIST (WITH STATS) */}
         {activeTab === 'tracker' && (
           <>
-            <StatsDashboard applications={applications} />
+            <StatsDashboard 
+              applications={applications} 
+              onNavigateToCareer={() => handleTabChange('career_analytics')} 
+            />
             <KanbanBoard 
               applications={applications}
               onStatusChange={handleStatusChange}
@@ -456,6 +466,14 @@ export default function App() {
           <SkillRoadmapPage 
             currentUser={currentUser}
             onNavigateToCvLibrary={() => handleTabChange('cv_library')}
+          />
+        )}
+
+        {/* TAB 9: CAREER FUNNEL ANALYTICS & GAMIFIED XP */}
+        {activeTab === 'career_analytics' && (
+          <CareerAnalyticsPage 
+            currentUser={currentUser}
+            onNavigateToTab={(tab) => handleTabChange(tab)}
           />
         )}
 
