@@ -36,6 +36,7 @@ import {
 import JobDetailModal from './JobDetailModal';
 import GmailSyncModal from './GmailSyncModal';
 import OutreachCrmModal from './OutreachCrmModal';
+import CalendarView from './CalendarView';
 
 export default function KanbanBoard({ 
   applications = [], 
@@ -55,12 +56,13 @@ export default function KanbanBoard({
   onRefreshApplications
 }) {
   const [isGmailModalOpen, setIsGmailModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
+  const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list' | 'calendar'
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('CUSTOM'); // 'CUSTOM' | 'SCORE_DESC' | 'SCORE_ASC' | 'DATE_DESC' | 'COMPANY_ASC' | 'TITLE_ASC'
   const [filterScore, setFilterScore] = useState('ALL'); // 'ALL' | 'HIGH' | 'MID' | 'LOW'
   const [filterWorkModel, setFilterWorkModel] = useState('ALL'); // 'ALL' | 'REMOTE' | 'HYBRID' | 'ONSITE'
   const [filterCv, setFilterCv] = useState('ALL'); // 'ALL' | 'ATTACHED' | 'UNATTACHED'
+  const [filterGmailOnly, setFilterGmailOnly] = useState(false);
   const [mobileSelectedColumn, setMobileSelectedColumn] = useState('SAVED');
   
   // DRAG & DROP STATE (ROBUST, FLICKER-FREE)
@@ -312,10 +314,16 @@ export default function KanbanBoard({
         if (app.cvProfileId || app.resumeId) return false;
       }
 
+      // 5. Gmail Only filter
+      if (filterGmailOnly) {
+        const isGmail = app.sourcePlatform === 'GMAIL' || Boolean(app.rawDescription && app.rawDescription.includes('GMAIL'));
+        if (!isGmail) return false;
+      }
+
       return true;
     });
 
-    // 5. Sort
+    // 6. Sort
     if (sortBy === 'CUSTOM') {
       return list; // Retine ordinea manuala din array
     }
@@ -338,12 +346,17 @@ export default function KanbanBoard({
     }
 
     return sorted;
-  }, [applications, searchQuery, filterScore, filterWorkModel, filterCv, sortBy]);
+  }, [applications, searchQuery, filterScore, filterWorkModel, filterCv, filterGmailOnly, sortBy]);
+
+  const gmailJobsCount = useMemo(() => {
+    return applications.filter(a => a.sourcePlatform === 'GMAIL' || Boolean(a.rawDescription && a.rawDescription.includes('GMAIL'))).length;
+  }, [applications]);
 
   const isAnyFilterActive = searchQuery.trim() !== '' || 
     filterScore !== 'ALL' || 
     filterWorkModel !== 'ALL' || 
     filterCv !== 'ALL' || 
+    filterGmailOnly ||
     sortBy !== 'CUSTOM';
 
   const handleResetFilters = () => {
@@ -351,6 +364,7 @@ export default function KanbanBoard({
     setFilterScore('ALL');
     setFilterWorkModel('ALL');
     setFilterCv('ALL');
+    setFilterGmailOnly(false);
     setSortBy('CUSTOM');
   };
 
@@ -670,7 +684,7 @@ export default function KanbanBoard({
                 </select>
               </div>
 
-              {/* VIEW MODE TOGGLE (KANBAN VS LIST) */}
+              {/* VIEW MODE TOGGLE (KANBAN VS LIST VS CALENDAR) */}
               <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 shrink-0">
                 <button
                   onClick={() => setViewMode('kanban')}
@@ -691,10 +705,22 @@ export default function KanbanBoard({
                       ? 'bg-black text-white shadow-sm' 
                       : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
                   }`}
-                  title="Vizualizare Lista Tabelara"
+                  title="Vizualizare Listă Tabelară"
                 >
                   <List className="w-3.5 h-3.5" />
-                  Lista
+                  Listă
+                </button>
+                <button
+                  onClick={() => setViewMode('calendar')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                    viewMode === 'calendar' 
+                      ? 'bg-black text-white shadow-sm' 
+                      : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+                  }`}
+                  title="Vizualizare Calendar & Agendă Aplicări"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  Calendar
                 </button>
               </div>
 
@@ -774,6 +800,26 @@ export default function KanbanBoard({
               </select>
             </div>
 
+            {/* FILTER DOAR DIN GMAIL */}
+            <button
+              type="button"
+              onClick={() => setFilterGmailOnly(prev => !prev)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-bold transition cursor-pointer select-none ${
+                filterGmailOnly 
+                  ? 'bg-red-50 text-red-700 border-red-300 ring-2 ring-red-400/20 shadow-2xs' 
+                  : 'bg-gray-50 hover:bg-gray-100 text-gray-600 border-gray-200'
+              }`}
+              title="Filtrează și afișează doar joburile extrase prin sincronizarea Gmail"
+            >
+              <Mail className={`w-3.5 h-3.5 ${filterGmailOnly ? 'text-red-600' : 'text-gray-400'}`} />
+              <span>Doar din Gmail</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                filterGmailOnly ? 'bg-red-200 text-red-900' : 'bg-gray-200 text-gray-700'
+              }`}>
+                {gmailJobsCount}
+              </span>
+            </button>
+
             {/* COUNT OF RESULTS */}
             <span className="text-[11px] text-gray-400 font-semibold ml-auto">
               Afisare: <strong className="text-gray-800">{filteredApplications.length}</strong> din {applications.length}
@@ -801,12 +847,18 @@ export default function KanbanBoard({
         <div>
           <h2 className="text-base sm:text-lg font-bold text-gray-950 flex items-center gap-2 tracking-tight">
             <FolderKanban className="w-5 h-5 text-gray-900" />
-            {viewMode === 'kanban' ? 'Tracker & Pipeline Aplicatii' : 'Lista Centralizata Aplicatii'}
+            {viewMode === 'kanban' 
+              ? 'Tracker & Pipeline Aplicații' 
+              : viewMode === 'list' 
+              ? 'Listă Centralizată Aplicații' 
+              : 'Calendar & Agendă Aplicări'}
           </h2>
           <p className="text-xs text-gray-500 font-medium mt-0.5">
             {viewMode === 'kanban' 
-              ? 'Trage orice card de job in alta coloana sau reordoneaza-le direct pentru a-ti organiza procesul.'
-              : 'Gestioneaza statusul, CV-ul asociat fiecarui job si rapoartele AI intr-un format compact.'}
+              ? 'Trage orice card de job în altă coloană sau reordonează-le direct pentru a-ți organiza procesul.'
+              : viewMode === 'list'
+              ? 'Gestionează statusul, CV-ul asociat fiecărui job și rapoartele AI într-un format compact.'
+              : 'Vizualizează cronologic aplicările pe zile, monitorizează interviurile și programează activități.'}
           </p>
         </div>
 
@@ -1323,6 +1375,24 @@ export default function KanbanBoard({
         </div>
       )}
 
+      {/* ========================================================================= */}
+      {/* 3. CALENDAR VIEW (CHRONOLOGICAL TIMELINE & AGENDA) */}
+      {/* ========================================================================= */}
+      {viewMode === 'calendar' && (
+        <CalendarView
+          applications={filteredApplications}
+          onOpenJobModal={handleOpenJobModal}
+          onOpenCoverLetter={onOpenCoverLetter}
+          onOpenOutreach={(targetJob) => setOutreachApp(targetJob)}
+          onDeleteApplication={onDeleteApplication}
+          onStatusChange={handleStatusSelectChange}
+          statusColorMap={statusColorMap}
+          statusDotMap={statusDotMap}
+          onApplicationUpdated={onApplicationUpdated}
+          activeUserId={activeUserId}
+        />
+      )}
+
       {/* JOB DETAIL MODAL INTEGRAT IN TRACKER */}
       {selectedJobForModal && (
         <JobDetailModal
@@ -1346,18 +1416,6 @@ export default function KanbanBoard({
         }}
         activeUserId={activeUserId}
       />
-
-      {/* JOB DETAIL MODAL (FIȘĂ COMPLETĂ JOB + ANALIZĂ AI + EMAIL GMAIL) */}
-      {selectedJobForModal && (
-        <JobDetailModal 
-          job={selectedJobForModal}
-          onClose={() => setSelectedJobForModal(null)}
-          onSaveToKanban={() => {}}
-          isSaved={true}
-          isSaving={false}
-          activeUserId={activeUserId}
-        />
-      )}
 
       {/* OUTREACH CRM MODAL (NOTE LINKEDIN, COLD EMAIL, CADENCE) */}
       {outreachApp && (
