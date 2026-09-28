@@ -978,22 +978,30 @@ export default function KanbanBoard({
                             onDragEnd={handleDragEnd}
                             onDragOver={(e) => handleCardDragOver(e, app.id, col.key)}
                             onDrop={(e) => handleCardDrop(e, app.id, col.key)}
-                            className={`bg-white border rounded-xl p-3 space-y-2.5 relative group shadow-2xs hover:shadow-md transition-all text-gray-900 cursor-grab active:cursor-grabbing ${
+                            className={`bg-white border rounded-xl p-3 space-y-2.5 relative group shadow-2xs hover:shadow-md transition-all text-gray-900 cursor-grab active:cursor-grabbing overflow-hidden w-full min-w-0 ${
                               isBeingDragged 
                                 ? 'opacity-40 border-2 border-dashed border-indigo-400 bg-indigo-50/30 shadow-none' 
                                 : 'border-gray-200/90 hover:border-indigo-200'
                             }`}
                           >
                             {/* CARD HEADER: COMPANY, TITLE, DELETE & DRAG */}
-                            <div className="flex items-start justify-between gap-1.5">
+                            <div className="flex items-start justify-between gap-1.5 w-full min-w-0">
                               <div 
                                 onClick={() => handleOpenJobModal(app)}
                                 className="cursor-pointer group/title flex-1 min-w-0"
                                 title="Apasa pentru a deschide fisa completa a jobului"
                               >
-                                <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-400 truncate block group-hover/title:text-indigo-600 transition">
-                                  {app.companyName}
-                                </span>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-400 truncate block group-hover/title:text-indigo-600 transition">
+                                    {app.companyName}
+                                  </span>
+                                  {isGmail && (
+                                    <span className="inline-flex items-center gap-1 font-bold text-[9px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded-full shrink-0" title="Detectat automat prin sincronizare Gmail">
+                                      <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
+                                      <span>Gmail</span>
+                                    </span>
+                                  )}
+                                </div>
                                 <h4 className="font-bold text-xs sm:text-[13px] text-gray-950 leading-snug mt-0.5 line-clamp-2 group-hover/title:text-indigo-600 transition">
                                   {app.jobTitle}
                                 </h4>
@@ -1015,52 +1023,60 @@ export default function KanbanBoard({
                               </div>
                             </div>
 
-                            {/* ROW BADGES: GMAIL / MATCH SCORE (STANGA) + DATA (DREAPTA) - NICIODATA SUPRAPUSE */}
-                            <div className="flex items-center justify-between gap-2 pt-0.5">
-                              {isGmail ? (
-                                <span className="inline-flex items-center gap-1 font-bold text-[10px] text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full shrink-0" title="Detectat automat prin sincronizare Gmail">
-                                  <Mail className="w-3 h-3 text-red-600 shrink-0" />
-                                  <span>Gmail</span>
-                                </span>
-                              ) : (
-                                <span className={`inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full shrink-0 ${
-                                  score >= 75 
-                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                    : score >= 50
-                                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                    : 'bg-slate-50 text-slate-700 border border-slate-200'
-                                }`}>
-                                  <Sparkles className="w-3 h-3 shrink-0" />
-                                  <span>{score > 0 ? `${score.toFixed(0)}% Match` : 'ATS Match'}</span>
-                                </span>
-                              )}
-
-                              {app.appliedDate && (
-                                <span className="inline-flex items-center gap-1 font-medium text-[10px] text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-md shrink-0 ml-auto" title={`Data adaugarii/aplicarii: ${app.appliedDate}`}>
-                                  <Calendar className="w-3 h-3 text-gray-400 shrink-0" />
-                                  <span>{app.appliedDate}</span>
-                                </span>
-                              )}
-                            </div>
-
-                            {/* SUBTITLU EXPEDITOR GMAIL SAU BARA PROGRESS SCOR MATCH */}
+                            {/* ROW BADGES: EXPEDITOR GMAIL / MATCH SCORE + DATA APLICARII */}
                             {isGmail ? (
-                              emailSender && (
-                                <div className="text-[10px] text-gray-500 truncate" title={`Expeditor: ${emailSender}`}>
-                                  De la: <strong className="text-gray-700 font-semibold">{emailSender}</strong>
-                                </div>
-                              )
+                              <div className="flex items-center justify-between gap-1.5 w-full min-w-0">
+                                <span 
+                                  className="inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded-md text-[10px] bg-red-50 text-red-700 border border-red-200 min-w-0 flex-1 truncate" 
+                                  title={emailSender ? `Expeditor: ${emailSender}` : 'Email Recrutare Gmail'}
+                                >
+                                  <Mail className="w-2.5 h-2.5 shrink-0 text-red-600" />
+                                  <span className="truncate min-w-0">{emailSender ? `De la: ${emailSender}` : 'Email Recrutare'}</span>
+                                </span>
+
+                                {app.appliedDate && (
+                                  <span 
+                                    className="inline-flex items-center gap-1 font-medium text-[10px] text-gray-500 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded-md shrink-0 ml-auto" 
+                                    title={`Data: ${app.appliedDate}`}
+                                  >
+                                    <Calendar className="w-2.5 h-2.5 text-gray-400 shrink-0" />
+                                    <span className="whitespace-nowrap">{app.appliedDate}</span>
+                                  </span>
+                                )}
+                              </div>
                             ) : (
-                              score > 0 && (
-                                <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden border border-gray-200/60">
-                                  <div 
-                                    className={`h-full rounded-full transition-all duration-500 ${
-                                      score >= 75 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-500' : 'bg-slate-400'
-                                    }`} 
-                                    style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
-                                  ></div>
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between gap-1.5 w-full min-w-0">
+                                  <span className={`inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full shrink-0 ${
+                                    score >= 75 
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                      : score >= 50
+                                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                      : 'bg-slate-50 text-slate-700 border border-slate-200'
+                                  }`}>
+                                    <Sparkles className="w-3 h-3 shrink-0" />
+                                    <span>{score > 0 ? `${score.toFixed(0)}% Match` : 'ATS Match'}</span>
+                                  </span>
+
+                                  {app.appliedDate && (
+                                    <span className="inline-flex items-center gap-1 font-medium text-[10px] text-gray-500 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded-md shrink-0 ml-auto" title={`Data adaugarii/aplicarii: ${app.appliedDate}`}>
+                                      <Calendar className="w-2.5 h-2.5 text-gray-400 shrink-0" />
+                                      <span className="whitespace-nowrap">{app.appliedDate}</span>
+                                    </span>
+                                  )}
                                 </div>
-                              )
+
+                                {score > 0 && (
+                                  <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden border border-gray-200/60">
+                                    <div 
+                                      className={`h-full rounded-full transition-all duration-500 ${
+                                        score >= 75 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-500' : 'bg-slate-400'
+                                      }`} 
+                                      style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
+                                    ></div>
+                                  </div>
+                                )}
+                              </div>
                             )}
 
                             {/* CV SELECTOR (COMPACT & CLEAN) */}

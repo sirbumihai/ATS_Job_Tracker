@@ -195,8 +195,20 @@ export default function JobSearchPage({
   const [savingJobId, setSavingJobId] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Timer sincronizare automata orara (60 minute)
-  const [secondsUntilSync, setSecondsUntilSync] = useState(3600);
+  // Helper pentru calculul secundelor ramase pana la urmatoarea ora fixa (:00:00)
+  // Nu se reseteaza la refresh deoarece este calculat direct din ceasul sistemului!
+  const getSecondsUntilNextHour = () => {
+    const now = new Date();
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+    const elapsed = minutes * 60 + seconds;
+    const remaining = 3600 - elapsed;
+    return remaining > 0 ? remaining : 3600;
+  };
+
+  // Timer sincronizare automata orara la ora fixa (ex: 19:00, 20:00, 21:00)
+  const [secondsUntilSync, setSecondsUntilSync] = useState(() => getSecondsUntilNextHour());
+  const lastTriggeredHourRef = useRef(null);
   const jobsListRef = useRef(null);
   const platformDropdownRef = useRef(null);
   const roleDropdownRef = useRef(null);
@@ -228,16 +240,23 @@ export default function JobSearchPage({
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setSecondsUntilSync(prev => {
-        if (prev <= 1) {
-          fetchJobs();
-          fetchGlobalStats();
-          return 3600;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const updateCountdown = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const remaining = getSecondsUntilNextHour();
+      
+      setSecondsUntilSync(remaining);
+
+      // Cand se ajunge la ora fixa (:00:00 - :00:02) declansam auto-refresh o singura data pe ora
+      if (now.getMinutes() === 0 && now.getSeconds() < 3 && lastTriggeredHourRef.current !== currentHour) {
+        lastTriggeredHourRef.current = currentHour;
+        fetchJobs();
+        fetchGlobalStats();
+      }
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -490,7 +509,7 @@ export default function JobSearchPage({
       if (res.ok) {
         const data = await res.json();
         setToastMessage(`Sincronizare Reusita! ${data.totalLiveJobs || '1500+'} joburi agregate si actualizate.`);
-        setSecondsUntilSync(3600);
+        setSecondsUntilSync(getSecondsUntilNextHour());
         setTimeout(() => setToastMessage(null), 4500);
       }
     } catch (err) {
@@ -833,7 +852,7 @@ export default function JobSearchPage({
 
           {/* CONTROALE RAPIDE: TIMER & SINCRONIZARE */}
           <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-auto">
-            <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-semibold text-gray-700">
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-semibold text-gray-700" title="Auto-refresh din ora in ora la ora fixa (ex: 20:00, 21:00). Nu se reseteaza la refresh pagina.">
               <Clock className="w-3.5 h-3.5 text-indigo-600" />
               <span className="text-[11px] font-bold">Auto-refresh:</span>
               <span className="font-mono font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200 text-xs">

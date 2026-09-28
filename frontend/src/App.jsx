@@ -251,6 +251,19 @@ export default function App() {
     fetchApplications();
   }, [activeUserId]);
 
+  // Auto-refresh aplicatii din ora in ora la ora fixa (ex: 20:00, 21:00)
+  useEffect(() => {
+    let lastHour = new Date().getHours();
+    const interval = setInterval(() => {
+      const now = new Date();
+      if (now.getMinutes() === 0 && now.getSeconds() < 3 && now.getHours() !== lastHour) {
+        lastHour = now.getHours();
+        fetchApplications();
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [activeUserId]);
+
   const handleApplicationUpdated = (updatedApp) => {
     setApplications(prev => prev.map(a => a.id === updatedApp.id ? updatedApp : a));
   };
