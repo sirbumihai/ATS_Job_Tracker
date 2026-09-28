@@ -35,7 +35,9 @@ import {
   Lightbulb,
   AlertTriangle,
   RefreshCw,
-  Bot
+  Bot,
+  FileSignature,
+  Send
 } from 'lucide-react';
 
 // Filtru riguros pentru a elimina artefacte web, tag-uri SVG Sketch/Figma sau titluri izolate
@@ -231,7 +233,9 @@ export default function JobDetailModal({
   isSaved, 
   isSaving,
   activeUserId,
-  onUpdateJobScore
+  onUpdateJobScore,
+  onOpenCoverLetter,
+  onOpenOutreach
 }) {
   const [detailedJob, setDetailedJob] = useState(job);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -1304,42 +1308,86 @@ export default function JobDetailModal({
 
         {/* FOOTER FIX CU ACȚIUNI RAPIDE */}
         <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
-          <div className="text-xs text-gray-500 font-semibold text-center sm:text-left">
-            Platformă Sursă: <strong className="text-gray-900">{currentJob.sourcePlatform}</strong> • Verificat & Validat
+          <div className="flex items-center gap-2 text-xs text-gray-500 font-semibold text-center sm:text-left flex-wrap">
+            <span>Platformă Sursă: <strong className="text-gray-900">{currentJob.sourcePlatform || 'DIRECT'}</strong></span>
+            {currentJob.appliedDate && (
+              <>
+                <span>•</span>
+                <span className="inline-flex items-center gap-1 text-gray-700 font-bold">
+                  <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                  <span>{currentJob.appliedDate}</span>
+                </span>
+              </>
+            )}
+            <span>• Verificat & Validat</span>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <button
-              onClick={() => onSaveToKanban(currentJob)}
-              disabled={isSaved || isSaving}
-              className={`flex-1 sm:flex-none px-5 py-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition cursor-pointer border ${
-                isSaved 
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
-                  : 'bg-white hover:bg-gray-100 text-gray-900 border-gray-300 shadow-2xs'
-              }`}
-            >
-              {isSaved ? (
-                <>
-                  <BookmarkCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Salvat în Tracker</span>
-                </>
-              ) : (
-                <>
-                  <Bookmark className="w-4 h-4 text-gray-500" />
-                  <span>{isSaving ? 'Se salvează...' : 'Salvează în Tracker'}</span>
-                </>
-              )}
-            </button>
+          <div className="flex items-center gap-2.5 w-full sm:w-auto flex-wrap justify-end">
+            {onOpenCoverLetter && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenCoverLetter(currentJob.id);
+                  onClose();
+                }}
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border border-blue-200/90 bg-blue-50/80 hover:bg-blue-100 text-blue-950 shadow-2xs"
+                title="Generează Scrisoare de Intenție AI pentru acest rol"
+              >
+                <FileSignature className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span>Scrisoare AI</span>
+              </button>
+            )}
 
-            <a
-              href={currentJob.directApplyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 sm:flex-none px-6 py-3 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md"
-            >
-              <span>Aplică pe Site-ul Oficial</span>
-              <ArrowUpRight className="w-4 h-4" />
-            </a>
+            {onOpenOutreach && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenOutreach(currentJob);
+                  onClose();
+                }}
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border border-purple-200/90 bg-purple-50/80 hover:bg-purple-100 text-purple-950 shadow-2xs"
+                title="Outreach Recruiter: Mesaj LinkedIn & Cold Email"
+              >
+                <Send className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                <span>Outreach CRM</span>
+              </button>
+            )}
+
+            {onSaveToKanban && (
+              <button
+                onClick={() => onSaveToKanban(currentJob)}
+                disabled={isSaved || isSaving}
+                className={`flex-1 sm:flex-none px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition cursor-pointer border ${
+                  isSaved 
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
+                    : 'bg-white hover:bg-gray-100 text-gray-900 border-gray-300 shadow-2xs'
+                }`}
+              >
+                {isSaved ? (
+                  <>
+                    <BookmarkCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Salvat în Tracker</span>
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="w-4 h-4 text-gray-500 shrink-0" />
+                    <span>{isSaving ? 'Se salvează...' : 'Salvează'}</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {currentJob.directApplyUrl && (
+              <a
+                href={currentJob.directApplyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 sm:flex-none px-5 py-2.5 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md"
+              >
+                <span>Aplică Oficial</span>
+                <ArrowUpRight className="w-4 h-4 shrink-0" />
+              </a>
+            )}
           </div>
         </div>
 

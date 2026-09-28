@@ -422,30 +422,51 @@ export default function KanbanBoard({
   const executeMove = (movingAppId, targetCardId, targetColumnKey, position = 'bottom') => {
     if (!movingAppId) return;
 
+    // Daca am dat drop pe acelasi card: nu facem nicio mutare
+    if (targetCardId && targetCardId === movingAppId) {
+      return;
+    }
+
     const currentApps = [...applications];
     const movingIndex = currentApps.findIndex(a => a.id === movingAppId);
     if (movingIndex === -1) return;
 
     const movingApp = { ...currentApps[movingIndex] };
-    const statusChanged = movingApp.status !== targetColumnKey;
+    const statusChanged = targetColumnKey && movingApp.status !== targetColumnKey;
 
     if (statusChanged) {
       movingApp.status = targetColumnKey;
     }
 
-    // Eliminam aplicatia mutata din lista
-    currentApps.splice(movingIndex, 1);
+    // Daca nu s-a schimbat statusul si nu avem targetCardId specific (drop pe aceeasi coloana):
+    if (!statusChanged && !targetCardId) {
+      const columnApps = currentApps.filter(a => a.status === targetColumnKey);
+      if (columnApps.length > 0 && columnApps[columnApps.length - 1].id === movingAppId) {
+        return; // Cardul este deja la finalul coloanei
+      }
+    }
 
-    if (targetCardId && targetCardId !== movingAppId) {
+    // Calculam pozitia exacta de inserare
+    if (targetCardId) {
       const targetIndex = currentApps.findIndex(a => a.id === targetCardId);
       if (targetIndex !== -1) {
-        const insertIndex = position === 'top' ? targetIndex : targetIndex + 1;
-        currentApps.splice(insertIndex, 0, movingApp);
+        let insertIndex = position === 'top' ? targetIndex : targetIndex + 1;
+        // Daca tinta este exact pozitia curenta a cardului in aceeasi coloana:
+        if (!statusChanged) {
+          if (insertIndex === movingIndex || insertIndex === movingIndex + 1) {
+            return; // Pozitia nu s-a schimbat deloc!
+          }
+        }
+        currentApps.splice(movingIndex, 1);
+        const newTargetIndex = currentApps.findIndex(a => a.id === targetCardId);
+        const finalInsertIndex = position === 'top' ? newTargetIndex : newTargetIndex + 1;
+        currentApps.splice(finalInsertIndex, 0, movingApp);
       } else {
+        currentApps.splice(movingIndex, 1);
         currentApps.push(movingApp);
       }
     } else {
-      // Plasat in partea de jos a coloanei tinta
+      currentApps.splice(movingIndex, 1);
       let lastColumnCardIndex = -1;
       for (let i = currentApps.length - 1; i >= 0; i--) {
         if (currentApps[i].status === targetColumnKey) {
@@ -897,9 +918,17 @@ export default function KanbanBoard({
                                 className="cursor-pointer group/title flex-1 min-w-0"
                                 title="Apasa pentru a deschide fisa completa a jobului"
                               >
-                                <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-500 block truncate group-hover/title:text-indigo-600 transition">
-                                  {app.companyName}
-                                </span>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-500 truncate group-hover/title:text-indigo-600 transition">
+                                    {app.companyName}
+                                  </span>
+                                  {(app.sourcePlatform === 'GMAIL' || (app.rawDescription && app.rawDescription.includes('GMAIL'))) && (
+                                    <span className="inline-flex items-center gap-0.5 font-black text-[9px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded-full shrink-0" title="Detectat automat prin sincronizare Gmail">
+                                      <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
+                                      <span>Gmail</span>
+                                    </span>
+                                  )}
+                                </div>
                                 <h4 className="font-bold text-xs sm:text-[13px] text-gray-950 leading-snug mt-0.5 line-clamp-2 group-hover/title:text-indigo-600 transition">
                                   {app.jobTitle}
                                 </h4>
@@ -935,20 +964,12 @@ export default function KanbanBoard({
                                   {score.toFixed(0)}% Match ATS
                                 </span>
                                 
-                                <div className="flex items-center gap-1 min-w-0">
-                                  {app.appliedDate && (
-                                    <span className="inline-flex items-center gap-1 font-bold text-[10px] text-gray-600 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md truncate" title={`Data aplicării: ${app.appliedDate}`}>
-                                      <Calendar className="w-2.5 h-2.5 text-gray-500 shrink-0" />
-                                      <span>{app.appliedDate}</span>
-                                    </span>
-                                  )}
-                                  {(app.sourcePlatform === 'GMAIL' || (app.rawDescription && app.rawDescription.includes('GMAIL'))) && (
-                                    <span className="inline-flex items-center gap-1 font-black text-[10px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md shrink-0" title="Detectat automat prin sincronizare Gmail">
-                                      <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
-                                      <span>Gmail</span>
-                                    </span>
-                                  )}
-                                </div>
+                                {app.appliedDate && (
+                                  <span className="inline-flex items-center gap-1 font-bold text-[10px] text-gray-600 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md shrink-0" title={`Data aplicării: ${app.appliedDate}`}>
+                                    <Calendar className="w-2.5 h-2.5 text-gray-500 shrink-0" />
+                                    <span>{app.appliedDate}</span>
+                                  </span>
+                                )}
                               </div>
                               <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden border border-gray-200/60">
                                 <div 
@@ -1012,19 +1033,19 @@ export default function KanbanBoard({
                               )}
                             </div>
 
-                            {/* ACTION BUTTONS: 3 ACTIUNI CLARE, COLORATE DISTINCT SI AERISITE */}
-                            <div className="grid grid-cols-3 gap-1.5 pt-1.5 border-t border-gray-100">
+                            {/* ACTION BUTTONS: CARD AERISIT CU FIȘĂ JOB + ACTIUNI RAPIDE ICON-ONLY */}
+                            <div className="flex items-center gap-1.5 pt-1.5 border-t border-gray-100">
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleOpenJobModal(app);
                                 }}
-                                className="py-1.5 px-1.5 rounded-xl border border-indigo-200/90 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 text-xs font-bold flex items-center justify-center gap-1 transition shadow-2xs cursor-pointer group"
+                                className="flex-1 py-1.5 px-2.5 rounded-xl border border-indigo-200/90 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer group"
                                 title="Deschide fișa completă și cerințele jobului"
                               >
                                 <Eye className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform shrink-0" />
-                                <span>Fișă</span>
+                                <span>Fișă Job</span>
                               </button>
 
                               {onOpenCoverLetter && (
@@ -1034,11 +1055,10 @@ export default function KanbanBoard({
                                     e.stopPropagation();
                                     onOpenCoverLetter(app.id);
                                   }}
-                                  className="py-1.5 px-1.5 rounded-xl border border-blue-200/90 bg-blue-50/80 hover:bg-blue-100 text-blue-950 text-xs font-bold flex items-center justify-center gap-1 transition shadow-2xs cursor-pointer group"
+                                  className="p-1.5 rounded-xl border border-blue-200/90 bg-blue-50/80 hover:bg-blue-100 text-blue-900 transition shadow-2xs cursor-pointer group shrink-0"
                                   title="Generează Scrisoare de Intenție AI pentru acest rol"
                                 >
-                                  <FileSignature className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform shrink-0" />
-                                  <span>Scrisoare</span>
+                                  <FileSignature className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform" />
                                 </button>
                               )}
 
@@ -1048,11 +1068,10 @@ export default function KanbanBoard({
                                   e.stopPropagation();
                                   setOutreachApp(app);
                                 }}
-                                className="py-1.5 px-1.5 rounded-xl border border-purple-200/90 bg-purple-50/80 hover:bg-purple-100 text-purple-950 text-xs font-bold flex items-center justify-center gap-1 transition shadow-2xs cursor-pointer group"
+                                className="p-1.5 rounded-xl border border-purple-200/90 bg-purple-50/80 hover:bg-purple-100 text-purple-900 transition shadow-2xs cursor-pointer group shrink-0"
                                 title="Outreach Recruiter: Mesaj LinkedIn & Cold Email"
                               >
-                                <Send className="w-3.5 h-3.5 text-purple-600 group-hover:scale-110 transition-transform shrink-0" />
-                                <span>Outreach</span>
+                                <Send className="w-3.5 h-3.5 text-purple-600 group-hover:scale-110 transition-transform" />
                               </button>
                             </div>
                           </div>
@@ -1123,10 +1142,28 @@ export default function KanbanBoard({
                         {/* 1. COMPANIE & JOB */}
                         <td className="py-4 px-4 sm:px-6">
                           <div>
-                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-500 block">
-                              {app.companyName}
-                            </span>
-                            <span className="font-bold text-sm text-gray-950 block mt-0.5">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
+                                {app.companyName}
+                              </span>
+                              {(app.sourcePlatform === 'GMAIL' || (app.rawDescription && app.rawDescription.includes('GMAIL'))) && (
+                                <span className="inline-flex items-center gap-1 font-black text-[9px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full" title="Detectat automat prin sincronizare Gmail">
+                                  <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
+                                  <span>Gmail</span>
+                                </span>
+                              )}
+                              {app.appliedDate && (
+                                <span className="inline-flex items-center gap-1 font-semibold text-[10px] text-gray-500 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md" title={`Data aplicării: ${app.appliedDate}`}>
+                                  <Calendar className="w-2.5 h-2.5 text-gray-400 shrink-0" />
+                                  <span>{app.appliedDate}</span>
+                                </span>
+                              )}
+                            </div>
+                            <span 
+                              onClick={() => handleOpenJobModal(app)}
+                              className="font-bold text-sm text-gray-950 block hover:text-indigo-600 transition cursor-pointer"
+                              title="Deschide fișa completă a jobului"
+                            >
                               {app.jobTitle}
                             </span>
                             {app.jobLocation && (
@@ -1234,27 +1271,25 @@ export default function KanbanBoard({
                               title="Vezi fișa completă a jobului"
                             >
                               <Eye className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform shrink-0" />
-                              <span>Fișă</span>
+                              <span>Fișă Job</span>
                             </button>
 
                             {onOpenCoverLetter && (
                               <button
                                 onClick={() => onOpenCoverLetter(app.id)}
-                                className="px-2.5 py-1.5 rounded-xl border border-blue-200/90 bg-blue-50/80 hover:bg-blue-100 text-blue-950 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs group"
+                                className="p-1.5 rounded-xl border border-blue-200/90 bg-blue-50/80 hover:bg-blue-100 text-blue-900 transition shadow-2xs cursor-pointer group"
                                 title="Generează Scrisoare de Intenție AI"
                               >
-                                <FileSignature className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform shrink-0" />
-                                <span>Scrisoare</span>
+                                <FileSignature className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
                               </button>
                             )}
 
                             <button
                               onClick={() => setOutreachApp(app)}
-                              className="px-2.5 py-1.5 rounded-xl border border-purple-200/90 bg-purple-50/80 hover:bg-purple-100 text-purple-950 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs group"
+                              className="p-1.5 rounded-xl border border-purple-200/90 bg-purple-50/80 hover:bg-purple-100 text-purple-900 transition shadow-2xs cursor-pointer group"
                               title="Outreach Recruiter: Mesaj LinkedIn & Cold Email"
                             >
-                              <Send className="w-3.5 h-3.5 text-purple-600 group-hover:scale-110 transition-transform shrink-0" />
-                              <span>Outreach</span>
+                              <Send className="w-4 h-4 text-purple-600 group-hover:scale-110 transition-transform" />
                             </button>
 
                             <button
@@ -1295,6 +1330,8 @@ export default function KanbanBoard({
           onClose={() => setSelectedJobForModal(null)}
           isSaved={true}
           activeUserId={activeUserId}
+          onOpenCoverLetter={onOpenCoverLetter}
+          onOpenOutreach={(targetJob) => setOutreachApp(targetJob)}
         />
       )}
 
