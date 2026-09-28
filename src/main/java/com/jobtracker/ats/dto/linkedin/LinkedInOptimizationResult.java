@@ -12,5 +12,8 @@ public record LinkedInOptimizationResult(
     List<HeadlineOptionDto> optimizedHeadlines,
     String optimizedAbout,
     List<RecommendedSkillDto> recommendedSkills,
-    List<RecruiterTipDto> recruiterTips
+    List<RecruiterTipDto> recruiterTips,
+    List<LinkedInActionStepDto> actionPlan,
+    List<LinkedInProjectDto> suggestedProjects,
+    List<RecruiterBooleanQueryDto> recruiterQueries
 ) {}

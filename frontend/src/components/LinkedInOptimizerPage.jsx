@@ -24,7 +24,14 @@ import {
   X,
   RefreshCw,
   Eye,
-  Briefcase
+  Briefcase,
+  CheckSquare,
+  Square,
+  Terminal,
+  Code2,
+  FolderGit2,
+  FileText,
+  BookmarkCheck
 } from 'lucide-react';
 
 export default function LinkedInOptimizerPage({ currentUser }) {
@@ -38,12 +45,30 @@ export default function LinkedInOptimizerPage({ currentUser }) {
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [addSkillModalOpen, setAddSkillModalOpen] = useState(false);
   const [newSkillText, setNewSkillText] = useState('');
-  const [activeTab, setActiveTab] = useState('headlines'); // 'headlines', 'about', 'skills', 'tips'
+  const [activeTab, setActiveTab] = useState('action_plan'); // 'action_plan', 'headlines', 'about', 'star_projects', 'boolean_search', 'skills', 'tips'
+  const [completedSteps, setCompletedSteps] = useState({});
 
   // Încarcă automat profilul demonstrativ Sirbu Mihai la pornire
   useEffect(() => {
     loadDemoProfile();
+    // Încarcă starea checklist-ului din localStorage
+    try {
+      const savedSteps = localStorage.getItem('linkedin_action_steps');
+      if (savedSteps) setCompletedSteps(JSON.parse(savedSteps));
+    } catch (e) {
+      console.warn('Could not read saved checklist steps', e);
+    }
   }, []);
+
+  const toggleStep = (stepId) => {
+    const updated = { ...completedSteps, [stepId]: !completedSteps[stepId] };
+    setCompletedSteps(updated);
+    try {
+      localStorage.setItem('linkedin_action_steps', JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Could not save checklist step', e);
+    }
+  };
 
   const loadDemoProfile = async () => {
     setLoading(true);
@@ -155,13 +180,6 @@ export default function LinkedInOptimizerPage({ currentUser }) {
     }
   };
 
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'text-emerald-600 bg-emerald-50 border-emerald-300';
-    if (score >= 60) return 'text-blue-600 bg-blue-50 border-blue-300';
-    if (score >= 40) return 'text-amber-600 bg-amber-50 border-amber-300';
-    return 'text-rose-600 bg-rose-50 border-rose-300';
-  };
-
   return (
     <div className="space-y-8 pb-16 font-sans">
       
@@ -173,13 +191,13 @@ export default function LinkedInOptimizerPage({ currentUser }) {
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-[#0077b5]/10 text-[#0077b5] border border-[#0077b5]/20">
               <Linkedin className="w-3.5 h-3.5 fill-[#0077b5]" />
-              Optimizator Profil LinkedIn & Audit Recruiter AI
+              Optimizator Profil LinkedIn • Ghid Strategic Recruiter 2026
             </div>
             <h1 className="text-2xl sm:text-4xl font-black text-gray-950 tracking-tight leading-tight">
-              Cum să ai un Profil LinkedIn <span className="text-[#0a66c2] underline decoration-blue-200 decoration-wavy">Magnet pentru Recruiteri</span>
+              Transformă-ți Profilul LinkedIn într-un <span className="text-[#0a66c2] underline decoration-blue-200 decoration-wavy">Magnet pentru Recruiteri</span>
             </h1>
             <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-              Exportă profilul direct din LinkedIn în format PDF, vezi replica vizuală a paginii tale și primești recomandări de optimizare cu cuvinte cheie ATS, headline-uri dovedite și bune practici pentru România și Europa.
+              Algoritmul LinkedIn Recruiter funcționează pe căutări semantice și booleene. Află exact ce secțiuni trebuie să adaugi, formulele dovedite de titlu și planul de acțiune pas cu pas pentru a primi oferte directe de Junior Software Engineer.
             </p>
           </div>
 
@@ -223,7 +241,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             <div>
               <p className="text-xs font-black text-gray-900 uppercase tracking-wide">Choose „Save to PDF”</p>
               <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                LinkedIn descarcă instant un export complet și curat în format PDF al întregului tău profil.
+                LinkedIn descarcă instant un export curat și complet în format PDF cu datele profilului tău.
               </p>
             </div>
           </div>
@@ -235,7 +253,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             <div>
               <p className="text-xs font-black text-blue-950 uppercase tracking-wide">Drop the file above</p>
               <p className="text-xs text-blue-900 mt-1 leading-relaxed">
-                Trage PDF-ul descărcat în zona de mai jos — îți reconstruim profilul și îl audităm în câteva secunde.
+                Trage PDF-ul în zona de mai jos — îți reconstruim profilul și îl audităm pe baza cerințelor reale din piață.
               </p>
             </div>
           </div>
@@ -248,101 +266,92 @@ export default function LinkedInOptimizerPage({ currentUser }) {
           onDrop={(e) => {
             e.preventDefault();
             setDragOver(false);
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
               handleFileUpload(e.dataTransfer.files[0]);
             }
           }}
-          className={`mt-6 p-6 rounded-2xl border-2 border-dashed transition flex flex-col sm:flex-row items-center justify-between gap-4 cursor-pointer ${
+          className={`mt-6 p-8 border-2 border-dashed rounded-2xl text-center transition flex flex-col items-center justify-center gap-3 cursor-pointer ${
             dragOver 
-              ? 'border-[#0a66c2] bg-blue-50/50' 
-              : 'border-gray-300 hover:border-gray-400 bg-gray-50/50'
+              ? 'border-[#0a66c2] bg-blue-50/70 scale-[1.005]' 
+              : 'border-gray-300 hover:border-gray-400 bg-gray-50/60'
           }`}
           onClick={() => document.getElementById('linkedin-pdf-input')?.click()}
         >
           <input 
             type="file" 
             id="linkedin-pdf-input" 
-            className="hidden" 
             accept=".pdf" 
+            className="hidden" 
             onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
+              if (e.target.files && e.target.files.length > 0) {
                 handleFileUpload(e.target.files[0]);
               }
             }} 
           />
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-blue-100/70 text-[#0a66c2] flex items-center justify-center shrink-0">
-              <Upload className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-gray-900">
-                Încarcă PDF-ul descărcat din LinkedIn (sau trage fișierul aici)
-              </p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Format acceptat: <strong className="text-gray-700">.pdf</strong> generat oficial de LinkedIn prin funcția „Save to PDF”
-              </p>
-            </div>
+          <div className="w-12 h-12 rounded-2xl bg-blue-100/70 text-[#0a66c2] flex items-center justify-center shadow-xs">
+            <Upload className="w-6 h-6" />
           </div>
-
-          <span className="px-4 py-2 rounded-xl text-xs font-bold bg-white border border-gray-300 text-gray-800 shadow-2xs hover:bg-gray-100 transition whitespace-nowrap">
-            Selectează PDF
-          </span>
+          <div>
+            <p className="text-sm font-bold text-gray-900">
+              {loading ? 'Se analizează PDF-ul LinkedIn...' : 'Apasă aici sau trage fișierul PDF salvat din LinkedIn'}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Suportă exporturile oficiale generate de LinkedIn (dimensiune maximă 15MB)
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* TWO-COLUMN WORKSPACE: LEFT = LINKEDIN CLONE PREVIEW, RIGHT = AI OPTIMIZATION PANEL */}
+      {/* MAIN TWO-COLUMN SPLIT: LINKEDIN UI REPLICA (LEFT) & AI ADVISOR (RIGHT) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* LEFT COLUMN: PIXEL-PERFECT LINKEDIN UI (7/12) */}
+        {/* LEFT COLUMN: PIXEL-PERFECT LINKEDIN DESKTOP PROFILE UI (7/12) */}
         <div className="lg:col-span-7 space-y-4">
+          
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
-              <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider">
-                Preview Live Profil LinkedIn
-              </h2>
+              <span className="text-xs font-black uppercase tracking-wider text-gray-400">Previzualizare Live</span>
+              <span className="text-xs font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Eye className="w-3 h-3 text-[#0a66c2]" />
+                Exact LinkedIn Desktop UI
+              </span>
             </div>
-            <span className="text-xs text-gray-400 font-semibold">
-              Replica Desktop Oficială
-            </span>
+            <span className="text-[11px] text-gray-400">Actualizat în timp real când adopți sugestii</span>
           </div>
 
-          {/* MAIN LINKEDIN CARD */}
-          <div className="bg-white border border-gray-300 rounded-2xl shadow-xs overflow-hidden">
+          {/* MAIN PROFILE CARD */}
+          <div className="bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-xs relative group">
             
-            {/* BANNER HEADER */}
-            <div className="h-36 sm:h-44 bg-[#1d3557] relative w-full overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#1d3557] via-[#243e63] to-[#1d3557] opacity-90"></div>
-              <button 
-                title="Editează coperta"
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-gray-700 flex items-center justify-center transition shadow-sm cursor-pointer"
-              >
-                <Edit3 className="w-4 h-4" />
-              </button>
+            {/* LINKEDIN COVER BANNER */}
+            <div className="h-32 sm:h-44 w-full bg-[#1d3557] relative">
+              <div className="absolute top-3 right-3">
+                <button className="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-gray-700 flex items-center justify-center shadow-md transition cursor-pointer">
+                  <Edit3 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            {/* AVATAR + TOP BAR INFO */}
+            {/* AVATAR & BASIC DETAILS */}
             <div className="px-6 pb-6 pt-0 relative">
               
-              {/* AVATAR (CIRCULAR WITH SM) */}
-              <div className="relative -mt-16 sm:-mt-20 mb-3 flex items-end justify-between">
-                <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-[#1b2a41] border-4 border-white text-white font-black text-3xl sm:text-4xl flex items-center justify-center shadow-md select-none tracking-wider">
-                  {profile?.fullName ? (
-                    profile.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-                  ) : 'SM'}
+              {/* CIRCULAR AVATAR */}
+              <div className="flex justify-between items-end -mt-16 sm:-mt-20 mb-3">
+                <div className="relative">
+                  <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-4 border-white bg-[#1b2a41] text-white flex items-center justify-center text-3xl sm:text-4xl font-black shadow-md">
+                    {profile?.fullName ? profile.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'SM'}
+                  </div>
+                  <div className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-emerald-500 border-2 border-white" title="Activ"></div>
                 </div>
 
-                {/* INSTITUTION ROW ON THE RIGHT */}
-                {profile?.education && profile.education.length > 0 && (
-                  <div className="hidden sm:flex items-center gap-2 max-w-[240px] text-right">
-                    <span className="text-xs font-bold text-gray-900 leading-tight">
-                      {profile.education[0].institution}
-                    </span>
-                    <div className="w-9 h-9 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-xs font-black text-gray-700 shrink-0">
-                      {profile.education[0].logoBadge || 'UP'}
-                    </div>
+                {/* UNIVERSITY LOGO BADGE */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center font-black text-xs text-gray-700">
+                    UP
                   </div>
-                )}
+                  <span className="text-xs font-bold text-gray-900 hidden sm:inline max-w-[180px] leading-tight">
+                    Universitatea POLITEHNICA din București
+                  </span>
+                </div>
               </div>
 
               {/* NAME & VERIFICATION */}
@@ -374,12 +383,12 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 {/* CONNECTIONS COUNT */}
                 <div className="pt-0.5">
                   <a href="#connections" className="text-xs font-bold text-[#0a66c2] hover:underline">
-                    {profile?.connectionsCount || '500+ connections'}
+                    {profile?.connectionsCount || '500+ conexiuni'}
                   </a>
                 </div>
               </div>
 
-              {/* ACTION PILLS (OPEN TO, ADD PROFILE SECTION, ENHANCE PROFILE, RESOURCES) */}
+              {/* ACTION PILLS */}
               <div className="flex flex-wrap items-center gap-2 pt-4">
                 <button className="px-4 py-1.5 rounded-full text-sm font-bold bg-[#0a66c2] hover:bg-[#004182] text-white transition shadow-2xs cursor-pointer">
                   Open to
@@ -398,10 +407,61 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             </div>
           </div>
 
+          {/* FEATURED SECTION (ÎN PRIM-PLAN) - CRITICAL DIFFERENTIATOR (+30% VIEWS) */}
+          <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
+                  Featured (În prim-plan)
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                    +30% Vizualizări
+                  </span>
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Vitrina ta tehnică vizuală: proiecte de pe GitHub, CV PDF și realizări concrete.
+                </p>
+              </div>
+              <button 
+                onClick={() => setActiveTab('action_plan')}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-600 transition cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {profile?.featured && profile.featured.length > 0 ? (
+                profile.featured.map((item, idx) => (
+                  <div key={idx} className="border border-gray-200 rounded-xl p-3 bg-gray-50/70 hover:bg-blue-50/40 hover:border-blue-200 transition space-y-2 flex flex-col justify-between">
+                    <div className="space-y-1">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-blue-700 bg-blue-100/70 px-1.5 py-0.5 rounded">
+                        {item.badge}
+                      </span>
+                      <h4 className="text-xs font-bold text-gray-900 leading-snug line-clamp-2">
+                        {item.title}
+                      </h4>
+                      <p className="text-[11px] text-gray-500 leading-tight">
+                        {item.subtitle}
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-gray-200/60 flex items-center justify-between text-[11px] font-bold text-[#0a66c2]">
+                      <span>{item.type === 'LINK' ? 'Deschide Link' : item.type === 'DOCUMENT' ? 'Descarcă PDF' : 'Vezi Postarea'}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-3 py-4 text-center text-xs text-gray-400 border border-dashed rounded-xl">
+                  Adaugă proiectele de pe GitHub în secțiunea Featured pentru a demonstra expertiza practică!
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* ABOUT CARD */}
           <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-xs space-y-3 relative group">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-gray-950">About</h3>
+              <h3 className="text-base font-bold text-gray-950">About (Despre)</h3>
               <button 
                 onClick={() => setActiveTab('about')}
                 title="Editează secțiunea About"
@@ -420,15 +480,89 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 onClick={() => setActiveTab('about')}
                 className="py-4 px-3 rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-400 hover:text-blue-600 hover:border-blue-300 transition cursor-pointer"
               >
-                + Add an about summary (Apasă pentru a genera cu AI un rezumat profesional complet)
+                + Adaugă secțiunea About (Apasă pentru a aplica rezumatul optimizat generat de AI)
               </div>
             )}
+          </div>
+
+          {/* PROJECTS CARD (GOOGLE XYZ / STAR FORMATTED) */}
+          <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
+                  Projects (Proiecte Tehnice)
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    Dovadă Practică
+                  </span>
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Substitutul principal pentru experiența în corporație pentru studenți și juniori.
+                </p>
+              </div>
+              <button 
+                onClick={() => setActiveTab('star_projects')}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-600 transition cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 divide-y divide-gray-100">
+              {profile?.projects && profile.projects.length > 0 ? (
+                profile.projects.map((proj, idx) => (
+                  <div key={idx} className={`space-y-2 ${idx > 0 ? 'pt-4' : ''}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-950 leading-tight">
+                          {proj.title}
+                        </h4>
+                        <p className="text-[11px] text-gray-500 mt-0.5">
+                          {proj.timePeriod} • Asociat cu {proj.associatedWith}
+                        </p>
+                      </div>
+                      {proj.url && (
+                        <a 
+                          href={proj.url} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition flex items-center gap-1 shrink-0"
+                        >
+                          <FolderGit2 className="w-3.5 h-3.5 text-gray-600" />
+                          GitHub
+                        </a>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-gray-700 leading-relaxed">
+                      {proj.description}
+                    </p>
+
+                    {proj.skills && proj.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {proj.skills.map((sk, sidx) => (
+                          <span key={sidx} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-100">
+                            {sk}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div 
+                  onClick={() => setActiveTab('star_projects')}
+                  className="py-4 text-center text-xs text-gray-400 border border-dashed rounded-xl cursor-pointer"
+                >
+                  + Adaugă proiecte tehnice cu formula STAR / Google XYZ
+                </div>
+              )}
+            </div>
           </div>
 
           {/* EDUCATION CARD */}
           <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-gray-950">Education</h3>
+              <h3 className="text-base font-bold text-gray-950">Education (Studii)</h3>
               <div className="flex items-center gap-1">
                 <button className="p-1.5 rounded-full hover:bg-gray-100 text-gray-600 transition cursor-pointer">
                   <Plus className="w-4 h-4" />
@@ -477,7 +611,10 @@ export default function LinkedInOptimizerPage({ currentUser }) {
           {/* SKILLS CARD */}
           <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-gray-950">Skills</h3>
+              <div>
+                <h3 className="text-base font-bold text-gray-950">Skills & Endorsements</h3>
+                <p className="text-xs text-gray-500">Fixează Top 3 Pinned Skills (Java, Spring Boot, SQL)</p>
+              </div>
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setAddSkillModalOpen(true)}
@@ -486,9 +623,6 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   <Plus className="w-3.5 h-3.5" />
                   Add Skill
                 </button>
-                <button className="p-1.5 rounded-full hover:bg-gray-100 text-gray-600 transition cursor-pointer">
-                  <Edit3 className="w-4 h-4" />
-                </button>
               </div>
             </div>
 
@@ -496,7 +630,14 @@ export default function LinkedInOptimizerPage({ currentUser }) {
               {profile?.skills && profile.skills.length > 0 ? (
                 profile.skills.map((sk, idx) => (
                   <div key={idx} className={`flex items-center justify-between ${idx > 0 ? 'pt-2.5' : ''}`}>
-                    <span className="text-xs font-bold text-gray-900">{sk}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-900">{sk}</span>
+                      {idx < 3 && (
+                        <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">
+                          Pinned Top {idx + 1}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[11px] text-gray-400">Aptitudine listată</span>
                   </div>
                 ))
@@ -505,6 +646,29 @@ export default function LinkedInOptimizerPage({ currentUser }) {
               )}
             </div>
           </div>
+
+          {/* LICENSES & CERTIFICATIONS CARD */}
+          {profile?.certifications && profile.certifications.length > 0 && (
+            <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-gray-950">Licenses & Certifications</h3>
+                <button className="p-1.5 rounded-full hover:bg-gray-100 text-gray-600 transition cursor-pointer">
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="space-y-2 divide-y divide-gray-100">
+                {profile.certifications.map((cert, idx) => (
+                  <div key={idx} className={`flex items-center justify-between ${idx > 0 ? 'pt-2' : ''}`}>
+                    <div className="flex items-center gap-2.5">
+                      <Award className="w-4 h-4 text-amber-500 shrink-0" />
+                      <span className="text-xs font-bold text-gray-800">{cert}</span>
+                    </div>
+                    <span className="text-[11px] text-gray-400 font-semibold">Verificat</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* LANGUAGES CARD */}
           {profile?.languages && profile.languages.length > 0 && (
@@ -537,23 +701,23 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                 Scor Vizibilitate Recruiteri
               </span>
-              <span className="text-xs font-bold text-gray-400">LinkedIn ATS Audit</span>
+              <span className="text-xs font-bold text-gray-400">Algoritm 2026 Audit</span>
             </div>
 
             <div className="flex items-center gap-5">
               <div className="relative w-20 h-20 rounded-2xl bg-neutral-800/80 border border-neutral-700 flex flex-col items-center justify-center shrink-0">
                 <span className="text-2xl font-black text-white">
-                  {optimizationResult?.overallScore || 45}
+                  {optimizationResult?.overallScore || 50}
                 </span>
                 <span className="text-[10px] text-gray-400 font-bold uppercase">din 100</span>
               </div>
 
               <div>
                 <h3 className="text-sm font-black text-white leading-tight">
-                  {optimizationResult?.scoreGrade || 'Nivel Mediu (Necesită Optimizare)'}
+                  {optimizationResult?.scoreGrade || 'All-Star Profile (Optimizat Recruiteri)'}
                 </h3>
                 <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                  Profilurile optimizate complet obțin cu până la <strong className="text-blue-300">3.5x mai multe mesaje directe</strong> de la recruiteri IT din România.
+                  Profilurile cu scor peste 85 obțin cu până la <strong className="text-blue-300">3.5x mai multe mesaje directe</strong> de la recruiteri din România.
                 </p>
               </div>
             </div>
@@ -565,14 +729,14 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   <div key={label} className="space-y-1">
                     <div className="flex justify-between text-[11px] font-semibold text-gray-300">
                       <span>{label}</span>
-                      <span>{val} / 25 pts</span>
+                      <span>{val} pts</span>
                     </div>
                     <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
                       <div 
                         className={`h-full rounded-full transition-all duration-500 ${
-                          val >= 20 ? 'bg-emerald-500' : val >= 12 ? 'bg-blue-500' : 'bg-amber-500'
+                          val >= 18 ? 'bg-emerald-500' : val >= 12 ? 'bg-blue-500' : 'bg-amber-500'
                         }`} 
-                        style={{ width: `${(val / 25) * 100}%` }}
+                        style={{ width: `${Math.min(100, (val / 20) * 100)}%` }}
                       />
                     </div>
                   </div>
@@ -600,10 +764,21 @@ export default function LinkedInOptimizerPage({ currentUser }) {
           </div>
 
           {/* TABS NAVIGATION FOR SUGGESTIONS */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-1.5 flex gap-1 shadow-xs">
+          <div className="bg-white border border-gray-200 rounded-2xl p-1.5 flex flex-wrap gap-1 shadow-xs">
+            <button
+              onClick={() => setActiveTab('action_plan')}
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'action_plan'
+                  ? 'bg-black text-white shadow-xs'
+                  : 'text-gray-600 hover:text-black hover:bg-gray-100'
+              }`}
+            >
+              <CheckSquare className="w-3.5 h-3.5 text-emerald-400" />
+              Plan Pas-cu-Pas
+            </button>
             <button
               onClick={() => setActiveTab('headlines')}
-              className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'headlines'
                   ? 'bg-black text-white shadow-xs'
                   : 'text-gray-600 hover:text-black hover:bg-gray-100'
@@ -614,18 +789,40 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             </button>
             <button
               onClick={() => setActiveTab('about')}
-              className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'about'
                   ? 'bg-black text-white shadow-xs'
                   : 'text-gray-600 hover:text-black hover:bg-gray-100'
               }`}
             >
               <Edit3 className="w-3.5 h-3.5 text-blue-500" />
-              Secțiune About
+              Despre
+            </button>
+            <button
+              onClick={() => setActiveTab('star_projects')}
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'star_projects'
+                  ? 'bg-black text-white shadow-xs'
+                  : 'text-gray-600 hover:text-black hover:bg-gray-100'
+              }`}
+            >
+              <FolderGit2 className="w-3.5 h-3.5 text-purple-500" />
+              Proiecte STAR
+            </button>
+            <button
+              onClick={() => setActiveTab('boolean_search')}
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'boolean_search'
+                  ? 'bg-black text-white shadow-xs'
+                  : 'text-gray-600 hover:text-black hover:bg-gray-100'
+              }`}
+            >
+              <Terminal className="w-3.5 h-3.5 text-sky-500" />
+              Căutare Recruiter
             </button>
             <button
               onClick={() => setActiveTab('skills')}
-              className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'skills'
                   ? 'bg-black text-white shadow-xs'
                   : 'text-gray-600 hover:text-black hover:bg-gray-100'
@@ -636,7 +833,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             </button>
             <button
               onClick={() => setActiveTab('tips')}
-              className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'tips'
                   ? 'bg-black text-white shadow-xs'
                   : 'text-gray-600 hover:text-black hover:bg-gray-100'
@@ -646,6 +843,89 @@ export default function LinkedInOptimizerPage({ currentUser }) {
               Sfaturi Pro
             </button>
           </div>
+
+          {/* TAB 0: ACTION PLAN CHECKLIST (10 DETAILED CONCRETE STEPS) */}
+          {activeTab === 'action_plan' && (
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black text-gray-950 uppercase tracking-wide flex items-center gap-2">
+                    <CheckSquare className="w-4 h-4 text-emerald-500" />
+                    Plan de Acțiune Pas cu Pas (10 Etape)
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Bifează etapele pe măsură ce le aplici pe profilul tău LinkedIn real.
+                  </p>
+                </div>
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                  {Object.values(completedSteps).filter(Boolean).length} / {optimizationResult?.actionPlan?.length || 10} Completate
+                </span>
+              </div>
+
+              <div className="space-y-3 pt-1">
+                {optimizationResult?.actionPlan?.map((step) => {
+                  const isDone = !!completedSteps[step.id];
+                  return (
+                    <div 
+                      key={step.id} 
+                      className={`p-4 rounded-2xl border transition space-y-2.5 ${
+                        isDone 
+                          ? 'border-emerald-200 bg-emerald-50/40 opacity-80' 
+                          : 'border-gray-200 bg-gray-50/80 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <button
+                            onClick={() => toggleStep(step.id)}
+                            className="mt-0.5 text-gray-400 hover:text-emerald-600 transition cursor-pointer"
+                          >
+                            {isDone ? (
+                              <CheckCircle2 className="w-5 h-5 text-emerald-600 fill-emerald-100" />
+                            ) : (
+                              <Square className="w-5 h-5 text-gray-300" />
+                            )}
+                          </button>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-bold text-gray-950 leading-tight">
+                                {step.stepNumber}. {step.title}
+                              </span>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                                {step.impact}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-gray-500 mt-1">
+                              Timp estimat: <strong>{step.estimatedMinutes}</strong> • Categorie: {step.category}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-gray-600 leading-relaxed pl-8">
+                        {step.instructions}
+                      </p>
+
+                      {step.exampleSnippet && (
+                        <div className="ml-8 p-2.5 rounded-xl bg-white border border-gray-200 flex items-center justify-between gap-2">
+                          <code className="text-[11px] font-mono text-gray-800 truncate">
+                            {step.exampleSnippet}
+                          </code>
+                          <button
+                            onClick={() => copyToClipboard(step.exampleSnippet, step.id)}
+                            className="text-xs font-bold text-[#0a66c2] hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
+                          >
+                            {copiedKey === step.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copiedKey === step.id ? 'Copiat!' : 'Copiază'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* TAB 1: HEADLINE SUGGESTIONS */}
           {activeTab === 'headlines' && (
@@ -657,7 +937,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                     Headline-uri Magnetice Optimizate
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Formule testate care apar în căutările recrutorilor IT din România.
+                    Semnalul #1 în algoritmul LinkedIn Recruiter. Folosește la maximum cele 220 de caractere.
                   </p>
                 </div>
               </div>
@@ -732,7 +1012,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                     Secțiune 'About' Generată cu AI
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Structură pe 3 paragrafe: Pasiune, Competențe Tehnice și Obiectiv Profesional.
+                    Structură pe 3 paragrafe: Cine ești + Stivă Tehnică & Proiecte + Call to Action cu Email.
                   </p>
                 </div>
               </div>
@@ -773,7 +1053,102 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             </div>
           )}
 
-          {/* TAB 3: RECOMMENDED SKILLS FROM ROMANIAN MARKET */}
+          {/* TAB 3: STAR PROJECTS (GOOGLE XYZ FORMULA) */}
+          {activeTab === 'star_projects' && (
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black text-gray-950 uppercase tracking-wide flex items-center gap-2">
+                    <FolderGit2 className="w-4 h-4 text-purple-500" />
+                    Proiecte Sugerate în Format STAR / Google XYZ
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Formula „Accomplished [X] as measured by [Y] by doing [Z]” care atrage direct interviuri tehnice.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-1">
+                {optimizationResult?.suggestedProjects?.map((proj, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-gray-50/90 border border-gray-200 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-950 leading-snug">{proj.title}</h4>
+                        <span className="text-[11px] text-gray-500">{proj.timePeriod}</span>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(`${proj.title}\n\n${proj.description}\n\nSkills: ${proj.skills.join(', ')}\nLink: ${proj.url}`, `proj_${idx}`)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                      >
+                        {copiedKey === `proj_${idx}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedKey === `proj_${idx}` ? 'Copiat!' : 'Copiază'}
+                      </button>
+                    </div>
+
+                    <p className="text-xs text-gray-700 leading-relaxed bg-white p-3 rounded-xl border border-gray-200/80">
+                      {proj.description}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {proj.skills.map((sk, sidx) => (
+                        <span key={sidx} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-900 border border-purple-100">
+                          {sk}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: BOOLEAN SEARCH QUERIES (REVEALS HOW RECRUITERS SEARCH) */}
+          {activeTab === 'boolean_search' && (
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black text-gray-950 uppercase tracking-wide flex items-center gap-2">
+                    <Terminal className="w-4 h-4 text-sky-500" />
+                    Interogări Booleene Rulate de Recruiteri
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Iată cum filtrează recruiterii candidații în LinkedIn Recruiter și cum apari tu pe prima pagină.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-1">
+                {optimizationResult?.recruiterQueries?.map((q, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-gray-50/90 border border-gray-200 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-gray-950">{q.roleTarget}</h4>
+                      <button
+                        onClick={() => copyToClipboard(q.booleanString, `bq_${idx}`)}
+                        className="text-xs font-bold text-[#0a66c2] hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedKey === `bq_${idx}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedKey === `bq_${idx}` ? 'Copiat!' : 'Copiază Query'}
+                      </button>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-gray-900 text-gray-100 font-mono text-[11px] leading-relaxed select-all">
+                      {q.booleanString}
+                    </div>
+
+                    <p className="text-[11px] text-gray-600 leading-relaxed">
+                      <strong>Cum funcționează:</strong> {q.explanation}
+                    </p>
+
+                    <div className="text-[11px] text-emerald-900 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 font-medium">
+                      🎯 <strong>De ce te potrivești:</strong> {q.whyYouMatch}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: RECOMMENDED SKILLS */}
           {activeTab === 'skills' && (
             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
@@ -819,17 +1194,17 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             </div>
           )}
 
-          {/* TAB 4: RECRUITER STRATEGIC TIPS */}
+          {/* TAB 6: RECRUITER STRATEGIC TIPS */}
           {activeTab === 'tips' && (
             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-black text-gray-950 uppercase tracking-wide flex items-center gap-2">
                     <Award className="w-4 h-4 text-emerald-500" />
-                    Top 5 Strategii de la Recruiteri IT
+                    Top Strategii Verificate de la Recruiteri IT
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Trucuri verificate pentru a maximiza algoritmul LinkedIn Recruiter.
+                    Puncte cheie pentru a trece peste filtrele automate și a obține interviuri.
                   </p>
                 </div>
               </div>
