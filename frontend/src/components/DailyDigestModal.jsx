@@ -66,7 +66,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
         setPreview(p);
       }
     } catch (err) {
-      console.error('Eroare la preluarea setărilor de digest:', err);
+      console.error('Eroare la preluarea setarilor de digest:', err);
     } finally {
       setLoadingPreview(false);
     }
@@ -109,7 +109,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
         fetchSettingsAndPreview();
       }
     } catch (err) {
-      console.error('Eroare la salvarea setărilor de digest:', err);
+      console.error('Eroare la salvarea setarilor de digest:', err);
     } finally {
       setSavingSettings(false);
     }
@@ -170,7 +170,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
             <button
               onClick={fetchSettingsAndPreview}
               disabled={loadingPreview}
-              title="Reîncarcă previzualizarea"
+              title="Reincarca previzualizarea"
               className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-black transition cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 ${loadingPreview ? 'animate-spin' : ''}`} />
@@ -207,7 +207,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            Previzualizare Alertă (Top 5 Joburi Potrivite)
+            Previzualizare Alerta (Top 5 Joburi Potrivite)
           </button>
 
           <button
@@ -233,10 +233,10 @@ export default function DailyDigestModal({ isOpen, onClose }) {
                 <div>
                   <h4 className="text-xs font-extrabold text-amber-950 flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    Filtru Automat de Potrivire Inteligentă
+                    Filtru Automat de Potrivire Inteligenta
                   </h4>
                   <p className="text-[11px] text-amber-900/90 mt-0.5">
-                    Scanăm cele 8.800+ oferte de muncă active și selectăm doar pozițiile cu <strong>Match ATS &gt;= {minMatchScore}%</strong> pentru profilul tău <strong>Mihai Sîrbu (UPB Automatica)</strong>.
+                    Scanam cele 8.800+ oferte de munca active si selectam doar pozitiile cu <strong>Match ATS &gt;= {minMatchScore}%</strong> pentru profilul tau <strong>Mihai Sirbu (UPB Automatica)</strong>.
                   </p>
                 </div>
 
@@ -297,7 +297,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
                         rel="noreferrer"
                         className="flex-1 sm:flex-none text-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 shadow-xs"
                       >
-                        Aplică Direct <ExternalLink className="w-3 h-3" />
+                        Aplica Direct <ExternalLink className="w-3 h-3" />
                       </a>
                       <a
                         href={job.outreachHook}
@@ -331,8 +331,8 @@ export default function DailyDigestModal({ isOpen, onClose }) {
               {/* STATUS ON/OFF */}
               <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl p-3.5">
                 <div>
-                  <h4 className="text-xs font-extrabold text-gray-900">Activare Alertă Zilnică la 09:00 AM</h4>
-                  <p className="text-[11px] text-gray-500">Trimite automat raportul în fiecare dimineață dacă există joburi noi.</p>
+                  <h4 className="text-xs font-extrabold text-gray-900">Activare Alerta Zilnica la 09:00 AM</h4>
+                  <p className="text-[11px] text-gray-500">Trimite automat raportul in fiecare dimineata daca exista joburi noi.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -402,7 +402,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
                     className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-mono focus:outline-indigo-600"
                   />
                   <p className="text-[11px] text-gray-500">
-                    În Discord: Server Settings -&gt; Integrations -&gt; Webhooks -&gt; New Webhook -&gt; Copy Webhook URL.
+                    In Discord: Server Settings -&gt; Integrations -&gt; Webhooks -&gt; New Webhook -&gt; Copy Webhook URL.
                   </p>
                 </div>
               )}
@@ -436,7 +436,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
               {/* EMAIL CONFIG */}
               {channel === 'EMAIL' && (
                 <div className="space-y-1.5 bg-amber-50/50 border border-amber-200 rounded-xl p-3.5">
-                  <label className="text-xs font-bold text-amber-950 block">Adresă de Email Destinatar</label>
+                  <label className="text-xs font-bold text-amber-950 block">Adresa de Email Destinatar</label>
                   <input
                     type="email"
                     value={emailRecipient}
@@ -478,7 +478,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
                       onChange={(e) => setOnlyRomania(e.target.checked)}
                       className="rounded-sm text-blue-600 focus:ring-blue-500"
                     />
-                    <span>Doar poziții din România & Remote</span>
+                    <span>Doar pozitii din Romania & Remote</span>
                   </label>
 
                   <label className="flex items-center gap-2 text-xs font-bold text-gray-700 cursor-pointer">
@@ -496,7 +496,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
               {/* SAVE BUTTON */}
               <div className="flex items-center justify-between pt-2">
                 <span className="text-xs text-gray-500">
-                  {saveSuccess && <span className="text-emerald-600 font-bold">✓ Setările au fost salvate cu succes!</span>}
+                  {saveSuccess && <span className="text-emerald-600 font-bold">✓ Setarile au fost salvate cu succes!</span>}
                 </span>
 
                 <div className="flex items-center gap-2">
@@ -506,7 +506,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
                     disabled={testingWebhook}
                     className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold transition cursor-pointer"
                   >
-                    {testingWebhook ? 'Trimitere...' : 'Testează Notificarea'}
+                    {testingWebhook ? 'Trimitere...' : 'Testeaza Notificarea'}
                   </button>
 
                   <button
@@ -515,7 +515,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
                     className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer flex items-center gap-1.5"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    {savingSettings ? 'Se salvează...' : 'Salvează Setările'}
+                    {savingSettings ? 'Se salveaza...' : 'Salveaza Setarile'}
                   </button>
                 </div>
               </div>
@@ -534,7 +534,7 @@ export default function DailyDigestModal({ isOpen, onClose }) {
             onClick={onClose}
             className="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition cursor-pointer"
           >
-            Închide
+            Inchide
           </button>
         </div>
       </div>

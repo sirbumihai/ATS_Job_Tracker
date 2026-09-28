@@ -64,22 +64,22 @@ export default function CoverLetterGenerator({
 
   // Initial default letter state (preview prior to generation)
   const [letterData, setLetterData] = useState({
-    candidateName: currentUser?.fullName || 'Mihai Sîrbu',
+    candidateName: currentUser?.fullName || 'Mihai Sirbu',
     candidateEmail: currentUser?.email || 'mihai.sirbu@example.com',
     candidatePhone: '+40 712 345 678',
-    candidateLocation: 'București, România',
+    candidateLocation: 'Bucuresti, Romania',
     candidateLinkedin: 'linkedin.com/in/mihaisirbu',
     companyName: 'Tech Company',
     jobTitle: 'Software Engineer',
     letterDate: '24 Septembrie 2026',
     recipientTitle: 'Echipa de Recrutare',
-    subjectLine: 'Candidatură pentru poziția de Software Engineer – Mihai Sîrbu',
+    subjectLine: 'Candidatura pentru pozitia de Software Engineer – Mihai Sirbu',
     salutation: 'Stimate Manager de Recrutare,',
-    openingParagraph: 'Vă adresez această scrisoare cu deosebit interes pentru oportunitatea de a mă alătura echipei dumneavoastră în rolul de Software Engineer. Pasiunea mea pentru scrierea de cod curat, scalabil și performant se aliniază strâns cu obiectivele tehnice ale organizației.',
-    bodyParagraph1: 'Având experiență practică în ecosistemul Java, Spring Boot și baze de date relaționale, am dezvoltat și integrat servicii REST robuste capabile să deservească sarcini de producție. Sunt obișnuit să analizez cerințe complexe de business și să le transform în module software sigure, bine testate și documentate.',
-    bodyParagraph2: 'Apreciez în mod deosebit accentul pe calitate și inovație din cadrul companiei. Sunt o persoană proactivă, orientată spre învățare continuă și dedicată colaborării eficiente în echipă pentru a atinge cele mai înalte standarde profesionale.',
-    closingParagraph: 'Aș fi onorat să discutăm în cadrul unui interviu despre modul în care abilitățile și entuziasmul meu pot contribui la succesul proiectelor dumneavoastră. Vă mulțumesc pentru timpul și atenția acordate.',
-    signOff: 'Cu stimă,',
+    openingParagraph: 'Va adresez aceasta scrisoare cu deosebit interes pentru oportunitatea de a ma alatura echipei dumneavoastra in rolul de Software Engineer. Pasiunea mea pentru scrierea de cod curat, scalabil si performant se aliniaza strans cu obiectivele tehnice ale organizatiei.',
+    bodyParagraph1: 'Avand experienta practica in ecosistemul Java, Spring Boot si baze de date relationale, am dezvoltat si integrat servicii REST robuste capabile sa deserveasca sarcini de productie. Sunt obisnuit sa analizez cerinte complexe de business si sa le transform in module software sigure, bine testate si documentate.',
+    bodyParagraph2: 'Apreciez in mod deosebit accentul pe calitate si inovatie din cadrul companiei. Sunt o persoana proactiva, orientata spre invatare continua si dedicata colaborarii eficiente in echipa pentru a atinge cele mai inalte standarde profesionale.',
+    closingParagraph: 'As fi onorat sa discutam in cadrul unui interviu despre modul in care abilitatile si entuziasmul meu pot contribui la succesul proiectelor dumneavoastra. Va multumesc pentru timpul si atentia acordate.',
+    signOff: 'Cu stima,',
     matchedSkills: ['Java', 'Spring Boot', 'PostgreSQL', 'REST API', 'Docker']
   });
 
@@ -186,7 +186,7 @@ export default function CoverLetterGenerator({
   // Trigger AI Generation
   const handleGenerate = async () => {
     if (!companyName.trim() && !jobTitle.trim() && !jobDescription.trim()) {
-      setErrorMessage('Te rugăm să completezi cel puțin Numele Companiei sau Titlul Jobului.');
+      setErrorMessage('Te rugam sa completezi cel putin Numele Companiei sau Titlul Jobului.');
       return;
     }
     setErrorMessage('');
@@ -230,8 +230,8 @@ export default function CoverLetterGenerator({
       }));
       setIsEditing(false);
     } catch (err) {
-      console.error('Eroare la generarea scrisorii de intenție:', err);
-      setErrorMessage('A apărut o problemă la generare. S-a activat modelul determinist de siguranță.');
+      console.error('Eroare la generarea scrisorii de intentie:', err);
+      setErrorMessage('A aparut o problema la generare. S-a activat modelul determinist de siguranta.');
     } finally {
       setGenerating(false);
     }
@@ -241,7 +241,7 @@ export default function CoverLetterGenerator({
   const handleDownloadPdf = async () => {
     const element = letterPaperRef.current;
     if (!element) {
-      alert('Documentul nu a fost găsit pentru export.');
+      alert('Documentul nu a fost gasit pentru export.');
       return;
     }
 
@@ -275,8 +275,8 @@ export default function CoverLetterGenerator({
 
       helperElements.forEach(el => { el.style.display = ''; });
     } catch (err) {
-      console.error('Eroare la descărcarea PDF-ului:', err);
-      alert('Eroare la descărcarea fișierului PDF.');
+      console.error('Eroare la descarcarea PDF-ului:', err);
+      alert('Eroare la descarcarea fisierului PDF.');
     } finally {
       setIsDownloadingPdf(false);
     }
@@ -353,7 +353,7 @@ export default function CoverLetterGenerator({
             </span>
           </div>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Creează o scrisoare de intenție curată, simplă și orientată pe rezultate, adaptată perfect profilului tău din CV și cerințelor jobului.
+            Creeaza o scrisoare de intentie curata, simpla si orientata pe rezultate, adaptata perfect profilului tau din CV si cerintelor jobului.
           </p>
         </div>
 
@@ -379,12 +379,12 @@ export default function CoverLetterGenerator({
             <div>
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5 mb-2">
                 <User className="w-3.5 h-3.5 text-blue-600" />
-                1. Alege CV-ul Sursă
+                1. Alege CV-ul Sursa
               </label>
               
               {loadingCvList ? (
                 <div className="text-xs text-gray-400 py-2 flex items-center gap-2">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Se încarcă CV-urile...
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Se incarca CV-urile...
                 </div>
               ) : cvList.length > 0 ? (
                 <div className="space-y-1.5">
@@ -395,17 +395,17 @@ export default function CoverLetterGenerator({
                   >
                     {cvList.map((cv) => (
                       <option key={cv.id} value={cv.id}>
-                        {cv.title || 'CV fără titlu'} {cv.isPrimary ? '★ (Principal)' : ''} — {cv.fullName || 'Fără nume'}
+                        {cv.title || 'CV fara titlu'} {cv.isPrimary ? '★ (Principal)' : ''} — {cv.fullName || 'Fara nume'}
                       </option>
                     ))}
                   </select>
                   <p className="text-[11px] text-gray-500 flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-emerald-600" /> Datele de contact și experiența sunt extrase automat din acest profil.
+                    <ShieldCheck className="w-3 h-3 text-emerald-600" /> Datele de contact si experienta sunt extrase automat din acest profil.
                   </p>
                 </div>
               ) : (
                 <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800">
-                  Nu ai niciun profil CV salvat încă. Se vor folosi datele prestabilite. Poți configura unul în secțiunea <strong>CV-urile Mele</strong>.
+                  Nu ai niciun profil CV salvat inca. Se vor folosi datele prestabilite. Poti configura unul in sectiunea <strong>CV-urile Mele</strong>.
                 </div>
               )}
             </div>
@@ -417,7 +417,7 @@ export default function CoverLetterGenerator({
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
                   <Briefcase className="w-3.5 h-3.5 text-amber-600" />
-                  2. Jobul Țintă
+                  2. Jobul Tinta
                 </label>
                 
                 {/* MODE TOGGLE */}
@@ -450,7 +450,7 @@ export default function CoverLetterGenerator({
                     onChange={(e) => handleSelectApplication(e.target.value)}
                     className="w-full text-xs font-medium px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition outline-none cursor-pointer"
                   >
-                    <option value="">-- Alege o candidatură salvată ({applications.length}) --</option>
+                    <option value="">-- Alege o candidatura salvata ({applications.length}) --</option>
                     {applications.map((app) => (
                       <option key={app.id} value={app.id}>
                         {app.companyName || 'Companie'} — {app.jobTitle || 'Job'} ({app.status || 'SAVED'})
@@ -485,18 +485,18 @@ export default function CoverLetterGenerator({
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-semibold text-gray-600">Descriere Job (sau Cerințe)</label>
+                  <label className="text-[11px] font-semibold text-gray-600">Descriere Job (sau Cerinte)</label>
                   <button
                     type="button"
                     onClick={handlePasteDescription}
                     className="text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 cursor-pointer"
                   >
-                    <ClipboardPaste className="w-3 h-3" /> Lipește din Clipboard
+                    <ClipboardPaste className="w-3 h-3" /> Lipeste din Clipboard
                   </button>
                 </div>
                 <textarea
                   rows={4}
-                  placeholder="Lipește aici cerințele cheie ale jobului pentru a sincroniza abilitățile din CV cu nevoile angajatorului..."
+                  placeholder="Lipeste aici cerintele cheie ale jobului pentru a sincroniza abilitatile din CV cu nevoile angajatorului..."
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
                   className="w-full text-xs p-3 rounded-xl border border-gray-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition outline-none resize-none text-gray-800 leading-relaxed font-sans"
@@ -510,7 +510,7 @@ export default function CoverLetterGenerator({
             <div>
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
                 <Sliders className="w-3.5 h-3.5 text-purple-600" />
-                3. Stil & Opțiuni
+                3. Stil & Optiuni
               </label>
 
               <div className="grid grid-cols-2 gap-3">
@@ -531,14 +531,14 @@ export default function CoverLetterGenerator({
                 {/* LANGUAGE SELECTION */}
                 <div>
                   <label className="text-[11px] font-semibold text-gray-600 mb-1 block flex items-center gap-1">
-                    <Languages className="w-3 h-3 text-gray-500" /> Limbă
+                    <Languages className="w-3 h-3 text-gray-500" /> Limba
                   </label>
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
                     className="w-full text-xs font-semibold px-2.5 py-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition outline-none cursor-pointer"
                   >
-                    <option value="RO">Română (RO)</option>
+                    <option value="RO">Romana (RO)</option>
                     <option value="EN">English (EN)</option>
                   </select>
                 </div>
@@ -566,12 +566,12 @@ export default function CoverLetterGenerator({
               {generating ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin text-blue-400" />
-                  <span>Se generează scrisoarea cu AI...</span>
+                  <span>Se genereaza scrisoarea cu AI...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>Generează Scrisoare de Intenție</span>
+                  <span>Genereaza Scrisoare de Intentie</span>
                 </>
               )}
             </button>
@@ -581,10 +581,10 @@ export default function CoverLetterGenerator({
           {/* TIPS CARD */}
           <div className="bg-blue-50/60 rounded-2xl border border-blue-100 p-4 text-xs text-blue-900 space-y-2">
             <h4 className="font-bold flex items-center gap-1.5 text-blue-950">
-              <ShieldCheck className="w-4 h-4 text-blue-600" /> De ce o scrisoare de intenție simplă?
+              <ShieldCheck className="w-4 h-4 text-blue-600" /> De ce o scrisoare de intentie simpla?
             </h4>
             <p className="text-[11px] leading-relaxed text-blue-800">
-              Recruiterii alocă mai puțin de <strong>30 de secunde</strong> unei scrisori. O scrisoare simplă, concisă (sub 250 de cuvinte), axată direct pe tehnologiile cerute și valoarea adusă, are o rată de citire și succes cu până la <strong>40% mai mare</strong> decât textele lungi și stufoase.
+              Recruiterii aloca mai putin de <strong>30 de secunde</strong> unei scrisori. O scrisoare simpla, concisa (sub 250 de cuvinte), axata direct pe tehnologiile cerute si valoarea adusa, are o rata de citire si succes cu pana la <strong>40% mai mare</strong> decat textele lungi si stufoase.
             </p>
           </div>
 
@@ -606,17 +606,17 @@ export default function CoverLetterGenerator({
                 }`}
               >
                 {isEditing ? <Eye className="w-3.5 h-3.5" /> : <Edit3 className="w-3.5 h-3.5" />}
-                {isEditing ? 'Previzualizează' : 'Editează Direct'}
+                {isEditing ? 'Previzualizeaza' : 'Editeaza Direct'}
               </button>
 
               <button
                 type="button"
                 onClick={handleCopyText}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 flex items-center gap-1.5 transition cursor-pointer"
-                title="Copiază textul scrisorii"
+                title="Copiaza textul scrisorii"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Copiat!' : 'Copiază Text'}</span>
+                <span>{copied ? 'Copiat!' : 'Copiaza Text'}</span>
               </button>
             </div>
 
@@ -625,10 +625,10 @@ export default function CoverLetterGenerator({
                 type="button"
                 onClick={handlePrint}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 flex items-center gap-1.5 transition cursor-pointer"
-                title="Printează sau salvează ca PDF vectorial din browser"
+                title="Printeaza sau salveaza ca PDF vectorial din browser"
               >
                 <Printer className="w-3.5 h-3.5 text-gray-600" />
-                <span>Printează</span>
+                <span>Printeaza</span>
               </button>
 
               <button
@@ -642,7 +642,7 @@ export default function CoverLetterGenerator({
                 ) : (
                   <Download className="w-3.5 h-3.5" />
                 )}
-                <span>{isDownloadingPdf ? 'Se generează...' : 'Descarcă PDF'}</span>
+                <span>{isDownloadingPdf ? 'Se genereaza...' : 'Descarca PDF'}</span>
               </button>
             </div>
           </div>
@@ -696,7 +696,7 @@ export default function CoverLetterGenerator({
                         type="text" 
                         value={letterData.candidateLocation} 
                         onChange={(e) => updateField('candidateLocation', e.target.value)}
-                        placeholder="Locație" 
+                        placeholder="Locatie" 
                         className="text-xs p-1 border rounded bg-amber-50/40"
                       />
                       <input 
@@ -904,7 +904,7 @@ export default function CoverLetterGenerator({
             <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1 mr-1">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                Competențe corelate din CV:
+                Competente corelate din CV:
               </span>
               {letterData.matchedSkills.map((skill, index) => (
                 <span

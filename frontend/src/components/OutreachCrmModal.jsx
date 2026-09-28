@@ -73,7 +73,7 @@ export default function OutreachCrmModal({
   const handleCopy = (text, key, label) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
-    setToastMessage(`Copiat în clipboard: ${label}!`);
+    setToastMessage(`Copiat in clipboard: ${label}!`);
     setTimeout(() => {
       setCopiedKey(null);
       setToastMessage('');
@@ -115,7 +115,7 @@ export default function OutreachCrmModal({
             <button
               onClick={() => fetchOutreachBundle(recruiterName)}
               disabled={loading}
-              title="Regenerează mesajele"
+              title="Regenereaza mesajele"
               className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-black transition cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -147,7 +147,7 @@ export default function OutreachCrmModal({
                     {bundle.cadence.stageLabel}
                   </span>
                   <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-1.5 py-0.2 rounded-full">
-                    {appliedDate ? `Aplicat la ${appliedDate}` : 'Aplicare recentă'}
+                    {appliedDate ? `Aplicat la ${appliedDate}` : 'Aplicare recenta'}
                   </span>
                 </div>
                 <p className="text-[11px] text-amber-900/90 font-medium mt-0.5">
@@ -162,7 +162,7 @@ export default function OutreachCrmModal({
                   onClick={() => setActiveTab('linkedin_note')}
                   className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1"
                 >
-                  <Linkedin className="w-3 h-3" /> Pasul 1: Notă LinkedIn
+                  <Linkedin className="w-3 h-3" /> Pasul 1: Nota LinkedIn
                 </button>
               ) : bundle.cadence.daysElapsed < 10 ? (
                 <button
@@ -191,7 +191,7 @@ export default function OutreachCrmModal({
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
                 <Search className="w-3.5 h-3.5 text-blue-600" />
-                Găsește persoana potrivită la {company}:
+                Gaseste persoana potrivita la {company}:
               </span>
               <a
                 href={bundle?.recruiterSearchUrl || `https://www.linkedin.com/search/results/people/?keywords=Recruiter%20${encodeURIComponent(company)}`}
@@ -226,7 +226,7 @@ export default function OutreachCrmModal({
                 type="submit"
                 className="px-2.5 py-1 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-lg transition cursor-pointer"
               >
-                Personalizează
+                Personalizeaza
               </button>
             </form>
           </div>
@@ -242,7 +242,7 @@ export default function OutreachCrmModal({
               }`}
             >
               <Linkedin className="w-3.5 h-3.5 text-[#0a66c2]" />
-              Notă LinkedIn (&lt;300 caractere)
+              Nota LinkedIn (&lt;300 caractere)
               {bundle?.linkedinNote && (
                 <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
                   bundle.linkedinNote.characterCount <= 300 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
@@ -297,7 +297,7 @@ export default function OutreachCrmModal({
               }`}
             >
               <MessageSquare className="w-3.5 h-3.5 text-gray-600" />
-              Icebreakers & Căutări Google
+              Icebreakers & Cautari Google
             </button>
           </div>
 
@@ -328,7 +328,7 @@ export default function OutreachCrmModal({
                     className="px-3 py-1.5 bg-[#0a66c2] hover:bg-[#004182] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                   >
                     {copiedKey === 'linkedin_note' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedKey === 'linkedin_note' ? 'Copiat!' : 'Copiază Nota'}
+                    {copiedKey === 'linkedin_note' ? 'Copiat!' : 'Copiaza Nota'}
                   </button>
                 </div>
               </div>
@@ -340,7 +340,7 @@ export default function OutreachCrmModal({
               <div className="bg-blue-50/80 border border-blue-200 rounded-xl p-3 flex items-start gap-2 text-xs text-blue-900">
                 <Sparkles className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
                 <p>
-                  <strong>Cum trimiți:</strong> Mergi pe profilul LinkedIn al recruiterului de la <strong>{company}</strong>, apasă <strong>Connect</strong>, apoi alege obligatoriu <strong>"Add a note"</strong> și lipește textul de mai sus. Nu trimite niciodată cerere goală!
+                  <strong>Cum trimiti:</strong> Mergi pe profilul LinkedIn al recruiterului de la <strong>{company}</strong>, apasa <strong>Connect</strong>, apoi alege obligatoriu <strong>"Add a note"</strong> si lipeste textul de mai sus. Nu trimite niciodata cerere goala!
                 </p>
               </div>
             </div>
@@ -372,7 +372,7 @@ export default function OutreachCrmModal({
                     className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                   >
                     {copiedKey === 'cold_email' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedKey === 'cold_email' ? 'Copiat!' : 'Copiază Email'}
+                    {copiedKey === 'cold_email' ? 'Copiat!' : 'Copiaza Email'}
                   </button>
                 </div>
               </div>
@@ -385,7 +385,7 @@ export default function OutreachCrmModal({
                   onClick={() => handleCopy(bundle.coldEmail.subject, 'email_sub', 'Subiectul')}
                   className="text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
                 >
-                  {copiedKey === 'email_sub' ? 'Copiat!' : 'Copiază'}
+                  {copiedKey === 'email_sub' ? 'Copiat!' : 'Copiaza'}
                 </button>
               </div>
 
@@ -395,7 +395,7 @@ export default function OutreachCrmModal({
               </div>
 
               <div className="text-[11px] text-gray-500 italic">
-                * Nu uita să atașezi CV-ul tău în format PDF înainte de expediere!
+                * Nu uita sa atasezi CV-ul tau in format PDF inainte de expediere!
               </div>
             </div>
           )}
@@ -419,7 +419,7 @@ export default function OutreachCrmModal({
                   className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                 >
                   {copiedKey === 'follow_up_1' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copiedKey === 'follow_up_1' ? 'Copiat!' : 'Copiază Mesaj'}
+                  {copiedKey === 'follow_up_1' ? 'Copiat!' : 'Copiaza Mesaj'}
                 </button>
               </div>
 
@@ -448,7 +448,7 @@ export default function OutreachCrmModal({
                   className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                 >
                   {copiedKey === 'follow_up_2' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copiedKey === 'follow_up_2' ? 'Copiat!' : 'Copiază Mesaj'}
+                  {copiedKey === 'follow_up_2' ? 'Copiat!' : 'Copiaza Mesaj'}
                 </button>
               </div>
 
@@ -463,10 +463,10 @@ export default function OutreachCrmModal({
             <div className="space-y-4">
               <div>
                 <h3 className="text-sm font-bold text-gray-900">
-                  Formule de Inițiere a Conversației (Icebreakers)
+                  Formule de Initiere a Conversatiei (Icebreakers)
                 </h3>
                 <p className="text-xs text-gray-500">
-                  Fraze scurte pe care le poți folosi dacă recruiterul acceptă cererea de conectare:
+                  Fraze scurte pe care le poti folosi daca recruiterul accepta cererea de conectare:
                 </p>
               </div>
 
@@ -478,7 +478,7 @@ export default function OutreachCrmModal({
                       onClick={() => handleCopy(starter, `starter_${i}`, 'Icebreaker')}
                       className="text-blue-600 hover:text-blue-800 font-bold shrink-0 cursor-pointer"
                     >
-                      {copiedKey === `starter_${i}` ? 'Copiat!' : 'Copiază'}
+                      {copiedKey === `starter_${i}` ? 'Copiat!' : 'Copiaza'}
                     </button>
                   </div>
                 ))}
@@ -486,17 +486,17 @@ export default function OutreachCrmModal({
 
               <div className="pt-2">
                 <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1.5 mb-2">
-                  <Search className="w-3.5 h-3.5 text-blue-600" /> Interogări Booleene Recruiter (Google / LinkedIn)
+                  <Search className="w-3.5 h-3.5 text-blue-600" /> Interogari Booleene Recruiter (Google / LinkedIn)
                 </h4>
                 <div className="space-y-1.5">
                   {bundle?.recruiterBooleanQueries?.map((query, idx) => (
                     <div key={idx} className="bg-gray-900 text-gray-200 font-mono text-[11px] p-2 rounded-lg flex items-center justify-between gap-2">
                       <span className="truncate">{query}</span>
                       <button
-                        onClick={() => handleCopy(query, `query_${idx}`, 'Interogare Booleană')}
+                        onClick={() => handleCopy(query, `query_${idx}`, 'Interogare Booleana')}
                         className="text-amber-400 hover:text-amber-300 font-sans font-bold text-xs shrink-0 cursor-pointer"
                       >
-                        {copiedKey === `query_${idx}` ? 'Copiat!' : 'Copiază'}
+                        {copiedKey === `query_${idx}` ? 'Copiat!' : 'Copiaza'}
                       </button>
                     </div>
                   ))}
@@ -511,13 +511,13 @@ export default function OutreachCrmModal({
         <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs text-gray-500">
           <span className="flex items-center gap-1.5 font-medium">
             <FileCheck className="w-4 h-4 text-emerald-600" />
-            Optimizat cu background-ul tău UPB & SIMAVI
+            Optimizat cu background-ul tau UPB & SIMAVI
           </span>
           <button
             onClick={onClose}
             className="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition cursor-pointer"
           >
-            Închide
+            Inchide
           </button>
         </div>
       </div>

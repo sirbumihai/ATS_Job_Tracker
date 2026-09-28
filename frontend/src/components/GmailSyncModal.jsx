@@ -48,7 +48,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
   const timerRef = useRef(null);
   const stepTimerRef = useRef(null);
 
-  // Incarcă credențialele memorate local
+  // Incarca credentialele memorate local
   useEffect(() => {
     if (isOpen) {
       try {
@@ -59,7 +59,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
           if (parsed.appPassword) setAppPassword(parsed.appPassword);
         }
       } catch (e) {
-        console.error('Eroare la citirea credențialelor salvate:', e);
+        console.error('Eroare la citirea credentialelor salvate:', e);
       }
       setTestResult(null);
       setSyncResult(null);
@@ -67,7 +67,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
     }
   }, [isOpen]);
 
-  // Blocare scroll pagină când modalul este deschis + ascultare tastă Escape
+  // Blocare scroll pagina cand modalul este deschis + ascultare tasta Escape
   useEffect(() => {
     if (!isOpen) return;
 
@@ -87,7 +87,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
 
   const handleTestConnection = async () => {
     if (!email || !appPassword) {
-      setErrorMsg('Te rugăm să completezi atât adresa de email cât și parola de aplicație.');
+      setErrorMsg('Te rugam sa completezi atat adresa de email cat si parola de aplicatie.');
       return;
     }
     setErrorMsg(null);
@@ -105,12 +105,12 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
       if (contentType.includes('application/json')) {
         data = await res.json();
       } else {
-        throw new Error(`Serverul a returnat un răspuns neașteptat (status ${res.status}).`);
+        throw new Error(`Serverul a returnat un raspuns neasteptat (status ${res.status}).`);
       }
 
       setTestResult({
         success: data.success,
-        message: data.message || (data.success ? 'Conexiune reușită!' : 'Eroare la conectare')
+        message: data.message || (data.success ? 'Conexiune reusita!' : 'Eroare la conectare')
       });
     } catch (err) {
       setTestResult({
@@ -156,7 +156,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
 
   const handleRunSync = async () => {
     if (!email || !appPassword) {
-      setErrorMsg('Te rugăm să completezi emailul și parola de aplicație.');
+      setErrorMsg('Te rugam sa completezi emailul si parola de aplicatie.');
       return;
     }
     setErrorMsg(null);
@@ -170,7 +170,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    // Timer pentru secundar și pași de progres
+    // Timer pentru secundar si pasi de progres
     const startTimestamp = Date.now();
     timerRef.current = setInterval(() => {
       const secs = Math.floor((Date.now() - startTimestamp) / 1000);
@@ -180,7 +180,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
       else if (secs >= 9) setSyncStep(4);
     }, 1000);
 
-    // Salvează credențialele dacă este bifat
+    // Salveaza credentialele daca este bifat
     if (rememberCredentials) {
       try {
         localStorage.setItem('ats_gmail_sync_credentials', JSON.stringify({
@@ -214,7 +214,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
       if (contentType.includes('application/json')) {
         data = await res.json();
       } else {
-        throw new Error(`Serverul a returnat codul ${res.status} (${res.statusText || 'Timeout proxy/rețea'}). Verifică dacă sincronizarea s-a executat.`);
+        throw new Error(`Serverul a returnat codul ${res.status} (${res.statusText || 'Timeout proxy/retea'}). Verifica daca sincronizarea s-a executat.`);
       }
 
       setSyncStep(5);
@@ -254,7 +254,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
               <span>GMAIL ATS SYNC</span>
             </span>
             <span className="text-xs font-bold text-gray-500 truncate max-w-[200px] sm:max-w-md">
-              Sincronizare Automată & Clasificare AI
+              Sincronizare Automata & Clasificare AI
             </span>
           </div>
 
@@ -262,16 +262,16 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
             <button
               onClick={() => setShowHelp(!showHelp)}
               className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-200/70 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
-              title="Instrucțiuni Parolă Aplicație"
+              title="Instructiuni Parola Aplicatie"
             >
               <HelpCircle className="w-4 h-4 text-indigo-600" />
-              <span className="hidden sm:inline">Ghid Parolă</span>
+              <span className="hidden sm:inline">Ghid Parola</span>
             </button>
 
             <button
               onClick={onClose}
               className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-200/70 transition cursor-pointer"
-              title="Închide fereastra (Esc)"
+              title="Inchide fereastra (Esc)"
             >
               <X className="w-5 h-5" />
             </button>
@@ -295,7 +295,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                 </span>
               </h2>
               <p className="text-xs text-gray-600 font-medium leading-relaxed">
-                Detectează automat confirmările de aplicare, invitațiile la interviu și ofertele de angajare de pe toate platformele ATS (LinkedIn, Greenhouse, Workday, Lever, eJobs, BestJobs, Hipo etc.).
+                Detecteaza automat confirmarile de aplicare, invitatiile la interviu si ofertele de angajare de pe toate platformele ATS (LinkedIn, Greenhouse, Workday, Lever, eJobs, BestJobs, Hipo etc.).
               </p>
             </div>
           </div>
@@ -304,9 +304,9 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
           <div className="bg-red-50/50 border border-red-200/80 rounded-2xl p-4 flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div className="text-xs text-red-950 space-y-1">
-              <p className="font-extrabold">Conexiune Securizată IMAP SSL & Filtrare Inteligentă AI</p>
+              <p className="font-extrabold">Conexiune Securizata IMAP SSL & Filtrare Inteligenta AI</p>
               <p className="text-red-900/80 leading-relaxed text-[11px]">
-                Conexiunea este criptată direct cu <strong>imap.gmail.com (Port 993)</strong> folosind o <strong>Parolă de Aplicație Google</strong> unică. Modelul AI analizează doar anteturile de recrutare pentru a elimina falsele alerte și promoțiile comerciale.
+                Conexiunea este criptata direct cu <strong>imap.gmail.com (Port 993)</strong> folosind o <strong>Parola de Aplicatie Google</strong> unica. Modelul AI analizeaza doar anteturile de recrutare pentru a elimina falsele alerte si promotiile comerciale.
               </p>
             </div>
           </div>
@@ -321,7 +321,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Adresă de Gmail
+                  Adresa de Gmail
                 </label>
                 <input 
                   type="email"
@@ -335,14 +335,14 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-bold text-gray-700">
-                    Parolă Aplicație (16 caractere)
+                    Parola Aplicatie (16 caractere)
                   </label>
                   <button 
                     type="button"
                     onClick={() => setShowHelp(!showHelp)}
                     className="text-[11px] text-red-600 hover:text-red-700 font-bold flex items-center gap-1 cursor-pointer"
                   >
-                    <span>Cum o obții?</span>
+                    <span>Cum o obtii?</span>
                   </button>
                 </div>
                 <div className="relative">
@@ -364,35 +364,35 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
               </div>
             </div>
 
-            {/* ACCORDION GHID PAROLĂ APLICAȚIE */}
+            {/* ACCORDION GHID PAROLA APLICATIE */}
             {showHelp && (
               <div className="p-4 bg-white border border-gray-200 rounded-2xl space-y-2.5 text-xs text-gray-700 animate-in fade-in duration-150">
                 <p className="font-extrabold text-gray-900 flex items-center gap-1.5">
                   <Key className="w-4 h-4 text-amber-600" />
-                  Instrucțiuni Google în 3 pași rapizi:
+                  Instructiuni Google in 3 pasi rapizi:
                 </p>
                 <ol className="list-decimal list-inside space-y-1.5 text-gray-600 leading-relaxed text-[11px]">
                   <li>
-                    Accesează contul la <a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer" className="text-red-600 underline font-bold inline-flex items-center gap-0.5">Cont Google &rarr; Securitate <ExternalLink className="w-2.5 h-2.5" /></a>
+                    Acceseaza contul la <a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer" className="text-red-600 underline font-bold inline-flex items-center gap-0.5">Cont Google &rarr; Securitate <ExternalLink className="w-2.5 h-2.5" /></a>
                   </li>
                   <li>
-                    Asigură-te că <strong>Verificarea în 2 pași</strong> este activă.
+                    Asigura-te ca <strong>Verificarea in 2 pasi</strong> este activa.
                   </li>
                   <li>
-                    Caută <strong>„Parole pentru aplicații”</strong> (App Passwords), scrie numele <em>ATS Job Tracker</em> și apasă <strong>Creează</strong>.
+                    Cauta <strong>„Parole pentru aplicatii”</strong> (App Passwords), scrie numele <em>ATS Job Tracker</em> si apasa <strong>Creeaza</strong>.
                   </li>
                   <li>
-                    Copiază codul de 16 litere și lipește-l în câmpul de mai sus.
+                    Copiaza codul de 16 litere si lipeste-l in campul de mai sus.
                   </li>
                 </ol>
               </div>
             )}
 
-            {/* PREFERINȚE SCANARE */}
+            {/* PREFERINTE SCANARE */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-200/70">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Perioadă căutare în inbox
+                  Perioada cautare in inbox
                 </label>
                 <select 
                   value={daysToLookBack}
@@ -415,7 +415,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                     onChange={e => setAutoCreateMissing(e.target.checked)}
                     className="w-4 h-4 rounded text-red-600 focus:ring-red-500 accent-red-600 cursor-pointer"
                   />
-                  <span>Creează automat carduri pentru aplicări noi</span>
+                  <span>Creeaza automat carduri pentru aplicari noi</span>
                 </label>
 
                 <label className="flex items-center gap-2.5 cursor-pointer select-none text-xs font-semibold text-gray-600">
@@ -425,22 +425,22 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                     onChange={e => setRememberCredentials(e.target.checked)}
                     className="w-4 h-4 rounded text-red-600 focus:ring-red-500 accent-red-600 cursor-pointer"
                   />
-                  <span>Păstrează datele pe acest browser</span>
+                  <span>Pastreaza datele pe acest browser</span>
                 </label>
               </div>
             </div>
           </div>
 
-          {/* BANNER REPARARE RAPIDĂ A CANDIDATURILOR EXISTENTE */}
+          {/* BANNER REPARARE RAPIDA A CANDIDATURILOR EXISTENTE */}
           <div className="bg-indigo-50/70 border border-indigo-200/90 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0 text-indigo-700">
                 <Wrench className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <p className="font-extrabold text-indigo-950">Curățare & Auto-Reparare Erori Gmail</p>
+                <p className="font-extrabold text-indigo-950">Curatare & Auto-Reparare Erori Gmail</p>
                 <p className="text-[11px] text-indigo-800/80 truncate">
-                  Corectează automat numele eronate ("REQ", "care ai aplicat") și falsele interviuri.
+                  Corecteaza automat numele eronate ("REQ", "care ai aplicat") si falsele interviuri.
                 </p>
               </div>
             </div>
@@ -451,18 +451,18 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shrink-0 transition cursor-pointer shadow-xs disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {isRepairing && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-              <span>{isRepairing ? 'Se curăță...' : 'Repară Datele'}</span>
+              <span>{isRepairing ? 'Se curata...' : 'Repara Datele'}</span>
             </button>
           </div>
 
           {repairResult && (
             <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-center gap-3 text-xs text-indigo-900 font-bold animate-in fade-in duration-200">
               <CheckCircle2 className="w-5 h-5 shrink-0 text-indigo-600" />
-              <span>{repairResult.message || `Au fost verificate și reparate ${repairResult.repaired || 0} candidaturi.`}</span>
+              <span>{repairResult.message || `Au fost verificate si reparate ${repairResult.repaired || 0} candidaturi.`}</span>
             </div>
           )}
 
-          {/* CARD DE PROGRES REAL-TIME & FEEDBACK LIVE ÎN TIMPUL SINCRONIZĂRII */}
+          {/* CARD DE PROGRES REAL-TIME & FEEDBACK LIVE IN TIMPUL SINCRONIZARII */}
           {isSyncing && (
             <div className="p-5 sm:p-6 bg-gradient-to-br from-indigo-50/80 via-white to-red-50/50 border-2 border-indigo-300 rounded-3xl space-y-4 shadow-sm animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between gap-3">
@@ -472,10 +472,10 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                   </div>
                   <div>
                     <h4 className="font-black text-sm text-gray-950">
-                      Sincronizare în Desfășurare...
+                      Sincronizare in Desfasurare...
                     </h4>
                     <p className="text-[11px] text-gray-500 font-medium">
-                      Procesare automată a emailurilor de recrutare
+                      Procesare automata a emailurilor de recrutare
                     </p>
                   </div>
                 </div>
@@ -488,15 +488,15 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                     type="button"
                     onClick={handleCancelSync}
                     className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-xs"
-                    title="Oprește imediat procesul"
+                    title="Opreste imediat procesul"
                   >
                     <XCircle className="w-3.5 h-3.5" />
-                    <span>Oprește</span>
+                    <span>Opreste</span>
                   </button>
                 </div>
               </div>
 
-              {/* BARA DE PROGRES VIZUALĂ */}
+              {/* BARA DE PROGRES VIZUALA */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-[11px] font-bold text-gray-600 px-0.5">
                   <span>Pasul {syncStep} din 5</span>
@@ -510,14 +510,14 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                 </div>
               </div>
 
-              {/* LISTA PAȘILOR DE SCANARE */}
+              {/* LISTA PASILOR DE SCANARE */}
               <div className="grid grid-cols-1 gap-2 pt-1">
                 {[
-                  { step: 1, title: 'Conectare IMAP securizată la imap.gmail.com (Port 993 SSL)' },
-                  { step: 2, title: `Căutare și scanare plicuri mesaje primite în ultimele ${daysToLookBack} zile` },
-                  { step: 3, title: 'Filtrare inteligentă anteturi și identificare platforme ATS (LinkedIn, BestJobs, etc.)' },
-                  { step: 4, title: 'Clasificare deterministă status (Aplicat, Interviu, Respins, Ofertă)' },
-                  { step: 5, title: 'Salvare securizată și actualizare board Kanban în timp real' }
+                  { step: 1, title: 'Conectare IMAP securizata la imap.gmail.com (Port 993 SSL)' },
+                  { step: 2, title: `Cautare si scanare plicuri mesaje primite in ultimele ${daysToLookBack} zile` },
+                  { step: 3, title: 'Filtrare inteligenta anteturi si identificare platforme ATS (LinkedIn, BestJobs, etc.)' },
+                  { step: 4, title: 'Clasificare determinista status (Aplicat, Interviu, Respins, Oferta)' },
+                  { step: 5, title: 'Salvare securizata si actualizare board Kanban in timp real' }
                 ].map((item) => {
                   const isDone = syncStep > item.step;
                   const isCurrent = syncStep === item.step;
@@ -544,7 +544,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                       <span className="flex-1 truncate sm:whitespace-normal">{item.title}</span>
                       {isCurrent && (
                         <span className="text-[10px] bg-indigo-100 text-indigo-900 font-black px-2 py-0.5 rounded-full shrink-0 animate-pulse">
-                          În lucru
+                          In lucru
                         </span>
                       )}
                     </div>
@@ -559,14 +559,14 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-3 text-xs text-amber-900 font-bold animate-in fade-in duration-200">
               <div className="flex items-center gap-2.5">
                 <AlertCircle className="w-5 h-5 shrink-0 text-amber-600" />
-                <span>Sincronizarea a fost oprită manual. Datele descărcate anterior sunt în siguranță.</span>
+                <span>Sincronizarea a fost oprita manual. Datele descarcate anterior sunt in siguranta.</span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsCancelled(false)}
                 className="text-amber-800 hover:text-amber-950 text-xs underline font-extrabold cursor-pointer"
               >
-                Închide
+                Inchide
               </button>
             </div>
           )}
@@ -594,7 +594,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
             </div>
           )}
 
-          {/* REZULTATE STATISTICI & APLICAȚII SINCRONIZATE */}
+          {/* REZULTATE STATISTICI & APLICATII SINCRONIZATE */}
           {syncResult && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="p-4 sm:p-5 bg-emerald-50/60 border border-emerald-200 rounded-3xl space-y-3">
@@ -618,7 +618,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                   </div>
                   <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100 shadow-2xs">
                     <p className="text-xl font-black text-emerald-700">{syncResult.createdApplications}</p>
-                    <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Nou Adăugate</p>
+                    <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Nou Adaugate</p>
                   </div>
                 </div>
               </div>
@@ -627,7 +627,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
               {syncResult.syncDetails && syncResult.syncDetails.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-xs font-black text-gray-900 uppercase tracking-wider px-1">
-                    Candidaturi identificate și sincronizate:
+                    Candidaturi identificate si sincronizate:
                   </h4>
                   <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                     {syncResult.syncDetails.map((detail, idx) => (
@@ -683,7 +683,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
 
         </div>
 
-        {/* FOOTER FIX CU ACȚIUNI RAPIDE */}
+        {/* FOOTER FIX CU ACTIUNI RAPIDE */}
         <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
           <button
             type="button"
@@ -692,7 +692,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
             className="w-full sm:w-auto px-5 py-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition cursor-pointer border bg-white hover:bg-gray-100 text-gray-900 border-gray-300 shadow-2xs disabled:opacity-50"
           >
             {isTesting && <RefreshCw className="w-4 h-4 animate-spin text-gray-600" />}
-            <span>Testează Conexiunea</span>
+            <span>Testeaza Conexiunea</span>
           </button>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -701,7 +701,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
               onClick={onClose}
               className="flex-1 sm:flex-none px-4 py-3 text-xs font-bold text-gray-600 hover:text-gray-900 rounded-2xl hover:bg-gray-200/60 transition cursor-pointer"
             >
-              Închide
+              Inchide
             </button>
 
             {isSyncing ? (
@@ -711,7 +711,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                 className="flex-1 sm:flex-none px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md active:scale-95"
               >
                 <XCircle className="w-4 h-4" />
-                <span>Oprește Sincronizarea</span>
+                <span>Opreste Sincronizarea</span>
               </button>
             ) : (
               <button
@@ -721,7 +721,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                 className="flex-1 sm:flex-none px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md disabled:opacity-50 active:scale-95"
               >
                 <Mail className="w-4 h-4" />
-                <span>Sincronizează Acum</span>
+                <span>Sincronizeaza Acum</span>
               </button>
             )}
           </div>

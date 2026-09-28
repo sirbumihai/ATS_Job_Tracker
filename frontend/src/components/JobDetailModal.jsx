@@ -37,7 +37,8 @@ import {
   RefreshCw,
   Bot,
   FileSignature,
-  Send
+  Send,
+  Mail
 } from 'lucide-react';
 
 // Filtru riguros pentru a elimina artefacte web, tag-uri SVG Sketch/Figma sau titluri izolate
@@ -46,7 +47,7 @@ export const isValidRequirementItem = (item) => {
   const trimmed = item.trim();
   if (trimmed.length < 8) return false;
 
-  // Nu permitem linii care se termină cu ':' (sunt de fapt sub-antete/subtitluri sau etichete de grup)
+  // Nu permitem linii care se termina cu ':' (sunt de fapt sub-antete/subtitluri sau etichete de grup)
   if (trimmed.endsWith(':')) return false;
 
   // Nu permitem artefacte de export SVG / grafice (Sketch, Figma, Illustrator)
@@ -54,21 +55,21 @@ export const isValidRequirementItem = (item) => {
   if (/^\d+_[A-Za-z0-9_ -]+$/i.test(trimmed)) return false;
   if (/\b\d+_[A-Za-z0-9_\- ]+created with sketch\b/i.test(trimmed)) return false;
 
-  // Nu permitem cuvinte izolate de titlu / antet care au scăpat ca cerințe
-  if (/^(knowledge|requirements|qualifications|experience|skills|overview|summary|responsibilities|benefits|cerințe|calificări|responsabilități|beneficii|profil|profilul candidatului|despre rol|activități|ce căutăm|who you are|what you bring)$/i.test(trimmed)) return false;
+  // Nu permitem cuvinte izolate de titlu / antet care au scapat ca cerinte
+  if (/^(knowledge|requirements|qualifications|experience|skills|overview|summary|responsibilities|benefits|cerinte|calificari|responsabilitati|beneficii|profil|profilul candidatului|despre rol|activitati|ce cautam|who you are|what you bring)$/i.test(trimmed)) return false;
 
-  // Nu permitem butoane/acțiuni UI sau zgomot de pagină web
-  if (/^(apply now|easy apply|save job|share|share this job|report job|report this job|posted on|full-time|part-time|remote|hybrid|on-site|vezi mai mult|citește mai mult)$/i.test(trimmed)) return false;
+  // Nu permitem butoane/actiuni UI sau zgomot de pagina web
+  if (/^(apply now|easy apply|save job|share|share this job|report job|report this job|posted on|full-time|part-time|remote|hybrid|on-site|vezi mai mult|citeste mai mult)$/i.test(trimmed)) return false;
 
   return true;
 };
 
-// Parser inteligent de Job Description: extragere structurată de cerințe obligatorii, bonus, responsabilități și beneficii
+// Parser inteligent de Job Description: extragere structurata de cerinte obligatorii, bonus, responsabilitati si beneficii
 export const parseJobDescription = (rawText, skillsRequired = [], matchingSkills = [], missingSkills = []) => {
   if (!rawText || rawText.trim().length === 0) {
     return {
       mandatoryRequirements: (skillsRequired || []).map(s => ({
-        text: `Cunoștințe sau experiență demonstrabilă cu ${s}`,
+        text: `Cunostinte sau experienta demonstrabila cu ${s}`,
         matched: (matchingSkills || []).includes(s) ? [s] : [],
         missing: (missingSkills || []).includes(s) ? [s] : []
       })),
@@ -80,7 +81,7 @@ export const parseJobDescription = (rawText, skillsRequired = [], matchingSkills
     };
   }
 
-  // 1. Curățare HTML, taguri de imagine/SVG & entități
+  // 1. Curatare HTML, taguri de imagine/SVG & entitati
   let text = rawText
     .replace(/<svg[\s\S]*?<\/svg>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
@@ -104,17 +105,17 @@ export const parseJobDescription = (rawText, skillsRequired = [], matchingSkills
     .replace(/\r\n/g, '\n')
     .trim();
 
-  // 1.1 Curățare artefacte Sketch, Figma și SVG icons
+  // 1.1 Curatare artefacte Sketch, Figma si SVG icons
   text = text
     .replace(/.*Created with Sketch\.?.*/gi, '')
     .replace(/.*Created with Figma\.?.*/gi, '')
     .replace(/\b\d+_[A-Za-z0-9_\- ]+Created with Sketch\b/gi, '')
     .replace(/^\s*\d+_[A-Za-z0-9_ -]{2,}\s*$/gm, '');
 
-  // 1.2 Inserare separatoare înainte de antete comune când textul este compactat (ex: LinkedIn text fără newline)
-  text = text.replace(/([a-z0-9\.\)\!\?])\s*(Main responsibilities|Key responsibilities|Responsibilities|What you will do|What you'll do|Tasks|Activități|Responsabilități|Ce vei face|Required skills|Requirements|Must have|Qualifications|Ce căutăm|Cerințe obligatorii|Cerințe|Desirable skills|Nice to have|Good to have|Bonus|Constituie avantaj|Reprezintă un plus|Avantaje|Compensation & benefits|Benefits|What we offer|Beneficii|Ce oferim|Who you are|Tech stack|Work mode|About us|Knowledge)\b/gi, '$1\n\n### $2:\n');
+  // 1.2 Inserare separatoare inainte de antete comune cand textul este compactat (ex: LinkedIn text fara newline)
+  text = text.replace(/([a-z0-9\.\)\!\?])\s*(Main responsibilities|Key responsibilities|Responsibilities|What you will do|What you'll do|Tasks|Activitati|Responsabilitati|Ce vei face|Required skills|Requirements|Must have|Qualifications|Ce cautam|Cerinte obligatorii|Cerinte|Desirable skills|Nice to have|Good to have|Bonus|Constituie avantaj|Reprezinta un plus|Avantaje|Compensation & benefits|Benefits|What we offer|Beneficii|Ce oferim|Who you are|Tech stack|Work mode|About us|Knowledge)\b/gi, '$1\n\n### $2:\n');
 
-  // 1.3 Separare elemente de listă concatenate (ex: "testingWork in teams", "ManagersBug fixing")
+  // 1.3 Separare elemente de lista concatenate (ex: "testingWork in teams", "ManagersBug fixing")
   text = text.replace(/([a-z0-9\.\)])([A-Z][a-z]{3,})/g, '$1\n• $2');
 
   const lines = text.split('\n');
@@ -131,7 +132,7 @@ export const parseJobDescription = (rawText, skillsRequired = [], matchingSkills
   const isHeading = (line) => {
     const l = line.trim().toLowerCase().replace(/^###\s*/, '').replace(/[:\s]+$/, '');
     if (!l) return false;
-    const matchesKeyword = /(cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|competen[tț]e|must have|must-have|requirements|required skills|essential experience|essential skills|what you need|qualifications|who you are|candidate profile|skills & experience|what you bring|ce trebuie s[aă] ai|hard skills|condi[tț]ii|cuno[sș]tin[tț]e|knowledge|technical knowledge|domain knowledge|job knowledge|skills|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|nice-to-have|good to have|desirable skills|desirable experience|preferred qualifications|would be a plus|avantaje|plusuri|op[tț]ional|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|ce presupune rolul|main responsibilities|key responsibilities|responsibilities|what you will do|what you'll do|your role|tasks|what you'll be doing|what success looks like|compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|pachet de beneficii|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion|tech stack|work mode|about us|despre noi)/i.test(l);
+    const matchesKeyword = /(cerin[tt]e|ce c[aa]ut[aa]m|ce ne dorim|profilul c[aa]utat|profil candidat|calific[aa]ri|competen[tt]e|must have|must-have|requirements|required skills|essential experience|essential skills|what you need|qualifications|who you are|candidate profile|skills & experience|what you bring|ce trebuie s[aa] ai|hard skills|condi[tt]ii|cuno[ss]tin[tt]e|knowledge|technical knowledge|domain knowledge|job knowledge|skills|bonus|constituie avantaj|reprezint[aa] un plus|nice to have|nice-to-have|good to have|desirable skills|desirable experience|preferred qualifications|would be a plus|avantaje|plusuri|op[tt]ional|responsabilit[aa][tt]i|ce vei face|rolul t[aa]u|descrierea rolului|activit[aa][tt]i|ce presupune rolul|main responsibilities|key responsibilities|responsibilities|what you will do|what you'll do|your role|tasks|what you'll be doing|what success looks like|compensation & benefits|beneficii|ce oferim|ce [ii][tt]i oferim|pachet de beneficii|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion|tech stack|work mode|about us|despre noi)/i.test(l);
 
     if (line.startsWith('### ') || line.endsWith(':')) {
       return matchesKeyword || l.length < 40;
@@ -144,16 +145,16 @@ export const parseJobDescription = (rawText, skillsRequired = [], matchingSkills
     if (/about us|work mode|despre noi|mod de lucru/i.test(l)) {
       return null;
     }
-    if (/compensation & benefits|beneficii|ce oferim|ce [iî][tț]i oferim|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion/i.test(l)) {
+    if (/compensation & benefits|beneficii|ce oferim|ce [ii][tt]i oferim|benefits|what we offer|perks|compensation|health and wellness|work-life balance|diversity and inclusion/i.test(l)) {
       return 'benefits';
     }
-    if (/desirable skills|desirable experience|bonus|constituie avantaj|reprezint[aă] un plus|nice to have|nice-to-have|good to have|preferred qualifications|would be a plus|plusuri|op[tț]ional|ce constituie avantaj|tech stack/i.test(l)) {
+    if (/desirable skills|desirable experience|bonus|constituie avantaj|reprezint[aa] un plus|nice to have|nice-to-have|good to have|preferred qualifications|would be a plus|plusuri|op[tt]ional|ce constituie avantaj|tech stack/i.test(l)) {
       return 'bonus';
     }
-    if (/required skills|essential experience|essential skills|cerin[tț]e|ce c[aă]ut[aă]m|ce ne dorim|profilul c[aă]utat|profil candidat|calific[aă]ri|must have|must-have|requirements|what you need|qualifications|who you are|candidate profile|skills & experience|hard skills|cuno[sș]tin[tț]e|knowledge|technical knowledge|domain knowledge/i.test(l)) {
+    if (/required skills|essential experience|essential skills|cerin[tt]e|ce c[aa]ut[aa]m|ce ne dorim|profilul c[aa]utat|profil candidat|calific[aa]ri|must have|must-have|requirements|what you need|qualifications|who you are|candidate profile|skills & experience|hard skills|cuno[ss]tin[tt]e|knowledge|technical knowledge|domain knowledge/i.test(l)) {
       return 'mandatory';
     }
-    if (/main responsibilities|key responsibilities|responsabilit[aă][tț]i|ce vei face|rolul t[aă]u|descrierea rolului|activit[aă][tț]i|ce presupune rolul|responsibilities|what you will do|what you'll do|your role|tasks|what success looks like/i.test(l)) {
+    if (/main responsibilities|key responsibilities|responsabilit[aa][tt]i|ce vei face|rolul t[aa]u|descrierea rolului|activit[aa][tt]i|ce presupune rolul|responsibilities|what you will do|what you'll do|your role|tasks|what success looks like/i.test(l)) {
       return 'responsibilities';
     }
     return null;
@@ -176,31 +177,31 @@ export const parseJobDescription = (rawText, skillsRequired = [], matchingSkills
     if (!cleanItem || !isValidRequirementItem(cleanItem)) continue;
 
     if (currentSection) {
-      // Redirecționează beneficii evidente către benefits
-      if (/meal voucher|tichete de mas[aă]|health care|medical insurance|asigurare medical[aă]|annual leave|zile de concediu|paid day off|flexible working|program flexibil|sabbatical|bookster|gym membership|pensie/i.test(cleanItem)) {
+      // Redirectioneaza beneficii evidente catre benefits
+      if (/meal voucher|tichete de mas[aa]|health care|medical insurance|asigurare medical[aa]|annual leave|zile de concediu|paid day off|flexible working|program flexibil|sabbatical|bookster|gym membership|pensie/i.test(cleanItem)) {
         sections.benefits.push(cleanItem);
         continue;
       }
-      if ((currentSection === 'mandatory') && /constituie (un )?avantaj|reprezint[aă] (un )?plus|nice to have|would be a plus|bonus/i.test(cleanItem)) {
+      if ((currentSection === 'mandatory') && /constituie (un )?avantaj|reprezint[aa] (un )?plus|nice to have|would be a plus|bonus/i.test(cleanItem)) {
         sections.bonus.push(cleanItem);
         continue;
       }
       sections[currentSection].push(cleanItem);
     } else {
-      if (/constituie (un )?avantaj|reprezint[aă] (un )?plus|nice to have|bonus/i.test(cleanItem)) {
+      if (/constituie (un )?avantaj|reprezint[aa] (un )?plus|nice to have|bonus/i.test(cleanItem)) {
         sections.bonus.push(cleanItem);
-      } else if (cleanItem.length > 15 && cleanItem.length < 160 && /candidat|experien|skills|studii|cuno[sș]tin|programare/i.test(cleanItem)) {
+      } else if (cleanItem.length > 15 && cleanItem.length < 160 && /candidat|experien|skills|studii|cuno[ss]tin|programare/i.test(cleanItem)) {
         sections.mandatory.push(cleanItem);
       }
     }
   }
 
-  // Fallback dacă nu s-au găsit cerințe explicite dar avem skillsRequired
+  // Fallback daca nu s-au gasit cerinte explicite dar avem skillsRequired
   if (sections.mandatory.length === 0 && skillsRequired && skillsRequired.length > 0) {
-    sections.mandatory = skillsRequired.map(s => `Cunoștințe practice de ${s}`);
+    sections.mandatory = skillsRequired.map(s => `Cunostinte practice de ${s}`);
   }
 
-  // Mapare și asociere automată a competențelor pe fiecare cerință
+  // Mapare si asociere automata a competentelor pe fiecare cerinta
   const mapWithSkillMatch = (items) => {
     return items.map(text => {
       const tLow = text.toLowerCase();
@@ -248,7 +249,7 @@ export default function JobDetailModal({
   const [aiAnalysisError, setAiAnalysisError] = useState(null);
   const [copiedEmailBody, setCopiedEmailBody] = useState(false);
 
-  // State pentru selectare CV personal pentru comparație
+  // State pentru selectare CV personal pentru comparatie
   const [userCvs, setUserCvs] = useState([]);
   const [selectedCvId, setSelectedCvId] = useState(null);
   const [loadingCvs, setLoadingCvs] = useState(false);
@@ -269,7 +270,7 @@ export default function JobDetailModal({
           }
         }
       })
-      .catch(e => console.warn('Nu s-au putut încărca CV-urile:', e))
+      .catch(e => console.warn('Nu s-au putut incarca CV-urile:', e))
       .finally(() => setLoadingCvs(false));
   }, [activeUserId]);
 
@@ -294,7 +295,7 @@ export default function JobDetailModal({
     const targetJob = jobToAnalyze || detailedJob || job;
     if (!targetJob || !targetJob.rawDescription || targetJob.rawDescription.trim().length < 50) return;
 
-    // IMPORTANT: Nu rulăm NICIODATĂ analiza AI pe emailurile Gmail
+    // IMPORTANT: Nu rulam NICIODATA analiza AI pe emailurile Gmail
     const isTargetGmail = targetJob.sourcePlatform === 'GMAIL' 
       || (typeof targetJob.rawDescription === 'string' && (targetJob.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || targetJob.rawDescription.includes('GMAIL (Sincronizat Automat)')))
       || (typeof targetJob.notes === 'string' && targetJob.notes.includes('[Gmail Sync'));
@@ -363,7 +364,7 @@ export default function JobDetailModal({
             onUpdateJobScore(targetJob.id, Number(data.atsScore) || targetJob.atsMatchScore, data);
           }
         } else {
-          setAiAnalysisError("Analiza AI nu a putut fi finalizată.");
+          setAiAnalysisError("Analiza AI nu a putut fi finalizata.");
         }
       } else {
         setAiAnalysisError("Serviciul AI este indisponibil momentan.");
@@ -406,13 +407,13 @@ export default function JobDetailModal({
   useEffect(() => {
     if (!job) return;
 
-    // Închidere la tasta Escape
+    // Inchidere la tasta Escape
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    // Dacă este job extras din Gmail, nu apelăm niciun model AI și afișăm direct emailul
+    // Daca este job extras din Gmail, nu apelam niciun model AI si afisam direct emailul
     const isTargetGmail = job.sourcePlatform === 'GMAIL' 
       || (typeof job.rawDescription === 'string' && (job.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || job.rawDescription.includes('GMAIL (Sincronizat Automat)')))
       || (typeof job.notes === 'string' && job.notes.includes('[Gmail Sync'));
@@ -424,8 +425,8 @@ export default function JobDetailModal({
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
 
-    // Preluăm detaliile extinse dacă descrierea este scurtă/placeholder sau lipsesc competențele de matching
-    const isDescriptionShort = !job.rawDescription || job.rawDescription.length < 350 || job.rawDescription.includes('Descrierea completă a postului salvat');
+    // Preluam detaliile extinse daca descrierea este scurta/placeholder sau lipsesc competentele de matching
+    const isDescriptionShort = !job.rawDescription || job.rawDescription.length < 350 || job.rawDescription.includes('Descrierea completa a postului salvat');
     const isMissingSkillBreakdown = !job.matchingSkills || job.matchingSkills.length === 0;
     const needsDetailsFetch = !!job.id && (isDescriptionShort || isMissingSkillBreakdown || ['LINKEDIN', 'HIPO', 'BESTJOBS'].includes(job.sourcePlatform));
 
@@ -486,7 +487,7 @@ export default function JobDetailModal({
           }
         })
         .catch(err => {
-          console.warn('Nu s-au putut încărca detaliile extinse:', err);
+          console.warn('Nu s-au putut incarca detaliile extinse:', err);
           if (!hasLoadedFromCache) runAiMatch(job, selectedCvId, false);
         })
         .finally(() => setLoadingDetails(false));
@@ -544,8 +545,8 @@ export default function JobDetailModal({
     const statusMatch = raw.match(/🏷️\s*Status Detectat:\s*([^\n\r]+)/i);
     if (statusMatch) status = statusMatch[1].trim();
 
-    if (raw.includes('CONȚINUT COMPLET EMAIL:')) {
-      const parts = raw.split(/CONȚINUT COMPLET EMAIL:[\s\S]*?-{10,}/i);
+    if (raw.includes('CONTINUT COMPLET EMAIL:')) {
+      const parts = raw.split(/CONTINUT COMPLET EMAIL:[\s\S]*?-{10,}/i);
       if (parts.length > 1) {
         body = parts[1].trim();
       }
@@ -574,7 +575,7 @@ export default function JobDetailModal({
     const jobLvl = (currentJob.experienceLevel || '').toUpperCase();
     const aiLvl = (aiAnalysisData?.experienceLevel || '').toUpperCase();
 
-    // Dacă jobul a fost determinat algoritmic ca SENIOR sau MID, nu permitem AI-ului să îl degradeze la JUNIOR sau INTERNSHIP
+    // Daca jobul a fost determinat algoritmic ca SENIOR sau MID, nu permitem AI-ului sa il degradeze la JUNIOR sau INTERNSHIP
     if (jobLvl === 'SENIOR') return 'SENIOR';
     if (jobLvl === 'MID') {
       return aiLvl === 'SENIOR' ? 'SENIOR' : 'MID';
@@ -612,7 +613,7 @@ export default function JobDetailModal({
     );
   }, [currentJob.rawDescription, skillsRequired, displayMatchingSkills, displayMissingSkills]);
 
-  // CERINȚE OBLIGATORII (MUST-HAVE): Când AI a evaluat jobul, rezultatele AI sunt sursa autoritară și completă
+  // CERINTE OBLIGATORII (MUST-HAVE): Cand AI a evaluat jobul, rezultatele AI sunt sursa autoritara si completa
   const effectiveMandatoryRequirements = useMemo(() => {
     if (aiAnalysisData?.mandatory && aiAnalysisData.mandatory.length > 0) {
       return aiAnalysisData.mandatory
@@ -625,14 +626,14 @@ export default function JobDetailModal({
         }));
     }
 
-    // Fallback când analiza AI nu este încă finalizată sau e indisponibilă
+    // Fallback cand analiza AI nu este inca finalizata sau e indisponibila
     return (parsedDescription.mandatoryRequirements || [])
       .filter(req => isValidRequirementItem(req?.text))
       .map(req => ({
         text: req.text,
         isMatched: req.matched && req.matched.length > 0,
         matchedSkill: req.matched ? req.matched.join(', ') : '',
-        explanation: req.matched && req.matched.length > 0 ? `Bifat în CV conform profilului: ${req.matched.join(', ')}` : 'Competență cerută în anunț'
+        explanation: req.matched && req.matched.length > 0 ? `Bifat in CV conform profilului: ${req.matched.join(', ')}` : 'Competenta ceruta in anunt'
       }));
   }, [aiAnalysisData?.mandatory, parsedDescription.mandatoryRequirements]);
 
@@ -648,7 +649,7 @@ export default function JobDetailModal({
         }));
     }
 
-    // Fallback când analiza AI nu este încă finalizată sau e indisponibilă
+    // Fallback cand analiza AI nu este inca finalizata sau e indisponibila
     return (parsedDescription.bonusRequirements || [])
       .filter(b => isValidRequirementItem(b?.text))
       .map(b => ({
@@ -675,9 +676,9 @@ export default function JobDetailModal({
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
-  // Formatare estetică a textului descrierii
+  // Formatare estetica a textului descrierii
   const formatDescription = (rawText) => {
-    if (!rawText) return <p className="text-gray-500 italic">Descrierea completă nu este disponibilă.</p>;
+    if (!rawText) return <p className="text-gray-500 italic">Descrierea completa nu este disponibila.</p>;
 
     let sanitized = rawText
       .replace(/<svg[\s\S]*?<\/svg>/gi, ' ')
@@ -687,14 +688,14 @@ export default function JobDetailModal({
       .replace(/.*Created with Figma\.?.*/gi, '')
       .replace(/\b\d+_[A-Za-z0-9_\- ]+Created with Sketch\b/gi, '');
 
-    // Împărțire pe paragrafe
+    // Impartire pe paragrafe
     const paragraphs = sanitized.split(/\n\s*\n|\r\n\r\n/);
 
     return paragraphs.map((para, pIdx) => {
       const trimmed = para.trim();
       if (!trimmed) return null;
 
-      // Verificare dacă paragraful este o listă cu liniuțe sau bullet points
+      // Verificare daca paragraful este o lista cu liniute sau bullet points
       if (trimmed.includes('•') || trimmed.includes('- ') || trimmed.includes('* ')) {
         const lines = trimmed.split(/\n/);
         return (
@@ -708,7 +709,7 @@ export default function JobDetailModal({
         );
       }
 
-      // Verificare dacă este un antet (Header)
+      // Verificare daca este un antet (Header)
       if (trimmed.endsWith(':') || (trimmed.length < 50 && (trimmed.toLowerCase().includes('cerin') || trimmed.toLowerCase().includes('responsabilit') || trimmed.toLowerCase().includes('benefic') || trimmed.toLowerCase().includes('requirements') || trimmed.toLowerCase().includes('responsibilities')))) {
         return (
           <h4 key={pIdx} className="text-sm font-black text-gray-950 uppercase tracking-wider mt-5 mb-2 border-b border-gray-100 pb-1">
@@ -756,7 +757,7 @@ export default function JobDetailModal({
             <button
               onClick={handleCopyLink}
               className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-200/70 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
-              title="Copiază link-ul direct de aplicare"
+              title="Copiaza link-ul direct de aplicare"
             >
               {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
               <span className="hidden sm:inline">{copiedLink ? 'Copiat!' : 'Distribuie'}</span>
@@ -765,7 +766,7 @@ export default function JobDetailModal({
             <button
               onClick={onClose}
               className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-200/70 transition cursor-pointer"
-              title="Închide fereastra (Esc)"
+              title="Inchide fereastra (Esc)"
             >
               <X className="w-5 h-5" />
             </button>
@@ -791,8 +792,8 @@ export default function JobDetailModal({
                     emailData?.status === 'REJECTED' ? 'bg-rose-100 text-rose-900 border-rose-300' :
                     'bg-blue-100 text-blue-900 border-blue-300'
                   }`}>
-                    {emailData?.status === 'INTERVIEWING' ? 'Invitație Interviu' :
-                     emailData?.status === 'OFFER_RECEIVED' ? 'Ofertă Primită' :
+                    {emailData?.status === 'INTERVIEWING' ? 'Invitatie Interviu' :
+                     emailData?.status === 'OFFER_RECEIVED' ? 'Oferta Primita' :
                      emailData?.status === 'REJECTED' ? 'Respins / Negativ' : 'Aplicat (Confirmare)'}
                   </span>
                 </div>
@@ -816,7 +817,7 @@ export default function JobDetailModal({
                     <div className="bg-white border border-gray-200 p-3.5 rounded-2xl shadow-2xs space-y-1">
                       <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">📅 Data Primirii</span>
                       <p className="font-extrabold text-gray-800 text-xs sm:text-sm">
-                        {emailData?.date || 'Nespecificată'}
+                        {emailData?.date || 'Nespecificata'}
                       </p>
                     </div>
                   </div>
@@ -829,7 +830,7 @@ export default function JobDetailModal({
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-gray-600" />
                     <h3 className="text-xs font-black text-gray-900 uppercase tracking-wider">
-                      Conținut Integral al Emailului Primit
+                      Continut Integral al Emailului Primit
                     </h3>
                   </div>
                   <button
@@ -842,7 +843,7 @@ export default function JobDetailModal({
                     className="px-3 py-1.5 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 text-xs font-bold text-gray-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
                   >
                     {copiedEmailBody ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-gray-500" />}
-                    <span>{copiedEmailBody ? 'Copiat!' : 'Copiază Text'}</span>
+                    <span>{copiedEmailBody ? 'Copiat!' : 'Copiaza Text'}</span>
                   </button>
                 </div>
 
@@ -850,7 +851,7 @@ export default function JobDetailModal({
                   {emailData?.body ? (
                     emailData.body
                   ) : (
-                    <p className="text-gray-400 italic">Mesajul nu conține text adițional în corpul emailului.</p>
+                    <p className="text-gray-400 italic">Mesajul nu contine text aditional in corpul emailului.</p>
                   )}
                 </div>
               </div>
@@ -883,9 +884,9 @@ export default function JobDetailModal({
                     {currentJob.location}
                   </span>
                   <span>•</span>
-                  <span className="flex items-center gap-1 text-gray-700 font-bold text-xs" title={currentJob.postedAt ? `Data postării: ${currentJob.postedAt}` : 'Data exactă de publicare nu a fost furnizată de angajator'}>
+                  <span className="flex items-center gap-1 text-gray-700 font-bold text-xs" title={currentJob.postedAt ? `Data postarii: ${currentJob.postedAt}` : 'Data exacta de publicare nu a fost furnizata de angajator'}>
                     <Calendar className="w-3.5 h-3.5 text-indigo-600" />
-                    {currentJob.postedAt ? (formatDateTime(currentJob.postedAt) !== 'Nespecificat' ? formatDateTime(currentJob.postedAt) : currentJob.postedDateAgo) : (currentJob.postedDateAgo || 'Dată nespecificată')}
+                    {currentJob.postedAt ? (formatDateTime(currentJob.postedAt) !== 'Nespecificat' ? formatDateTime(currentJob.postedAt) : currentJob.postedDateAgo) : (currentJob.postedDateAgo || 'Data nespecificata')}
                   </span>
                   {currentJob.status && (
                     <>
@@ -938,7 +939,7 @@ export default function JobDetailModal({
             <div className="bg-gray-50/90 border border-gray-200/80 p-3.5 rounded-2xl space-y-1">
               <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 flex items-center gap-1">
                 <Briefcase className="w-3.5 h-3.5 text-purple-600" />
-                Nivel Experiență
+                Nivel Experienta
               </span>
               <p className="text-xs sm:text-sm font-extrabold text-gray-900">
                 {effectiveExperienceLevel === 'INTERNSHIP' ? 'Internship' :
@@ -950,21 +951,21 @@ export default function JobDetailModal({
             <div className="bg-gray-50/90 border border-gray-200/80 p-3.5 rounded-2xl space-y-1">
               <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 flex items-center gap-1">
                 <Users className="w-3.5 h-3.5 text-amber-600" />
-                Competiție
+                Competitie
               </span>
               <p className="text-xs sm:text-sm font-extrabold text-gray-900 truncate">
-                {currentJob.applicantCountText ? currentJob.applicantCountText.replace(/[()]/g, '').trim() : 'Estimare Normală'}
+                {currentJob.applicantCountText ? currentJob.applicantCountText.replace(/[()]/g, '').trim() : 'Estimare Normala'}
               </p>
             </div>
           </div>
 
-          {/* SECȚIUNE PIPELINE DE AUDIT & ISTORIC MODIFICĂRI */}
+          {/* SECTIUNE PIPELINE DE AUDIT & ISTORIC MODIFICARI */}
           <div className="bg-gray-50 border border-gray-200 rounded-3xl p-4 sm:p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4 text-indigo-600" />
                 <span className="text-xs font-black uppercase tracking-wider text-gray-900">
-                  Audit Lifecycle & Istoric Modificări
+                  Audit Lifecycle & Istoric Modificari
                 </span>
                 {currentJob.contentHash && (
                   <span className="text-[10px] font-mono bg-white text-gray-500 border border-gray-200 px-2 py-0.5 rounded-md hidden sm:inline" title={`SHA-256: ${currentJob.contentHash}`}>
@@ -978,7 +979,7 @@ export default function JobDetailModal({
                 className="text-xs font-extrabold text-indigo-700 hover:text-indigo-950 bg-white border border-indigo-200 hover:bg-indigo-50 px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
               >
                 <GitCommit className="w-3.5 h-3.5" />
-                <span>{showChanges ? 'Ascunde Istoric' : 'Vezi Istoric Modificări'}</span>
+                <span>{showChanges ? 'Ascunde Istoric' : 'Vezi Istoric Modificari'}</span>
               </button>
             </div>
 
@@ -986,11 +987,11 @@ export default function JobDetailModal({
               <div className="pt-2 border-t border-gray-200/80 space-y-2">
                 {loadingChanges ? (
                   <div className="py-4 text-center text-xs font-semibold text-gray-500 animate-pulse">
-                    Se încarcă istoricul din baza de date...
+                    Se incarca istoricul din baza de date...
                   </div>
                 ) : jobChanges.length === 0 ? (
                   <div className="py-3 text-center text-xs text-gray-500 font-medium bg-white rounded-xl border border-gray-100">
-                    Niciun eveniment de modificare înregistrat încă (Job în starea inițială CREATED).
+                    Niciun eveniment de modificare inregistrat inca (Job in starea initiala CREATED).
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1010,7 +1011,7 @@ export default function JobDetailModal({
                             {change.changeType}
                           </span>
                           <span className="font-semibold text-gray-700">
-                            {change.details || 'Modificare detectată în pipeline'}
+                            {change.details || 'Modificare detectata in pipeline'}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-[11px] text-gray-400 font-medium shrink-0">
@@ -1025,18 +1026,18 @@ export default function JobDetailModal({
             )}
           </div>
 
-          {/* SECȚIUNE NOUĂ: BILANȚ INTELIGENT COMPETENȚE (CE ȘTII VS CE ÎȚI LIPSEȘTE) */}
+          {/* SECTIUNE NOUA: BILANT INTELIGENT COMPETENTE (CE STII VS CE ITI LIPSESTE) */}
           <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-5 sm:p-6 rounded-3xl shadow-xl space-y-4 border border-indigo-500/20">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
               <div>
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-indigo-400" />
                   <h3 className="text-sm font-black uppercase tracking-wider text-white">
-                    Bilanț Competențe: Ce Știi vs Ce Îți Lipsește
+                    Bilant Competente: Ce Stii vs Ce Iti Lipseste
                   </h3>
                 </div>
                 <p className="text-xs text-slate-300 mt-1">
-                  Comparat în timp real cu profilul tău de CV pentru a-ți evidenția atuurile la interviu
+                  Comparat in timp real cu profilul tau de CV pentru a-ti evidentia atuurile la interviu
                 </p>
 
                 {/* SELECTOR CV UTILIZATOR PENTRU COMPARARE */}
@@ -1044,7 +1045,7 @@ export default function JobDetailModal({
                   <div className="flex flex-wrap items-center gap-2 mt-2.5 pt-2 border-t border-white/10">
                     <span className="text-xs font-extrabold text-indigo-300 flex items-center gap-1.5">
                       <FileText className="w-3.5 h-3.5 text-indigo-400" />
-                      Compară cu CV-ul:
+                      Compara cu CV-ul:
                     </span>
                     <select
                       value={selectedCvId || ''}
@@ -1068,22 +1069,22 @@ export default function JobDetailModal({
                   onClick={() => runAiMatch(currentJob, selectedCvId, true)}
                   disabled={loadingAiAnalysis}
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-extrabold text-xs shadow-md transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed border border-indigo-400/40"
-                  title="Analizează semantic cerințele jobului direct cu AI Groq și CV-ul selectat"
+                  title="Analizeaza semantic cerintele jobului direct cu AI Groq si CV-ul selectat"
                 >
                   {loadingAiAnalysis ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-200" />
-                      <span>Verificare AI în curs...</span>
+                      <span>Verificare AI in curs...</span>
                     </>
                   ) : aiAnalysisData ? (
                     <>
                       <Bot className="w-3.5 h-3.5 text-emerald-300" />
-                      <span>Re-analizează cu AI</span>
+                      <span>Re-analizeaza cu AI</span>
                     </>
                   ) : (
                     <>
                       <Bot className="w-3.5 h-3.5 text-indigo-200" />
-                      <span>Verifică & Bifează cu AI</span>
+                      <span>Verifica & Bifeaza cu AI</span>
                     </>
                   )}
                 </button>
@@ -1093,14 +1094,14 @@ export default function JobDetailModal({
                   <div className="text-right">
                     <div className="text-xs font-black text-white">{displayScore.toFixed(1)}% Match ATS</div>
                     <div className="text-[10px] text-indigo-200 font-semibold">
-                      {matchedMandatoryCount} din {totalMandatoryCount > 0 ? totalMandatoryCount : (skillsRequired.length || 1)} cerințe bifate
+                      {matchedMandatoryCount} din {totalMandatoryCount > 0 ? totalMandatoryCount : (skillsRequired.length || 1)} cerinte bifate
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* RAPORT / VERDICT AI RECRUITER DACĂ ESTE ACTIVAT */}
+            {/* RAPORT / VERDICT AI RECRUITER DACA ESTE ACTIVAT */}
             {aiAnalysisData?.verdict && (
               <div className="bg-indigo-900/60 border border-indigo-400/30 rounded-2xl p-3.5 flex items-start gap-3">
                 <div className="p-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 shrink-0 mt-0.5">
@@ -1108,7 +1109,7 @@ export default function JobDetailModal({
                 </div>
                 <div className="space-y-0.5">
                   <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300">
-                    Verdict Recruiter AI (Analiză Semantică CV)
+                    Verdict Recruiter AI (Analiza Semantica CV)
                   </span>
                   <p className="text-xs text-indigo-100 font-medium leading-relaxed">
                     {aiAnalysisData.verdict}
@@ -1124,14 +1125,14 @@ export default function JobDetailModal({
               </div>
             )}
 
-            {/* GRID CU 2 COLOANE CLARE: CE ȘTII vs CE NU ȘTII */}
+            {/* GRID CU 2 COLOANE CLARE: CE STII vs CE NU STII */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* COLOANA 1: CE STĂPÂNEȘTI (VERDE) */}
+              {/* COLOANA 1: CE STAPANESTI (VERDE) */}
               <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-4 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    Ce Stăpânești Deja ({displayMatchingSkills.length})
+                    Ce Stapanesti Deja ({displayMatchingSkills.length})
                   </span>
                   <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                     Puncte Forte
@@ -1149,20 +1150,20 @@ export default function JobDetailModal({
                       </span>
                     ))
                   ) : (
-                    <span className="text-xs text-slate-400 italic">Nu s-a detectat încă o suprapunere directă de cuvinte cheie din CV.</span>
+                    <span className="text-xs text-slate-400 italic">Nu s-a detectat inca o suprapunere directa de cuvinte cheie din CV.</span>
                   )}
                 </div>
                 <p className="text-[11px] text-emerald-300/80 leading-relaxed pt-1">
-                  ✓ Aceste competențe sunt deja demonstrate în CV. Vor fi punctele tale forte la interviu!
+                  ✓ Aceste competente sunt deja demonstrate in CV. Vor fi punctele tale forte la interviu!
                 </p>
               </div>
 
-              {/* COLOANA 2: CE ÎȚI LIPSEȘTE / DE APROFUNDAT (PORTOCALIU) */}
+              {/* COLOANA 2: CE ITI LIPSESTE / DE APROFUNDAT (PORTOCALIU) */}
               <div className="bg-amber-950/30 border border-amber-500/30 rounded-2xl p-4 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
                     <AlertCircle className="w-4 h-4 text-amber-400" />
-                    Ce Nu Ai în CV / De Învățat ({displayMissingSkills.length})
+                    Ce Nu Ai in CV / De Invatat ({displayMissingSkills.length})
                   </span>
                   <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     Gaps de Acoperit
@@ -1182,46 +1183,46 @@ export default function JobDetailModal({
                   ) : (
                     <span className="text-xs text-emerald-300 font-bold flex items-center gap-1">
                       <CheckCheck className="w-4 h-4 text-emerald-400" />
-                      Felicitări! Profilul tău acoperă toate cerințele tehnice identificate!
+                      Felicitari! Profilul tau acopera toate cerintele tehnice identificate!
                     </span>
                   )}
                 </div>
                 <p className="text-[11px] text-amber-300/80 leading-relaxed pt-1">
-                  💡 Sfat: Dacă ai lucrat chiar și la proiecte personale cu aceste tehnologii, adaugă-le în CV Studio pentru a crește scorul ATS!
+                  💡 Sfat: Daca ai lucrat chiar si la proiecte personale cu aceste tehnologii, adauga-le in CV Studio pentru a creste scorul ATS!
                 </p>
               </div>
             </div>
 
-            {/* EVALUARE NIVEL EXPERIENȚĂ */}
+            {/* EVALUARE NIVEL EXPERIENTA */}
             <div className="text-xs text-slate-200 bg-white/5 p-3 rounded-2xl border border-white/10 leading-relaxed">
               <span className="font-black text-white">Evaluare Nivel: </span>
               {effectiveExperienceLevel === 'JUNIOR' || effectiveExperienceLevel === 'INTERNSHIP' ? (
                 <span className="text-emerald-300 font-bold">
-                  Poziția este ideală pentru debut de carieră (0-1 ani experiență). Șanse maxime de selecție la interviu! Fără penalizare de vechime.
+                  Pozitia este ideala pentru debut de cariera (0-1 ani experienta). Sanse maxime de selectie la interviu! Fara penalizare de vechime.
                 </span>
               ) : effectiveExperienceLevel === 'MID' ? (
                 <span className="text-amber-300 font-bold">
-                  Penalizare de nivel: Poziția solicită 2-4 ani de experiență comercială. Profilul de Junior este plafonat automat de algoritmul ATS din cauza deficitului de vechime cerut.
+                  Penalizare de nivel: Pozitia solicita 2-4 ani de experienta comerciala. Profilul de Junior este plafonat automat de algoritmul ATS din cauza deficitului de vechime cerut.
                 </span>
               ) : (
                 <span className="text-rose-300 font-bold">
-                  Incompatibilitate de senioritate: Poziție de nivel Senior / Lead (5+ ani). Sistemele automate ATS descalifică de regulă profilurile fără vechime comercială solidă.
+                  Incompatibilitate de senioritate: Pozitie de nivel Senior / Lead (5+ ani). Sistemele automate ATS descalifica de regula profilurile fara vechime comerciala solida.
                 </span>
               )}
             </div>
           </div>
 
-          {/* SECȚIUNE FIȘA POSTULUI & CERINȚE DETALIATE */}
+          {/* SECTIUNE FISA POSTULUI & CERINTE DETALIATE */}
           <div className="space-y-5 pt-2">
             <div className="flex items-center justify-between border-b border-gray-200 pb-3">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-indigo-600" />
                 <div>
                   <h3 className="text-sm font-black text-gray-950 uppercase tracking-wider">
-                    Fișa Postului & Cerințe Detaliate
+                    Fisa Postului & Cerinte Detaliate
                   </h3>
                   <p className="text-[11px] text-gray-500 font-medium">
-                    Cerințe tehnice și responsabilități structurate inteligent
+                    Cerinte tehnice si responsabilitati structurate inteligent
                   </p>
                 </div>
               </div>
@@ -1230,7 +1231,7 @@ export default function JobDetailModal({
             {loadingDetails && (
               <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-2xl text-xs font-bold text-indigo-700 flex items-center gap-2 animate-pulse">
                 <Sparkles className="w-4 h-4 text-indigo-600" />
-                Se extrage descrierea detaliată completă de pe {currentJob.sourcePlatform}...
+                Se extrage descrierea detaliata completa de pe {currentJob.sourcePlatform}...
               </div>
             )}
 
@@ -1238,13 +1239,13 @@ export default function JobDetailModal({
               <div className="p-3 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 border border-indigo-200 rounded-2xl text-xs font-bold text-indigo-900 flex items-center justify-between gap-2 animate-pulse shadow-2xs">
                 <div className="flex items-center gap-2">
                   <Bot className="w-4 h-4 text-indigo-600 animate-spin" />
-                  <span>AI extrage și separă cerințele, responsabilitățile și beneficiile din anunț...</span>
+                  <span>AI extrage si separa cerintele, responsabilitatile si beneficiile din anunt...</span>
                 </div>
                 <span className="text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full uppercase font-black">AI Live</span>
               </div>
             )}
 
-            {/* CERINȚE OBLIGATORII (MUST-HAVE) */}
+            {/* CERINTE OBLIGATORII (MUST-HAVE) */}
             {effectiveMandatoryRequirements.length > 0 && (
               <div className="bg-white border-2 border-indigo-100 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
                 <div className="flex items-center justify-between border-b border-indigo-50 pb-3">
@@ -1254,7 +1255,7 @@ export default function JobDetailModal({
                     </div>
                     <div>
                       <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-2">
-                        <span>Cerințe Obligatorii (Must-Have)</span>
+                        <span>Cerinte Obligatorii (Must-Have)</span>
                         {aiAnalysisData && (
                           <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md flex items-center gap-1">
                             <Bot className="w-3 h-3 text-indigo-600" />
@@ -1263,12 +1264,12 @@ export default function JobDetailModal({
                         )}
                       </h4>
                       <span className="text-[11px] text-gray-500 font-semibold">
-                        Competențe și calificări esențiale cerute pentru acest rol
+                        Competente si calificari esentiale cerute pentru acest rol
                       </span>
                     </div>
                   </div>
                   <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    {effectiveMandatoryRequirements.length} Cerințe
+                    {effectiveMandatoryRequirements.length} Cerinte
                   </span>
                 </div>
 
@@ -1304,12 +1305,12 @@ export default function JobDetailModal({
                         {req.isMatched ? (
                           <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
                             <Check className="w-3 h-3 text-emerald-600" />
-                            <span>{req.matchedSkill ? `Bifat: ${req.matchedSkill}` : 'Bifat în CV'}</span>
+                            <span>{req.matchedSkill ? `Bifat: ${req.matchedSkill}` : 'Bifat in CV'}</span>
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
                             <BookOpen className="w-3 h-3 text-amber-600" />
-                            <span>Lipsește din CV</span>
+                            <span>Lipseste din CV</span>
                           </span>
                         )}
                       </div>
@@ -1319,7 +1320,7 @@ export default function JobDetailModal({
               </div>
             )}
 
-            {/* CUNOȘTINȚE BONUS / AVANTAJE (NICE-TO-HAVE) */}
+            {/* CUNOSTINTE BONUS / AVANTAJE (NICE-TO-HAVE) */}
             {effectiveBonusRequirements.length > 0 && (
               <div className="bg-gradient-to-br from-amber-50/50 to-purple-50/30 border-2 border-amber-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
                 <div className="flex items-center justify-between border-b border-amber-100 pb-3">
@@ -1329,11 +1330,11 @@ export default function JobDetailModal({
                     </div>
                     <div>
                       <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-1.5">
-                        <span>Cunoștințe Bonus & Avantaje (Nice-to-Have)</span>
+                        <span>Cunostinte Bonus & Avantaje (Nice-to-Have)</span>
                         <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                       </h4>
                       <span className="text-[11px] text-gray-500 font-semibold">
-                        Cunoștințe care nu sunt eliminatorii, dar îți oferă un avantaj major la selecție
+                        Cunostinte care nu sunt eliminatorii, dar iti ofera un avantaj major la selectie
                       </span>
                     </div>
                   </div>
@@ -1362,7 +1363,7 @@ export default function JobDetailModal({
                       {bonus.isMatched && (
                         <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1 shrink-0 self-start sm:self-center">
                           <Check className="w-3 h-3 text-emerald-600" />
-                          <span>{bonus.matchedSkill ? `Bonus Bifat: ${bonus.matchedSkill}` : 'Bonus Bifat în Profil!'}</span>
+                          <span>{bonus.matchedSkill ? `Bonus Bifat: ${bonus.matchedSkill}` : 'Bonus Bifat in Profil!'}</span>
                         </span>
                       )}
                     </div>
@@ -1371,7 +1372,7 @@ export default function JobDetailModal({
               </div>
             )}
 
-            {/* RESPONSABILITĂȚI PRINCIPALE */}
+            {/* RESPONSABILITATI PRINCIPALE */}
             {displayResponsibilities && displayResponsibilities.length > 0 && (
               <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
@@ -1381,7 +1382,7 @@ export default function JobDetailModal({
                     </div>
                     <div>
                       <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-2">
-                        <span>Ce Vei Face în Acest Rol (Responsabilități)</span>
+                        <span>Ce Vei Face in Acest Rol (Responsabilitati)</span>
                         {aiAnalysisData?.responsibilities?.length > 0 && (
                           <span className="text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md flex items-center gap-1">
                             <Bot className="w-3 h-3 text-blue-600" />
@@ -1390,12 +1391,12 @@ export default function JobDetailModal({
                         )}
                       </h4>
                       <span className="text-[11px] text-gray-500 font-semibold">
-                        Activitățile tale zilnice și proiectele din cadrul echipei
+                        Activitatile tale zilnice si proiectele din cadrul echipei
                       </span>
                     </div>
                   </div>
                   <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
-                    {displayResponsibilities.length} Activități
+                    {displayResponsibilities.length} Activitati
                   </span>
                 </div>
 
@@ -1410,7 +1411,7 @@ export default function JobDetailModal({
               </div>
             )}
 
-            {/* BENEFICII & OFERTĂ */}
+            {/* BENEFICII & OFERTA */}
             {displayBenefits && displayBenefits.length > 0 && (
               <div className="bg-emerald-50/40 border border-emerald-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
                 <div className="flex items-center justify-between border-b border-emerald-100 pb-2.5">
@@ -1420,7 +1421,7 @@ export default function JobDetailModal({
                     </div>
                     <div>
                       <h4 className="text-sm font-black text-emerald-950 uppercase tracking-wider flex items-center gap-2">
-                        <span>Ce Îți Oferă Compania (Beneficii & Pachet)</span>
+                        <span>Ce Iti Ofera Compania (Beneficii & Pachet)</span>
                         {aiAnalysisData?.benefits?.length > 0 && (
                           <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-md flex items-center gap-1">
                             <Bot className="w-3 h-3 text-emerald-600" />
@@ -1429,7 +1430,7 @@ export default function JobDetailModal({
                         )}
                       </h4>
                       <span className="text-[11px] text-emerald-700 font-semibold">
-                        Perks, asigurare, dezvoltare profesională și condiții de lucru
+                        Perks, asigurare, dezvoltare profesionala si conditii de lucru
                       </span>
                     </div>
                   </div>
@@ -1449,7 +1450,7 @@ export default function JobDetailModal({
               </div>
             )}
 
-            {/* FALLBACK DACĂ NU S-A PUTUT STRUCTURA NICIO SECȚIUNE */}
+            {/* FALLBACK DACA NU S-A PUTUT STRUCTURA NICIO SECTIUNE */}
             {(!parsedDescription.mandatoryRequirements.length &&
               (!aiAnalysisData?.mandatory || !aiAnalysisData.mandatory.length) &&
               !parsedDescription.bonusRequirements.length &&
@@ -1468,10 +1469,10 @@ export default function JobDetailModal({
 
       </div>
 
-        {/* FOOTER FIX CU ACȚIUNI RAPIDE */}
+        {/* FOOTER FIX CU ACTIUNI RAPIDE */}
         <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
           <div className="flex items-center gap-2 text-xs text-gray-500 font-semibold text-center sm:text-left flex-wrap">
-            <span>Platformă: <strong className="text-gray-900">{isGmailJob ? 'Gmail Sync' : (currentJob.sourcePlatform || 'DIRECT')}</strong></span>
+            <span>Platforma: <strong className="text-gray-900">{isGmailJob ? 'Gmail Sync' : (currentJob.sourcePlatform || 'DIRECT')}</strong></span>
             {(currentJob.appliedDate || emailData?.date) && (
               <>
                 <span>•</span>
@@ -1493,7 +1494,7 @@ export default function JobDetailModal({
                   onClose();
                 }}
                 className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border border-blue-200/90 bg-blue-50/80 hover:bg-blue-100 text-blue-950 shadow-2xs"
-                title="Generează Scrisoare de Intenție AI pentru acest rol"
+                title="Genereaza Scrisoare de Intentie AI pentru acest rol"
               >
                 <FileSignature className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                 <span>Scrisoare AI</span>
@@ -1528,12 +1529,12 @@ export default function JobDetailModal({
                 {isSaved ? (
                   <>
                     <BookmarkCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>Salvat în Tracker</span>
+                    <span>Salvat in Tracker</span>
                   </>
                 ) : (
                   <>
                     <Bookmark className="w-4 h-4 text-gray-500 shrink-0" />
-                    <span>{isSaving ? 'Se salvează...' : 'Salvează'}</span>
+                    <span>{isSaving ? 'Se salveaza...' : 'Salveaza'}</span>
                   </>
                 )}
               </button>
@@ -1546,7 +1547,7 @@ export default function JobDetailModal({
                 rel="noopener noreferrer"
                 className="flex-1 sm:flex-none px-5 py-2.5 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md"
               >
-                <span>Aplică Oficial</span>
+                <span>Aplica Oficial</span>
                 <ArrowUpRight className="w-4 h-4 shrink-0" />
               </a>
             )}

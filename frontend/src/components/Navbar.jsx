@@ -28,11 +28,11 @@ import {
 
 const NAV_SECTIONS = [
   {
-    title: 'PIPELINE & CĂUTARE',
+    title: 'PIPELINE & CAUTARE',
     items: [
       {
         id: 'tracker',
-        label: 'Tracker Aplicații',
+        label: 'Tracker Aplicatii',
         subtitle: 'Kanban & Pipeline',
         icon: FolderKanban,
         color: 'text-blue-600',
@@ -41,8 +41,8 @@ const NAV_SECTIONS = [
       },
       {
         id: 'job_search',
-        label: 'Căutare Job-uri',
-        subtitle: 'Agregator Piață IT',
+        label: 'Cautare Job-uri',
+        subtitle: 'Agregator Piata IT',
         icon: Search,
         color: 'text-amber-500',
         activeColor: 'text-amber-400',
@@ -50,7 +50,7 @@ const NAV_SECTIONS = [
       },
       {
         id: 'market_insights',
-        label: 'Radar Piață IT',
+        label: 'Radar Piata IT',
         subtitle: 'Statistici & Tech Trends',
         icon: Compass,
         color: 'text-cyan-600',
@@ -65,7 +65,7 @@ const NAV_SECTIONS = [
       {
         id: 'cv_library',
         label: 'CV-urile Mele',
-        subtitle: 'Bază de date Profiluri',
+        subtitle: 'Baza de date Profiluri',
         icon: Files,
         color: 'text-emerald-600',
         activeColor: 'text-emerald-400',
@@ -84,7 +84,7 @@ const NAV_SECTIONS = [
       {
         id: 'cover_letter',
         label: 'Cover Letter AI',
-        subtitle: 'Scrisoare de Intenție',
+        subtitle: 'Scrisoare de Intentie',
         icon: FileSignature,
         color: 'text-indigo-600',
         activeColor: 'text-indigo-400',
@@ -112,7 +112,7 @@ const NAV_SECTIONS = [
     ]
   },
   {
-    title: 'CREȘTERE & CARIERĂ',
+    title: 'CRESTERE & CARIERA',
     items: [
       {
         id: 'skill_roadmap',
@@ -126,8 +126,8 @@ const NAV_SECTIONS = [
       },
       {
         id: 'career_analytics',
-        label: 'Carieră & XP Funnel',
-        subtitle: 'Pâlnie Conversie & Quests',
+        label: 'Cariera & XP Funnel',
+        subtitle: 'Palnie Conversie & Quests',
         icon: Trophy,
         color: 'text-amber-500',
         activeColor: 'text-amber-400',
@@ -255,7 +255,7 @@ export default function Navbar({
           {onOpenDigestModal && (
             <button
               onClick={onOpenDigestModal}
-              title="Configurează și testează Daily Job Digest (09:00 AM)"
+              title="Configureaza si testeaza Daily Job Digest (09:00 AM)"
               className="w-full p-2.5 rounded-xl border border-amber-200/90 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950 flex items-center justify-between transition cursor-pointer shadow-2xs group"
             >
               <div className="flex items-center gap-2.5">
@@ -307,7 +307,7 @@ export default function Navbar({
               className="w-full py-2.5 px-3 rounded-xl bg-black hover:bg-neutral-800 text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-sm cursor-pointer"
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>Conectare în Cont</span>
+              <span>Conectare in Cont</span>
             </button>
           )}
 

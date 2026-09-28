@@ -116,7 +116,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
       }
     } catch (err) {
       console.error("Eroare la preluarea statisticilor pietei:", err);
-      setError("Nu s-au putut încărca datele analitice de piață. Te rugăm să reîncerci.");
+      setError("Nu s-au putut incarca datele analitice de piata. Te rugam sa reincerci.");
     } finally {
       setLoading(false);
     }
@@ -182,18 +182,18 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
   const getCompBadge = (rate) => {
     if (rate >= 60) {
       return {
-        label: 'Competiție Redusă',
+        label: 'Competitie Redusa',
         color: 'text-emerald-700 bg-emerald-100/70 border-emerald-300'
       };
     }
     if (rate >= 45) {
       return {
-        label: 'Competiție Medie',
+        label: 'Competitie Medie',
         color: 'text-amber-700 bg-amber-100/70 border-amber-300'
       };
     }
     return {
-      label: 'Competiție Mare',
+      label: 'Competitie Mare',
       color: 'text-rose-700 bg-rose-100/70 border-rose-300'
     };
   };
@@ -209,13 +209,13 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-blue-50 text-blue-700 border border-blue-200">
               <Compass className="w-3.5 h-3.5" />
-              Radar Piață IT & Ghid Oportunități 2026
+              Radar Piata IT & Ghid Oportunitati 2026
             </div>
             <h1 className="text-2xl sm:text-4xl font-black text-gray-950 tracking-tight leading-tight">
-              Unde Sunt Joburile IT & Unde Ai <span className="text-blue-600 underline decoration-blue-200 decoration-wavy">Cea Mai Mică Competiție</span>
+              Unde Sunt Joburile IT & Unde Ai <span className="text-blue-600 underline decoration-blue-200 decoration-wavy">Cea Mai Mica Competitie</span>
             </h1>
             <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-              Analiză pe baza a <span className="font-bold text-gray-950">{data?.totalJobsAnalyzed ? data.totalJobsAnalyzed.toLocaleString() : '8.800+'} de poziții IT reale</span>. Descoperă ce se cere în descrierile oficiale ale rolurilor, unde numărul de candidați este redus și companiile găsesc greu oameni, precum și salariile medii nete în România.
+              Analiza pe baza a <span className="font-bold text-gray-950">{data?.totalJobsAnalyzed ? data.totalJobsAnalyzed.toLocaleString() : '8.800+'} de pozitii IT reale</span>. Descopera ce se cere in descrierile oficiale ale rolurilor, unde numarul de candidati este redus si companiile gasesc greu oameni, precum si salariile medii nete in Romania.
             </p>
           </div>
 
@@ -225,7 +225,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
               className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-800 transition border border-gray-200 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Actualizează Datele
+              Actualizeaza Datele
             </button>
             {onNavigateToJobSearch && (
               <button
@@ -233,7 +233,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-black hover:bg-neutral-800 text-white transition shadow-sm cursor-pointer"
               >
                 <Search className="w-3.5 h-3.5 text-blue-400" />
-                Vezi Joburile Live în Căutare
+                Vezi Joburile Live in Cautare
               </button>
             )}
             {onNavigateToSkillRoadmap && (
@@ -242,7 +242,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white transition shadow-sm cursor-pointer"
               >
                 <GraduationCap className="w-3.5 h-3.5 text-purple-200" />
-                Învață cu Roadmap de 7 Zile
+                Invata cu Roadmap de 7 Zile
               </button>
             )}
           </div>
@@ -251,35 +251,35 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
         {/* METRICS STRIP */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-gray-100">
           <div className="bg-gray-50/80 border border-gray-200/70 p-4 rounded-2xl">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Poziții Analizate</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pozitii Analizate</p>
             <p className="text-xl sm:text-2xl font-black text-gray-950 mt-1">
               {data ? data.totalJobsAnalyzed?.toLocaleString() : '...'}
             </p>
             <p className="text-[11px] text-gray-500 mt-1">
-              {locationFilter === 'RO_ONLY' ? 'Doar Piața România' : locationFilter === 'RO_AND_REMOTE' ? 'România & Remote' : 'România + Europa'}
+              {locationFilter === 'RO_ONLY' ? 'Doar Piata Romania' : locationFilter === 'RO_AND_REMOTE' ? 'Romania & Remote' : 'Romania + Europa'}
             </p>
           </div>
 
           <div className="bg-emerald-50/60 border border-emerald-200/70 p-4 rounded-2xl">
-            <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Poziții Junior & Intern</p>
+            <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Pozitii Junior & Intern</p>
             <p className="text-xl sm:text-2xl font-black text-emerald-950 mt-1">
               {data ? data.totalJuniorJobs?.toLocaleString() : '...'}
             </p>
             <p className="text-[11px] text-emerald-700 mt-1">
-              {data && data.totalJobsAnalyzed > 0 ? `${Math.round((data.totalJuniorJobs * 100) / data.totalJobsAnalyzed)}% din poziții` : 'Oportunități debut'}
+              {data && data.totalJobsAnalyzed > 0 ? `${Math.round((data.totalJuniorJobs * 100) / data.totalJobsAnalyzed)}% din pozitii` : 'Oportunitati debut'}
             </p>
           </div>
 
           <div className="bg-blue-50/60 border border-blue-200/70 p-4 rounded-2xl">
-            <p className="text-xs font-semibold text-blue-800 uppercase tracking-wider">Competiție Redusă</p>
+            <p className="text-xs font-semibold text-blue-800 uppercase tracking-wider">Competitie Redusa</p>
             <p className="text-xl sm:text-2xl font-black text-blue-950 mt-1">
               {data ? `${data.overallLowCompetitionPct}%` : '...'}
             </p>
-            <p className="text-[11px] text-blue-700 mt-1">Sub 10-25 aplicanți / early apply</p>
+            <p className="text-[11px] text-blue-700 mt-1">Sub 10-25 aplicanti / early apply</p>
           </div>
 
           <div className="bg-purple-50/60 border border-purple-200/70 p-4 rounded-2xl">
-            <p className="text-xs font-semibold text-purple-800 uppercase tracking-wider">Specializări IT</p>
+            <p className="text-xs font-semibold text-purple-800 uppercase tracking-wider">Specializari IT</p>
             <p className="text-xl sm:text-2xl font-black text-purple-950 mt-1">
               {data?.domains ? data.domains.length : '13'}
             </p>
@@ -298,7 +298,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
           <div className="space-y-1.5">
             <label className="text-xs font-black uppercase text-gray-500 tracking-wider flex items-center gap-1.5">
               <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
-              1. Nivel de Experiență:
+              1. Nivel de Experienta:
             </label>
             <div className="inline-flex p-1 bg-gray-100 rounded-xl border border-gray-200 w-full overflow-x-auto">
               <button
@@ -348,7 +348,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
           <div className="space-y-1.5">
             <label className="text-xs font-black uppercase text-gray-500 tracking-wider flex items-center gap-1.5">
               <Globe className="w-3.5 h-3.5 text-emerald-600" />
-              2. Filtru Geografic (Locație):
+              2. Filtru Geografic (Locatie):
             </label>
             <div className="inline-flex p-1 bg-gray-100 rounded-xl border border-gray-200 w-full overflow-x-auto">
               <button
@@ -359,7 +359,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                     : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
                 }`}
               >
-                <span>🇷🇴 Doar România</span>
+                <span>🇷🇴 Doar Romania</span>
               </button>
               <button
                 onClick={() => setLocationFilter('RO_AND_REMOTE')}
@@ -369,7 +369,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                     : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
                 }`}
               >
-                <span>🏠 România & Remote</span>
+                <span>🏠 Romania & Remote</span>
               </button>
               <button
                 onClick={() => setLocationFilter('ALL')}
@@ -394,7 +394,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Caută domeniu sau skill (ex: python, devops, react, embedded)..."
+              placeholder="Cauta domeniu sau skill (ex: python, devops, react, embedded)..."
               className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
             />
             {searchQuery && (
@@ -416,8 +416,8 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                 className="text-xs font-bold bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
               >
                 <option value="OPPORTUNITY">Scor Oportunitate (Sweet Spot)</option>
-                <option value="LOW_COMP">Cea Mai Mică Competiție</option>
-                <option value="VOLUME">Număr Joburi (Cerere)</option>
+                <option value="LOW_COMP">Cea Mai Mica Competitie</option>
+                <option value="VOLUME">Numar Joburi (Cerere)</option>
                 <option value="NAME">Alfabetic</option>
               </select>
             </div>
@@ -449,9 +449,9 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                 </span>
                 <span className="text-xs text-emerald-700 font-bold">Cel mai bun ROI</span>
               </div>
-              <h3 className="font-black text-gray-950 text-base">Unde să aplici pentru cele mai bune șanse</h3>
+              <h3 className="font-black text-gray-950 text-base">Unde sa aplici pentru cele mai bune sanse</h3>
               <p className="text-xs text-gray-600">
-                Roluri cu cerere mare din partea angajatorilor și competiție redusă din partea altor aplicanți.
+                Roluri cu cerere mare din partea angajatorilor si competitie redusa din partea altor aplicanti.
               </p>
 
               <div className="space-y-2 pt-2">
@@ -470,7 +470,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                           {spot.title}
                         </p>
                         <p className="text-[10px] text-gray-500">
-                          {spot.levelJobCount} poziții • {spot.lowCompetitionRate}% competiție redusă
+                          {spot.levelJobCount} pozitii • {spot.lowCompetitionRate}% competitie redusa
                         </p>
                       </div>
                     </div>
@@ -489,13 +489,13 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
                   <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                  Cea Mai Mică Competiție
+                  Cea Mai Mica Competitie
                 </span>
-                <span className="text-xs text-blue-700 font-bold">Puțini candidați</span>
+                <span className="text-xs text-blue-700 font-bold">Putini candidati</span>
               </div>
-              <h3 className="font-black text-gray-950 text-base">Lipsă de candidați specializați</h3>
+              <h3 className="font-black text-gray-950 text-base">Lipsa de candidati specializati</h3>
               <p className="text-xs text-gray-600">
-                Domenii tehnice unde companiile au sub 10-25 de aplicanți per job și răspund mult mai repede.
+                Domenii tehnice unde companiile au sub 10-25 de aplicanti per job si raspund mult mai repede.
               </p>
 
               <div className="space-y-2 pt-2">
@@ -514,7 +514,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                           {spot.title}
                         </p>
                         <p className="text-[10px] text-gray-500">
-                          {spot.lowCompetitionRate}% dintre postări au competiție scăzută
+                          {spot.lowCompetitionRate}% dintre postari au competitie scazuta
                         </p>
                       </div>
                     </div>
@@ -533,13 +533,13 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
                   <Flame className="w-3.5 h-3.5 text-amber-600" />
-                  Cele Mai Căutate
+                  Cele Mai Cautate
                 </span>
                 <span className="text-xs text-amber-700 font-bold">Volum maxim</span>
               </div>
               <h3 className="font-black text-gray-950 text-base">Cele mai multe oferte deschise</h3>
               <p className="text-xs text-gray-600">
-                Domenii cu numărul brut cel mai mare de joburi active pe nivelul {levelFilter} în {locationFilter === 'RO_ONLY' ? 'România' : 'piață'}.
+                Domenii cu numarul brut cel mai mare de joburi active pe nivelul {levelFilter} in {locationFilter === 'RO_ONLY' ? 'Romania' : 'piata'}.
               </p>
 
               <div className="space-y-2 pt-2">
@@ -558,7 +558,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                           {spot.title}
                         </p>
                         <p className="text-[10px] text-gray-500">
-                          {spot.levelJobCount} poziții la nivelul {levelFilter}
+                          {spot.levelJobCount} pozitii la nivelul {levelFilter}
                         </p>
                       </div>
                     </div>
@@ -581,10 +581,10 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
             <div>
               <h3 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-blue-600" />
-                Frecvența Tehnologiilor în Descrierile Reale de Joburi ({levelFilter} • {locationFilter === 'RO_ONLY' ? 'România' : 'Extins'})
+                Frecventa Tehnologiilor in Descrierile Reale de Joburi ({levelFilter} • {locationFilter === 'RO_ONLY' ? 'Romania' : 'Extins'})
               </h3>
               <p className="text-xs text-gray-500 mt-0.5">
-                Extrase direct din cerințele oficiale ale anunțurilor de recrutare din România (fără estimări generice sau etichete sintetice).
+                Extrase direct din cerintele oficiale ale anunturilor de recrutare din Romania (fara estimari generice sau etichete sintetice).
               </p>
             </div>
             <span className="text-[11px] font-bold text-gray-400">
@@ -647,7 +647,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                       style={{ width: `${Math.min(100, sk.percentage * 2)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-gray-400 mt-1">{sk.count} poziții cerute</span>
+                  <span className="text-[10px] text-gray-400 mt-1">{sk.count} pozitii cerute</span>
                 </div>
             ))}
           </div>
@@ -660,15 +660,15 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
           <div>
             <h2 className="text-lg sm:text-xl font-black text-gray-950 flex items-center gap-2">
               <Code className="w-5 h-5 text-blue-600" />
-              Specializări Tehnice în Piață ({filteredDomains.length})
+              Specializari Tehnice in Piata ({filteredDomains.length})
             </h2>
             <p className="text-xs text-gray-500">
-              Apasă pe orice domeniu pentru a vedea cerințele complete, joburile reale din România și estimările salariale.
+              Apasa pe orice domeniu pentru a vedea cerintele complete, joburile reale din Romania si estimarile salariale.
             </p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-xl border border-gray-200">
-              {locationFilter === 'RO_ONLY' ? '🇷🇴 Doar România' : locationFilter === 'RO_AND_REMOTE' ? '🏠 România & Remote' : '🌍 Toate'}
+              {locationFilter === 'RO_ONLY' ? '🇷🇴 Doar Romania' : locationFilter === 'RO_AND_REMOTE' ? '🏠 Romania & Remote' : '🌍 Toate'}
             </span>
             <span className="text-xs font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-xl border border-gray-200">
               Nivel: {levelFilter}
@@ -679,18 +679,18 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
         {loading ? (
           <div className="py-20 text-center bg-white border border-gray-200 rounded-3xl">
             <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
-            <p className="text-sm font-bold text-gray-800">Se analizează piața IT și descrierile de joburi...</p>
-            <p className="text-xs text-gray-500 mt-1">Calculare statistici de competiție, cerere și salarii.</p>
+            <p className="text-sm font-bold text-gray-800">Se analizeaza piata IT si descrierile de joburi...</p>
+            <p className="text-xs text-gray-500 mt-1">Calculare statistici de competitie, cerere si salarii.</p>
           </div>
         ) : filteredDomains.length === 0 ? (
           <div className="py-16 text-center bg-white border border-gray-200 rounded-3xl p-6">
             <Info className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm font-bold text-gray-800">Nu a fost găsit niciun domeniu conform filtrelor selectate.</p>
+            <p className="text-sm font-bold text-gray-800">Nu a fost gasit niciun domeniu conform filtrelor selectate.</p>
             <button
               onClick={() => { setSearchQuery(''); setLevelFilter('JUNIOR'); setLocationFilter('RO_ONLY'); setActiveOnly(false); }}
               className="mt-3 px-4 py-2 bg-black text-white text-xs font-bold rounded-xl cursor-pointer"
             >
-              Resetează Filtrele
+              Reseteaza Filtrele
             </button>
           </div>
         ) : (
@@ -732,7 +732,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase">Competiție</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase">Competitie</p>
                         <p className={`text-[11px] font-black mt-1 px-1.5 py-0.5 rounded-md inline-block border ${compInfo.color}`}>
                           {compInfo.label}
                         </p>
@@ -756,7 +756,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                     {/* CV SKILL MATCH INDICATOR (IF USER HAS CV) */}
                     {domain.userMatchScore > 0 ? (
                       <div className="flex items-center justify-between text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-xl">
-                        <span>Potrivire cu CV-ul tău:</span>
+                        <span>Potrivire cu CV-ul tau:</span>
                         <span className="font-black px-1.5 py-0.2 rounded-md bg-emerald-600 text-white text-[10px]">
                           {domain.userMatchScore}% Match
                         </span>
@@ -820,7 +820,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
         )}
       </section>
 
-      {/* DETAIL MODAL ("CE TREBUIE SĂ ȘTII PENTRU ACEST ROL") */}
+      {/* DETAIL MODAL ("CE TREBUIE SA STII PENTRU ACEST ROL") */}
       {selectedDomain && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div 
@@ -876,7 +876,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                 }`}
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                Ce Se Cere în Descrierile Reale
+                Ce Se Cere in Descrierile Reale
               </button>
               <button
                 onClick={() => setModalTab('comparison')}
@@ -898,7 +898,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                 }`}
               >
                 <Compass className="w-4 h-4 text-purple-600" />
-                Ghid de Pregătire & Roadmap
+                Ghid de Pregatire & Roadmap
               </button>
               <button
                 onClick={() => setModalTab('sample_jobs')}
@@ -926,7 +926,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                       <Zap className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
                       <div>
                         <span className="font-black uppercase tracking-wider text-[11px] text-indigo-800 block">
-                          Formatul Tipic al Interviului Tehnic în România
+                          Formatul Tipic al Interviului Tehnic in Romania
                         </span>
                         <p className="text-xs text-indigo-950 mt-1 leading-relaxed">
                           {selectedDomain.interviewFormat}
@@ -941,7 +941,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
                           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                          Analiză Potrivire cu CV-ul Tău Salvat
+                          Analiza Potrivire cu CV-ul Tau Salvat
                         </span>
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white">
                           {selectedDomain.userMatchScore}% Match
@@ -949,11 +949,11 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                       </div>
                       <div className="text-xs text-emerald-900 space-y-1">
                         <p>
-                          ✓ Competențe identificate în CV-ul tău: <strong className="text-emerald-950">{selectedDomain.userMatchingSkills?.join(', ') || 'Niciunul'}</strong>
+                          ✓ Competente identificate in CV-ul tau: <strong className="text-emerald-950">{selectedDomain.userMatchingSkills?.join(', ') || 'Niciunul'}</strong>
                         </p>
                         {selectedDomain.userMissingSkills?.length > 0 && (
                           <p className="text-gray-700">
-                            ⚡ Ce îți lipsește pentru a maximiza rata de selecție ATS: <strong className="text-rose-600">{selectedDomain.userMissingSkills.join(', ')}</strong>
+                            ⚡ Ce iti lipseste pentru a maximiza rata de selectie ATS: <strong className="text-rose-600">{selectedDomain.userMissingSkills.join(', ')}</strong>
                           </p>
                         )}
                       </div>
@@ -965,7 +965,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <h4 className="text-xs font-black uppercase text-gray-500 tracking-wider flex items-center gap-2">
                         <BarChart3 className="w-4 h-4 text-blue-600" />
-                        Frecvența Tehnologiilor în Descrierile Reale ({levelFilter} • {locationFilter === 'RO_ONLY' ? 'România' : 'Extins'})
+                        Frecventa Tehnologiilor in Descrierile Reale ({levelFilter} • {locationFilter === 'RO_ONLY' ? 'Romania' : 'Extins'})
                       </h4>
                       <span className="text-[11px] text-gray-400 font-semibold">
                         {selectedDomain.topSkills?.length || 0} tehnologii identificate
@@ -1020,7 +1020,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                             <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden mt-2.5">
                               <div className="bg-blue-600 h-full rounded-full" style={{ width: `${Math.min(100, sk.percentage * 2)}%` }} />
                             </div>
-                            <span className="text-[10px] text-gray-400 mt-1">{sk.count} cerințe în descrieri</span>
+                            <span className="text-[10px] text-gray-400 mt-1">{sk.count} cerinte in descrieri</span>
                           </div>
                       ))}
                     </div>
@@ -1056,9 +1056,9 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">
                       Nivel Junior / Intern (0-2 ani)
                     </span>
-                    <h4 className="font-black text-gray-950 text-sm">Focus pe Bază & Capacitate de Învățare</h4>
+                    <h4 className="font-black text-gray-950 text-sm">Focus pe Baza & Capacitate de Invatare</h4>
                     <p className="text-xs text-gray-600 leading-relaxed">
-                      Companiile nu caută un expert care știe totul, ci o persoană pasionată cu fundamente solide și dorință de creștere.
+                      Companiile nu cauta un expert care stie totul, ci o persoana pasionata cu fundamente solide si dorinta de crestere.
                     </p>
                     <ul className="space-y-2 pt-2 border-t border-gray-100">
                       {selectedDomain.seniorityComparison?.juniorFocus?.map((point, i) => (
@@ -1075,9 +1075,9 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-800">
                       Nivel Mid-Level (2-4 ani)
                     </span>
-                    <h4 className="font-black text-gray-950 text-sm">Autonomie & Livrare Funcționalități</h4>
+                    <h4 className="font-black text-gray-950 text-sm">Autonomie & Livrare Functionalitati</h4>
                     <p className="text-xs text-gray-600 leading-relaxed">
-                      Se cere capacitatea de a prelua un task de la cap la coadă fără îndrumare constantă, scriind cod curat și testat.
+                      Se cere capacitatea de a prelua un task de la cap la coada fara indrumare constanta, scriind cod curat si testat.
                     </p>
                     <ul className="space-y-2 pt-2 border-t border-gray-100">
                       {selectedDomain.seniorityComparison?.midFocus?.map((point, i) => (
@@ -1094,9 +1094,9 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800">
                       Nivel Senior & Lead (5+ ani)
                     </span>
-                    <h4 className="font-black text-gray-950 text-sm">Arhitectură, Scalabilitate & Mentoring</h4>
+                    <h4 className="font-black text-gray-950 text-sm">Arhitectura, Scalabilitate & Mentoring</h4>
                     <p className="text-xs text-gray-600 leading-relaxed">
-                      Decizii tehnice pe termen lung, rezolvare de probleme de performanță la scară mare și ghidare de echipă.
+                      Decizii tehnice pe termen lung, rezolvare de probleme de performanta la scara mare si ghidare de echipa.
                     </p>
                     <ul className="space-y-2 pt-2 border-t border-gray-100">
                       {selectedDomain.seniorityComparison?.seniorFocus?.map((point, i) => (
@@ -1114,7 +1114,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
               {modalTab === 'roadmap' && (
                 <div className="space-y-4">
                   <div className="bg-blue-50 border border-blue-200 p-4 rounded-2xl text-xs text-blue-800 leading-relaxed">
-                    💡 <strong>Plan Strategic Recomandat:</strong> Urmează aceste 4 etape structurate pentru a trece cu succes de selecția ATS și de interviul tehnic pentru roluri de {selectedDomain.title}.
+                    💡 <strong>Plan Strategic Recomandat:</strong> Urmeaza aceste 4 etape structurate pentru a trece cu succes de selectia ATS si de interviul tehnic pentru roluri de {selectedDomain.title}.
                   </div>
 
                   <div className="space-y-3">
@@ -1155,10 +1155,10 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                     <div>
                       <h4 className="text-xs font-black text-gray-950 uppercase tracking-wider flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-blue-600" />
-                        Companii Reale Verificate ({locationFilter === 'RO_ONLY' ? 'Piața România' : locationFilter === 'RO_AND_REMOTE' ? 'România & Remote' : 'Toate'})
+                        Companii Reale Verificate ({locationFilter === 'RO_ONLY' ? 'Piata Romania' : locationFilter === 'RO_AND_REMOTE' ? 'Romania & Remote' : 'Toate'})
                       </h4>
                       <p className="text-[11px] text-gray-500 mt-0.5">
-                        Fiecare poziție de mai jos provine de la o companie diferită pentru a asigura varietate (fără duplicate).
+                        Fiecare pozitie de mai jos provine de la o companie diferita pentru a asigura varietate (fara duplicate).
                       </p>
                     </div>
 
@@ -1171,7 +1171,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                         className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-bold transition shadow-xs shrink-0 cursor-pointer"
                       >
                         <Search className="w-3.5 h-3.5 text-blue-400" />
-                        <span>Caută în toate joburile deschise</span>
+                        <span>Cauta in toate joburile deschise</span>
                       </button>
                     )}
                   </div>
@@ -1209,7 +1209,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                               rel="noopener noreferrer"
                               className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-bold transition shadow-xs cursor-pointer"
                             >
-                              <span>Vezi Anunțul / Aplică Direct</span>
+                              <span>Vezi Anuntul / Aplica Direct</span>
                               <ExternalLink className="w-3 h-3 text-blue-400" />
                             </a>
                           )}
@@ -1219,13 +1219,13 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                   ) : (
                     <div className="p-8 text-center bg-white border border-gray-200 rounded-2xl space-y-3">
                       <p className="text-xs text-gray-600">
-                        Nu au fost identificate exemple directe pentru filtrul <strong className="text-gray-900">{locationFilter === 'RO_ONLY' ? 'Doar România' : locationFilter}</strong> la nivelul <strong className="text-gray-900">{levelFilter}</strong>.
+                        Nu au fost identificate exemple directe pentru filtrul <strong className="text-gray-900">{locationFilter === 'RO_ONLY' ? 'Doar Romania' : locationFilter}</strong> la nivelul <strong className="text-gray-900">{levelFilter}</strong>.
                       </p>
                       <button
                         onClick={() => setLocationFilter('RO_AND_REMOTE')}
                         className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition cursor-pointer"
                       >
-                        Comută pe România & Remote
+                        Comuta pe Romania & Remote
                       </button>
                     </div>
                   )}
@@ -1238,13 +1238,13 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
             {/* MODAL FOOTER */}
             <div className="p-4 border-t border-gray-200 bg-white flex items-center justify-between shrink-0">
               <span className="text-xs text-gray-500">
-                Piață: <strong className="text-gray-900">{selectedDomain.totalJobs} joburi</strong> ({selectedDomain.juniorJobs} Junior, {selectedDomain.midJobs} Mid, {selectedDomain.seniorJobs} Senior)
+                Piata: <strong className="text-gray-900">{selectedDomain.totalJobs} joburi</strong> ({selectedDomain.juniorJobs} Junior, {selectedDomain.midJobs} Mid, {selectedDomain.seniorJobs} Senior)
               </span>
               <button
                 onClick={() => setSelectedDomain(null)}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition cursor-pointer"
               >
-                Închide
+                Inchide
               </button>
             </div>
           </div>

@@ -27,12 +27,12 @@ const MONTH_NAMES_RO = [
 
 const WEEKDAY_NAMES_RO = [
   { short: 'Lun', full: 'Luni' },
-  { short: 'Mar', full: 'Marți' },
+  { short: 'Mar', full: 'Marti' },
   { short: 'Mie', full: 'Miercuri' },
   { short: 'Joi', full: 'Joi' },
   { short: 'Vin', full: 'Vineri' },
-  { short: 'Sâm', full: 'Sâmbătă' },
-  { short: 'Dum', full: 'Duminică' }
+  { short: 'Sam', full: 'Sambata' },
+  { short: 'Dum', full: 'Duminica' }
 ];
 
 export default function CalendarView({
@@ -125,8 +125,8 @@ export default function CalendarView({
     const month = currentDate.getMonth();
 
     const firstDayOfMonth = new Date(year, month, 1);
-    // JS getDay(): 0 = Duminică, 1 = Luni, etc.
-    // În România săptămâna începe Luni: Luni = 0, Duminică = 6
+    // JS getDay(): 0 = Duminica, 1 = Luni, etc.
+    // In Romania saptamana incepe Luni: Luni = 0, Duminica = 6
     const firstDayOffset = (firstDayOfMonth.getDay() + 6) % 7;
 
     const daysInCurrentMonth = new Date(year, month + 1, 0).getDate();
@@ -134,7 +134,7 @@ export default function CalendarView({
 
     const cells = [];
 
-    // Zile din luna anterioară (fade)
+    // Zile din luna anterioara (fade)
     for (let i = firstDayOffset - 1; i >= 0; i--) {
       const dNum = daysInPrevMonth - i;
       const prevMonth = month === 0 ? 11 : month - 1;
@@ -150,7 +150,7 @@ export default function CalendarView({
       });
     }
 
-    // Zile din luna curentă
+    // Zile din luna curenta
     for (let d = 1; d <= daysInCurrentMonth; d++) {
       const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       cells.push({
@@ -163,7 +163,7 @@ export default function CalendarView({
       });
     }
 
-    // Zile din luna următoare pentru a completa săptămânile (multiplu de 7, max 42)
+    // Zile din luna urmatoare pentru a completa saptamanile (multiplu de 7, max 42)
     const remaining = (7 - (cells.length % 7)) % 7;
     for (let nextD = 1; nextD <= remaining; nextD++) {
       const nextMonth = month === 11 ? 0 : month + 1;
@@ -226,7 +226,7 @@ export default function CalendarView({
 
   // Formatare estetica a datei selectate
   const formatSelectedDateHuman = (dateStr) => {
-    if (!dateStr) return 'Nicio zi selectată';
+    if (!dateStr) return 'Nicio zi selectata';
     try {
       const [y, m, d] = dateStr.split('-').map(Number);
       const dt = new Date(y, m - 1, d);
@@ -257,11 +257,11 @@ export default function CalendarView({
                 {MONTH_NAMES_RO[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h3>
               <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                {totalMonthApps} aplicări în lună
+                {totalMonthApps} aplicari in luna
               </span>
             </div>
             <p className="text-xs text-gray-500 font-semibold mt-0.5">
-              Click pe orice zi pentru a vizualiza sau adăuga aplicări
+              Click pe orice zi pentru a vizualiza sau adauga aplicari
             </p>
           </div>
         </div>
@@ -290,7 +290,7 @@ export default function CalendarView({
             <button
               onClick={handlePrevMonth}
               className="p-1.5 rounded-lg hover:bg-white text-gray-600 hover:text-black transition cursor-pointer"
-              title="Luna Anterioară"
+              title="Luna Anterioara"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -299,12 +299,12 @@ export default function CalendarView({
               className="px-2.5 py-1 text-xs font-bold rounded-lg hover:bg-white text-gray-800 transition cursor-pointer"
               title="Mergi la ziua de azi"
             >
-              Astăzi
+              Astazi
             </button>
             <button
               onClick={handleNextMonth}
               className="p-1.5 rounded-lg hover:bg-white text-gray-600 hover:text-black transition cursor-pointer"
-              title="Luna Următoare"
+              title="Luna Urmatoare"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -422,7 +422,7 @@ export default function CalendarView({
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 block">
-                  Agendă & Aplicări
+                  Agenda & Aplicari
                 </span>
                 <h4 className="text-sm sm:text-base font-black text-gray-950 mt-0.5">
                   {formatSelectedDateHuman(selectedDateStr)}
@@ -449,7 +449,7 @@ export default function CalendarView({
                         <div 
                           onClick={() => onOpenJobModal(app)} 
                           className="cursor-pointer flex-1 min-w-0"
-                          title="Deschide fișa completă a jobului"
+                          title="Deschide fisa completa a jobului"
                         >
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
@@ -502,7 +502,7 @@ export default function CalendarView({
                             type="button"
                             onClick={() => onOpenJobModal(app)}
                             className="p-1 rounded-lg hover:bg-indigo-50 text-indigo-700 border border-indigo-200 transition cursor-pointer"
-                            title="Deschide Fișa Jobului"
+                            title="Deschide Fisa Jobului"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
@@ -512,7 +512,7 @@ export default function CalendarView({
                               type="button"
                               onClick={() => onOpenCoverLetter(app.id)}
                               className="p-1 rounded-lg hover:bg-blue-50 text-blue-700 border border-blue-200 transition cursor-pointer"
-                              title="Generează Scrisoare de Intenție AI"
+                              title="Genereaza Scrisoare de Intentie AI"
                             >
                               <FileSignature className="w-3.5 h-3.5" />
                             </button>
@@ -530,12 +530,12 @@ export default function CalendarView({
                           <button
                             type="button"
                             onClick={() => {
-                              if (window.confirm(`Sigur dorești să ștergi aplicarea la ${app.companyName}?`)) {
+                              if (window.confirm(`Sigur doresti sa stergi aplicarea la ${app.companyName}?`)) {
                                 onDeleteApplication && onDeleteApplication(app.id);
                               }
                             }}
                             className="p-1 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition cursor-pointer"
-                            title="Șterge aplicarea"
+                            title="Sterge aplicarea"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -549,16 +549,16 @@ export default function CalendarView({
             ) : (
               <div className="py-8 text-center text-gray-400 space-y-2 border border-dashed border-gray-200 rounded-xl p-4">
                 <CalendarDays className="w-8 h-8 text-gray-300 mx-auto" />
-                <p className="text-xs font-semibold text-gray-600">Nicio aplicare în această zi</p>
+                <p className="text-xs font-semibold text-gray-600">Nicio aplicare in aceasta zi</p>
                 <p className="text-[11px] text-gray-400">
-                  Selectează altă zi cu marcaje sau adaugă o dată joburilor salvate mai jos.
+                  Selecteaza alta zi cu marcaje sau adauga o data joburilor salvate mai jos.
                 </p>
               </div>
             )}
 
           </div>
 
-          {/* ACTIVE INTERVIEWS HIGHLIGHT (DACĂ EXISTĂ) */}
+          {/* ACTIVE INTERVIEWS HIGHLIGHT (DACA EXISTA) */}
           {interviewApps.length > 0 && (
             <div className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-4 space-y-2.5 shadow-2xs">
               <div className="flex items-center gap-2 text-amber-900">
@@ -600,7 +600,7 @@ export default function CalendarView({
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-gray-500 group-hover:text-blue-600 transition" />
                   <span className="text-xs font-extrabold text-gray-800 group-hover:text-blue-600 transition">
-                    Joburi fără dată specificată ({unscheduledApps.length})
+                    Joburi fara data specificata ({unscheduledApps.length})
                   </span>
                 </div>
                 <span className="text-xs font-bold text-gray-400 group-hover:text-gray-700">
@@ -611,7 +611,7 @@ export default function CalendarView({
               {showUnscheduled && (
                 <div className="space-y-2 pt-2 border-t border-gray-100 max-h-[260px] overflow-y-auto pr-1">
                   <p className="text-[11px] text-gray-500 font-medium">
-                    Setează o dată pentru a le poziționa în calendar:
+                    Seteaza o data pentru a le pozitiona in calendar:
                   </p>
                   {unscheduledApps.map((app) => (
                     <div key={app.id} className="p-2.5 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1.5">
@@ -638,7 +638,7 @@ export default function CalendarView({
                           }}
                           className="px-2 py-1 bg-black hover:bg-neutral-800 text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
                         >
-                          {savingDateAppId === app.id ? '...' : 'Programează'}
+                          {savingDateAppId === app.id ? '...' : 'Programeaza'}
                         </button>
                       </div>
                     </div>

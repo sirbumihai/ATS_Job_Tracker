@@ -40,25 +40,25 @@ export default function GithubReadmeStudio({ currentUser }) {
     {
       id: 'BACKEND_SYSTEMS',
       title: 'Backend & Systems Engineer',
-      desc: 'Focus pe Java 21, Spring Boot, baze de date relaționale, microservicii și latență redusă.',
+      desc: 'Focus pe Java 21, Spring Boot, baze de date relationale, microservicii si latenta redusa.',
       badge: 'Recomandat'
     },
     {
       id: 'FULLSTACK_SYSTEMS',
       title: 'Full-Stack & Cloud Engineer',
-      desc: 'Ecosistem complet: Spring Boot + React, Docker, containere și livrare end-to-end.',
+      desc: 'Ecosistem complet: Spring Boot + React, Docker, containere si livrare end-to-end.',
       badge: 'Popular'
     },
     {
       id: 'MINIMALIST_LEAD',
       title: 'Minimalist Senior / Tech Lead',
-      desc: 'Zero decorațiuni inutile, stil curat Unix, cod și arhitectură pe primul loc.',
+      desc: 'Zero decoratiuni inutile, stil curat Unix, cod si arhitectura pe primul loc.',
       badge: 'Clean Code'
     },
     {
       id: 'OPEN_SOURCE',
       title: 'Open Source & Product Builder',
-      desc: 'Orientat pe proiecte publice, învățare activă, documentație impecabilă și metrici.',
+      desc: 'Orientat pe proiecte publice, invatare activa, documentatie impecabila si metrici.',
       badge: 'Community'
     }
   ];
@@ -107,7 +107,7 @@ export default function GithubReadmeStudio({ currentUser }) {
   const [loadingCvList, setLoadingCvList] = useState(false);
 
   // Form Fields
-  const [candidateName, setCandidateName] = useState(currentUser?.fullName || 'Mihai Sîrbu');
+  const [candidateName, setCandidateName] = useState(currentUser?.fullName || 'Mihai Sirbu');
   const [githubUsername, setGithubUsername] = useState('sarbumihai');
   const [archetype, setArchetype] = useState('BACKEND_SYSTEMS');
   const [headline, setHeadline] = useState('Software Engineer | Java 21, Spring Boot & Backend Systems');
@@ -160,11 +160,11 @@ export default function GithubReadmeStudio({ currentUser }) {
   const [generating, setGenerating] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [antiAiTips, setAntiAiTips] = useState([
-    'Design Senior 100% Non-AI: Fără emoticoane (fără rachete, unelte, fețe zâmbitoare sau degete indicatoare).',
-    'Structură inginerească clară: Focus activ, stack tehnic grupat pe categorii, proiecte cu metrici concrete.',
-    'Zero clișee corporatiste ("passionate developer", "crafting seamless experiences", "transformative synergy").',
+    'Design Senior 100% Non-AI: Fara emoticoane (fara rachete, unelte, fete zambitoare sau degete indicatoare).',
+    'Structura inginereasca clara: Focus activ, stack tehnic grupat pe categorii, proiecte cu metrici concrete.',
+    'Zero clisee corporatiste ("passionate developer", "crafting seamless experiences", "transformative synergy").',
     'Insigne Shields.io flat-square discrete cu logo-uri oficiale de brand.',
-    'Metrici tehnice măsurabile (latență P99, cereri concurente, indici de baze de date, acoperire de teste).'
+    'Metrici tehnice masurabile (latenta P99, cereri concurente, indici de baze de date, acoperire de teste).'
   ]);
 
   // Load CV profiles from backend
@@ -469,7 +469,7 @@ export default function GithubReadmeStudio({ currentUser }) {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-3xl">
-            Creează un README.md autentic, sobru și non-AI pentru profilul tău de GitHub. Fără emoticoane juvenile sau clișee corporatiste, axat pe arhitectură reală, metrici măsurabile și stack tehnic structurat pe domenii.
+            Creeaza un README.md autentic, sobru si non-AI pentru profilul tau de GitHub. Fara emoticoane juvenile sau clisee corporatiste, axat pe arhitectura reala, metrici masurabile si stack tehnic structurat pe domenii.
           </p>
         </div>
 
@@ -497,7 +497,7 @@ export default function GithubReadmeStudio({ currentUser }) {
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-blue-600" />
-                  1. Sursă Date Profil (CV)
+                  1. Sursa Date Profil (CV)
                 </label>
                 {cvList.length > 0 && (
                   <button
@@ -508,14 +508,14 @@ export default function GithubReadmeStudio({ currentUser }) {
                     }}
                     className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
                   >
-                    <RefreshCw className="w-3 h-3" /> Resincronizează
+                    <RefreshCw className="w-3 h-3" /> Resincronizeaza
                   </button>
                 )}
               </div>
 
               {loadingCvList ? (
                 <div className="text-xs text-gray-400 py-2 flex items-center gap-2">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Se încarcă CV-urile...
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Se incarca CV-urile...
                 </div>
               ) : cvList.length > 0 ? (
                 <select
@@ -535,7 +535,7 @@ export default function GithubReadmeStudio({ currentUser }) {
                 </select>
               ) : (
                 <p className="text-xs text-gray-500 bg-gray-50 p-2.5 rounded-xl border">
-                  Nu ai un CV salvat în aplicație. Se folosesc datele implicite.
+                  Nu ai un CV salvat in aplicatie. Se folosesc datele implicite.
                 </p>
               )}
             </div>
@@ -629,7 +629,7 @@ export default function GithubReadmeStudio({ currentUser }) {
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-gray-600 mb-1 block">Bio / Descriere Concisă (Non-AI)</label>
+                <label className="text-[11px] font-semibold text-gray-600 mb-1 block">Bio / Descriere Concisa (Non-AI)</label>
                 <textarea
                   rows={3}
                   value={bioText}
@@ -719,7 +719,7 @@ export default function GithubReadmeStudio({ currentUser }) {
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-gray-600 mb-1 block">Temă Carduri GitHub</label>
+                <label className="text-[11px] font-semibold text-gray-600 mb-1 block">Tema Carduri GitHub</label>
                 <select
                   value={statsTheme}
                   onChange={(e) => setStatsTheme(e.target.value)}
@@ -749,12 +749,12 @@ export default function GithubReadmeStudio({ currentUser }) {
               {generating ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
-                  <span>Se analizează și lustruiește README-ul non-AI...</span>
+                  <span>Se analizeaza si lustruieste README-ul non-AI...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>Lustruiește cu Filtru Non-AI</span>
+                  <span>Lustruieste cu Filtru Non-AI</span>
                 </>
               )}
             </button>
@@ -838,10 +838,10 @@ export default function GithubReadmeStudio({ currentUser }) {
                 type="button"
                 onClick={handleCopyMarkdown}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200 flex items-center gap-1.5 transition cursor-pointer"
-                title="Copiază tot codul Markdown în clipboard"
+                title="Copiaza tot codul Markdown in clipboard"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Copiat!' : 'Copiază Markdown'}</span>
+                <span>{copied ? 'Copiat!' : 'Copiaza Markdown'}</span>
               </button>
 
               <button
@@ -850,7 +850,7 @@ export default function GithubReadmeStudio({ currentUser }) {
                 className="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1.5 transition cursor-pointer shadow-sm hover:shadow"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Descarcă README.md</span>
+                <span>Descarca README.md</span>
               </button>
             </div>
           </div>
@@ -961,35 +961,35 @@ export default function GithubReadmeStudio({ currentUser }) {
             </div>
 
             <p className="text-xs text-gray-600 leading-relaxed">
-              GitHub oferă o funcționalitate specială: dacă creezi un repository public cu <strong>același nume exact ca username-ul tău</strong>, conținutul fișierului <code>README.md</code> va fi afișat automat pe pagina ta de profil!
+              GitHub ofera o functionalitate speciala: daca creezi un repository public cu <strong>acelasi nume exact ca username-ul tau</strong>, continutul fisierului <code>README.md</code> va fi afisat automat pe pagina ta de profil!
             </p>
 
             <div className="space-y-2.5 text-xs text-gray-800">
               <div className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-200">
                 <span className="w-5 h-5 rounded-full bg-black text-white font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">1</span>
                 <div>
-                  <strong>Creează un repository nou pe GitHub:</strong> Mergi la <a href="https://github.com/new" target="_blank" rel="noreferrer" className="text-blue-600 underline font-bold">github.com/new</a>.
+                  <strong>Creeaza un repository nou pe GitHub:</strong> Mergi la <a href="https://github.com/new" target="_blank" rel="noreferrer" className="text-blue-600 underline font-bold">github.com/new</a>.
                 </div>
               </div>
 
               <div className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-200">
                 <span className="w-5 h-5 rounded-full bg-black text-white font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">2</span>
                 <div>
-                  <strong>Numește repository-ul:</strong> Pune exact username-ul tău (ex: <code>{githubUsername.trim() || 'sarbumihai'}</code>). GitHub va afișa un mesaj cu o cutie verde: <em>"You found a secret!"</em>.
+                  <strong>Numeste repository-ul:</strong> Pune exact username-ul tau (ex: <code>{githubUsername.trim() || 'sarbumihai'}</code>). GitHub va afisa un mesaj cu o cutie verde: <em>"You found a secret!"</em>.
                 </div>
               </div>
 
               <div className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-200">
                 <span className="w-5 h-5 rounded-full bg-black text-white font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">3</span>
                 <div>
-                  <strong>Bifează "Public" și "Add a README file":</strong> Creează repository-ul.
+                  <strong>Bifeaza "Public" si "Add a README file":</strong> Creeaza repository-ul.
                 </div>
               </div>
 
               <div className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-200">
                 <span className="w-5 h-5 rounded-full bg-black text-white font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">4</span>
                 <div>
-                  <strong>Lipește codul generat:</strong> Apasă butonul <strong>„Copiază Markdown”</strong> din acest Studio, deschide <code>README.md</code> în GitHub, lipește conținutul și apasă <strong>Commit changes</strong>!
+                  <strong>Lipeste codul generat:</strong> Apasa butonul <strong>„Copiaza Markdown”</strong> din acest Studio, deschide <code>README.md</code> in GitHub, lipeste continutul si apasa <strong>Commit changes</strong>!
                 </div>
               </div>
             </div>
@@ -999,7 +999,7 @@ export default function GithubReadmeStudio({ currentUser }) {
                 onClick={() => setShowGuideModal(false)}
                 className="px-5 py-2.5 bg-black hover:bg-neutral-800 text-white font-bold text-xs rounded-xl cursor-pointer"
               >
-                Am înțeles, mulțumesc!
+                Am inteles, multumesc!
               </button>
             </div>
           </div>

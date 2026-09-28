@@ -49,7 +49,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
   const [targetDomain, setTargetDomain] = useState('BACKEND');
   const [profileMode, setProfileMode] = useState('all_star'); // 'current' | 'all_star'
   
-  // Modale & Interacțiuni
+  // Modale & Interactiuni
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [addSkillModalOpen, setAddSkillModalOpen] = useState(false);
   const [newSkillText, setNewSkillText] = useState('');
@@ -70,12 +70,12 @@ export default function LinkedInOptimizerPage({ currentUser }) {
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
 
-  // Încărcare inițială
+  // Incarcare initiala
   useEffect(() => {
     loadAllStarProfile();
     fetchUserCvs();
     
-    // Încarcă starea checklist-ului din localStorage
+    // Incarca starea checklist-ului din localStorage
     try {
       const savedSteps = localStorage.getItem('linkedin_action_steps');
       if (savedSteps) setCompletedSteps(JSON.parse(savedSteps));
@@ -99,7 +99,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
         }
       }
     } catch (err) {
-      console.error('Eroare la preluarea CV-urilor din bibliotecă:', err);
+      console.error('Eroare la preluarea CV-urilor din biblioteca:', err);
     }
   };
 
@@ -124,7 +124,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
         triggerOptimization(data);
       }
     } catch (err) {
-      console.error('Eroare la încărcarea profilului demonstrativ:', err);
+      console.error('Eroare la incarcarea profilului demonstrativ:', err);
     } finally {
       setLoading(false);
     }
@@ -143,7 +143,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
         loadDemoProfile();
       }
     } catch (err) {
-      console.error('Eroare la încărcarea profilului All-Star:', err);
+      console.error('Eroare la incarcarea profilului All-Star:', err);
       loadDemoProfile();
     } finally {
       setLoading(false);
@@ -152,7 +152,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
 
   const handleSyncWithSelectedCv = async () => {
     if (!selectedCvId && cvList.length === 0) {
-      alert('Nu ai niciun CV în bibliotecă pentru a sincroniza.');
+      alert('Nu ai niciun CV in biblioteca pentru a sincroniza.');
       return;
     }
     const targetCv = cvList.find(c => c.id === selectedCvId) || cvList[0];
@@ -183,7 +183,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
       }
     } catch (err) {
       console.error('Eroare la sincronizarea cu CV-ul:', err);
-      alert('A apărut o eroare la sincronizare.');
+      alert('A aparut o eroare la sincronizare.');
     } finally {
       setSyncingCv(false);
     }
@@ -191,7 +191,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
 
   const handleFileUpload = async (file) => {
     if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
-      alert('Te rugăm să încarci un fișier PDF exportat din LinkedIn.');
+      alert('Te rugam sa incarci un fisier PDF exportat din LinkedIn.');
       return;
     }
 
@@ -210,11 +210,11 @@ export default function LinkedInOptimizerPage({ currentUser }) {
         setProfile(parsed);
         triggerOptimization(parsed);
       } else {
-        alert('Nu am putut citi fișierul PDF. Asigură-te că este un export PDF valid LinkedIn.');
+        alert('Nu am putut citi fisierul PDF. Asigura-te ca este un export PDF valid LinkedIn.');
       }
     } catch (err) {
       console.error('Eroare la upload PDF:', err);
-      alert('A apărut o eroare la încărcarea fișierului PDF.');
+      alert('A aparut o eroare la incarcarea fisierului PDF.');
     } finally {
       setLoading(false);
     }
@@ -363,7 +363,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 Profil LinkedIn <span className="text-[#0a66c2] underline decoration-blue-200 decoration-wavy">Magnet pentru Recruiteri</span> & Cross-Sync CV
               </h1>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                Combină datele oficiale din CV-ul tău (SIMAVI, ATS Job Tracker, 3D Medical Image Segmentation) cu algoritmul LinkedIn Recruiter 2026 pentru a genera un profil de autoritate maximă (100/100 All-Star).
+                Combina datele oficiale din CV-ul tau (SIMAVI, ATS Job Tracker, 3D Medical Image Segmentation) cu algoritmul LinkedIn Recruiter 2026 pentru a genera un profil de autoritate maxima (100/100 All-Star).
               </p>
             </div>
 
@@ -401,7 +401,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#0a66c2] hover:bg-[#004182] text-white transition shadow-sm cursor-pointer disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${optimizing ? 'animate-spin' : ''}`} />
-                Re-evaluează Scorul ATS
+                Re-evalueaza Scorul ATS
               </button>
 
             </div>
@@ -415,10 +415,10 @@ export default function LinkedInOptimizerPage({ currentUser }) {
               </div>
               <div>
                 <h4 className="text-xs font-black uppercase text-blue-950 tracking-wider">
-                  Sincronizează Profilul cu un CV din Bibliotecă
+                  Sincronizeaza Profilul cu un CV din Biblioteca
                 </h4>
                 <p className="text-xs text-blue-900 mt-0.5">
-                  Importă automat proiectele STAR, experiența de internship și competențele tehnice fără a le tasta manual.
+                  Importa automat proiectele STAR, experienta de internship si competentele tehnice fara a le tasta manual.
                 </p>
               </div>
             </div>
@@ -432,11 +432,11 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 {cvList.length > 0 ? (
                   cvList.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.title || 'CV Fără Titlu'} {c.isPrimary ? '★ (Principal)' : ''}
+                      {c.title || 'CV Fara Titlu'} {c.isPrimary ? '★ (Principal)' : ''}
                     </option>
                   ))
                 ) : (
-                  <option value="">Sîrbu Mihai-Alexandru (CV Principal Tehnic)</option>
+                  <option value="">Sirbu Mihai-Alexandru (CV Principal Tehnic)</option>
                 )}
               </select>
 
@@ -446,7 +446,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition flex items-center gap-1.5 shadow-xs cursor-pointer whitespace-nowrap disabled:opacity-50"
               >
                 <Sparkles className={`w-3.5 h-3.5 ${syncingCv ? 'animate-spin' : ''}`} />
-                {syncingCv ? 'Se fuzionează...' : 'Sincronizează cu CV-ul'}
+                {syncingCv ? 'Se fuzioneaza...' : 'Sincronizeaza cu CV-ul'}
               </button>
             </div>
           </div>
@@ -513,10 +513,10 @@ export default function LinkedInOptimizerPage({ currentUser }) {
               </div>
               <div className="text-left">
                 <p className="text-xs font-bold text-gray-900">
-                  {loading ? 'Se analizează PDF-ul LinkedIn...' : 'Ai descărcat un nou PDF din LinkedIn? Trage fișierul aici'}
+                  {loading ? 'Se analizeaza PDF-ul LinkedIn...' : 'Ai descarcat un nou PDF din LinkedIn? Trage fisierul aici'}
                 </p>
                 <p className="text-[11px] text-gray-500">
-                  Folosește Resources ➔ Save to PDF de pe LinkedIn pentru a compara cu starea ta live.
+                  Foloseste Resources ➔ Save to PDF de pe LinkedIn pentru a compara cu starea ta live.
                 </p>
               </div>
             </div>
@@ -536,7 +536,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
               <span className="text-xs font-black uppercase tracking-wider text-gray-400">Previzualizare Profil Live</span>
               <span className="text-xs font-bold text-gray-700 bg-gray-100 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
                 <Eye className="w-3 h-3 text-[#0a66c2]" />
-                {profileMode === 'all_star' ? 'All-Star Demo (Recomandat 100/100)' : 'Profilul Tău Curent'}
+                {profileMode === 'all_star' ? 'All-Star Demo (Recomandat 100/100)' : 'Profilul Tau Curent'}
               </span>
             </div>
             
@@ -547,7 +547,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 title="Alege Tema Banner-ului"
               >
                 <Palette className="w-3.5 h-3.5 text-blue-600" />
-                <span className="hidden sm:inline">Schimbă Banner</span>
+                <span className="hidden sm:inline">Schimba Banner</span>
               </button>
             </div>
           </div>
@@ -603,7 +603,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 <button 
                   onClick={() => setBannerPickerOpen(!bannerPickerOpen)}
                   className="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-gray-700 flex items-center justify-center shadow-md transition cursor-pointer"
-                  title="Personalizează Banner-ul"
+                  title="Personalizeaza Banner-ul"
                 >
                   <Edit3 className="w-4 h-4" />
                 </button>
@@ -632,7 +632,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                     UP
                   </div>
                   <span className="text-xs font-bold text-gray-900 hidden sm:inline max-w-[200px] leading-tight">
-                    Universitatea POLITEHNICA din București
+                    Universitatea POLITEHNICA din Bucuresti
                   </span>
                 </div>
               </div>
@@ -657,7 +657,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                       setEditHeadlineModalOpen(true);
                     }}
                     className="p-1 rounded-full text-gray-400 hover:text-black opacity-0 group-hover/h:opacity-100 transition cursor-pointer shrink-0"
-                    title="Editează Headline"
+                    title="Editeaza Headline"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </button>
@@ -666,7 +666,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 {/* CREATOR TOPICS */}
                 {profile?.isCreatorMode && (
                   <p className="text-xs text-gray-500 font-medium pt-0.5">
-                    Discută despre{' '}
+                    Discuta despre{' '}
                     <span className="font-semibold text-gray-700">
                       {profile.creatorTopics ? profile.creatorTopics.join(' ') : '#java #springboot #backend #algorithms #softwareengineering'}
                     </span>
@@ -675,7 +675,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
 
                 {/* LOCATION & CONTACT INFO */}
                 <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 pt-1">
-                  <span>{profile?.location || 'București, România'}</span>
+                  <span>{profile?.location || 'Bucuresti, Romania'}</span>
                   <span>•</span>
                   <button 
                     onClick={() => setContactModalOpen(true)}
@@ -710,7 +710,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   onClick={toggleCreatorMode}
                   className="px-4 py-1.5 rounded-full text-xs font-bold bg-white hover:bg-blue-50 text-[#0a66c2] border border-[#0a66c2] transition shadow-2xs cursor-pointer"
                 >
-                  {profile?.isCreatorMode ? 'Creator Mode: Pornit' : 'Pornește Creator Mode'}
+                  {profile?.isCreatorMode ? 'Creator Mode: Pornit' : 'Porneste Creator Mode'}
                 </button>
 
                 <button 
@@ -721,25 +721,25 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-400 transition shadow-2xs cursor-pointer flex items-center gap-1"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
-                  Editează Profil
+                  Editeaza Profil
                 </button>
               </div>
 
             </div>
           </div>
 
-          {/* FEATURED SECTION (ÎN PRIM-PLAN) */}
+          {/* FEATURED SECTION (IN PRIM-PLAN) */}
           <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
-                  Featured (În prim-plan)
+                  Featured (In prim-plan)
                   <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                    +30% Vizualizări
+                    +30% Vizualizari
                   </span>
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Vitrina ta tehnică vizuală: proiecte de pe GitHub, demo-uri live și CV PDF.
+                  Vitrina ta tehnica vizuala: proiecte de pe GitHub, demo-uri live si CV PDF.
                 </p>
               </div>
               <button 
@@ -766,14 +766,14 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                       </p>
                     </div>
                     <div className="pt-2 border-t border-gray-200/60 flex items-center justify-between text-[11px] font-bold text-[#0a66c2]">
-                      <span>{item.type === 'LINK' ? 'Deschide Link' : item.type === 'DOCUMENT' ? 'Descarcă PDF' : 'Vezi Postarea'}</span>
+                      <span>{item.type === 'LINK' ? 'Deschide Link' : item.type === 'DOCUMENT' ? 'Descarca PDF' : 'Vezi Postarea'}</span>
                       <ExternalLink className="w-3 h-3" />
                     </div>
                   </div>
                 ))
               ) : (
                 <div className="col-span-3 py-4 text-center text-xs text-gray-400 border border-dashed rounded-xl">
-                  Adaugă proiectele de pe GitHub în secțiunea Featured pentru a demonstra expertiza practică!
+                  Adauga proiectele de pe GitHub in sectiunea Featured pentru a demonstra expertiza practica!
                 </div>
               )}
             </div>
@@ -788,7 +788,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   setTempAbout(profile?.about || '');
                   setEditAboutModalOpen(true);
                 }}
-                title="Editează secțiunea About"
+                title="Editeaza sectiunea About"
                 className="p-1.5 rounded-full hover:bg-gray-100 text-gray-600 transition cursor-pointer"
               >
                 <Edit3 className="w-4 h-4" />
@@ -804,7 +804,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 onClick={() => setActiveTab('about')}
                 className="py-4 px-3 rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-400 hover:text-blue-600 hover:border-blue-300 transition cursor-pointer"
               >
-                + Adaugă secțiunea About (Apasă pentru a aplica rezumatul optimizat generat de AI)
+                + Adauga sectiunea About (Apasa pentru a aplica rezumatul optimizat generat de AI)
               </div>
             )}
           </div>
@@ -814,13 +814,13 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
-                  Experience (Experiență Profesională)
+                  Experience (Experienta Profesionala)
                   <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                    Validare Practică
+                    Validare Practica
                   </span>
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Internship-urile și proiectele în echipă demonstrează adaptarea la rigorile industriei.
+                  Internship-urile si proiectele in echipa demonstreaza adaptarea la rigorile industriei.
                 </p>
               </div>
               <button 
@@ -859,7 +859,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   onClick={handleSyncWithSelectedCv}
                   className="py-4 text-center text-xs text-gray-400 border border-dashed rounded-xl cursor-pointer hover:border-blue-300 hover:text-blue-600 transition"
                 >
-                  + Nu ai nicio experiență listată. Apasă pe „Sincronizează cu CV-ul” pentru a importa automat internship-ul SIMAVI!
+                  + Nu ai nicio experienta listata. Apasa pe „Sincronizeaza cu CV-ul” pentru a importa automat internship-ul SIMAVI!
                 </div>
               )}
             </div>
@@ -876,7 +876,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   </span>
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Proiecte complexe cu cod deschis și arhitectură scalabilă (Java 21, Spring Boot, PyTorch).
+                  Proiecte complexe cu cod deschis si arhitectura scalabila (Java 21, Spring Boot, PyTorch).
                 </p>
               </div>
               <button 
@@ -933,7 +933,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   onClick={() => setActiveTab('star_projects')}
                   className="py-4 text-center text-xs text-gray-400 border border-dashed rounded-xl cursor-pointer"
                 >
-                  + Adaugă proiecte tehnice cu formula STAR / Google XYZ
+                  + Adauga proiecte tehnice cu formula STAR / Google XYZ
                 </div>
               )}
             </div>
@@ -976,8 +976,8 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                     UP
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-gray-900">Universitatea POLITEHNICA din București</h4>
-                    <p className="text-xs text-gray-600">Informatică</p>
+                    <h4 className="text-sm font-bold text-gray-900">Universitatea POLITEHNICA din Bucuresti</h4>
+                    <p className="text-xs text-gray-600">Informatica</p>
                     <p className="text-[11px] text-gray-400">octombrie 2022 – iulie 2026</p>
                   </div>
                 </div>
@@ -992,10 +992,10 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
                   Skills & Endorsements
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                    {profile?.skills?.length || 0} competențe
+                    {profile?.skills?.length || 0} competente
                   </span>
                 </h3>
-                <p className="text-xs text-gray-500">Fixează Top 3 Pinned Skills (Java, Spring Boot, SQL)</p>
+                <p className="text-xs text-gray-500">Fixeaza Top 3 Pinned Skills (Java, Spring Boot, SQL)</p>
               </div>
               <div className="flex items-center gap-2">
                 <button 
@@ -1021,11 +1021,11 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-gray-400">Aptitudine listată</span>
+                      <span className="text-[11px] text-gray-400">Aptitudine listata</span>
                       <button
                         onClick={() => removeSkillFromProfile(sk)}
                         className="text-gray-300 hover:text-rose-600 transition p-1 cursor-pointer opacity-0 group-hover/sk:opacity-100"
-                        title="Șterge aptitudinea"
+                        title="Sterge aptitudinea"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -1033,7 +1033,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-gray-400">Nicio aptitudine listată încă.</p>
+                <p className="text-xs text-gray-400">Nicio aptitudine listata inca.</p>
               )}
             </div>
           </div>
@@ -1110,7 +1110,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   {optimizationResult?.scoreGrade || 'All-Star Profile (Optimizat Recruiteri)'}
                 </h3>
                 <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                  Profilurile cu scor peste 85 obțin cu până la <strong className="text-blue-300">3.5x mai multe mesaje directe</strong> de la recruiteri din România.
+                  Profilurile cu scor peste 85 obtin cu pana la <strong className="text-blue-300">3.5x mai multe mesaje directe</strong> de la recruiteri din Romania.
                 </p>
               </div>
             </div>
@@ -1211,7 +1211,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
               }`}
             >
               <Terminal className="w-3.5 h-3.5 text-sky-500" />
-              Căutare Recruiter
+              Cautare Recruiter
             </button>
             <button
               onClick={() => setActiveTab('skills')}
@@ -1222,7 +1222,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
               }`}
             >
               <Flame className="w-3.5 h-3.5 text-rose-500" />
-              Skills Piață
+              Skills Piata
             </button>
             <button
               onClick={() => setActiveTab('tips')}
@@ -1244,10 +1244,10 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 <div>
                   <h3 className="text-sm font-black text-gray-950 uppercase tracking-wide flex items-center gap-2">
                     <CheckSquare className="w-4 h-4 text-emerald-500" />
-                    Plan de Acțiune Pas cu Pas (10 Etape)
+                    Plan de Actiune Pas cu Pas (10 Etape)
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Bifează etapele pe măsură ce le aplici pe profilul tău LinkedIn real.
+                    Bifeaza etapele pe masura ce le aplici pe profilul tau LinkedIn real.
                   </p>
                 </div>
                 <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
@@ -1309,7 +1309,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                             className="text-xs font-bold text-[#0a66c2] hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
                           >
                             {copiedKey === step.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                            {copiedKey === step.id ? 'Copiat!' : 'Copiază'}
+                            {copiedKey === step.id ? 'Copiat!' : 'Copiaza'}
                           </button>
                         </div>
                       )}
@@ -1330,7 +1330,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                     Headline-uri Magnetice Optimizate
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Semnalul #1 în algoritmul LinkedIn Recruiter. Folosește la maximum cele 220 de caractere.
+                    Semnalul #1 in algoritmul LinkedIn Recruiter. Foloseste la maximum cele 220 de caractere.
                   </p>
                 </div>
               </div>
@@ -1370,7 +1370,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                         className="px-3 py-1.5 rounded-xl text-xs font-bold bg-black hover:bg-neutral-800 text-white transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
                       >
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        Adoptă în Profil
+                        Adopta in Profil
                       </button>
                       <button
                         onClick={() => copyToClipboard(h.headline, `h_${i}`)}
@@ -1384,7 +1384,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                         ) : (
                           <>
                             <Copy className="w-3.5 h-3.5" />
-                            Copiază
+                            Copiaza
                           </>
                         )}
                       </button>
@@ -1402,10 +1402,10 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 <div>
                   <h3 className="text-sm font-black text-gray-950 uppercase tracking-wide flex items-center gap-2">
                     <Edit3 className="w-4 h-4 text-blue-500" />
-                    Secțiune 'About' Generată cu AI
+                    Sectiune 'About' Generata cu AI
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Structură pe 3 paragrafe: Cine ești + Stivă Tehnică & Proiecte + Call to Action cu Email.
+                    Structura pe 3 paragrafe: Cine esti + Stiva Tehnica & Proiecte + Call to Action cu Email.
                   </p>
                 </div>
               </div>
@@ -1422,7 +1422,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                       className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-black hover:bg-neutral-800 text-white transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                     >
                       <Check className="w-4 h-4 text-emerald-400" />
-                      Adoptă în Profilul Live
+                      Adopta in Profilul Live
                     </button>
                     <button
                       onClick={() => copyToClipboard(optimizationResult.optimizedAbout, 'about_text')}
@@ -1436,7 +1436,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                       ) : (
                         <>
                           <Copy className="w-4 h-4" />
-                          Copiază Textul
+                          Copiaza Textul
                         </>
                       )}
                     </button>
@@ -1453,7 +1453,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 <div>
                   <h3 className="text-sm font-black text-gray-950 uppercase tracking-wide flex items-center gap-2">
                     <FolderGit2 className="w-4 h-4 text-purple-500" />
-                    Proiecte Sugerate în Format STAR / Google XYZ
+                    Proiecte Sugerate in Format STAR / Google XYZ
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
                     Formula „Accomplished [X] as measured by [Y] by doing [Z]” care atrage direct interviuri tehnice.
@@ -1474,7 +1474,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                         className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 transition flex items-center gap-1.5 cursor-pointer shrink-0"
                       >
                         {copiedKey === `proj_${idx}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                        {copiedKey === `proj_${idx}` ? 'Copiat!' : 'Copiază'}
+                        {copiedKey === `proj_${idx}` ? 'Copiat!' : 'Copiaza'}
                       </button>
                     </div>
 
@@ -1502,10 +1502,10 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 <div>
                   <h3 className="text-sm font-black text-gray-950 uppercase tracking-wide flex items-center gap-2">
                     <Terminal className="w-4 h-4 text-sky-500" />
-                    Interogări Booleene Rulate de Recruiteri
+                    Interogari Booleene Rulate de Recruiteri
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Iată cum filtrează recruiterii candidații în LinkedIn Recruiter și cum apari tu pe prima pagină.
+                    Iata cum filtreaza recruiterii candidatii in LinkedIn Recruiter si cum apari tu pe prima pagina.
                   </p>
                 </div>
               </div>
@@ -1520,7 +1520,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                         className="text-xs font-bold text-[#0a66c2] hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         {copiedKey === `bq_${idx}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                        {copiedKey === `bq_${idx}` ? 'Copiat!' : 'Copiază Query'}
+                        {copiedKey === `bq_${idx}` ? 'Copiat!' : 'Copiaza Query'}
                       </button>
                     </div>
 
@@ -1529,11 +1529,11 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                     </div>
 
                     <p className="text-[11px] text-gray-600 leading-relaxed">
-                      <strong>Cum funcționează:</strong> {q.explanation}
+                      <strong>Cum functioneaza:</strong> {q.explanation}
                     </p>
 
                     <div className="text-[11px] text-emerald-900 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 font-medium">
-                      🎯 <strong>De ce te potrivești:</strong> {q.whyYouMatch}
+                      🎯 <strong>De ce te potrivesti:</strong> {q.whyYouMatch}
                     </div>
                   </div>
                 ))}
@@ -1548,10 +1548,10 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 <div>
                   <h3 className="text-sm font-black text-gray-950 uppercase tracking-wide flex items-center gap-2">
                     <Flame className="w-4 h-4 text-rose-500" />
-                    Aptitudini Recomandate de Piață
+                    Aptitudini Recomandate de Piata
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Tehnologii solicitate frecvent în rolurile de Junior din România care îți lipsesc din profil.
+                    Tehnologii solicitate frecvent in rolurile de Junior din Romania care iti lipsesc din profil.
                   </p>
                 </div>
               </div>
@@ -1579,7 +1579,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                       className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-black hover:text-white text-gray-800 border border-gray-300 transition shadow-2xs whitespace-nowrap cursor-pointer flex items-center gap-1"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      Adaugă
+                      Adauga
                     </button>
                   </div>
                 ))}
@@ -1597,7 +1597,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                     Top Strategii Verificate de la Recruiteri IT
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Puncte cheie pentru a trece peste filtrele automate și a obține interviuri.
+                    Puncte cheie pentru a trece peste filtrele automate si a obtine interviuri.
                   </p>
                 </div>
               </div>
@@ -1636,7 +1636,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
                 <Edit3 className="w-4 h-4 text-[#0a66c2]" />
-                Editează Headline Profil
+                Editeaza Headline Profil
               </h3>
               <button 
                 onClick={() => setEditHeadlineModalOpen(false)}
@@ -1661,7 +1661,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 placeholder="Ex: Junior Software Engineer | Java 21 & Spring Boot | Student @ UPB..."
               />
               <p className="text-[11px] text-gray-500">
-                Sfat: Folosește separatorul `|` și include rolul dorit + stiva tehnică principală.
+                Sfat: Foloseste separatorul `|` si include rolul dorit + stiva tehnica principala.
               </p>
             </div>
 
@@ -1671,7 +1671,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 onClick={() => setEditHeadlineModalOpen(false)}
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition cursor-pointer"
               >
-                Anulează
+                Anuleaza
               </button>
               <button
                 type="button"
@@ -1679,7 +1679,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 disabled={!tempHeadline.trim()}
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-black text-white hover:bg-neutral-800 transition cursor-pointer disabled:opacity-50"
               >
-                Salvează în Profil
+                Salveaza in Profil
               </button>
             </div>
           </div>
@@ -1693,7 +1693,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
                 <Edit3 className="w-4 h-4 text-[#0a66c2]" />
-                Editează Secțiunea About (Despre)
+                Editeaza Sectiunea About (Despre)
               </h3>
               <button 
                 onClick={() => setEditAboutModalOpen(false)}
@@ -1710,7 +1710,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 onChange={(e) => setTempAbout(e.target.value)}
                 rows={10}
                 className="w-full p-3 text-xs text-gray-900 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black leading-relaxed"
-                placeholder="Scrie povestea ta profesională, proiectele realizate și datele de contact..."
+                placeholder="Scrie povestea ta profesionala, proiectele realizate si datele de contact..."
               />
             </div>
 
@@ -1720,7 +1720,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 onClick={() => setEditAboutModalOpen(false)}
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition cursor-pointer"
               >
-                Anulează
+                Anuleaza
               </button>
               <button
                 type="button"
@@ -1728,7 +1728,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 disabled={!tempAbout.trim()}
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-black text-white hover:bg-neutral-800 transition cursor-pointer disabled:opacity-50"
               >
-                Salvează în Profil
+                Salveaza in Profil
               </button>
             </div>
           </div>
@@ -1742,7 +1742,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
                 <Linkedin className="w-4 h-4 text-[#0a66c2]" />
-                Informații de Contact (Contact Info)
+                Informatii de Contact (Contact Info)
               </h3>
               <button 
                 onClick={() => setContactModalOpen(false)}
@@ -1755,7 +1755,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             <div className="space-y-4">
               <div className="space-y-1">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-blue-600" /> Adresă Email
+                  <Mail className="w-3.5 h-3.5 text-blue-600" /> Adresa Email
                 </span>
                 <p className="text-sm font-bold text-gray-900 bg-gray-50 p-2.5 rounded-xl border border-gray-200">
                   {profile?.email || 'sarbumihai0@gmail.com'}
@@ -1764,7 +1764,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
 
               <div className="space-y-1">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-emerald-600" /> Număr de Telefon
+                  <Phone className="w-3.5 h-3.5 text-emerald-600" /> Numar de Telefon
                 </span>
                 <p className="text-sm font-bold text-gray-900 bg-gray-50 p-2.5 rounded-xl border border-gray-200">
                   {profile?.phone || '(+40) 723 034 706'}
@@ -1788,10 +1788,10 @@ export default function LinkedInOptimizerPage({ currentUser }) {
 
               <div className="space-y-1">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-rose-500" /> Locație
+                  <MapPin className="w-3.5 h-3.5 text-rose-500" /> Locatie
                 </span>
                 <p className="text-sm font-bold text-gray-900 bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                  {profile?.location || 'București, România'}
+                  {profile?.location || 'Bucuresti, Romania'}
                 </p>
               </div>
             </div>
@@ -1800,7 +1800,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
               onClick={() => setContactModalOpen(false)}
               className="w-full py-2.5 rounded-xl text-xs font-bold bg-black text-white hover:bg-neutral-800 transition cursor-pointer"
             >
-              Închide
+              Inchide
             </button>
           </div>
         </div>
@@ -1813,7 +1813,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-[#0a66c2]" />
-                Adaugă Aptitudine Manuală
+                Adauga Aptitudine Manuala
               </h3>
               <button 
                 onClick={() => setAddSkillModalOpen(false)}
@@ -1842,14 +1842,14 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   onClick={() => setAddSkillModalOpen(false)}
                   className="flex-1 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition cursor-pointer"
                 >
-                  Anulează
+                  Anuleaza
                 </button>
                 <button
                   type="submit"
                   disabled={!newSkillText.trim()}
                   className="flex-1 py-2 rounded-xl text-xs font-bold bg-black text-white hover:bg-neutral-800 transition cursor-pointer disabled:opacity-50"
                 >
-                  Salvează în Profil
+                  Salveaza in Profil
                 </button>
               </div>
             </form>

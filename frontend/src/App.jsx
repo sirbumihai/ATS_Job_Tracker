@@ -17,23 +17,23 @@ import { Plus, Upload, Bell } from 'lucide-react';
 
 const TAB_METADATA = {
   tracker: {
-    title: 'Tracker Aplicații',
+    title: 'Tracker Aplicatii',
     subtitle: 'Pipeline Kanban & Monitorizare Status Joburi',
     category: 'Pipeline'
   },
   job_search: {
-    title: 'Căutare Job-uri',
-    subtitle: 'Agregator Multi-Platformă & Scraping în Timp Real',
-    category: 'Piață IT'
+    title: 'Cautare Job-uri',
+    subtitle: 'Agregator Multi-Platforma & Scraping in Timp Real',
+    category: 'Piata IT'
   },
   market_insights: {
-    title: 'Radar Piață IT',
-    subtitle: 'Statistici Reale & Frecvență Tehnologii România',
+    title: 'Radar Piata IT',
+    subtitle: 'Statistici Reale & Frecventa Tehnologii Romania',
     category: 'Statistici'
   },
   cv_library: {
     title: 'CV-urile Mele',
-    subtitle: 'Bază de Profiluri ATS & PDF Upload',
+    subtitle: 'Baza de Profiluri ATS & PDF Upload',
     category: 'Documente'
   },
   cv_studio: {
@@ -42,8 +42,8 @@ const TAB_METADATA = {
     category: 'Optimizare ATS'
   },
   cover_letter: {
-    title: 'Generator Scrisori de Intenție',
-    subtitle: 'Cover Letter Personalizat pe Cerințele Jobului',
+    title: 'Generator Scrisori de Intentie',
+    subtitle: 'Cover Letter Personalizat pe Cerintele Jobului',
     category: 'AI Assistant'
   },
   github_readme: {
@@ -53,17 +53,17 @@ const TAB_METADATA = {
   },
   linkedin_optimizer: {
     title: 'LinkedIn Profile Optimizer',
-    subtitle: 'Import PDF, Replică Desktop & Audit 100/100 All-Star',
+    subtitle: 'Import PDF, Replica Desktop & Audit 100/100 All-Star',
     category: 'LinkedIn'
   },
   skill_roadmap: {
     title: '7-Day Skill Gap Roadmaps',
-    subtitle: 'Laboratoare Practice & Injectare 1-Click în CV',
-    category: 'Educație'
+    subtitle: 'Laboratoare Practice & Injectare 1-Click in CV',
+    category: 'Educatie'
   },
   career_analytics: {
-    title: 'Carieră, Funnel & Gamified XP',
-    subtitle: 'Pâlnie de Conversie, Diagnostic Bottleneck & Quests',
+    title: 'Cariera, Funnel & Gamified XP',
+    subtitle: 'Palnie de Conversie, Diagnostic Bottleneck & Quests',
     category: 'Analytics'
   }
 };
@@ -414,7 +414,7 @@ export default function App() {
   const currentTabInfo = TAB_METADATA[activeTab] || {
     title: 'JobFlow AI',
     subtitle: 'Tracker & ATS Studio',
-    category: 'Platformă'
+    category: 'Platforma'
   };
 
   return (
@@ -433,7 +433,7 @@ export default function App() {
       {/* CONTINUT PRINCIPAL (Coloana Dreapta pe Desktop) */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden bg-[#f8fafc]">
         
-        {/* DESKTOP TOP BAR CU TITLU PAGINĂ ȘI BREADCRUMB */}
+        {/* DESKTOP TOP BAR CU TITLU PAGINA SI BREADCRUMB */}
         <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3.5 bg-white border-b border-slate-200/90 sticky top-0 z-20 shadow-2xs">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">

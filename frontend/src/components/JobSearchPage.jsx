@@ -534,7 +534,7 @@ export default function JobSearchPage({
     fetchGlobalStats();
   }, []);
 
-  // Cautare debounced (300ms) - declanșează căutarea pe server cu pagina 1 la orice modificare de filtru
+  // Cautare debounced (300ms) - declanseaza cautarea pe server cu pagina 1 la orice modificare de filtru
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchJobs(1);
@@ -1789,7 +1789,7 @@ export default function JobSearchPage({
                     <button
                       onClick={() => setOutreachSearchJob(job)}
                       className="py-2.5 px-3 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 rounded-xl text-xs font-black flex items-center justify-center gap-1 transition cursor-pointer shadow-2xs"
-                      title="Outreach Recruiter: Notă LinkedIn (<300 caractere), Cold Email"
+                      title="Outreach Recruiter: Nota LinkedIn (<300 caractere), Cold Email"
                     >
                       <Send className="w-3.5 h-3.5 text-purple-600" />
                       <span>Outreach</span>

@@ -45,7 +45,7 @@ export function AuthModal({ isOpen, onClose, authMode, setAuthMode, authForm, se
           </div>
           <div>
             <h3 className="text-base sm:text-lg font-black text-gray-950 tracking-tight">
-              {authMode === 'login' ? 'Autentificare Utilizator' : 'Înregistrare Cont Nou'}
+              {authMode === 'login' ? 'Autentificare Utilizator' : 'Inregistrare Cont Nou'}
             </h3>
             <p className="text-xs text-gray-500 font-semibold">Spring Security 6 + Token JWT</p>
           </div>
@@ -65,7 +65,7 @@ export function AuthModal({ isOpen, onClose, authMode, setAuthMode, authForm, se
               <input 
                 type="text" 
                 required
-                placeholder="Mihai Sîrbu"
+                placeholder="Mihai Sirbu"
                 value={authForm.fullName}
                 onChange={e => setAuthForm({...authForm, fullName: e.target.value})}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-medium transition"
@@ -74,7 +74,7 @@ export function AuthModal({ isOpen, onClose, authMode, setAuthMode, authForm, se
           )}
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Adresă Email</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1">Adresa Email</label>
             <input 
               type="email" 
               required
@@ -86,7 +86,7 @@ export function AuthModal({ isOpen, onClose, authMode, setAuthMode, authForm, se
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Parolă Cont</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1">Parola Cont</label>
             <input 
               type="password" 
               required
@@ -101,7 +101,7 @@ export function AuthModal({ isOpen, onClose, authMode, setAuthMode, authForm, se
             type="submit" 
             className="w-full py-2.5 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs shadow-sm transition cursor-pointer"
           >
-            {authMode === 'login' ? 'Conectare în Cont' : 'Creează Contul Acum'}
+            {authMode === 'login' ? 'Conectare in Cont' : 'Creeaza Contul Acum'}
           </button>
 
           <div className="text-center pt-2 border-t border-gray-100">
@@ -109,14 +109,14 @@ export function AuthModal({ isOpen, onClose, authMode, setAuthMode, authForm, se
               <p className="text-xs text-gray-500 font-medium">
                 Nu ai un cont?{' '}
                 <button type="button" onClick={() => setAuthMode('register')} className="text-blue-600 font-bold hover:underline cursor-pointer">
-                  Înregistrează-te acum
+                  Inregistreaza-te acum
                 </button>
               </p>
             ) : (
               <p className="text-xs text-gray-500 font-medium">
                 Ai deja cont?{' '}
                 <button type="button" onClick={() => setAuthMode('login')} className="text-blue-600 font-bold hover:underline cursor-pointer">
-                  Autentifică-te
+                  Autentifica-te
                 </button>
               </p>
             )}
@@ -161,9 +161,9 @@ export function AddJobModal({ isOpen, onClose, newJob, setNewJob, onSubmit }) {
           </div>
           <div>
             <h3 className="text-base sm:text-lg font-black text-gray-950 tracking-tight">
-              Adaugă un Job Nou în Tracker
+              Adauga un Job Nou in Tracker
             </h3>
-            <p className="text-xs text-gray-500 font-semibold">Introducere manuală sau descriere brută</p>
+            <p className="text-xs text-gray-500 font-semibold">Introducere manuala sau descriere bruta</p>
           </div>
         </div>
 
@@ -181,7 +181,7 @@ export function AddJobModal({ isOpen, onClose, newJob, setNewJob, onSubmit }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Titlul Rolului / Poziției</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1">Titlul Rolului / Pozitiei</label>
             <input 
               type="text" 
               required
@@ -197,7 +197,7 @@ export function AddJobModal({ isOpen, onClose, newJob, setNewJob, onSubmit }) {
             <textarea 
               required
               rows={5}
-              placeholder="Lipește textul descrierii jobului aici pentru analiza automată a compatibilității..."
+              placeholder="Lipeste textul descrierii jobului aici pentru analiza automata a compatibilitatii..."
               value={newJob.rawDescription}
               onChange={e => setNewJob({...newJob, rawDescription: e.target.value})}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs text-gray-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-medium transition resize-none leading-relaxed"
@@ -210,13 +210,13 @@ export function AddJobModal({ isOpen, onClose, newJob, setNewJob, onSubmit }) {
               onClick={onClose} 
               className="px-4 py-2 border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-xl text-xs font-bold transition cursor-pointer"
             >
-              Anulează
+              Anuleaza
             </button>
             <button 
               type="submit" 
               className="px-5 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer"
             >
-              Salvează Jobul
+              Salveaza Jobul
             </button>
           </div>
         </form>
@@ -259,23 +259,23 @@ export function UploadResumeModal({ isOpen, onClose, selectedFile, setSelectedFi
           </div>
           <div>
             <h3 className="text-base sm:text-lg font-black text-gray-950 tracking-tight">
-              Încărcare CV PDF
+              Incarcare CV PDF
             </h3>
-            <p className="text-xs text-gray-500 font-semibold">Procesare text & parsare competențe</p>
+            <p className="text-xs text-gray-500 font-semibold">Procesare text & parsare competente</p>
           </div>
         </div>
 
         {uploadedSuccess ? (
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
             <Check className="w-8 h-8 text-emerald-600 mx-auto animate-bounce" />
-            <p className="text-xs font-bold text-emerald-900">CV-ul a fost procesat și asociat cu succes!</p>
+            <p className="text-xs font-bold text-emerald-900">CV-ul a fost procesat si asociat cu succes!</p>
             <p className="text-[11px] text-emerald-700">{uploadedSuccess}</p>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="border-2 border-dashed border-gray-200 hover:border-purple-400 bg-gray-50/50 hover:bg-purple-50/30 rounded-2xl p-6 text-center cursor-pointer transition">
               <FileText className="w-10 h-10 text-purple-600 mx-auto mb-2" />
-              <p className="text-xs text-gray-700 font-bold">Selectează fișierul CV (PDF sau DOCX)</p>
+              <p className="text-xs text-gray-700 font-bold">Selecteaza fisierul CV (PDF sau DOCX)</p>
               <input 
                 type="file" 
                 accept=".pdf,.docx"
@@ -290,14 +290,14 @@ export function UploadResumeModal({ isOpen, onClose, selectedFile, setSelectedFi
                 onClick={onClose} 
                 className="px-4 py-2 border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-xl text-xs font-bold transition cursor-pointer"
               >
-                Anulează
+                Anuleaza
               </button>
               <button 
                 type="submit" 
                 disabled={!selectedFile || uploading} 
                 className="px-5 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50"
               >
-                {uploading ? 'Se procesează CV...' : 'Procesează CV'}
+                {uploading ? 'Se proceseaza CV...' : 'Proceseaza CV'}
               </button>
             </div>
           </form>
@@ -345,8 +345,8 @@ export function AiReportModal({ isOpen, onClose, analysis }) {
             <BrainCircuit className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-black text-gray-950 tracking-tight">Raport Analiză AI & Compatibilitate ATS</h3>
-            <p className="text-xs text-gray-500 font-semibold">Comparație semantică între cerințele jobului și profilul tău</p>
+            <h3 className="text-base sm:text-lg font-black text-gray-950 tracking-tight">Raport Analiza AI & Compatibilitate ATS</h3>
+            <p className="text-xs text-gray-500 font-semibold">Comparatie semantica intre cerintele jobului si profilul tau</p>
           </div>
         </div>
 
@@ -360,7 +360,7 @@ export function AiReportModal({ isOpen, onClose, analysis }) {
             score >= 60 ? 'bg-amber-50 text-amber-700 border-amber-200' :
             'bg-rose-50 text-rose-700 border-rose-200'
           }`}>
-            {score >= 80 ? 'Candidat Excelent' : score >= 60 ? 'Potrivire Moderată' : 'Gap-uri Semnificative'}
+            {score >= 80 ? 'Candidat Excelent' : score >= 60 ? 'Potrivire Moderata' : 'Gap-uri Semnificative'}
           </span>
         </div>
 
@@ -369,7 +369,7 @@ export function AiReportModal({ isOpen, onClose, analysis }) {
             <div>
               <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Competențe Validate în CV ({matching.length})</span>
+                <span>Competente Validate in CV ({matching.length})</span>
               </h4>
               <div className="flex flex-wrap gap-1.5">
                 {matching.map((sk, idx) => (
@@ -385,7 +385,7 @@ export function AiReportModal({ isOpen, onClose, analysis }) {
             <div>
               <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4 text-rose-600" />
-                <span>Competențe Cheie Lipsă ({missing.length})</span>
+                <span>Competente Cheie Lipsa ({missing.length})</span>
               </h4>
               <div className="flex flex-wrap gap-1.5">
                 {missing.map((sk, idx) => (
@@ -399,7 +399,7 @@ export function AiReportModal({ isOpen, onClose, analysis }) {
 
           {analysis.recommendation && (
             <div className="p-4 bg-blue-50/70 border border-blue-200/80 rounded-2xl space-y-1">
-              <span className="text-xs font-extrabold text-blue-950 uppercase tracking-wider">Recomandare Strategică:</span>
+              <span className="text-xs font-extrabold text-blue-950 uppercase tracking-wider">Recomandare Strategica:</span>
               <p className="text-xs text-blue-900 font-medium leading-relaxed">{analysis.recommendation}</p>
             </div>
           )}

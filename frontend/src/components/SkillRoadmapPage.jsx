@@ -79,7 +79,7 @@ export default function SkillRoadmapPage({ currentUser, onNavigateToCvLibrary })
   const handleCopy = (text, key, label) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
-    setToastMessage(`Copiat în clipboard: ${label}!`);
+    setToastMessage(`Copiat in clipboard: ${label}!`);
     setTimeout(() => {
       setCopiedKey(null);
       setToastMessage('');
@@ -103,9 +103,9 @@ export default function SkillRoadmapPage({ currentUser, onNavigateToCvLibrary })
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setToastMessage(`✓ Skill-ul ${roadmap.skillName} și proiectul Capstone au fost adăugate în CV!`);
+        setToastMessage(`✓ Skill-ul ${roadmap.skillName} si proiectul Capstone au fost adaugate in CV!`);
       } else {
-        setToastMessage(`⚠️ ${data.message || 'Eroare la adăugarea în CV'}`);
+        setToastMessage(`⚠️ ${data.message || 'Eroare la adaugarea in CV'}`);
       }
     } catch (err) {
       setToastMessage('Eroare de conexiune la server.');
@@ -175,10 +175,10 @@ export default function SkillRoadmapPage({ currentUser, onNavigateToCvLibrary })
               <span className="text-xs font-bold text-gray-600">Curricula Intensive de 7 Zile</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight">
-              Învață Tehnologiile Căutate în România și Adaugă-le în CV
+              Invata Tehnologiile Cautate in Romania si Adauga-le in CV
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 font-medium max-w-3xl leading-relaxed">
-              Transformă tehnologiile lipsă cerute în anunțurile de joburi în proiecte reale pe GitHub. Fiecare curriculum oferă teorie esențială, comenzi Docker, cod complet Spring Boot și un proiect Capstone formulat Google XYZ gata de inserat în CV.
+              Transforma tehnologiile lipsa cerute in anunturile de joburi in proiecte reale pe GitHub. Fiecare curriculum ofera teorie esentiala, comenzi Docker, cod complet Spring Boot si un proiect Capstone formulat Google XYZ gata de inserat in CV.
             </p>
           </div>
 
@@ -197,7 +197,7 @@ export default function SkillRoadmapPage({ currentUser, onNavigateToCvLibrary })
               className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1"
             >
               <Sparkles className={`w-3.5 h-3.5 ${isGeneratingCustom ? 'animate-spin' : ''}`} />
-              {isGeneratingCustom ? 'Generez...' : 'Generează'}
+              {isGeneratingCustom ? 'Generez...' : 'Genereaza'}
             </button>
           </form>
         </div>
@@ -346,7 +346,7 @@ export default function SkillRoadmapPage({ currentUser, onNavigateToCvLibrary })
                     onClick={() => handleCopy(roadmap.cvBulletPoint, 'cv_bullet', 'Formula Google XYZ')}
                     className="hover:text-white cursor-pointer"
                   >
-                    {copiedKey === 'cv_bullet' ? 'Copiat!' : 'Copiază'}
+                    {copiedKey === 'cv_bullet' ? 'Copiat!' : 'Copiaza'}
                   </button>
                 </div>
                 <p className="italic text-[11px] text-gray-100">
@@ -360,7 +360,7 @@ export default function SkillRoadmapPage({ currentUser, onNavigateToCvLibrary })
                 className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <PlusCircle className={`w-4 h-4 ${isAddingToCv ? 'animate-spin' : ''}`} />
-                {isAddingToCv ? 'Se adaugă...' : '+ Adaugă Automat în CV-ul Meu'}
+                {isAddingToCv ? 'Se adauga...' : '+ Adauga Automat in CV-ul Meu'}
               </button>
             </div>
 
@@ -395,7 +395,7 @@ export default function SkillRoadmapPage({ currentUser, onNavigateToCvLibrary })
                     }`}
                   >
                     <CheckSquare className="w-3.5 h-3.5" />
-                    {completedDays[activeDay.dayNumber] ? 'Bifat ca Finalizat ✓' : 'Marchează ca Finalizat'}
+                    {completedDays[activeDay.dayNumber] ? 'Bifat ca Finalizat ✓' : 'Marcheaza ca Finalizat'}
                   </button>
                 </div>
 
@@ -435,14 +435,14 @@ export default function SkillRoadmapPage({ currentUser, onNavigateToCvLibrary })
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-extrabold text-gray-700 flex items-center gap-1.5">
                         <Code2 className="w-4 h-4 text-purple-600" />
-                        Configurație & Cod Practic ({activeDay.codeSnippetLanguage?.toUpperCase() || 'CODE'})
+                        Configuratie & Cod Practic ({activeDay.codeSnippetLanguage?.toUpperCase() || 'CODE'})
                       </span>
                       <button
                         onClick={() => handleCopy(activeDay.codeSnippet, `code_${activeDay.dayNumber}`, 'Snippet-ul de Cod')}
                         className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
                       >
                         {copiedKey === `code_${activeDay.dayNumber}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                        {copiedKey === `code_${activeDay.dayNumber}` ? 'Copiat!' : 'Copiază Codul'}
+                        {copiedKey === `code_${activeDay.dayNumber}` ? 'Copiat!' : 'Copiaza Codul'}
                       </button>
                     </div>
 
@@ -457,7 +457,7 @@ export default function SkillRoadmapPage({ currentUser, onNavigateToCvLibrary })
                   <div className="space-y-2 bg-amber-50/70 border border-amber-200/80 rounded-xl p-4">
                     <h3 className="text-xs font-extrabold text-amber-950 flex items-center gap-1.5">
                       <HelpCircle className="w-4 h-4 text-amber-600" />
-                      Întrebări de Verificare la Interviul Tehnic
+                      Intrebari de Verificare la Interviul Tehnic
                     </h3>
                     <ul className="space-y-1.5 text-xs text-amber-900/90 font-medium">
                       {activeDay.interviewVerificationQuestions.map((q, qi) => (
@@ -477,7 +477,7 @@ export default function SkillRoadmapPage({ currentUser, onNavigateToCvLibrary })
                     onClick={() => setSelectedDayNumber(prev => Math.max(1, prev - 1))}
                     className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
-                    ← Ziua Precedentă
+                    ← Ziua Precedenta
                   </button>
 
                   <button
@@ -485,7 +485,7 @@ export default function SkillRoadmapPage({ currentUser, onNavigateToCvLibrary })
                     onClick={() => setSelectedDayNumber(prev => Math.min(roadmap.totalDays || 7, prev + 1))}
                     className="px-3 py-1.5 rounded-lg bg-black hover:bg-neutral-800 text-white text-xs font-bold transition shadow-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
-                    Următoarea Zi →
+                    Urmatoarea Zi →
                   </button>
                 </div>
 
