@@ -15,7 +15,8 @@ import {
   Files,
   FileSignature,
   Github,
-  Compass
+  Compass,
+  Linkedin
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -130,6 +131,18 @@ export default function Navbar({
           >
             <Github className={`w-3.5 h-3.5 ${activeTab === 'github_readme' ? 'text-emerald-400' : 'text-gray-900'}`} />
             GitHub README
+          </button>
+
+          <button
+            onClick={() => setActiveTab('linkedin_optimizer')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+              activeTab === 'linkedin_optimizer' 
+                ? 'bg-black text-white shadow-sm' 
+                : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+            }`}
+          >
+            <Linkedin className={`w-3.5 h-3.5 ${activeTab === 'linkedin_optimizer' ? 'text-blue-400' : 'text-[#0a66c2]'}`} />
+            LinkedIn Optimizer
           </button>
         </div>
 
@@ -255,6 +268,15 @@ export default function Navbar({
             >
               <Github className={`w-3.5 h-3.5 ${activeTab === 'github_readme' ? 'text-emerald-400' : 'text-gray-900'}`} />
               GitHub
+            </button>
+            <button
+              onClick={() => { setActiveTab('linkedin_optimizer'); setMobileMenuOpen(false); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shrink-0 ${
+                activeTab === 'linkedin_optimizer' ? 'bg-black text-white' : 'text-gray-700'
+              }`}
+            >
+              <Linkedin className={`w-3.5 h-3.5 ${activeTab === 'linkedin_optimizer' ? 'text-blue-400' : 'text-[#0a66c2]'}`} />
+              LinkedIn
             </button>
           </div>
         </div>

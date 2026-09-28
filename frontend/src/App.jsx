@@ -8,12 +8,14 @@ import JobSearchPage from './components/JobSearchPage';
 import CoverLetterGenerator from './components/CoverLetterGenerator';
 import GithubReadmeStudio from './components/GithubReadmeStudio';
 import MarketInsightsPage from './components/MarketInsightsPage';
+import LinkedInOptimizerPage from './components/LinkedInOptimizerPage';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
 
 export default function App() {
   const getInitialTab = () => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
+      if (path.startsWith('/linkedin') || path.startsWith('/linkedin-optimizer')) return 'linkedin_optimizer';
       if (path.startsWith('/job-search') || path.startsWith('/jobs')) return 'job_search';
       if (path.startsWith('/market-insights') || path.startsWith('/insights') || path.startsWith('/radar')) return 'market_insights';
       if (path.startsWith('/cv-library') || path.startsWith('/cv_library')) return 'cv_library';
@@ -22,6 +24,7 @@ export default function App() {
       if (path.startsWith('/github-readme') || path.startsWith('/github_readme') || path.startsWith('/readme')) return 'github_readme';
       if (path.startsWith('/tracker') || path.startsWith('/kanban')) return 'tracker';
       const hash = window.location.hash.toLowerCase();
+      if (hash.includes('linkedin')) return 'linkedin_optimizer';
       if (hash.includes('job-search') || hash.includes('jobs')) return 'job_search';
       if (hash.includes('market-insights') || hash.includes('radar')) return 'market_insights';
       if (hash.includes('cv-library') || hash.includes('cv_library')) return 'cv_library';
@@ -30,7 +33,7 @@ export default function App() {
       if (hash.includes('github-readme') || hash.includes('github_readme') || hash.includes('readme')) return 'github_readme';
       if (hash.includes('tracker') || hash.includes('kanban')) return 'tracker';
       const stored = localStorage.getItem('ats_active_tab');
-      if (stored === 'job_search' || stored === 'market_insights' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
+      if (stored === 'linkedin_optimizer' || stored === 'job_search' || stored === 'market_insights' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
       if (stored === 'kanban') return 'tracker';
     }
     return 'tracker';
@@ -49,6 +52,7 @@ export default function App() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('ats_active_tab', tab);
       let targetPath = '/tracker';
+      if (tab === 'linkedin_optimizer') targetPath = '/linkedin-optimizer';
       if (tab === 'job_search') targetPath = '/job-search';
       if (tab === 'market_insights') targetPath = '/market-insights';
       if (tab === 'cv_library') targetPath = '/cv-library';
@@ -421,6 +425,13 @@ export default function App() {
         {/* TAB 6: GITHUB PROFILE README STUDIO (NON-AI & AUTHENTIC) */}
         {activeTab === 'github_readme' && (
           <GithubReadmeStudio 
+            currentUser={currentUser}
+          />
+        )}
+
+        {/* TAB 7: LINKEDIN OPTIMIZER (PDF IMPORT, UI REPLICA & AI ADVISOR) */}
+        {activeTab === 'linkedin_optimizer' && (
+          <LinkedInOptimizerPage 
             currentUser={currentUser}
           />
         )}
