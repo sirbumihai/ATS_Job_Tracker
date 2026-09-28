@@ -312,7 +312,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
           </div>
 
           {/* FORMULAR DATE DE CONECTARE */}
-          <div className="bg-gray-50/70 border border-gray-200 rounded-3xl p-5 sm:p-6 space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleRunSync(); }} className="bg-gray-50/70 border border-gray-200 rounded-3xl p-5 sm:p-6 space-y-4">
             <h3 className="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
               <Key className="w-3.5 h-3.5 text-red-600" />
               <span>Date de Autentificare Gmail</span>
@@ -429,7 +429,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                 </label>
               </div>
             </div>
-          </div>
+          </form>
 
           {/* BANNER REPARARE RAPIDA A CANDIDATURILOR EXISTENTE */}
           <div className="bg-indigo-50/70 border border-indigo-200/90 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">

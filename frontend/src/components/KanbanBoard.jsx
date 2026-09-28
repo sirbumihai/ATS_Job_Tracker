@@ -38,6 +38,17 @@ import GmailSyncModal from './GmailSyncModal';
 import OutreachCrmModal from './OutreachCrmModal';
 import CalendarView from './CalendarView';
 
+export const isAppGmail = (app) => {
+  if (!app) return false;
+  const platform = (app.sourcePlatform || '').toUpperCase();
+  if (platform === 'GMAIL') return true;
+  const desc = app.rawDescription || '';
+  if (desc.includes('GMAIL') || desc.includes('EMAIL DE RECRUTARE') || desc.includes('CONTINUT COMPLET EMAIL') || desc.includes('CONȚINUT COMPLET EMAIL')) return true;
+  const notes = app.notes || '';
+  if (notes.toLowerCase().includes('gmail sync')) return true;
+  return false;
+};
+
 export default function KanbanBoard({ 
   applications = [], 
   currentUser, 
@@ -166,7 +177,7 @@ export default function KanbanBoard({
   };
 
   const handleOpenJobModal = (app) => {
-    const isGmail = app.sourcePlatform === 'GMAIL' || Boolean(app.rawDescription && app.rawDescription.includes('GMAIL'));
+    const isGmail = isAppGmail(app);
     setSelectedJobForModal({
       id: app.jobId || app.id,
       jobTitle: app.jobTitle,
@@ -185,7 +196,10 @@ export default function KanbanBoard({
       competitivenessLabel: isGmail ? "Email Recrutare" : "Competitie Medie",
       applicantCountText: isGmail ? "Sincronizat din Gmail" : "Candidatura Activa",
       postedDateAgo: app.appliedDate ? `Email din ${app.appliedDate}` : "Salvat in Tracker",
-      postedAt: app.appliedDate ? `${app.appliedDate}T12:00:00Z` : null
+      postedAt: app.appliedDate ? `${app.appliedDate}T12:00:00Z` : null,
+      notes: app.notes,
+      appliedDate: app.appliedDate,
+      status: app.status
     });
   };
 
@@ -329,8 +343,7 @@ export default function KanbanBoard({
 
       // 5. Gmail Only filter
       if (filterGmailOnly) {
-        const isGmail = app.sourcePlatform === 'GMAIL' || Boolean(app.rawDescription && app.rawDescription.includes('GMAIL'));
-        if (!isGmail) return false;
+        if (!isAppGmail(app)) return false;
       }
 
       return true;
@@ -362,7 +375,7 @@ export default function KanbanBoard({
   }, [applications, searchQuery, filterScore, filterWorkModel, filterCv, filterGmailOnly, sortBy]);
 
   const gmailJobsCount = useMemo(() => {
-    return applications.filter(a => a.sourcePlatform === 'GMAIL' || Boolean(a.rawDescription && a.rawDescription.includes('GMAIL'))).length;
+    return applications.filter(isAppGmail).length;
   }, [applications]);
 
   const isAnyFilterActive = searchQuery.trim() !== '' || 
@@ -463,26 +476,19 @@ export default function KanbanBoard({
 
     if (statusChanged) {
       movingApp.status = targetColumnKey;
-    }
-
-    // Daca nu s-a schimbat statusul si nu avem targetCardId specific (drop pe aceeasi coloana):
-    if (!statusChanged && !targetCardId) {
-      const columnApps = currentApps.filter(a => a.status === targetColumnKey);
-      if (columnApps.length > 0 && columnApps[columnApps.length - 1].id === movingAppId) {
-        return; // Cardul este deja la finalul coloanei
-      }
+    } else if (!targetCardId) {
+      // Daca nu s-a schimbat statusul si nu avem targetCardId specific (eliberat pe aceeasi coloana):
+      return; // Ramane exact unde era!
     }
 
     // Calculam pozitia exacta de inserare
     if (targetCardId) {
       const targetIndex = currentApps.findIndex(a => a.id === targetCardId);
       if (targetIndex !== -1) {
-        let insertIndex = position === 'top' ? targetIndex : targetIndex + 1;
-        // Daca tinta este exact pozitia curenta a cardului in aceeasi coloana:
         if (!statusChanged) {
-          if (insertIndex === movingIndex || insertIndex === movingIndex + 1) {
-            return; // Pozitia nu s-a schimbat deloc!
-          }
+          if (targetCardId === movingAppId) return;
+          if (position === 'top' && (targetIndex === movingIndex || targetIndex === movingIndex + 1)) return;
+          if (position === 'bottom' && (targetIndex === movingIndex || targetIndex === movingIndex - 1)) return;
         }
         currentApps.splice(movingIndex, 1);
         const newTargetIndex = currentApps.findIndex(a => a.id === targetCardId);
@@ -954,9 +960,7 @@ export default function KanbanBoard({
                   >
                     {colApps.map((app) => {
                       const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
-                      const isGmail = app.sourcePlatform === 'GMAIL' 
-                        || (app.rawDescription && app.rawDescription.includes('GMAIL'))
-                        || (app.notes && app.notes.includes('[Gmail Sync'));
+                      const isGmail = isAppGmail(app);
                       const emailSender = isGmail ? getEmailSender(app) : null;
                       const isBeingDragged = draggedAppId === app.id;
                       const isDropTargetTop = dragOverTarget?.cardId === app.id && dragOverTarget?.position === 'top' && draggedAppId !== app.id;
@@ -987,17 +991,9 @@ export default function KanbanBoard({
                                 className="cursor-pointer group/title flex-1 min-w-0"
                                 title="Apasa pentru a deschide fisa completa a jobului"
                               >
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-500 truncate group-hover/title:text-indigo-600 transition">
-                                    {app.companyName}
-                                  </span>
-                                  {isGmail && (
-                                    <span className="inline-flex items-center gap-0.5 font-black text-[9px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded-full shrink-0" title="Detectat automat prin sincronizare Gmail">
-                                      <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
-                                      <span>Gmail</span>
-                                    </span>
-                                  )}
-                                </div>
+                                <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-400 truncate block group-hover/title:text-indigo-600 transition">
+                                  {app.companyName}
+                                </span>
                                 <h4 className="font-bold text-xs sm:text-[13px] text-gray-950 leading-snug mt-0.5 line-clamp-2 group-hover/title:text-indigo-600 transition">
                                   {app.jobTitle}
                                 </h4>
@@ -1011,7 +1007,7 @@ export default function KanbanBoard({
                                     }
                                   }}
                                   title="Sterge din Tracker"
-                                  className="p-1 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition cursor-pointer"
+                                  className="p-1 rounded-lg hover:bg-rose-50 text-gray-300 hover:text-rose-600 transition cursor-pointer"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -1019,43 +1015,43 @@ export default function KanbanBoard({
                               </div>
                             </div>
 
-                            {/* MATCH SCORE PILL OR GMAIL SENDER PILL */}
-                            {isGmail ? (
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between text-[11px] gap-1">
-                                  <span className="inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded-md text-[10px] bg-red-50 text-red-700 border border-red-200 shrink-0 truncate max-w-[170px]" title={emailSender ? `Expeditor: ${emailSender}` : 'Sincronizat automat din Gmail'}>
-                                    <Mail className="w-2.5 h-2.5 shrink-0 text-red-600" />
-                                    <span className="truncate">{emailSender ? `De la: ${emailSender}` : 'Email Recrutare'}</span>
-                                  </span>
-                                  {app.appliedDate && (
-                                    <span className="inline-flex items-center gap-1 font-bold text-[10px] text-gray-600 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md shrink-0" title={`Data: ${app.appliedDate}`}>
-                                      <Calendar className="w-2.5 h-2.5 text-gray-500 shrink-0" />
-                                      <span>{app.appliedDate}</span>
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between text-[11px] gap-1">
-                                  <span className={`inline-flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md text-[10px] shrink-0 ${
-                                    score >= 75 
+                            {/* ROW BADGES: GMAIL / MATCH SCORE (STANGA) + DATA (DREAPTA) - NICIODATA SUPRAPUSE */}
+                            <div className="flex items-center justify-between gap-2 pt-0.5">
+                              {isGmail ? (
+                                <span className="inline-flex items-center gap-1 font-bold text-[10px] text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full shrink-0" title="Detectat automat prin sincronizare Gmail">
+                                  <Mail className="w-3 h-3 text-red-600 shrink-0" />
+                                  <span>Gmail</span>
+                                </span>
+                              ) : (
+                                <span className={`inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full shrink-0 ${
+                                  score >= 75 
                                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                     : score >= 50
                                     ? 'bg-amber-50 text-amber-700 border border-amber-200'
                                     : 'bg-slate-50 text-slate-700 border border-slate-200'
-                                  }`}>
-                                    <Sparkles className="w-2.5 h-2.5 shrink-0" />
-                                    {score.toFixed(0)}% Match ATS
-                                  </span>
-                                  
-                                  {app.appliedDate && (
-                                    <span className="inline-flex items-center gap-1 font-bold text-[10px] text-gray-600 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md shrink-0" title={`Data aplicarii: ${app.appliedDate}`}>
-                                      <Calendar className="w-2.5 h-2.5 text-gray-500 shrink-0" />
-                                      <span>{app.appliedDate}</span>
-                                    </span>
-                                  )}
+                                }`}>
+                                  <Sparkles className="w-3 h-3 shrink-0" />
+                                  <span>{score > 0 ? `${score.toFixed(0)}% Match` : 'ATS Match'}</span>
+                                </span>
+                              )}
+
+                              {app.appliedDate && (
+                                <span className="inline-flex items-center gap-1 font-medium text-[10px] text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-md shrink-0 ml-auto" title={`Data adaugarii/aplicarii: ${app.appliedDate}`}>
+                                  <Calendar className="w-3 h-3 text-gray-400 shrink-0" />
+                                  <span>{app.appliedDate}</span>
+                                </span>
+                              )}
+                            </div>
+
+                            {/* SUBTITLU EXPEDITOR GMAIL SAU BARA PROGRESS SCOR MATCH */}
+                            {isGmail ? (
+                              emailSender && (
+                                <div className="text-[10px] text-gray-500 truncate" title={`Expeditor: ${emailSender}`}>
+                                  De la: <strong className="text-gray-700 font-semibold">{emailSender}</strong>
                                 </div>
+                              )
+                            ) : (
+                              score > 0 && (
                                 <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden border border-gray-200/60">
                                   <div 
                                     className={`h-full rounded-full transition-all duration-500 ${
@@ -1064,7 +1060,7 @@ export default function KanbanBoard({
                                     style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
                                   ></div>
                                 </div>
-                              </div>
+                              )
                             )}
 
                             {/* CV SELECTOR (COMPACT & CLEAN) */}

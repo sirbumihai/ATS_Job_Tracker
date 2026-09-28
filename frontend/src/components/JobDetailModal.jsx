@@ -297,7 +297,12 @@ export default function JobDetailModal({
 
     // IMPORTANT: Nu rulam NICIODATA analiza AI pe emailurile Gmail
     const isTargetGmail = targetJob.sourcePlatform === 'GMAIL' 
-      || (typeof targetJob.rawDescription === 'string' && (targetJob.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || targetJob.rawDescription.includes('GMAIL (Sincronizat Automat)')))
+      || (typeof targetJob.rawDescription === 'string' && (
+        targetJob.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || 
+        targetJob.rawDescription.includes('GMAIL (Sincronizat Automat)') ||
+        targetJob.rawDescription.includes('CONTINUT COMPLET EMAIL') ||
+        targetJob.rawDescription.includes('CONȚINUT COMPLET EMAIL')
+      ))
       || (typeof targetJob.notes === 'string' && targetJob.notes.includes('[Gmail Sync'));
     if (isTargetGmail) return;
 
@@ -415,7 +420,12 @@ export default function JobDetailModal({
 
     // Daca este job extras din Gmail, nu apelam niciun model AI si afisam direct emailul
     const isTargetGmail = job.sourcePlatform === 'GMAIL' 
-      || (typeof job.rawDescription === 'string' && (job.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || job.rawDescription.includes('GMAIL (Sincronizat Automat)')))
+      || (typeof job.rawDescription === 'string' && (
+        job.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || 
+        job.rawDescription.includes('GMAIL (Sincronizat Automat)') ||
+        job.rawDescription.includes('CONTINUT COMPLET EMAIL') ||
+        job.rawDescription.includes('CONȚINUT COMPLET EMAIL')
+      ))
       || (typeof job.notes === 'string' && job.notes.includes('[Gmail Sync'));
 
     if (isTargetGmail) {
@@ -518,7 +528,12 @@ export default function JobDetailModal({
   const isGmailJob = useMemo(() => {
     if (!currentJob) return false;
     return currentJob.sourcePlatform === 'GMAIL' 
-      || (typeof currentJob.rawDescription === 'string' && (currentJob.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || currentJob.rawDescription.includes('GMAIL (Sincronizat Automat)')))
+      || (typeof currentJob.rawDescription === 'string' && (
+        currentJob.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || 
+        currentJob.rawDescription.includes('GMAIL (Sincronizat Automat)') ||
+        currentJob.rawDescription.includes('CONTINUT COMPLET EMAIL') ||
+        currentJob.rawDescription.includes('CONȚINUT COMPLET EMAIL')
+      ))
       || (typeof currentJob.notes === 'string' && currentJob.notes.includes('[Gmail Sync'));
   }, [currentJob]);
 
@@ -545,8 +560,8 @@ export default function JobDetailModal({
     const statusMatch = raw.match(/🏷️\s*Status Detectat:\s*([^\n\r]+)/i);
     if (statusMatch) status = statusMatch[1].trim();
 
-    if (raw.includes('CONTINUT COMPLET EMAIL:')) {
-      const parts = raw.split(/CONTINUT COMPLET EMAIL:[\s\S]*?-{10,}/i);
+    if (/CON[TȚ]INUT COMPLET EMAIL:/i.test(raw)) {
+      const parts = raw.split(/CON[TȚ]INUT COMPLET EMAIL:[\s\S]*?-{10,}/i);
       if (parts.length > 1) {
         body = parts[1].trim();
       }
@@ -554,7 +569,7 @@ export default function JobDetailModal({
 
     if (!body) {
       body = raw
-        .replace(/📩 EMAIL DE RECRUTARE GMAIL[\s\S]*?={10,}/gi, '')
+        .replace(/📩\s*EMAIL DE RECRUTARE GMAIL[\s\S]*?={10,}/gi, '')
         .replace(/============================================================/g, '')
         .trim();
     }

@@ -142,7 +142,7 @@ public class GmailSyncService {
 
             log.info("[GMAIL SYNC] Colectate {} emailuri candidate de recrutare pentru {}. Rezolvare rapidă...", candidateList.size(), request.getEmail());
 
-            // 2. Fast-Path Deterministic: verificăm dacă putem parsa direct cu acuratețe 100% fără a consuma tokeni AI
+            // 2. Fast-Path Deterministic: verificam daca putem parsa direct cu acuratete 100% fara a consuma tokeni AI
             List<CandidateEmailRecord> ambiguousList = new ArrayList<>();
             for (CandidateEmailRecord item : candidateList) {
                 EmailParserService.ParsedJobEmail fastParsed = emailParserService.parseFastOrDeterministic(item.sender(), item.subject(), item.body());
@@ -155,12 +155,18 @@ public class GmailSyncService {
                 }
             }
 
-            // 3. Procesăm doar emailurile ambigue rămase (dacă există) în loturi mici cu modelul AI Qwen3.8-27b
+            // 3. Procesam un numar strict limitat (maxim 8) de emailuri ambigue cu modelul AI, iar restul deterministic
             if (!ambiguousList.isEmpty()) {
-                log.info("[GMAIL SYNC] {} emailuri ambigue trimise la clasificatorul AI în loturi compacte...", ambiguousList.size());
+                int maxAiToProcess = Math.min(8, ambiguousList.size());
+                List<CandidateEmailRecord> aiToProcess = ambiguousList.subList(0, maxAiToProcess);
+                List<CandidateEmailRecord> remainingDeterministic = ambiguousList.subList(maxAiToProcess, ambiguousList.size());
+
+                log.info("[GMAIL SYNC] {} emailuri trimise la clasificatorul AI (max 8 pentru viteza), restul de {} rezolvate direct deterministic.",
+                        aiToProcess.size(), remainingDeterministic.size());
+
                 int chunkSize = 4;
-                for (int i = 0; i < ambiguousList.size(); i += chunkSize) {
-                    List<CandidateEmailRecord> chunk = ambiguousList.subList(i, Math.min(i + chunkSize, ambiguousList.size()));
+                for (int i = 0; i < aiToProcess.size(); i += chunkSize) {
+                    List<CandidateEmailRecord> chunk = aiToProcess.subList(i, Math.min(i + chunkSize, aiToProcess.size()));
                     List<EmailParserService.CandidateEmailItem> batchItems = chunk.stream()
                             .map(c -> new EmailParserService.CandidateEmailItem(c.id(), c.sender(), c.subject(), c.snippet()))
                             .toList();
@@ -171,10 +177,11 @@ public class GmailSyncService {
                         try {
                             EmailParserService.ParsedJobEmail parsed = aiBatchResults.get(item.id());
                             if (parsed == null) {
-                                parsed = emailParserService.parse(item.sender(), item.subject(), item.body());
+                                // Fallback direct deterministic (fara apeluri individuale suplimentare AI ca sa evitam rate limit 429)
+                                parsed = emailParserService.parseFastOrDeterministic(item.sender(), item.subject(), item.body());
                             }
 
-                            if (!parsed.isRecruitmentEmail()) {
+                            if (parsed == null || !parsed.isRecruitmentEmail()) {
                                 continue;
                             }
 
@@ -183,19 +190,21 @@ public class GmailSyncService {
                             log.debug("[GMAIL SYNC] Eroare la aplicarea rezultatului pentru un mesaj: {}", e.getMessage());
                         }
                     }
+                }
 
-                    if (i + chunkSize < ambiguousList.size()) {
-                        try {
-                            Thread.sleep(200);
-                        } catch (InterruptedException ignored) {}
+                // Pentru restul de mesaje ambigue peste plafonul AI, aplicam fallback deterministic rapid (0 ms, 0 tokeni)
+                for (CandidateEmailRecord item : remainingDeterministic) {
+                    EmailParserService.ParsedJobEmail detParsed = emailParserService.parseFastOrDeterministic(item.sender(), item.subject(), item.body());
+                    if (detParsed != null && detParsed.isRecruitmentEmail()) {
+                        processMatchedEmail(user, userApps, detParsed, item.sender(), item.subject(), item.emailDate(), item.body(), request.isAutoCreateMissing(), result);
                     }
                 }
             }
 
             inbox.close(false);
             result.setSuccess(true);
-            result.setMessage("Sincronizare finalizată cu succes. " + result.getUpdatedApplications() + " aplicații actualizate, "
-                    + result.getCreatedApplications() + " candidaturi noi adăugate automat.");
+            result.setMessage("Sincronizare finalizata cu succes. " + result.getUpdatedApplications() + " aplicatii actualizate, "
+                    + result.getCreatedApplications() + " candidaturi noi adaugate automat.");
 
             log.info("[GMAIL SYNC] Finalizat pentru {}: {} actualizate, {} create din {} emailuri de recrutare potrivite.",
                     request.getEmail(), result.getUpdatedApplications(), result.getCreatedApplications(), result.getMatchedEmails());
@@ -308,20 +317,20 @@ public class GmailSyncService {
         StringBuilder sb = new StringBuilder();
         sb.append("📩 EMAIL DE RECRUTARE GMAIL (Sincronizat Automat)\n");
         sb.append("============================================================\n");
-        sb.append("📅 Data Primirii: ").append(emailDate != null ? emailDate.toString() : "Dată Nespecificată").append("\n");
+        sb.append("📅 Data Primirii: ").append(emailDate != null ? emailDate.toString() : "Data Nespecificata").append("\n");
         sb.append("👤 Expeditor: ").append(sender != null && !sender.isBlank() ? sender : "Nespecificat").append("\n");
-        sb.append("📌 Subiect: ").append(subject != null && !subject.isBlank() ? subject : "Fără Subiect").append("\n");
+        sb.append("📌 Subiect: ").append(subject != null && !subject.isBlank() ? subject : "Fara Subiect").append("\n");
         sb.append("🏷️ Status Detectat: ").append(status != null ? status.name() : "APPLIED").append("\n");
         sb.append("============================================================\n\n");
-        sb.append("📝 CONȚINUT COMPLET EMAIL:\n");
+        sb.append("📝 CONTINUT COMPLET EMAIL:\n");
         sb.append("------------------------------------------------------------\n");
         String clean = body != null ? body.trim() : "";
         if (clean.length() > 5000) {
-            sb.append(clean, 0, 5000).append("\n\n[... Trunchiat pentru afișare optimizată ...]");
+            sb.append(clean, 0, 5000).append("\n\n[... Trunchiat pentru afisare optimizata ...]");
         } else if (!clean.isEmpty()) {
             sb.append(clean);
         } else {
-            sb.append("(Corpul mesajului nu conține text adițional)");
+            sb.append("(Corpul mesajului nu contine text aditional)");
         }
         return sb.toString();
     }
@@ -336,13 +345,16 @@ public class GmailSyncService {
             JobPosting jp = app.getJobPosting();
             if (jp == null) continue;
 
-            String rawDesc = jp.getRawDescription();
+            String rawDesc = jp.getRawDescription() != null ? jp.getRawDescription() : "";
             String notes = app.getNotes() != null ? app.getNotes() : "";
             String comp = jp.getCompanyName() != null ? jp.getCompanyName() : "";
             String title = jp.getJobTitle() != null ? jp.getJobTitle() : "";
 
             boolean isGmailApp = notes.contains("Gmail Sync")
-                    || (rawDesc != null && (rawDesc.contains("EMAIL DE RECRUTARE GMAIL") || rawDesc.contains("GMAIL (Sincronizat Automat)")))
+                    || rawDesc.contains("EMAIL DE RECRUTARE GMAIL")
+                    || rawDesc.contains("GMAIL (Sincronizat Automat)")
+                    || rawDesc.contains("CONTINUT COMPLET EMAIL")
+                    || rawDesc.contains("CONȚINUT COMPLET EMAIL")
                     || "REQ".equalsIgnoreCase(comp)
                     || comp.toLowerCase().contains("care ai aplicat")
                     || comp.toLowerCase().contains("acest job")
@@ -351,26 +363,42 @@ public class GmailSyncService {
 
             if (!isGmailApp) continue;
 
+            // 1. Eliminare instantanee a intrarilor spam / newsletter create accidental anterior
+            boolean isSpamOrNewsletter = comp.equalsIgnoreCase("Tomas from Kickresume")
+                    || comp.equalsIgnoreCase("Aleks Gornik")
+                    || title.toLowerCase().contains("why mindset matters")
+                    || title.toLowerCase().contains("10 joburi noi")
+                    || title.toLowerCase().contains("joburi similare")
+                    || title.toLowerCase().contains("verify your email")
+                    || rawDesc.toLowerCase().contains("let job offers come to you")
+                    || rawDesc.toLowerCase().contains("why mindset matters in engineering");
+
+            if (isSpamOrNewsletter) {
+                applicationRepository.delete(app);
+                jobPostingRepository.delete(jp);
+                repairedCount++;
+                continue;
+            }
+
             boolean changed = false;
             String sender = "";
             String subject = "";
             String body = "";
+            LocalDate emailDate = app.getAppliedDate();
 
-            if (rawDesc != null) {
-                java.util.regex.Matcher mSender = java.util.regex.Pattern.compile("👤\\s*Expeditor:\\s*([^\\n\\r]+)").matcher(rawDesc);
-                if (mSender.find()) sender = mSender.group(1).trim();
+            java.util.regex.Matcher mSender = java.util.regex.Pattern.compile("👤\\s*Expeditor:\\s*([^\\n\\r]+)").matcher(rawDesc);
+            if (mSender.find()) sender = mSender.group(1).trim();
 
-                java.util.regex.Matcher mSubj = java.util.regex.Pattern.compile("📌\\s*Subiect:\\s*([^\\n\\r]+)").matcher(rawDesc);
-                if (mSubj.find()) subject = mSubj.group(1).trim();
+            java.util.regex.Matcher mSubj = java.util.regex.Pattern.compile("📌\\s*Subiect:\\s*([^\\n\\r]+)").matcher(rawDesc);
+            if (mSubj.find()) subject = mSubj.group(1).trim();
 
-                if (rawDesc.contains("CONȚINUT COMPLET EMAIL:")) {
-                    String[] parts = rawDesc.split("CONȚINUT COMPLET EMAIL:[\\s\\S]*?-{10,}");
-                    if (parts.length > 1) {
-                        body = parts[1].trim();
-                    }
-                } else {
-                    body = rawDesc;
+            if (rawDesc.contains("CONTINUT COMPLET EMAIL:") || rawDesc.contains("CONȚINUT COMPLET EMAIL:")) {
+                String[] parts = rawDesc.split("(?:CONTINUT|CONȚINUT) COMPLET EMAIL:[\\s\\S]*?-{10,}");
+                if (parts.length > 1) {
+                    body = parts[1].trim();
                 }
+            } else {
+                body = rawDesc;
             }
 
             if (sender.isBlank() && !notes.isBlank()) {
@@ -379,49 +407,67 @@ public class GmailSyncService {
             }
 
             EmailParserService.ParsedJobEmail reParsed = emailParserService.parseFastOrDeterministic(sender, subject, body);
-            if (reParsed == null) {
-                reParsed = emailParserService.parse(sender, subject, body);
-            }
 
-            if (reParsed != null) {
-                String newComp = reParsed.companyName();
-                String newTitle = reParsed.jobTitle();
-                ApplicationStatus newStatus = reParsed.detectedStatus();
-
-                // 1. Corectare Nume Companie dacă era corupt sau generic
-                if (newComp != null && !newComp.isBlank() && !newComp.equalsIgnoreCase("Companie Parteneră")) {
-                    if ("REQ".equalsIgnoreCase(comp)
-                            || comp.toLowerCase().contains("care ai aplicat")
-                            || comp.toLowerCase().contains("acest job")
-                            || comp.toLowerCase().contains("companie partener")
-                            || !comp.equalsIgnoreCase(newComp)) {
-                        jp.setCompanyName(newComp);
-                        changed = true;
-                    }
+            // Corectare nume companie corupte sau generice
+            if ("REQ".equalsIgnoreCase(comp)
+                    || comp.toLowerCase().contains("care ai aplicat")
+                    || comp.toLowerCase().contains("acest job")
+                    || comp.toLowerCase().contains("companie partener")
+                    || comp.equalsIgnoreCase("Ashbyhq")
+                    || comp.equalsIgnoreCase("HR System")
+                    || comp.equalsIgnoreCase("FlutterBe Workday")
+                    || comp.equalsIgnoreCase("Your Career")) {
+                
+                String targetComp = null;
+                if (comp.equalsIgnoreCase("Ashbyhq") && subject.toLowerCase().contains("cohere")) {
+                    targetComp = "Cohere";
+                } else if (comp.equalsIgnoreCase("HR System") && subject.toLowerCase().contains("capgemini")) {
+                    targetComp = "Capgemini";
+                } else if (comp.equalsIgnoreCase("FlutterBe Workday")) {
+                    targetComp = "Flutter Entertainment";
+                } else if (comp.equalsIgnoreCase("Your Career")) {
+                    targetComp = "Google";
+                } else if (reParsed != null && reParsed.companyName() != null && !reParsed.companyName().equalsIgnoreCase("Companie Partenera")) {
+                    targetComp = reParsed.companyName();
                 }
 
-                // 2. Corectare Titlu Job dacă era corupt sau generic
-                if (newTitle != null && !newTitle.isBlank() && !newTitle.equalsIgnoreCase("Software Position")) {
-                    if ("Software Position".equalsIgnoreCase(title)
-                            || title.toLowerCase().contains("cu succes la acest job")
-                            || !title.equalsIgnoreCase(newTitle)) {
-                        jp.setJobTitle(newTitle);
-                        changed = true;
-                    }
-                }
-
-                // 3. Corectare Status (în special falsuri BestJobs sau respingeri ING)
-                if (app.getStatus() == ApplicationStatus.INTERVIEWING) {
-                    if (newStatus == ApplicationStatus.APPLIED || (rawDesc != null && rawDesc.contains("Bestie"))) {
-                        app.setStatus(ApplicationStatus.APPLIED);
-                        changed = true;
-                    }
-                }
-
-                if (newStatus == ApplicationStatus.REJECTED && app.getStatus() != ApplicationStatus.REJECTED) {
-                    app.setStatus(ApplicationStatus.REJECTED);
+                if (targetComp != null && !targetComp.equalsIgnoreCase(comp)) {
+                    jp.setCompanyName(targetComp);
                     changed = true;
                 }
+            }
+
+            // Corectare titlu job generic
+            if ("Software Position".equalsIgnoreCase(title)
+                    || title.toLowerCase().contains("cu succes la acest job")
+                    || title.toLowerCase().contains("care ai aplicat")) {
+                String targetTitle = (reParsed != null && reParsed.jobTitle() != null && !reParsed.jobTitle().equalsIgnoreCase("Software Position"))
+                        ? reParsed.jobTitle()
+                        : (subject != null && !subject.isBlank() ? subject : "Candidatura " + jp.getCompanyName());
+                jp.setJobTitle(targetTitle);
+                changed = true;
+            }
+
+            // Corectare false interviuri (Bestie video promo, Sova assessment survey, Vodafone tracking)
+            if (app.getStatus() == ApplicationStatus.INTERVIEWING) {
+                boolean isFalseInterview = rawDesc.toLowerCase().contains("bestie")
+                        || rawDesc.toLowerCase().contains("interviu video cu bestie")
+                        || rawDesc.toLowerCase().contains("sova assessment")
+                        || rawDesc.toLowerCase().contains("online assessment")
+                        || rawDesc.toLowerCase().contains("track your")
+                        || subject.toLowerCase().contains("feedback on your recent online assessment")
+                        || subject.toLowerCase().contains("track your vois");
+
+                if (isFalseInterview || (reParsed != null && reParsed.detectedStatus() == ApplicationStatus.APPLIED)) {
+                    app.setStatus(ApplicationStatus.APPLIED);
+                    changed = true;
+                }
+            }
+
+            // Asigurare format complet standardizat de email in rawDescription
+            if (!rawDesc.contains("EMAIL DE RECRUTARE GMAIL") || !rawDesc.contains("CONTINUT COMPLET EMAIL")) {
+                jp.setRawDescription(buildGmailJobDescription(sender, subject, emailDate, app.getStatus(), body));
+                changed = true;
             }
 
             if (changed) {
