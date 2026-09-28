@@ -450,27 +450,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* Quick Context Actions */}
+          {/* User Account / Status Info */}
           <div className="flex items-center gap-2.5">
-            {activeTab === 'tracker' && (
-              <>
-                <button
-                  onClick={() => setShowUploadResumeModal(true)}
-                  className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
-                >
-                  <Upload className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Încarcă CV</span>
-                </button>
-                <button
-                  onClick={() => setShowAddJobModal(true)}
-                  className="px-3 py-1.5 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
-                >
-                  <Plus className="w-3.5 h-3.5 text-white" />
-                  <span>Adaugă Job</span>
-                </button>
-              </>
-            )}
-
             {currentUser && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100/80 border border-gray-200 text-gray-700">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
