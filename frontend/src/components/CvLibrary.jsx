@@ -26,6 +26,7 @@ export default function CvLibrary({
   const [searchQuery, setSearchQuery] = useState('');
   const [creatingNew, setCreatingNew] = useState(false);
   const [newCvTitle, setNewCvTitle] = useState('');
+  const [importingPdf, setImportingPdf] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [actionMessage, setActionMessage] = useState(null);
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
@@ -56,6 +57,47 @@ export default function CvLibrary({
   const showNotification = (msg) => {
     setActionMessage(msg);
     setTimeout(() => setActionMessage(null), 3000);
+  };
+
+  // IMPORT CV FROM PDF / WORD FILE
+  const handleImportCv = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!activeUserId) {
+      alert("Te rugam sa te autentifici inainte de a incarca un CV.");
+      return;
+    }
+
+    setImportingPdf(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/v1/resumes', {
+        method: 'POST',
+        headers: { 'X-User-Id': activeUserId },
+        body: formData
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        await fetchCvProfiles();
+        const createdCvId = data?.parsedProfile?.id;
+        showNotification(`CV-ul "${file.name}" a fost importat cu succes!`);
+        if (createdCvId && onEditCvInStudio) {
+          onEditCvInStudio(createdCvId);
+        }
+      } else {
+        alert("Eroare la importarea fisierului. Te rugam sa incerci din nou.");
+      }
+    } catch (err) {
+      console.error("Eroare la importarea CV-ului:", err);
+      alert("A aparut o eroare la conexiunea cu serverul.");
+    } finally {
+      setImportingPdf(false);
+      if (e.target) e.target.value = '';
+    }
   };
 
   // CREATE NEW CV PROFILE
@@ -258,6 +300,18 @@ export default function CvLibrary({
           </div>
 
           <div className="flex items-center gap-2.5">
+            <label className="px-3.5 py-2 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200/90 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer">
+              {importingPdf ? <RefreshCw className="w-4 h-4 animate-spin text-gray-600" /> : <Upload className="w-4 h-4 text-gray-600" />}
+              <span>{importingPdf ? 'Se importa...' : 'Importa CV (PDF / Word)'}</span>
+              <input 
+                type="file" 
+                accept=".pdf,.docx,.doc" 
+                onChange={handleImportCv} 
+                disabled={importingPdf}
+                className="hidden" 
+              />
+            </label>
+
             <button
               onClick={() => setShowCreateModal(true)}
               className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
@@ -399,16 +453,30 @@ export default function CvLibrary({
           <div>
             <h3 className="text-base font-bold text-gray-900">Nu ai niciun CV salvat inca</h3>
             <p className="text-xs text-gray-500 mt-1">
-              Creeaza primul tau CV sau editeaza un sablon pentru a incepe sa personalizezi aplicarile.
+              Creeaza primul tau CV sau importa un fisier existent pentru a incepe sa personalizezi aplicarile.
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Creeaza Primul CV
-          </button>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <label className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer">
+              {importingPdf ? <RefreshCw className="w-4 h-4 animate-spin text-gray-600" /> : <Upload className="w-4 h-4 text-gray-600" />}
+              <span>{importingPdf ? 'Se importa...' : 'Importa CV (PDF / Word)'}</span>
+              <input 
+                type="file" 
+                accept=".pdf,.docx,.doc" 
+                onChange={handleImportCv} 
+                disabled={importingPdf}
+                className="hidden" 
+              />
+            </label>
+
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Creeaza Primul CV
+            </button>
+          </div>
         </div>
       )}
 
@@ -429,7 +497,7 @@ export default function CvLibrary({
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   Denumire Versiune CV *
@@ -445,6 +513,28 @@ export default function CvLibrary({
                 <p className="text-[11px] text-gray-400 mt-1">
                   Poti crea versiuni specifice pentru diferite domenii, companii sau tehnologii.
                 </p>
+              </div>
+
+              <div className="pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-xs font-semibold text-gray-700 block">Sau porneste de la un CV existent</span>
+                    <span className="text-[11px] text-gray-400">Incarca un fisier PDF sau Word pentru extragere automata</span>
+                  </div>
+                  <label className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition shrink-0">
+                    <Upload className="w-3.5 h-3.5 text-gray-600" />
+                    <span>Importa fisier</span>
+                    <input 
+                      type="file" 
+                      accept=".pdf,.docx,.doc" 
+                      onChange={(e) => {
+                        setShowCreateModal(false);
+                        handleImportCv(e);
+                      }} 
+                      className="hidden" 
+                    />
+                  </label>
+                </div>
               </div>
             </div>
 

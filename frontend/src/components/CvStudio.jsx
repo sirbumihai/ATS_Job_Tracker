@@ -13,7 +13,6 @@ import {
   Zap,
   CheckCircle2,
   AlertTriangle,
-  Upload,
   Briefcase,
   FolderGit2,
   GraduationCap,
@@ -205,8 +204,6 @@ export default function CvStudio({
   
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [pdfCustomName, setPdfCustomName] = useState(() => (contactData?.fullName || 'Resume').trim().replace(/\s+/g, '_') + '_ATS');
-  const [parsingPdf, setParsingPdf] = useState(false);
-  const [parsedPdfSuccess, setParsedPdfSuccess] = useState(null);
 
   // MULTI-PAGE A4 LAYOUT STATES
   const [pageStats, setPageStats] = useState({ pages: 1, percent: 100, isOverflown: false });
@@ -711,100 +708,6 @@ export default function CvStudio({
     setSkillsFields(prev => prev.filter((_, idx) => idx !== fieldIdx));
     setSelectedTarget(null);
   };
-
-  // UPLOAD PDF CV & AUTO FILL
-  const handleFileUploadPdf = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!activeUserId) {
-      alert("Te rugam sa te autentifici inainte de a incarca un CV.");
-      return;
-    }
-
-    setParsingPdf(true);
-    setParsedPdfSuccess(null);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch('/api/v1/resumes', {
-        method: 'POST',
-        headers: { 'X-User-Id': activeUserId },
-        body: formData
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.parsedProfile) {
-          const p = data.parsedProfile;
-          const safeParse = (str, fallback) => {
-            try { return str ? (typeof str === 'string' ? JSON.parse(str) : str) : fallback; } catch (e) { return fallback; }
-          };
-
-          if (p.title) setCvTitle(p.title);
-          if (p.id) setCurrentCvId(p.id);
-
-          const rawName = p.fullName || 'Sirbu Mihai-Alexandru';
-          const formattedFullName = rawName;
-
-          setContactData({
-            fullName: formattedFullName,
-            email: p.email || 'sarbu.mihai@gmail.com',
-            phone: p.phone || '(+40) 723 034 706',
-            location: p.location || 'Bucuresti, Romania',
-            linkedin: p.linkedin || 'https://linkedin.com/in/sarbumihai',
-            github: p.github || 'https://github.com/sarbumihai'
-          });
-
-          if (p.summary) setSummaryText(p.summary);
-
-          const parsedEdu = safeParse(p.educationJson, []).map((e, idx) => ({ ...e, id: e.id || idx + 1 }));
-          if (Array.isArray(parsedEdu) && parsedEdu.length > 0) setEducationList(parsedEdu);
-
-          const parsedExp = safeParse(p.workExperienceJson, []).map((e, idx) => ({ ...e, id: e.id || idx + 1 }));
-          if (Array.isArray(parsedExp) && parsedExp.length > 0) setExperienceList(parsedExp);
-
-          const parsedProj = safeParse(p.projectsJson, []).map((pr, idx) => ({ ...pr, id: pr.id || idx + 1 }));
-          if (Array.isArray(parsedProj) && parsedProj.length > 0) setProjectsList(parsedProj);
-
-          if (p.skillsLanguages || p.skillsFrameworks || p.skillsDevops || p.skillsDatabases) {
-            setSkillsFields([
-              {
-                id: 'languages',
-                label: 'Languages',
-                items: p.skillsLanguages ? p.skillsLanguages.split(',').map(s => s.trim()).filter(Boolean) : ['Java', 'TypeScript', 'Python', 'C/C++']
-              },
-              {
-                id: 'frameworks',
-                label: 'Frameworks',
-                items: p.skillsFrameworks ? p.skillsFrameworks.split(',').map(s => s.trim()).filter(Boolean) : ['Spring Boot', 'React', 'Next.js']
-              },
-              {
-                id: 'developer_tools',
-                label: 'Developer Tools',
-                items: p.skillsDevops ? p.skillsDevops.split(',').map(s => s.trim()).filter(Boolean) : ['Docker', 'Git', 'Linux', 'CI/CD']
-              },
-              {
-                id: 'libraries',
-                label: 'Libraries',
-                items: p.skillsDatabases ? p.skillsDatabases.split(',').map(s => s.trim()).filter(Boolean) : ['PostgreSQL', 'Redis', 'Tailwind']
-              }
-            ]);
-          }
-        }
-        setParsedPdfSuccess(`CV-ul "${file.name}" a fost importat, structurat pe sablonul Jake Resume si poate fi editat live!`);
-        setTimeout(() => setParsedPdfSuccess(null), 6000);
-      }
-    } catch (err) {
-      console.error("Eroare la incarcarea PDF-ului:", err);
-    } finally {
-      setParsingPdf(false);
-    }
-  };
-
-
 
   // DIRECT PDF DOWNLOAD
   const handleDownloadDirectPdf = async () => {
@@ -1343,7 +1246,7 @@ export default function CvStudio({
 
                       <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
                       <div
-                        contentEditable={true}
+                        contentEditable={!(isRewritingThisBullet && activeRewritingBullet.suggestion)}
                         suppressContentEditableWarning={true}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1355,9 +1258,18 @@ export default function CvStudio({
                           setExperienceList(updated);
                         }}
                         className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
-                          isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
+                          isRewritingThisBullet && activeRewritingBullet.suggestion
+                            ? 'line-through text-rose-600 bg-rose-50/70 border-rose-200'
+                            : isBulletSelected 
+                              ? 'border-gray-400 bg-gray-100/40' 
+                              : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
                         }`}
-                        style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
+                        style={{ 
+                          fontSize: '8.5pt', 
+                          lineHeight: '1.35', 
+                          color: isRewritingThisBullet && activeRewritingBullet.suggestion ? '#dc2626' : '#000000', 
+                          textAlign: 'justify' 
+                        }}
                       >
                         {b}
                       </div>
@@ -1388,50 +1300,49 @@ export default function CvStudio({
                       </div>
                     </div>
 
-                    {/* INLINE AI DIFF */}
+                    {/* INLINE AI SUGGESTION */}
                     {isRewritingThisBullet && (
-                      <div className="no-pdf ml-3 mt-1.5 mb-2 p-2.5 bg-neutral-50/90 border border-neutral-200 rounded-xl font-sans text-xs space-y-2 shadow-xs">
+                      <div className="no-pdf ml-3.5 mt-1 mb-1.5 flex items-start gap-1.5 font-sans">
                         {activeRewritingBullet.loading ? (
-                          <div className="flex items-center gap-2 text-neutral-600 py-1">
+                          <div className="flex items-center gap-1.5 text-neutral-600 py-0.5 text-xs">
                             <RefreshCw className="w-3.5 h-3.5 animate-spin text-neutral-800" />
                             <span className="text-[11px] font-medium">Generare sugestie AI...</span>
                           </div>
                         ) : activeRewritingBullet.suggestion ? (
-                          <div className="space-y-2">
-                            <div className="space-y-1">
-                              <div className="text-[10.5px] text-rose-700 bg-rose-50/90 border border-rose-200/90 rounded-lg px-2.5 py-1.5 line-through leading-relaxed">
-                                {activeRewritingBullet.originalText}
-                              </div>
-                              <div className="text-[11px] text-emerald-800 bg-emerald-50/90 border border-emerald-200/90 rounded-lg px-2.5 py-1.5 font-medium leading-relaxed">
-                                {activeRewritingBullet.suggestion}
-                              </div>
+                          <>
+                            <div 
+                              className="text-emerald-700 bg-emerald-50/90 border border-emerald-300/80 rounded-lg px-2.5 py-1 text-[8.5pt] leading-[1.35] flex-1 font-medium select-text"
+                              style={{ fontFamily: "'Times New Roman', Times, serif" }}
+                            >
+                              {activeRewritingBullet.suggestion}
                             </div>
-                            <div className="flex items-center justify-end gap-2 pt-0.5">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveRewritingBullet(null);
-                                }}
-                                className="px-2.5 py-1 text-[11px] font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/60 rounded-lg transition cursor-pointer"
-                              >
-                                Refuza
-                              </button>
+                            <div className="flex items-center gap-1 shrink-0 pt-0.5">
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleSelectBulletVariation(activeRewritingBullet.suggestion);
                                 }}
-                                className="px-3 py-1 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-2xs transition flex items-center gap-1 cursor-pointer"
+                                title="Accepta modificarea"
+                                className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-2xs transition cursor-pointer flex items-center justify-center"
                               >
                                 <Check className="w-3.5 h-3.5" />
-                                Accepta
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveRewritingBullet(null);
+                                }}
+                                title="Refuza modificarea"
+                                className="p-1.5 bg-gray-100 hover:bg-rose-100 text-gray-600 hover:text-rose-700 border border-gray-200 hover:border-rose-300 rounded-lg transition cursor-pointer flex items-center justify-center"
+                              >
+                                <X className="w-3.5 h-3.5" />
                               </button>
                             </div>
-                          </div>
+                          </>
                         ) : (
-                          <div className="flex items-center justify-between text-[11px] text-rose-600 py-0.5">
+                          <div className="flex items-center gap-2 text-[11px] text-rose-600 py-0.5">
                             <span>Nu s-a putut genera sugestia AI.</span>
                             <button
                               type="button"
@@ -1682,7 +1593,7 @@ export default function CvStudio({
 
                         <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
                         <div
-                          contentEditable={true}
+                          contentEditable={!(isRewritingThisBullet && activeRewritingBullet.suggestion)}
                           suppressContentEditableWarning={true}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1694,9 +1605,18 @@ export default function CvStudio({
                             setProjectsList(updated);
                           }}
                           className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
-                            isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
+                            isRewritingThisBullet && activeRewritingBullet.suggestion
+                              ? 'line-through text-rose-600 bg-rose-50/70 border-rose-200'
+                              : isBulletSelected 
+                                ? 'border-gray-400 bg-gray-100/40' 
+                                : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
                           }`}
-                          style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
+                          style={{ 
+                            fontSize: '8.5pt', 
+                            lineHeight: '1.35', 
+                            color: isRewritingThisBullet && activeRewritingBullet.suggestion ? '#dc2626' : '#000000', 
+                            textAlign: 'justify' 
+                          }}
                         >
                           {b}
                         </div>
@@ -1727,50 +1647,49 @@ export default function CvStudio({
                         </div>
                       </div>
 
-                      {/* INLINE AI DIFF */}
+                      {/* INLINE AI SUGGESTION */}
                       {isRewritingThisBullet && (
-                        <div className="no-pdf ml-3 mt-1.5 mb-2 p-2.5 bg-neutral-50/90 border border-neutral-200 rounded-xl font-sans text-xs space-y-2 shadow-xs">
+                        <div className="no-pdf ml-3.5 mt-1 mb-1.5 flex items-start gap-1.5 font-sans">
                           {activeRewritingBullet.loading ? (
-                            <div className="flex items-center gap-2 text-neutral-600 py-1">
+                            <div className="flex items-center gap-1.5 text-neutral-600 py-0.5 text-xs">
                               <RefreshCw className="w-3.5 h-3.5 animate-spin text-neutral-800" />
                               <span className="text-[11px] font-medium">Generare sugestie AI...</span>
                             </div>
                           ) : activeRewritingBullet.suggestion ? (
-                            <div className="space-y-2">
-                              <div className="space-y-1">
-                                <div className="text-[10.5px] text-rose-700 bg-rose-50/90 border border-rose-200/90 rounded-lg px-2.5 py-1.5 line-through leading-relaxed">
-                                  {activeRewritingBullet.originalText}
-                                </div>
-                                <div className="text-[11px] text-emerald-800 bg-emerald-50/90 border border-emerald-200/90 rounded-lg px-2.5 py-1.5 font-medium leading-relaxed">
-                                  {activeRewritingBullet.suggestion}
-                                </div>
+                            <>
+                              <div 
+                                className="text-emerald-700 bg-emerald-50/90 border border-emerald-300/80 rounded-lg px-2.5 py-1 text-[8.5pt] leading-[1.35] flex-1 font-medium select-text"
+                                style={{ fontFamily: "'Times New Roman', Times, serif" }}
+                              >
+                                {activeRewritingBullet.suggestion}
                               </div>
-                              <div className="flex items-center justify-end gap-2 pt-0.5">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveRewritingBullet(null);
-                                  }}
-                                  className="px-2.5 py-1 text-[11px] font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/60 rounded-lg transition cursor-pointer"
-                                >
-                                  Refuza
-                                </button>
+                              <div className="flex items-center gap-1 shrink-0 pt-0.5">
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleSelectBulletVariation(activeRewritingBullet.suggestion);
                                   }}
-                                  className="px-3 py-1 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-2xs transition flex items-center gap-1 cursor-pointer"
+                                  title="Accepta modificarea"
+                                  className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-2xs transition cursor-pointer flex items-center justify-center"
                                 >
                                   <Check className="w-3.5 h-3.5" />
-                                  Accepta
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveRewritingBullet(null);
+                                  }}
+                                  title="Refuza modificarea"
+                                  className="p-1.5 bg-gray-100 hover:bg-rose-100 text-gray-600 hover:text-rose-700 border border-gray-200 hover:border-rose-300 rounded-lg transition cursor-pointer flex items-center justify-center"
+                                >
+                                  <X className="w-3.5 h-3.5" />
                                 </button>
                               </div>
-                            </div>
+                            </>
                           ) : (
-                            <div className="flex items-center justify-between text-[11px] text-rose-600 py-0.5">
+                            <div className="flex items-center gap-2 text-[11px] text-rose-600 py-0.5">
                               <span>Nu s-a putut genera sugestia AI.</span>
                               <button
                                 type="button"
@@ -2362,16 +2281,7 @@ export default function CvStudio({
               <span>AI Review</span>
             </button>
 
-            <div className="hidden sm:block h-5 w-px bg-gray-200" />
-
-            {/* DOCUMENT IMPORT */}
-            <label className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition">
-              <Upload className="w-3.5 h-3.5 text-gray-600" />
-              <span>{parsingPdf ? 'Se extrage...' : 'Importa'}</span>
-              <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
-            </label>
-
-              {/* RESTORE SECTIONS DROPDOWN (ONLY IF ANY SECTION IS HIDDEN) */}
+            {/* RESTORE SECTIONS DROPDOWN (ONLY IF ANY SECTION IS HIDDEN) */}
               {missingSections.length > 0 && (
                 <div className="relative">
                   <button
@@ -2436,14 +2346,6 @@ export default function CvStudio({
             </button>
           </div>
         </div>
-
-        {/* PARSED PDF SUCCESS BANNER */}
-        {parsedPdfSuccess && (
-          <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{parsedPdfSuccess}</span>
-          </div>
-        )}
       </div>
 
       {/* POLISH AI COACH PANEL */}
