@@ -4,7 +4,6 @@ import {
   FileSignature, 
   Sparkles, 
   Download, 
-  Printer, 
   Copy, 
   Check, 
   RefreshCw, 
@@ -280,16 +279,6 @@ export default function CoverLetterGenerator({
     } finally {
       setIsDownloadingPdf(false);
     }
-  };
-
-  // Native Vector Print (Save as PDF)
-  const handlePrint = () => {
-    const originalTitle = document.title;
-    const candidateClean = (letterData.candidateName || 'Candidat').trim().replace(/\s+/g, '_');
-    const companyClean = (letterData.companyName || 'Job').trim().replace(/\s+/g, '_');
-    document.title = `Cover_Letter_${candidateClean}_${companyClean}`;
-    window.print();
-    document.title = originalTitle;
   };
 
   // Copy complete letter text to clipboard
@@ -621,16 +610,6 @@ export default function CoverLetterGenerator({
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 flex items-center gap-1.5 transition cursor-pointer"
-                title="Printeaza sau salveaza ca PDF vectorial din browser"
-              >
-                <Printer className="w-3.5 h-3.5 text-gray-600" />
-                <span>Printeaza</span>
-              </button>
-
               <button
                 type="button"
                 onClick={handleDownloadPdf}
