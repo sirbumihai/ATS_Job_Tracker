@@ -101,16 +101,10 @@ public class LinkedInOptimizerService {
                 "https://www.linkedin.com/in/sirbu-mihai",
                 "(+40) 723 034 706",
                 "500+ conexiuni",
-                "Sunt student în cadrul Facultății de Automatică și Calculatoare (Universitatea POLITEHNICA din București), dedicat ingineriei software, sistemelor backend robuste și scalabile și optimizării algoritmice.\n\n" +
-                "🛠️ Ce construiesc și ce știu să fac:\n" +
-                "• Backend & Arhitectură: Java 21, Spring Boot 3, RESTful APIs, arhitecturi orientate pe microservicii, principii Clean Architecture și SOLID.\n" +
-                "• Baze de Date & Persistență: PostgreSQL, Microsoft SQL Server, indexare avansată B-Tree, modelare relațională 3NF, optimizare interogări SQL și căutare vectorială cu pgvector.\n" +
-                "• DevOps & Cloud: Docker Compose, Git & GitHub workflows, Maven, Nginx, Linux, migrații Flyway și pipeline-uri CI/CD.\n" +
-                "• Proiecte Reprezentative: Am proiectat și implementat ATS Job Tracker (Spring Boot 3 + PostgreSQL pgvector + React + Docker), un sistem distribuit cu web crawling concurent și potrivire semantică a joburilor.\n\n" +
-                "💼 Experiență practică:\n" +
-                "Am activat ca Software Engineering Intern la SIMAVI (Software Imagination & Vision), gestionând întregul ciclu SDLC pentru o aplicație full-stack în Java (Spring Boot) și optimizând interogările JPA pe baze de date cu 50.000+ înregistrări.\n\n" +
-                "🎯 Obiectiv curent: Deschis pentru oportunități de Junior Software Engineer / Junior Backend Developer sau colaborări tehnice cu echipe ambițioase.\n\n" +
-                "📫 Contact direct: sarbumihai0@gmail.com | Bucuros să mă conectez cu colegi din industrie, mentori și tech recruiters!",
+                "Inginer software la inceput de drum, student la Facultatea de Automatica si Calculatoare din cadrul Universitatii POLITEHNICA din Bucuresti. Lucrez in principal pe dezvoltare backend si arhitectura de aplicatii folosind Java si ecosistemul Spring Boot.\n\n" +
+                "In proiectele mele ma concentrez pe scrierea de cod modular si usor de intretinut, proiectarea de baze de date relationale (PostgreSQL, Microsoft SQL Server) si containerizarea serviciilor cu Docker. Recent am dezvoltat ATS Job Tracker, o platforma full-stack cu backend in Spring Boot 3, persistenta in PostgreSQL cu extensia pgvector pentru cautare semantica, frontend in React si deployment containerizat. Anterior, am activat ca Software Engineering Intern la SIMAVI, unde am lucrat pe intregul ciclu de dezvoltare (SDLC) pentru aplicatii enterprise in Java.\n\n" +
+                "Sunt deschis pentru oportunitati de Junior Software Engineer sau Junior Backend Developer, unde pot contribui tehnic si pot aprofunda sisteme distribuite de inalta performanta.\n\n" +
+                "Contact: sarbumihai0@gmail.com | Bucuresti, Romania",
                 List.of(
                         new LinkedInEducationDto(
                                 "National University of Science and Technology POLITEHNICA Bucharest",
@@ -546,16 +540,11 @@ public class LinkedInOptimizerService {
     }
 
     private String generateOptimizedAbout(LinkedInProfileDto profile, String domain) {
-        return "Sunt student în cadrul Facultății de Automatică și Calculatoare (Universitatea POLITEHNICA din București), dedicat ingineriei software, dezvoltării de sisteme backend robuste și scalabile și optimizării algoritmice.\n\n" +
-                "🛠️ Ce construiesc și ce știu să fac:\n" +
-                "• Backend & Arhitectură: Java 21, Spring Boot 3, RESTful APIs, arhitecturi orientate pe microservicii, principii Clean Architecture și SOLID.\n" +
-                "• Baze de Date & Persistență: PostgreSQL, Microsoft SQL Server, indexare avansată, modelare relațională 3NF, optimizare de interogări SQL și căutare vectorială cu pgvector.\n" +
-                "• DevOps & Unelte Moderne: Docker, containerizare, Git & GitHub workflows, Maven, Linux și integrare continuă (CI/CD).\n" +
-                "• Proiecte Reprezentative: Am proiectat și implementat ATS Job Tracker (Spring Boot 3 + PostgreSQL + React + Docker), un sistem complex cu web crawling automat, deduplicare concurentă și potrivire semantică a joburilor.\n\n" +
-                "💡 Despre mine:\n" +
-                "Îmi place să înțeleg mecanismele de profunzime ale sistemelor – de la complexitatea algoritmilor și alocarea memoriei, până la fluxul complet al pachetelor printr-un API securizat. Sunt o persoană riguroasă, analitică și motivată să lucrez într-o echipă tehnică unde calitatea codului este o prioritate.\n\n" +
-                "🎯 Obiectiv curent: Sunt deschis pentru roluri de Junior Software Engineer / Junior Backend Developer sau Internship tehnic.\n\n" +
-                "📫 Contact direct: " + (profile.email() != null && !profile.email().isBlank() ? profile.email() : "sarbumihai0@gmail.com") + " | Bucuros să mă conectez cu colegi din industrie, mentori și tech recruiters!";
+        String email = (profile != null && profile.email() != null && !profile.email().isBlank()) ? profile.email() : "sarbumihai0@gmail.com";
+        return "Inginer software la inceput de drum, student la Facultatea de Automatica si Calculatoare din cadrul Universitatii POLITEHNICA din Bucuresti. Lucrez in principal pe dezvoltare backend si arhitectura de aplicatii folosind Java si ecosistemul Spring Boot.\n\n" +
+                "In proiectele mele ma concentrez pe scrierea de cod modular si usor de intretinut, proiectarea de baze de date relationale (PostgreSQL, Microsoft SQL Server) si containerizarea serviciilor cu Docker. Recent am dezvoltat ATS Job Tracker, o platforma full-stack cu backend in Spring Boot 3, persistenta in PostgreSQL cu extensia pgvector pentru cautare semantica, frontend in React si deployment containerizat. Anterior, am activat ca Software Engineering Intern la SIMAVI, unde am lucrat pe intregul ciclu de dezvoltare (SDLC) pentru aplicatii enterprise in Java.\n\n" +
+                "Sunt deschis pentru oportunitati de Junior Software Engineer sau Junior Backend Developer, unde pot contribui tehnic si pot aprofunda sisteme distribuite de inalta performanta.\n\n" +
+                "Contact: " + email + " | Bucuresti, Romania";
     }
 
     private List<RecommendedSkillDto> generateRecommendedSkills(LinkedInProfileDto profile, String domain) {
@@ -695,12 +684,12 @@ public class LinkedInOptimizerService {
         steps.add(new LinkedInActionStepDto(
                 "step_4",
                 "4",
-                "Adaugă Rezumatul 'About' în 3 Paragrafe cu Date de Contact",
+                "Adauga Rezumatul 'About' Tehnic si Autentic",
                 "Conversie Recruiter",
-                "+50% Rata de Răspuns la Interviu",
-                "10 min",
-                "Apasă 'Add profile section' ➔ 'About' ➔ 'Add about'. Copiază textul optimizat generat de asistentul nostru, care îmbină pasiunea inginerească, proiectele practice și adresa de email.",
-                "Textul complet din tab-ul 'Despre (About Bio)' din această pagină.",
+                "+50% Rata de Raspuns la Interviu",
+                "5 min",
+                "Apasa 'Add profile section' ➔ 'About' ➔ 'Add about'. Copiaza textul curat si tehnic din tab-ul Despre, axat pe stiva tehnica, proiecte si contact direct, fara sabloane artificiale.",
+                "Textul tehnic din tab-ul 'Despre' din aceasta pagina.",
                 true
         ));
 

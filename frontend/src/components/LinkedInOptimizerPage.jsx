@@ -57,6 +57,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
   const [tempHeadline, setTempHeadline] = useState('');
   const [editAboutModalOpen, setEditAboutModalOpen] = useState(false);
   const [tempAbout, setTempAbout] = useState('');
+  const [selectedAboutVariant, setSelectedAboutVariant] = useState('technical');
   const [bannerPickerOpen, setBannerPickerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('action_plan'); // 'action_plan', 'headlines', 'about', 'star_projects', 'boolean_search', 'skills', 'tips'
   const [completedSteps, setCompletedSteps] = useState({});
@@ -804,7 +805,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 onClick={() => setActiveTab('about')}
                 className="py-4 px-3 rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-400 hover:text-blue-600 hover:border-blue-300 transition cursor-pointer"
               >
-                + Adauga sectiunea About (Apasa pentru a aplica rezumatul optimizat generat de AI)
+                + Adauga sectiunea About (Apasa pentru a alege un rezumat tehnic)
               </div>
             )}
           </div>
@@ -1395,40 +1396,108 @@ export default function LinkedInOptimizerPage({ currentUser }) {
             </div>
           )}
 
-          {/* TAB 2: ABOUT / SUMMARY GENERATOR */}
-          {activeTab === 'about' && (
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-black text-gray-950 uppercase tracking-wide flex items-center gap-2">
-                    <Edit3 className="w-4 h-4 text-blue-500" />
-                    Sectiune 'About' Generata cu AI
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Structura pe 3 paragrafe: Cine esti + Stiva Tehnica & Proiecte + Call to Action cu Email.
-                  </p>
-                </div>
-              </div>
+          {/* TAB 2: ABOUT / SUMMARY (NON-AI & PROFESSIONAL) */}
+          {activeTab === 'about' && (() => {
+            const userEmail = profile?.email || 'sarbumihai0@gmail.com';
+            const aboutVariants = [
+              {
+                id: 'technical',
+                label: 'Tehnic & Detaliat (Romana)',
+                badge: 'Recomandat Backend',
+                text: optimizationResult?.optimizedAbout || `Inginer software la inceput de drum, student la Facultatea de Automatica si Calculatoare din cadrul Universitatii POLITEHNICA din Bucuresti. Lucrez in principal pe dezvoltare backend si arhitectura de aplicatii folosind Java si ecosistemul Spring Boot.
 
-              {optimizationResult?.optimizedAbout && (
-                <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 text-xs text-gray-800 leading-relaxed whitespace-pre-line max-h-96 overflow-y-auto">
-                    {optimizationResult.optimizedAbout}
+In proiectele mele ma concentrez pe scrierea de cod modular si usor de intretinut, proiectarea de baze de date relationale (PostgreSQL, Microsoft SQL Server) si containerizarea serviciilor cu Docker. Recent am dezvoltat ATS Job Tracker, o platforma full-stack cu backend in Spring Boot 3, persistenta in PostgreSQL cu extensia pgvector pentru cautare semantica, frontend in React si deployment containerizat. Anterior, am activat ca Software Engineering Intern la SIMAVI, unde am lucrat pe intregul ciclu de dezvoltare (SDLC) pentru aplicatii enterprise in Java.
+
+Sunt deschis pentru oportunitati de Junior Software Engineer sau Junior Backend Developer, unde pot contribui tehnic si pot aprofunda sisteme distribuite de inalta performanta.
+
+Contact: ${userEmail} | Bucuresti, Romania`
+              },
+              {
+                id: 'concise',
+                label: 'Concis & Direct (Romana)',
+                badge: 'Format Scurt',
+                text: `Student in anul final la Automatica si Calculatoare (UPB), pasionat de inginerie software si dezvoltare backend. Experienta mea practica include atat stagiu de practica ca Software Engineering Intern (SIMAVI), cat si proiecte software complete dezvoltate de la zero.
+
+Stiva tehnica principala: Java 21, Spring Boot 3, PostgreSQL, Docker, Git, REST APIs si baze de date relationale. Imi place sa lucrez la optimizarea interogarilor SQL, structura curata a serviciilor si integrarea de solutii moderne, precum cautarea vectoriala in PostgreSQL (pgvector).
+
+Urmaresc un rol de Junior Software Engineer / Backend Developer intr-o echipa tehnica care pune accent pe bune practici, clean code si colaborare solida.
+
+Email: ${userEmail}`
+              },
+              {
+                id: 'english',
+                label: 'International (Engleza)',
+                badge: 'Companii Globale',
+                text: `Software engineer and Computer Science student at University POLITEHNICA of Bucharest (Faculty of Automatic Control and Computers), focused on backend engineering, RESTful APIs, and database performance.
+
+My primary technical stack revolves around Java, Spring Boot, relational databases (PostgreSQL, SQL Server), and Docker. I care deeply about writing clean, maintainable code, structuring scalable database schemas, and understanding systems down to query execution and memory management.
+
+Key projects include ATS Job Tracker, an open-source platform built with Spring Boot 3, PostgreSQL (pgvector), React, and Docker, featuring automated web scrapers and semantic candidate matching. Previously, as a Software Engineering Intern at SIMAVI, I contributed to full-stack Java/Spring enterprise solutions across the complete SDLC.
+
+Currently open to Junior Software Engineer, Junior Backend Developer, and Software Developer roles.
+
+Reach out directly at: ${userEmail}`
+              }
+            ];
+
+            const currentAboutVariant = aboutVariants.find(v => v.id === selectedAboutVariant) || aboutVariants[0];
+
+            return (
+              <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                  <div>
+                    <h3 className="text-sm font-black text-gray-950 uppercase tracking-wide flex items-center gap-2">
+                      <Edit3 className="w-4 h-4 text-blue-500" />
+                      Rezumat Profesional 'About' (Scris Uman • Fara Emoticoane)
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Texte reale si concise pentru ingineri software. Fara sabloane generice de AI, fara emoticoane si fara formulari artificiale.
+                    </p>
+                  </div>
+                </div>
+
+                {/* VARIANT PILLS SELECTOR */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {aboutVariants.map((variant) => (
+                    <button
+                      key={variant.id}
+                      onClick={() => setSelectedAboutVariant(variant.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                        selectedAboutVariant === variant.id
+                          ? 'bg-black text-white shadow-xs'
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                      }`}
+                    >
+                      <span>{variant.label}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-semibold ${
+                        selectedAboutVariant === variant.id
+                          ? 'bg-neutral-800 text-gray-300'
+                          : 'bg-gray-200 text-gray-600'
+                      }`}>
+                        {variant.badge}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="space-y-4 pt-1">
+                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 text-xs sm:text-sm text-gray-800 leading-relaxed whitespace-pre-line max-h-96 overflow-y-auto font-sans select-text">
+                    {currentAboutVariant.text}
                   </div>
 
                   <div className="flex items-center gap-2.5">
                     <button
-                      onClick={() => applyAbout(optimizationResult.optimizedAbout)}
+                      onClick={() => applyAbout(currentAboutVariant.text)}
                       className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-black hover:bg-neutral-800 text-white transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                     >
                       <Check className="w-4 h-4 text-emerald-400" />
                       Adopta in Profilul Live
                     </button>
                     <button
-                      onClick={() => copyToClipboard(optimizationResult.optimizedAbout, 'about_text')}
+                      onClick={() => copyToClipboard(currentAboutVariant.text, `about_${currentAboutVariant.id}`)}
                       className="py-2.5 px-4 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200 transition flex items-center gap-1.5 cursor-pointer"
                     >
-                      {copiedKey === 'about_text' ? (
+                      {copiedKey === `about_${currentAboutVariant.id}` ? (
                         <>
                           <Check className="w-4 h-4 text-emerald-600" />
                           Copiat!
@@ -1442,9 +1511,9 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                     </button>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            );
+          })()}
 
           {/* TAB 3: STAR PROJECTS (GOOGLE XYZ FORMULA) */}
           {activeTab === 'star_projects' && (
