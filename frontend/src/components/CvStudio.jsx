@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import html2pdf from 'html2pdf.js';
 import { 
   FileText, 
@@ -191,7 +192,6 @@ export default function CvStudio({
   // UI CONTROLS & INTERACTIVITY STATES (DEFAULT 100% ZOOM)
   const [previewZoom, setPreviewZoom] = useState(1.0);
   const [showEditContactModal, setShowEditContactModal] = useState(false);
-  const [showAiModal, setShowAiModal] = useState(false);
   
   // DIRECT SINGLE-BUTTON POPUP DELETION TARGET
   const [selectedTarget, setSelectedTarget] = useState(null); // { type: 'skill'|'field'|'bullet'|'item', section: string, idx: number, subIdx?: number }
@@ -205,13 +205,10 @@ export default function CvStudio({
   
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [pdfCustomName, setPdfCustomName] = useState(() => (contactData?.fullName || 'Resume').trim().replace(/\s+/g, '_') + '_ATS');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [parsingPdf, setParsingPdf] = useState(false);
   const [parsedPdfSuccess, setParsedPdfSuccess] = useState(null);
 
-  // LATEX EXPORT & MULTI-PAGE A4 LAYOUT STATES
-  const [showLatexModal, setShowLatexModal] = useState(false);
-  const [latexCopied, setLatexCopied] = useState(false);
+  // MULTI-PAGE A4 LAYOUT STATES
   const [pageStats, setPageStats] = useState({ pages: 1, percent: 100, isOverflown: false });
   const [pageLayoutMode, setPageLayoutMode] = useState('auto'); // 'auto' | '1' | '2'
   const [splitSectionKey, setSplitSectionKey] = useState('skills'); // which section starts on Page 2
@@ -220,13 +217,9 @@ export default function CvStudio({
 
   const isMultiPage = pageLayoutMode === '2' || (pageLayoutMode === 'auto' && pageStats.isOverflown);
 
-  // AGENT OUTPUTS
-  const [agent1Output, setAgent1Output] = useState(null);
-  const [agent2Output, setAgent2Output] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(applications.length > 0 ? applications[0].id : '');
-  const [customJobDescription, setCustomJobDescription] = useState('');
 
-  // POLISH AI COACH & BULLET REWRITER STATES
+  // AI REVIEW & BULLET REWRITER STATES
   const [showPolishCoach, setShowPolishCoach] = useState(false);
   const [activeRewritingBullet, setActiveRewritingBullet] = useState(null);
 
@@ -265,12 +258,22 @@ export default function CvStudio({
   };
 
   const handleOpenBulletRewrite = async (section, itemIdx, bulletIdx, bulletText) => {
+    if (
+      activeRewritingBullet &&
+      activeRewritingBullet.section === section &&
+      activeRewritingBullet.itemIdx === itemIdx &&
+      activeRewritingBullet.bulletIdx === bulletIdx
+    ) {
+      setActiveRewritingBullet(null);
+      return;
+    }
+
     setActiveRewritingBullet({
       section,
       itemIdx,
       bulletIdx,
       originalText: bulletText,
-      variations: null,
+      suggestion: null,
       loading: true
     });
 
@@ -285,7 +288,8 @@ export default function CvStudio({
       });
       if (res.ok) {
         const data = await res.json();
-        setActiveRewritingBullet(prev => prev ? { ...prev, variations: data, loading: false } : null);
+        const bestSuggestion = data?.highImpact || data?.concise || data?.deepTech || '';
+        setActiveRewritingBullet(prev => prev ? { ...prev, suggestion: bestSuggestion, loading: false } : null);
       } else {
         setActiveRewritingBullet(prev => prev ? { ...prev, loading: false } : null);
       }
@@ -313,6 +317,22 @@ export default function CvStudio({
     }
     setActiveRewritingBullet(null);
   };
+
+  // LOCK BODY SCROLL & ESCAPE HANDLER FOR EDIT CONTACT MODAL
+  useEffect(() => {
+    if (showEditContactModal) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') setShowEditContactModal(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [showEditContactModal]);
 
   // DISMISS POPUPS ON OUTSIDE CLICK
   useEffect(() => {
@@ -784,79 +804,7 @@ export default function CvStudio({
     }
   };
 
-  // REAL 2-AGENT GROQ AI PIPELINE
-  const handleRunTwoAgentPipeline = async () => {
-    if (!activeUserId) {
-      alert("Te rugam sa te autentifici inainte de a rula optimizarea AI.");
-      return;
-    }
 
-    setIsAnalyzing(true);
-    setAgent1Output(null);
-    setAgent2Output(null);
-
-    try {
-      const payload = {
-        applicationId: selectedJobId || (applications.length > 0 ? applications[0].id : null),
-        customJobDescription: customJobDescription || "",
-        languagePreference: "EN"
-      };
-
-      const res = await fetch('/api/v1/cv/optimize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': activeUserId
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setAgent1Output({
-          targetMatchScore: data.targetMatchScore || "100%",
-          matchingSkills: data.matchingSkills || [],
-          missingSkills: data.missingSkills || [],
-          actionPlan: data.actionPlan || "Analiza realizata cu succes."
-        });
-
-        setAgent2Output({
-          tailoredSummary: data.tailoredSummary || "",
-          tailoredSkills: data.tailoredSkills || {},
-          tailoredProjects: [{
-            bullets: data.tailoredBullets || []
-          }],
-          fullTailoredReport: data.fullTailoredReport || ""
-        });
-      } else {
-        const err = await res.text();
-        alert("Eroare la optimizarea AI: " + err);
-      }
-    } catch (err) {
-      console.error("Eroare la apelul AI:", err);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleApplyAiOptimizations = () => {
-    if (!agent2Output) return;
-
-    if (agent2Output.tailoredSummary) {
-      setSummaryText(agent2Output.tailoredSummary);
-      if (!sectionOrder.includes('summary')) {
-        setSectionOrder(prev => ['summary', ...prev]);
-      }
-    }
-
-    if (agent2Output.tailoredProjects?.[0]?.bullets?.length > 0 && projectsList.length > 0) {
-      const updated = [...projectsList];
-      updated[0].bullets = agent2Output.tailoredProjects[0].bullets;
-      setProjectsList(updated);
-    }
-
-    alert("Optimizarile generate de AI Groq au fost aplicate direct pe foaia de CV!");
-  };
 
   // DIRECT PDF DOWNLOAD
   const handleDownloadDirectPdf = async () => {
@@ -979,266 +927,7 @@ export default function CvStudio({
     isMultiPage
   ]);
 
-  // LATEX GENERATION & EXPORT LOGIC
-  const escapeLatex = (str) => {
-    if (!str) return '';
-    return String(str)
-      .replace(/\\/g, '\\textbackslash{}')
-      .replace(/&/g, '\\&')
-      .replace(/%/g, '\\%')
-      .replace(/\$/g, '\\$')
-      .replace(/#/g, '\\#')
-      .replace(/_/g, '\\_')
-      .replace(/\{/g, '\\{')
-      .replace(/\}/g, '\\}')
-      .replace(/~/g, '\\textasciitilde{}')
-      .replace(/\^/g, '\\textasciicircum{}');
-  };
 
-  const formatLatexText = (str) => {
-    if (!str) return '';
-    let text = String(str);
-    const boldMatches = [];
-    text = text.replace(/\*\*(.*?)\*\*/g, (_, match) => {
-      boldMatches.push(match);
-      return `___LATEX_BOLD_${boldMatches.length - 1}___`;
-    });
-
-    text = escapeLatex(text);
-
-    boldMatches.forEach((match, idx) => {
-      text = text.replace(`___LATEX\\_BOLD\\_${idx}___`, `\\textbf{${escapeLatex(match)}}`);
-    });
-
-    return text;
-  };
-
-  const generateLatex = () => {
-    const candidateName = (contactData.fullName || 'RESUME CANDIDATE').toUpperCase();
-
-    const contactParts = [];
-    if (contactData.phone) contactParts.push(escapeLatex(contactData.phone));
-    if (contactData.email) {
-      contactParts.push(`\\href{mailto:${escapeLatex(contactData.email)}}{${escapeLatex(contactData.email)}}`);
-    }
-    if (contactData.linkedin) {
-      const fullUrl = contactData.linkedin.startsWith('http') ? contactData.linkedin : `https://${contactData.linkedin}`;
-      const displayUrl = contactData.linkedin.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
-      contactParts.push(`\\href{${fullUrl}}{${escapeLatex(displayUrl)}}`);
-    }
-    if (contactData.github) {
-      const fullUrl = contactData.github.startsWith('http') ? contactData.github : `https://${contactData.github}`;
-      const displayUrl = contactData.github.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
-      contactParts.push(`\\href{${fullUrl}}{${escapeLatex(displayUrl)}}`);
-    }
-    if (contactData.location) {
-      contactParts.push(escapeLatex(contactData.location));
-    }
-
-    const contactLine = contactParts.join(' \\ $|$ \\ \n    ');
-
-    let bodySections = '';
-
-    sectionOrder.forEach(secKey => {
-      if (secKey === 'education' && educationList.length > 0) {
-        let eduContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Education}\n';
-        educationList.forEach((edu, idx) => {
-          if (idx > 0) eduContent += '\n    \\vspace{3pt}\n';
-          eduContent += `    \\textbf{${escapeLatex(edu.school)}} \\hfill \\textit{${escapeLatex(edu.location)}} \\\\\n`;
-          eduContent += `    ${escapeLatex(edu.degree)} \\hfill \\textit{${escapeLatex(edu.period)}} \\\\\n`;
-          if (edu.bullets && edu.bullets.length > 0) {
-            edu.bullets.forEach(b => {
-              eduContent += `    ${formatLatexText(b)} \\\\\n`;
-            });
-          }
-        });
-        eduContent += '\\end{rSection}\n\n';
-        bodySections += eduContent;
-      }
-
-      if (secKey === 'experience' && experienceList.length > 0) {
-        let expContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Experience}\n';
-        experienceList.forEach(exp => {
-          expContent += `\\textbf{${escapeLatex(exp.role)}} \\hfill \\textit{${escapeLatex(exp.period)}} \\\\\n`;
-          expContent += `${escapeLatex(exp.company)} \\hfill \\textit{${escapeLatex(exp.location)}}\n`;
-          if (exp.bullets && exp.bullets.length > 0) {
-            expContent += '\\begin{itemize}\n';
-            exp.bullets.forEach(b => {
-              expContent += `    \\item ${formatLatexText(b)}\n`;
-            });
-            expContent += '\\end{itemize}\n';
-          }
-        });
-        expContent += '\\end{rSection}\n\n';
-        bodySections += expContent;
-      }
-
-      if (secKey === 'projects' && projectsList.length > 0) {
-        let projContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Projects}\n';
-        projectsList.forEach(proj => {
-          projContent += `\n\\section{${escapeLatex(proj.title)} \\hfill \\normalfont\\textit{${escapeLatex(proj.period)}}}\n`;
-          const metaParts = [];
-          if (proj.techStack) {
-            metaParts.push(`\\textbf{Tech:} ${escapeLatex(proj.techStack)}`);
-          }
-          if (proj.linkUrl) {
-            const fullLink = proj.linkUrl.startsWith('http') ? proj.linkUrl : `https://${proj.linkUrl}`;
-            const linkDisplay = proj.linkText || proj.linkUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
-            const isLive = linkDisplay.includes('vercel') || linkDisplay.includes('app') || linkDisplay.includes('web') || !linkDisplay.includes('github');
-            const label = isLive ? 'Live:' : 'Code:';
-            metaParts.push(`\\textbf{${label}} \\href{${fullLink}}{${escapeLatex(linkDisplay)}}`);
-          }
-          if (metaParts.length > 0) {
-            projContent += `${metaParts.join(' \\hfill ')}\n`;
-          }
-          if (proj.bullets && proj.bullets.length > 0) {
-            projContent += '\\begin{itemize}\n';
-            proj.bullets.forEach(b => {
-              projContent += `    \\item ${formatLatexText(b)}\n`;
-            });
-            projContent += '\\end{itemize}\n';
-          }
-        });
-        projContent += '\n\\end{rSection}\n\n';
-        bodySections += projContent;
-      }
-
-      if (secKey === 'skills' && skillsFields.length > 0) {
-        let skillsContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Technical Skills}\n';
-        skillsContent += '\\begin{tabular}{@{} >{\\bfseries}l @{\\hspace{4ex}} l @{}}\n';
-        skillsFields.forEach((field) => {
-          const cleanLabel = escapeLatex(field.label).replace(/:+$/, '') + ':';
-          const itemsStr = escapeLatex(field.items.join(', '));
-          skillsContent += `    ${cleanLabel.padEnd(16, ' ')} & ${itemsStr} \\\\\n`;
-        });
-        skillsContent += '\\end{tabular}\n\\end{rSection}\n\n';
-        bodySections += skillsContent;
-      }
-
-      if (secKey === 'certifications' && certificationsList.length > 0) {
-        let certContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Certifications}\n';
-        certificationsList.forEach(cert => {
-          certContent += `\\textbf{${escapeLatex(cert.name)}}`;
-          if (cert.issuer) certContent += ` \\ $|$ \\ \\textit{${escapeLatex(cert.issuer)}}`;
-          if (cert.period) certContent += ` \\hfill \\textit{${escapeLatex(cert.period)}}`;
-          certContent += '\\\\\n';
-          if (cert.bullets && cert.bullets.length > 0) {
-            certContent += '\\begin{itemize}\n';
-            cert.bullets.forEach(b => {
-              certContent += `    \\item ${formatLatexText(b)}\n`;
-            });
-            certContent += '\\end{itemize}\n';
-          }
-        });
-        certContent += '\\end{rSection}\n\n';
-        bodySections += certContent;
-      }
-
-      if (secKey === 'summary' && summaryText) {
-        let sumContent = '\\vspace{-0.2cm}\n\\begin{rSection}{Professional Summary}\n';
-        sumContent += `${formatLatexText(summaryText)}\n`;
-        sumContent += '\\end{rSection}\n\n';
-        bodySections += sumContent;
-      }
-    });
-
-    return `\\documentclass[10pt,letterpaper]{article}
-
-\\usepackage[T1]{fontenc} % Suport font T1
-\\usepackage[utf8]{inputenc} % UTF-8
-
-\\usepackage[left=0.5in,top=0.32in,right=0.5in,bottom=0.32in]{geometry} % Margini optimizate
-\\usepackage{enumitem} 
-\\setlist[itemize]{nosep, leftmargin=12pt} % Liste compacte, fara spatii parazite
-
-\\usepackage{parskip}
-\\usepackage{array} % Necesar pentru tabelul de Technical Skills
-
-\\linespread{0.94} % Inaltime naturala si aerisita a randurilor
-\\pagestyle{empty} % Fara numar de pagina
-
-% Implementare nativa rSection (fara dependenta de fisiere .cls externe)
-\\newenvironment{rSection}[1]{
-  \\vspace{4pt}
-  {\\bfseries\\MakeUppercase{#1}}
-  \\vspace{2pt}
-  \\hrule
-  \\vspace{3pt}
-}{
-  \\par\\vspace{2pt}
-}
-
-% Comanda de titlu de proiect
-\\renewcommand{\\section}[1]{\\par\\vspace{3pt}\\noindent\\textbf{#1}\\par\\vspace{1pt}}
-
-\\usepackage{ebgaramond} % Fontul elegant EB Garamond
-
-% Link-uri curate, colorate elegant, FARA chenare albastre
-\\usepackage{color,hyperref}
-\\definecolor{darkblue}{rgb}{0.0,0.0,0.4}
-\\hypersetup{
-    colorlinks=true,
-    breaklinks=true,
-    linkcolor=darkblue,
-    urlcolor=darkblue,
-    citecolor=darkblue,
-    pdfborder={0 0 0}
-}
-
-% Asigura compatibilitate 100% cu scannerele ATS
-\\pdfgentounicode=1
-
-\\begin{document}
-\\vspace*{-0.4cm}
-\\begin{center}
-    {\\Huge \\bfseries ${candidateName}} \\\\ \\vspace{2pt}
-    ${contactLine}
-\\end{center}
-
-${bodySections}\\end{document}
-`;
-  };
-
-  const handleDownloadTex = () => {
-    const code = generateLatex();
-    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const sanitizedName = (contactData.fullName || 'Resume').trim().replace(/\s+/g, '_');
-    a.href = url;
-    a.download = `${sanitizedName}_ATS_Resume.tex`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleCopyLatex = async () => {
-    const code = generateLatex();
-    try {
-      await navigator.clipboard.writeText(code);
-      setLatexCopied(true);
-      setTimeout(() => setLatexCopied(false), 3000);
-    } catch (e) {
-      alert("Nu s-a putut copia codul in clipboard.");
-    }
-  };
-
-  const handleOpenOverleaf = () => {
-    const code = generateLatex();
-    const form = document.createElement('form');
-    form.action = 'https://www.overleaf.com/docs';
-    form.method = 'POST';
-    form.target = '_blank';
-
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'snip';
-    input.value = code;
-
-    form.appendChild(input);
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-  };
 
   // MULTI-PAGE A4 SECTION PARTITIONING
   const getPageSections = () => {
@@ -1633,60 +1322,128 @@ ${bodySections}\\end{document}
               {/* BULLETS */}
               {exp.bullets && exp.bullets.map((b, bIdx) => {
                 const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'experience' && selectedTarget?.idx === expIdx && selectedTarget?.subIdx === bIdx;
+                const isRewritingThisBullet = activeRewritingBullet &&
+                  activeRewritingBullet.section === 'experience' &&
+                  activeRewritingBullet.itemIdx === expIdx &&
+                  activeRewritingBullet.bulletIdx === bIdx;
+
                 return (
-                  <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
-                    {isBulletSelected && (
-                      <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
-                          className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                        >
-                          <Trash2 className="w-3 h-3 text-gray-500" /> Delete
-                        </button>
-                      </div>
-                    )}
+                  <div key={bIdx} className="cv-popup-target relative">
+                    <div className="flex items-start gap-1 mt-0.5 group/b">
+                      {isBulletSelected && (
+                        <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
+                            className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                          >
+                            <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                          </button>
+                        </div>
+                      )}
 
-                    <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
-                    <div
-                      contentEditable={true}
-                      suppressContentEditableWarning={true}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedTarget({ type: 'bullet', section: 'experience', idx: expIdx, subIdx: bIdx });
-                      }}
-                      onBlur={e => {
-                        const updated = [...experienceList];
-                        updated[expIdx].bullets[bIdx] = e.currentTarget.textContent || "";
-                        setExperienceList(updated);
-                      }}
-                      className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
-                        isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
-                      }`}
-                      style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
-                    >
-                      {b}
-                    </div>
-
-                    <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
-                      <button
+                      <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
+                      <div
+                        contentEditable={true}
+                        suppressContentEditableWarning={true}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleOpenBulletRewrite('experience', expIdx, bIdx, b);
+                          setSelectedTarget({ type: 'bullet', section: 'experience', idx: expIdx, subIdx: bIdx });
                         }}
-                        className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs"
-                        title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici masurabile"
+                        onBlur={e => {
+                          const updated = [...experienceList];
+                          updated[expIdx].bullets[bIdx] = e.currentTarget.textContent || "";
+                          setExperienceList(updated);
+                        }}
+                        className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
+                          isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
+                        }`}
+                        style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
                       >
-                        <Sparkles className="w-2.5 h-2.5 text-amber-600" />
-                        <span>AI XYZ</span>
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
-                        className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
-                        title="Sterge bullet"
-                      >
-                        <Trash2 className="w-2.5 h-2.5" />
-                      </button>
+                        {b}
+                      </div>
+
+                      <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenBulletRewrite('experience', expIdx, bIdx, b);
+                          }}
+                          className={`px-1.5 py-0.5 border rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs transition ${
+                            isRewritingThisBullet
+                              ? 'bg-amber-500 text-white border-amber-600'
+                              : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
+                          }`}
+                          title="Rescrie acest punct cu asistenta AI"
+                        >
+                          <Sparkles className={`w-2.5 h-2.5 ${isRewritingThisBullet ? 'text-white' : 'text-amber-600'}`} />
+                          <span>AI</span>
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
+                          className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
+                          title="Sterge bullet"
+                        >
+                          <Trash2 className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
                     </div>
+
+                    {/* INLINE AI DIFF */}
+                    {isRewritingThisBullet && (
+                      <div className="no-pdf ml-3 mt-1.5 mb-2 p-2.5 bg-neutral-50/90 border border-neutral-200 rounded-xl font-sans text-xs space-y-2 shadow-xs">
+                        {activeRewritingBullet.loading ? (
+                          <div className="flex items-center gap-2 text-neutral-600 py-1">
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-neutral-800" />
+                            <span className="text-[11px] font-medium">Generare sugestie AI...</span>
+                          </div>
+                        ) : activeRewritingBullet.suggestion ? (
+                          <div className="space-y-2">
+                            <div className="space-y-1">
+                              <div className="text-[10.5px] text-rose-700 bg-rose-50/90 border border-rose-200/90 rounded-lg px-2.5 py-1.5 line-through leading-relaxed">
+                                {activeRewritingBullet.originalText}
+                              </div>
+                              <div className="text-[11px] text-emerald-800 bg-emerald-50/90 border border-emerald-200/90 rounded-lg px-2.5 py-1.5 font-medium leading-relaxed">
+                                {activeRewritingBullet.suggestion}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-end gap-2 pt-0.5">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveRewritingBullet(null);
+                                }}
+                                className="px-2.5 py-1 text-[11px] font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/60 rounded-lg transition cursor-pointer"
+                              >
+                                Refuza
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSelectBulletVariation(activeRewritingBullet.suggestion);
+                                }}
+                                className="px-3 py-1 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-2xs transition flex items-center gap-1 cursor-pointer"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                Accepta
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between text-[11px] text-rose-600 py-0.5">
+                            <span>Nu s-a putut genera sugestia AI.</span>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setActiveRewritingBullet(null); }}
+                              className="text-neutral-500 hover:text-neutral-800 text-[10px] font-medium cursor-pointer"
+                            >
+                              Inchide
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1904,60 +1661,128 @@ ${bodySections}\\end{document}
                 {/* BULLETS */}
                 {proj.bullets && proj.bullets.map((b, bIdx) => {
                   const isBulletSelected = selectedTarget?.type === 'bullet' && selectedTarget?.section === 'projects' && selectedTarget?.idx === projIdx && selectedTarget?.subIdx === bIdx;
+                  const isRewritingThisBullet = activeRewritingBullet &&
+                    activeRewritingBullet.section === 'projects' &&
+                    activeRewritingBullet.itemIdx === projIdx &&
+                    activeRewritingBullet.bulletIdx === bIdx;
+
                   return (
-                    <div key={bIdx} className="cv-popup-target relative flex items-start gap-1 mt-0.5 group/b">
-                      {isBulletSelected && (
-                        <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
-                            className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-                          >
-                            <Trash2 className="w-3 h-3 text-gray-500" /> Delete
-                          </button>
-                        </div>
-                      )}
+                    <div key={bIdx} className="cv-popup-target relative">
+                      <div className="flex items-start gap-1 mt-0.5 group/b">
+                        {isBulletSelected && (
+                          <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
+                              className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                            >
+                              <Trash2 className="w-3 h-3 text-gray-500" /> Delete
+                            </button>
+                          </div>
+                        )}
 
-                      <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
-                      <div
-                        contentEditable={true}
-                        suppressContentEditableWarning={true}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedTarget({ type: 'bullet', section: 'projects', idx: projIdx, subIdx: bIdx });
-                        }}
-                        onBlur={e => {
-                          const updated = [...projectsList];
-                          updated[projIdx].bullets[bIdx] = e.currentTarget.textContent || "";
-                          setProjectsList(updated);
-                        }}
-                        className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
-                          isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
-                        }`}
-                        style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
-                      >
-                        {b}
-                      </div>
-
-                      <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
-                        <button
+                        <span style={{ fontSize: '9pt', lineHeight: '1.35', flexShrink: 0, paddingLeft: '4px' }}>•</span>
+                        <div
+                          contentEditable={true}
+                          suppressContentEditableWarning={true}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleOpenBulletRewrite('projects', projIdx, bIdx, b);
+                            setSelectedTarget({ type: 'bullet', section: 'projects', idx: projIdx, subIdx: bIdx });
                           }}
-                          className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs"
-                          title="Rescrie acest punct conform Formulei Google X-Y-Z cu metrici masurabile"
+                          onBlur={e => {
+                            const updated = [...projectsList];
+                            updated[projIdx].bullets[bIdx] = e.currentTarget.textContent || "";
+                            setProjectsList(updated);
+                          }}
+                          className={`outline-none border px-1 py-0.5 rounded transition cursor-text flex-1 ${
+                            isBulletSelected ? 'border-gray-400 bg-gray-100/40' : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
+                          }`}
+                          style={{ fontSize: '8.5pt', lineHeight: '1.35', color: '#000000', textAlign: 'justify' }}
                         >
-                          <Sparkles className="w-2.5 h-2.5 text-amber-600" />
-                          <span>AI XYZ</span>
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
-                          className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
-                          title="Sterge bullet"
-                        >
-                          <Trash2 className="w-2.5 h-2.5" />
-                        </button>
+                          {b}
+                        </div>
+
+                        <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenBulletRewrite('projects', projIdx, bIdx, b);
+                            }}
+                            className={`px-1.5 py-0.5 border rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs transition ${
+                              isRewritingThisBullet
+                                ? 'bg-amber-500 text-white border-amber-600'
+                                : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
+                            }`}
+                            title="Rescrie acest punct cu asistenta AI"
+                          >
+                            <Sparkles className={`w-2.5 h-2.5 ${isRewritingThisBullet ? 'text-white' : 'text-amber-600'}`} />
+                            <span>AI</span>
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
+                            className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
+                            title="Sterge bullet"
+                          >
+                            <Trash2 className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
                       </div>
+
+                      {/* INLINE AI DIFF */}
+                      {isRewritingThisBullet && (
+                        <div className="no-pdf ml-3 mt-1.5 mb-2 p-2.5 bg-neutral-50/90 border border-neutral-200 rounded-xl font-sans text-xs space-y-2 shadow-xs">
+                          {activeRewritingBullet.loading ? (
+                            <div className="flex items-center gap-2 text-neutral-600 py-1">
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-neutral-800" />
+                              <span className="text-[11px] font-medium">Generare sugestie AI...</span>
+                            </div>
+                          ) : activeRewritingBullet.suggestion ? (
+                            <div className="space-y-2">
+                              <div className="space-y-1">
+                                <div className="text-[10.5px] text-rose-700 bg-rose-50/90 border border-rose-200/90 rounded-lg px-2.5 py-1.5 line-through leading-relaxed">
+                                  {activeRewritingBullet.originalText}
+                                </div>
+                                <div className="text-[11px] text-emerald-800 bg-emerald-50/90 border border-emerald-200/90 rounded-lg px-2.5 py-1.5 font-medium leading-relaxed">
+                                  {activeRewritingBullet.suggestion}
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-end gap-2 pt-0.5">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveRewritingBullet(null);
+                                  }}
+                                  className="px-2.5 py-1 text-[11px] font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/60 rounded-lg transition cursor-pointer"
+                                >
+                                  Refuza
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSelectBulletVariation(activeRewritingBullet.suggestion);
+                                  }}
+                                  className="px-3 py-1 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-2xs transition flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  Accepta
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between text-[11px] text-rose-600 py-0.5">
+                              <span>Nu s-a putut genera sugestia AI.</span>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setActiveRewritingBullet(null); }}
+                                className="text-neutral-500 hover:text-neutral-800 text-[10px] font-medium cursor-pointer"
+                              >
+                                Inchide
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -2471,12 +2296,12 @@ ${bodySections}\\end{document}
               {isMultiPage ? (
                 <>
                   <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                  <span>📑 2 Pagini ({pageStats.percent}%)</span>
+                  <span>2 Pagini ({pageStats.percent}%)</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                  <span>📄 1 Pagina ({pageStats.percent}%)</span>
+                  <span>1 Pagina ({pageStats.percent}%)</span>
                 </>
               )}
             </div>
@@ -2517,56 +2342,34 @@ ${bodySections}\\end{document}
         {/* SUBTLE ROW DIVIDER */}
         <div className="h-px bg-gray-100" />
 
-        {/* ROW 2: ACTION TOOLBAR (AI + TOOLS + EXPORT) */}
+        {/* ROW 2: ACTION TOOLBAR (AI REVIEW + TOOLS + EXPORT) */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           
-          {/* LEFT CLUSTER: AI SUITE & DOCUMENT TOOLS */}
+          {/* LEFT CLUSTER: AI REVIEW & IMPORT */}
           <div className="flex flex-wrap items-center gap-2">
             
-            {/* AI SUITE CAPSULE */}
-            <div className="flex items-center bg-amber-50/70 border border-amber-200/80 p-0.5 rounded-xl shadow-2xs">
-              <button
-                onClick={() => setShowPolishCoach(!showPolishCoach)}
-                className={`px-3 py-1 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer ${
-                  showPolishCoach 
-                    ? 'bg-black text-white shadow-xs' 
-                    : 'text-amber-900 hover:bg-amber-100/70'
-                }`}
-                title="Deschide panoul Polish AI Coach pentru scor 95+"
-              >
-                <Sparkles className={`w-3.5 h-3.5 ${showPolishCoach ? 'text-amber-300' : 'text-amber-600'}`} />
-                <span>Polish AI</span>
-                <span className="text-[10px] bg-amber-200 text-amber-950 px-1 py-0.2 rounded font-black">95+</span>
-              </button>
-
-              <button
-                onClick={() => setShowAiModal(true)}
-                className="px-3 py-1 text-gray-800 hover:text-black hover:bg-white/80 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                title="Optimizare CV cu AI Groq pe baza cerintelor jobului"
-              >
-                <Zap className="w-3.5 h-3.5 text-amber-500" />
-                <span>Optimizare ATS</span>
-              </button>
-            </div>
+            {/* AI REVIEW BUTTON */}
+            <button
+              onClick={() => setShowPolishCoach(!showPolishCoach)}
+              className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 border shadow-2xs transition cursor-pointer ${
+                showPolishCoach 
+                  ? 'bg-black text-white border-black shadow-xs' 
+                  : 'bg-white hover:bg-gray-50 text-gray-800 border-gray-200'
+              }`}
+              title="Deschide panoul AI Review pentru diagnostic si sugestii de optimizare"
+            >
+              <Sparkles className={`w-3.5 h-3.5 ${showPolishCoach ? 'text-amber-300' : 'text-amber-600'}`} />
+              <span>AI Review</span>
+            </button>
 
             <div className="hidden sm:block h-5 w-px bg-gray-200" />
 
-            {/* DOCUMENT TOOLS: LATEX & IMPORT */}
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setShowLatexModal(true)}
-                className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
-                title="Deschide LaTeX Studio: Exporta fisierul .tex sau compileaza direct pe Overleaf"
-              >
-                <Code2 className="w-3.5 h-3.5 text-indigo-600" />
-                <span>LaTeX</span>
-              </button>
-
-              <label className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition">
-                <Upload className="w-3.5 h-3.5 text-gray-600" />
-                <span>{parsingPdf ? 'Se extrage...' : 'Importa'}</span>
-                <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
-              </label>
+            {/* DOCUMENT IMPORT */}
+            <label className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition">
+              <Upload className="w-3.5 h-3.5 text-gray-600" />
+              <span>{parsingPdf ? 'Se extrage...' : 'Importa'}</span>
+              <input type="file" accept=".pdf,.docx" onChange={handleFileUploadPdf} className="hidden" />
+            </label>
 
               {/* RESTORE SECTIONS DROPDOWN (ONLY IF ANY SECTION IS HIDDEN) */}
               {missingSections.length > 0 && (
@@ -2604,7 +2407,6 @@ ${bodySections}\\end{document}
                 </div>
               )}
             </div>
-          </div>
 
           {/* RIGHT CLUSTER: EXPORT & PDF DOWNLOAD */}
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -2802,7 +2604,7 @@ ${bodySections}\\end{document}
 
               {/* VISUAL PAGE FOOTER BADGE (NO PDF) */}
               <div className="no-pdf absolute bottom-2 right-4 text-[10px] text-gray-400 font-sans select-none pointer-events-none">
-                📄 Pagina 1 {isMultiPage ? 'din 2' : ''}
+                Pagina 1 {isMultiPage ? 'din 2' : ''}
               </div>
 
               {/* SINGLE-PAGE OVERFLOW BOUNDARY INDICATOR (SHOWN ONLY WHEN ON 1-PAGE MODE AND OVERFLOWN) */}
@@ -2818,7 +2620,7 @@ ${bodySections}\\end{document}
                   <span className={`mx-2 px-2.5 py-0.5 text-white font-sans text-[10px] font-bold rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider ${
                     pageStats.isOverflown ? 'bg-rose-600 animate-pulse' : 'bg-gray-600'
                   }`}>
-                    ✂️ Limita Pagina 1 (A4: 297mm) {pageStats.isOverflown ? `— Depasit cu ${pageStats.percent - 100}% (apasa "2 Pagini" sus sau comuta pe Auto)!` : '— Pagina 1 se termina aici'}
+                    Limita Pagina 1 (A4: 297mm) {pageStats.isOverflown ? `— Depasit cu ${pageStats.percent - 100}% (apasa "2 Pagini" sus sau comuta pe Auto)!` : '— Pagina 1 se termina aici'}
                   </span>
                   <div className={`h-[2px] border-t-2 border-dashed flex-1 ${pageStats.isOverflown ? 'border-rose-500' : 'border-gray-300'}`}></div>
                 </div>
@@ -2834,7 +2636,7 @@ ${bodySections}\\end{document}
                     <div className="h-[2px] border-t-2 border-dashed border-amber-400 flex-1"></div>
                     <div className="bg-amber-50 border border-amber-300 px-4 py-2 rounded-2xl text-xs font-bold text-amber-950 flex flex-wrap items-center justify-center gap-3 shadow-md">
                       <span className="flex items-center gap-1.5 text-amber-900">
-                        <span>✂️</span> <strong>Intrerupere Pagina A4 (297 mm)</strong>
+                        <strong>Intrerupere Pagina A4 (297 mm)</strong>
                       </span>
                       <span className="text-amber-300">|</span>
                       <div className="flex items-center gap-2">
@@ -2935,7 +2737,7 @@ ${bodySections}\\end{document}
 
                   {/* VISUAL PAGE FOOTER BADGE (NO PDF) */}
                   <div className="no-pdf absolute bottom-2 right-4 text-[10px] text-gray-400 font-sans select-none pointer-events-none">
-                    📄 Pagina 2 din 2
+                    Pagina 2 din 2
                   </div>
                 </div>
               </>
@@ -2945,18 +2747,31 @@ ${bodySections}\\end{document}
       </div>
 
       {/* ================= MODAL: EDIT CONTACT ================= */}
-      {showEditContactModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="max-w-xl w-full my-6 animate-in fade-in zoom-in-95 font-sans">
-            
+      {showEditContactModal && typeof document !== 'undefined' && createPortal(
+        <div 
+          onClick={() => setShowEditContactModal(false)}
+          className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            className="max-w-xl w-full my-6 animate-in fade-in zoom-in-95 font-sans"
+          >
             <div className="text-center mb-3">
               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wide" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
                 {contactData.fullName}
               </h2>
             </div>
 
-            <div className="bg-white text-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl space-y-4 border border-gray-200">
-              
+            <div className="bg-white text-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl space-y-4 border border-gray-200 relative">
+              <button 
+                type="button"
+                onClick={() => setShowEditContactModal(false)}
+                className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                title="Inchide"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
               <div className="space-y-3">
                 <div className="grid grid-cols-12 items-center gap-3">
                   <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Email</label>
@@ -2995,7 +2810,6 @@ ${bodySections}\\end{document}
               <div className="border-t border-gray-200 my-4"></div>
 
               <div className="space-y-3">
-                
                 <div className="grid grid-cols-12 items-center gap-3">
                   <label className="col-span-3 text-right text-xs font-semibold text-gray-500">LinkedIn</label>
                   <input 
@@ -3095,11 +2909,11 @@ ${bodySections}\\end{document}
                     Show Full URL
                   </label>
                 </div>
-
               </div>
 
-              <div className="pt-4">
+              <div className="pt-4 flex items-center justify-end">
                 <button
+                  type="button"
                   onClick={() => setShowEditContactModal(false)}
                   className="bg-black hover:bg-gray-800 text-white font-bold text-xs px-5 py-2 rounded-lg shadow transition cursor-pointer"
                 >
@@ -3109,347 +2923,8 @@ ${bodySections}\\end{document}
 
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ================= MODAL: AI 100% ATS OPTIMIZATION ================= */}
-      {showAiModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white text-gray-900 max-w-4xl w-full p-6 rounded-2xl border border-gray-200 space-y-5 shadow-2xl my-8">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-black text-white rounded-xl">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-gray-950">Optimizare AI ATS 100% (Groq Live)</h3>
-                  <p className="text-[11px] text-gray-500">Analiza diferente ATS + Rescriere adaptata pentru cerintele jobului</p>
-                </div>
-              </div>
-              <button onClick={() => setShowAiModal(false)} className="p-1 text-gray-400 hover:text-black rounded-lg cursor-pointer">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              {applications.length > 0 && (
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Selecteaza Jobul din Tracker:</label>
-                  <select 
-                    value={selectedJobId}
-                    onChange={e => setSelectedJobId(e.target.value)}
-                    className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs text-gray-900"
-                  >
-                    {applications.map(app => (
-                      <option key={app.id} value={app.id}>{app.jobTitle} la {app.companyName}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] font-bold text-gray-600 mb-1">Sau introdu cerinte job personalizate:</label>
-                <input 
-                  type="text" 
-                  placeholder="ex: Java 21, Spring Boot, Microservices, Kubernetes, Redis"
-                  value={customJobDescription}
-                  onChange={e => setCustomJobDescription(e.target.value)}
-                  className="w-full bg-white border border-gray-300 rounded-xl p-2.5 text-xs text-gray-900"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={handleRunTwoAgentPipeline}
-              disabled={isAnalyzing}
-              className="w-full py-3 bg-black hover:bg-neutral-800 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition disabled:opacity-60 cursor-pointer"
-            >
-              {isAnalyzing ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-gray-300" />
-                  Se ruleaza Agent 1 (Gap Analyzer) & Agent 2 (Groq LLM Rewriter)...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  Ruleaza Analiza si Rescrierea AI (Groq Live)
-                </>
-              )}
-            </button>
-
-            {(agent1Output || agent2Output) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                {agent1Output && (
-                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-gray-900 flex items-center gap-1.5">
-                        <Target className="w-4 h-4 text-black" /> Agent 1: Gap Analyzer
-                      </span>
-                      <span className="px-2 py-0.5 bg-black text-white rounded font-mono font-bold text-[10px]">
-                        Scor: 100%
-                      </span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="p-2.5 bg-white rounded-lg border border-gray-200">
-                        <span className="text-[10px] font-bold text-emerald-700 block">Skill-uri Match:</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {agent1Output.matchingSkills.map(s => (
-                            <span key={s} className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-medium">{s}</span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="p-2.5 bg-white rounded-lg border border-gray-200">
-                        <span className="text-[10px] font-bold text-rose-700 block">Cuvinte Cheie de Adaugat:</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {agent1Output.missingSkills.map(s => (
-                            <span key={s} className="text-[9px] bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded font-medium">{s}</span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {agent2Output && (
-                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-gray-900 flex items-center gap-1.5">
-                        <BrainCircuit className="w-4 h-4 text-black" /> Agent 2: CV Rewriter (100%)
-                      </span>
-                      <button
-                        onClick={handleApplyAiOptimizations}
-                        className="px-2.5 py-1 bg-black hover:bg-neutral-800 text-white rounded-lg font-bold text-[10px] flex items-center gap-1 shadow transition cursor-pointer"
-                      >
-                        <Check className="w-3 h-3 text-emerald-400" /> Aplica direct in CV
-                      </button>
-                    </div>
-
-                    {agent2Output.tailoredSummary && (
-                      <div className="p-2.5 bg-white rounded-lg border border-gray-200 space-y-1">
-                        <span className="text-[10px] font-bold text-gray-700">Summary Re-scris:</span>
-                        <p className="text-[11px] text-gray-800 italic">{agent2Output.tailoredSummary}</p>
-                      </div>
-                    )}
-
-                    {agent2Output.tailoredProjects?.[0]?.bullets?.length > 0 && (
-                      <div className="p-2.5 bg-white rounded-lg border border-gray-200 space-y-1 max-h-36 overflow-y-auto">
-                        <span className="text-[10px] font-bold text-gray-700">Bullet-uri Metoda XYZ:</span>
-                        {agent2Output.tailoredProjects[0].bullets.map((b, idx) => (
-                          <p key={idx} className="text-[10px] text-gray-800 flex items-start gap-1">
-                            <span className="text-black">•</span> <span>{b}</span>
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* SINGLE BULLET XYZ REWRITE MODAL */}
-      {activeRewritingBullet && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl border border-gray-200 text-gray-900 space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-amber-100 text-amber-800 rounded-xl">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-sm sm:text-base text-gray-950">
-                    Rescriere AI • Formula Google X-Y-Z
-                  </h3>
-                  <p className="text-[11px] text-gray-500">
-                    Alege una dintre cele 3 variante optimizate cu metrici masurabile
-                  </p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setActiveRewritingBullet(null)}
-                className="p-1 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-900 transition cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Varianta Curenta:</span>
-              <p className="text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg border border-gray-200 italic">
-                {activeRewritingBullet.originalText}
-              </p>
-            </div>
-
-            {activeRewritingBullet.loading ? (
-              <div className="py-8 flex flex-col items-center justify-center gap-2 text-gray-500">
-                <RefreshCw className="w-6 h-6 animate-spin text-black" />
-                <span className="text-xs font-semibold">Generare optiuni Google X-Y-Z in curs...</span>
-              </div>
-            ) : activeRewritingBullet.variations ? (
-              <div className="space-y-3 pt-1">
-                {activeRewritingBullet.variations.highImpact && (
-                  <div 
-                    onClick={() => handleSelectBulletVariation(activeRewritingBullet.variations.highImpact)}
-                    className="p-3 rounded-xl border border-purple-200 bg-purple-50/40 hover:border-purple-400 hover:bg-purple-50/80 cursor-pointer transition space-y-1 group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-200">
-                        🚀 Impact Maxim (Google XYZ)
-                      </span>
-                      <span className="text-xs font-bold text-purple-700 opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-                        Selecteaza <ArrowRight className="w-3.5 h-3.5" />
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-900 font-medium leading-relaxed">
-                      {activeRewritingBullet.variations.highImpact}
-                    </p>
-                  </div>
-                )}
-
-                {activeRewritingBullet.variations.deepTech && (
-                  <div 
-                    onClick={() => handleSelectBulletVariation(activeRewritingBullet.variations.deepTech)}
-                    className="p-3 rounded-xl border border-blue-200 bg-blue-50/40 hover:border-blue-400 hover:bg-blue-50/80 cursor-pointer transition space-y-1 group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
-                        ⚙️ Adancime Tehnica & Arhitectura
-                      </span>
-                      <span className="text-xs font-bold text-blue-700 opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-                        Selecteaza <ArrowRight className="w-3.5 h-3.5" />
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-900 font-medium leading-relaxed">
-                      {activeRewritingBullet.variations.deepTech}
-                    </p>
-                  </div>
-                )}
-
-                {activeRewritingBullet.variations.concise && (
-                  <div 
-                    onClick={() => handleSelectBulletVariation(activeRewritingBullet.variations.concise)}
-                    className="p-3 rounded-xl border border-emerald-200 bg-emerald-50/40 hover:border-emerald-400 hover:bg-emerald-50/80 cursor-pointer transition space-y-1 group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        🎯 Formulare Concisa & Directa
-                      </span>
-                      <span className="text-xs font-bold text-emerald-700 opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-                        Selecteaza <ArrowRight className="w-3.5 h-3.5" />
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-900 font-medium leading-relaxed">
-                      {activeRewritingBullet.variations.concise}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : null}
-
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => setActiveRewritingBullet(null)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-bold text-xs cursor-pointer transition"
-              >
-                Anuleaza
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL: LATEX STUDIO & OVERLEAF ================= */}
-      {showLatexModal && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="max-w-3xl w-full my-6 bg-white text-gray-900 rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 font-sans">
-            
-            {/* MODAL HEADER */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-neutral-950 text-white">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-amber-400 text-neutral-950 rounded-xl">
-                  <Code2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base">LaTeX Studio & PDF Generator</h3>
-                  <p className="text-xs text-gray-300">Format profesional EB Garamond (100% Vectorial ATS, 1 pagina A4)</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setShowLatexModal(false)}
-                className="p-1.5 hover:bg-neutral-800 rounded-lg text-gray-400 hover:text-white transition cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* MODAL CONTENT */}
-            <div className="p-6 space-y-4">
-              <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-xs text-amber-900 leading-relaxed flex items-start gap-2.5">
-                <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-bold">De ce LaTeX?</span> Motoarele de compilare TeX genereaza text pur vectorial cu kerning si spatiere de precizie matematica, citite 100% corect de sistemele ATS (Workday, Taleo, Greenhouse).
-                  Apasa <span className="font-bold">"Deschide pe Overleaf"</span> pentru compilare instanta in cloud, sau <span className="font-bold">"Descarca .tex"</span> pentru compilare locala!
-                </div>
-              </div>
-
-              {/* ACTION BUTTONS */}
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={handleOpenOverleaf}
-                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
-                  title="Deschide Overleaf cu codul gata inserat si compileaza PDF-ul instant"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  <span>Deschide pe Overleaf (Compileaza PDF)</span>
-                </button>
-
-                <button
-                  onClick={handleDownloadTex}
-                  className="px-4 py-2.5 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
-                  title="Descarca fisierul sursa .tex pe calculator"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Descarca .tex</span>
-                </button>
-
-                <button
-                  onClick={handleCopyLatex}
-                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-bold text-xs flex items-center gap-2 transition cursor-pointer"
-                  title="Copiaza codul LaTeX in clipboard"
-                >
-                  {latexCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-gray-600" />}
-                  <span>{latexCopied ? "Copiat in Clipboard!" : "Copiaza Codul"}</span>
-                </button>
-              </div>
-
-              {/* CODE PREVIEW */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs text-gray-500 font-medium">
-                  <span>Previzualizare Cod Sursa LaTeX (.tex):</span>
-                  <span>Sincronizat automat cu datele tale din formular</span>
-                </div>
-                <div className="relative bg-neutral-950 text-neutral-100 p-4 rounded-xl font-mono text-xs overflow-x-auto max-h-80 border border-neutral-800 selection:bg-amber-400 selection:text-neutral-950">
-                  <pre className="whitespace-pre">{generateLatex()}</pre>
-                </div>
-              </div>
-            </div>
-
-            {/* MODAL FOOTER */}
-            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-end">
-              <button
-                onClick={() => setShowLatexModal(false)}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl text-xs font-bold transition cursor-pointer"
-              >
-                Inchide
-              </button>
-            </div>
-
-          </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
