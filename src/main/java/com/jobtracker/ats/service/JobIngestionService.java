@@ -34,7 +34,7 @@ public class JobIngestionService {
             cachedJobListingRepository.deleteBySourcePlatformIn(REMOVED_PLATFORMS);
             jobStagingRepository.deleteBySourcePlatformIn(REMOVED_PLATFORMS);
         } catch (Exception e) {
-            log.warn("[JOB INGESTION] Curățare platforme eliminate: {}", e.getMessage());
+            log.warn("[JOB INGESTION] Curatare platforme eliminate: {}", e.getMessage());
         }
     }
 
@@ -54,7 +54,7 @@ public class JobIngestionService {
         try {
             OffsetDateTime now = OffsetDateTime.now();
 
-            // 1. Ingestie decuplată în staging (jobs_staging)
+            // 1. Ingestie decuplata in staging (jobs_staging)
             List<JobStaging> stagingBatch = new ArrayList<>();
             for (UnifiedJobListingDto dto : freshList) {
                 if (dto.directApplyUrl() == null || dto.directApplyUrl().isBlank()) continue;
@@ -77,14 +77,14 @@ public class JobIngestionService {
                 }
             }
 
-            // 2. Mapare pentru upsert & tracking modificări (cached_live_jobs & job_changes)
+            // 2. Mapare pentru upsert & tracking modificari (cached_live_jobs & job_changes)
             try {
                 cachedJobListingRepository.clearAllNewlyDiscovered();
             } catch (Exception e) {
                 log.warn("[JOB INGESTION] Nu s-a putut reseta newlyDiscovered: {}", e.getMessage());
             }
 
-            // Interogare selectivă în loturi pe baza URL-urilor primite (în loc de încărcare completă a tabelei cu findAll)
+            // Interogare selectiva in loturi pe baza URL-urilor primite (in loc de incarcare completa a tabelei cu findAll)
             Set<String> freshUrls = freshList.stream()
                     .map(UnifiedJobListingDto::directApplyUrl)
                     .filter(u -> u != null && !u.isBlank())
@@ -122,7 +122,7 @@ public class JobIngestionService {
                     existing.setNewlyDiscovered(false);
                     boolean modified = false;
 
-                    // Reactivare dacă fusese marcat ca EXPIRED
+                    // Reactivare daca fusese marcat ca EXPIRED
                     if ("EXPIRED".equalsIgnoreCase(existing.getStatus())) {
                         existing.setStatus("ACTIVE");
                         modified = true;
@@ -136,7 +136,7 @@ public class JobIngestionService {
                                 .build());
                     }
 
-                    // Detectare modificări de conținut (Hash Change)
+                    // Detectare modificari de continut (Hash Change)
                     if (existing.getContentHash() != null && !existing.getContentHash().equals(newHash)) {
                         String oldHash = existing.getContentHash();
 
@@ -148,7 +148,7 @@ public class JobIngestionService {
                             diffs.add("Salariu: \"" + existing.getSalaryRange() + "\" ➔ \"" + (dto.salaryRange() != null ? dto.salaryRange() : "Nespecificat") + "\"");
                         }
                         if (existing.getLocation() != null && !existing.getLocation().equalsIgnoreCase(dto.location())) {
-                            diffs.add("Locație: \"" + existing.getLocation() + "\" ➔ \"" + dto.location() + "\"");
+                            diffs.add("Locatie: \"" + existing.getLocation() + "\" ➔ \"" + dto.location() + "\"");
                         }
                         if (existing.getWorkModel() != null && !existing.getWorkModel().equalsIgnoreCase(dto.workModel())) {
                             diffs.add("Mod lucru: " + existing.getWorkModel() + " ➔ " + dto.workModel());
@@ -161,7 +161,7 @@ public class JobIngestionService {
                         if (Math.abs(newLen - oldLen) > 20) {
                             diffs.add("Descriere text: " + (newLen > oldLen ? "+" : "") + (newLen - oldLen) + " caractere");
                         }
-                        String detailsMessage = diffs.isEmpty() ? "Conținut actualizat de la platformă" : String.join(" | ", diffs);
+                        String detailsMessage = diffs.isEmpty() ? "Continut actualizat de la platforma" : String.join(" | ", diffs);
 
                         existing.setContentHash(newHash);
                         existing.setJobTitle(dto.jobTitle());
@@ -211,7 +211,7 @@ public class JobIngestionService {
                             .jobId(newJob.getId())
                             .newHash(newHash)
                             .changeType("CREATED")
-                            .details("Descoperit pentru prima dată pe " + dto.sourcePlatform())
+                            .details("Descoperit pentru prima data pe " + dto.sourcePlatform())
                             .changedAt(now)
                             .build());
                 }
@@ -230,7 +230,7 @@ public class JobIngestionService {
                         }
                     }
                 }
-                log.info("[JOB INGESTION] Salvate {} joburi NOI în PostgreSQL.", toInsert.size());
+                log.info("[JOB INGESTION] Salvate {} joburi NOI in PostgreSQL.", toInsert.size());
             }
 
             if (!toUpdate.isEmpty()) {
@@ -241,7 +241,7 @@ public class JobIngestionService {
                         cachedJobListingRepository.saveAll(toUpdate.subList(i, end));
                     } catch (Exception ignored) {}
                 }
-                log.info("[JOB INGESTION] Actualizate {} joburi existente (reactivate / conținut modificat).", toUpdate.size());
+                log.info("[JOB INGESTION] Actualizate {} joburi existente (reactivate / continut modificat).", toUpdate.size());
             }
 
             if (!changesToInsert.isEmpty()) {
@@ -252,20 +252,22 @@ public class JobIngestionService {
                         jobChangeRepository.saveAll(changesToInsert.subList(i, end));
                     } catch (Exception ignored) {}
                 }
-                log.info("[JOB INGESTION] Înregistrate {} evenimente în job_changes.", changesToInsert.size());
+                log.info("[JOB INGESTION] Inregistrate {} evenimente in job_changes.", changesToInsert.size());
             }
 
             markExpiredJobs();
 
         } catch (Exception e) {
-            log.error("[JOB INGESTION] Eroare în pipeline-ul de ingestie: {}", e.getMessage(), e);
+            log.error("[JOB INGESTION] Eroare in pipeline-ul de ingestie: {}", e.getMessage(), e);
         }
     }
 
     @Transactional
     public int markExpiredJobs() {
         try {
-            OffsetDateTime threshold = OffsetDateTime.now().minusDays(3);
+            // Un job este considerat expirat daca nu a mai fost intalnit pe platforma timp de 14 zile
+            // (evita marcarea falsa / flapping-ul la pauze scurte de crawling)
+            OffsetDateTime threshold = OffsetDateTime.now().minusDays(14);
             List<CachedJobListing> staleJobs = cachedJobListingRepository.findActiveJobsNotSeenSince(threshold);
             if (staleJobs.isEmpty()) return 0;
 
@@ -277,13 +279,13 @@ public class JobIngestionService {
                 changes.add(JobChange.builder()
                         .jobId(job.getId())
                         .changeType("EXPIRED")
-                        .details("Jobul nu a mai fost găsit pe platformă de peste 3 zile (ultima apariție: " + job.getLastSeenAt() + ")")
+                        .details("Jobul nu a mai fost gasit pe platforma de peste 14 zile (ultima aparitie: " + job.getLastSeenAt() + ")")
                         .changedAt(now)
                         .build());
             }
             cachedJobListingRepository.saveAll(staleJobs);
             jobChangeRepository.saveAll(changes);
-            log.info("[JOB INGESTION] Marcate {} joburi ca EXPIRED (nevăzute în ultimele 3 zile).", staleJobs.size());
+            log.info("[JOB INGESTION] Marcate {} joburi ca EXPIRED (nevazute in ultimele 14 zile).", staleJobs.size());
             return staleJobs.size();
         } catch (Exception e) {
             log.warn("[JOB INGESTION] Eroare la marcarea joburilor expirate: {}", e.getMessage());

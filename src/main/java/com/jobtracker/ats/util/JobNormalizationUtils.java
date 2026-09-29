@@ -200,8 +200,8 @@ public final class JobNormalizationUtils {
             return "INTERNSHIP";
         }
 
-        // 4. Strict Junior checks (titlul trebuie să conțină explicit Junior / Entry-level / Graduate / Începător)
-        if (t.matches(".*\\b(?:junior|jr|entry-level|fresh grad|graduate|incepator|începător)\\b.*") ||
+        // 4. Strict Junior checks (titlul trebuie să conțină explicit Junior / Entry-level / Graduate / Începător / New Grad)
+        if (t.matches(".*\\b(?:junior|jr|entry-level|fresh grad|new grad|graduate|graduates|grad|incepator|începător)\\b.*") ||
             t.contains("jr.") || t.contains("jr ") || t.contains("entry level") || 
             t.contains("0-1 ani") || t.contains("0-2 ani")) {
             return "JUNIOR";
@@ -347,7 +347,7 @@ public final class JobNormalizationUtils {
             new TechSkillDefinition("Power BI & Tableau", "AI & Data", Pattern.compile("(?i)\\b(power\\s+bi|powerbi|tableau)\\b")),
 
             // --- QA & TESTARE ---
-            new TechSkillDefinition("QA & Testing", "QA & Testare", Pattern.compile("(?i)\\b(qa\\b|software\\s+testing|test\\s+cases|manual\\s+testing|quality\\s+assurance)\\b")),
+            new TechSkillDefinition("QA & Testing", "QA & Testare", Pattern.compile("(?i)\\b(qa\\b|tester|testers|testing|software\\s+testing|test\\s+engineer|test\\s+cases|manual\\s+testing|quality\\s+assurance)\\b")),
             new TechSkillDefinition("Test Automation", "QA & Testare", Pattern.compile("(?i)\\b(automation|test\\s+automation|automated\\s+testing)\\b")),
             new TechSkillDefinition("Selenium / Playwright / Cypress", "QA & Testare", Pattern.compile("(?i)\\b(selenium|playwright|cypress)\\b")),
             new TechSkillDefinition("JUnit & Mockito", "QA & Testare", Pattern.compile("(?i)\\b(junit|mockito|pytest|testng)\\b")),
@@ -562,7 +562,7 @@ public final class JobNormalizationUtils {
             case "ANDROID" -> title.contains("android") || skills.contains("kotlin") || desc.contains("android sdk") || title.contains("mobile");
             case "DEVOPS" -> title.contains("devops") || title.contains("sre") || title.contains("reliability") || desc.contains("kubernetes") || skills.contains("site reliability");
             case "CLOUD_SECURITY", "CYBERSECURITY" -> title.contains("security") || desc.contains("threat") || desc.contains("cryptography") || desc.contains("vulnerability") || title.contains("cyber") || title.contains("penetration");
-            case "QA_TESTING", "AUTOMATION_TEST" -> title.contains("qa") || title.contains("test") || title.contains("quality") || skills.contains("selenium") || skills.contains("playwright") || skills.contains("cypress") || skills.contains("testing");
+            case "QA_TESTING", "AUTOMATION_TEST", "TESTER", "QA_TESTER", "QA" -> title.contains("qa") || title.contains("test") || title.contains("quality") || skills.contains("selenium") || skills.contains("playwright") || skills.contains("cypress") || skills.contains("testing") || skills.contains("qa & testing");
             case "BUSINESS_ANALYST" -> title.contains("business analyst") || title.contains("product owner") || title.contains("analist business") || title.contains("functional analyst") || title.contains("analist functional") || title.contains("requirements") || skills.contains("business analysis");
             case "TECH_SUPPORT" -> title.contains("support") || title.contains("helpdesk") || title.contains("servicedesk") || title.contains("service desk") || title.contains("suport tehnic") || title.contains("it service");
             case "SYSADMIN_NETWORK" -> title.contains("system admin") || title.contains("sysadmin") || title.contains("network") || title.contains("administrator de sistem") || title.contains("infrastructure");
