@@ -19,7 +19,6 @@ import {
   Linkedin,
   GraduationCap,
   Bell,
-  Trophy,
   ChevronRight,
   Sparkles,
   Zap,
@@ -112,27 +111,17 @@ const NAV_SECTIONS = [
     ]
   },
   {
-    title: 'CRESTERE & CARIERA',
+    title: 'PREGATIRE & RESURSE',
     items: [
       {
         id: 'skill_roadmap',
         label: 'Skill Roadmaps',
-        subtitle: 'Planuri Practice 7 Zile',
+        subtitle: 'Ghid & Resurse Gratuite',
         icon: GraduationCap,
         color: 'text-rose-600',
         activeColor: 'text-rose-400',
         activeBg: 'bg-rose-600/10',
-        badge: 'LABS'
-      },
-      {
-        id: 'career_analytics',
-        label: 'Cariera & XP Funnel',
-        subtitle: 'Palnie Conversie & Quests',
-        icon: Trophy,
-        color: 'text-amber-500',
-        activeColor: 'text-amber-400',
-        activeBg: 'bg-amber-500/10',
-        badge: 'XP'
+        badge: 'FREE'
       }
     ]
   }
