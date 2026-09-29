@@ -29,7 +29,8 @@ import {
   MapPin,
   RefreshCw,
   Globe,
-  AlertCircle
+  AlertCircle,
+  BookOpen
 } from 'lucide-react';
 
 const DOMAIN_ICONS = {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Search, 
   MapPin, 
@@ -321,6 +322,27 @@ export default function JobSearchPage({
       setLoadingChanges(false);
     }
   };
+
+  // Scroll lock & Escape key listener cand modalul de istoric/audit este deschis
+  useEffect(() => {
+    if (!auditJobForChanges || typeof document === 'undefined') return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setAuditJobForChanges(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = (prevBodyOverflow === 'hidden' ? '' : prevBodyOverflow);
+      document.documentElement.style.overflow = (prevHtmlOverflow === 'hidden' ? '' : prevHtmlOverflow);
+    };
+  }, [auditJobForChanges]);
 
   // 4 NIVELURI DE EXPERIENTA PENTRU MULTI-SELECT
   const levelsConfig = [
@@ -1959,9 +1981,15 @@ export default function JobSearchPage({
       )}
 
       {/* MODAL AUDIT LIFECYCLE & ISTORIC MODIFICARI */}
-      {auditJobForChanges && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white border border-gray-200 rounded-3xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      {auditJobForChanges && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-in fade-in duration-200"
+          onClick={() => setAuditJobForChanges(null)}
+        >
+          <div 
+            className="relative bg-white border border-gray-200 rounded-3xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
             <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
               <div className="flex items-center gap-2.5">
@@ -2106,7 +2134,8 @@ export default function JobSearchPage({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* OUTREACH CRM MODAL PENTRU JOB DIN SEARCH */}
