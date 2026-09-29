@@ -31,7 +31,6 @@ const NAV_SECTIONS = [
       {
         id: 'tracker',
         label: 'Tracker Aplicatii',
-        subtitle: 'Kanban & Pipeline',
         icon: FolderKanban,
         color: 'text-blue-600',
         activeColor: 'text-blue-400',
@@ -40,7 +39,6 @@ const NAV_SECTIONS = [
       {
         id: 'job_search',
         label: 'Cautare Job-uri',
-        subtitle: 'Agregator Piata IT',
         icon: Search,
         color: 'text-amber-500',
         activeColor: 'text-amber-400',
@@ -49,7 +47,6 @@ const NAV_SECTIONS = [
       {
         id: 'market_insights',
         label: 'Market Insights',
-        subtitle: 'Cerinte & Skill Match',
         icon: Compass,
         color: 'text-cyan-600',
         activeColor: 'text-cyan-400',
@@ -63,7 +60,6 @@ const NAV_SECTIONS = [
       {
         id: 'cv_library',
         label: 'CV-urile Mele',
-        subtitle: 'Baza de date Profiluri',
         icon: Files,
         color: 'text-emerald-600',
         activeColor: 'text-emerald-400',
@@ -72,7 +68,6 @@ const NAV_SECTIONS = [
       {
         id: 'cv_studio',
         label: 'Studio CV',
-        subtitle: 'Match 100% & PDF',
         icon: FileText,
         color: 'text-purple-600',
         activeColor: 'text-purple-400',
@@ -82,7 +77,6 @@ const NAV_SECTIONS = [
       {
         id: 'cover_letter',
         label: 'Cover Letter AI',
-        subtitle: 'Scrisoare de Intentie',
         icon: FileSignature,
         color: 'text-indigo-600',
         activeColor: 'text-indigo-400',
@@ -91,7 +85,6 @@ const NAV_SECTIONS = [
       {
         id: 'github_readme',
         label: 'GitHub README',
-        subtitle: 'Profil Developer Curat',
         icon: Github,
         color: 'text-gray-900',
         activeColor: 'text-emerald-400',
@@ -100,7 +93,6 @@ const NAV_SECTIONS = [
       {
         id: 'linkedin_optimizer',
         label: 'LinkedIn Optimizer',
-        subtitle: 'Audit & Desktop Preview',
         icon: Linkedin,
         color: 'text-[#0a66c2]',
         activeColor: 'text-sky-400',
@@ -115,7 +107,6 @@ const NAV_SECTIONS = [
       {
         id: 'skill_roadmap',
         label: 'Skill Roadmaps',
-        subtitle: 'Ghid & Resurse Gratuite',
         icon: GraduationCap,
         color: 'text-rose-600',
         activeColor: 'text-rose-400',
@@ -157,13 +148,13 @@ export default function Navbar({
                 <button
                   key={item.id}
                   onClick={() => handleSelectTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer group ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all duration-150 cursor-pointer group ${
                     isActive 
                       ? 'bg-gray-950 text-white shadow-sm' 
                       : 'text-gray-700 hover:text-black hover:bg-gray-100/90'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <div className={`p-1.5 rounded-lg shrink-0 transition-colors ${
                       isActive 
                         ? 'bg-white/10 text-white' 
@@ -171,18 +162,11 @@ export default function Navbar({
                     }`}>
                       <Icon className={`w-4 h-4 ${isActive ? item.activeColor : item.color}`} />
                     </div>
-                    <div className="min-w-0">
-                      <div className={`text-xs truncate font-bold ${
-                        isActive ? 'text-white' : 'text-gray-900 group-hover:text-black'
-                      }`}>
-                        {item.label}
-                      </div>
-                      <div className={`text-[10px] truncate ${
-                        isActive ? 'text-gray-400' : 'text-gray-600'
-                      }`}>
-                        {item.subtitle}
-                      </div>
-                    </div>
+                    <span className={`text-xs truncate font-bold ${
+                      isActive ? 'text-white' : 'text-gray-900 group-hover:text-black'
+                    }`}>
+                      {item.label}
+                    </span>
                   </div>
 
                   {item.badge && (
