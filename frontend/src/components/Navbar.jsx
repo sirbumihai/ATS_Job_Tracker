@@ -18,7 +18,6 @@ import {
   Compass,
   Linkedin,
   GraduationCap,
-  Bell,
   ChevronRight,
   Sparkles,
   Zap,
@@ -134,8 +133,7 @@ export default function Navbar({
   onLogout, 
   onOpenAuth, 
   onOpenUpload, 
-  onOpenAddJob,
-  onOpenDigestModal
+  onOpenAddJob
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -237,33 +235,8 @@ export default function Navbar({
           {renderNavList()}
         </div>
 
-        {/* BOTTOM SECTION: DAILY DIGEST + USER FOOTER */}
+        {/* BOTTOM SECTION: USER FOOTER */}
         <div className="p-3 border-t border-gray-100 bg-gray-50/70 space-y-2.5">
-          
-          {/* DAILY DIGEST BUTTON */}
-          {onOpenDigestModal && (
-            <button
-              onClick={onOpenDigestModal}
-              title="Configureaza si testeaza Daily Job Digest (09:00 AM)"
-              className="w-full p-2.5 rounded-xl border border-amber-200/90 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950 flex items-center justify-between transition cursor-pointer shadow-2xs group"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="relative p-1.5 rounded-lg bg-amber-200/80 text-amber-900 group-hover:scale-105 transition-transform">
-                  <Bell className="w-4 h-4 text-amber-800" />
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500"></span>
-                </div>
-                <div className="text-left">
-                  <div className="text-xs font-black text-amber-950 flex items-center gap-1.5">
-                    Daily Job Digest
-                    <span className="text-[9px] bg-amber-200 text-amber-900 font-black px-1.5 py-0.2 rounded-full">09:00</span>
-                  </div>
-                  <div className="text-[10px] text-amber-700 font-medium">Alerte automate zilnice</div>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          )}
 
           {/* USER PROFILE & LOGOUT */}
           {currentUser ? (
@@ -328,16 +301,6 @@ export default function Navbar({
 
         {/* Mobile Right Controls */}
         <div className="flex items-center gap-2">
-          {onOpenDigestModal && (
-            <button
-              onClick={onOpenDigestModal}
-              title="Daily Job Digest"
-              className="p-2 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 relative cursor-pointer"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500"></span>
-            </button>
-          )}
 
           {currentUser ? (
             <div className="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
@@ -400,21 +363,6 @@ export default function Navbar({
 
             {/* Drawer Footer */}
             <div className="p-4 border-t border-gray-100 bg-gray-50/70 space-y-3">
-              {onOpenDigestModal && (
-                <button
-                  onClick={() => {
-                    onOpenDigestModal();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full p-2.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-xs font-bold flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-amber-700" />
-                    <span>Daily Job Digest (09:00 AM)</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-amber-600" />
-                </button>
-              )}
 
               {currentUser && (
                 <button

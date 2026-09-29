@@ -10,9 +10,8 @@ import GithubReadmeStudio from './components/GithubReadmeStudio';
 import MarketInsightsPage from './components/MarketInsightsPage';
 import LinkedInOptimizerPage from './components/LinkedInOptimizerPage';
 import SkillRoadmapPage from './components/SkillRoadmapPage';
-import DailyDigestModal from './components/DailyDigestModal';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
-import { Plus, Upload, Bell } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 
 const TAB_METADATA = {
   tracker: {
@@ -190,7 +189,6 @@ export default function App() {
   const [showAddJobModal, setShowAddJobModal] = useState(false);
   const [showUploadResumeModal, setShowUploadResumeModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
-  const [showDailyDigestModal, setShowDailyDigestModal] = useState(false);
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [analyzingAppId, setAnalyzingAppId] = useState(null);
 
@@ -428,7 +426,6 @@ export default function App() {
         currentUser={currentUser}
         onLogout={handleLogout}
         onOpenAuth={() => setShowAuthModal(true)}
-        onOpenDigestModal={() => setShowDailyDigestModal(true)}
       />
 
       {/* CONTINUT PRINCIPAL (Coloana Dreapta pe Desktop) */}
@@ -495,7 +492,6 @@ export default function App() {
             onSaveToKanbanSuccess={fetchApplications}
             onNavigateToStudio={() => handleTabChange('cv_studio')}
             onNavigateToKanban={() => handleTabChange('tracker')}
-            onOpenDigestModal={() => setShowDailyDigestModal(true)}
           />
         )}
 
@@ -598,11 +594,6 @@ export default function App() {
         isOpen={showAiModal}
         onClose={() => setShowAiModal(false)}
         analysis={selectedAnalysis}
-      />
-
-      <DailyDigestModal
-        isOpen={showDailyDigestModal}
-        onClose={() => setShowDailyDigestModal(false)}
       />
 
     </div>

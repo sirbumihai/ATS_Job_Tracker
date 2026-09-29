@@ -125,8 +125,7 @@ export default function JobSearchPage({
   currentUser, 
   onSaveToKanbanSuccess, 
   onNavigateToStudio,
-  onNavigateToKanban,
-  onOpenDigestModal
+  onNavigateToKanban
 }) {
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
