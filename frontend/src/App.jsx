@@ -27,9 +27,9 @@ const TAB_METADATA = {
     category: 'Piata IT'
   },
   market_insights: {
-    title: 'Radar Piata IT',
-    subtitle: 'Statistici Reale & Frecventa Tehnologii Romania',
-    category: 'Statistici'
+    title: 'Market Insights',
+    subtitle: 'Cerinte Reale & Skill Match Piata IT',
+    category: 'Piata IT'
   },
   cv_library: {
     title: 'CV-urile Mele',

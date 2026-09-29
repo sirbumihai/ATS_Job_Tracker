@@ -50,8 +50,8 @@ const NAV_SECTIONS = [
       },
       {
         id: 'market_insights',
-        label: 'Radar Piata IT',
-        subtitle: 'Statistici & Tech Trends',
+        label: 'Market Insights',
+        subtitle: 'Cerinte & Skill Match',
         icon: Compass,
         color: 'text-cyan-600',
         activeColor: 'text-cyan-400',

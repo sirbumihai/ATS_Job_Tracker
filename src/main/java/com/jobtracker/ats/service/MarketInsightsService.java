@@ -808,31 +808,33 @@ public class MarketInsightsService {
 
             // Top skills pentru domeniu (filtrate pe nivelul selectat, pana la 16 tehnologii)
             List<CachedJobListing> jobsForSkills = filterJobsByLevel(domainJobs, level);
-            List<SkillFrequencyDto> topSkills = calculateTopSkills(jobsForSkills, 16);
+            List<SkillFrequencyDto> rawTopSkills = calculateTopSkills(jobsForSkills, 16);
 
             // DEDUPLICARE STRICTA PE COMPANIE pentru sampleJobs:
             // Ne asiguram ca NICIODATA nu apar joburi de la aceeasi firma in lista de exemple!
             List<SampleJobDto> sampleJobs = pickDiverseSampleJobs(jobsForSkills, 8);
 
-            // Estimare salariala pentru nivelul curent
+            // Estimare salariala pentru nivelul curent (pastrata in backend)
             String salaryEst = cat.getSalaryEstimate(level);
 
-            // Match personalizat cu CV-ul utilizatorului
+            // Match personalizat cu CV-ul utilizatorului pe TOATE cerintele extrase din anunturile reale
             List<String> matchingSkills = new ArrayList<>();
             List<String> missingSkills = new ArrayList<>();
-            int userMatchScore = 0;
+            List<SkillFrequencyDto> topSkills = new ArrayList<>();
 
-            if (!userCvSkills.isEmpty() && !topSkills.isEmpty()) {
-                int totalTop = Math.min(5, topSkills.size());
-                for (int i = 0; i < totalTop; i++) {
-                    String skName = topSkills.get(i).skill();
-                    if (hasSkillInCv(userCvSkills, skName)) {
-                        matchingSkills.add(skName);
-                    } else {
-                        missingSkills.add(skName);
-                    }
+            for (SkillFrequencyDto sk : rawTopSkills) {
+                boolean hasSkill = hasSkillInCv(userCvSkills, sk.skill());
+                topSkills.add(new SkillFrequencyDto(sk.skill(), sk.count(), sk.percentage(), sk.category(), hasSkill));
+                if (hasSkill) {
+                    matchingSkills.add(sk.skill());
+                } else {
+                    missingSkills.add(sk.skill());
                 }
-                userMatchScore = (int) Math.round(((double) matchingSkills.size() / totalTop) * 100.0);
+            }
+
+            int userMatchScore = 0;
+            if (!userCvSkills.isEmpty() && !topSkills.isEmpty()) {
+                userMatchScore = (int) Math.round(((double) matchingSkills.size() / topSkills.size()) * 100.0);
             }
 
             domainDtos.add(new MarketDomainDto(
@@ -966,6 +968,12 @@ public class MarketInsightsService {
                 || loc.contains("bacau") || loc.contains("bacău") || loc.contains("baia mare");
     }
 
+    private boolean isBucharestJob(CachedJobListing j) {
+        if (j == null) return false;
+        String loc = j.getLocation() != null ? j.getLocation().toLowerCase() : "";
+        return loc.contains("bucur") || loc.contains("bucharest") || loc.contains("ilfov") || loc.contains("otopeni") || loc.contains("voluntari");
+    }
+
     private boolean isRemoteJob(CachedJobListing j) {
         if (j == null) return false;
         String loc = j.getLocation() != null ? j.getLocation().toLowerCase() : "";
@@ -974,7 +982,9 @@ public class MarketInsightsService {
     }
 
     private List<CachedJobListing> filterJobsByLocation(List<CachedJobListing> jobs, String locFilter) {
-        if ("RO_ONLY".equalsIgnoreCase(locFilter)) {
+        if ("BUCURESTI".equalsIgnoreCase(locFilter) || "BUCHAREST".equalsIgnoreCase(locFilter)) {
+            return jobs.stream().filter(this::isBucharestJob).toList();
+        } else if ("RO_ONLY".equalsIgnoreCase(locFilter)) {
             return jobs.stream().filter(this::isRomaniaJob).toList();
         } else if ("RO_AND_REMOTE".equalsIgnoreCase(locFilter)) {
             return jobs.stream().filter(j -> isRomaniaJob(j) || isRemoteJob(j)).toList();
@@ -1047,7 +1057,7 @@ public class MarketInsightsService {
                 .map(e -> {
                     double pct = Math.round((e.getValue() * 1000.0) / total) / 10.0;
                     String category = JobNormalizationUtils.getSkillCategory(e.getKey());
-                    return new SkillFrequencyDto(e.getKey(), e.getValue(), pct, category);
+                    return new SkillFrequencyDto(e.getKey(), e.getValue(), pct, category, false);
                 })
                 .toList();
     }
@@ -1065,6 +1075,21 @@ public class MarketInsightsService {
             addSkillsToSet(set, p.getSkillsFrameworks());
             addSkillsToSet(set, p.getSkillsDatabases());
             addSkillsToSet(set, p.getSkillsDevops());
+
+            // De asemenea, extragem si competente mentionate in summary sau experienta
+            if (p.getSummary() != null && !p.getSummary().isBlank()) {
+                List<String> sumSkills = JobNormalizationUtils.extractSkills("", p.getSummary());
+                for (String sk : sumSkills) set.add(sk.toLowerCase().trim());
+            }
+            if (p.getProjectsJson() != null && !p.getProjectsJson().isBlank()) {
+                List<String> projSkills = JobNormalizationUtils.extractSkills("", p.getProjectsJson());
+                for (String sk : projSkills) set.add(sk.toLowerCase().trim());
+            }
+            if (p.getWorkExperienceJson() != null && !p.getWorkExperienceJson().isBlank()) {
+                List<String> expSkills = JobNormalizationUtils.extractSkills("", p.getWorkExperienceJson());
+                for (String sk : expSkills) set.add(sk.toLowerCase().trim());
+            }
+
             return set;
         } catch (Exception e) {
             log.warn("[MARKET INSIGHTS] Eroare la preluarea CV-ului utilizatorului {}: {}", userId, e.getMessage());
@@ -1083,12 +1108,57 @@ public class MarketInsightsService {
         }
     }
 
-    private boolean hasSkillInCv(Set<String> userSkills, String skillName) {
-        if (userSkills.isEmpty() || skillName == null) return false;
-        String sk = skillName.toLowerCase();
-        for (String u : userSkills) {
-            if (u.contains(sk) || sk.contains(u)) {
-                return true;
+    public boolean hasSkillInCv(Set<String> userSkills, String skillName) {
+        if (userSkills == null || userSkills.isEmpty() || skillName == null || skillName.isBlank()) {
+            return false;
+        }
+        String cleanSkill = skillName.toLowerCase().trim();
+        List<String> synonyms = JobNormalizationUtils.expandTechSynonyms(cleanSkill);
+
+        for (String userRaw : userSkills) {
+            String u = userRaw.toLowerCase().trim();
+            if (u.isEmpty()) continue;
+
+            // Potrivire exacta
+            if (u.equals(cleanSkill)) return true;
+
+            // Verificare sinonime extinse
+            for (String syn : synonyms) {
+                if (u.equals(syn)) return true;
+                if (syn.length() > 3 && (u.contains(syn) || syn.contains(u))) return true;
+            }
+
+            // Tehnologii specifice uzuale
+            if (cleanSkill.contains("git") && (u.contains("git") || u.contains("github") || u.contains("gitlab"))) return true;
+            if (cleanSkill.contains("sql") && (u.contains("sql") || u.contains("postgres") || u.contains("mysql"))) return true;
+            if (cleanSkill.contains("docker") && u.contains("docker")) return true;
+            if (cleanSkill.contains("linux") && u.contains("linux")) return true;
+            if (cleanSkill.contains("rest") && (u.contains("rest") || u.contains("api"))) return true;
+            if (cleanSkill.contains("python") && u.contains("python")) return true;
+            if (cleanSkill.contains("java") && !cleanSkill.contains("javascript") && u.equals("java")) return true;
+            if (cleanSkill.contains("javascript") && (u.contains("javascript") || u.equals("js"))) return true;
+            if (cleanSkill.contains("typescript") && (u.contains("typescript") || u.equals("ts"))) return true;
+            if (cleanSkill.contains("react") && u.contains("react")) return true;
+            if (cleanSkill.contains("spring") && u.contains("spring")) return true;
+            if (cleanSkill.contains("c++") && (u.contains("c++") || u.contains("cpp"))) return true;
+            if (cleanSkill.contains("c#") && (u.contains("c#") || u.contains("csharp") || u.contains(".net"))) return true;
+            if (cleanSkill.contains("aws") && (u.contains("aws") || u.contains("amazon web services"))) return true;
+            if (cleanSkill.contains("azure") && u.contains("azure")) return true;
+            if (cleanSkill.contains("kubernetes") && (u.contains("kubernetes") || u.contains("k8s"))) return true;
+            if (cleanSkill.contains("ci/cd") && (u.contains("ci/cd") || u.contains("github actions") || u.contains("jenkins") || u.contains("gitlab ci"))) return true;
+            if (cleanSkill.contains("oop") && (u.contains("oop") || u.contains("object oriented") || u.contains("clean code") || u.contains("solid"))) return true;
+            if (cleanSkill.contains("testing") || cleanSkill.contains("qa")) {
+                if (u.contains("junit") || u.contains("mockito") || u.contains("jest") || u.contains("selenium") || u.contains("cypress") || u.contains("test")) return true;
+            }
+            if (cleanSkill.contains("pandas") || cleanSkill.contains("numpy")) {
+                if (u.contains("pandas") || u.contains("numpy")) return true;
+            }
+
+            // Substring doar pentru cuvinte de minim 4 caractere (evita fals pozitiv pe 'c', 'go', 'r')
+            if (u.length() >= 4 && cleanSkill.length() >= 4) {
+                if (u.contains(cleanSkill) || cleanSkill.contains(u)) {
+                    return true;
+                }
             }
         }
         return false;
