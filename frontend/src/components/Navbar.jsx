@@ -71,8 +71,7 @@ const NAV_SECTIONS = [
         icon: FileText,
         color: 'text-purple-600',
         activeColor: 'text-purple-400',
-        activeBg: 'bg-purple-600/10',
-        badge: '100%'
+        activeBg: 'bg-purple-600/10'
       },
       {
         id: 'cover_letter',
@@ -96,8 +95,7 @@ const NAV_SECTIONS = [
         icon: Linkedin,
         color: 'text-[#0a66c2]',
         activeColor: 'text-sky-400',
-        activeBg: 'bg-blue-600/10',
-        badge: 'ALL-STAR'
+        activeBg: 'bg-blue-600/10'
       }
     ]
   },
@@ -110,8 +108,7 @@ const NAV_SECTIONS = [
         icon: GraduationCap,
         color: 'text-rose-600',
         activeColor: 'text-rose-400',
-        activeBg: 'bg-rose-600/10',
-        badge: 'FREE'
+        activeBg: 'bg-rose-600/10'
       }
     ]
   }
