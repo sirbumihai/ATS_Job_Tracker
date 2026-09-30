@@ -25,7 +25,8 @@ import {
   ShieldAlert,
   ArrowRight,
   TrendingUp,
-  RefreshCw
+  RefreshCw,
+  Boxes
 } from 'lucide-react';
 import { JAVA_ANKI_CATEGORIES, JAVA_ANKI_CARDS } from '../data/javaAnkiDeckData';
 
@@ -185,6 +186,7 @@ export default function JavaAnkiTrainer() {
   const renderCategoryIcon = (catId, sizeClass = "w-4 h-4") => {
     switch (catId) {
       case 'JAVA_CORE': return <Coffee className={sizeClass} />;
+      case 'COLLECTIONS': return <Boxes className={sizeClass} />;
       case 'SPRING_JPA': return <Leaf className={sizeClass} />;
       case 'SQL_DB': return <Database className={sizeClass} />;
       case 'CONCURRENCY': return <Cpu className={sizeClass} />;
