@@ -27,14 +27,16 @@ import {
   AlertTriangle,
   Lightbulb,
   ChevronRight,
-  CheckCheck
+  CheckCheck,
+  Brain
 } from 'lucide-react';
 import { JOB_TRACKS } from '../data/jobTracksRoadmapData';
 import { HR_INTERVIEW_DATA } from '../data/hrInterviewData';
+import JavaAnkiTrainer from './JavaAnkiTrainer';
 
 export default function SkillRoadmapPage() {
-  // VIEW MODE: 'TECH_TRACKS' vs 'HR_SCREENING'
-  const [viewMode, setViewMode] = useState('TECH_TRACKS'); // 'TECH_TRACKS' | 'HR_SCREENING'
+  // VIEW MODE: 'TECH_TRACKS' | 'HR_SCREENING' | 'ANKI_JAVA'
+  const [viewMode, setViewMode] = useState('TECH_TRACKS');
 
   // TECH TRACKS STATE
   const [selectedTrackId, setSelectedTrackId] = useState('BACKEND');
@@ -186,16 +188,16 @@ export default function SkillRoadmapPage() {
             </div>
 
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-950 tracking-tight leading-tight">
-              Cum Treci Interviul <span className="text-purple-600 underline decoration-purple-200 decoration-wavy">HR</span> si Cel <span className="text-indigo-600 underline decoration-indigo-200 decoration-wavy">Tehnic</span>
+              Cum Treci Interviul <span className="text-purple-600 underline decoration-purple-200 decoration-wavy">HR</span>, Cel <span className="text-indigo-600 underline decoration-indigo-200 decoration-wavy">Tehnic</span> si <span className="text-blue-600 underline decoration-blue-200 decoration-wavy">Anki Trainer</span>
             </h1>
 
             <p className="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed">
-              Pregatire 360 de grade pentru intregul proces de selectie: de la primul apel de screening cu recruiterul (pitch de 90s, STAR, verificarea de engleza) pana la bancile de intrebari tehnice si cursurile gratuite pentru fiecare specializare.
+              Pregatire 360 de grade pentru intregul proces de selectie: screening HR (pitch de 90s, STAR, verificarea de engleza), ghid tehnic pe roluri si antrenament interactiv cu flashcards stil Anki pentru Java.
             </p>
           </div>
 
-          {/* VIEW MODE TOGGLE SWITCHER (TECH vs HR) */}
-          <div className="flex items-center p-1 bg-gray-100 rounded-2xl border border-gray-200 shrink-0 self-start lg:self-center">
+          {/* VIEW MODE TOGGLE SWITCHER (TECH vs HR vs ANKI) */}
+          <div className="flex items-center p-1 bg-gray-100 rounded-2xl border border-gray-200 shrink-0 self-start lg:self-center flex-wrap gap-1">
             <button
               onClick={() => setViewMode('TECH_TRACKS')}
               className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
@@ -218,6 +220,18 @@ export default function SkillRoadmapPage() {
             >
               <Users className="w-4 h-4 text-amber-600" />
               <span>Interviu HR & Screening</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode('ANKI_JAVA')}
+              className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                viewMode === 'ANKI_JAVA'
+                  ? 'bg-white text-black shadow-xs font-black'
+                  : 'text-gray-600 hover:text-black'
+              }`}
+            >
+              <Brain className="w-4 h-4 text-blue-600" />
+              <span>Anki Flashcards Java</span>
             </button>
           </div>
         </div>
@@ -853,6 +867,15 @@ export default function SkillRoadmapPage() {
             </div>
           )}
 
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODE 3: ANKI JAVA FLASHCARDS & REPETITIE SPATIATA                         */}
+      {/* ========================================================================= */}
+      {viewMode === 'ANKI_JAVA' && (
+        <div className="animate-in fade-in duration-200">
+          <JavaAnkiTrainer />
         </div>
       )}
 
