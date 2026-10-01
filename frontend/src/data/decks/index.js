@@ -2,15 +2,15 @@
 // Preluat din repozitorii GitHub de top (Baeldung, DopplerHQ, sudheerj, donnemartin, devops-exercises, AIMLInterviews)
 // STRICT ZERO DIACRITICE IN TOATE TEXTELE
 
-import { JAVA_DECK } from './javaDeck';
-import { SPRING_DECK } from './springDeck';
-import { SQL_DECK } from './sqlDeck';
-import { SYSTEM_DESIGN_DECK } from './systemDesignDeck';
-import { TESTING_DECK } from './testingDeck';
-import { REACT_DECK } from './reactDeck';
-import { DEVOPS_DECK } from './devopsDeck';
-import { CLOUD_DECK } from './cloudDeck';
-import { ML_AI_DECK } from './mlAiDeck';
+import { JAVA_DECK } from './javaDeck.js';
+import { SPRING_DECK } from './springDeck.js';
+import { SQL_DECK } from './sqlDeck.js';
+import { SYSTEM_DESIGN_DECK } from './systemDesignDeck.js';
+import { TESTING_DECK } from './testingDeck.js';
+import { REACT_DECK } from './reactDeck.js';
+import { DEVOPS_DECK } from './devopsDeck.js';
+import { CLOUD_DECK } from './cloudDeck.js';
+import { ML_AI_DECK } from './mlAiDeck.js';
 
 // Categorii oficiale cu metadata, iconite si culori
 export const TECH_ANKI_CATEGORIES = [
