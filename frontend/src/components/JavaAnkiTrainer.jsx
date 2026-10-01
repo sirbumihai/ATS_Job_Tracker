@@ -3,19 +3,15 @@ import {
   Brain, 
   RotateCw, 
   CheckCircle2, 
-  AlertCircle, 
   Sparkles, 
-  BookOpen, 
   Layers, 
   Search, 
   Check, 
   Copy, 
-  Flame, 
   Zap, 
   ChevronLeft, 
   ChevronRight, 
   Shuffle, 
-  ListFilter, 
   HelpCircle,
   Coffee,
   Leaf,
@@ -24,19 +20,22 @@ import {
   Server,
   ShieldAlert,
   ArrowRight,
-  TrendingUp,
   RefreshCw,
-  Boxes
+  Layout,
+  Cloud,
+  ChevronDown
 } from 'lucide-react';
-import { JAVA_ANKI_CATEGORIES, JAVA_ANKI_CARDS } from '../data/javaAnkiDeckData';
+import { TECH_ANKI_CATEGORIES, ALL_TECH_ANKI_CARDS } from '../data/decks/index';
 
-const STORAGE_KEY = 'java_anki_flashcards_progress_v1';
+const STORAGE_KEY = 'tech_anki_flashcards_progress_v2';
 
 export default function JavaAnkiTrainer() {
   // Navigation & Category Filter
   const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [difficultyFilter, setDifficultyFilter] = useState('ALL'); // 'ALL' | 'USOR' | 'MEDIU' | 'DIFICIL'
   const [searchQuery, setSearchQuery] = useState('');
   const [viewStyle, setViewStyle] = useState('FLASHCARD'); // 'FLASHCARD' | 'CATALOG'
+  const [visibleCatalogLimit, setVisibleCatalogLimit] = useState(20);
 
   // Flashcard Player State
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -44,7 +43,6 @@ export default function JavaAnkiTrainer() {
   const [copiedCodeId, setCopiedCodeId] = useState(null);
 
   // Persistent Progress Data
-  // cardId -> { status: 'new' | 'learning' | 'review' | 'mastered', repetitions: number, lastRating: string, updatedAt: string }
   const [progress, setProgress] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -63,17 +61,27 @@ export default function JavaAnkiTrainer() {
     }
   }, [progress]);
 
-  // Filtered Cards based on category and search
+  // Dynamic counts per category
+  const categoryCounts = useMemo(() => {
+    const counts = { ALL: ALL_TECH_ANKI_CARDS.length };
+    ALL_TECH_ANKI_CARDS.forEach(card => {
+      counts[card.category] = (counts[card.category] || 0) + 1;
+    });
+    return counts;
+  }, []);
+
+  // Filtered Cards based on category, difficulty and search
   const filteredCards = useMemo(() => {
-    return JAVA_ANKI_CARDS.filter(card => {
+    return ALL_TECH_ANKI_CARDS.filter(card => {
       const matchCategory = selectedCategory === 'ALL' || card.category === selectedCategory;
+      const matchDifficulty = difficultyFilter === 'ALL' || card.difficulty === difficultyFilter;
       const matchSearch = !searchQuery.trim() || 
         card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         card.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
         card.answer.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchCategory && matchSearch;
+      return matchCategory && matchDifficulty && matchSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, difficultyFilter, searchQuery]);
 
   // Ensure current card index is in bounds
   useEffect(() => {
@@ -81,13 +89,13 @@ export default function JavaAnkiTrainer() {
       setCurrentCardIndex(0);
     }
     setIsFlipped(false);
-  }, [filteredCards.length, selectedCategory, searchQuery]);
+  }, [filteredCards.length, selectedCategory, difficultyFilter, searchQuery]);
 
   const currentCard = filteredCards[currentCardIndex] || filteredCards[0];
 
   // Stats calculation
   const stats = useMemo(() => {
-    const total = JAVA_ANKI_CARDS.length;
+    const total = ALL_TECH_ANKI_CARDS.length;
     let mastered = 0;
     let learning = 0;
     let review = 0;
@@ -136,7 +144,6 @@ export default function JavaAnkiTrainer() {
   // Keyboard Shortcuts (Space to flip, 1-4 to rate)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't trigger if user is typing in an input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       if (e.code === 'Space') {
@@ -185,18 +192,21 @@ export default function JavaAnkiTrainer() {
   // Helper for Category Icons
   const renderCategoryIcon = (catId, sizeClass = "w-4 h-4") => {
     switch (catId) {
-      case 'JAVA_CORE': return <Coffee className={sizeClass} />;
-      case 'COLLECTIONS': return <Boxes className={sizeClass} />;
-      case 'SPRING_JPA': return <Leaf className={sizeClass} />;
-      case 'SQL_DB': return <Database className={sizeClass} />;
-      case 'CONCURRENCY': return <Cpu className={sizeClass} />;
+      case 'JAVA': return <Coffee className={sizeClass} />;
+      case 'SPRING': return <Leaf className={sizeClass} />;
+      case 'SQL': return <Database className={sizeClass} />;
       case 'SYSTEM_DESIGN': return <Server className={sizeClass} />;
       case 'TESTING': return <CheckCircle2 className={sizeClass} />;
+      case 'REACT': return <Layout className={sizeClass} />;
+      case 'DEVOPS': return <Cpu className={sizeClass} />;
+      case 'CLOUD': return <Cloud className={sizeClass} />;
+      case 'ML_AI': return <Sparkles className={sizeClass} />;
       default: return <Layers className={sizeClass} />;
     }
   };
 
   const cardStatus = currentCard ? progress[currentCard.id]?.status || 'new' : 'new';
+  const visibleCatalogCards = filteredCards.slice(0, visibleCatalogLimit);
 
   return (
     <div className="space-y-6 font-sans text-gray-900">
@@ -206,13 +216,13 @@ export default function JavaAnkiTrainer() {
         <div className="bg-white rounded-2xl p-4 border border-gray-200/90 shadow-2xs">
           <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
             <Brain className="w-3.5 h-3.5 text-blue-600" />
-            Total Carduri
+            Total Carduri Tech
           </div>
           <div className="text-2xl font-black text-gray-950 mt-1">
             {stats.total}
           </div>
           <div className="text-[11px] text-gray-600 font-semibold mt-0.5">
-            Curicula tehnica 2026
+            9 Domenii & Curicula 2026
           </div>
         </div>
 
@@ -258,34 +268,73 @@ export default function JavaAnkiTrainer() {
 
       {/* 2. CONTROLS: CATEGORIES & VIEW SWITCHER */}
       <div className="bg-white rounded-2xl p-4 border border-gray-200/90 shadow-2xs space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        
+        {/* Top line: 9 Categories Bar */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-thin">
+          {TECH_ANKI_CATEGORIES.map(cat => {
+            const isSelected = selectedCategory === cat.id;
+            const count = categoryCounts[cat.id] || 0;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                  setCurrentCardIndex(0);
+                  setIsFlipped(false);
+                  setVisibleCatalogLimit(20);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer shrink-0 ${
+                  isSelected
+                    ? 'bg-black text-white shadow-xs'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-black'
+                }`}
+              >
+                {renderCategoryIcon(cat.id, "w-3.5 h-3.5")}
+                <span>{cat.label}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                  isSelected ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Second line: Filters (Search, Difficulty, Mode, Shuffle, Reset) */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1 border-t border-gray-100">
           
-          {/* Category Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-            {JAVA_ANKI_CATEGORIES.map(cat => {
-              const isSelected = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.id);
-                    setCurrentCardIndex(0);
-                    setIsFlipped(false);
-                  }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer shrink-0 ${
-                    isSelected
-                      ? 'bg-black text-white shadow-xs'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-black'
-                  }`}
-                >
-                  {renderCategoryIcon(cat.id, "w-3.5 h-3.5")}
-                  <span>{cat.label}</span>
-                </button>
-              );
-            })}
+          {/* Difficulty pills */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-1">
+            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mr-1">
+              Dificultate:
+            </span>
+            {[
+              { id: 'ALL', label: 'Toate' },
+              { id: 'USOR', label: 'Usor' },
+              { id: 'MEDIU', label: 'Mediu' },
+              { id: 'DIFICIL', label: 'Dificil' }
+            ].map(diff => (
+              <button
+                key={diff.id}
+                onClick={() => {
+                  setDifficultyFilter(diff.id);
+                  setCurrentCardIndex(0);
+                  setIsFlipped(false);
+                  setVisibleCatalogLimit(20);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  difficultyFilter === diff.id
+                    ? 'bg-blue-600 text-white shadow-2xs'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-black'
+                }`}
+              >
+                {diff.label}
+              </button>
+            ))}
           </div>
 
-          {/* View mode toggle (Flashcard vs Catalog) */}
+          {/* View mode toggle (Flashcard vs Catalog) & Actions */}
           <div className="flex items-center gap-2 shrink-0">
             <div className="flex items-center p-0.5 bg-gray-100 rounded-xl border border-gray-200">
               <button
@@ -294,7 +343,7 @@ export default function JavaAnkiTrainer() {
                   viewStyle === 'FLASHCARD' ? 'bg-white text-black shadow-xs' : 'text-gray-600 hover:text-black'
                 }`}
               >
-                Mod Anki (Card)
+                Mod Card (Anki)
               </button>
               <button
                 onClick={() => setViewStyle('CATALOG')}
@@ -302,7 +351,7 @@ export default function JavaAnkiTrainer() {
                   viewStyle === 'CATALOG' ? 'bg-white text-black shadow-xs' : 'text-gray-600 hover:text-black'
                 }`}
               >
-                Toate Intrebarile ({filteredCards.length})
+                Catalog ({filteredCards.length})
               </button>
             </div>
 
@@ -329,9 +378,13 @@ export default function JavaAnkiTrainer() {
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="Cauta intrebari, concepte (ex: HashMap, N+1, Virtual Threads, Proxy, Mockito)..."
+            placeholder="Cauta in toate intrebarile (ex: HashMap, N+1, Virtual Threads, VPC, Docker, RAG, useMemo, Token Bucket)..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentCardIndex(0);
+              setVisibleCatalogLimit(20);
+            }}
             className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
           />
         </div>
@@ -342,9 +395,9 @@ export default function JavaAnkiTrainer() {
         filteredCards.length === 0 ? (
           <div className="bg-white rounded-3xl p-12 text-center border border-gray-200 shadow-2xs space-y-3">
             <HelpCircle className="w-10 h-10 text-gray-400 mx-auto" />
-            <h3 className="text-base font-bold text-gray-900">Nu am gasit carduri pentru cautarea ta</h3>
+            <h3 className="text-base font-bold text-gray-900">Nu am gasit carduri pentru filtrele selectate</h3>
             <p className="text-xs text-gray-500 max-w-md mx-auto">
-              Incearca sa schimbi categoria sau sa stergi cuvintele cheie din bara de cautare.
+              Incearca sa schimbi categoria, sa setezi dificultatea pe "Toate" sau sa cureti termenii de cautare.
             </p>
           </div>
         ) : (
@@ -386,7 +439,7 @@ export default function JavaAnkiTrainer() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-gray-100 text-gray-800 border border-gray-200 flex items-center gap-1.5">
                     {renderCategoryIcon(currentCard.category, "w-3 h-3 text-blue-600")}
-                    {JAVA_ANKI_CATEGORIES.find(c => c.id === currentCard.category)?.label || currentCard.category}
+                    {TECH_ANKI_CATEGORIES.find(c => c.id === currentCard.category)?.label || currentCard.category}
                   </span>
 
                   <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
@@ -421,7 +474,7 @@ export default function JavaAnkiTrainer() {
 
                     <div className="pt-6">
                       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200 group-hover:bg-blue-600 group-hover:text-white transition">
-                        <span>Vezi raspunsul complet & codul explicativ</span>
+                        <span>Vezi raspunsul complet & explicatia</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </div>
                     </div>
@@ -448,10 +501,10 @@ export default function JavaAnkiTrainer() {
                     {currentCard.codeSnippet && (
                       <div className="relative rounded-2xl overflow-hidden bg-gray-950 text-gray-200 border border-gray-800 text-xs font-mono shadow-xs">
                         <div className="flex items-center justify-between px-3 py-1.5 bg-gray-900 border-b border-gray-800 text-[11px] text-gray-400">
-                          <span className="font-semibold text-gray-300">Java Solution / Snippet</span>
+                          <span className="font-semibold text-gray-300">Solutie / Cod / Configurare</span>
                           <button
                             onClick={() => handleCopyCode(currentCard.codeSnippet, currentCard.id)}
-                            className="flex items-center gap-1 text-[10px] text-gray-300 hover:text-white transition"
+                            className="flex items-center gap-1 text-[10px] text-gray-300 hover:text-white transition cursor-pointer"
                           >
                             {copiedCodeId === currentCard.id ? (
                               <>
@@ -512,7 +565,7 @@ export default function JavaAnkiTrainer() {
                       setIsFlipped(false);
                       setCurrentCardIndex(prev => (prev - 1 + filteredCards.length) % filteredCards.length);
                     }}
-                    className="p-1 hover:text-black hover:bg-gray-100 rounded-md transition"
+                    className="p-1 hover:text-black hover:bg-gray-100 rounded-md transition cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -522,7 +575,7 @@ export default function JavaAnkiTrainer() {
                       setIsFlipped(false);
                       setCurrentCardIndex(prev => (prev + 1) % filteredCards.length);
                     }}
-                    className="p-1 hover:text-black hover:bg-gray-100 rounded-md transition"
+                    className="p-1 hover:text-black hover:bg-gray-100 rounded-md transition cursor-pointer"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -576,13 +629,14 @@ export default function JavaAnkiTrainer() {
         )
       ) : (
         /* 4. CATALOG / CHEATSHEET VIEW (BROWSE ALL QUESTIONS) */
-        <div className="space-y-3">
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
-            Toate intrebarile disponibile in acest deck ({filteredCards.length})
+        <div className="space-y-4">
+          <div className="flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
+            <span>Intrebari afisate: {visibleCatalogCards.length} din {filteredCards.length}</span>
+            <span>Deck: {TECH_ANKI_CATEGORIES.find(c => c.id === selectedCategory)?.label || 'Toate'}</span>
           </div>
 
           <div className="space-y-3">
-            {filteredCards.map((card, idx) => {
+            {visibleCatalogCards.map((card, idx) => {
               const status = progress[card.id]?.status || 'new';
               return (
                 <div 
@@ -592,8 +646,9 @@ export default function JavaAnkiTrainer() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-black text-gray-400">#{idx + 1}</span>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-gray-100 text-gray-700">
-                        {JAVA_ANKI_CATEGORIES.find(c => c.id === card.category)?.label || card.category}
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-gray-100 text-gray-700 flex items-center gap-1">
+                        {renderCategoryIcon(card.category, "w-3 h-3 text-blue-600")}
+                        {TECH_ANKI_CATEGORIES.find(c => c.id === card.category)?.label || card.category}
                       </span>
                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
                         card.difficulty === 'DIFICIL' ? 'bg-rose-100 text-rose-800' :
@@ -646,6 +701,19 @@ export default function JavaAnkiTrainer() {
               );
             })}
           </div>
+
+          {/* Load More Button for large decks */}
+          {visibleCatalogLimit < filteredCards.length && (
+            <div className="text-center pt-2">
+              <button
+                onClick={() => setVisibleCatalogLimit(prev => prev + 20)}
+                className="px-5 py-2.5 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-bold transition inline-flex items-center gap-2 shadow-xs cursor-pointer"
+              >
+                <span>Incarca inca 20 de intrebari (Ramase: {filteredCards.length - visibleCatalogLimit})</span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
