@@ -1,16 +1,378 @@
-// Deck Masiv: Java Core, OOP, JVM Internals, Colectii, Concurenta, Memorie & Java 21
-// Preluat din: Baeldung, DopplerHQ, kgurcharan/java-interview-questions, Junior-Java-Guide
-// Peste 200 de intrebari reale de interviu tehnic complet structurate cu cod, capcane si concluzii.
-// STRICT ZERO DIACRITICE IN TOATE TEXTELE
+// ============================================================================
+// JAVA INTERVIEW FLASHCARD DECK - JUNIOR & MID LEVEL (210 Realistic Questions)
+// ============================================================================
+// Focus: Junior & Mid developer interview preparation (Zero Senior/Staff traps)
+// Strictly ZERO diacritics for clean encoding and maximum compatibility.
+//
+// Categories covered:
+// 1. Java Core & OOP (01-35)
+// 2. Memory, JVM & Strings (36-50)
+// 3. Collections & Data Structures (51-85)
+// 4. Lambdas, Functional Interfaces & Streams API (86-114)
+// 5. Optional & Java Date/Time API (115-130)
+// 6. I/O, NIO.2 & Serialization (131-140)
+// 7. Modern Java: Records, Sealed Classes, Switch Expressions (141-147)
+// 8. Concurrency & Multithreading (148-176)
+// 9. JDBC & Persistence (177-182)
+// 10. Design Patterns & SOLID Principles (183-198)
+// 11. Reflection, Annotations & Core Java Essentials (199-210)
+// ============================================================================
 
 export const JAVA_DECK = [
   {
     id: "java-01",
-    category: "JAVA",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Cei 4 Piloni ai Programarii Orientate pe Obiecte (OOP)",
+    question: "Care sunt cei 4 piloni fundamentali ai OOP si cum se aplica fiecare in limbajul Java?",
+    answer: "Cei 4 piloni fundamentali ai OOP sunt:\\n1. Incapsulare (Encapsulation):\\n   - Ascunderea starii interne a obiectului si restrictionarea accesului direct prin modificatori (private) si expunerea controlata prin metode getter si setter.\\n2. Mostenire (Inheritance):\\n   - Capacitatea unei clase copil de a prelua proprietatile si metodele unei clase parinte folosind cuvantul cheie extends, promovand reutilizarea codului.\\n3. Polimorfism (Polymorphism):\\n   - Capacitatea unui obiect de a lua mai multe forme. Exista polimorfism la compilare (Overloading - supraincarcare) si la executie (Overriding - suprascriere de metode).\\n4. Abstractizare (Abstraction):\\n   - Ascunderea detaliilor complexe de implementare si expunerea doar a interfetei esentiale catre utilizator (prin interfete si clase abstracte).",
+    codeSnippet: `// 1. Incapsulare: campuri private cu getteri/setteri
+public class Account {
+    private double balance; // ascuns
+    public double getBalance() { return balance; }
+}
+
+// 2. Mostenire:
+public class SavingsAccount extends Account {}
+
+// 3. Polimorfism:
+Account acc = new SavingsAccount();
+
+// 4. Abstractizare:
+public interface PaymentService { void pay(double amount); }`,
+    interviewTrap: "Multi candidati confunda Abstractizarea cu Incapsularea. Incapsularea ascunde datele/starea (data hiding), in timp ce Abstractizarea ascunde complexitatea implementarii (implementation hiding).",
+    keyTakeaway: "OOP se bazeaza pe Incapsulare (protectie date), Mostenire (reutilizare), Polimorfism (forme multiple) si Abstractizare (interfata esentiala)."
+  },
+  {
+    id: "java-02",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Clasa vs Obiect in Java",
+    question: "Care este diferenta dintre o clasa si un obiect in Java si cum se aloca memoria?",
+    answer: "1. Clasa (Tiparul / Blueprint):\\n   - Este o definitie logica, un sablon abstract care descrie starea (campuri) si comportamentul (metode) pe care le vor avea obiectele.\\n   - Nu ocupa memorie pe Heap pentru date de instanta; definitia de clasa este incarcata o singura data in Metaspace de catre ClassLoader.\\n\\n2. Obiectul (Instanta Reala):\\n   - Este o instanta concreta, fizica a unei clase creata la runtime folosind operatorul new (ex: new Car()).\\n   - Fiecare obiect are propria sa stare independenta stocata in memoria Heap a masinii virtuale (JVM).\\n   - Variabila care retine obiectul (ex: Car c) este o referinta stocata pe Stiva (Stack) care puncteaza catre adresa obiectului din Heap.",
+    codeSnippet: `// Clasa (Tipar logic):
+public class Car {
+    String model;
+}
+
+// Obiecte (Instante fizice pe Heap):
+Car car1 = new Car(); // Obiect 1 in Heap
+Car car2 = new Car(); // Obiect 2 in Heap (stare separata)`,
+    interviewTrap: "Daca declari Car c;, nu ai creat niciun obiect, ci doar o referinta nula (null) pe stiva. Obiectul fizic apare doar dupa executia operatorului new.",
+    keyTakeaway: "Clasa este reteta definita in cod; obiectul este prajitura concreta alocata pe Heap la runtime cu new."
+  },
+  {
+    id: "java-03",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ce este un Constructor si Constructorul Default",
+    question: "Ce rol are un constructor in Java si cand genereaza compilatorul un constructor implicit (default constructor)?",
+    answer: "1. Ce este un Constructor:\\n   - Un bloc special de cod apelat automat la crearea unei noi instante a unei clase folosind operatorul new.\\n   - Rolul sau principal este initializarea campurilor si a starii obiectului.\\n   - Are exact acelasi nume cu clasa si NU ARE niciun tip de retur (nici macar void!).\\n\\n2. Constructorul Default (Implicit):\\n   - Daca NU declari niciun constructor explicit in clasa, compilatorul Java adauga automat un constructor public fara parametri: public MyClass() { super(); }.\\n   - Acest constructor initializeaza campurile cu valorile lor implicite (0, null, false).\\n\\n3. Cand DISPARE Constructorul Default:\\n   - Daca declari chiar si un singur constructor cu parametri (ex: public MyClass(String name)), compilatorul NU mai genereaza constructorul default! Apelul new MyClass() va arunca eroare de compilare.",
+    codeSnippet: `public class User {
+    private String name;
+
+    // Daca adaugi acest constructor cu parametri:
+    public User(String name) {
+        this.name = name;
+    }
+}
+
+// In alt fisier:
+// User u = new User(); // CRASH la compilare! Constructorul default nu mai exista!
+User u = new User("Alex"); // Corect!`,
+    interviewTrap: "Daca pui tip de retur pe un constructor (ex: public void User()), Java il trateaza ca pe o simpla metoda normala si NU ca pe un constructor!",
+    keyTakeaway: "Constructorul initializeaza instanta; daca adaugi un constructor cu parametri, trebuie sa declari manual constructorul fara parametri daca ai nevoie de el."
+  },
+  {
+    id: "java-04",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Constructor Chaining: this() si super()",
+    question: "Ce este Constructor Chaining si ce reguli stricte impune Java pentru apelurile this() si super()?",
+    answer: "Constructor Chaining reprezinta procesul prin care un constructor apeleaza un alt constructor din aceeasi clasa (folosind this(...)) sau din superclasa parinte (folosind super(...)):\\n\\nReguli Fundamentale Stricte:\\n1. Apelul this() sau super() TREBUIE sa fie strict pe PRIMA LINIE executabila a constructorului!\\n2. Nu poti avea ambele apeluri this() si super() in acelasi constructor (doar unul pe prima linie).\\n3. Nu poti crea apeluri circulare (Constructor 1 apeleaza this() catre Constructor 2, iar Constructor 2 apeleaza inapoi Constructor 1 - eroare de compilare: recursive constructor invocation).\\n4. Daca nu pui explicit super() sau this(), compilatorul Java insereaza automat super() fara parametri pe prima linie a oricarui constructor.",
+    codeSnippet: `public class Employee {
+    private String name;
+    private int salary;
+
+    public Employee(String name) {
+        this(name, 3000); // Apeleaza celalalt constructor din aceeasi clasa (pe prima linie!)
+    }
+
+    public Employee(String name, int salary) {
+        super(); // Apeleaza constructorul parintelui Object
+        this.name = name;
+        this.salary = salary;
+    }
+}`,
+    interviewTrap: "Daca clasa parinte nu are constructor fara parametri, iar copilul nu apeleaza explicit super(argumente) pe prima linie, codul copilului nu va compila.",
+    keyTakeaway: "this() apeleaza alt constructor din clasa; super() apeleaza constructorul parintelui; ambele trebuie sa stea obligatoriu pe prima linie."
+  },
+  {
+    id: "java-05",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Cuvantul cheie this in Java",
+    question: "Ce reprezinta cuvantul cheie this in Java si care sunt cele 3 situatii frecvente in care este utilizat?",
+    answer: "Cuvantul cheie this este o variabila de referinta implicita care puncteaza catre INSTANTA CURENTA a obiectului in care este executat codul:\\n\\nCele 3 Utilizari Principale:\\n1. Diferentierea campurilor de instanta de parametri (Shadowing):\\n   - Cand parametrul constructorului are acelasi nume cu campul clasei: this.name = name;.\\n2. Apelarea altui constructor din aceeasi clasa (Constructor Chaining):\\n   - this(param1, param2); pe prima linie a constructorului.\\n3. Transmiterea obiectului curent ca parametru sau returnarea lui (Method Chaining / Fluent API):\\n   - return this; in clase de tip Builder pentru a inlantui metode.",
+    codeSnippet: `public class Person {
+    private String name;
+
+    public Person setName(String name) {
+        this.name = name; // this.name este campul; name este parametrul
+        return this;     // Returneaza instanta curenta pentru chaining
+    }
+}`,
+    interviewTrap: "Cuvantul cheie this NU poate fi folosit niciodata intr-o metoda statica sau bloc static, deoarece metodele statice apartin clasei si nu au o instanta asociata.",
+    keyTakeaway: "this se refera la instanta curenta a obiectului pe Heap si rezolva ambiguitatile de nume intre campuri si parametri."
+  },
+  {
+    id: "java-06",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Cuvantul cheie super in Java",
+    question: "Ce face cuvantul cheie super in Java si cand este necesar sa il folosim?",
+    answer: "Cuvantul cheie super este o referinta directa catre SUPERCLASA (clasa parinte) a obiectului curent:\\n\\nCele 3 Utilizari Principale:\\n1. Apelarea constructorului din clasa parinte:\\n   - super() sau super(arg1, arg2) pe prima linie a constructorului subclasei.\\n2. Apelarea unei metode din parinte care a fost suprascrisa (Overridden):\\n   - Daca subclasa a suprascris metoda display(), poti apela implementarea originala din parinte folosind super.display();.\\n3. Accesarea unui camp din parinte daca subclasa a declarat un camp cu acelasi nume (Field Shadowing):\\n   - super.message acceseaza campul din parinte, in timp ce this.message acceseaza campul copilului.",
+    codeSnippet: `class Animal {
+    void makeSound() { System.out.println("Sunet generic"); }
+}
+
+class Dog extends Animal {
+    @Override
+    void makeSound() {
+        super.makeSound(); // Apeleaza codul din parinte
+        System.out.println("Ham ham!"); // Adauga comportament propriu
+    }
+}`,
+    interviewTrap: "Nu poti folosi super.super.method() pentru a sari peste parintele direct si a accesa un bunic; Java respecta incapsularea ierarhica directa.",
+    keyTakeaway: "super permite invocarea metodelor si constructorilor din clasa parinte directa."
+  },
+  {
+    id: "java-07",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Method Overloading vs Method Overriding",
+    question: "Care este diferenta esentiala dintre Overloading (supraincarcare) si Overriding (suprascriere) in Java?",
+    answer: "1. Method Overloading (Supraincarcare):\\n   - Are loc in ACEEASI clasa (sau mostenita fara schimbare de comportament).\\n   - Metodele au ACELASI nume, dar liste de parametri DIFERITE (numar, tip sau ordine diferita a parametrilor).\\n   - Tipul de retur POATE fi diferit, dar NU este suficient singur pentru a distinge metodele.\\n   - Este rezolvat la COMPILARE (Compile-time / Polimorfism static).\\n\\n2. Method Overriding (Suprascriere):\\n   - Are loc intre clase diferite aflate intr-o relatie de MOSTENIRE (Parinte -> Copil).\\n   - Metoda din copil are EXACT aceeasi semnatura (acelasi nume si exact aceiasi parametri) ca in parinte.\\n   - Ofera o implementare specifica pentru clasa copil.\\n   - Este rezolvat la RUNTIME (Polimorfism dinamic pe baza obiectului real din memorie).",
+    codeSnippet: `// 1. Overloading (aceeasi clasa, parametri diferiti):
+class Printer {
+    void print(String s) { System.out.println(s); }
+    void print(int i) { System.out.println(i); }
+}
+
+// 2. Overriding (subclasa rescrie comportamentul):
+class Animal { void speak() { System.out.println("..."); } }
+class Cat extends Animal {
+    @Override
+    void speak() { System.out.println("Miau"); }
+}`,
+    interviewTrap: "Daca schimbi doar tipul de return (ex: int add(int a) si double add(int a)), codul NU compileaza! Compilatorul nu poate deosebi apelurile dupa tipul de return.",
+    keyTakeaway: "Overloading = aceeasi clasa, parametri diferiti (la compilare); Overriding = subclasa cu exact aceeasi semnatura (la runtime)."
+  },
+  {
+    id: "java-08",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Adnotarea @Override: De ce este recomandata?",
+    question: "Ce rol are adnotarea @Override si de ce este o buna practica sa o folosesti intotdeauna cand suprascrii o metoda?",
+    answer: "1. Ce face @Override:\\n   - Este o adnotare de compilare (Compile-time check) care informeaza compilatorul Java ca metoda urmatoare este intentionata sa suprascrie o metoda dintr-o superclasa sau interfata.\\n\\n2. De ce este FOARTE RECOMANDATA:\\n   - Previne greselile de tastare (typo bugs): Daca scrii din greseala tostring() in loc de toString(), fara @Override compilatorul crede ca ai creat o metoda noua oarecare. Cu @Override, compilatorul va arunca eroare de compilare: \"method does not override or implement a method from a supertype\".\\n   - Detecteaza modificari in parinte: Daca cineva schimba parametrii metodei in superclasa, toate subclasele cu @Override vor semnala imediat eroarea la compilare.\\n   - Creste masiv lizibilitatea codului pentru colegii de echipa.",
+    codeSnippet: `class Parent {
+    public void execute(String command) {}
+}
+
+class Child extends Parent {
+    @Override // Protejeaza impotriva erorilor de semnatura
+    public void execute(String command) {
+        System.out.println("Executing: " + command);
+    }
+}`,
+    interviewTrap: "Adnotarea @Override este optionala la nivel sintactic (codul va functiona si fara ea daca semnatura se potriveste), dar omiterea ei este considerata un semn de neglijenta la interviuri.",
+    keyTakeaway: "@Override forteaza compilatorul sa valideze ca metoda chiar suprascrie o metoda parinte, prevenind bug-uri tacute de tastare."
+  },
+  {
+    id: "java-09",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Poti suprascrie o metoda statica sau privata in Java?",
+    question: "Poti face Override pe o metoda statica sau privata in Java? Ce este fenomenul de Method Hiding?",
+    answer: "1. Metode Private:\\n   - NU pot fi suprascrise! Metodele private sunt invizibile in afara clasei lor.\\n   - Daca declari o metoda cu acelasi nume intr-o subclasa, este o metoda noua complet independenta, fara nicio legatura de polimorfism.\\n\\n2. Metode Statice (Method Hiding):\\n   - NU pot fi suprascrise prin polimorfism dinamic!\\n   - Metodele statice sunt legate de CLASA (la compile-time pe baza tipului referintei), nu de instanta de pe Heap.\\n   - Daca o subclasa defineste o metoda statica cu aceeasi semnatura ca in parinte, are loc \"Method Hiding\" (metoda copilului o ascunde pe cea din parinte, dar nu o suprascrie polimorfic).",
+    codeSnippet: `class Parent {
+    public static void print() { System.out.println("Parent"); }
+}
+class Child extends Parent {
+    public static void print() { System.out.println("Child"); } // Method Hiding
+}
+
+Parent p = new Child();
+p.print(); // Afiseaza "Parent"! Decizia se ia pe baza tipului referintei (Parent)!`,
+    interviewTrap: "Daca pui @Override pe o metoda statica din subclasa, codul NU compileaza! Compilatorul va spune explicit: \"static methods cannot be annotated with @Override\".",
+    keyTakeaway: "Metodele statice si private nu se suprascriu polimorfic; metodele statice cu acelasi nume produc Method Hiding legat la compilare."
+  },
+  {
+    id: "java-10",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Clasa Abstracta vs Interfata in Java",
+    question: "Care sunt principalele diferente dintre o clasa abstracta si o interfata in Java modern?",
+    answer: "1. Clasa Abstracta (Abstract Class):\\n   - Poate avea stare: poate contine campuri de instanta (variabile non-finale, mutabile).\\n   - Poate avea constructori (apelati prin super() de catre subclase).\\n   - Suporta mostenire simpla: o clasa poate extinde o SINGURA clasa abstracta.\\n   - Poate avea metode cu orice modificator de acces (private, protected, public).\\n\\n2. Interfata (Interface):\\n   - Defineste un contract de comportament pur.\\n   - Campurile sunt implicit public static final (doar constante!). Nu poate avea stare de instanta.\\n   - NU are constructori si nu poate fi instantiata.\\n   - O clasa poate implementa MULTIPLE interfete (implements InterfaceA, InterfaceB).\\n   - In Java 8+ poate avea metode cu implementare: metode default si metode static (iar in Java 9+ si metode private).",
+    codeSnippet: `// Clasa abstracta: defineste stare comuna + comportament
+public abstract class Vehicle {
+    protected int speed; // Camp mutabil
+    public Vehicle(int speed) { this.speed = speed; } // Constructor
+    public abstract void drive();
+}
+
+// Interfata: defineste capabilitati
+public interface Flyable {
+    void fly(); // metoda abstracta
+    default void glide() { System.out.println("Gliding..."); } // Java 8 default
+}`,
+    interviewTrap: "Daca relatia este de tip \"IS-A\" (Cainele ESTE UN Animal) si ai stare comuna, folosesti clasa abstracta. Daca relatia este \"CAN-DO\" (un avion POATE SA zboare - Flyable), folosesti interfata.",
+    keyTakeaway: "Clasa abstracta are stare, campuri mutabile si constructori; interfata defineste un contract comportamental cu mostenire multipla."
+  },
+  {
+    id: "java-11",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "De ce Java nu suporta Mostenirea Multipla de Clase?",
+    question: "De ce Java nu permite unei clase sa extinda mai multe clase parinte simultan si ce este Diamond Problem?",
+    answer: "1. Problema Diamantului (The Diamond Problem):\\n   - Imagineaza-ti ca Clasa B si Clasa C extind ambele Clasa A si ambele suprascriu metoda start().\\n   - Daca Clasa D ar putea extinde simultan atat B cat si C (class D extends B, C), ce s-ar intampla la apelul d.start()?\\n   - JVM nu ar sti pe care implementare sa o execute: pe cea din B sau pe cea din C? Aceasta ambiguitate grava creeaza haos in limbaje precum C++.\\n\\n2. Decizia Creatorilor Java (James Gosling):\\n   - Pentru simplitate si robustete, Java interzice mostenirea multipla de clase.\\n   - In schimb, Java permite implementarea de MULTIPLE INTERFETE, deoarece interfetele traditionale nu aveau stare interna.\\n   - Chiar si cu metode default in Java 8, daca doua interfete au aceeasi metoda default, Java forteaza compilarea sa esueze pana cand clasa copil suprascrie explicit metoda conflictuala.",
+    codeSnippet: `// Java NU permite:
+// class D extends B, C {} // EROARE DE COMPILARE!
+
+// Java permite mostenire multipla de INTERFETE:
+class D implements InterfaceB, InterfaceC {
+    @Override
+    public void start() {
+        InterfaceB.super.start(); // Rezolvare clara a alegerii!
+    }
+}`,
+    interviewTrap: "Java suporta mostenire multipla de TIP / COMPORTAMENT (prin interfete), dar NU suporta mostenire multipla de STARE / IMPLEMENTARE (de clase).",
+    keyTakeaway: "Mostenirea multipla de clase este interzisa pentru a elimina ambiguitatea Diamond Problem; se rezolva prin interfete multiple."
+  },
+  {
+    id: "java-12",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ce este cuvantul cheie final pe Variabile, Metode si Clase?",
+    question: "Ce efect are cuvantul cheie final atunci cand este aplicat pe o variabila, pe o metoda si pe o clasa in Java?",
+    answer: "Cuvantul cheie final exprima conceptul de imutabilitate sau restrictionare:\\n\\n1. Pe o Variabila (final variable):\\n   - Valoarea variabilei NU mai poate fi schimbata odata initializata (devine o constanta).\\n   - Daca este o referinta catre un obiect, referinta nu poate fi reatribuita (nu poti face obj = other), DAR starea interna a obiectului poate fi modificata daca obiectul este mutabil!\\n\\n2. Pe o Metoda (final method):\\n   - Metoda NU mai poate fi suprascrisa (overridden) in nicio subclasa copil.\\n   - Folosit pentru securitate, pentru a garanta ca logica metodei nu este alterata.\\n\\n3. Pe o Clasa (final class):\\n   - Clasa NU mai poate fi extinsa / mostenita (nimeni nu poate face extends MyClass).\\n   - Exemple clasice din JDK: java.lang.String, Integer, Double, System.",
+    codeSnippet: `// 1. Clasa finala (nu poate fi mostenita):
+public final class ImmutableValue {}
+
+// 2. Metoda finala (nu poate fi suprascrisa):
+public class Base {
+    public final void securityCheck() {}
+}
+
+// 3. Variabila finala:
+final List<String> list = new ArrayList<>();
+list.add("Java"); // Permis! Starea interna se modifica.
+// list = new ArrayList<>(); // CRASH la compilare! Referinta e finala.`,
+    interviewTrap: "final pe o lista (final List l) NU face lista imutabila! Poti face linistit list.add(), doar variabila l nu poate fi reatribuita.",
+    keyTakeaway: "final blocheaza: reatribuirea variabilei, suprascrierea metodei si mostenirea clasei."
+  },
+  {
+    id: "java-13",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ce este cuvantul cheie static in Java?",
+    question: "Ce inseamna cuvantul cheie static aplicat pe o variabila sau metoda si unde este stocat in memorie?",
+    answer: "Cuvantul cheie static leaga membrul respectiv direct de CLASA, si nu de o instanta individuala:\\n\\n1. Variabile Statice (Campuri de Clasa):\\n   - Exista o SINGURA copie a variabilei partajata intre toate obiectele instantiate din acea clasa.\\n   - Daca Obiectul 1 modifica variabila statica, Obiectul 2 va vedea imediat valoarea modificata.\\n   - Stocata in Metaspace/Heap asociata metadatelor clasei.\\n\\n2. Metode Statice:\\n   - Pot fi apelate direct folosind numele clasei (ex: Math.max(a, b), String.valueOf(10)), fara a instantia clasa cu new.\\n   - Nu au acces la \"this\" sau \"super\" si NU pot accesa direct campuri non-statice de instanta.\\n\\n3. Bloc Static (static { ... }):\\n   - Ruleaza o singura data la incarcarea clasei in memorie de catre ClassLoader.",
+    codeSnippet: `public class Counter {
+    public static int globalCount = 0; // Partajat de toate instantele!
+    public int instanceCount = 0;      // Propriu fiecarei instante
+
+    public static void increment() {
+        globalCount++; // Permis
+        // instanceCount++; // EROARE de compilare! Non-static field inside static method!
+    }
+}
+
+Counter.increment(); // Apel direct pe clasa fara 'new'!`,
+    interviewTrap: "O metoda statica nu poate apela o metoda non-statica direct fara sa creeze explicit un new MyClass(), deoarece metoda non-statica are nevoie de starea unui obiect.",
+    keyTakeaway: "static apartine clasei ca intreg si este partajat de toate instantele; se apeleaza direct pe numele clasei fara new."
+  },
+  {
+    id: "java-14",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ordinea de Initializare la Instantierea unei Clase",
+    question: "In ce ordine se executa blocurile statice, campurile de instanta, constructorul parinte si constructorul copil la crearea unui obiect?",
+    answer: "Ordinea exacta de executie in JVM este intotdeauna urmatoarea:\\n\\n1. Membrii Statici (o singura data la prima utilizare a clasei):\\n   - 1.1 Blocurile statice si campurile statice ale Parintelui (in ordinea scrierii in cod).\\n   - 1.2 Blocurile statice si campurile statice ale Copilului.\\n\\n2. Instantierea Obiectului (la fiecare new Child()):\\n   - 2.1 Blocurile de instanta si campurile de instanta ale Parintelui.\\n   - 2.2 Constructorul Parintelui (super()).\\n   - 2.3 Blocurile de instanta si campurile de instanta ale Copilului.\\n   - 2.4 Constructorul Copilului.",
+    codeSnippet: `class Parent {
+    static { System.out.println("1. Static Parent"); }
+    { System.out.println("3. Instance Parent"); }
+    Parent() { System.out.println("4. Constructor Parent"); }
+}
+
+class Child extends Parent {
+    static { System.out.println("2. Static Child"); }
+    { System.out.println("5. Instance Child"); }
+    Child() { System.out.println("6. Constructor Child"); }
+}
+
+// Executie: new Child();
+// Afiseaza exact: 1 -> 2 -> 3 -> 4 -> 5 -> 6`,
+    interviewTrap: "Blocurile statice se executa o singura data in toata viata aplicatiei. La al doilea new Child(), pasii 1 si 2 NU se mai executa deloc!",
+    keyTakeaway: "Ordinea este: Statici Parinte -> Statici Copil -> Instanta Parinte -> Constructor Parinte -> Instanta Copil -> Constructor Copil."
+  },
+  {
+    id: "java-15",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Modificatorii de Acces: private, default, protected, public",
+    question: "Care este diferenta de vizibilitate intre cei 4 modificatori de acces din Java si unde se poate accesa fiecare?",
+    answer: "Cei 4 modificatori controleaza incapsularea si securitatea codului:\\n\\n1. private (Cel mai restrictiv):\\n   - Accesibil EXCLUSIV in interiorul aceleiasi clase.\\n\\n2. default (Package-Private - cand nu pui niciun modificator):\\n   - Accesibil in aceeasi clasa SI in toate clasele aflate in ACELASI PACHET.\\n   - Nu este vizibil in alte pachete, nici macar in subclase.\\n\\n3. protected:\\n   - Accesibil in aceeasi clasa, in acelasi pachet,\\n   - SI in toate subclasele copil din ALTE PACHETE (prin mostenire).\\n\\n4. public (Cel mai permisiv):\\n   - Accesibil de oriunde din intreaga aplicatie.",
+    codeSnippet: `package com.ats.model;
+
+public class Candidate {
+    private String ssn;         // Doar in Candidate
+    String packageNote;         // In com.ats.model
+    protected String status;    // In com.ats.model + subclase din orice pachet
+    public String name;         // De oriunde
+}`,
+    interviewTrap: "Daca o clasa din alt pachet mosteneste o clasa cu camp protected, ea il poate accesa prin mostenire (this.status), dar NU pe o instanta nou creata din exterior (new Parent().status e ilegal).",
+    keyTakeaway: "private = doar clasa; default = acelasi pachet; protected = pachet + subclase externe; public = global."
+  },
+  {
+    id: "java-16",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "De ce Java este STRICT Pass-by-Value si NU Pass-by-Reference?",
+    question: "De ce Java este considerat strict Pass-by-Value chiar si atunci cand transmitem obiecte ca parametri in metode?",
+    answer: "1. Ce inseamna Pass-by-Value:\\n   - Cand transmiti o variabila unei metode, Java face intotdeauna o COPIE A VALORII acelei variabile si o plaseaza pe stiva metodei apelate.\\n\\n2. Cazul Tip Primitive (int, boolean):\\n   - Se copiaza valoarea binara (ex: numarul 5). Modificarile din metoda nu afecteaza variabila originala.\\n\\n3. Cazul Obiecte (Referinte):\\n   - Variabila care tine un obiect este de fapt o ADRESA (o referinta) catre obiectul din Heap.\\n   - Java COPIAZA ACEASTA ADRESA!\\n   - De aceea poti modifica proprietatile interioare ale obiectului (p.setName(\"Nou\")) pentru ca ambele referinte arata catre acelasi obiect pe Heap;\\n   - DAR daca incerci sa reatribui referinta (p = new Person(\"Altul\")), modifici DOAR copia locala de referinta! Referinta originala a apelantului ramane neschimbata!",
+    codeSnippet: `void modify(Person p) {
+    p.setName("Mihai"); // Modifica obiectul comun pe Heap (VIZIBIL afara)
+    p = new Person("Ion"); // Reatribuie copia locala de adresa (INVIZIBIL afara)
+}
+
+Person person = new Person("Alex");
+modify(person);
+System.out.println(person.getName()); // Afiseaza "Mihai", NICIODATA "Ion"!`,
+    interviewTrap: "Multi candidati spun gresit: \"Primitivele se transmit prin valoare, iar obiectele se transmit prin referinta\". Raspunsul corect 100%: Toate se transmit prin valoare; in cazul obiectelor valoarea transmisa este copia referintei.",
+    keyTakeaway: "Java este strict pass-by-value; la obiecte copiaza valoarea referintei de memorie."
+  },
+  {
+    id: "java-17",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Clasa java.lang.Object si Metodele sale Principale",
+    question: "Ce este clasa Object in Java si care sunt cele mai importante metode mostenite de toate clasele?",
+    answer: "java.lang.Object este clasa radacina a intregii ierarhii de clase din Java. Daca o clasa nu extinde explicit alta clasa, compilatorul adauga automat extends Object.\\n\\nCele mai importante metode mostenite de orice clasa:\\n1. boolean equals(Object obj): Compara egalitatea logica a doua obiecte (implicit compara adresele cu ==).\\n2. int hashCode(): Returneaza o valoare hash intreaga asociata obiectului pentru tabele de dispersie.\\n3. String toString(): Returneaza reprezentarea text a obiectului (implicit NumeClasa@HexHashCode).\\n4. Class<?> getClass(): Returneaza metadatele clasei la runtime (pentru Reflection).\\n5. Object clone(): Creeaza o copie shallow a obiectului (daca implementeaza Cloneable).\\n6. wait(), notify(), notifyAll(): Metode de sincronizare si comunicare intre thread-uri.",
+    codeSnippet: `Object obj = new Object();
+System.out.println(obj.toString()); // ex: java.lang.Object@2f92e0f4
+System.out.println(obj.hashCode()); // ex: 798154996
+System.out.println(obj.getClass().getName()); // java.lang.Object`,
+    interviewTrap: "Implementarea implicita a lui equals() din clasa Object face pur si simplu this == obj (compara adresele fizice din Heap). De aceea trebuie suprascrisa pentru egalitate logica de campuri.",
+    keyTakeaway: "Object este parintele universal in Java si furnizeaza metode de baza: equals, hashCode, toString, getClass, wait, notify."
+  },
+  {
+    id: "java-18",
+    category: 'JAVA',
     difficulty: "MEDIU",
     title: "Contractul equals() si hashCode() in Java",
-    question: "Ce stipuleaza contractul dintre metodele equals() si hashCode() din clasa Object? Ce problema grava apare daca suprascrii equals() dar nu si hashCode() intr-o entitate folosita in HashSet sau HashMap?",
-    answer: "Contractul stipuleaza doua reguli fundamentale:\n1. Daca doua obiecte sunt egale conform equals(), ele TREBUIE sa returneze acelasi hashCode().\n2. Daca doua obiecte au acelasi hashCode(), NU este obligatoriu sa fie egale (coliziune de hash).\n\nDaca suprascrii doar equals(): cand adaugi un obiect intr-un HashSet sau ca cheie intr-un HashMap, JVM calculeaza bucket-ul pe baza hashCode()-ului implicit (adresa din memorie). Daca cauti acelasi obiect logic (alt obiect cu aceleasi campuri), acesta va primi alt hash, va cauta in alt bucket si get(key) va returna NULL sau va introduce duplicate in HashSet!",
+    question: "Care este contractul dintre metodele equals() si hashCode() si ce problema grava apare in HashSet/HashMap daca nu le suprascrii impreuna?",
+    answer: "Contractul dintre equals() si hashCode() stipuleaza doua reguli fundamentale:\\n1. Daca doua obiecte sunt egale conform equals(), ele TREBUIE sa returneze acelasi hashCode() garantat!\\n2. Daca doua obiecte au acelasi hashCode(), NU este obligatoriu sa fie egale (fenomenul de coliziune hash).\\n\\nCe problema grava apare daca suprascrii doar equals():\\n- Cand adaugi un obiect intr-un HashSet sau ca si cheie intr-un HashMap, JVM foloseste hashCode() pentru a alege bucket-ul din array.\\n- Daca nu ai suprascris hashCode(), se va folosi hashCode-ul din clasa Object (adresa de memorie a instantei).\\n- Doua obiecte identice ca si continut vor primi hash-uri complet diferite si vor fi puse in bucket-uri diferite!\\n- Rezultat: get(key) va returna NULL, iar HashSet-ul va accepta duplicate!",
     codeSnippet: `public class Candidate {
     private Long id;
     private String email;
@@ -24,3838 +386,3990 @@ export const JAVA_DECK = [
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, email); // OBLIGATORIU cand suprascrii equals!
+        return Objects.hash(id, email); // OBLIGATORIU impreuna cu equals!
     }
 }`,
-    interviewTrap: "Campurile folosite la calculul hashCode() trebuie sa fie IMUTABILE. Daca modifici un camp dupa inserarea in HashSet, nu mai poti gasi niciodata obiectul (Memory Leak)!",
-    keyTakeaway: "Equals egal implica HashCode egal. Niciodata nu suprascrie doar una din cele doua metode."
-  },
-  {
-    id: "java-02",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "De ce este String imutabil in Java si ce este Pool-ul?",
-    question: "De ce clasa String este declarata \"final\" si imutabila in Java? Ce este String Constant Pool si ce se intampla la executarea: String s = new String(\"test\")?",
-    answer: "String este imutabil pentru 4 ratiuni majore:\n1. String Constant Pool (Memorie): Reutilizeaza secventele identice de caractere in Heap, economisind memorie masiva.\n2. Securitate: Parametrii de conexiune la retea, fisiere si DB sunt String-uri; daca erau mutabile, un atacator putea altera calea dupa validare.\n3. Thread-Safety: Pot fi partajate intre mii de fire concurente fara lock-uri sau sincronizari.\n4. Caching HashCode: Hash-ul se calculeaza o singura data la initializare si se retine in cache.\n\nLa apelul new String(\"test\"): Se creeaza DOI obiecte daca \"test\" nu era deja in Pool: unul in String Constant Pool si unul NOU distinct pe Heap-ul general.",
-    codeSnippet: `String s1 = "job"; // Referinta catre String Pool
-String s2 = "job"; // Aceeasi referinta din Pool
-System.out.println(s1 == s2); // TRUE
-
-String s3 = new String("job"); // Aloca obiect nou separat in Heap
-System.out.println(s1 == s3); // FALSE!
-System.out.println(s1.equals(s3)); // TRUE
-System.out.println(s1 == s3.intern()); // TRUE (intern aduce referinta din Pool)`,
-    interviewTrap: "Operatorul == compara adresele de memorie, in timp ce .equals() compara continutul caracterelor. Nu folosi == pentru String-uri!",
-    keyTakeaway: "Foloseste intotdeauna literali (\"abc\") in loc de new String(), si StringBuilder pentru concatenari in bucle."
-  },
-  {
-    id: "java-03",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "String vs StringBuilder vs StringBuffer",
-    question: "Care este diferenta de performanta si siguranta a firelor de executie (Thread-Safety) intre String, StringBuilder si StringBuffer?",
-    answer: "1. String: Imutabil. Orice modificare (concatenare cu +) creeaza un obiect NOU pe Heap. In bucle mari genereaza cantitati uriase de obiecte temporare si incetineste Garbage Collector-ul.\n2. StringBuffer (Java 1.0): Mutabil si THREAD-SAFE. Toate metodele sale principale (append, insert) sunt sincronizate cu cuvantul cheie synchronized. Are cost suplimentar de sincronizare chiar daca ruleaza pe un singur thread.\n3. StringBuilder (Java 5): Mutabil si NON-THREAD-SAFE. Nu foloseste synchronized, fiind cu 50-80% mai rapid decat StringBuffer. Este alegerea standard pentru constructia de siruri pe un singur fir de executie (in metode locale).",
-    codeSnippet: `// GRESIT (Creeaza 10.000 de obiecte String in Heap):
-String s = "";
-for (int i = 0; i < 10000; i++) s += i;
-
-// CORECT (Modifica un singur buffer intern de caractere):
-StringBuilder sb = new StringBuilder(10000);
-for (int i = 0; i < 10000; i++) sb.append(i);
-String result = sb.toString();`,
-    interviewTrap: "Daca stii dinainte marimea aproximativa a sirului, paseaza capacitatea initiala constructorului new StringBuilder(capacity) pentru a evita redimensionarile interne repetate ale array-ului de caractere.",
-    keyTakeaway: "StringBuilder pentru performanta pe un singur thread; StringBuffer doar daca partajezi bufferul intre thread-uri multiple; String pentru constante."
-  },
-  {
-    id: "java-04",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "De ce Java este STRICT Pass-by-Value si NU Pass-by-Reference?",
-    question: "Explica de ce se spune ca Java este strict \"Pass-by-Value\". Ce se transmite efectiv cand pasezi un obiect ca argument intr-o metoda?",
-    answer: "In Java, absolut totul se transmite prin valoare (Pass-by-Value):\n1. Pentru tipuri primitive (int, double): Se transmite o COPIE a valorii numerice. Modificarea parametrului in interiorul metodei nu afecteaza variabila originala a apelantului.\n2. Pentru obiecte: Nu se transmite obiectul in sine si nici o referinta mutabila C++, ci se transmite O COPIE A REFERINTEI (valoarea adresei de memorie din Stack). Ca urmare:\n   - Poti modifica starea interna a obiectului prin apelul de metode (ex: user.setName(\"Mihai\")).\n   - Dar daca reasignezi parametrul cu new User(), reasignezi doar copia locala din stiva; variabila originala a apelantului ramane neschimbata!",
-    codeSnippet: `public static void modify(User u) {
-    u.setName("Alex"); // Afecteaza obiectul original din Heap!
-    u = new User("Dan"); // Reasigneaza doar copia locala a referintei!
-}
-
-User user = new User("Ion");
-modify(user);
-System.out.println(user.getName()); // Afiseaza "Alex", NU "Dan"!`,
-    interviewTrap: "Multi candidati spun gresit ca \"primitivele sunt pass-by-value, iar obiectele sunt pass-by-reference\". In Java, chiar si referintele la obiecte sunt transmise prin valoarea lor!",
-    keyTakeaway: "In Java se copiaza mereu valoarea: la primitive valoarea numerica, la obiecte valoarea pointerului catre Heap."
-  },
-  {
-    id: "java-05",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Poti suprascrie (Override) o metoda statica in Java?",
-    question: "Poate o clasa copil sa suprascrie o metoda statica definita in clasa parinte? Ce este Method Hiding?",
-    answer: "NU, metodele statice NU pot fi suprascrise (Override)! Polimorfismul dinamic (Overriding) functioneaza pe baza instantei reale de pe Heap la runtime prin Dynamic Dispatch (tabela vtable). Metodele statice apartin clasei (nu instantei) si sunt legate static la compilare (Compile-time / Early Binding).\n\nDaca declari o metoda statica cu aceeasi semnatura in clasa copil, fenomenul se numeste \"Method Hiding\" (Ascunderea Metodei). Metoda care se apeleaza depinde strict de tipul referintei declarate la compilare, nu de instanta de pe Heap!",
-    codeSnippet: `class Parent { static void print() { System.out.println("Parent"); } }
-class Child extends Parent { static void print() { System.out.println("Child"); } }
-
-Parent p = new Child();
-p.print(); // Afiseaza "Parent"! Nu s-a apelat metoda din Child!`,
-    interviewTrap: "Daca adaugi adnotarea @Override pe o metoda statica in clasa copil, codul NU compileaza!",
-    keyTakeaway: "Metodele statice se ascund (Method Hiding) si se leaga la compilare; metodele de instanta se suprascriu (Overriding) si se leaga la runtime."
-  },
-  {
-    id: "java-06",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Interfata vs Clasa Abstracta in Java modern (Java 8-21)",
-    question: "Cum s-au schimbat diferentele dintre Interfete si Clase Abstracte odata cu introducerea metodelor default, statice si private in interfete? Cand alegi una in locul celeilalte?",
-    answer: "Odata cu Java 8 (default & static methods) si Java 9 (private methods), interfetele pot avea implementari de cod.\n\nDiferente ramase:\n1. State (Stare interna): Interfetele NU pot stoca stare (variabile de instanta); au doar constante publice statice finale. O clasa abstracta poate avea stare, campuri private si constructori.\n2. Mostenire Multipla: O clasa poate implementa oricate interfete, dar poate extinde o singura clasa abstracta.\n3. Constructor: O clasa abstracta are constructor apelat la instantierea copilului; o interfata nu are constructor.\n\nCand alegi: Clasa abstracta pentru stare partajata si cod intern comun intr-o ierarhie stransa; Interfata pentru a defini un contract de capabilitate (Comparable, AutoCloseable) intre clase necorelate.",
-    codeSnippet: `public interface Auditable {
-    default void logAudit() {
-        logInternal("Actiune inregistrata la " + Instant.now());
-    }
-    private void logInternal(String msg) {
-        System.out.println("[AUDIT] " + msg);
-    }
-}`,
-    interviewTrap: "Daca o clasa implementeaza doua interfete care au aceeasi metoda default (Diamond Problem), compilatorul da eroare pana cand clasa suprascrie metoda si alege InterfaceA.super.method().",
-    keyTakeaway: "Interfata = ce stie sa faca (contract); Clasa abstracta = ce este (identitate si stare)."
-  },
-  {
-    id: "java-07",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "final vs finally vs finalize() in Java",
-    question: "Explica distinctia clara dintre cuvintele cheie final, blocul finally si metoda finalize() din Java.",
-    answer: "1. final (Cuvant cheie modifier):\n   - Variabila: Valoarea devine constanta si nu mai poate fi reasignata.\n   - Metoda: Nu mai poate fi suprascrisa (overridden) in clasele derivate.\n   - Clasa: Nu mai poate fi mostenita (ex: clasa String sau Integer).\n\n2. finally (Bloc de control al fluxului):\n   - Se asociaza cu try-catch si se executa INTOTDEAUNA, indiferent daca se arunca o exceptie sau exista return in try/catch.\n   - Folosit pentru eliberarea resurselor.\n   - Nu se executa doar la System.exit(0) sau cadere de JVM.\n\n3. finalize() (Metoda din Object): Deprecated din Java 9 si eliminata treptat; nu te baza niciodata pe ea!",
-    codeSnippet: `final int MAX_RETRIES = 3;
-
-try {
-    process();
-    return true; // finally TOT se executa inainte de return!
-} catch (Exception e) {
-    log.error(e);
-} finally {
-    cleanup(); // Se executa garantat
-}`,
-    interviewTrap: "Daca pui return si in try si in finally, valoarea din finally va suprascrie valoarea din try!",
-    keyTakeaway: "Foloseste try-with-resources in loc de blocuri finally manuale pentru clase AutoCloseable."
-  },
-  {
-    id: "java-08",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Shallow Copy vs Deep Copy in Java",
-    question: "Care este diferenta dintre o copie superficiala (Shallow Copy) si o copie profunda (Deep Copy) si cum implementezi Deep Copy in mod sigur?",
-    answer: "1. Shallow Copy (Copie Superficiala):\n   - Creeaza un obiect nou, dar campurile care sunt referinte catre alte obiecte copiaza doar adresa de memorie. Ambele obiecte (originalul si copia) indica spre aceleasi instante interne. Modificarea unui camp intern din copie va altera si originalul!\n   - Metoda Object.clone() face shallow copy implicit.\n\n2. Deep Copy (Copie Profunda):\n   - Creeaza un obiect nou si cloneaza recursiv toate obiectele interne referentiate. Originalul si copia sunt complet independente in memorie.\n\nModalitati de implementare Deep Copy:\n- Copy Constructor dedicat (cea mai rapida si curata metoda recomandata de Joshua Bloch).\n- Serializare/Deserializare JSON cu Jackson sau binary serialization.",
-    codeSnippet: `// Copy Constructor pentru Deep Copy:
-public class CandidateProfile {
-    private String name;
-    private List<String> skills;
-
-    // Deep Copy Constructor:
-    public CandidateProfile(CandidateProfile other) {
-        this.name = other.name;
-        this.skills = new ArrayList<>(other.skills); // Lista NOUA separata!
-    }
-}`,
-    interviewTrap: "Interfata Cloneable din Java este considerata defectuoasa (broken design) deoarece clone() este declarata protected in Object si nu exista metoda clone() in interfata Cloneable!",
-    keyTakeaway: "Foloseste Copy Constructors sau factory methods in loc de Cloneable pentru a crea copii profunde."
-  },
-  {
-    id: "java-09",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Ordinea de Initializare la Instantierea unei Clase",
-    question: "In ce ordine se executa blocurile statice, variabilele de instanta, blocurile de initializare si constructorii cand creezi o instanta Child care mosteneste Parent?",
-    answer: "Ordinea stricta de executie este:\n1. Variabilele statice si blocurile de initializare statica ale clasei PARINTE (o singura data, la incarcarea clasei).\n2. Variabilele statice si blocurile statice ale clasei COPIL.\n3. Variabilele de instanta si blocurile non-statice ale clasei PARINTE.\n4. Constructorul clasei PARINTE.\n5. Variabilele de instanta si blocurile non-statice ale clasei COPIL.\n6. Constructorul clasei COPIL.",
-    codeSnippet: `class Parent {
-    static { System.out.println("1. Static Parent"); }
-    { System.out.println("3. Instance Parent"); }
-    Parent() { System.out.println("4. Constructor Parent"); }
-}
-class Child extends Parent {
-    static { System.out.println("2. Static Child"); }
-    { System.out.println("5. Instance Child"); }
-    Child() { System.out.println("6. Constructor Child"); }
-}`,
-    interviewTrap: "Blocurile statice se executa o singura data in toata viata aplicatiei cand clasa este incarcata de ClassLoader, in timp ce blocurile de instanta se executa la fiecare apel new!",
-    keyTakeaway: "Static Parent -> Static Child -> Instance Parent -> Constructor Parent -> Instance Child -> Constructor Child."
-  },
-  {
-    id: "java-10",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Ce este si cum functioneaza Garbage Collector in JVM?",
-    question: "Explica ipoteza generationala (Weak Generational Hypothesis) si partitiile principale ale memoriei Heap in JVM (Eden, Survivor, Tenured/Old).",
-    answer: "JVM Heap este impartit conform Ipotezei Generationale (majoritatea obiectelor mor la scurt timp dupa creare):\n1. Young Generation: Contine Eden Space si doua Survivor Spaces (S0 si S1 / From si To). Noile obiecte se aloca in Eden. Cand Eden se umple, ruleaza un Minor GC (rapid, compacteaza obiectele vii in Survivor).\n2. Old (Tenured) Generation: Obiectele care supravietuiesc mai multor cicluri de GC (default 15 cicluri, prag controlat de -XX:MaxTenuringThreshold) sunt promovate in Old Gen.\n3. Metaspace (Off-Heap): Stocheaza metadata despre clase, bytecode si metode (a inlocuit PermGen din Java 8).",
-    codeSnippet: `// JVM Heap Layout:
-// [---------- Young Generation ----------] [--- Old / Tenured ---]
-// [   Eden   ] [ Survivor S0 ] [ Survivor S1 ] [ Long-lived Objects ]
-// Minor GC: curata Young Gen
-// Major / Full GC: curata Old Gen (stop-the-world mai lung)`,
-    interviewTrap: "Metaspace nu este in Heap! Este alocat in memoria nativa a sistemului de operare si se extinde dinamic daca nu este restrictionat cu -XX:MaxMetaspaceSize.",
-    keyTakeaway: "Majoritatea alocarilor mor in Eden. GC-urile moderne (G1GC, ZGC) folosesc regiuni dinamice pentru a reduce timpii de pauza sub 1ms."
-  },
-  {
-    id: "java-11",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Algoritmi de Garbage Collection: G1GC vs ZGC vs Parallel GC",
-    question: "Care sunt diferentele cheie intre colectorii de gunoi G1GC (default in Java 9-21) si ZGC (Zero Latency GC din Java 21)?",
-    answer: "1. Parallel GC (Throughput Collector):\n   - Optimizeaza throughput-ul maxim al procesorului. Pauzele Stop-the-World pot dura secunde intregi; ideal pentru aplicatii batch offline.\n\n2. G1GC (Garbage-First GC - Default in Java 9+):\n   - Imparte Heap-ul in mii de regiuni de dimensiuni egale (1MB - 32MB).\n   - Curata mai intai regiunile cu cel mai mult gunoi (\"Garbage First\").\n   - Permite setarea unui obiectiv de pauza (ex: -XX:MaxGCPauseMillis=200), dar la heap-uri foarte mari pauzele pot depasi tinta.\n\n3. ZGC (Z Garbage Collector - Modern in Java 21):\n   - Scalabil la heap-uri de pana la 16 Terabytes!\n   - Toate fazele costisitoare de marcare, relocare si compactare ruleaza CONCURENT cu aplicatia folosind Colored Pointers si Load Barriers.\n   - Garanteaza pauze Stop-the-World de sub 1 MILISECUNDA, indiferent de marimea memoriei Heap!",
-    codeSnippet: `// Activare ZGC generational in Java 21:
-java -XX:+UseZGC -XX:+ZGenerational -jar app.jar`,
-    interviewTrap: "ZGC consuma putin mai mult CPU din cauza Load Barriers la accesarea referintelor de obiecte, dar elimina complet blocajele de latenta in aplicatiile web.",
-    keyTakeaway: "G1GC este excelentul default; ZGC este alegerea ideala in Java 21 pentru aplicatii cu cerinte stricte de latenta mica."
-  },
-  {
-    id: "java-12",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Ce cauzeaza OutOfMemoryError: Java heap space vs Metaspace vs StackOverflowError?",
-    question: "Care este diferenta dintre OutOfMemoryError pe Heap, OutOfMemoryError pe Metaspace si StackOverflowError?",
-    answer: "1. StackOverflowError:\n   - Apare pe stiva thread-ului (Thread Stack Memory) cand numarul de cadre de apel depaseste limita (de obicei cauzat de o recursivitate infinita fara caz de baza).\n\n2. OutOfMemoryError: Java heap space:\n   - Apare cand memoria Heap este plina si Garbage Collector-ul nu poate elibera suficient spatiu pentru a aloca un obiect nou (cauzat de alocari gigantice sau Memory Leaks cu obiecte referentiate permanent).\n\n3. OutOfMemoryError: Metaspace:\n   - Apare in memoria nativa (Off-Heap) cand numarul de clase incarcate in memorie este prea mare (cauzat de generare dinamica necontrolata de proxy-uri CGLIB/Spring, hot reload repetat fara restart sau librarii de bytecode).",
-    codeSnippet: `// 1. StackOverflow:
-void infiniteRecursion() { infiniteRecursion(); }
-
-// 2. Heap OOM:
-List<byte[]> list = new ArrayList<>();
-while(true) list.add(new byte[1024 * 1024]);`,
-    interviewTrap: "StackOverflowError este o subclasa de Error, nu de Exception! Nu incerca sa o prinzi cu catch (Exception e).",
-    keyTakeaway: "Recursivitate infinita -> StackOverflowError; colectii nesterse pe Heap -> Heap OOM; generare masiva de clase -> Metaspace OOM."
-  },
-  {
-    id: "java-13",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Cum functioneaza Ierarhia de ClassLoaders in JVM?",
-    question: "Cum incarca JVM-ul clasele in memorie si ce reprezinta modelul de delegare (Delegation Principle) intre ClassLoaders?",
-    answer: "JVM foloseste o ierarhie stricta de ClassLoaders bazata pe principiul delegarii (Parent Delegation Model):\n1. Bootstrap ClassLoader: Scris in cod nativ C++, incarca clasele fundamentale de baza ale JDK-ului din modulul java.base (java.lang.*, java.util.*).\n2. Platform / Extension ClassLoader: Incarca modulele si extensiile platformei standard.\n3. Application / System ClassLoader: Incarca clasele din classpath-ul aplicatiei tale (fisierele .class si dependintele din JAR-uri).\n\nModelul de Delegare:\nCand o clasa este ceruta, ApplicationClassLoader NU o incarca direct. El deleaga cererea catre parintele sau (Platform), care deleaga mai departe catre Bootstrap. Daca parintele gaseste clasa, o incarca el. Doar daca niciun parinte nu o gaseste, ApplicationClassLoader o incarca din propriul classpath. Acest mecanism previne ca un programator sa rescrie o versiune malitioasa a clasei java.lang.String!",
-    codeSnippet: `ClassLoader appCl = Candidate.class.getClassLoader();
-ClassLoader platformCl = appCl.getParent();
-ClassLoader bootstrapCl = platformCl.getParent(); // Returneaza NULL (C++ nativ)`,
-    interviewTrap: "Daca apelezi String.class.getClassLoader(), metoda returneaza NULL deoarece Bootstrap ClassLoader este implementat in C++ si nu are instanta de obiect Java.",
-    keyTakeaway: "ClassLoaders deleaga intotdeauna cererea parintilor mai intai pentru a proteja integritatea claselor de baza ale JDK-ului."
-  },
-  {
-    id: "java-14",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Integer Cache (-128 la 127) si Autoboxing",
-    question: "Ce afiseaza codul: Integer a = 127; Integer b = 127; System.out.println(a == b); si ce afiseaza daca valoarea este 128? De ce?",
-    answer: "Pentru 127 va afisa TRUE, iar pentru 128 va afisa FALSE!\n\nExplicatie: Java implementeaza un Integer Cache pentru valorile cuprinse intre -128 si 127 (conform JLS). La autoboxing (Integer.valueOf(127)), JVM returneaza aceeasi instanta cached din array-ul intern IntegerCache.cache.\n\nPentru 128, valoarea depaseste intervalul default de caching, deci se aloca doua instante complet noi pe Heap. Operatorul == compara adresele de memorie, deci va returna false!",
-    codeSnippet: `Integer a = 127;
-Integer b = 127;
-System.out.println(a == b); // TRUE (acelasi obiect din cache)
-
-Integer x = 128;
-Integer y = 128;
-System.out.println(x == y); // FALSE (doua instante diferite pe Heap)
-System.out.println(x.equals(y)); // TRUE (compara valorile primitive)`,
-    interviewTrap: "Limita superioara (127) poate fi extinsa prin parametrul JVM: -XX:AutoBoxCacheMax=<size>.",
-    keyTakeaway: "Nu folosi == pentru compararea wrapper-elor (Integer, Long, Double). Foloseste mereu .equals()."
-  },
-  {
-    id: "java-15",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "De ce folosim BigDecimal si nu double pentru bani?",
-    question: "De ce nu trebuie NICIODATA sa folosesti tipurile primitive float sau double pentru calcule financiare, salarii sau tranzactii cu bani?",
-    answer: "Tipurile float si double sunt numere in virgula mobila bazate pe standardul binar IEEE 754. Ele nu pot reprezenta cu precizie exacta fractiile zecimale simple precum 0.1 sau 0.01 (in binar devin fractii infinite periodice, la fel cum 1/3 devine 0.3333... in zecimal).\n\nRezultatul operatiei: 0.1 + 0.2 in Java NU este 0.3, ci 0.30000000000000004! In aplicatiile bancare sau financiare, aceste rotunjiri acumulate duc la diferente de bani si erori contabile grave.\n\nSolutie: BigDecimal pastreaza reprezentarea zecimala exacta cu precizie arbitrara configurabila.",
-    codeSnippet: `// 1. Cu double (GRESIT in sisteme financiare):
-double d1 = 0.1;
-double d2 = 0.2;
-System.out.println(d1 + d2 == 0.3); // FALSE! Afiseaza 0.30000000000000004
-
-// 2. Cu BigDecimal (CORECT):
-// ATENTIE: Foloseste mereu constructorul cu String, NU cu double!
-BigDecimal b1 = new BigDecimal("0.1");
-BigDecimal b2 = new BigDecimal("0.2");
-BigDecimal sum = b1.add(b2);
-System.out.println(sum); // 0.3 EXACT`,
-    interviewTrap: "Daca scrii new BigDecimal(0.1) trecand un literal double, transferi chiar eroarea de precizie a double-ului in BigDecimal! Foloseste OBLIGATORIU new BigDecimal(\"0.1\") sau BigDecimal.valueOf(0.1).",
-    keyTakeaway: "Pentru orice operatiune cu valuta, preturi, comisioane sau salarii: BigDecimal cu String constructor."
-  },
-  {
-    id: "java-16",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Autoboxing si capcana NullPointerException",
-    question: "Cum poate o simpla atribuire de tip primitiv sa arunce NullPointerException in timpul unboxing-ului automat?",
-    answer: "Autoboxing-ul este conversia automata facuta de compilator intre tipuri primitive si clase wrapper (ex: int -> Integer). Unboxing-ul este operatiunea inversa (ex: Integer -> int apeland sub capota intValue()).\n\nDaca ai un obiect wrapper (Integer) care are valoarea null si incerci sa il asignezi unei variabile primitive (int) sau il folosesti intr-o expresie aritmetica (==, +, >), JVM apeleaza metoda .intValue() pe referinta nula, aruncand instant NullPointerException!",
-    codeSnippet: `Integer countWrapper = null;
-
-// ARUNCA NullPointerException la runtime:
-int count = countWrapper; // Compilatorul genereaza: countWrapper.intValue()
-
-// La fel si in conditii logice:
-if (countWrapper > 0) { ... } // NPE!`,
-    interviewTrap: "Aceasta eroare apare frecvent in entitati JPA unde campurile numerice din baza de date contin NULL (ex: coloana nullable in Postgres), dar in cod DTO-ul le mapeaza in tipuri primitive (int, boolean).",
-    keyTakeaway: "Verifica intotdeauna daca wrapperul este null inainte de unboxing sau foloseste tipuri primitive doar cand campul este garantat non-null."
-  },
-  {
-    id: "java-17",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Cum functioneaza HashMap intern in Java?",
-    question: "Explica arhitectura interna a unui HashMap in Java 8+: structura de date, calculul bucket-ului, gestionarea coliziunilor si cand se transforma lista inlantuita in arbore.",
-    answer: "HashMap foloseste un array de bucket-uri (Node<K,V>[] table). Indexul se calculeaza prin formula: index = (n - 1) & hash(key.hashCode()). In caz de coliziune, elementele se adauga initial intr-o lista simplu inlantuita. Daca numarul de elemente dintr-un bucket depaseste pragul de 8 (TREEIFY_THRESHOLD) si capacitatea totala a array-ului este cel putin 64, lista se converteste intr-un arbore rosu-negru (Red-Black Tree, TreeNode), reducand complexitatea de la O(n) la O(log n). Cand numarul scade sub 6, arborele redevine lista (UNTREEIFY_THRESHOLD).",
-    codeSnippet: `static final int hash(Object key) {
-    int h;
-    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
-}
-int index = (table.length - 1) & hash;
-
-// Praguri critice in java.util.HashMap:
-static final int TREEIFY_THRESHOLD = 8;
-static final int UNTREEIFY_THRESHOLD = 6;
-static final int MIN_TREEIFY_CAPACITY = 64;`,
-    interviewTrap: "Pentru transformarea in Red-Black Tree este obligatoriu ca si capacitatea totala a tabelei sa fie >= 64. Daca este mai mica, se face resize (dublare), NU treeify!",
-    keyTakeaway: "Complexitate: O(1) amortizat pentru get/put. O(log n) in caz de coliziuni masive in acelasi bucket."
-  },
-  {
-    id: "java-18",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Cum functioneaza HashSet intern in Java?",
-    question: "Ce structura de date foloseste clasa HashSet in interiorul sau pentru a asigura unicitatea elementelor?",
-    answer: "HashSet NU implementeaza un mecanism propriu de hashing de la zero! Intern, HashSet este doar un simplu wrapper peste o instanta de HashMap (private transient HashMap<E,Object> map).\n\nCand adaugi un element cu set.add(e):\n- Elementul tau este inserat ca si CHEIE in HashMap-ul intern (map.put(e, PRESENT)).\n- Valoarea asociata este o simpla constanta statica \"dummy\" de tip Object numita PRESENT.\n- Deoarece un HashMap garanteaza ca cheile sunt unice, HashSet garanteaza automat unicitatea elementelor!",
-    codeSnippet: `public class HashSet<E> implements Set<E> {
-    private transient HashMap<E,Object> map;
-    private static final Object PRESENT = new Object();
-
-    public boolean add(E e) {
-        return map.put(e, PRESENT) == null; // Daca returneaza null, elementul nu exista
-    }
-}`,
-    interviewTrap: "Daca obiectul inserat in HashSet nu are implementate corect metodele equals() si hashCode(), HashSet va permite duplicate logice!",
-    keyTakeaway: "HashSet este pur si simplu un HashMap unde valorile sunt ignorate si cheile reprezinta elementele setului."
+    interviewTrap: "Campurile folosite in hashCode() trebuie sa fie imutabile. Daca adaugi un obiect intr-un HashSet si apoi ii modifici un camp folosit in hashCode, nu il mai poti gasi niciodata pentru a-l sterge!",
+    keyTakeaway: "Daca suprascrii equals(), suprascrie intotdeauna si hashCode(), altfel structurile de tip HashSet si HashMap devin complet corupte."
   },
   {
     id: "java-19",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "ArrayList vs LinkedList: De ce evitam LinkedList?",
-    question: "Care este diferenta dintre ArrayList si LinkedList si de ce in aplicatiile enterprise reale se prefera ArrayList in 99% din cazuri?",
-    answer: "1. ArrayList: Bazat pe un array dinamic redimensionabil. Ofera acces instantaneu prin index in timp O(1) si este compact in memorie.\n\n2. LinkedList: Lista dublu inlantuita. Fiecare element este impachetat intr-un nod (Node<E>) cu doi pointeri (prev, next).\n\nDe ce evitam LinkedList chiar si la inserari:\n- Cache Locality (Performanta hardware): Elementele dintr-un ArrayList sunt contigue in memorie, potrivindu-se perfect pe liniile de CPU Cache (L1/L2). In LinkedList, nodurile sunt dispersate aleatoriu pe Heap, generand masive CPU Cache Misses.\n- Consum Memorie: Pe un JVM pe 64 de biti, un nod de LinkedList consuma 24-32 bytes overhead suplimentar doar pentru pointeri si header de obiect, pe langa data utila.",
-    codeSnippet: `// 1. ArrayList:
-List<String> fastList = new ArrayList<>(100);
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "De ce este util sa suprascrii metoda toString()?",
+    question: "Ce returneaza metoda toString() din clasa Object si de ce este o buna practica sa o suprascrii in clasele de model (POJO / DTO)?",
+    answer: "1. Comportamentul Implicit din Object.toString():\\n   - Returneaza un sir de forma: getClass().getName() + \"@\" + Integer.toHexString(hashCode()).\\n   - Exemplu: com.ats.Candidate@7852e922.\\n   - Acest text este complet inutil la debugging si logare, deoarece nu iti arata ce date se afla in interiorul obiectului!\\n\\n2. De ce o Suprascriem:\\n   - Pentru a oferi o reprezentare text clara, lizibila si informativa a starii obiectului (ex: Candidate[id=101, name=Alex, email=alex@test.com]).\\n   - Este apelata automat cand afisezi obiectul cu System.out.println(obj), cand il concatenezi intr-un String (str + obj) sau cand il logezi cu log.info(\"User: {}\", obj).",
+    codeSnippet: `public class User {
+    private String username;
+    private String role;
 
-// 2. Pentru operatii de Coada / Stiva (FIFO/LIFO):
-Deque<String> queue = new ArrayDeque<>();`,
-    interviewTrap: "Manualele vechi spun ca LinkedList are O(1) pentru inserare la mijloc. In practica, pana sa inserezi la mijloc trebuie sa parcurgi lista pana acolo in O(n), facand operatia mai lenta decat copierea de memorie din ArrayList (System.arraycopy).",
-    keyTakeaway: "ArrayList este alegerea implicita pentru liste. Pentru cozi sau stive, foloseste ArrayDeque."
+    @Override
+    public String toString() {
+        return "User{username='" + username + "', role='" + role + "'}";
+    }
+}`,
+    interviewTrap: "Nu include campuri sensibile (precum parole in text clar, coduri PIN sau tokeni secrete de securitate) in metoda toString(), deoarece vor aparea accidental in logurile de productie!",
+    keyTakeaway: "toString() ofera reprezentarea text a obiectului pentru logging si debugging; suprascrie-o intotdeauna dar exclude datele confidentiale."
   },
   {
     id: "java-20",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Fail-Fast vs Fail-Safe Iterators",
-    question: "Ce este un iterator Fail-Fast si de ce apare ConcurrentModificationException daca stergi un element dintr-o lista cu list.remove() in interiorul unui for-each?",
-    answer: "1. Fail-Fast (ArrayList, HashMap, HashSet):\n   - Daca structura colectiei este modificata structural (adaugari, stergeri) in timp ce o parcurgi, iteratorul detecteaza diferenta dintre contorul modCount si expectedModCount si arunca instantaneu ConcurrentModificationException.\n   - Scopul este sa previna coruperea silentioasa a datelor.\n\n2. Fail-Safe / Weakly Consistent (ConcurrentHashMap, CopyOnWriteArrayList):\n   - Itereaza pe un snapshot sau pe o vizualizare slab consistenta a datelor. Nu arunca niciodata ConcurrentModificationException cand colectia este modificata concurent.",
-    codeSnippet: `List<String> list = new ArrayList<>(List.of("A", "B", "C"));
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Operatorul instanceof si Pattern Matching in Java 16",
+    question: "Ce face operatorul instanceof si cum simplifica Pattern Matching for instanceof (Java 16) verificarea si conversia de tip?",
+    answer: "1. Ce face operatorul clasic instanceof:\\n   - Verifica la runtime daca un obiect este o instanta a unei anumite clase sau implementeaza o anumita interfata.\\n   - Returneaza true daca obiectul este compatibil, sau false daca nu este sau daca obiectul este null.\\n\\n2. Codul Vechi Incomod (Inainte de Java 16):\\n   - Dupa if (obj instanceof String), trebuia sa scrii o linie suplimentara de cast explicit: String s = (String) obj;.\\n   - Cod redundant si predispus la erori.\\n\\n3. Pattern Matching for instanceof (Java 16 - JEP 394):\\n   - Permite declararea unei variabile tinta direct in verificarea instanceof: if (obj instanceof String s).\\n   - Daca conditia este true, variabila \"s\" este deja creata si convertita automat la tipul String, gata de folosit imediat!",
+    codeSnippet: `// 1. Modul clasic (invechit cu cast):
+if (obj instanceof String) {
+    String s = (String) obj;
+    System.out.println(s.toUpperCase());
+}
 
-// CORECT cu removeIf() din Java 8:
-list.removeIf(item -> item.equals("B"));`,
-    interviewTrap: "For-each-ul este doar syntactic sugar peste Iterator. Daca apelezi list.remove() in for-each, iteratorul nu stie ca ai modificat lista si da eroare la urmatorul it.next().",
-    keyTakeaway: "Pentru stergere curata in iteratii, foloseste mereu metoda list.removeIf() sau iteratorul dedicat."
+// 2. Modul modern Java 16+ (Pattern Matching):
+if (obj instanceof String s) {
+    System.out.println(s.toUpperCase()); // "s" este deja String!
+}`,
+    interviewTrap: "Daca verifici null instanceof MyClass, expresia returneaza intotdeauna false fara sa arunce NullPointerException.",
+    keyTakeaway: "Pattern matching for instanceof combina verificarea de tip cu cast-ul automat intr-o singura instructiune eleganta."
   },
   {
     id: "java-21",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Cum functioneaza ConcurrentHashMap?",
-    question: "Cum reuseste ConcurrentHashMap sa fie thread-safe cu performanta ridicata fata de Collections.synchronizedMap sau vechiul Hashtable?",
-    answer: "Hashtable si Collections.synchronizedMap blocheaza INTREAGA tabela la orice operatiune de citire sau scriere (un singur lock global pe toata colectia), devenind o strangulare masiva de performanta.\n\nConcurrentHashMap (in Java 8+):\n1. Citirile (get): Sunt complet NON-BLOCANTE (Lock-Free), folosind variabile volatile pe noduri.\n2. Scrierile (put): Blocheaza DOAR PRIMUL NOD din bucket-ul specific unde se face inserarea (folosind synchronized pe primul nod din bucket). Nicio alta celula sau bucket nu este blocat!\n3. Daca bucket-ul este gol: Inserarea se face complet fara lock folosind instructiunea hardware CAS (Compare-And-Swap).\n4. Nu permite chei sau valori NULL.",
-    codeSnippet: `ConcurrentMap<String, Long> userHits = new ConcurrentHashMap<>();
-userHits.computeIfAbsent("user_42", k -> queryDatabase(k));
-userHits.merge("user_42", 1L, Long::sum); // Incrementare atomica`,
-    interviewTrap: "Daca folosesti verificari separate: if (!map.containsKey(key)) map.put(key, val), operatia per ansamblu NU este atomica! Foloseste mereu operatiile atomice native: putIfAbsent, computeIfAbsent sau merge.",
-    keyTakeaway: "ConcurrentHashMap scaleaza la mii de thread-uri prin lock-uri granulare pe bucket si citiri fara lock."
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ce este o Interfata Marker (Marker Interface)?",
+    question: "Ce este o Interfata Marker in Java, ce metode contine si da 3 exemple celebre din JDK?",
+    answer: "1. Ce este o Interfata Marker (Tagging Interface):\\n   - Este o interfata care NU CONTINE NICIUN camp si NICIO metoda (complet goala).\\n   - Rolul sau este de a \"eticheta\" sau \"marca\" o clasa, semnalizand masinii virtuale JVM sau altor framework-uri ca obiectul poseda o anumita proprietate speciala.\\n\\n2. Cele 3 Exemple Canonice din JDK:\\n   - java.io.Serializable: Semnaleaza JVM-ului ca obiectul are voie sa fie convertit intr-un flux de octeti pentru salvare pe disc sau transfer peste retea.\\n   - java.lang.Cloneable: Semnaleaza metodei Object.clone() ca este permisa clonarea camp cu camp a obiectului (fara ea, clone() arunca CloneNotSupportedException).\\n   - java.util.RandomAccess: Semnaleaza ca o colectie (ex: ArrayList) suporta acces instantaneu O(1) la orice index, permitand algoritmilor sa aleaga bucle for clasice in loc de iteratori.",
+    codeSnippet: `// Exemplu Marker Interface:
+public class Candidate implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private String name;
+    // Nicio metoda obligatorie de implementat!
+}`,
+    interviewTrap: "In Java modern, rolul de marcare a fost preluat in mare parte de Adnotari (@Entity, @Deprecated), dar interfetele marker istorice raman fundamentale in JDK.",
+    keyTakeaway: "O interfata marker este complet vida si serveste doar ca eticheta de metadate pentru JVM (Serializable, Cloneable, RandomAccess)."
   },
   {
     id: "java-22",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "PriorityQueue: Arhitectura si Cautarea Top-K elemente",
-    question: "Ce structura de date sta la baza clasei PriorityQueue in Java si cum se foloseste pentru a gasi cele mai mari K elemente dintr-un stream masiv?",
-    answer: "PriorityQueue este o coada de prioritati implementata pe baza unui Min-Heap (sau Max-Heap daca se trimite un Comparator inversat) reprezentat intern ca un array dinamic.\n\nComplexitati:\n- Inserare (offer): O(log N)\n- Extragere minim (poll): O(log N)\n- Inspectare minim (peek): O(1)\n\nAlgoritmul Top-K:\nPentru a retine cele mai mari K elemente dintr-un flux de milioane de joburi, mentinem o PriorityQueue (Min-Heap) de capacitate fixa K. La fiecare element nou, daca e mai mare decat minimul din heap (peek), dam poll() si adaugam elementul nou. La final, heap-ul contine exact cele mai mari K elemente in timp O(N log K), consumand doar O(K) memorie!",
-    codeSnippet: `PriorityQueue<Integer> topK = new PriorityQueue<>(k);
-for (int salary : allSalaries) {
-    topK.offer(salary);
-    if (topK.size() > k) topK.poll();
-}`,
-    interviewTrap: "Iteratorul unui PriorityQueue NU parcurge elementele in ordine sortata! Pentru a le parcurge in ordine sortata, trebuie sa le extragi pe rand cu poll().",
-    keyTakeaway: "PriorityQueue este cheia rezolvarii problemelor de clasament (Top-K, Kth largest) si algoritmului Dijkstra."
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "De ce String este Imutabil in Java?",
+    question: "De ce este clasa String declarata final si imutabila in Java si ce beneficii aduce?",
+    answer: "Un obiect String nu isi poate modifica continutul niciodata dupa creare. Motivele majore de design sunt:\\n\\n1. String Constant Pool (Economie de Memorie):\\n   - JVM poate partaja aceeasi instanta textuala intre mii de referinte fara riscul ca un thread sa modifice textul altuia.\\n2. Securitate (Security):\\n   - Parametrii de conexiune la retea, parolele, URL-urile si caile de fisiere sunt String-uri. Daca erau mutabile, un fir atacator putea altera calea dupa validarea de securitate.\\n3. Thread-Safety Garantat:\\n   - Obiectele imutabile sunt thread-safe prin definitie. Pot fi partajate liber intre fire fara niciun lock sau synchronized.\\n4. Caching HashCode:\\n   - Hash-ul unui String este calculat o singura data la prima apelare si retinut intr-un camp privat cache. Deoarece textul nu se schimba, hashCode-ul ramane identic, facand String-ul cheia perfecta pentru HashMap.",
+    codeSnippet: `String s1 = "java";
+s1.toUpperCase(); // Creeaza un obiect NOU in memorie, nu-l modifica pe s1!
+System.out.println(s1); // Afiseaza tot "java"!
+
+String s2 = s1.toUpperCase(); // Salveaza referinta catre noul String
+System.out.println(s2); // "JAVA"`,
+    interviewTrap: "Metodele din String precum replace(), toUpperCase(), trim() NU modifica string-ul existent; ele returneaza intotdeauna un obiect NOU pe care trebuie sa il capturezi.",
+    keyTakeaway: "String este imutabil pentru economie de memorie (String Pool), securitate, thread-safety si performanta in HashMap."
   },
   {
     id: "java-23",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "ArrayDeque vs java.util.Stack: De ce Stack este Deprecated?",
-    question: "De ce documentatia oficiala Java recomanda folosirea lui ArrayDeque in locul clasei java.util.Stack?",
-    answer: "Clasa java.util.Stack este o clasa relicva din Java 1.0 care mosteneste direct din java.util.Vector:\n1. Sincronizare inutila: Toate metodele din Vector si Stack sunt synchronized, adaugand un cost de performanta masiv chiar si cand lucrezi pe un singur thread.\n2. Incalca principiul OOP LIFO: Mostenind din Vector, Stack permite apelarea de metode precum get(index) sau insertElementAt(item, 0), permitand acces la orice pozitie a stivei, nu doar la varf!\n\nArrayDeque implementeaza interfata Deque, este nesincronizat, mai rapid ca Stack si LinkedList si functioneaza atat ca Stiva (push/pop) cat si ca Coada (offer/poll).",
-    codeSnippet: `Deque<String> modernStack = new ArrayDeque<>();
-modernStack.push("A");
-modernStack.push("B");
-String top = modernStack.pop(); // "B"`,
-    interviewTrap: "ArrayDeque nu permite elemente NULL (arunca NullPointerException).",
-    keyTakeaway: "Foloseste intotdeauna ArrayDeque atat pentru implementari de stiva (LIFO) cat si pentru cozi (FIFO)."
+    title: "String Constant Pool si new String(\"abc\")",
+    question: "Ce este String Constant Pool (SCP) si ce se intampla in memorie la executia instructiunii String s = new String(\"test\")?",
+    answer: "1. Ce este String Constant Pool:\\n   - O zona speciala de memorie situata in Heap unde masina virtuala stocheaza o singura copie a fiecarui literal de sir de caractere.\\n   - Daca scrii String s1 = \"test\"; si String s2 = \"test\";, ambele variabile primesc exact aceeasi referinta de memorie din Pool (s1 == s2 este true!).\\n\\n2. Ce se intampla la new String(\"test\"):\\n   - Se creeaza DOUA obiecte in memorie (daca literalul \"test\" nu era deja in Pool):\\n     - Obiectul 1: Literalul \"test\" este adaugat in String Constant Pool.\\n     - Obiectul 2: Operatorul new forteaza alocarea unui obiect NOU, separat, in spatiul general al Heap-ului!\\n   - Referinta s puncteaza catre obiectul din Heap, nu catre cel din Pool (de aceea s == \"test\" este false!).",
+    codeSnippet: `String s1 = "job"; // Referinta din String Pool
+String s2 = "job"; // Aceeasi referinta din Pool
+System.out.println(s1 == s2); // TRUE!
+
+String s3 = new String("job"); // Obiect nou in Heap!
+System.out.println(s1 == s3); // FALSE!
+System.out.println(s1.equals(s3)); // TRUE (continut identic)
+System.out.println(s1 == s3.intern()); // TRUE (intern aduce referinta din Pool)`,
+    interviewTrap: "Folosirea lui new String(\"text\") este aproape intotdeauna un anti-pattern care iroseste memorie. Foloseste intotdeauna literali directi: String s = \"text\";.",
+    keyTakeaway: "String Constant Pool refoloseste sirurile identice; new String() creeaza un obiect duplicat inutil in Heap."
   },
   {
     id: "java-24",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "TreeMap & TreeSet: Structura si NavigableMap",
-    question: "Ce structura de date sta la baza TreeMap si TreeSet si ce metode speciale ofera interfata NavigableMap?",
-    answer: "TreeMap si TreeSet sunt colectii ordonate bazate pe arbori rosu-negru (Red-Black Trees - arbori binari de cautare auto-echilibrati).\n\nComplexitate garantata:\n- O(log N) pentru get, put, remove, containsKey.\n\nInterfata NavigableMap ofera metode puternice de cautare de proximitate:\n- ceilingKey(k): Returneaza cea mai mica cheie >= k.\n- floorKey(k): Returneaza cea mai mare cheie <= k.\n- higherKey(k) si lowerKey(k): Cautare stricta > k sau < k.\n- subMap(from, to): Vizualizare a unui interval de chei.",
-    codeSnippet: `NavigableMap<Integer, String> scores = new TreeMap<>();
-scores.put(100, "Mihai");
-scores.put(85, "Alex");
-scores.put(70, "Dan");
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Operatorul == vs metoda equals() in Java",
+    question: "Care este diferenta dintre operatorul == si metoda equals() si de ce nu comparam niciodata obiecte cu ==?",
+    answer: "1. Operatorul == (Egalitate de Referinta / Adresa):\\n   - Pentru tipuri primitive (int, double): Compara direct VALORILE numerice binare (ex: 5 == 5 este true).\\n   - Pentru obiecte (referinte): Compara ADRESELE DE MEMORIE! Verifica daca ambele variabile puncteaza catre exact aceeasi instanta fizica pe Heap.\\n   - Daca ai doua obiecte distincte cu exact aceleasi date, == va returna FALSE!\\n\\n2. Metoda .equals() (Egalitate Logica de Continut):\\n   - Este o metoda mostenita din clasa Object si suprascrisa de clase (String, Integer, Date, Candidate).\\n   - Compara CONTINUTUL real al obiectelor (camp cu camp).\\n   - \"test\".equals(new String(\"test\")) returneaza TRUE garantat.",
+    codeSnippet: `String a = new String("salut");
+String b = new String("salut");
 
-System.out.println(scores.floorKey(90)); // 85 (cel mai apropiat scor <= 90)`,
-    interviewTrap: "Obiectele folosite ca chei intr-un TreeMap trebuie sa implementeze Comparable sau trebuie sa trimiti un Comparator constructorului; altfel, la prima inserare vei primi ClassCastException!",
-    keyTakeaway: "TreeMap garanteaza chei sortate in O(log N) si operatii avansate de proximitate de interval."
+System.out.println(a == b);      // FALSE! (Adrese diferite pe Heap)
+System.out.println(a.equals(b));  // TRUE! (Acelasi text)`,
+    interviewTrap: "Cand compari un String cu o constanta, scrie intotdeauna \"CONSTANT\".equals(variabila) in loc de variabila.equals(\"CONSTANT\") pentru a fi protejat 100% impotriva lui NullPointerException!",
+    keyTakeaway: "== compara adresele de memorie ale obiectelor; equals() compara continutul logic al datelor."
   },
   {
     id: "java-25",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "LinkedHashMap si implementarea unui LRU Cache",
-    question: "Cum pastreaza LinkedHashMap ordinea elementelor si cum poti construi un LRU Cache (Least Recently Used) in doar 5 linii de cod?",
-    answer: "LinkedHashMap extinde HashMap si adauga o lista dublu inlantuita care trece prin toate intrarile (Node).\n\nPoate fi configurat in doua moduri:\n1. Insertion-Order (Implicit): Itereaza elementele in ordinea in care au fost inserate.\n2. Access-Order: Cand este creat cu constructorul new LinkedHashMap(cap, loadFactor, true), fiecare accesare a unei chei (get sau put) muta nodul respectiv la finalul listei inlantuite!\n\nConstruirea unui LRU Cache:\nSuprascrii metoda removeEldestEntry(Map.Entry eldest) pentru a returna true cand dimensiunea depaseste capacitatea dorita. Cele mai vechi elemente neaccesate vor fi eliminate automat!",
-    codeSnippet: `public class LruCache<K, V> extends LinkedHashMap<K, V> {
-    private final int capacity;
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "String vs StringBuilder vs StringBuffer",
+    question: "Care este diferenta dintre String, StringBuilder si StringBuffer si cand trebuie folosit fiecare?",
+    answer: "1. String (Imutabil):\\n   - Orice modificare creeaza un obiect nou. Daca concatenezi siruri intr-o bucla mare (s += i), generezi mii de obiecte temporare si sufoci Garbage Collector-ul.\\n\\n2. StringBuilder (Mutabil, Non-Thread-Safe, Foarte Rapid):\\n   - Modifica textul pe loc intr-un buffer intern fara sa creeze obiecte noi.\\n   - NU este sincronizat (nu foloseste synchronized), fiind cu 50-80% mai rapid decat StringBuffer.\\n   - Este alegerea standard pentru constructia de siruri pe un singur fir (in metode locale).\\n\\n3. StringBuffer (Mutabil, Thread-Safe, Mai Lent):\\n   - Metodele sale (append, insert) sunt sincronizate cu synchronized.\\n   - Poate fi partajat in siguranta intre mai multe fire, dar are cost de sincronizare.",
+    codeSnippet: `// INEFICIENT: Creeaza 10.000 obiecte String pe Heap:
+String s = "";
+for (int i = 0; i < 10000; i++) s += i;
 
-    public LruCache(int capacity) {
-        // Al treilea parametru 'true' activeaza ACCESS-ORDER!
-        super(capacity, 0.75f, true);
-        this.capacity = capacity;
-    }
-
-    @Override
-    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-        return size() > capacity; // Sterge cel mai vechi nod nefolosit
-    }
-}`,
-    interviewTrap: "LinkedHashMap este NON-thread-safe. Daca il folosesti ca cache in mediu multi-threaded, trebuie impachetat cu Collections.synchronizedMap.",
-    keyTakeaway: "LinkedHashMap cu access-order = true este solutia nativa eleganta pentru crearea unui LRU Cache."
+// CORECT & EFICIENT: Un singur obiect mutabil:
+StringBuilder sb = new StringBuilder();
+for (int i = 0; i < 10000; i++) sb.append(i);
+String result = sb.toString();`,
+    interviewTrap: "In Java modern, o simpla concatenare String a = \"a\" + \"b\" + \"c\" pe o singura linie este optimizata automat de compilator prin invokedynamic/StringBuilder. Problema apare doar in bucle (loops).",
+    keyTakeaway: "Foloseste String pentru date fixe; StringBuilder pentru concatenari in bucle pe un singur fir; StringBuffer doar la partajare multi-threaded."
   },
   {
     id: "java-26",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Generics si fenomenul de Type Erasure",
-    question: "Ce este Type Erasure in Java si ce se intampla cu tipurile generice (ex: List<String> vs List<Integer>) la compilare si in timpul rularii (runtime)?",
-    answer: "Generics au fost adaugate in Java 5 cu cerinta de compatibilitate retroactiva (backward compatibility) cu versiunile vechi.\n\nType Erasure inseamna ca toate informatiile despre tipurile generice din parametri (<T>, <String>) sunt verificate la COMPILARE si apoi STERSE din bytecode. La runtime, List<String> si List<Integer> devin ambele clasa simpla List (cu elemente de tip Object sau bounded type-ul superior).\n\nConsecinte practice:\n1. Nu poti face new T() sau new T[10].\n2. Nu poti face instanceof List<String> (doar instanceof List<?>).\n3. Nu poti avea metode supraincarcate cu aceeasi semnatura dupa stergere.",
-    codeSnippet: `List<String> list1 = new ArrayList<>();
-List<Integer> list2 = new ArrayList<>();
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Metode Utile din Clasa String: trim vs strip, split, join",
+    question: "Ce fac metodele strip() (Java 11), split() si join() din clasa String?",
+    answer: "1. trim() vs strip() (Java 11):\\n   - trim(): Elimina spatiile albe de la capete, dar recunoaste doar caractere ASCII (cod <= U+0020).\\n   - strip(): Metoda moderna constienta de standardul Unicode (recunoaste toate spatiile albe Unicode precum spatiile speciale din alte limbi). Se recomanda strip() in Java modern.\\n   - Exista si stripLeading() (doar inceputul) si stripTrailing() (doar sfarsitul).\\n\\n2. String.split(regex):\\n   - Imparte sirul intr-un array de String[] pe baza unui separator.\\n   - Atentie: parametrul este o EXPRESIE REGULATA (Regex)! Pentru a imparti dupa punct trebuie sa pui escape: split(\"\\\\\\\\.\").\\n\\n3. String.join(delimiter, elements) (Java 8):\\n   - Uneste o colectie de siruri folosind un delimitator specificat (ex: String.join(\", \", list)).",
+    codeSnippet: `String text = "   Java 21   ";
+System.out.println(text.strip()); // "Java 21"
 
-// La runtime, ambele apartin exact aceleiasi clase:
-System.out.println(list1.getClass() == list2.getClass()); // TRUE!`,
-    interviewTrap: "Daca ai nevoie sa afli tipul generic la runtime (de exemplu la deserializare JSON in Jackson/Spring), se foloseste tehnica TypeReference sau Super Type Tokens.",
-    keyTakeaway: "Generics asigura siguranta tipurilor la compilare (Compile-time Type Safety) fara overhead de memorie la runtime."
+// Split cu regex:
+String[] parts = "ion,alex,maria".split(",");
+
+// Join:
+String joined = String.join(" - ", "Frontend", "Backend", "QA"); // "Frontend - Backend - QA"`,
+    interviewTrap: "Daca apelezi text.split(\".\") crezand ca imparti dupa punct, vei obtine un array gol, deoarece in regex punctul \".\" inseamna \"orice caracter\"! Scrie text.split(\"\\\\\\\\.\") sau Pattern.quote(\".\").",
+    keyTakeaway: "strip() elimina spatiile Unicode; split() foloseste regex si cere escape pe caractere speciale; join() uneste siruri cu delimitator."
   },
   {
     id: "java-27",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Principiul PECS in Generics: Producer Extends, Consumer Super",
-    question: "Ce inseamna principiul PECS (Producer Extends, Consumer Super) propus de Joshua Bloch si cand folosesti <? extends T> vs <? super T>?",
-    answer: "PECS stabileste regulile pentru wildcard-urile generice:\n1. Producer Extends (<? extends T>):\n   - Folosit cand colectia doar PRODUCE date pe care vrei sa le citesti (Read-Only).\n   - Poti citi elemente ca fiind de tip T (deoarece orice element extinde T).\n   - NU poti adauga nimic in colectie (cu exceptia lui null), deoarece compilatorul nu stie tipul exact al subtype-ului!\n\n2. Consumer Super (<? super T>):\n   - Folosit cand colectia CONSUMA date (Write-Only), adica adaugi elemente in ea.\n   - Poti adauga in siguranta obiecte de tip T sau derivate din T.\n   - Citirile returneaza doar Object.",
-    codeSnippet: `// Exemplul canonic din Collections.copy(dest, src):
-public static <T> void copy(List<? super T> dest, List<? extends T> src) {
-    for (int i = 0; i < src.size(); i++) {
-        dest.set(i, src.get(i)); // src PRODUCE (get), dest CONSUMA (set)
-    }
-}`,
-    interviewTrap: "Daca incerci sa apelezi list.add(new Apple()) pe o variabila List<? extends Fruit>, codul NU compileaza!",
-    keyTakeaway: "Daca doar citesti din lista: extends. Daca doar scrii in lista: super. Daca faci si citire si scriere: tip exact fara wildcard."
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Cum verifici corect daca un String este gol: isEmpty vs isBlank",
+    question: "Care este diferenta dintre metoda isEmpty() si isBlank() (Java 11) si de ce este importanta pentru validarea input-urilor?",
+    answer: "1. String.isEmpty():\\n   - Returneaza true NUMAI SI NUMAI DACA lungimea sirului este exact zero: length() == 0.\\n   - Un sir format doar din spatii albe (\"   \") NU este considerat empty (isEmpty() returneaza false!).\\n\\n2. String.isBlank() (Introdus in Java 11):\\n   - Returneaza true daca sirul este complet gol (lungime 0) SAU daca contine EXCLUSIV spatii albe (whitespace characters)!\\n   - \"   \".isBlank() returneaza TRUE!\\n\\n3. Bune Practici in Aplicatii:\\n   - Pentru validarea campurilor introduse de utilizatori intr-un formular (nume, email, parola), se foloseste intotdeauna isBlank(), deoarece un utilizator care apasa doar space-uri nu a introdus o valoare reala.",
+    codeSnippet: `String s1 = "";
+String s2 = "   ";
+
+System.out.println(s1.isEmpty()); // true
+System.out.println(s2.isEmpty()); // FALSE! (are lungimea 3)
+
+System.out.println(s1.isBlank()); // true
+System.out.println(s2.isBlank()); // TRUE! (contine doar spatii)`,
+    interviewTrap: "Daca variabila este null, atat isEmpty() cat si isBlank() vor arunca NullPointerException! Verifica intotdeauna if (str != null && !str.isBlank()) sau foloseste StringUtils.hasText(str) din Spring.",
+    keyTakeaway: "isEmpty() cere lungime 0; isBlank() trateaza ca goale si sirurile formate exclusiv din spatii albe."
   },
   {
     id: "java-28",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Checked vs Unchecked Exceptions in Java",
-    question: "Care este diferenta dintre Checked Exceptions si Unchecked Exceptions? Care mostenesc direct Exception si care mostenesc RuntimeException?",
-    answer: "1. Checked Exceptions (Mostenesc direct Exception dar NU RuntimeException):\n   - Sunt verificate la compilare. Metoda este OBLIGATA sa le prinda (try-catch) sau sa le declare in semnatura (throws IOException).\n   - Reprezinta conditii anormale dar previzibile din exterior (ex: FileNotFoundException, SQLException).\n\n2. Unchecked Exceptions (Mostenesc RuntimeException sau Error):\n   - Nu sunt verificate la compilare.\n   - Reprezinta de obicei bug-uri de programare sau erori logice ce nu pot fi recuperate curat la runtime (ex: NullPointerException, IllegalArgumentException, IndexOutOfBoundsException).\n   - Tranzactiile Spring Boot fac ROLLBACK automat doar pentru Unchecked Exceptions!",
-    codeSnippet: `// Checked: compilatorul te obliga sa o declari sau tratezi
-public void readFile() throws IOException {
-    throw new IOException("Fisier inexistent");
-}
+    title: "Text Blocks in Java 15: Sintaxa cu ghilimele triple",
+    question: "Ce sunt Text Blocks in Java 15 (ghilimele triple \"\"\" \"\"\") si cum rezolva scrierea de JSON si SQL multi-linie?",
+    answer: "1. Problema Veche cu Sirurile Multi-linie:\\n   - Inainte de Java 15, un JSON sau un query SQL trebuia scris prin concatenari obositoare cu +, newline-uri explicite (\\\\n) si escape-uri urate la fiecare ghilimea (\\\\\"). Codul era greu de citit si modificat.\\n\\n2. Ce aduc Text Blocks (Java 15 - JEP 378):\\n   - Permite declararea de siruri de caractere pe mai multe linii folosind trei ghilimele (\"\"\").\\n   - Ghilimelele normale din interior (\"nume\") nu mai necesita escape!\\n   - Elimina automat spatiile de indentare comune de cod (Strip Indentation).\\n\\n3. Regula Sintactica Obligatorie:\\n   - Dupa primele trei ghilimele deschise (\"\"\") TREBUIE sa urmeze obligatoriu o linie noua (newline)! Nu poti pune text pe aceeasi linie.",
+    codeSnippet: `// Query SQL lizibil si curat:
+String sql = """
+    SELECT id, name, email
+    FROM users
+    WHERE status = 'ACTIVE'
+    ORDER BY created_at DESC;
+    """;
 
-// Unchecked: eroare de programare, nu trebuie declarata in throws
-public void calculate(int val) {
-    if (val < 0) throw new IllegalArgumentException("Valoarea nu poate fi negativa");
-}`,
-    interviewTrap: "Error (ex: OutOfMemoryError, StackOverflowError) este de asemenea Unchecked, dar reprezinta defectiuni catastrofale ale JVM-ului; nu incerca sa prinzi Error cu try-catch!",
-    keyTakeaway: "Spring Boot mapeaza majoritatea exceptiilor de baze de date in Unchecked Exceptions (DataAccessException)."
+// JSON curat fara escape:
+String json = """
+    {
+        "role": "DEVELOPER",
+        "level": "JUNIOR"
+    }
+    """;`,
+    interviewTrap: "Daca scrii text pe aceeasi linie cu primele trei ghilimele (ex: \"\"\"SELECT...), codul nu va compila!",
+    keyTakeaway: "Text Blocks (\"\"\") permit scrierea de JSON si SQL multi-linie fara escape-uri de ghilimele si fara concatenari manuale."
   },
   {
     id: "java-29",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "try-with-resources si Suppressed Exceptions",
-    question: "Cum functioneaza blocul try-with-resources introdus in Java 7 si ce se intampla cand atat codul din try cat si metoda close() arunca exceptii?",
-    answer: "try-with-resources asigura ca orice resursa care implementeaza java.lang.AutoCloseable este inchisa automat la finalul blocului.\n\nCe sunt Suppressed Exceptions:\nIn vechiul model try-catch-finally, daca atat codul din try cat si cel din finally aruncau cate o exceptie, exceptia din finally o ascundea pe cea din try.\nIn try-with-resources, exceptia aruncata de corpul blocului try este exceptia principala (Primary Exception), iar daca close() arunca si ea o exceptie, aceasta este atasata ca Suppressed Exception (accesibila prin ex.getSuppressed()), pastrand ambele erori!",
-    codeSnippet: `try (Connection conn = ds.getConnection();
-     PreparedStatement ps = conn.prepareStatement(sql)) {
-    ps.executeQuery();
-} catch (SQLException e) {
-    for (Throwable supp : e.getSuppressed()) {
-        System.err.println("Eroare inchidere: " + supp.getMessage());
-    }
-}`,
-    interviewTrap: "Resursele sunt inchise in ORDINE INVERSA declararii lor (LIFO). In exemplul de mai sus, ps este inchis primul, apoi conn.",
-    keyTakeaway: "Foloseste intotdeauna try-with-resources pentru orice conexiune JDBC, socket sau stream."
+    title: "Cele 8 Tipuri Primitive in Java si Dimensiunile lor",
+    question: "Care sunt cele 8 tipuri de date primitive din Java, ce categorie reprezinta si cati octeti (bytes) ocupa fiecare in memorie?",
+    answer: "Java are 8 tipuri primitive stocate direct pe stiva sau inline in obiecte:\\n\\n1. Numere Intregi (Signed Integers):\\n   - byte: 1 byte (8 biti), interval [-128 la 127]\\n   - short: 2 bytes (16 biti), interval [-32.768 la 32.767]\\n   - int (Implicit): 4 bytes (32 biti), ~[-2 miliarde la +2 miliarde]\\n   - long: 8 bytes (64 biti), sufix L (ex: 100L)\\n\\n2. Numere cu Virgula Mobila (Floating Point):\\n   - float: 4 bytes (32 biti), precizie simpla, sufix f (ex: 3.14f)\\n   - double (Implicit): 8 bytes (64 biti), precizie dubla (ex: 3.14)\\n\\n3. Caracter:\\n   - char: 2 bytes (16 biti), stocheaza un caracter Unicode UTF-16 intre ghilimele simple (ex: 'A')\\n\\n4. Valoare Logica:\\n   - boolean: true sau false (teoretic 1 bit, fizic adesea alocat ca 1 byte).",
+    codeSnippet: `byte b = 127;
+int i = 1_000_000; // Underscore permis pentru lizibilitate
+long l = 5_000_000_000L; // 'L' obligatoriu pentru numere mari
+double d = 99.99;
+char c = 'J';
+boolean active = true;`,
+    interviewTrap: "Daca scrii long x = 5000000000; fara litera \"L\" la sfarsit, compilatorul arunca eroare \"integer number too large\", deoarece trateaza numerele intregi ca fiind implicit de tip int (pana la 2 miliarde)!",
+    keyTakeaway: "Cele 8 primitive sunt: byte(1B), short(2B), int(4B), long(8B), float(4B), double(8B), char(2B), boolean."
   },
   {
     id: "java-30",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "De ce este Enum considerat cel mai sigur Singleton Pattern?",
-    question: "De ce Joshua Bloch recomanda folosirea unui Enum cu o singura valoare ca fiind cel mai sigur mod de a implementa Singleton Pattern in Java?",
-    answer: "Implementarile clasice de Singleton (chiar si Double-Checked Locking cu volatile) pot fi sparte prin:\n1. Reflection: Un programator poate accesa constructorul privat cu constructor.setAccessible(true).\n2. Serializare: La deserializarea unui obiect Singleton se creeaza o instanta complet noua daca nu implementezi corect readResolve().\n\nDe ce Enum este 100% sigur:\n- JVM garanteaza ca un Enum este instantiat o singura data si este thread-safe nativ.\n- Reflection refuza explicit sa creeze instante de Enum (arunca IllegalArgumentException: Cannot reflectively create enum objects).\n- Serializarea Enum-urilor este gestionata special de JVM fara a crea instante duplicate.",
-    codeSnippet: `public enum DatabaseConnectionPool {
-    INSTANCE;
+    title: "Primitive vs Clase Wrapper in Java",
+    question: "Care este diferenta dintre un tip primitiv si clasa sa Wrapper (ex: int vs Integer) si cand folosim fiecare?",
+    answer: "Fiecarui tip primitiv ii corespunde o clasa Wrapper din pachetul java.lang (int -> Integer, double -> Double, boolean -> Boolean, char -> Character):\\n\\n1. Tip Primitiv (int):\\n   - Stocheaza direct valoarea binara bruta.\\n   - Traieste pe Stiva (Stack) ca variabila locala; alocare si acces ultra-rapide.\\n   - NU POATE FI NICIODATA NULL! Are valoare implicita (0 sau false).\\n   - Nu poate fi folosit in Colectii generice (nu poti scrie List<int>).\\n\\n2. Clasa Wrapper (Integer):\\n   - Este un OBIECT complet instantiat pe Heap care incapsuleaza valoarea primitiva.\\n   - POATE FI NULL (esential pentru baze de date unde coloanele pot fi NULL).\\n   - Poate fi folosit in Collections si Generics (List<Integer>, Map<String, Double>).\\n   - Ofera metode utilitare de conversie (Integer.parseInt(\"123\")).",
+    codeSnippet: `int primitive = 10; // Nu poate fi null, zero overhead
+Integer wrapper = 10; // Obiect in Heap, poate fi null
 
-    private DataSource dataSource;
-
-    public void init() { /* conexiuni */ }
-    public Connection getConnection() { return dataSource.getConnection(); }
-}
-
-// Utilizare:
-DatabaseConnectionPool.INSTANCE.getConnection();`,
-    interviewTrap: "Daca ai nevoie sa extinzi o alta clasa de baza, Enum nu poate fi folosit deoarece mosteneste deja implicit java.lang.Enum.",
-    keyTakeaway: "Un Enum cu o singura valoare este cel mai robust Singleton din Java (rezistent la Reflection si Deserializare)."
+List<Integer> list = new ArrayList<>(); // Obligatoriu Wrapper in Colectii!
+// List<int> invalidList; // CRASH la compilare! Primitive not allowed in generics`,
+    interviewTrap: "Daca folosesti Wrapper in calcule matematice intensive, conversiile repetate (Boxing/Unboxing) consuma memorie si incetinesc procesorul. Foloseste primitive pentru calcule.",
+    keyTakeaway: "Primitivele sunt rapide si nu pot fi null; Wrappers sunt obiecte pe Heap capabile sa fie null si folosite in Generics."
   },
   {
     id: "java-31",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Virtual Threads in Java 21 vs Platform Threads (OS Threads)",
-    question: "Ce sunt Virtual Threads din Java 21 (Project Loom), cum difera de Platform Threads si cand este contraindicat sa le folosesti?",
-    answer: "Platform Threads sunt mapate 1:1 cu thread-urile sistemului de operare (OS Kernel). Ele sunt costisitoare: consuma ~1MB de memorie per stack, iar context switching-ul la nivel de kernel este lent (limita practica este de cateva mii de thread-uri).\n\nVirtual Threads sunt fire de executie foarte usoare gestionate de JVM (in spatiul utilizator), nu de kernel. Poti rula milioane de fire simultan cu consum minim de RAM (~cativ KB). Cand un Virtual Thread intalneste o operatie de blocare I/O (apel HTTP, interogare baza de date JDBC, citire fisier), JVM-ul il \"demonteaza\" de pe thread-ul fizic purtator (Carrier Thread) si monteaza un alt Virtual Thread gata de executie.\n\nCand NU le folosim: Pentru operatiuni intensive de CPU (calcul matematic pur, procesare video/imagini), deoarece acolo nu exista blocare I/O!",
-    codeSnippet: `try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-    IntStream.range(0, 10_000).forEach(i -> {
-        executor.submit(() -> {
-            Thread.sleep(Duration.ofSeconds(1));
-            return "Rezultat " + i;
-        });
-    });
-} // Auto-close asteapta terminarea tuturor task-urilor!`,
-    interviewTrap: "Daca un Virtual Thread apeleaza o operatie blocanta in interiorul unui bloc synchronized sau apeluri native JNI, apare Thread Pinning (ramane lipit de Carrier Thread). Inlocuieste synchronized cu ReentrantLock!",
-    keyTakeaway: "Virtual Threads rezolva scalabilitatea pe operatiuni I/O bound (retea, baze de date) fara complexitatea programarii reactive."
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Autoboxing, Unboxing si Capcana NullPointerException",
+    question: "Ce este Autoboxing si Unboxing in Java si cum poate genera o linie banala de cod o exceptie NullPointerException?",
+    answer: "1. Autoboxing (Conversie Automata Primitiv -> Wrapper):\\n   - Conversia automata pe care o face compilatorul Java cand atribuie un primitiv unei clase Wrapper.\\n   - int x = 5; Integer y = x; este transformat intern de compilator in: Integer y = Integer.valueOf(x);.\\n\\n2. Unboxing (Conversie Automata Wrapper -> Primitiv):\\n   - Conversia inversa de la clasa Wrapper la tipul primitiv.\\n   - Integer y = 10; int x = y; este transformat in: int x = y.intValue();.\\n\\n3. Capcana Fatala de NullPointerException (NPE):\\n   - Daca un obiect Wrapper are valoarea NULL iar codul tau incearca sa il foloseasca intr-o expresie primitiva (unboxing), JVM va apela intern .intValue() pe o referinta nula!\\n   - Rezultat: java.lang.NullPointerException instantaneu la runtime pe o linie de atribuire simpla!",
+    codeSnippet: `Integer count = null; // Wrapper null (legitim)
+
+// CRASH la runtime: NullPointerException!
+// Compilatorul incearca: int total = count.intValue(); pe null!
+int total = count; 
+
+// Acelasi pericol in conditii if:
+Boolean flag = null;
+// if (flag) {} // CRASH: flag.booleanValue() arunca NPE!`,
+    interviewTrap: "Aceasta este o intrebare clasica de interviu: \"Poate arunca o simpla atribuire int a = b un NullPointerException?\". Raspunsul: Da, daca b este un Integer wrapper cu valoarea null.",
+    keyTakeaway: "Autoboxing converteste automat intre primitive si wrappers; unboxing pe o valoare null arunca NullPointerException."
   },
   {
     id: "java-32",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "volatile vs synchronized vs AtomicInteger in Java",
-    question: "Care este diferenta de garantie intre cuvintele cheie volatile, synchronized si clasele din java.util.concurrent.atomic?",
-    answer: "1. volatile: Garanteaza doar VIZIBILITATEA intre thread-uri (citirile si scrierile se fac direct in memoria principala RAM, nu in CPU cache). Nu ofera atomicitate! Operatiunea count++ este formata din 3 pasi (read, update, write), deci va avea race conditions pe variabile volatile.\n\n2. synchronized: Garanteaza atat VIZIBILITATE cat si ATOMICITATE si EXCLUZIUNE MUTUALA. Doar un singur thread poate intra in sectiunea critica la un moment dat folosind monitorul de lock al obiectului.\n\n3. AtomicInteger / AtomicLong: Folosesc instructiuni hardware native CAS (Compare-And-Swap) fara lock-uri software blocante (Lock-Free Concurrency). Ofera performanta superioara fata de synchronized pentru contori si flag-uri concurente.",
-    codeSnippet: `// 1. Volatile NU este atomic pentru incrementare:
-private volatile int count = 0; // count++ produce pierderi de date!
+    title: "Integer Cache (-128 la 127) si Comparatia cu ==",
+    question: "De ce codul Integer a = 100, b = 100; a == b afiseaza true, dar pentru 200 afiseaza false in Java?",
+    answer: "Aceasta intrebare testeaza cunoasterea mecanismului intern de Caching din clasele Wrapper:\\n\\n1. Cum functioneaza Integer Cache:\\n   - Conform specificatiei Java, pentru a economisi memorie la Autoboxing, clasa Integer mentine un cache intern static de obiecte pre-instantiate pentru intervalul de la -128 la +127.\\n   - Cand scrii Integer a = 100;, compilatorul apeleaza Integer.valueOf(100).\\n   - Deoarece 100 se afla in intervalul [-128, 127], Integer.valueOf() returneaza aceeasi instanta partajata din cache pentru ambele variabile a si b.\\n   - Operatorul == compara adresele de memorie, iar ambele refera aceeasi adresa din cache => afiseaza TRUE!\\n\\n2. Ce se intampla la 200:\\n   - Numarul 200 depaseste limita de 127 a cache-ului.\\n   - Integer.valueOf(200) apeleaza intern new Integer(200) pentru a crea un obiect nou pe Heap de fiecare data!\\n   - a si b sunt doua obiecte diferite cu adrese diferite in memorie => a == b afiseaza FALSE!",
+    codeSnippet: `Integer a = 100;
+Integer b = 100;
+System.out.println(a == b); // TRUE! (Vin din Integer Cache)
 
-// 2. AtomicInteger foloseste hardware CAS (Lock-Free):
-private final AtomicInteger atomicCount = new AtomicInteger(0);
-atomicCount.incrementAndGet(); // Thread-safe si foarte rapid!
-
-// 3. Synchronized (Blocant):
-public synchronized void increment() { count++; }`,
-    interviewTrap: "Daca variabila este doar citita si scrisa printr-un flag boolean (ex: volatile boolean running = true), volatile este thread-safe fara lock-uri.",
-    keyTakeaway: "Pentru contori si flag-uri simple: Atomics. Pentru logica complexa cu multiple stari: Lock/synchronized."
+Integer x = 200;
+Integer y = 200;
+System.out.println(x == y); // FALSE! (Doua obiecte separate pe Heap)
+System.out.println(x.equals(y)); // TRUE! (Continutul logic este egal)`,
+    interviewTrap: "Nu compara NICIODATA obiecte Wrapper folosind operatorul ==! Foloseste intotdeauna metoda .equals() pentru a evita bug-uri care apar doar la numere > 127.",
+    keyTakeaway: "Integer Cache refoloseste obiectele intre -128 si 127; compara intotdeauna Wrappers cu .equals() si niciodata cu ==."
   },
   {
     id: "java-33",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Stari ale unui Thread in Java si wait() vs sleep()",
-    question: "Care sunt cele 6 stari ale unui fir de executie in Thread.State si care este diferenta fundamentala intre Object.wait() si Thread.sleep()?",
-    answer: "Cele 6 stari ale unui thread in Java:\n1. NEW: Creat dar nepornit (inainte de .start()).\n2. RUNNABLE: Se executa activ pe CPU sau asteapta alocare de timp de procesor in OS.\n3. BLOCKED: Asteapta sa obtina un monitor lock (pentru a intra intr-o sectiune synchronized).\n4. WAITING: Asteapta la infinit ca alt thread sa semnalizeze (wait(), join(), LockSupport.park()).\n5. TIMED_WAITING: Asteapta pentru un interval limitat de timp (sleep(ms), wait(timeout)).\n6. TERMINATED: Executia metodei run() s-a finalizat sau a picat cu exceptie netratata.\n\nwait() vs sleep():\n- Thread.sleep(ms): Nu elibereaza lock-ul detinut pe obiect! Thread-ul adoarme tinand lock-ul blocat pentru oricine altcineva.\n- Object.wait(): ELIBEREAZA lock-ul pe obiectul respectiv, permitand altor thread-uri sa intre in synchronized pana la primirea unui notify() sau notifyAll().",
-    codeSnippet: `synchronized (lock) {
-    while (!condition) {
-        lock.wait(); // Elibereaza lock-ul si asteapta
-    }
-}`,
-    interviewTrap: "Apelul wait() fara bloc synchronized arunca instantaneu IllegalMonitorStateException!",
-    keyTakeaway: "Apeleaza intotdeauna wait() intr-o bucla while, niciodata intr-un simplu if, pentru a preveni Spurious Wakeups."
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "De ce folosim BigDecimal si nu double pentru Bani si Finante?",
+    question: "De ce este o eroare grava sa folosesti float sau double pentru calcule financiare si cum rezolva BigDecimal problema?",
+    answer: "1. De ce double si float sunt GRESITE pentru Bani:\\n   - Tipurile float si double sunt bazate pe standardul binar IEEE 754 cu virgula mobila.\\n   - Multe fractii zecimale simple precum 0.1 sau 0.01 NU POT fi reprezentate exact in sistem binar (baza 2), devenind fractii infinite periodice (la fel cum 1/3 este 0.33333... in baza 10).\\n   - Calculele acumuleaza erori de rotunjire (ex: 0.1 + 0.2 afiseaza 0.30000000000000004!), ducand la pierderi de bani sau bilanturi contabile eronate in productie.\\n\\n2. Solutia: java.math.BigDecimal\\n   - Reprezinta numere zecimale cu precizie arbitrara exacta, fara nicio eroare de rotunjire.\\n   - Permite specificarea explicita a modului de rotunjire (ex: RoundingMode.HALF_UP).",
+    codeSnippet: `// GRESIT cu double:
+double d1 = 0.1;
+double d2 = 0.2;
+System.out.println(d1 + d2); // 0.30000000000000004!
+
+// CORECT cu BigDecimal (OBLIGATORIU constructor cu String!):
+BigDecimal b1 = new BigDecimal("0.1");
+BigDecimal b2 = new BigDecimal("0.2");
+BigDecimal sum = b1.add(b2);
+System.out.println(sum); // 0.3 exact!`,
+    interviewTrap: "Nu folosi NICIODATA constructorul new BigDecimal(0.1) cu parametru double! Acesta va prelua valoarea deja inexacta a double-ului. Foloseste intotdeauna new BigDecimal(\"0.1\") cu String sau BigDecimal.valueOf(0.1).",
+    keyTakeaway: "double acumuleaza erori de precizie binara; foloseste intotdeauna BigDecimal cu constructor String pentru aplicatii financiare."
   },
   {
     id: "java-34",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Ce este ThreadLocal si de ce provoaca Memory Leaks in Tomcat/Spring?",
-    question: "Ce este ThreadLocal in Java, la ce este folosit (ex: SecurityContext, Tranzactii) si de ce uitarea apelului threadLocal.remove() provoaca Memory Leaks in servere de aplicatii?",
-    answer: "ThreadLocal ofera variabile izolate la nivel de fir de executie (Thread-Confined State). Fiecare thread detine propria sa copie independenta a variabilei, accesibila global fara a fi trimisa ca parametru prin toate metodele.\n\nUtilizari: SecurityContextHolder, TransactionSynchronizationManager.\n\nDe ce provoaca Memory Leaks:\nServerele web (Tomcat) folosesc un Thread Pool (firele nu mor dupa request, ci se recicleaza). Daca nu apelezi ThreadLocal.remove():\n1. Obiectele din ThreadLocal raman blocate in memorie si nu pot fi curatate de GC.\n2. Urmatorul request HTTP pe acelasi thread va vedea datele utilizatorului anterior (vulnerabilitate de securitate)!",
-    codeSnippet: `public class TenantContext {
-    private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
-    public static void setTenant(String tenant) { CURRENT_TENANT.set(tenant); }
-    public static String getTenant() { return CURRENT_TENANT.get(); }
-    public static void clear() { CURRENT_TENANT.remove(); } // OBLIGATORIU in finally!
-}`,
-    interviewTrap: "Cheile din ThreadLocalMap sunt WeakReferences, dar valorile sunt StrongReferences. Daca thread-ul traieste mult in pool, valorile raman blocate.",
-    keyTakeaway: "Apeleaza intotdeauna threadLocal.remove() intr-un bloc finally sau Spring HandlerInterceptor."
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Type Casting: Widening vs Narrowing in Java",
+    question: "Care este diferenta dintre Widening Casting (conversie implicita) si Narrowing Casting (conversie explicita) in Java?",
+    answer: "1. Widening Casting (Implicit / Fara Pierdere de Date):\\n   - Conversia automata a unui tip mai mic de date intr-un tip mai mare ca dimensiune de octeti.\\n   - Nu necesita niciun operator de cast; compilatorul o face automat deoarece valoarea mai mica incape garantat in spatiul mai mare.\\n   - Ordine: byte -> short -> int -> long -> float -> double.\\n\\n2. Narrowing Casting (Explicit / Cu Risc de Pierdere de Date):\\n   - Conversia manuala a unui tip mai mare intr-un tip mai mic (ex: double in int, sau long in short).\\n   - Necesita CAST MANUAL cu paranteze rotunde: (int) myDouble.\\n   - Risc: Partile zecimale sunt trunchiate (taiate), iar daca numarul depaseste valoarea maxima a tipului mic, va aparea un Data Overflow care returneaza valori complet eronate.",
+    codeSnippet: `// 1. Widening (automat):
+int myInt = 9;
+double myDouble = myInt; // Devine 9.0 automat
+
+// 2. Narrowing (manual cu cast):
+double pi = 3.99;
+int truncated = (int) pi; // Devine 3 (partea zecimala e stearsa!)
+
+int big = 130;
+byte b = (byte) big; // Overflow! byte are maxim 127 -> devine -126!`,
+    interviewTrap: "Narrowing cast de la double la int nu face rotunjire matematica (3.99 nu devine 4), ci trunchiaza direct partea fractionara, devenind 3.",
+    keyTakeaway: "Widening este sigur si automat (mic -> mare); Narrowing cere cast manual si poate trunchia date sau produce overflow (mare -> mic)."
   },
   {
     id: "java-35",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Deadlock: Conditiile de aparitie si Prevenirea in Java",
-    question: "Ce este un Deadlock intre doua thread-uri si cum se poate preveni simplu la nivel de cod aplicativ?",
-    answer: "Deadlock-ul apare cand doua thread-uri se blocheaza reciproc: Thread 1 detine Lock A si asteapta Lock B, iar Thread 2 detine Lock B si asteapta Lock A.\n\nCum se previne:\n1. Lock Ordering (Cea mai buna metoda): Toate thread-urile din sistem cer lock-urile in aceeasi ordine stricta (ex: dupa ID crescator).\n2. tryLock() cu Timeout din ReentrantLock: Daca nu primeste lock-ul in X secunde, elibereaza resursele si reincearca.\n3. Detectare: jstack <pid> identifica instant thread-urile blocate.",
-    codeSnippet: `public void transferMoney(Account from, Account to, BigDecimal amount) {
-    Account firstLock = from.getId() < to.getId() ? from : to;
-    Account secondLock = from.getId() < to.getId() ? to : from;
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Operatori Logici: && (Short-Circuit) vs & (Logical AND)",
+    question: "Care este diferenta dintre operatorul && (Conditional AND) si & (Logical AND) si cum previne short-circuiting erorile?",
+    answer: "1. Operatorul && (Short-Circuit / Scurtcircuitare):\\n   - Daca prima conditie din stanga este FALSE, Java NU MAI EVALUEAZA a doua conditie din dreapta deloc, deoarece rezultatul final este oricum garantat false!\\n   - Acelasi lucru pentru || (Conditional OR): daca prima conditie este TRUE, nu mai evalueaza a doua.\\n   - Vital pentru protectie: permite verificarea de null inainte de a apela o metoda (ex: if (user != null && user.isActive())).\\n\\n2. Operatorul & (Non-Short-Circuit / Bitwise AND):\\n   - Evalueaza INTOTDEAUNA ambele expresii (atat stanga cat si dreapta), chiar daca prima a fost deja false!\\n   - Daca scrii if (user != null & user.isActive()), iar user este null, codul va incerca oricum sa evalueze user.isActive() si va arunca NullPointerException!",
+    codeSnippet: `String name = null;
 
-    synchronized (firstLock) {
-        synchronized (secondLock) {
-            from.debit(amount);
-            to.credit(amount);
-        }
-    }
-}`,
-    interviewTrap: "Fara ordonare dupa ID, cand A trimite bani lui B si concomitent B trimite bani lui A, apare Deadlock instant.",
-    keyTakeaway: "Ordoneaza intotdeauna achizitia lock-urilor pentru a elimina bucla circulara de asteptare."
+// SIGUR cu && (scurtcircuiteaza la prima conditie falsa):
+if (name != null && name.length() > 0) {
+    System.out.println("Valid");
+}
+
+// CRASH cu & (evalueaza ambele parti!):
+// if (name != null & name.length() > 0) // NullPointerException!`,
+    interviewTrap: "Foloseste intotdeauna && si || pentru conditii logice booleene; pastreaza & si | strict pentru operatii pe biti numerici.",
+    keyTakeaway: "&& scurtcircuiteaza si se opreste la primul false; & evalueaza obligatoriu ambele parti si poate provoca NullPointerException."
   },
   {
     id: "java-36",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "ReentrantLock vs synchronized in Java",
-    question: "Ce avantaje ofera clasa ReentrantLock din java.util.concurrent.locks fata de cuvantul cheie nativ synchronized?",
-    answer: "ReentrantLock ofera capabilitati avansate inexistente in synchronized:\n1. Non-blocking Lock Acquisition: Metoda tryLock() incearca sa obtina lock-ul fara sa ramana blocata la infinit.\n2. Lock cu Timeout: lock.tryLock(2, TimeUnit.SECONDS) renunta daca lock-ul nu devine disponibil in 2 secunde (previne deadlock-uri).\n3. Intreruptibilitate: lockInterruptibly() permite unui thread blocat sa fie intrerupt prin thread.interrupt().\n4. Fairness Policy: Poate fi configurat cu new ReentrantLock(true) pentru a acorda lock-ul in ordinea sosirii thread-urilor (FIFO - Fair Lock).\n5. Multiple Conditii: Permite crearea de multiple Condition objects (ex: notFull, notEmpty) pe acelasi lock.",
-    codeSnippet: `Lock lock = new ReentrantLock();
-if (lock.tryLock(1, TimeUnit.SECONDS)) {
-    try {
-        // Sectiune critica
-    } finally {
-        lock.unlock(); // OBLIGATORIU in finally!
-    }
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Heap Memory vs Stack Memory in JVM",
+    question: "Care este diferenta fundamentala dintre memoria Stack (Stiva) si memoria Heap intr-o aplicatie Java?",
+    answer: "Memoria JVM este impartita in zone cu roluri complet diferite:\\n\\n1. Stack Memory (Stiva de Executie):\\n   - Fiecare thread are propria sa stiva privata (nu se partajeaza intre fire).\\n   - Stocheaza variabilele locale primitive (int, boolean) si adresele de referinta catre obiecte.\\n   - Stocheaza cadrele de apel ale metodelor (Stack Frames) in regim LIFO (Last-In-First-Out).\\n   - Alocare si eliberare instantanee; memoria se curata automat la intoarcerea din metoda.\\n   - Daca recursivitatea e prea adanca, arunca: java.lang.StackOverflowError.\\n\\n2. Heap Memory (Gramada de Obiecte):\\n   - O singura zona partajata global intre toate firele aplicatiei.\\n   - Stocheaza TOATE OBIECTELE reale instantiate cu new (instante de clase, String-uri, array-uri).\\n   - Curatata automat de Garbage Collector cand obiectele nu mai au referinte.\\n   - Daca se umple, arunca: java.lang.OutOfMemoryError: Java heap space.",
+    codeSnippet: `void myMethod() {
+    int x = 10;            // x traieste pe STIVA
+    Person p = new Person(); // p (referinta) traieste pe STIVA,
+                           // dar instanta reala new Person() traieste pe HEAP!
 }`,
-    interviewTrap: "Daca uiti sa apelezi lock.unlock() in interiorul unui bloc finally, lock-ul ramane blocat pentru totdeauna!",
-    keyTakeaway: "synchronized este mai curat si auto-eliberat; ReentrantLock este necesar pentru timeouts, fairness sau Virtual Threads in Java 21."
+    interviewTrap: "Variabila din clasa (campul membru) traieste pe Heap ca parte a obiectului, chiar daca este un int primitiv. Doar variabilele locale declarate in interiorul metodelor traiesc pe Stiva.",
+    keyTakeaway: "Stiva stocheaza variabile locale si referinte (privata per thread); Heap-ul stocheaza toate obiectele reale (partajat global si curatat de GC)."
   },
   {
     id: "java-37",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Parametrii critici ai unui ThreadPoolExecutor in Java",
-    question: "Care sunt cei 5 parametri de baza ai unui ThreadPoolExecutor si cum decide executorul cand creeaza thread-uri noi sau pune task-urile in coada?",
-    answer: "Cei 5 parametri sunt:\n1. corePoolSize: Numarul de thread-uri mentinute active permanent in pool.\n2. maximumPoolSize: Numarul maxim de thread-uri permise la sarcina mare.\n3. keepAliveTime: Timpul dupa care thread-urile suplimentare peste corePoolSize sunt oprite daca sunt inactive.\n4. workQueue (BlockingQueue): Coada unde asteapta task-urile cand toate core threads sunt ocupate.\n5. handler (RejectedExecutionHandler): Politica aplicata cand coada este plina si s-a atins maximumPoolSize (AbortPolicy, CallerRunsPolicy).\n\nFluxul de executie surprinzator:\nCand soseste un task nou:\n- Daca numarul de thread-uri < corePoolSize: Creeaza un thread nou.\n- Daca corePoolSize este plin: Pune task-ul in COADA (workQueue)!\n- Doar daca COADA DEVINE PLINA, creeaza thread-uri noi pana la maximumPoolSize!\n- Daca si coada si maximumPoolSize sunt pline: Apeleaza RejectedExecutionHandler.",
-    codeSnippet: `ThreadPoolExecutor executor = new ThreadPoolExecutor(
-    4,                      // corePoolSize
-    10,                     // maximumPoolSize
-    60L, TimeUnit.SECONDS,  // keepAliveTime
-    new ArrayBlockingQueue<>(500), // Coada limitata (Bounded Queue)
-    new ThreadPoolExecutor.CallerRunsPolicy() // Backpressure graceful
-);`,
-    interviewTrap: "Metodele factory Executors.newFixedThreadPool() folosesc o coada LinkedBlockingQueue NELIMITATA (Integer.MAX_VALUE). Daca task-urile sosesc mai repede decat pot fi procesate, coada consuma tot RAM-ul si duce la OutOfMemoryError!",
-    keyTakeaway: "Foloseste intotdeauna ThreadPoolExecutor cu coada de dimensiune limitata si politica CallerRunsPolicy pentru protectie in productie."
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ce este Garbage Collector-ul in Java pe intelesul tuturor?",
+    question: "Ce este Garbage Collector-ul (GC) in Java, cum functioneaza si cand devine un obiect eligibil pentru stergere?",
+    answer: "1. Ce este Garbage Collector (GC):\\n   - Un proces automat de fundal al masinii virtuale Java (JVM) responsabil cu gestionarea automata a memoriei.\\n   - Spre deosebire de C/C++ unde programatorul trebuie sa elibereze manual memoria prin free() sau delete, in Java Garbage Collector-ul identifica si sterge automat obiectele care nu mai sunt utilizate, eliberand spatiul din Heap.\\n\\n2. Cand devine un Obiect Eligibil pentru GC:\\n   - Un obiect este eligibil pentru colectare cand devine \"Inaccesibil\" (Unreachable) - adica atunci cand NU MAI EXISTA NICIO REFERINTA activa (un lant de legaturi) de la firele de executie curente (GC Roots) catre acel obiect.\\n\\n3. Cum rupem referintele:\\n   - Setand referinta la null (obj = null;).\\n   - Reatribuind referinta (obj = new OtherObject();).\\n   - Iesind din scope-ul unei metode locale (variabila locala dispare de pe stiva).",
+    codeSnippet: `Person p1 = new Person("Ion"); // Obiect 1 creat pe Heap
+Person p2 = new Person("Ana"); // Obiect 2 creat pe Heap
+
+p1 = p2; // Referinta p1 puncteaza acum catre "Ana"!
+// Obiectul "Ion" nu mai are nicio referinta activa -> Devine eligibil pentru GC!`,
+    interviewTrap: "Apelul System.gc() NU garanteaza ca Garbage Collector-ul va rula imediat; este doar o sugestie catre JVM pe care acesta o poate amana sau ignora.",
+    keyTakeaway: "Garbage Collector elibereaza automat memoria Heap curatand obiectele care nu mai au nicio referinta activa."
   },
   {
     id: "java-38",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "CountDownLatch vs CyclicBarrier in Java",
-    question: "Care este diferenta dintre clasele de sincronizare CountDownLatch si CyclicBarrier din java.util.concurrent?",
-    answer: "1. CountDownLatch (One-Shot):\n   - Functioneaza ca un numarator invers (countdown).\n   - Unul sau mai multe thread-uri asteapta apeland latch.await() pana cand alte thread-uri decrementeaza contorul la 0 prin latch.countDown().\n   - Nu poate fi resetat dupa ce a ajuns la 0 (este de unica folosinta).\n   - Exemplu: Asteptarea ca 3 microservicii independente sa finalizeze initializarea inainte de a deschide traficul HTTP.\n\n2. CyclicBarrier (Reutilizabil):\n   - Ofera un punct comun de intalnire (rendezvous point) pentru un numar fix de N thread-uri.\n   - Fiecare thread apeleaza barrier.await() si ramane blocat pana cand toate cele N thread-uri au sosit la bariera. In acel moment, toate firele sunt eliberate simultan.\n   - Poate fi resetata si refolosita in bucle ciclice pe runde repetate.",
-    codeSnippet: `// 1. CountDownLatch (Start dupa ce 3 servicii sunt gata):
-CountDownLatch latch = new CountDownLatch(3);
-latch.countDown();
-latch.await();
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ce este un Memory Leak in Java si un Exemplu Simplu",
+    question: "Daca Java are Garbage Collector, cum este posibil sa apara un Memory Leak si care este cel mai simplu exemplu?",
+    answer: "1. Ce este un Memory Leak in Java:\\n   - Nu inseamna ca memoria fizica a disparut, ci ca aplicatia continua sa retina REFERINTE TARI (Strong References) catre obiecte de care NU MAI ARE NEVOIE in logica de business!\\n   - Deoarece referinta exista inca in cod, Garbage Collector-ul crede ca obiectul este important si REFUZA sa il stearga.\\n   - In timp, aceste obiecte uitate se acumuleaza in Heap pana cand aplicatia ramane fara memorie si crapa cu OutOfMemoryError.\\n\\n2. Cel mai Simplu Exemplu (Colectie Statica):\\n   - Daca adaugi continuu elemente intr-o lista statica (static List) sau intr-o mapa de cache fara a sterge niciodata intrarile vechi, lista va creste la infinit cat timp aplicatia e pornita!",
+    codeSnippet: `public class MemoryLeakDemo {
+    // Variabila STATICA traieste pe toata durata de viata a aplicatiei!
+    private static final List<byte[]> cache = new ArrayList<>();
 
-// 2. CyclicBarrier:
-CyclicBarrier barrier = new CyclicBarrier(4, () -> System.out.println("Toti au sosit!"));
-barrier.await();`,
-    interviewTrap: "CountDownLatch este axat pe evenimente (numara de cate ori s-a apelat countDown), in timp ce CyclicBarrier este axat pe thread-uri (toate firele asteapta la aceeasi bariera).",
-    keyTakeaway: "Pentru task-uri de initializare: CountDownLatch. Pentru simulari paralele in runde: CyclicBarrier."
+    public void processData() {
+        cache.add(new byte[1024 * 1024]); // Adauga 1 MB la fiecare cerere HTTP!
+        // Uitam sa curatam lista -> Memory Leak garantat!
+    }
+}`,
+    interviewTrap: "GC Roots includ variabile statice si thread-uri active. Obiectele legate de o variabila statica nu vor fi sterse niciodata de GC pana la oprirea JVM.",
+    keyTakeaway: "Memory Leak apare cand obiecte inutile raman legate prin referinte uitate (in special in colectii statice), impiedicand GC-ul sa le elibereze."
   },
   {
     id: "java-39",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Ce este Semaphore si cum controleaza accesul la resurse finite?",
-    question: "Ce este un Semaphore in Java si cum se foloseste pentru a implementa Rate Limiting sau un Connection Pool simplificat?",
-    answer: "Un Semaphore gestioneaza un set de \"permise\" (permits) numerice virtuale:\n- acquire(): Blocheaza thread-ul curent pana cand un permis devine disponibil si il consuma (scade contorul cu 1).\n- release(): Returneaza un permis inapoi la semafor (creste contorul cu 1), eliberand eventualele thread-uri blocate in acquire().\n\nEste utilizat pentru a limita numarul maxim de fire concurente care pot accesa simultan o resursa finita (ex: maxim 5 apeluri simultane catre un API extern scump sau o baza de date).",
-    codeSnippet: `Semaphore semaphore = new Semaphore(3); // Maxim 3 conexiuni simultane
-
-public void callExternalApi() throws InterruptedException {
-    semaphore.acquire();
-    try {
-        executeHttpCall();
-    } finally {
-        semaphore.release(); // OBLIGATORIU in finally!
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Semnatura Metodei main in Java: De ce public static void main?",
+    question: "De ce metoda principala de pornire in Java are semnatura exacta public static void main(String[] args)?",
+    answer: "Fiecare cuvant din semnatura are o ratiune tehnica precisa pentru JVM:\\n\\n1. public:\\n   - Metoda trebuie sa poata fi apelata de JVM din exteriorul clasei si din afara pachetului la pornirea aplicatiei.\\n\\n2. static:\\n   - Permite JVM-ului sa apeleze metoda direct pe clasa (MainClass.main()) FARA a fi nevoie sa creeze o instanta a clasei cu new MainClass(). (Daca nu era statica, cum ar fi stiut JVM ce constructor sa apeleze?).\\n\\n3. void:\\n   - Metoda nu returneaza nicio valoare Java. Daca programul se termina cu un cod de eroare, se foloseste System.exit(int status).\\n\\n4. main:\\n   - Numele standard recunoscut de motorul de executie JVM ca punct fix de intrare in program.\\n\\n5. String[] args:\\n   - Un array de siruri de caractere care captureaza argumentele din linia de comanda transmise la pornire (ex: java App arg1 arg2).",
+    codeSnippet: `public class Application {
+    public static void main(String[] args) {
+        System.out.println("Argumente transmise: " + args.length);
+        if (args.length > 0) {
+            System.out.println("Primul argument: " + args[0]);
+        }
     }
 }`,
-    interviewTrap: "Un Semaphore cu 1 singur permis (new Semaphore(1)) se comporta similar cu un Lock binar, dar cu o diferenta critica: permisul poate fi eliberat de un ALT thread decat cel care l-a achizitionat!",
-    keyTakeaway: "Semaphore limiteaza numarul de accesari concurente la o resursa externa."
+    interviewTrap: "Daca schimbi semnatura (ex: scoti static sau pui tip de retur int), codul va compila fara eroare, dar la executie JVM va arunca: NoSuchMethodError: main method not found.",
+    keyTakeaway: "public permite accesul JVM din exterior; static permite apelul fara instantiere new; void nu returneaza nimic; args preia argumentele din consola."
   },
   {
     id: "java-40",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "CompletableFuture: Rularea si combinarea de operatii asincrone",
-    question: "Cum rulezi doua apeluri API externe in paralel si combini rezultatele folosind CompletableFuture in Java 8+?",
-    answer: "CompletableFuture permite programarea asincrona functionala si non-blocanta:\n1. supplyAsync(): Lanseaza operatia asincron pe un executor.\n2. thenCombine(): Uneste ambele rezultate cand ambele futures s-au terminat cu succes.\n3. allOf(): Asteapta terminarea a N task-uri paralele.\n4. exceptionally(): Ofera o valoare de fallback in caz de eroare.",
-    codeSnippet: `CompletableFuture<UserDto> userFuture = CompletableFuture.supplyAsync(() -> userService.getUser(id));
-CompletableFuture<List<JobDto>> jobsFuture = CompletableFuture.supplyAsync(() -> jobService.getRecommendedJobs(id));
-
-CompletableFuture<DashboardDto> dashboard = userFuture
-    .thenCombine(jobsFuture, (user, jobs) -> new DashboardDto(user, jobs))
-    .exceptionally(ex -> DashboardDto.empty());
-
-DashboardDto result = dashboard.join();`,
-    interviewTrap: "Daca nu specifici un Executor personalizat, supplyAsync foloseste ForkJoinPool.commonPool. Daca ai apeluri I/O blocante, vei epuiza thread-urile din pool!",
-    keyTakeaway: "Trimite intotdeauna un ExecutorService dedicat cu Thread Pool optimizat ca parametru in supplyAsync()."
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "De ce Java foloseste Suita de Bytecode si JVM (Platform Independence)?",
+    question: "Ce inseamna principiul \"Write Once, Run Anywhere\" (WORA) si care este rolul Bytecode-ului si al JVM-ului?",
+    answer: "1. Problema Limbajelor Compilate Nativ (C/C++):\\n   - Codul sursa este compilat direct in instructiuni masina specifice unui anumit procesor si sistem de operare (un binar compilat pe Windows x86 nu ruleaza pe Linux sau Mac ARM).\\n\\n2. Solutia Java (\"Write Once, Run Anywhere\"):\\n   - Compilatorul javac NU genereaza cod masina direct, ci un format intermediar universal de instructiuni numit BYTECODE (fisierele .class).\\n   - Bytecode-ul este identic pe orice calculator din lume!\\n\\n3. Rolul JVM (Java Virtual Machine):\\n   - JVM-ul este masina virtuala specifica fiecarei platforme (exista un JVM dedicat pentru Windows, altul pentru Linux, altul pentru Mac).\\n   - JVM citeste bytecode-ul universal si il traduce la runtime in instructiunile masina native ale procesorului gazda.",
+    codeSnippet: `// Pasul 1: Cod Sursa (.java)
+//         |
+//         v (javac - Java Compiler)
+// Pasul 2: Bytecode (.class universal)
+//         |
+//         +---> JVM Windows -> Cod Masina Windows x86
+//         +---> JVM Linux   -> Cod Masina Linux ARM64
+//         +---> JVM macOS   -> Cod Masina Apple Silicon`,
+    interviewTrap: "Java este platform-independent (bytecode-ul ruleaza oriunde), dar JVM-ul insusi este PLATFORM-DEPENDENT (trebuie sa descarci JDK-ul specific sistemului tau de operare).",
+    keyTakeaway: "Compilatorul creeaza Bytecode universal (.class); JVM-ul specific sistemului tau traduce bytecode-ul in cod masina nativ."
   },
   {
     id: "java-41",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Interfete Functionale de baza in java.util.function",
-    question: "Care sunt cele 4 interfete functionale fundamentale din Java 8 si care sunt semnaturile metodelor lor abstracte (Predicate, Function, Consumer, Supplier)?",
-    answer: "Cele 4 interfete canonice pe care se bazeaza Lambdas si Streams API:\n1. Predicate<T>: Primeste T si returneaza boolean (metoda: boolean test(T t)). Folosit in Stream.filter().\n2. Function<T, R>: Primeste T si returneaza R (metoda: R apply(T t)). Folosit in Stream.map().\n3. Consumer<T>: Primeste T si nu returneaza nimic / void (metoda: void accept(T t)). Folosit in Stream.forEach().\n4. Supplier<T>: Nu primeste niciun parametru si produce o valoare T (metoda: T get()). Folosit in Optional.orElseGet() sau generatoare.",
-    codeSnippet: `Predicate<String> isShort = s -> s.length() < 5;
-Function<String, Integer> toLength = String::length;
-Consumer<String> printer = System.out::println;
-Supplier<Double> randomGen = Math::random;`,
-    interviewTrap: "Daca o interfata are mai mult de o metoda abstracta, NU este o interfata functionala chiar daca are adnotarea @FunctionalInterface (compilatorul va da eroare)! Metodele default si statice nu se contorizeaza ca abstracte.",
-    keyTakeaway: "Predicate = test boolean; Function = transformare; Consumer = consum void; Supplier = furnizare valoare."
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ierarhia de Colectii in Java: List, Set, Queue si Map",
+    question: "Care este ierarhia principala a interfetelor din Collections Framework si de ce Map NU extinde interfata Collection?",
+    answer: "1. Ierarhia Radacina java.lang.Iterable -> java.util.Collection:\\n   - Toate colectiile care stocheaza elemente individuale implementeaza Collection:\\n     - List: Colectie ordonata, indexata, permite DUPLICATE (ArrayList, LinkedList).\\n     - Set: Colectie care NU permite DUPLICATE, defineste unicitate (HashSet, TreeSet).\\n     - Queue: Colectie ordonata pentru procesare in coada FIFO (PriorityQueue, ArrayDeque).\\n\\n2. De ce Map NU extinde Collection:\\n   - Interfata java.util.Map stocheaza PERECHI de cheie-valoare (Key-Value Pairs: Map<K, V>), in timp ce Collection stocheaza ELEMENTE INDIVIDUALE (E).\\n   - Metodele fundamentale din Collection (precum add(E), contains(Object)) sunt incompatibile conceptual cu operatiile pe perechi (put(K, V), containsKey(K), containsValue(V)).\\n   - Map ofera totusi \"views\" catre colectii: keySet(), values(), entrySet().",
+    codeSnippet: `// Colectii de elemente unice:
+Collection<String> list = new ArrayList<>();
+Collection<String> set = new HashSet<>();
+
+// Structura pe perechi:
+Map<String, Integer> map = new HashMap<>();
+map.put("Alex", 25);`,
+    interviewTrap: "Intrebare capcana la interviu: \"Extinde Map interfata Collection?\". Raspunsul este categoric NU; Map este o ierarhie separata paralela.",
+    keyTakeaway: "List, Set si Queue extind Collection (elemente individuale); Map este o ierarhie separata pentru perechi cheie-valoare."
   },
   {
     id: "java-42",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Operatii Intermediare (Lazy) vs Terminale in Streams API",
-    question: "De ce operatiile dintr-un Java Stream sunt \"Lazy\" (lenese) si ce declanseaza executia efectiva a procesarii?",
-    answer: "1. Operatii Intermediare (Intermediate Operations):\n   - Exemple: filter(), map(), flatMap(), distinct(), sorted(), limit().\n   - Sunt complet LAZY: Nu proceseaza niciun element si nu consuma memorie cand sunt apelate. Ele doar construiesc un pipeline declarativ de transformari.\n\n2. Operatii Terminale (Terminal Operations):\n   - Exemple: collect(), forEach(), reduce(), count(), anyMatch(), findFirst().\n   - Sunt EAGER: Doar apelarea unei operatii terminale declanseaza executia pipeline-ului.\n\nOptimizarea Short-Circuiting:\nDeoarece stream-urile sunt lazy, Java poate procesa elementele pe rand pe verticala (nu genereaza colectii intermediare). De exemplu, intr-un filter() urmat de findFirst(), procesarea se opreste imediat dupa primul element valid!",
-    codeSnippet: `List<String> names = List.of("Ana", "Bogdan", "Cristian");
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "List vs Set vs Map: Diferente Fundamentale",
+    question: "Care sunt diferentele principale intre o Lista (List), un Set si o Mapa (Map) in utilizarea de zi cu zi?",
+    answer: "1. List (Lista):\\n   - Ordonata: Elementele isi pastreaza ordinea in care au fost inserate (Encounter Order).\\n   - Acces prin Index: Poti accesa rapid orice element prin pozitia sa: list.get(0).\\n   - Duplicate: ACCEPTA duplicate (poti avea de 10 ori acelasi element).\\n   - Exemple: ArrayList, LinkedList.\\n\\n2. Set (Multime):\\n   - Unicitate: NU ACCEPTA DUPLICATE! Daca adaugi un element existent, este ignorat.\\n   - Fara Index: Nu exista metoda get(index); elementele sunt parcurse prin for-each sau iterator.\\n   - Exemple: HashSet (fara ordine garantata), TreeSet (sortat dupa valoare).\\n\\n3. Map (Dictionar / Tabela Hash):\\n   - Stocheaza perechi Cheie -> Valoare (Key-Value).\\n   - Cheile sunt UNICE (nu pot exista doua chei identice).\\n   - Valorile pot fi duplicate.\\n   - Exemple: HashMap, TreeMap.",
+    codeSnippet: `List<String> list = new ArrayList<>();
+list.add("Java"); list.add("Java"); // Dimensiune: 2
 
-// Nimic nu se executa AICI (doar definire pipeline):
-Stream<String> stream = names.stream()
-    .filter(n -> { System.out.println("Filter: " + n); return n.length() > 3; });
+Set<String> set = new HashSet<>();
+set.add("Java"); set.add("Java");   // Dimensiune: 1 (duplicat ignorat!)
 
-System.out.println("Inainte de terminal");
-String first = stream.findFirst().orElse(""); // Abia AICI se executa!`,
-    interviewTrap: "Un Stream poate fi consumat O SINGURA DATA! Daca incerci sa apelezi o a doua operatie terminala pe aceeasi instanta de Stream, vei primi IllegalStateException: stream has already been operated upon or closed.",
-    keyTakeaway: "Operatiile intermediare doar configureaza pipeline-ul; operatia terminala declanseaza executia element cu element."
+Map<String, Integer> map = new HashMap<>();
+map.put("Java", 17);
+map.put("Java", 21); // Suprascrie valoarea veche cu 21!`,
+    interviewTrap: "Daca adaugi o cheie duplicata intr-un Map (map.put(\"key\", val2)), cheia veche nu se duplica, ci noua valoare o suprascrie pe cea veche si returneaza valoarea veche.",
+    keyTakeaway: "List pastreaza ordinea si accepta duplicate; Set garanteaza unicitate fara duplicate; Map leaga chei unice de valori."
   },
   {
     id: "java-43",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "De ce NU trebuie sa folosesti parallelStream() pentru operatiuni I/O?",
-    question: "De ce folosirea lui parallelStream() pentru apeluri HTTP sau interogari de baze de date poate bloca intreaga aplicatie?",
-    answer: "parallelStream() foloseste sub capota un thread pool global partajat la nivelul intregului JVM: ForkJoinPool.commonPool().\n\nMarimea acestui pool este egala cu numarul de nuclee CPU (Runtime.getRuntime().availableProcessors() - 1).\n\nDe ce este periculos pentru I/O:\nForkJoinPool a fost proiectat pentru calcule intensive de procesor (CPU-bound, divide-et-impera). Daca lansezi apeluri HTTP sau interogari DB blocante intr-un parallelStream(), toate firele din ForkJoinPool.commonPool vor ramane blocate in asteptare I/O. Niciun alt modul din aplicatie nu va mai putea rula sarcini paralele, degradand grav intregul sistem!",
-    codeSnippet: `// GRESIT (Blocheaza ForkJoinPool.commonPool global cu apeluri I/O lente):
-jobUrls.parallelStream().forEach(this::callExternalHttpApi);
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "ArrayList vs LinkedList: Cand alegi pe fiecare?",
+    question: "Care este diferenta structurala dintre ArrayList si LinkedList si de ce ArrayList este aproape intotdeauna preferat in practica?",
+    answer: "1. ArrayList (Bazat pe Array Dinamic redimensionabil):\\n   - Stocheaza elementele intr-un array contiguu in memorie.\\n   - Acces la index: O(1) instantaneu (citire rapida prin get(i)).\\n   - Cautare: O(N).\\n   - Inserare/Stergere la final: O(1) amortizat; la mijloc: O(N) (necesita mutarea elementelor urmatoare cu System.arraycopy).\\n   - Extrem de prietenos cu CPU Cache-ul (Localitate spatiala a memoriei).\\n\\n2. LinkedList (Bazat pe Lista Dublu Inlantuita de Noduri):\\n   - Fiecare element este impachetat intr-un nod separat (Node) care retine 3 referinte: valoarea, nodul anterior (prev) si nodul urmator (next).\\n   - Acces la index: O(N) lent (trebuie sa parcurga lista de la capat pana la pozitia dorita).\\n   - Inserare/Stergere la inceput/sfarsit: O(1) rapid.\\n   - Dezavantaj major: Consuma de 3-4 ori mai multa memorie decat ArrayList din cauza pointerilor de noduri si provoaca CPU Cache Miss continuu pe Heap.\\n\\n3. Concluzia din Industrie:\\n   - In 99% din proiectele de productie se foloseste exclusiv ArrayList.",
+    codeSnippet: `// Alegerea standard in productie:
+List<String> list = new ArrayList<>(); // Rapid, compact in memorie
 
-// CORECT: Foloseste Virtual Threads (Java 21) sau un ThreadPoolExecutor dedicat!`,
-    interviewTrap: "Pentru colectii mici (sub 10.000 de elemente), parallelStream() este adesea MAI LENT decat un stream secvential simplu din cauza overhead-ului de impartire a task-urilor si combinare de rezultate.",
-    keyTakeaway: "parallelStream() este strict pentru calcule masive CPU-bound in memorie, niciodata pentru I/O de retea sau baze de date."
+// LinkedList este util doar daca implementezi Deque/Coada:
+Deque<String> queue = new LinkedList<>();`,
+    interviewTrap: "Multi candidati cred ca LinkedList este mai rapid la inserari la mijloc decat ArrayList. Fals: desi inserarea nodului este O(1), gasirea pozitiei de inserare necesita o parcurgere O(N) lenta!",
+    keyTakeaway: "ArrayList este bazat pe array contiguu si este ultra-rapid datorita cache-ului CPU; LinkedList consuma memorie pe noduri si e rar util."
   },
   {
     id: "java-44",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Bune practici cu Optional in Java 8+",
-    question: "Care sunt cele mai mari greseli de utilizare a clasei Optional<T> si de ce orElseGet() este preferat in locul lui orElse()?",
-    answer: "Optional a fost creat exclusiv ca tip de retur pentru metode pentru a indica clar lipsa unei valori (eliminand NullPointerException).\n\nReguli de bune practici:\n1. Nu folosi niciodata optional.get() fara verificare anterioara isPresent() (sau foloseste direct orElseThrow()).\n2. Nu folosi Optional ca tip de camp intr-o entitate (nu este Serializable).\n3. Nu folosi Optional ca parametru de metoda.\n4. orElse() vs orElseGet():\n   - orElse(expresie): Evalueaza expresia INTOTDEAUNA, chiar daca Optional-ul contine deja o valoare!\n   - orElseGet(supplier): Evalueaza expresia doar daca Optional-ul este gol (Lazy Evaluation).",
-    codeSnippet: `// GRESIT: generateDefault() se apeleaza MEREU, consumand resurse!
-User user = findUser().orElse(generateDefaultFromDb());
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Cum functioneaza redimensionarea automata a unui ArrayList?",
+    question: "Ce se intampla intern intr-un ArrayList cand capacitatea sa este depasita si care este factorul de crestere?",
+    answer: "1. Capacitatea Initiala (Default Capacity):\\n   - Cand creezi new ArrayList<>(), array-ul intern Object[] elementData este initial gol (capacitate 0).\\n   - La prima inserare (list.add(\"primul\")), array-ul este alocat cu o capacitate implicita de 10 elemente.\\n\\n2. Mecanismul de Redimensionare (Grow / Resize):\\n   - Cand adaugi al 11-lea element si array-ul este plin:\\n   - JVM calculeaza noua capacitate folosind formula de crestere cu 50%:\\n     nouaCapacitate = vecheaCapacitate + (vecheaCapacitate >> 1); (deplasare pe biti spre dreapta cu 1 inseamna impartire la 2).\\n   - De la 10 creste la 15, de la 15 la 22, de la 22 la 33 etc.\\n   - JVM aloca un array nou mai mare si copiaza toate elementele vechi in cel nou folosind operatia nativa rapida System.arraycopy().\\n\\n3. Optimizare de Bune Practici:\\n   - Daca stii dinainte ca lista va contine 1.000 de elemente, instantiaza: new ArrayList<>(1000) pentru a elimina cele 10-15 redimensionari si copieri intermediare inutile!",
+    codeSnippet: `// Fara capacitate: face 10 redimensionari si copieri succesive:
+List<Integer> list1 = new ArrayList<>();
 
-// CORECT: Supplier-ul se executa DOAR cand utilizatorul lipseste:
-User user = findUser().orElseGet(() -> generateDefaultFromDb());`,
-    interviewTrap: "Nu returna niciodata null dintr-o metoda care are tipul de retur Optional<T>! Returneaza intotdeauna Optional.empty().",
-    keyTakeaway: "Foloseste orElseGet() pentru valori de fallback costisitoare si Optional strict ca tip de retur de metoda."
+// Cu capacitate initiala: O SINGURA alocare, zero copieri:
+List<Integer> list2 = new ArrayList<>(10000);`,
+    interviewTrap: "Metoda size() returneaza numarul de elemente adaugate efectiv in lista, in timp ce capacitatea interna a array-ului este mai mare si invizibila din exterior.",
+    keyTakeaway: "ArrayList creste cu 50% (factor 1.5) la umplere alocand un nou array si copiind datele; pre-dimensioneaza-l daca stii marimea."
   },
   {
     id: "java-45",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "Ce sunt Java Records (introduse in Java 16/21)?",
-    question: "Ce este un Record in Java modern, ce cod genereaza automat compilatorul si cand il folosesti in loc de o clasa DTO standard sau Lombok @Data?",
-    answer: "Un Record este o clasa speciala imutabila de tip \"data carrier\" (purtatoare de date transparente).\n\nCe genereaza automat compilatorul:\n1. Campuri private final pentru fiecare componenta din header.\n2. Constructor canonic cu toti parametrii.\n3. Getters cu numele campului (ex: id(), email() in loc de getId()).\n4. Implementare corecta pentru equals() si hashCode() bazata pe toate campurile.\n5. Metoda toString() formatata clar.\n\nCand le folosim: Ideale pentru DTO-uri REST, chei compuse de cache, proiectii de baze de date si mesaje de coada. Sunt integrate nativ cu Pattern Matching in Java 21.",
-    codeSnippet: `public record JobSummaryDto(Long id, String title, String company, double salary) {
-    public JobSummaryDto {
-        if (salary < 0) throw new IllegalArgumentException("Salariul nu poate fi negativ");
-    }
+    title: "Cum functioneaza HashSet intern in Java?",
+    question: "Cum garanteaza HashSet unicitatea elementelor si ce structura de date foloseste in spate?",
+    answer: "HashSet este o clasa de fatada extrem de inteligenta:\\n\\n1. Structura din Spate:\\n   - HashSet NU are o structura proprie de stocare pe biti; el este construit 100% PESTE UN HashMap INTERN!\\n   - private transient HashMap<E, Object> map;\\n\\n2. Cum se adauga elementele (Garantarea Unicitatii):\\n   - Cand apelezi set.add(\"element\"), HashSet insereaza valoarea ta ca si CHEIE in HashMap-ul intern: map.put(element, PRESENT);\\n   - Deoarece cheile dintr-un HashMap sunt garantat UNICE, daca adaugi acelasi element de doua ori, HashMap-ul suprascrie intrarea si returneaza false, fara a crea duplicate!\\n\\n3. Ce este obiectul PRESENT:\\n   - Un obiect static dummy de tip Object: private static final Object PRESENT = new Object();\\n   - Este folosit ca valoare pasiva comuna pentru toate cheile din HashMap pentru a economisi memorie.",
+    codeSnippet: `// Sursa din HashSet.java:
+public boolean add(E e) {
+    return map.put(e, PRESENT) == null; // Daca returneaza null, a fost inserat cu succes!
 }
 
-JobSummaryDto dto = new JobSummaryDto(1L, "Java Dev", "Tech Corp", 3500.0);
-System.out.println(dto.title()); // Getter-ul nu are prefixul "get"`,
-    interviewTrap: "Un Record nu poate extinde o alta clasa (deoarece extinde deja implicit java.lang.Record). Nu este potrivit ca entitate JPA/Hibernate cu relatii Lazy!",
-    keyTakeaway: "Records elimina codul boilerplate pentru DTO-uri si garanteaza imutabilitate garantata."
+public boolean contains(Object o) {
+    return map.containsKey(o); // Cautare rapida in HashMap O(1)
+}`,
+    interviewTrap: "Daca adaugi un obiect custom intr-un HashSet, este OBLIGATORIU sa suprascrii equals() si hashCode() in clasa obiectului, altfel HashSet nu va putea detecta duplicatele!",
+    keyTakeaway: "HashSet foloseste un HashMap intern stocand elementele tale ca si chei si un obiect dummy PRESENT ca si valoare."
   },
   {
     id: "java-46",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Ce sunt Sealed Classes in Java 17+ (permits, final, non-sealed)?",
-    question: "Ce problema de design rezolva clasele sigilate (Sealed Classes) si care sunt cele 3 cuvinte cheie pe care le pot avea clasele descendente?",
-    answer: "In Java traditional, o clasa putea fi ori mostenita de oricine (public), ori nemostenita de nimeni (final). Nu exista o cale de mijloc.\n\nSealed Classes permit unui autor de librarie sa declare explicit care clase au voie sa o mosteneasca folosind clauza permits:\npublic sealed class PaymentMethod permits CreditCard, BankTransfer, Crypto {}\n\nRegula celor 3 modificatori pe subclase:\nFiecare clasa mentionata in permits trebuie sa aiba exact unul din cei 3 modificatori:\n1. final: Nu mai poate fi extinsa deloc.\n2. sealed: Extinde clasa, dar isi declara propria sa lista restransa de copii permits.\n3. non-sealed: Se deschide mostenirii nelimitate de catre oricine.\n\nBeneficiu major: Permite verificarea exhaustiva in switch expressions in Java 21 fara a mai fi nevoie de clauza default!",
-    codeSnippet: `public sealed interface Notification permits EmailAlert, SmsAlert {}
-public final class EmailAlert implements Notification {}
-public final class SmsAlert implements Notification {}
-
-// Switch exhaustiv verificat la compilare (fara default):
-String send(Notification n) {
-    return switch (n) {
-        case EmailAlert e -> "Email trimis";
-        case SmsAlert s -> "SMS trimis";
-    };
-}`,
-    interviewTrap: "Toate subclasele permise trebuie sa se afle in acelasi modul sau in acelasi pachet (package) cu clasa parinte sealed!",
-    keyTakeaway: "Sealed classes definesc ierarhii de mostenire controlate si permit pattern matching exhaustiv la compilare."
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "HashSet vs TreeSet vs LinkedHashSet",
+    question: "Care sunt diferentele de ordonare si performanta intre HashSet, LinkedHashSet si TreeSet?",
+    answer: "Toate cele 3 clase implementeaza interfata Set (fara duplicate), dar au strategii diferite de organizare:\\n\\n1. HashSet (Cel mai rapid):\\n   - Bazat pe tabela de dispersie (HashMap).\\n   - Nu ofera NICIO GARANTIE de ordine! Ordinea parcurgerii se poate schimba oricand la adaugarea de elemente noi.\\n   - Performanta: Operatii add(), remove(), contains() in timp O(1) constant.\\n\\n2. LinkedHashSet (Pastreaza Ordinea de Inserare):\\n   - Extinde HashSet si mentine o lista dublu inlantuita peste toate nodurile.\\n   - Garanteaza parcurgerea elementelor exact in ORDINEA DE INSERARE (Insertion Order).\\n   - Performanta: Aproape la fel de rapid ca HashSet (timp O(1)), cu consum infim mai mare de memorie pe noduri.\\n\\n3. TreeSet (Sortat Natural sau prin Comparator):\\n   - Bazat pe un arbore rosu-negru (TreeMap / Red-Black Tree).\\n   - Mentine elementele STRICT SORTATE crescator conform ordinii naturale (Comparable) sau unui Comparator custom.\\n   - Performanta: Operatii in timp logaritmic O(log N). Elementele trebuie sa fie obligatoriu comparabile!",
+    codeSnippet: `Set<String> hash = new HashSet<>(List.of("Z", "A", "M")); // Ordine aleatorie
+Set<String> linked = new LinkedHashSet<>(List.of("Z", "A", "M")); // [Z, A, M] (cum au intrat)
+Set<String> tree = new TreeSet<>(List.of("Z", "A", "M")); // [A, M, Z] (sortat alfabetic)`,
+    interviewTrap: "Daca adaugi un obiect care nu implementeaza Comparable intr-un TreeSet fara a oferi un Comparator in constructor, codul va arunca la runtime: ClassCastException!",
+    keyTakeaway: "HashSet e cel mai rapid O(1) fara ordine; LinkedHashSet pastreaza ordinea de inserare; TreeSet mentine elementele sortate O(log N)."
   },
   {
     id: "java-47",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "Pattern Matching for Switch & Record Patterns (Java 21)",
-    question: "Cum simplifica Java 21 inspectarea tipurilor de obiecte folosind Pattern Matching in switch expressions si Record Patterns?",
-    answer: "Inainte de Java 21, verificarea tipurilor cerea lanturi lungi de if (obj instanceof Type) urmate de cast-uri explicite.\n\nIn Java 21:\n1. Switch pe tipuri: Permite inspectarea tipului direct in switch, cu verificari de null si conditii aditionale (guarded patterns cu when).\n2. Record Patterns: Permite deconstructia directa a componentelor unui Record chiar in antetul cazului de switch!",
-    codeSnippet: `public String handleJobStatus(Object obj) {
-    return switch (obj) {
-        case null -> "Status nul primit";
-        case JobSummaryDto(var id, var title, var comp, var sal) when sal > 5000 -> 
-            "Job Senior Top: " + title + " la " + comp;
-        case JobSummaryDto dto -> "Job Standard: " + dto.title();
-        case String s -> "Status text: " + s.toUpperCase();
-        default -> "Tip necunoscut: " + obj;
-    };
-}`,
-    interviewTrap: "Switch-ul pe obiecte sigilate (sealed classes) sau exhaustive trebuie sa acopere toate cazurile posibile, altfel compilatorul cere obligatoriu clauza default.",
-    keyTakeaway: "Pattern Matching in Java 21 elimina complet cast-urile manuale si reduce codul de clasificare cu peste 70%."
+    title: "Cum functioneaza HashMap intern pe intelesul tuturor?",
+    question: "Explica pas cu pas ce se intampla cand apelam map.put(key, value) si map.get(key) intr-un HashMap?",
+    answer: "HashMap stocheaza datele intr-un array de bucket-uri (Node<K, V>[] table):\\n\\nCe se intampla la map.put(key, value):\\n1. Calculeaza Hash-ul: Daca key == null, hash-ul este 0. Altfel, apeleaza key.hashCode() si trece rezultatul printr-o functie de perturbare bitwise.\\n2. Calculeaza Indexul de Bucket: index = hash & (table.length - 1) pentru a gasi pozitia din array.\\n3. Daca bucket-ul este gol: Creeaza un nod nou si il plaseaza direct in array (O(1)).\\n4. Daca bucket-ul este ocupat (Coliziune Hash):\\n   - Parcurge lista de noduri din acel bucket.\\n   - Daca gaseste o cheie cu acelasi hash SI cheie.equals(existingKey), SUPRASCRIE valoarea existenta cu noua valoare.\\n   - Daca nu gaseste nicio cheie egala, adauga noul nod la sfarsitul listei.\\n   - Daca lista dintr-un bucket depaseste 8 noduri iar tabela are >= 64 capacitate, lista se transforma in Red-Black Tree (O(log N)).\\n5. Daca numarul total de elemente depaseste threshold-ul (capacity * 0.75), tabela isi dubleaza capacitatea (Resize).\\n\\nCe se intampla la map.get(key):\\n- Calculeaza hash-ul si indexul bucket-ului, apoi parcurge nodurile comparand cu equals() pana gaseste cheia si returneaza valoarea.",
+    codeSnippet: `// Schema mentala a unui bucket cu coliziune:
+// table[3] -> [Node1: hash, key1, val1] -> [Node2: hash, key2, val2] -> null`,
+    interviewTrap: "Daca uiti sa suprascrii equals() pe clasa cheii, get() va folosi comparatia de adrese din Object si nu va gasi niciodata valoarea inserata cu un alt obiect echivalent!",
+    keyTakeaway: "HashMap calculeaza indexul prin hash(&); la coliziuni cauta cheia prin equals() in lista/arborele din bucket."
   },
   {
     id: "java-48",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "La ce foloseste serialVersionUID si cuvantul cheie transient?",
-    question: "Ce rol are campul serialVersionUID intr-o clasa Serializable si ce se intampla cu campurile declarate cu cuvantul cheie transient la serializare?",
-    answer: "1. serialVersionUID:\n   - Este un identificator numeric de versiune asociat fiecarei clase Serializable.\n   - La serializare, JVM scrie acest ID in fluxul de octeti. La deserializare, compara ID-ul din flux cu ID-ul clasei curente din classpath.\n   - Daca nu declari explicit serialVersionUID, compilatorul genereaza automat un hash bazat pe campurile si metodele clasei. Daca adaugi ulterior un simplu camp nou, ID-ul se schimba, iar deserializarea obiectelor vechi va esua cu InvalidClassException!\n\n2. Cuvantul cheie transient:\n   - Marcheaza un camp pentru a fi IGNORAT complet de procesul de serializare nativa Java.\n   - La deserializare, campul primeste valoarea sa default (null pentru obiecte, 0 pentru numere, false pentru booleeni).\n   - Folosit pentru date sensibile (parole, chei criptografice) sau resurse legate de mediul local (socket-uri, conexiuni la DB).",
+    title: "Ce sunt Load Factor si Initial Capacity in HashMap?",
+    question: "Ce reprezinta Initial Capacity si Load Factor in HashMap si cand se declanseaza operatia de Rehashing?",
+    answer: "1. Initial Capacity (Capacitatea Initiala):\\n   - Numarul de bucket-uri (dimensiunea array-ului intern) alocat la crearea HashMap-ului.\\n   - Valoarea implicita este 16 (intotdeauna o putere a lui 2).\\n\\n2. Load Factor (Factorul de Incarcare):\\n   - O masura a gradului de umplere a tabelei inainte ca aceasta sa isi mareasca automat capacitatea.\\n   - Valoarea implicita este 0.75 (75%). Ofera un compromis optim intre consumul de spatiu si timpul de cautare.\\n\\n3. Pragul de Redimensionare (Threshold) si Rehashing:\\n   - Threshold = Capacity * Load Factor (ex: 16 * 0.75 = 12 elemente).\\n   - Cand adaugi al 13-lea element in mapa, se declanseaza automat operatia de Resize (Rehashing):\\n     - Se aloca un array nou DUBLU ca marime (de la 16 la 32 de bucket-uri);\\n     - Toate elementele existente sunt re-indexate si redistribuite in noul array.",
+    codeSnippet: `// Constructor custom daca stii ca vei avea 100.000 elemente:
+// Evita 15 operatii costisitoare de resize si rehash:
+Map<String, User> map = new HashMap<>(135000, 0.75f);`,
+    interviewTrap: "Un load factor mai mic (ex: 0.5) reduce coliziunile dar iroseste multa memorie. Un load factor prea mare (ex: 0.95) economiseste spatiu dar creste numarul de coliziuni si incetineste cautarile get(). Valoarea default 0.75 este ideala.",
+    keyTakeaway: "Initial Capacity este 16, Load Factor este 0.75; la depasirea pragului (12 elemente) capacitatea se dubleaza prin Rehashing."
+  },
+  {
+    id: "java-49",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "HashMap vs Hashtable in Java",
+    question: "Care sunt diferentele principale intre HashMap si vechea clasa Hashtable si de ce Hashtable este considerata legacy?",
+    answer: "1. Sincronizare si Thread-Safety:\\n   - Hashtable (Java 1.0): Este sincronizata pe toate metodele cu synchronized. Poate fi folosita intre fire, dar este extrem de lenta din cauza blocarii intregii mape la fiecare get/put.\\n   - HashMap (Java 1.2): NU este sincronizata (non-thread-safe), fiind mult mai rapida pentru aplicatii uzuale.\\n\\n2. Tratarea Valorilor NULL:\\n   - HashMap: Permite o singura cheie NULL (stocata mereu in bucket-ul 0) si permite oricate valori NULL.\\n   - Hashtable: NU PERMITE NICIODATA chei null sau valori null (arunca instantaneu NullPointerException).\\n\\n3. Concluzia Moderna:\\n   - Hashtable este o clasa istorica invechita (legacy). Daca ai nevoie de o mapa thread-safe in aplicatii moderne, foloseste INTOTDEAUNA ConcurrentHashMap, niciodata Hashtable!",
+    codeSnippet: `// Permis in HashMap:
+Map<String, String> map = new HashMap<>();
+map.put(null, "valoare_pe_null"); // OK!
+map.put("cheie", null);           // OK!
+
+// Crapa in Hashtable:
+// Hashtable<String, String> table = new Hashtable<>();
+// table.put(null, "test"); // CRASH: NullPointerException!`,
+    interviewTrap: "Hashtable este parte din vechiul JDK 1.0 impreuna cu Vector si Stack. Toate 3 sunt sincronizate grosier si inlocuite de colectii moderne.",
+    keyTakeaway: "HashMap e rapid, non-sincronizat si accepta null; Hashtable este legacy, sincronizat greoi si refuza strict valorile null."
+  },
+  {
+    id: "java-50",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "HashMap vs TreeMap vs LinkedHashMap",
+    question: "Care sunt cazurile de utilizare si diferentele dintre HashMap, LinkedHashMap si TreeMap?",
+    answer: "1. HashMap (Alegerea Implicita Generala):\\n   - Bazat pe tabela de dispersie (Hash Table).\\n   - Nu pastreaza nicio ordine a cheilor.\\n   - Performanta maxima: get() si put() in timp O(1) constant.\\n\\n2. LinkedHashMap (Pastreaza Ordinea):\\n   - Extinde HashMap si leaga nodurile printr-o lista dublu inlantuita.\\n   - Pastreaza ORDINEA DE INSERARE a cheilor (sau ordinea de acces pentru LRU Cache).\\n   - Performanta O(1) rapida, cu consum foarte mic de memorie suplimentar.\\n\\n3. TreeMap (Sortat dupa Chei):\\n   - Bazat pe un arbore rosu-negru (Red-Black Tree).\\n   - Cheile sunt mentinute STRICT SORTATE crescator conform ordinii naturale (Comparable) sau unui Comparator.\\n   - Ofera metode de navigare: firstKey(), lastKey(), subMap().\\n   - Performanta O(log N). Cheile nu pot fi null!",
+    codeSnippet: `Map<String, Integer> map = new HashMap<>();
+map.put("C", 3); map.put("A", 1); map.put("B", 2); // Ordine impredictibila
+
+Map<String, Integer> linked = new LinkedHashMap<>();
+linked.put("C", 3); linked.put("A", 1); linked.put("B", 2); // [C, A, B] (ordinea inserarii)
+
+Map<String, Integer> tree = new TreeMap<>();
+tree.put("C", 3); tree.put("A", 1); tree.put("B", 2); // [A, B, C] (sortat alfabetic)`,
+    interviewTrap: "TreeMap arunca NullPointerException daca incerci sa pui o cheie null (cand foloseste ordinea naturala), in timp ce HashMap accepta cheia null fara probleme.",
+    keyTakeaway: "HashMap este cel mai rapid fara ordine; LinkedHashMap pastreaza ordinea de inserare; TreeMap mentine cheile sortate O(log N)."
+  },
+  {
+    id: "java-51",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Comparable vs Comparator in Java",
+    question: "Care este diferenta dintre interfata Comparable si Comparator si cand o alegi pe fiecare pentru sortare?",
+    answer: "1. java.lang.Comparable<T> (Ordonare Naturala Implicita):\\n   - Se implementeaza DIRECT in interiorul clasei de domeniu (ex: public class Student implements Comparable<Student>).\\n   - Contine o singura metoda: int compareTo(T other).\\n   - Defineste o singura ordine principala de sortare (ex: alfabetic dupa nume sau dupa ID).\\n\\n2. java.util.Comparator<T> (Ordonare Personalizata / Multipla):\\n   - Se defineste ca o clasa SEPARATA sau ca o expresie Lambda fara a modifica clasa originala.\\n   - Contine metoda: int compare(T o1, T o2).\\n   - Permite definirea a zeci de criterii de sortare diferite (sortare dupa varsta, dupa salariu, descrescator).\\n   - Poate fi transmisa ca parametru la Collections.sort(list, comparator) sau list.sort(comparator).",
+    codeSnippet: `// 1. Comparable (in clasa):
+public class Book implements Comparable<Book> {
+    private int year;
+    public int compareTo(Book b) { return Integer.compare(this.year, b.year); }
+}
+
+// 2. Comparator (extern / lambda):
+Comparator<Book> byTitle = (b1, b2) -> b1.title.compareTo(b2.title);
+books.sort(byTitle);`,
+    interviewTrap: "Nu scrie return o1.id - o2.id; pentru compararea numerelor intregi, deoarece scaderile de numere mari negative pot produce Integer Underflow/Overflow! Foloseste intotdeauna Integer.compare(o1.id, o2.id).",
+    keyTakeaway: "Comparable defineste ordinea naturala din interiorul clasei; Comparator defineste reguli multiple de sortare din exterior."
+  },
+  {
+    id: "java-52",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Compunerea Rapida a Comparatorilor in Java 8+",
+    question: "Cum folosesti Comparator.comparing() si thenComparing() pentru a sorta dupa mai multe campuri succesive?",
+    answer: "Incepand cu Java 8, interfata Comparator ofera metode statice si default declarative care elimina tot codul boilerplate:\\n\\n1. Comparator.comparing(Function<T, U>):\\n   - Creeaza un comparator pe baza unei functii de extragere a cheii (Method Reference).\\n   - Exemplu: Comparator.comparing(User::getLastName).\\n\\n2. thenComparing(Function<T, U>):\\n   - Adauga un criteriu de departajare secundar daca primul criteriu returneaza egalitate (0).\\n   - Poti inlantui oricate criterii succesive dorite.\\n\\n3. reversed():\\n   - Inverseaza ordinea comparatorului.",
+    codeSnippet: `// Sortare: mai intai dupa Departament, apoi dupa Nume, apoi dupa Varsta descrescator:
+List<Employee> list = getEmployees();
+
+list.sort(
+    Comparator.comparing(Employee::getDepartment)
+              .thenComparing(Employee::getName)
+              .thenComparing(Employee::getAge, Comparator.reverseOrder())
+);`,
+    interviewTrap: "Daca un camp extras poate fi null, foloseste Comparator.nullsFirst(...) sau nullsLast(...) pentru a preveni NullPointerException la sortare.",
+    keyTakeaway: "Comparator.comparing().thenComparing() realizeaza sortari complexe pe multiple campuri intr-o singura linie fluenta."
+  },
+  {
+    id: "java-53",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ce este un Iterator si cum se foloseste?",
+    question: "Ce este un Iterator in Java, care sunt cele 3 metode principale ale sale si cum se deosebeste de o bucla for obisnuita?",
+    answer: "1. Ce este un Iterator:\\n   - Un obiect care implementeaza interfata java.util.Iterator si permite parcurgerea secventiala a oricarei colectii fara a expune structura interna a acesteia.\\n\\n2. Cele 3 Metode Principale:\\n   - boolean hasNext(): Verifica daca mai exista elemente urmatoare in colectie.\\n   - E next(): Returneaza urmatorul element din colectie si avanseaza cursorul.\\n   - void remove(): Sterge ultimul element returnat de next() din colectia de baza in mod sigur.\\n\\n3. De ce este Util:\\n   - Iteratorul este singura modalitate sigura de a sterge elemente dintr-o colectie traditionala in timpul parcurgerii fara a declansa ConcurrentModificationException.",
+    codeSnippet: `List<String> names = new ArrayList<>(List.of("Alex", "Ion", "Maria"));
+Iterator<String> it = names.iterator();
+
+while (it.hasNext()) {
+    String name = it.next();
+    if (name.startsWith("I")) {
+        it.remove(); // Stergere sigura din lista in timpul iterarii!
+    }
+}
+System.out.println(names); // [Alex, Maria]`,
+    interviewTrap: "Daca apelezi it.remove() inainte de a fi apelat cel putin o data it.next(), sau daca apelezi remove() de doua ori la rand, vei primi IllegalStateException.",
+    keyTakeaway: "Iteratorul parcurge colectii prin hasNext()/next() si este singurul care permite remove() sigur in bucle clasice."
+  },
+  {
+    id: "java-54",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "ConcurrentModificationException: Cauza si Solutii",
+    question: "De ce apare ConcurrentModificationException intr-o bucla for-each si cum o previi corect in Java?",
+    answer: "1. De ce apare Exceptia:\\n   - O bucla for-each (for (String s : list)) este tradusa de compilator intr-un Iterator intern.\\n   - Colectia mentine un contor de modificari structurale: modCount.\\n   - Iteratorul retine valoarea initiala: expectedModCount.\\n   - Daca apelezi list.remove(s) direct pe colectie in corpul buclei, modCount este incrementat de lista, dar iteratorul nu stie! La urmatorul pas, iteratorul detecteaza modCount != expectedModCount si arunca instantaneu: ConcurrentModificationException!\\n\\n2. Cele Doua Solutii Recomandate:\\n   - Solutia 1 (Moderna Java 8+): Foloseste metoda list.removeIf(predicate) (curata si rapida).\\n   - Solutia 2 (Clasica): Foloseste un Iterator explicit si apeleaza it.remove() (care actualizeaza si expectedModCount).",
+    codeSnippet: `List<String> list = new ArrayList<>(List.of("A", "B", "C"));
+
+// GRESIT: arunca ConcurrentModificationException:
+// for (String s : list) { if (s.equals("B")) list.remove(s); }
+
+// CORECT in Java 8+:
+list.removeIf(s -> s.equals("B")); // [A, C]`,
+    interviewTrap: "Numele \"ConcurrentModificationException\" este inselator: exceptia apare frecvent intr-un SINGUR thread cand modifici structura colectiei in timp ce o iterezi!",
+    keyTakeaway: "Nu sterge direct din colectie in bucle for-each; foloseste list.removeIf() sau iterator.remove()."
+  },
+  {
+    id: "java-55",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Fail-Fast vs Fail-Safe Iterators",
+    question: "Care este diferenta dintre un iterator Fail-Fast si un iterator Fail-Safe in Java?",
+    answer: "1. Fail-Fast Iterators (ArrayList, HashSet, HashMap):\\n   - Daca colectia de baza este modificata structural (add, remove) in timpul iterarii de catre orice alt cod (in afara de metoda proprie a iteratorului):\\n   - Iteratorul arunca IMEDIAT o exceptie ConcurrentModificationException si opreste executia!\\n   - Functioneaza pe baza contorului intern modCount. Prefera sa esueze rapid decat sa riste un comportament impredictibil.\\n\\n2. Fail-Safe / Weakly Consistent Iterators (CopyOnWriteArrayList, ConcurrentHashMap):\\n   - NU arunca niciodata ConcurrentModificationException!\\n   - Lucreaza fie pe o COPIE a colectiei realizata la momentul crearii iteratorului (CopyOnWriteArrayList), fie pe un snapshot intern tolerant la modificari.\\n   - Poti adauga si sterge elemente simultan din alte fire fara ca iteratorul sa crape.",
+    codeSnippet: `// 1. Fail-Fast:
+List<String> fastList = new ArrayList<>(List.of("1", "2"));
+// fastList.iterator() va arunca eroare daca lista se modifica!
+
+// 2. Fail-Safe:
+List<String> safeList = new CopyOnWriteArrayList<>(List.of("1", "2"));
+for (String s : safeList) {
+    safeList.add("3"); // Sigur! Nu arunca nicio exceptie!
+}`,
+    interviewTrap: "Iteratorul din CopyOnWriteArrayList este imun la modificari, dar el nu va reflecta elementele adaugate dupa pornirea iterarii (vede doar snapshot-ul initial).",
+    keyTakeaway: "Fail-Fast arunca imediat ConcurrentModificationException; Fail-Safe itereaza pe un snapshot sigur fara exceptii."
+  },
+  {
+    id: "java-56",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Arrays.asList() vs List.of() vs new ArrayList<>()",
+    question: "Care este diferenta intre o lista creata cu Arrays.asList(), una cu List.of() si una cu new ArrayList<>()?",
+    answer: "1. new ArrayList<>() (Modificabila 100%):\\n   - O lista obisnuita in care poti adauga (add), sterge (remove) si modifica (set) oricand.\\n\\n2. Arrays.asList(array) (Dimensiune Fixa):\\n   - Este doar un wrapper peste array-ul original.\\n   - Dimensiunea este FIXA: list.add() si list.remove() arunca UnsupportedOperationException!\\n   - DAR elementele existente pot fi modificate cu list.set(0, \"nou\"), iar modificarea afecteaza si array-ul original!\\n   - Accepta valori null.\\n\\n3. List.of(...) (Java 9+ - Strict Imutabila):\\n   - Complet imutabila: nici add, nici remove, nici set nu sunt permise!\\n   - NU accepta valori NULL (arunca NullPointerException la initializare).\\n   - Consuma cea mai putina memorie.",
+    codeSnippet: `// 1. Modificabila:
+List<String> l1 = new ArrayList<>(List.of("A", "B"));
+l1.add("C"); // OK!
+
+// 2. Dimensiune fixa (suporta set, dar nu add):
+List<String> l2 = Arrays.asList("A", "B");
+l2.set(0, "Z"); // OK!
+// l2.add("C"); // CRASH: UnsupportedOperationException!
+
+// 3. Imutabila:
+List<String> l3 = List.of("A", "B");
+// l3.set(0, "Z"); // CRASH: UnsupportedOperationException!`,
+    interviewTrap: "Daca ai nevoie sa adaugi elemente ulterior intr-o lista creata din elemente fixe, scrie: new ArrayList<>(List.of(\"A\", \"B\")).",
+    keyTakeaway: "new ArrayList e modificabila; Arrays.asList are dimensiune fixa; List.of este strict imutabila si respinge null-urile."
+  },
+  {
+    id: "java-57",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Queue in Java: offer/poll/peek vs add/remove/element",
+    question: "Care este diferenta dintre cele doua seturi de metode din interfata Queue (cele care arunca exceptii vs cele care returneaza valori speciale)?",
+    answer: "Interfata java.util.Queue ofera doua seturi paralele de metode pentru fiecare operatie de baza (Inserare, Stergere, Inspectare):\\n\\n1. Setul 1: Arunca Exceptii la esec:\\n   - Inserare: add(e) (arunca IllegalStateException daca o coada limitata este plina).\\n   - Stergere: remove() (arunca NoSuchElementException daca coada este goala).\\n   - Inspectare: element() (arunca NoSuchElementException daca coada este goala).\\n\\n2. Setul 2: Returneaza Valori Speciale (null sau false - Recomandat!):\\n   - Inserare: offer(e) (returneaza false daca coada este plina, fara crash).\\n   - Stergere: poll() (returneaza elementul din varf, sau null daca coada e goala).\\n   - Inspectare: peek() (priveste primul element fara a-l sterge, sau null daca e goala).",
+    codeSnippet: `Queue<String> queue = new LinkedList<>();
+
+// Modul sigur (recomandat):
+queue.offer("Client 1");
+String next = queue.poll(); // "Client 1"
+String empty = queue.poll(); // null (fara nicio exceptie!)`,
+    interviewTrap: "In aplicatii de productie se recomanda folosirea metodelor offer(), poll() si peek(), deoarece evitarea exceptiilor creste performanta si previne crash-urile neasteptate.",
+    keyTakeaway: "add/remove/element arunca exceptii cand esueaza; offer/poll/peek returneaza false/null in siguranta."
+  },
+  {
+    id: "java-58",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "PriorityQueue in Java: Ce este si cum functioneaza?",
+    question: "Ce este un PriorityQueue in Java si cum difera ordinea de iesire a elementelor fata de o coada obisnuita FIFO?",
+    answer: "1. Ce este PriorityQueue:\\n   - O coada bazata pe o structura de date de tip Min-Heap (arbore binar binar de prioritati stocat intr-un array).\\n   - Spre deosebire de o coada standard FIFO (First-In-First-Out) unde primul venit iese primul:\\n   - Intr-un PriorityQueue elementele sunt procesate in ordinea PRIORITATII lor!\\n\\n2. Cum se stabileste Prioritatea:\\n   - Implicit (Min-Heap): Elementul cu valoarea cea mai mica (conform compareTo) este situat intotdeauna in varful cozii (head) si iese primul la poll().\\n   - Prin Comparator: Poti inversa ordinea pentru a face un Max-Heap (cel mai mare numar iese primul).\\n\\n3. Complexitate Algoritmica:\\n   - Inserare (offer): O(log N).\\n   - Extragere minim (poll): O(log N).\\n   - Inspectare minim (peek): O(1) instantaneu.\\n   - Nu accepta elemente null!",
+    codeSnippet: `// Min-Heap (implicit: iese cel mai mic numar primul):
+PriorityQueue<Integer> pq = new PriorityQueue<>();
+pq.offer(50);
+pq.offer(10);
+pq.offer(30);
+
+System.out.println(pq.poll()); // 10!
+System.out.println(pq.poll()); // 30!
+System.out.println(pq.poll()); // 50!`,
+    interviewTrap: "Daca parcurgi un PriorityQueue cu o bucla for-each, elementele NU vor fi afisate sortate! Heap-ul garanteaza doar ca elementul din varf (peek/poll) este minimul absolut.",
+    keyTakeaway: "PriorityQueue proceseaza elementele dupa prioritate (Min-Heap implicit) cu extragere O(log N), nu dupa ordinea sosirii."
+  },
+  {
+    id: "java-59",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "ArrayDeque vs java.util.Stack: De ce Stack este Deprecated?",
+    question: "De ce clasa java.util.Stack este considerata invechita si de ce se recomanda ArrayDeque pentru implementarea unei stive LIFO?",
+    answer: "1. Defectele lui java.util.Stack (Java 1.0):\\n   - Extinde clasa Vector. Mosteneste toate metodele de indexare ale unui vector (poti adauga sau sterge la orice index, incalcand principiul strict LIFO al unei stive!).\\n   - Toate metodele sunt sincronizate grosier cu synchronized, provocand o penalizare inutila de performanta intr-un mediu cu un singur fir.\\n\\n2. De ce ArrayDeque este Superioara:\\n   - Implementeaza interfata Deque (Double Ended Queue) folosind un array circular redimensionabil.\\n   - Nu foloseste sincronizare, fiind de 2-4 ori mai rapida decat Stack.\\n   - Ofera metode curate de stiva: push(e) pentru adaugare in varf, pop() pentru extragere din varf si peek() pentru inspectare.\\n   - Nu aloca noduri in memorie ca un LinkedList.",
+    codeSnippet: `// Recomandat pentru o Stiva (LIFO - Last In First Out):
+Deque<String> stack = new ArrayDeque<>();
+stack.push("Pagina 1");
+stack.push("Pagina 2");
+
+System.out.println(stack.pop()); // "Pagina 2" (ultimul adaugat iese primul!)
+System.out.println(stack.peek()); // "Pagina 1"`,
+    interviewTrap: "Chiar si documentatia oficiala Java din clasa Stack mentioneaza explicit: \"A more complete and consistent set of LIFO stack operations is provided by the Deque interface and its implementations (e.g. ArrayDeque)\".",
+    keyTakeaway: "ArrayDeque este alternativa moderna, rapida si ne-sincronizata care inlocuieste vechea clasa Stack."
+  },
+  {
+    id: "java-60",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ierarhia de Exceptii in Java: Throwable, Error, Exception",
+    question: "Care este ierarhia de clase a erorilor si exceptiilor in Java si ce reprezinta fiecare ramura?",
+    answer: "Toate erorile si situatiile exceptionale din Java au ca radacina comuna clasa java.lang.Throwable:\\n\\n1. java.lang.Error:\\n   - Probleme grave si catastrofale cauzate de mediu sau JVM (hardware, epuizare memorie, stiva plina).\\n   - Aplicatia NU trebuie sa incerce sa le prinda sau sa se recupereze din ele.\\n   - Exemple: OutOfMemoryError, StackOverflowError.\\n\\n2. java.lang.Exception:\\n   - Situatii anormale din logica aplicatiei din care un program se poate si trebuie sa se recupereze.\\n   - Se imparte in doua mari categorii:\\n     - Checked Exceptions: Subclase directe ale lui Exception (in afara de RuntimeException).\\n     - Unchecked Exceptions: Toate subclasele lui java.lang.RuntimeException.",
+    codeSnippet: `//                Throwable
+//               /         \\
+//            Error       Exception
+//                         /       \\
+//           Checked Exceptions   RuntimeException (Unchecked)`,
+    interviewTrap: "Daca prinzi catch (Throwable t), vei intercepta si erori fatale precum OutOfMemoryError. Prinde intotdeauna catch (Exception e) pentru recuperari normale.",
+    keyTakeaway: "Throwable se imparte in Error (probleme fatale de JVM) si Exception (erori recuperabile de aplicatie)."
+  },
+  {
+    id: "java-61",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Checked vs Unchecked Exceptions in Java",
+    question: "Care este diferenta fundamentala dintre o Checked Exception si o Unchecked Exception (RuntimeException)?",
+    answer: "1. Checked Exceptions (Verificate la Compilare):\\n   - Mostenesc clasa Exception, dar NU mostenesc RuntimeException.\\n   - Compilatorul TE FORTEAZA sa le gestionezi: fie le prinzi intr-un bloc try-catch, fie le declari in semnatura metodei folosind throws NumeExceptie.\\n   - Reprezinta conditii externe neprevazute dar anticipate, din care aplicatia se poate recupera (ex: un fisier temporar lipseste, o conexiune de retea a picat).\\n   - Exemple: IOException, SQLException, ClassNotFoundException.\\n\\n2. Unchecked Exceptions (Neverificate la Compilare):\\n   - Mostenesc clasa java.lang.RuntimeException.\\n   - Compilatorul NU te forteaza sa le prinzi sau sa le declari cu throws.\\n   - Reprezinta de regula bug-uri de programare, erori de logica sau utilizare gresita a API-urilor.\\n   - Exemple: NullPointerException, ArrayIndexOutOfBoundsException, IllegalArgumentException.",
+    codeSnippet: `// 1. Checked: compilatorul cere try-catch sau throws:
+public void readFile() throws IOException {
+    FileReader file = new FileReader("c:\\\\test.txt");
+}
+
+// 2. Unchecked: nu cere declarare:
+public void divide(int a, int b) {
+    if (b == 0) throw new IllegalArgumentException("Impartitorul nu poate fi 0");
+}`,
+    interviewTrap: "Daca nu tratezi o checked exception, codul refuza sa compileze; daca apare o unchecked exception, codul compileaza dar crapa la runtime daca nu e gestionata.",
+    keyTakeaway: "Checked sunt verificate de compilator (cer try-catch/throws); Unchecked mostenesc RuntimeException si semnaleaza bug-uri de logica."
+  },
+  {
+    id: "java-62",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Blocul try-catch-finally: Se executa finally intotdeauna?",
+    question: "Care este rolul blocului finally si in ce situatii extreme se poate intampla ca finally sa NU se execute?",
+    answer: "1. Rolul Blocului finally:\\n   - Se plaseaza dupa try sau catch si este garantat sa se execute atat in caz de succes, cat si in cazul in care a fost aruncata o exceptie.\\n   - Folosit istoric pentru curatarea resurselor (inchiderea fisierelor, conexiunilor DB).\\n\\n2. In ce Situatii Extreme NU se executa finally:\\n   - 1. Daca in blocul try sau catch se apeleaza System.exit(0): JVM-ul este oprit instantaneu.\\n   - 2. Crash al masinii virtuale sau eroare fatala de sistem (ex: JVM Core Dump, OutOfMemoryError sever).\\n   - 3. Firul curent este un Daemon Thread, iar toate firele non-daemon s-au incheiat (JVM opreste daemon-ul pe loc).\\n   - 4. O bucla infinita (while(true)) sau un Deadlock permanent inainte de a ajunge la finally.",
+    codeSnippet: `try {
+    System.out.println("1. In Try");
+    // System.exit(0); // Daca de-comentezi asta, finally nu mai ruleaza!
+} finally {
+    System.out.println("2. In Finally (Garantat)");
+}`,
+    interviewTrap: "Daca pui o instructiune return in try si un alt return in finally, valoarea returnata din finally o va suprascrie complet pe cea din try, ascunzand chiar si exceptiile aruncate!",
+    keyTakeaway: "finally ruleaza intotdeauna indiferent de erori, cu exceptia apelului System.exit() sau a crash-ului JVM."
+  },
+  {
+    id: "java-63",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "try-with-resources si Interfata AutoCloseable in Java 7",
+    question: "Ce problema a rezolvat structura try-with-resources introdusa in Java 7 si cum functioneaza?",
+    answer: "1. Problema Veche cu Inchiderea Resurselor (Inainte de Java 7):\\n   - Trebuia sa declari variabilele in afara blocului try, sa pui un bloc finally, sa verifici if (res != null) si sa prinzi o alta exceptie pe close()! Erau necesare 15-20 linii de cod urat pentru un simplu fisier.\\n\\n2. Ce aduce try-with-resources:\\n   - Orice resursa declarata intre parantezele rotunde ale lui try (Resource res = ...) este INCHISA AUTOMAT de catre JVM la iesirea din bloc, indiferent daca executia s-a terminat cu succes sau cu exceptie!\\n   - Elimina complet nevoia de bloc finally manual.\\n\\n3. Conditia Obligatorie:\\n   - Clasa resursei TREBUIE sa implementeze interfata java.lang.AutoCloseable (sau java.io.Closeable), care contine metoda void close().",
+    codeSnippet: `// Inchidere automata garantata la final:
+try (BufferedReader br = new BufferedReader(new FileReader("data.txt"))) {
+    String line = br.readLine();
+    System.out.println(line);
+} catch (IOException e) {
+    log.error("Eroare la citire", e);
+} // br.close() a fost apelat automat aici!`,
+    interviewTrap: "Daca declari mai multe resurse in try (try (R1 r1 = ...; R2 r2 = ...)), JVM le va inchide automat in ORDINE INVERSA fata de cum au fost declarate (mai intai r2, apoi r1).",
+    keyTakeaway: "try-with-resources inchide automat orice resursa AutoCloseable, eliminand complet blocurile finally manuale redundante."
+  },
+  {
+    id: "java-64",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Cuvintele cheie throw vs throws in Java",
+    question: "Care este diferenta dintre cuvantul cheie throw si cuvantul cheie throws in Java?",
+    answer: "1. throw (Aruncare Efectiva):\\n   - Este o instructiune de executie plasata in interiorul corpului unei metode.\\n   - Este folosita pentru a ARUNCA EXPLICIT o instanta noua de exceptie: throw new IllegalArgumentException(\"Scor invalid\");.\\n   - Opreste imediat fluxul normal al metodei curente.\\n\\n2. throws (Declarare in Semnatura):\\n   - Este o clauza plasata in SEMNATURA unei metode (la finalul listei de parametri).\\n   - Avertizeaza compilatorul si apelantii ca aceasta metoda ar putea arunca una sau mai multe Checked Exceptions: public void read() throws IOException, SQLException.\\n   - Nu creeaza niciun obiect de exceptie, ci doar deleaga responsabilitatea tratarii catre codul apelant.",
+    codeSnippet: `// 'throws' in semnatura (avertisment)
+public void validateAge(int age) throws InvalidAgeException {
+    if (age < 18) {
+        // 'throw' in corp (actiunea efectiva)
+        throw new InvalidAgeException("Varsta minima este 18");
+    }
+}`,
+    interviewTrap: "throw este urmat intotdeauna de o INSTANTA de obiect (throw new ...); throws este urmat de NUMELE CLASEI de exceptie (throws IOException).",
+    keyTakeaway: "throw arunca o instanta de exceptie in cod; throws declara posibilele exceptii checked in semnatura metodei."
+  },
+  {
+    id: "java-65",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Cum creezi o Exceptie Custom (Personalizata) in Java?",
+    question: "Cum se creeaza o clasa de exceptie proprie si cand alegi sa extinzi Exception vs RuntimeException?",
+    answer: "1. Crearea unei Exceptii Personalizate:\\n   - Creezi o clasa noua care extinde fie Exception (pentru Checked), fie RuntimeException (pentru Unchecked).\\n   - Oferi de regula 3 constructori standard: fara parametri, cu mesaj de eroare String si cu cauza radacina Throwable cause.\\n\\n2. Cand extinzi Exception (Checked Custom Exception):\\n   - Cand vrei sa FORTEZI apelantul sa gestioneze problema si te astepti ca aplicatia sa aiba un plan de recuperare (ex: InsufficientFundsException).\\n\\n3. Cand extinzi RuntimeException (Unchecked Custom Exception - Standardul Modern):\\n   - In 90% din aplicatiile moderne (Spring Boot, REST APIs), se prefera RuntimeException pentru ca nu polueaza semnaturile metodelor cu throws si poate fi interceptata global intr-un @ControllerAdvice (ex: ResourceNotFoundException).",
+    codeSnippet: `public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+
+    public ResourceNotFoundException(String message, Throwable cause) {
+        super(message, cause); // Retine cauza originala (Exception Chaining)
+    }
+}`,
+    interviewTrap: "Transmite intotdeauna parametrul Throwable cause catre super(message, cause) daca impachetezi o exceptie existenta, altfel vei pierde stack trace-ul original al erorii.",
+    keyTakeaway: "O exceptie custom extinde RuntimeException pentru simplitate si este aruncata cand o regula specifica de business a fost incalcata."
+  },
+  {
+    id: "java-66",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Top 5 Exceptii Comune de Runtime si Cauzele lor",
+    question: "Care sunt cele mai frecvente 5 exceptii de tip RuntimeException intalnite in Java si ce le provoaca?",
+    answer: "1. NullPointerException (NPE):\\n   - Incercarea de a apela o metoda, de a accesa un camp sau de a indexa un array pe o referinta care are valoarea null.\\n2. ArrayIndexOutOfBoundsException / StringIndexOutOfBoundsException:\\n   - Accesarea unui index negativ sau mai mare sau egal cu lungimea array-ului (arr[arr.length]).\\n3. IllegalArgumentException:\\n   - O metoda a primit un argument invalid conform logicii sale (ex: varsta < 0).\\n4. NumberFormatException (subclasa a lui IllegalArgumentException):\\n   - Incercarea de a parsa un text invalid intr-un numar: Integer.parseInt(\"abc\").\\n5. ClassCastException:\\n   - Incercarea de a converti fortat (type casting) un obiect la o clasa care nu se afla in ierarhia sa de mostenire (ex: Object x = Integer.valueOf(5); String s = (String) x;).",
+    codeSnippet: `// 1. NPE:
+String s = null; s.length();
+
+// 2. IndexOutOfBounds:
+int[] arr = new int[3]; int val = arr[5];
+
+// 3. NumberFormatException:
+int num = Integer.parseInt("not_a_number");`,
+    interviewTrap: "Pentru a preveni NumberFormatException, valideaza intotdeauna inputul cu regex sau prinde explicit exceptia inainte de parsare.",
+    keyTakeaway: "NPE, IndexOutOfBounds, IllegalArgument, NumberFormat si ClassCast sunt cele mai comune erori cauzate de bug-uri de programare."
+  },
+  {
+    id: "java-67",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Multi-Catch Block in Java 7",
+    question: "Cum folosesti Multi-Catch block-ul introdus in Java 7 si ce restrictie de mostenire exista intre exceptiile prinse impreuna?",
+    answer: "1. Ce este Multi-Catch (Java 7):\\n   - Permite prinderea a doua sau mai multe tipuri de exceptii diferite intr-un SINGUR bloc catch folosind caracterul pipe (|).\\n   - Elimina duplicarea de cod cand mai multe exceptii necesita aceeasi reactie (ex: logare si returnare cod de eroare).\\n\\n2. Restrictia Stricta de Mostenire:\\n   - Exceptiile listate in acelasi bloc catch NU AU VOIE sa fie intr-o relatie de mostenire parinte-copil!\\n   - Exemplu ilegal: catch (IOException | FileNotFoundException e) NU compileaza, deoarece FileNotFoundException este deja o subclasa a lui IOException (este redundanta)!\\n\\n3. Variabila \"e\" este Finala:\\n   - In multi-catch, parametrul e este considerat implicit final; nu poti reatribui o alta valoare variabilei e.",
+    codeSnippet: `try {
+    processDatabaseAndFile();
+} catch (SQLException | IOException e) { // Curat, pe o singura linie!
+    log.error("Eroare de procesare: " + e.getMessage(), e);
+}`,
+    interviewTrap: "Daca doua exceptii mostenesc una din alta, prinde doar parintele (ex: catch (IOException e)) sau separa-le in doua blocuri catch clasice.",
+    keyTakeaway: "Multi-catch prinde mai multe exceptii cu | eliminand duplicarea; exceptiile nu trebuie sa fie legate prin mostenire directa."
+  },
+  {
+    id: "java-68",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "De ce este periculos sa lasi un bloc catch gol (Swallowed Exception)?",
+    question: "De ce lasarea unui bloc catch gol (Empty Catch Block) este considerata una dintre cele mai grave greseli de programare?",
+    answer: "1. Ce este o Swallowed Exception (Exceptie Inghitita):\\n   - Prinderea unei exceptii fara a face absolut nimic cu ea:\\n     try { ... } catch (Exception e) { /* nimic */ }\\n\\n2. Consecinte Catastrofale in Productie:\\n   - Programul continua sa ruleze orbeste ca si cum nimic nu s-ar fi intamplat, dar starea interna a datelor este deja corupta sau operatia a esuat pe jumatate!\\n   - Zero vizibilitate: Nimeni nu stie ca sistemul a esuat (nu exista log, nu exista alerta).\\n   - Cand aplicatia crapa 2 ore mai tarziu intr-o alta componenta, este imposibil de aflat care a fost cauza initiala.\\n\\n3. Bune Practici:\\n   - Cel putin logheaza eroarea cu stack trace: log.error(\"Eroare...\", e);\\n   - Sau re-arunca o exceptie specifica de runtime: throw new ServiceException(\"Esec\", e);.",
+    codeSnippet: `// COD INTERZIS (Anti-pattern periculos):
+try {
+    updatePaymentStatus();
+} catch (Exception e) {
+    // NIMIC! Plata nu s-a inregistrat, dar nimeni nu stie!
+}
+
+// COD CORECT:
+try {
+    updatePaymentStatus();
+} catch (Exception e) {
+    log.error("Eroare la actualizarea platii", e);
+    throw new PaymentFailedException("Esec procesare", e);
+}`,
+    interviewTrap: "Daca vezi intr-un code review un bloc catch gol sau un catch care doar scrie System.out.println(e.getMessage()), cere imediat corectarea cu logging complet.",
+    keyTakeaway: "Un catch gol ascunde erorile si corupe starea sistemului; logheaza intotdeauna eroarea sau re-arunc-o mai departe."
+  },
+  {
+    id: "java-69",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "OutOfMemoryError vs StackOverflowError",
+    question: "Care este diferenta dintre OutOfMemoryError si StackOverflowError si cum se provoaca fiecare?",
+    answer: "Ambele sunt erori de memorie din ramura java.lang.Error, dar se produc in zone de memorie complet diferite:\\n\\n1. StackOverflowError (Memoria Stiva - Stack):\\n   - Apare atunci cand stiva de apeluri a unui fir de executie depaseste dimensiunea maxima alocata (-Xss, de regula 1 MB).\\n   - Cauza universala clasica: O RECURSIE INFINITA (o metoda se apeleaza pe sine fara a atinge niciodata conditia de oprire base case), umpland stiva cu milioane de Stack Frames.\\n\\n2. OutOfMemoryError (Memoria Gramada - Heap):\\n   - Apare atunci cand spatiul de Heap se umple complet cu obiecte noi si Garbage Collector-ul nu mai poate elibera suficient spatiu pentru cererea curenta.\\n   - Cauze comune: Memory leaks (colectii care acumuleaza continuu obiecte), incarcarea fisierelor uriase deodata in memorie, alocarea unui array gigantic (new byte[Integer.MAX_VALUE]).",
+    codeSnippet: `// 1. Provoaca StackOverflowError (Recursie infinita pe Stack):
+void recursive() {
+    recursive(); // Se apeleaza la infinit
+}
+
+// 2. Provoaca OutOfMemoryError (Heap plin):
+List<Object> list = new ArrayList<>();
+while (true) {
+    list.add(new byte[1024 * 1024]); // Aloca continuu fara oprire
+}`,
+    interviewTrap: "StackOverflowError este aproape intotdeauna un bug de recursie in cod; OutOfMemoryError este de regula un memory leak sau un volum de date neprevazut pe Heap.",
+    keyTakeaway: "StackOverflowError este cauzat de recursie infinita pe stiva; OutOfMemoryError este cauzat de epuizarea memoriei Heap."
+  },
+  {
+    id: "java-70",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "NoClassDefFoundError vs ClassNotFoundException",
+    question: "Care este diferenta dintre exceptia ClassNotFoundException si eroarea NoClassDefFoundError in Java?",
+    answer: "1. ClassNotFoundException (Checked Exception):\\n   - Apare la incarcare DINAMICA explicita cand codul incearca sa incarce o clasa prin numele sau ca text (ex: Class.forName(\"com.mysql.jdbc.Driver\") sau ClassLoader.loadClass()).\\n   - Semnificatie: Fisierul .class nu a fost gasit pe classpath. Se rezolva adaugand dependinta JAR in pom.xml.\\n\\n2. NoClassDefFoundError (Fatal Error):\\n   - Apare atunci cand codul a compilat cu succes deoarece clasa era prezenta la compilare, dar la RUNTIME clasa nu mai poate fi gasita sau initializata!\\n   - Cauze frecvente:\\n     - Clasa lipseste din JAR-ul impachetat la runtime.\\n     - Initializarea statica a picat: Daca o clasa a aruncat o exceptie intr-un static { ... } block, JVM o marcheaza ca defecta. Orice apel viitor catre acea clasa arunca NoClassDefFoundError!",
+    codeSnippet: `// 1. ClassNotFoundException:
+try {
+    Class.forName("com.inexistent.MyClass");
+} catch (ClassNotFoundException e) {
+    System.out.println("Clasa negasita la runtime");
+}`,
+    interviewTrap: "Daca vezi NoClassDefFoundError in loguri, cauta mai sus prima aparitie a lui ExceptionInInitializerError pentru a gasi blocul static care a provocat problema initiala.",
+    keyTakeaway: "ClassNotFoundException apare la apeluri dinamice cu Class.forName; NoClassDefFoundError apare cand o clasa existenta la compilare lipseste la runtime."
+  },
+  {
+    id: "java-71",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Generics in Java - Scop si Type Safety",
+    question: "Ce sunt Generics in Java, de ce au fost introduse in Java 5 si cum asigura siguranta tipurilor (type safety)?",
+    answer: "1. Ce sunt Generics:\\n   - Un mecanism introdus in Java 5 care permite parametrizarea tipurilor pentru clase, interfete si metode (ex: List<String> in loc de List simplu).\\n\\n2. Beneficii principale:\\n   - Siguranta la compilare (Compile-time Type Safety): Erorile de incompatibilitate de tip sunt detectate la compilare, nu la executie (evita ClassCastException).\\n   - Eliminarea cast-urilor explicite: Nu mai este necesar cast-ul manual (String) list.get(0).\\n   - Cod reutilizabil si generic: Aceeasi structura de date poate functiona cu orice tip de obiect.",
+    codeSnippet: `// Inainte de Java 5 (fara Generics):
+List list = new ArrayList();
+list.add("Java");
+list.add(100); // Permis, dar periculos!
+String s = (String) list.get(1); // ClassCastException la runtime!
+
+// Cu Generics (Java 5+):
+List<String> names = new ArrayList<>();
+names.add("Java");
+// names.add(100); // Eroare de compilare directa!
+String name = names.get(0); // Fara cast!`,
+    interviewTrap: "Daca folosesti tipul brut (raw type, ex: List list), anulezi complet beneficiile oferite de Generics si deschizi calea erorilor ClassCastException la runtime.",
+    keyTakeaway: "Generics ofera verificare a tipurilor la compilare si elimina cast-urile manuale."
+  },
+  {
+    id: "java-72",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Generics Type Erasure",
+    question: "Ce este Type Erasure in Java si ce consecinte practice are la runtime?",
+    answer: "1. Ce este Type Erasure:\\n   - Este procesul prin care compilatorul Java inlatura (sterge) toate informatiile despre tipurile generice in timpul compilarii in bytecode.\\n   - A fost implementat pentru a asigura compatibilitatea inversa (backward compatibility) cu versiunile de Java anterioare aparitiei Generics (Java 1.4).\\n\\n2. Ce face compilatorul:\\n   - Inlocuieste toti parametrii de tip cu tipul lor bound (ex: T extends Number devine Number) sau cu Object daca sunt unbound (T devine Object).\\n   - Insereaza cast-uri sigure de bytecode acolo unde este accesata valoarea.\\n\\n3. Consecinte practice la runtime:\\n   - La runtime, List<String> si List<Integer> sunt exact aceeasi clasa: ArrayList.class.\\n   - Nu poti face new T(), new T[10] sau instanceof List<String> la runtime.",
+    codeSnippet: `List<String> list1 = new ArrayList<>();
+List<Integer> list2 = new ArrayList<>();
+
+// La runtime clasele sunt identice din cauza Type Erasure:
+System.out.println(list1.getClass() == list2.getClass()); // true!
+
+// Ilegal la compilare:
+// if (list1 instanceof List<String>) {} // Eroare: Cannot perform instanceof check against parameterized type`,
+    interviewTrap: "Nu poti distinge intre List<String> si List<Integer> la runtime doar prin getClass(). Ambele au clasa java.util.ArrayList.",
+    keyTakeaway: "Type Erasure sterge tipurile generice la compilare; la runtime JVM lucreaza cu Object sau bound-ul superior."
+  },
+  {
+    id: "java-73",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Generics Wildcards si Principiul PECS",
+    question: "Ce inseamna ? extends T vs ? super T in Java si ce reprezinta principiul PECS?",
+    answer: "1. Principiul PECS (Producer Extends, Consumer Super):\\n   - Producer Extends (? extends T): Daca structura de date doar \"produce\" date (citesti din ea), folosesti extends (Covarianta).\\n   - Consumer Super (? super T): Daca structura de date \"consuma\" date (scrii/adaugi in ea), folosesti super (Contravarianta).\\n\\n2. ? extends T (Upper Bounded):\\n   - Poti citi elemente ca fiind de tip T (sigur).\\n   - NU poti adauga elemente in colectie (cu exceptia lui null), deoarece compilatorul nu stie tipul exact al instantei concrete.\\n\\n3. ? super T (Lower Bounded):\\n   - Poti adauga elemente de tip T sau subclase ale lui T.\\n   - La citire primesti doar Object.",
+    codeSnippet: `// Producer Extends: doar citesti
+void printNumbers(List<? extends Number> list) {
+    for (Number n : list) {
+        System.out.println(n.doubleValue());
+    }
+    // list.add(10); // EROARE de compilare! Nu poti adauga!
+}
+
+// Consumer Super: doar scrii/adaugi
+void addIntegers(List<? super Integer> list) {
+    list.add(10);  // OK!
+    list.add(20);  // OK!
+    // Number n = list.get(0); // EROARE! Returneaza doar Object
+}`,
+    interviewTrap: "Cea mai frecventa greseala la interviu: incercarea de a adauga un element intr-o lista List<? extends Number>. Este interzis de compilator!",
+    keyTakeaway: "Foloseste extends cand vrei sa citesti (Producer), foloseste super cand vrei sa scrii (Consumer) - regula PECS."
+  },
+  {
+    id: "java-74",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Raw Types: List vs List<Object> vs List<?>",
+    question: "Care este diferenta dintre un raw type List, List<Object> si List<?> in Java?",
+    answer: "1. Raw Type (List):\\n   - Lista nestricta, stil pre-Java 5. Permite adaugarea oricarui tip de obiect, dar anuleaza verificarea compilatorului.\\n   - Provoaca compiler warnings si risca ClassCastException.\\n\\n2. List<Object>:\\n   - Lista parametrizata explicit cu Object. O lista List<String> NU poate fi atribuita unei variabile List<Object> (Generics sunt invariante!).\\n   - Poti adauga orice obiect in ea.\\n\\n3. List<?> (Unbounded Wildcard):\\n   - O lista cu tip necunoscut. Poti atribui o lista de orice tip (List<String>, List<Integer>).\\n   - Este read-only: nu poti adauga nimic in ea (doar null).",
+    codeSnippet: `List rawList = new ArrayList<String>();
+rawList.add(123); // Compileaza, dar periculos la runtime!
+
+List<String> strList = new ArrayList<>();
+// List<Object> objList = strList; // EROARE de compilare! Generics nu sunt covariante!
+
+List<?> wildList = strList; // OK!
+// wildList.add("test"); // EROARE! Nu poti adauga in List<?>
+Object item = wildList.get(0); // OK la citire`,
+    interviewTrap: "Candidatii cred adesea ca List<String> mosteneste List<Object>. FALS! In Java, Generics sunt invariante: List<String> NU este un List<Object>.",
+    keyTakeaway: "List<?> este sigur pentru citire generica; List<Object> accepta orice dar nu este parinte pentru List<T>; List (raw) trebuie evitat."
+  },
+  {
+    id: "java-75",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "De ce nu putem crea array-uri generice (new T[])?",
+    question: "De ce expresia new T[10] genereaza o eroare de compilare in Java si cum se rezolva aceasta problema?",
+    answer: "1. Cauza fundamentala: Conflict intre Array-uri si Generics:\\n   - Array-urile sunt reificate (reified) la runtime: JVM trebuie sa cunoasca tipul exact al componentelor la runtime pentru a arunca ArrayStoreException daca pui un tip gresit.\\n   - Generics sunt non-reificate: tipul generic T este sters la compilare (Type Erasure) si devine Object in bytecode.\\n   - Daca new T[10] ar fi permis, JVM ar aloca new Object[10], ceea ce ar sparge siguranta tipurilor la runtime cand este castat la T[].\\n\\n2. Solutii comune:\\n   - Folosirea colectiilor: List<T> list = new ArrayList<>().\\n   - Cast cu suprimare de warning: (T[]) new Object[size].\\n   - Folosirea reflexiei cu tip explicit: (T[]) Array.newInstance(clazz, size).",
+    codeSnippet: `// Incercare gresita:
+public class MyStorage<T> {
+    // private T[] items = new T[10]; // EROARE de compilare!
+
+    // Solutia 1: Cast de Object array (utilizata si in ArrayList)
+    @SuppressWarnings("unchecked")
+    private T[] items = (T[]) new Object[10];
+
+    // Solutia 2: Cu java.lang.reflect.Array
+    @SuppressWarnings("unchecked")
+    public T[] createArray(Class<T> clazz, int size) {
+        return (T[]) java.lang.reflect.Array.newInstance(clazz, size);
+    }
+}`,
+    interviewTrap: "Array-urile sunt covariante si reificate la runtime, in timp ce Generics sunt invariante si sterse la compilare (type erasure). Aceste doua concepte sunt incompatibile.",
+    keyTakeaway: "new T[] nu functioneaza din cauza Type Erasure; se foloseste cast pe Object[] sau java.lang.reflect.Array.newInstance."
+  },
+  {
+    id: "java-76",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Collections.unmodifiableList() vs List.copyOf() si List.of()",
+    question: "Care este diferenta dintre Collections.unmodifiableList(list) si List.copyOf(list) / List.of()?",
+    answer: "1. Collections.unmodifiableList(originalList):\\n   - Este un simplu \"view\" (wrapper) read-only peste lista originala.\\n   - Daca cineva modifica lista originala, aceste modificari SE VOR REFLECTA si in lista unmodifiable!\\n   - Arunca UnsupportedOperationException doar daca incerci sa apelezi add() sau remove() pe wrapper.\\n\\n2. List.copyOf(originalList) (Java 10+):\\n   - Creeaza o lista cu adevarat imutabila, facand o copie defensiva daca e necesar.\\n   - Modificarile aduse listei originale ulterioare NU afecteaza copia.\\n   - Nu accepta elemente null (arunca NullPointerException).\\n\\n3. List.of(e1, e2, ...) (Java 9+):\\n   - Creeaza direct o lista imutabila compacta.",
+    codeSnippet: `List<String> original = new ArrayList<>();
+original.add("A");
+
+List<String> unmod = Collections.unmodifiableList(original);
+List<String> copy = List.copyOf(original);
+
+original.add("B"); // Modificam lista initiala
+
+System.out.println(unmod); // [A, B] -> S-a modificat prin view!
+System.out.println(copy);  // [A]    -> A ramas neschimbata!`,
+    interviewTrap: "Collections.unmodifiableList() NU este complet imutabil, deoarece lista din spatele sau poate fi modificata de oricine detine o referinta catre ea.",
+    keyTakeaway: "unmodifiableList este doar o vizualizare needitabila a listei originale; List.copyOf creeaza o copie complet independenta si imutabila."
+  },
+  {
+    id: "java-77",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Collections.synchronizedList() vs CopyOnWriteArrayList",
+    question: "Cum difera Collections.synchronizedList() de CopyOnWriteArrayList si cand este recomandat fiecare?",
+    answer: "1. Collections.synchronizedList(list):\\n   - Pune un lock pe fiecare metoda (synchronized) pe un obiect comun (mutex).\\n   - Fiecare operatie de citire sau scriere blocheaza celelalte thread-uri.\\n   - La iteratie cu for-each / iterator, programatorul TREBUIE sa sincronizeze manual lista, altfel risca ConcurrentModificationException.\\n\\n2. CopyOnWriteArrayList:\\n   - Thread-safe fara blocarea cititorilor: operatiile de citire (get, iterate) sunt ultra-rapide si nu folosesc lock-uri.\\n   - La fiecare operatie de scriere (add, set, remove), se creeaza o copie NOUA completa a array-ului intern.\\n   - Iteratoarele nu arunca niciodata ConcurrentModificationException (au un snapshot al array-ului din momentul crearii).\\n\\n3. Cand se foloseste fiecare:\\n   - CopyOnWriteArrayList: ideal cand ai 99% citiri si foarte rare scrieri (ex: liste de listeners, cache mic).\\n   - synchronizedList: cand ai multe scrieri si citiri egale.",
+    codeSnippet: `// 1. synchronizedList necesita bloc manual la iterare:
+List<String> syncList = Collections.synchronizedList(new ArrayList<>());
+synchronized (syncList) {
+    for (String s : syncList) { /* sigur */ }
+}
+
+// 2. CopyOnWriteArrayList: citiri rapide fara lock
+List<String> cowList = new CopyOnWriteArrayList<>();
+cowList.add("Event1");
+// Iterarea este thread-safe fara lock:
+for (String s : cowList) { System.out.println(s); }`,
+    interviewTrap: "Folosirea CopyOnWriteArrayList intr-un scenariu cu scrieri frecvente duce la degradare masiva a performantei si consum enorm de memorie din cauza copierii array-ului la fiecare add.",
+    keyTakeaway: "CopyOnWriteArrayList este perfect pentru citiri frecvente si scrieri rare; synchronizedList sincronizeaza fiecare apel pe acelasi lock."
+  },
+  {
+    id: "java-78",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "ConcurrentHashMap - Arhitectura si Avantaje",
+    question: "Cum realizeaza ConcurrentHashMap accesul concurent eficient si de ce este superior Hashtable sau synchronizedMap?",
+    answer: "1. De ce Hashtable si synchronizedMap sunt lente:\\n   - Blocheaza intreaga tabela la orice operatie (lock la nivel de map). Daca un thread citeste, niciun alt thread nu poate scrie sau citi simultan.\\n\\n2. Cum functioneaza ConcurrentHashMap (Java 8+):\\n   - Nu blocheaza intreaga harta!\\n   - Citirile (get()) sunt complet non-blocante (lock-free) gratie variabilelor marcate volatile (Node.val, Node.next).\\n   - Scrierile blocheaza doar nodul prim din bucket-ul respectiv (synchronized pe head node-ul din bucket) sau folosesc CAS (Compare-And-Swap) pentru inserarea primului nod intr-un bucket gol.\\n   - Permite mai multor thread-uri sa scrie simultan atata timp cat acceseaza bucket-uri diferite.\\n\\n3. Fara chei sau valori null:\\n   - Nu accepta niciodata null ca cheie sau valoare (pentru a evita ambiguitatea daca o cheie lipseste sau are valoarea null in mediu concurent).",
+    codeSnippet: `ConcurrentMap<String, Integer> map = new ConcurrentHashMap<>();
+
+// Operatii atomice compuse oferite de ConcurrentMap:
+map.putIfAbsent("counter", 0);
+map.computeIfPresent("counter", (k, v) -> v + 1);
+
+// Thread-safe fara niciun lock pe toata tabela:
+Integer val = map.get("counter");`,
+    interviewTrap: "ConcurrentHashMap nu permite NULL nici ca cheie, nici ca valoare! Daca apelezi map.put(null, \"val\"), primesti NullPointerException instantaneu.",
+    keyTakeaway: "ConcurrentHashMap blocheaza doar la nivel de bucket la scriere si are citiri lock-free, permitand concurenta masiva fara blocarea intregii harti."
+  },
+  {
+    id: "java-79",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "EnumSet si EnumMap in Java",
+    question: "De ce sunt EnumSet si EnumMap mult mai rapide decat HashSet si HashMap cand lucram cu enumerari?",
+    answer: "1. EnumSet:\\n   - Reprezentare interna extrem de eficienta: foloseste un vector de biti (un singur long pe post de bitfield pentru pana la 64 de valori ale enum-ului).\\n   - Fiecare valoare a enum-ului corespunde unui singur bit (0 sau 1).\\n   - Operatiile de adaugare, stergere si testare de apartenenta (contains) se reduc la operatii pe biti la nivel de procesor (AND, OR, NOT), avand complexitate O(1) si consum infim de memorie.\\n\\n2. EnumMap:\\n   - Foloseste intern un simplu array de obiecte (Object[]), indexat direct dupa valoarea ordinal() a enum-ului.\\n   - Nu exista coliziuni de hash, nu se calculeaza hashCode() si nu exista bucket-uri sau liste inlantuite.\\n\\n3. Concluzie:\\n   - Intotdeauna foloseste EnumSet si EnumMap in loc de HashSet/HashMap cand cheile/elementele sunt constante ale unui Enum.",
+    codeSnippet: `public enum Role { ADMIN, USER, MANAGER, GUEST }
+
+// EnumSet:
+Set<Role> roles = EnumSet.of(Role.ADMIN, Role.MANAGER);
+if (roles.contains(Role.ADMIN)) { /* operatie rapida pe biti */ }
+
+// EnumMap:
+Map<Role, String> permissions = new EnumMap<>(Role.class);
+permissions.put(Role.ADMIN, "Full Access");
+permissions.put(Role.USER, "Read Only");`,
+    interviewTrap: "EnumSet nu are constructor public. Se instantiaza obligatoriu prin metode statice de tip fabrica: EnumSet.of(), EnumSet.noneOf(), EnumSet.allOf().",
+    keyTakeaway: "EnumSet utilizeaza bit vectori iar EnumMap foloseste array indexat dupa ordinal; ambele sunt semnificativ mai rapide decat HashSet/HashMap."
+  },
+  {
+    id: "java-80",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "De ce cheia unui HashMap trebuie sa fie Imutabila?",
+    question: "Ce se intampla daca folosesti un obiect mutabil drept cheie intr-un HashMap si ii modifici starea dupa inserare?",
+    answer: "1. Mecanismul inserarii:\\n   - La inserarea map.put(key, value), HashMap calculeaza key.hashCode() pentru a gasi bucket-ul corespunzator.\\n\\n2. Ce se intampla la mutatie:\\n   - Daca modifici campurile obiectului cheie, hashCode()-ul acestuia se modifica.\\n   - Cand incerci ulterior sa apelezi map.get(key), HashMap va calcula noul hash code si va cauta intr-un alt bucket!\\n   - Rezultat: get() va returna null, desi obiectul se afla in continuare in HashMap intr-un alt bucket! Valoarea devine \"pierduta\" in memorie (memory leak).\\n\\n3. Regula de aur:\\n   - Cheile din HashMap trebuie sa fie imutabile (ex: String, Integer, UUID, sau clase custom cu campuri final si fara setteri).",
+    codeSnippet: `class MutableKey {
+    int id;
+    MutableKey(int id) { this.id = id; }
+    public int hashCode() { return id; }
+    public boolean equals(Object o) { return o instanceof MutableKey && this.id == ((MutableKey)o).id; }
+}
+
+Map<MutableKey, String> map = new HashMap<>();
+MutableKey key = new MutableKey(1);
+map.put(key, "Secret Data");
+
+key.id = 2; // MODIFICAM STAREA CHEII!
+
+System.out.println(map.get(key)); // NULL! Valoarea este pierduta in map!`,
+    interviewTrap: "Daca modifici cheia dupa inserare, nu poti nici sa o regasesti cu get() si nici sa o stergi usor cu remove(). Datele raman blocate in memorie.",
+    keyTakeaway: "Cheile dintr-un HashMap trebuie sa fie intotdeauna imutabile pentru ca hashCode() sa ramana constant pe toata durata vietii obiectului."
+  },
+  {
+    id: "java-81",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Queue: add/remove/element vs offer/poll/peek",
+    question: "Care este diferenta dintre cele doua seturi de metode din interfata java.util.Queue in Java?",
+    answer: "Interfata Queue ofera doua seturi de metode pentru aceleasi operatii, care difera prin modul de tratare a situatiilor limita (coada plina sau coada goala):\\n\\n1. Setul care arunca EXCEPTII:\\n   - Inserare: add(e) -> arunca IllegalStateException daca o coada cu capacitate limitata este plina.\\n   - Extragere: remove() -> arunca NoSuchElementException daca coada este goala.\\n   - Inspectare: element() -> arunca NoSuchElementException daca coada este goala.\\n\\n2. Setul care returneaza VALORI SPECIALE (fara exceptii):\\n   - Inserare: offer(e) -> returneaza false daca nu s-a putut adauga.\\n   - Extragere: poll() -> returneaza null daca coada este goala.\\n   - Inspectare: peek() -> returneaza null daca coada este goala.\\n\\n3. Recomandare:\\n   - In aplicatii de productie se prefera oferta offer/poll/peek pentru a evita overhead-ul exceptiilor.",
+    codeSnippet: `Queue<String> queue = new LinkedList<>();
+
+// Varianta cu exceptii:
+// queue.remove(); // Arunca NoSuchElementException!
+
+// Varianta sigura:
+String item = queue.poll(); // Returneaza null, nu crapa!
+String top = queue.peek();  // Returneaza null
+
+queue.offer("Task 1"); // Adauga cu succes (returneaza true)`,
+    interviewTrap: "Daca o coada accepta elemente null (desi nerecomandat), poll() == null devine ambiguu (nu stii daca coada e goala sau contine null).",
+    keyTakeaway: "add/remove/element arunca exceptii in caz de eroare; offer/poll/peek returneaza valori speciale (false/null)."
+  },
+  {
+    id: "java-82",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Deque ca Stiva moderna vs vechiul java.util.Stack",
+    question: "De ce este clasa java.util.Stack considerata invechita (legacy) si ce clasa/interfata se recomanda in schimb?",
+    answer: "1. De ce Stack este invechit:\\n   - Mosteneste clasa Vector, ceea ce inseamna ca fiecare metoda din Stack este sincronizata (synchronized), cauzand overhead inutil de performanta in aplicatii single-thread.\\n   - Sparge principiul OOP prin mostenirea lui Vector: poti apela metode ca stack.add(index, elem) sau stack.remove(index), violand principiul LIFO (Last-In-First-Out).\\n\\n2. Ce se recomanda in schimb:\\n   - Interfata Deque (Double-Ended Queue) si implementarea ArrayDeque.\\n   - ArrayDeque ofera metodele standard LIFO: push(), pop(), peek().\\n   - Este nesincronizata, mult mai rapida decat Stack si bazata pe un array circular eficient.",
+    codeSnippet: `// INCORECT (Legacy):
+Stack<Integer> oldStack = new Stack<>();
+
+// CORECT si Recomandat:
+Deque<Integer> stack = new ArrayDeque<>();
+stack.push(10);
+stack.push(20);
+
+int top = stack.pop();   // 20
+int peek = stack.peek(); // 10`,
+    interviewTrap: "Nu folosi niciodata java.util.Stack in cod modern sau la interviu. Arata intervievatorului ca stii ca ArrayDeque este inlocuitorul modern si performant.",
+    keyTakeaway: "java.util.Stack mosteneste Vector si e lent sincronizat; ArrayDeque este implementarea moderna recomandata pentru LIFO stiva."
+  },
+  {
+    id: "java-83",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "IdentityHashMap vs HashMap standard",
+    question: "Cum difera IdentityHashMap de un HashMap standard si cand este util?",
+    answer: "1. Diferenta fundamentala la comparare:\\n   - HashMap standard compara cheile folosind equals() si hashCode().\\n   - IdentityHashMap compara cheile exclusiv dupa identitatea de referinta (operatorul ==) si System.identityHashCode(k).\\n\\n2. Comportament:\\n   - Doua obiecte diferite cu exact acelasi continut (equals() == true) vor fi tratate ca doua intrari separate in IdentityHashMap.\\n\\n3. Cazuri de utilizare tipice:\\n   - Grafuri de obiecte si serializare (detectarea ciclurilor unde vrei sa stii daca ai vizitat exact aceeasi instanta de obiect).\\n   - Framework-uri interne (compilatoare, clonare profunda - deep clone).",
+    codeSnippet: `Map<String, String> identityMap = new IdentityHashMap<>();
+
+String s1 = new String("key");
+String s2 = new String("key");
+
+identityMap.put(s1, "Value 1");
+identityMap.put(s2, "Value 2");
+
+// Desi s1.equals(s2) este true, s1 != s2:
+System.out.println(identityMap.size()); // 2!
+System.out.println(identityMap.get(s1)); // Value 1
+System.out.println(identityMap.get(s2)); // Value 2`,
+    interviewTrap: "Daca folosesti literali String (care sunt internati in String Pool), s1 si s2 vor pointa la aceeasi referinta, deci IdentityHashMap va stoca doar o intrare.",
+    keyTakeaway: "IdentityHashMap foloseste == in loc de equals() si System.identityHashCode() in loc de hashCode()."
+  },
+  {
+    id: "java-84",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Arrays.binarySearch() si conditiile de utilizare",
+    question: "Care este conditia obligatorie inainte de a apela Arrays.binarySearch() si ce returneaza daca elementul nu este gasit?",
+    answer: "1. Conditie OBLIGATORIE:\\n   - Array-ul (sau lista in cazul Collections.binarySearch) TREBUIE sa fie sortat in ordine crescatoare inainte de cautare!\\n   - Daca array-ul nu este sortat, rezultatul este nedeterminat (nedefinit).\\n\\n2. Ce returneaza daca elementul este gasit:\\n   - Indexul elementului (>= 0).\\n\\n3. Ce returneaza daca elementul NU este gasit:\\n   - Un numar negativ: -(insertionPoint + 1).\\n   - Unde insertionPoint este indexul unde elementul ar trebui inserat pentru a mentine ordinea sortata.\\n   - Formula permite verificarea rapida: daca index < 0, elementul nu exista.",
+    codeSnippet: `int[] arr = { 2, 5, 8, 12, 16, 23, 38 };
+
+int index1 = Arrays.binarySearch(arr, 12);
+System.out.println("Gasit la index: " + index1); // 3
+
+int index2 = Arrays.binarySearch(arr, 10);
+// 10 ar fi fost inserat la indexul 3. -(3 + 1) = -4
+System.out.println("Negasit: " + index2); // -4`,
+    interviewTrap: "Daca uiti sa sortezi array-ul cu Arrays.sort(arr) inainte de binarySearch(), poti primi -1 chiar daca elementul exista in array.",
+    keyTakeaway: "binarySearch necesita un array sortat; returneaza indexul daca gaseste sau -(insertionPoint + 1) daca nu gaseste."
+  },
+  {
+    id: "java-85",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Algoritmul TimSort in Java",
+    question: "Ce algoritm de sortare foloseste Java in Arrays.sort(Object[]) si Collections.sort() si ce complexitate are?",
+    answer: "1. Algoritmul TimSort:\\n   - Creat de Tim Peters pentru Python in 2002 si adoptat in Java din Java 7 pentru sortarea obiectelor.\\n   - Este un algoritm hibrid extrem de performant, combinand Insertion Sort si Merge Sort.\\n   - Cauta subsiruri gata ordonate (runs) din datele reale; daca sunt mici, foloseste binary insertion sort; apoi imbina subsirurile prin merge sort.\\n\\n2. Proprietati esentiale:\\n   - Este Stabil (Stable): nu modifica ordinea relativa a elementelor egale (crucial pentru sortari multiple in UI).\\n   - Complexitate de timp:\\n     - Cel mai bun caz (Best Case): O(n) cand array-ul este deja sortat!\\n     - Cazul mediu si cel mai rau caz: O(n log n).\\n   - Complexitate de spatiu: O(n).",
+    codeSnippet: `List<User> users = getUsers();
+// Foloseste TimSort: pastreaza ordinea elementelor cu aceeasi varsta (stabilitate)
+users.sort(Comparator.comparingInt(User::getAge));`,
+    interviewTrap: "Pentru primitive (ex: int[]), Arrays.sort() foloseste Dual-Pivot Quicksort (instabil dar rapid pe primitive), NU TimSort.",
+    keyTakeaway: "TimSort sorteaza obiecte in O(n log n), cu cel mai bun caz O(n) pe date pre-sortate, si este garantat stabil."
+  },
+  {
+    id: "java-86",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Expresii Lambda si Interfete Functionale",
+    question: "Ce este o expresie Lambda in Java si ce cerinta trebuie sa indeplineasca o interfata pentru a fi folosita cu o lambda?",
+    answer: "1. Ce este o Expresie Lambda:\\n   - O functie anonima (o bucata de cod compacta fara nume, clasa separata sau modificatori) care poate fi transmisa ca parametru sau stocata intr-o variabila.\\n   - Sintaxa de baza: (parametri) -> { corp; }.\\n\\n2. Relatia cu Interfetele Functionale:\\n   - O expresie lambda poate fi utilizata DOAR acolo unde tipul asteptat este o Interfata Functionala (SAM - Single Abstract Method).\\n   - O interfata functionala este o interfata care are EXACT o singura metoda abstracta (poate avea oricate metode default sau statice).\\n\\n3. Beneficii:\\n   - Reduce codul boilerplate al claselor interne anonime (Anonymous Inner Classes).\\n   - Permite stilul de programare functionala in Java.",
+    codeSnippet: `// Varianta veche cu Clasa Anonima:
+Runnable r1 = new Runnable() {
+    @Override
+    public void run() {
+        System.out.println("Hello din Thread");
+    }
+};
+
+// Varianta moderna cu Lambda:
+Runnable r2 = () -> System.out.println("Hello din Thread");
+new Thread(r2).start();`,
+    interviewTrap: "Daca o interfata are 2 metode abstracte, NU este o interfata functionala si incercarea de a-i asocia o expresie lambda va genera eroare de compilare.",
+    keyTakeaway: "Expresiile Lambda implementeaza interfete functionale (SAM - o singura metoda abstracta) in mod compact."
+  },
+  {
+    id: "java-87",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Adnotarea @FunctionalInterface",
+    question: "Ce rol are adnotarea @FunctionalInterface si este ea obligatorie pentru a folosi o expresie Lambda?",
+    answer: "1. Rolul adnotarii @FunctionalInterface:\\n   - Este o verificare la compilare (informative / compiler check), similar cu @Override.\\n   - Forteaza compilatorul sa valideze ca interfata are EXACT o singura metoda abstracta.\\n   - Daca adaugi din greseala o a doua metoda abstracta, compilatorul arunca eroare imediat: \"Unexpected @FunctionalInterface annotation\".\\n   - Documenteaza intentia clara de design ca acea interfata este gandita pentru lambdas.\\n\\n2. Este obligatorie?\\n   - NU! Orice interfata cu o singura metoda abstracta este considerata functional interface conform specificatiei Java, chiar daca lipseste adnotarea.",
+    codeSnippet: `@FunctionalInterface
+public interface Calculator {
+    int compute(int a, int b); // Exact o metoda abstracta!
+
+    // Metode default si statice sunt permise:
+    default void printInfo() { System.out.println("Calc"); }
+    static int add(int x, int y) { return x + y; }
+
+    // Daca adaugi: void reset(); -> EROARE de compilare!
+}`,
+    interviewTrap: "Metodele mostenite din java.lang.Object (cum ar fi boolean equals(Object o)) NU se numara ca metode abstracte ale interfetei.",
+    keyTakeaway: "@FunctionalInterface nu este obligatorie tehnic, dar este o buna practica esentiala pentru prevenirea adaugarii de metode abstracte in viitor."
+  },
+  {
+    id: "java-88",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Cele 4 Interfete Functionale Standard de baza",
+    question: "Care sunt cele 4 mari interfete functionale din java.util.function si ce semnaturi au metodele lor?",
+    answer: "In pachetul java.util.function exista 4 interfete functionale fundamentale:\\n\\n1. Predicate<T>:\\n   - Metoda: boolean test(T t)\\n   - Primeste un argument de tip T si returneaza un boolean (folosita pentru filtrare si validare).\\n\\n2. Function<T, R>:\\n   - Metoda: R apply(T t)\\n   - Primeste un argument de tip T si returneaza un rezultat transformat de tip R (folosita pentru transformari si mapari).\\n\\n3. Consumer<T>:\\n   - Metoda: void accept(T t)\\n   - Primeste un argument de tip T si nu returneaza nimic (folosita pentru efecte secundare: print, salvare in db).\\n\\n4. Supplier<T>:\\n   - Metoda: T get()\\n   - Nu primeste parametri si produce/furnizeaza o valoare de tip T (factory, lazy loading).",
+    codeSnippet: `// 1. Predicate: testeaza conditie
+Predicate<String> isLong = s -> s.length() > 5;
+
+// 2. Function: transforma T in R
+Function<String, Integer> toLength = String::length;
+
+// 3. Consumer: consuma fara retur
+Consumer<String> printer = System.out::println;
+
+// 4. Supplier: furnizeaza valoare
+Supplier<Double> randomVal = () -> Math.random();`,
+    interviewTrap: "Invata pe de rost cele 4 nume si semnaturile lor: test(), apply(), accept(), get(). Sunt intrebate frecvent la interviurile de Junior/Mid!",
+    keyTakeaway: "Predicate (T -> boolean), Function (T -> R), Consumer (T -> void), Supplier (() -> T)."
+  },
+  {
+    id: "java-89",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Interfete Functionale Primitive in Java",
+    question: "De ce exista interfete precum IntPredicate, ToIntFunction sau LongConsumer si cand trebuie folosite?",
+    answer: "1. Problema cu Generics si Primitive:\\n   - Interfetele generice precum Predicate<Integer> sau Function<String, Integer> lucreaza cu obiecte wrapper (Integer, Double).\\n   - Fiecare apel genereaza operatii de Autoboxing (conversie din int in Integer pe Heap) si Unboxing (conversie din Integer in int).\\n   - Pentru milioane de operatii, autoboxing-ul cauzeaza o degradare severa a performantei si presiune mare pe Garbage Collector.\\n\\n2. Solutia: Interfete specializate pentru primitive:\\n   - IntPredicate (metoda: boolean test(int value)) -> fara boxing!\\n   - ToIntFunction<T> (metoda: int applyAsInt(T value))\\n   - LongConsumer, DoubleSupplier etc.\\n\\n3. Cand se folosesc:\\n   - In procesari intensive de numere si in primitive streams (IntStream, LongStream, DoubleStream).",
+    codeSnippet: `// Cu autoboxing (ineficient pentru procesari mari):
+Predicate<Integer> p1 = num -> num > 0; // boxing int -> Integer
+
+// Fara autoboxing (performanta maxima):
+IntPredicate p2 = num -> num > 0; // lucreaza direct cu tipul primitiv int
+boolean result = p2.test(42);`,
+    interviewTrap: "Daca folosesti Function<Person, Integer> in loc de ToIntFunction<Person>, vei crea un obiect Integer pe Heap pentru fiecare element procesat.",
+    keyTakeaway: "Interfetele functionale primitive elimina penalizarea de memorie si timp cauzata de autoboxing si unboxing."
+  },
+  {
+    id: "java-90",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "BiFunction, BiConsumer si BiPredicate",
+    question: "Ce reprezinta interfetele BiFunction, BiConsumer si BiPredicate si cum difera de cele simple?",
+    answer: "Prefixul \"Bi\" indica faptul ca interfata primeste DOI parametri in loc de unul singur:\\n\\n1. BiPredicate<T, U>:\\n   - Metoda: boolean test(T t, U u)\\n   - Evalueaza o conditie primind doua valori de tipuri posibil diferite.\\n\\n2. BiFunction<T, U, R>:\\n   - Metoda: R apply(T t, U u)\\n   - Primeste doua valori (T si U) si returneaza un rezultat transformat de tip R.\\n\\n3. BiConsumer<T, U>:\\n   - Metoda: void accept(T t, U u)\\n   - Consuma doi parametri fara a returna nimic (foarte des folosita in Map.forEach((k, v) -> ...)).",
+    codeSnippet: `// BiPredicate:
+BiPredicate<String, Integer> isLongerThan = (str, len) -> str.length() > len;
+
+// BiFunction:
+BiFunction<Integer, Integer, String> sumToString = (a, b) -> "Suma: " + (a + b);
+
+// BiConsumer: iterare peste Map
+Map<String, Integer> ages = Map.of("Ana", 25, "Mihai", 30);
+ages.forEach((name, age) -> System.out.println(name + " are " + age + " ani"));`,
+    interviewTrap: "Nu exista o interfata \"BiSupplier\" in Java standard, deoarece o metoda nu poate returna simultan doua valori independente.",
+    keyTakeaway: "Variantele \"Bi\" accepta doi parametri de intrare: BiPredicate (test), BiFunction (apply) si BiConsumer (accept)."
+  },
+  {
+    id: "java-91",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "UnaryOperator si BinaryOperator",
+    question: "Ce sunt UnaryOperator si BinaryOperator si cum relationeaza cu Function si BiFunction?",
+    answer: "1. UnaryOperator<T>:\\n   - Este o extensie a lui Function<T, T>.\\n   - Reprezinta o operatie pe un singur operand, unde tipul de intrare si tipul de retur sunt IDENTICE (T apply(T t)).\\n   - Ex: transformarea unui String in litere mari.\\n\\n2. BinaryOperator<T>:\\n   - Este o extensie a lui BiFunction<T, T, T>.\\n   - Reprezinta o operatie pe doi operanzi de acelasi tip T, returnand un rezultat de acelasi tip T.\\n   - Ex: adunarea a doua numere sau gasirea maximului cu BinaryOperator.maxBy(comparator).\\n\\n3. De ce exista:\\n   - Simplifica semnatura atunci cand tipurile nu se schimba.",
+    codeSnippet: `// UnaryOperator<String> in loc de Function<String, String>:
+UnaryOperator<String> addExclamation = s -> s + "!";
+System.out.println(addExclamation.apply("Java")); // Java!
+
+// BinaryOperator<Integer> in loc de BiFunction<Integer, Integer, Integer>:
+BinaryOperator<Integer> multiply = (a, b) -> a * b;
+System.out.println(multiply.apply(4, 5)); // 20`,
+    interviewTrap: "Foloseste UnaryOperator si BinaryOperator cand tipurile de intrare si retur sunt egale pentru a face codul mai clar si usor de citit.",
+    keyTakeaway: "UnaryOperator extinde Function<T, T>; BinaryOperator extinde BiFunction<T, T, T>."
+  },
+  {
+    id: "java-92",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Method References (::) in Java",
+    question: "Ce sunt Method References (operatorul ::) in Java si care sunt cele 4 tipuri existente?",
+    answer: "1. Ce sunt Method References:\\n   - O sintaxa compacta pentru a transmite direct o metoda existenta ca expresie lambda cand lambda nu face altceva decat sa redirectioneze apelul catre acea metoda.\\n\\n2. Cele 4 tipuri de referinte:\\n   - Referinta la metoda statica: ClassName::staticMethod (ex: Math::max echivalent cu (a, b) -> Math.max(a, b)).\\n   - Referinta la metoda de instanta pe un obiect particular: instance::method (ex: System.out::println echivalent cu x -> System.out.println(x)).\\n   - Referinta la metoda de instanta a unui obiect arbitrar de un tip dat: ClassName::instanceMethod (ex: String::toUpperCase echivalent cu s -> s.toUpperCase()).\\n   - Referinta la constructor: ClassName::new (ex: ArrayList::new echivalent cu () -> new ArrayList<>()).",
+    codeSnippet: `List<String> names = List.of("ana", "bogdan");
+
+// 1. Static:
+Function<Double, Double> sqrt = Math::sqrt;
+
+// 2. Instanta pe obiect particular:
+names.forEach(System.out::println);
+
+// 3. Instanta pe tip arbitrar:
+List<String> upper = names.stream().map(String::toUpperCase).toList();
+
+// 4. Constructor:
+Supplier<List<String>> listSupplier = ArrayList::new;`,
+    interviewTrap: "Sintaxa ClassName::instanceMethod este valida doar daca primul argument al expresiei lambda devine obiectul pe care se apeleaza metoda (target-ul apelului).",
+    keyTakeaway: "Method References fac codul mai lizibil inlocuind lambdas redundante cu operatorul ::."
+  },
+  {
+    id: "java-93",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Variabile \"Effectively Final\" in Lambdas",
+    question: "De ce variabilele locale folosite intr-o expresie lambda trebuie sa fie final sau effectively final?",
+    answer: "1. Regula:\\n   - O variabila locala definita in afara unei expresii lambda poate fi accesata in interiorul lambda-ului DOAR daca este marcata explicit final SAU nu i se mai schimba valoarea dupa initializare (effectively final).\\n\\n2. Cauza tehnica (Variable Capture & Stack Lifecycle):\\n   - Variabilele locale traiesc pe Stiva (Stack) a thread-ului care apeleaza metoda si sunt distruse la iesirea din metoda.\\n   - Expresia lambda poate rula asincron pe un alt thread mult timp dupa ce metoda a terminat executia!\\n   - Java copiaza valoarea variabilei locale in instanta lambda (capture by value).\\n   - Daca variabila ar putea fi modificata, ar aparea inconsistente intre stiva si copia din heap (si probleme grave de concurenta).\\n\\n3. Ce nu este restrictionat:\\n   - Campurile de instanta ale clasei pot fi modificate deoarece traiesc pe Heap.",
+    codeSnippet: `int count = 10; // effectively final
+
+Runnable r = () -> {
+    System.out.println(count); // OK: count nu este modificat
+};
+
+int invalidCount = 5;
+// invalidCount = 6; // Daca de-comentezi, linia de mai jos nu mai compileaza!
+// Runnable r2 = () -> System.out.println(invalidCount); // EROARE!`,
+    interviewTrap: "Daca ai nevoie sa modifici o valoare dintr-o lambda, foloseste o structura mutabila pe Heap, cum ar fi AtomicInteger sau un array de un element int[] arr = {0}.",
+    keyTakeaway: "Variabilele locale capturate in lambdas sunt copiate dupa valoare si trebuie sa fie final sau effectively final."
+  },
+  {
+    id: "java-94",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Stream API - Ce este un Stream?",
+    question: "Ce este un Stream in Java 8+, cum difera de o Colectie si care sunt caracteristicile sale fundamentale?",
+    answer: "1. Ce este un Stream:\\n   - O secventa de elemente care suporta operatii agregate de procesare (filtrare, transformare, reducere) in stil declarativ.\\n\\n2. Diferente majore fata de o Colectie:\\n   - Nu stocheaza date: Un Stream este un pipeline de procesare, nu o structura de stocare.\\n   - Functional: Nu modifica sursa de date (nu produce mutatii pe colectia originala).\\n   - Evaluare Lazy: Operatiile intermediare nu se executa pana cand nu este declansata o operatie terminala.\\n   - Consumabil o singura data: Un stream poate fi parcurs o singura data (similar cu un Iterator). Dupa operatia terminala, stream-ul este inchis.",
+    codeSnippet: `List<String> list = List.of("Java", "Spring", "Docker");
+
+// Colectia stocheaza date; Stream-ul doar le proceseaza declarativ:
+List<String> result = list.stream()
+    .filter(s -> s.startsWith("J"))
+    .map(String::toUpperCase)
+    .toList();
+
+System.out.println(list);   // [Java, Spring, Docker] -> Neschimbat!
+System.out.println(result); // [JAVA]`,
+    interviewTrap: "Multi juniori cred ca list.stream().filter(...) modifica lista initiala. FALS! Streams nu muta sursa de date, ci produc rezultate noi.",
+    keyTakeaway: "Un Stream este un canal de procesare a datelor, nu o colectie; este lazy, functional si de unica folosinta."
+  },
+  {
+    id: "java-95",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Operatii Intermediare vs Operatii Terminale in Streams",
+    question: "Care este diferenta dintre operatiile intermediare si cele terminale in Stream API si cum functioneaza Lazy Evaluation?",
+    answer: "1. Operatii Intermediare (Intermediate Operations):\\n   - Returneaza intotdeauna un nou Stream (permit chaining / fluent API).\\n   - Sunt LAZY: nu se executa imediat! Doar construiesc pipeline-ul de instructiuni.\\n   - Exemple: filter(), map(), flatMap(), sorted(), distinct(), limit(), skip().\\n\\n2. Operatii Terminale (Terminal Operations):\\n   - Returneaza un rezultat final (colectie, numar, boolean, Optional) sau void.\\n   - Sunt EAGER: declanseaza parcurgerea si executia efectiva a tuturor operatiilor intermediare din pipeline.\\n   - Inchid stream-ul dupa executie.\\n   - Exemple: collect(), toList(), forEach(), reduce(), count(), anyMatch(), findFirst().",
+    codeSnippet: `List<String> names = List.of("Ana", "Ion", "Maria");
+
+// FARA operatie terminala: nimic nu se executa (niciun print la consola)!
+names.stream().filter(n -> {
+    System.out.println("Filtrare: " + n);
+    return n.length() > 3;
+});
+
+// CU operatie terminala: pipeline-ul se declanseaza!
+long count = names.stream()
+    .filter(n -> {
+        System.out.println("Procesare: " + n);
+        return n.length() > 3;
+    })
+    .count(); // Operatia terminala declanseaza totul!`,
+    interviewTrap: "Daca ai un stream doar cu operatii intermediare si fara nicio operatie terminala, codul nu va executa nicio instructiune si nu va da nicio eroare!",
+    keyTakeaway: "Operatiile intermediare sunt lazy si returneaza un Stream; operatia terminala porneste executia si returneaza rezultatul final."
+  },
+  {
+    id: "java-96",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Operatiile filter() si map() in Stream API",
+    question: "Cum functioneaza operatiile intermediare filter() si map() si cand se foloseste fiecare?",
+    answer: "1. filter(Predicate<T>):\\n   - Selecteaza elemente pe baza unei conditii booleene.\\n   - Pastreaza in stream doar elementele pentru care predicatul returneaza true.\\n   - Numarul de elemente din stream scade sau ramane egal; tipul elementelor ramane neschimbat (T -> T).\\n\\n2. map(Function<T, R>):\\n   - Transforma fiecare element intr-un alt element / valoare.\\n   - Numarul de elemente ramane strict acelasi (relatie 1 la 1).\\n   - Tipul elementului se poate schimba (ex: transforma User in String, sau String in Integer).",
+    codeSnippet: `List<String> items = List.of("apple", "banana", "kiwi", "avocado");
+
+List<Integer> lengths = items.stream()
+    .filter(s -> s.startsWith("a")) // Pastreaza doar: "apple", "avocado"
+    .map(String::length)            // Transforma in lungimi: 5, 7
+    .toList();
+
+System.out.println(lengths); // [5, 7]`,
+    interviewTrap: "Nu folosi map() pentru a filtra elemente returnand null; foloseste intotdeauna filter() pentru eliminarea elementelor.",
+    keyTakeaway: "filter() reduce numarul de elemente pastrand tipul; map() transforma fiecare element pastrand numarul de elemente (1:1)."
+  },
+  {
+    id: "java-97",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "map() vs flatMap() in Stream API",
+    question: "Care este diferenta dintre map() si flatMap() si cand este obligatoriu flatMap()?",
+    answer: "1. map(Function<T, R>):\\n   - Transforma fiecare element intr-un singur rezultat de tip R (mapare 1 la 1).\\n   - Daca functia returneaza o colectie sau un stream, map() produce un Stream de colectii (ex: Stream<List<String>>).\\n\\n2. flatMap(Function<T, Stream<R>>):\\n   - Transforma fiecare element intr-un Stream de rezultate si apoi \"aplatizeaza\" (flattens) toate aceste stream-uri intr-un singur Stream continuu (mapare 1 la multe).\\n   - Transforma structuri imbricate (liste de liste, orase dintr-o lista de tari) intr-un stream plat.\\n\\n3. Cand este folosit:\\n   - Flattening de List<List<T>> -> List<T>.\\n   - Decomprimarea relatiilor One-to-Many.",
+    codeSnippet: `List<List<String>> nested = List.of(
+    List.of("A", "B"),
+    List.of("C", "D")
+);
+
+// Cu map: produce Stream<List<String>> (structura ramane imbricata)
+// nested.stream().map(List::stream)...
+
+// Cu flatMap: produce Stream<String> (aplatizat intr-o singura lista)
+List<String> flat = nested.stream()
+    .flatMap(List::stream)
+    .toList();
+
+System.out.println(flat); // [A, B, C, D]`,
+    interviewTrap: "Daca ai nevoie sa extragi toate comenzile tuturor clientilor dintr-o lista List<Customer>, foloseste flatMap(c -> c.getOrders().stream()). Daca folosesti map, obtii un Stream<List<Order>>.",
+    keyTakeaway: "map() mapeaza 1:1; flatMap() mapeaza 1:N si aplatizeaza stream-urile imbricate intr-un singur stream liniar."
+  },
+  {
+    id: "java-98",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Operatiile distinct, sorted, limit si skip",
+    question: "Ce fac operatiile intermediare distinct(), sorted(), limit() si skip() si care dintre ele sunt stateful?",
+    answer: "1. Operatii Stateful vs Stateless:\\n   - Stateless: Fiecare element este procesat independent de celelalte (ex: filter, map).\\n   - Stateful: Necesita cunoasterea starii anterioare sau stocarea elementelor in memorie.\\n\\n2. distinct():\\n   - Elimina duplicatele pe baza metodei equals() si hashCode(). (Stateful)\\n\\n3. sorted():\\n   - Sorteaza elementele in ordinea naturala (Comparable) sau folosind un Comparator explicit. Necesita acumularea tuturor elementelor inainte de a merge mai departe! (Stateful)\\n\\n4. limit(maxSize):\\n   - Trunchiaza stream-ul la primele maxSize elemente. (Short-circuiting)\\n\\n5. skip(n):\\n   - Sare peste primele n elemente din stream.",
+    codeSnippet: `List<Integer> numbers = List.of(5, 2, 8, 2, 9, 5, 1, 3);
+
+List<Integer> result = numbers.stream()
+    .distinct()            // [5, 2, 8, 9, 1, 3]
+    .sorted()              // [1, 2, 3, 5, 8, 9]
+    .skip(2)               // Sare peste 1, 2 -> [3, 5, 8, 9]
+    .limit(3)              // Primele 3 -> [3, 5, 8]
+    .toList();
+
+System.out.println(result); // [3, 5, 8]`,
+    interviewTrap: "Pe stream-uri infinite (ex: Stream.generate()), apelul sorted() va bloca aplicatia cu OutOfMemoryError pentru ca incearca sa stocheze infinitatea de elemente in memorie.",
+    keyTakeaway: "distinct() elimina duplicatele, sorted() ordoneaza, skip(n) sare peste n elemente, limit(k) opreste dupa k elemente."
+  },
+  {
+    id: "java-99",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Operatia peek() in Streams: Corect vs Anti-pattern",
+    question: "Care este scopul oficial al operatiei peek() si de ce este considerata un anti-pattern cand modifica starea?",
+    answer: "1. Scopul oficial:\\n   - Operatie intermediara conceputa EXCLUSIV pentru debugging si logging (vizualizarea elementelor pe masura ce curg prin pipeline).\\n   - Primeste un Consumer<T> si returneaza acelasi stream.\\n\\n2. De ce modificarea starii prin peek() este un Anti-pattern:\\n   - Streams sunt optimizate de JVM; in anumite situatii (ex: stream.map(...).peek(...).count()), compilatorul poate optimiza complet si sari peste pasul peek() daca numarul de elemente poate fi dedus fara evaluare!\\n   - Modificarea starii obiectelor (side-effects) in peek() sparge principiul imutabilitatii si produce erori neasteptate pe stream-uri paralele.\\n\\n3. Regula:\\n   - Foloseste peek() doar pentru log.debug() / println(); daca vrei transformari de date, foloseste map().",
+    codeSnippet: `// UTILIZARE CORECTA: doar logging/debugging
+List<String> res = List.of("one", "two", "three").stream()
+    .filter(s -> s.length() > 3)
+    .peek(val -> System.out.println("Filtrat: " + val))
+    .map(String::toUpperCase)
+    .toList();
+
+// ANTI-PATTERN: modificarea starii obiectelor in peek!
+// list.stream().peek(user -> user.setStatus("ACTIVE")).toList(); // GRESIT!`,
+    interviewTrap: "In Java 9+, expresia Stream.of(\"a\", \"b\").peek(System.out::println).count() poate sa NU printeze nimic! Deoarece count() stie deja dimensiunea stream-ului si sare peste executia pipeline-ului.",
+    keyTakeaway: "peek() este strict pentru depanare/logging; nu te baza pe el pentru modificari de date sau logica de business."
+  },
+  {
+    id: "java-100",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "forEach() vs forEachOrdered() in Streams",
+    question: "Care este diferenta dintre forEach() si forEachOrdered(), in special pe Stream-uri paralele?",
+    answer: "1. forEach(Consumer<T>):\\n   - Parcurge fiecare element din stream si aplica actiunea.\\n   - Pe un stream secvential simplu, parcurge in ordinea aparitiei.\\n   - Pe un Parallel Stream, forEach() NU garanteaza ordinea de procesare a elementelor; le proceseaza asincron in functie de cum termina thread-urile din pool (creste performanta renuntand la ordine).\\n\\n2. forEachOrdered(Consumer<T>):\\n   - Garanteaza ca elementele vor fi procesate STRICT in ordinea sursei originale (encounter order), chiar si pe stream-uri paralele.\\n   - Consecinta: pe parallel streams, forEachOrdered() anuleaza mare parte din avantajul de performanta al paralelizarii.",
+    codeSnippet: `List<Integer> list = List.of(1, 2, 3, 4, 5);
+
+// Pe stream paralel:
+System.out.println("--- forEach (ordine nedeterminista): ---");
+list.parallelStream().forEach(System.out::print); // ex: 3 5 1 2 4
+
+System.out.println("\\n--- forEachOrdered (ordine garantata): ---");
+list.parallelStream().forEachOrdered(System.out::print); // 1 2 3 4 5`,
+    interviewTrap: "Daca folosesti forEachOrdered() pe un parallelStream(), thread-urile trebuie sa astepte sincronizarea ordinii, pierzand beneficiul vitezei paralele.",
+    keyTakeaway: "forEach este rapid dar renunta la ordinea de intalnire pe stream-uri paralele; forEachOrdered mentine ordinea cu pretul performantei."
+  },
+  {
+    id: "java-101",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "findFirst() vs findAny() in Streams",
+    question: "Cum difera findFirst() de findAny() si cand ar trebui preferat findAny()?",
+    answer: "1. findFirst():\\n   - Returneaza un Optional cu primul element din stream conform ordinii de intalnire (encounter order).\\n   - Este deterministic atat pe stream-uri secventiale cat si pe cele paralele.\\n   - Pe stream-uri paralele are cost ridicat de coordonare intre thread-uri pentru a garanta ca returneaza fix primul element din lista originala.\\n\\n2. findAny():\\n   - Returneaza un Optional cu ORICARE element din stream care indeplineste conditiile.\\n   - Pe stream-uri secventiale returneaza de obicei tot primul element.\\n   - Pe stream-uri paralele este mult mai performant: returneaza imediat primul rezultat gasit de oricare thread liber (non-deterministic).\\n\\n3. Recomandare:\\n   - Foloseste findAny() cand nu te intereseaza ordinea exacta pe stream-uri paralele.",
+    codeSnippet: `List<String> names = List.of("Ion", "Ana", "Alex", "Andrei");
+
+// Pe paralel stream:
+Optional<String> any = names.parallelStream()
+    .filter(s -> s.startsWith("A"))
+    .findAny(); // Returneaza rapid oricare dintre "Ana", "Alex", "Andrei"
+
+Optional<String> first = names.parallelStream()
+    .filter(s -> s.startsWith("A"))
+    .findFirst(); // Garanteaza returnarea lui "Ana"`,
+    interviewTrap: "Pe stream-uri secventiale findFirst() si findAny() dau aproape mereu acelasi rezultat, dar diferenta devine critica pe stream-uri paralele.",
+    keyTakeaway: "findFirst() garanteaza primul element (mai lent pe paralel); findAny() returneaza cel mai rapid element gasit de thread-uri."
+  },
+  {
+    id: "java-102",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "anyMatch, allMatch, noneMatch si Short-Circuiting",
+    question: "Ce fac metodele anyMatch(), allMatch() si noneMatch() si cum functioneaza evaluarea Short-Circuiting?",
+    answer: "1. Ce este Short-Circuiting:\\n   - Un mecanism de optimizare prin care procesarea stream-ului se opreste imediat ce rezultatul final poate fi determinat cu certitudine, fara a mai parcurge restul elementelor.\\n\\n2. anyMatch(Predicate<T>):\\n   - Returneaza true daca CEL PUTIN UN element respecta conditia. Se opreste la primul element adevarat.\\n\\n3. allMatch(Predicate<T>):\\n   - Returneaza true daca TOATE elementele respecta conditia. Se opreste la primul element fals.\\n\\n4. noneMatch(Predicate<T>):\\n   - Returneaza true daca NICIUN element nu respecta conditia. Se opreste la primul element adevarat.\\n\\n5. Comportament pe Stream GOAL (Important!):\\n   - anyMatch pe stream gol returneaza false.\\n   - allMatch pe stream gol returneaza true (adevar vacuus)!\\n   - noneMatch pe stream gol returneaza true.",
+    codeSnippet: `List<Integer> nums = List.of(2, 4, 6, 7, 8, 10);
+
+// Se opreste la 7:
+boolean hasOdd = nums.stream().anyMatch(n -> n % 2 != 0); // true (gasit la 7)
+
+// Se opreste la 7:
+boolean allEven = nums.stream().allMatch(n -> n % 2 == 0); // false (esuat la 7)
+
+// Stream gol:
+List<Integer> empty = List.of();
+System.out.println(empty.stream().allMatch(n -> n > 100)); // true!`,
+    interviewTrap: "Capcana clasica de interviu: Ce returneaza streamGol.allMatch(x -> x > 10)? Raspunsul este TRUE, conform logicii matematice a predicatelor (vacuous truth).",
+    keyTakeaway: "anyMatch, allMatch si noneMatch folosesc short-circuiting si se opresc imediat ce verdictul este sigur."
+  },
+  {
+    id: "java-103",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Operatia terminala reduce() in Streams",
+    question: "Cum functioneaza operatia reduce() in Stream API si care sunt cele 3 variante ale sale?",
+    answer: "1. Ce face reduce():\\n   - Combina succesiv toate elementele dintr-un stream intr-o singura valoare finala folosind o functie acumulatoare (BinaryOperator).\\n\\n2. Cele 3 variante de supraincarcare:\\n   - Varianta 1: Optional<T> reduce(BinaryOperator<T> accumulator)\\n     - Nu are valoare initiala. Daca stream-ul este gol, returneaza Optional.empty().\\n   - Varianta 2: T reduce(T identity, BinaryOperator<T> accumulator)\\n     - Are valoare de identitate (ex: 0 pentru suma, 1 pentru inmultire). Returneaza direct T.\\n   - Varianta 3: <U> U reduce(U identity, BiFunction<U, ? super T, U> accumulator, BinaryOperator<U> combiner)\\n     - Folosita pe stream-uri paralele cand tipul rezultatului difera de tipul elementelor.",
+    codeSnippet: `List<Integer> numbers = List.of(1, 2, 3, 4, 5);
+
+// Varianta 1: returneaza Optional
+Optional<Integer> sumOpt = numbers.stream().reduce((a, b) -> a + b);
+
+// Varianta 2: cu identity = 0 (suma):
+int sum = numbers.stream().reduce(0, (a, b) -> a + b); // sau Integer::sum
+System.out.println("Suma: " + sum); // 15
+
+// Varianta cu inmultire (identity = 1):
+int product = numbers.stream().reduce(1, (a, b) -> a * b); // 120`,
+    interviewTrap: "Daca pui o valoare de identitate gresita (ex: identity = 10 la suma), rezultatul final va fi alterat (10 + suma numerelor). Valoarea identity trebuie sa respecte regula f(identity, x) == x.",
+    keyTakeaway: "reduce() pliaza elementele stream-ului intr-un singur rezultat cumulativ pe baza unei operatii asociative."
+  },
+  {
+    id: "java-104",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "count(), min() si max() pe Stream-uri",
+    question: "Cum se utilizeaza operatiile terminale count(), min() si max() si ce tipuri returneaza?",
+    answer: "1. count():\\n   - Returneaza numarul de elemente din stream sub forma unui long.\\n\\n2. min(Comparator<T>) si max(Comparator<T>):\\n   - Primeste obligatoriu un Comparator pentru a defini ordinea de comparare.\\n   - Returneaza un Optional<T>, deoarece stream-ul poate fi gol!\\n   - Optional previne aparitia NullPointerException.",
+    codeSnippet: `List<String> list = List.of("elefant", "caine", "pisica", "leu");
+
+// count():
+long total = list.stream().filter(s -> s.length() > 3).count();
+
+// min() dupa lungime:
+Optional<String> shortest = list.stream()
+    .min(Comparator.comparingInt(String::length));
+
+// max() alfabetic:
+Optional<String> lastAlphabetical = list.stream()
+    .max(String::compareTo);
+
+shortest.ifPresent(s -> System.out.println("Cel mai scurt: " + s)); // leu`,
+    interviewTrap: "min() si max() nu compileaza fara un Comparator (cu exceptia Primitive Streams: IntStream.min() nu are nevoie de Comparator).",
+    keyTakeaway: "count() returneaza long; min() si max() necesita un Comparator si returneaza Optional<T>."
+  },
+  {
+    id: "java-105",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Collectors.toList() vs Stream.toList() (Java 16+)",
+    question: "Care este diferenta dintre stream.collect(Collectors.toList()) si stream.toList() introdus in Java 16?",
+    answer: "1. stream.collect(Collectors.toList()):\\n   - Returneaza o implementare de List (de regula un ArrayList standard).\\n   - Lista returnata este MUTABILA (poti apela .add() sau .remove() fara eroare).\\n   - Permite elemente null.\\n\\n2. stream.toList() (Java 16+):\\n   - Sintaxa mult mai concisa si directa.\\n   - Returneaza o lista complet IMUTABILA (unmodifiable list).\\n   - Daca apelezi add() sau remove() pe lista rezultata, arunca UnsupportedOperationException!\\n   - Consuma mai putina memorie.",
+    codeSnippet: `List<String> names = List.of("A", "B");
+
+// Java 8+: lista mutabila
+List<String> mutableList = names.stream()
+    .collect(Collectors.toList());
+mutableList.add("C"); // Functioneaza!
+
+// Java 16+: lista imutabila compacta
+List<String> unmodList = names.stream().toList();
+// unmodList.add("C"); // UnsupportedOperationException la runtime!`,
+    interviewTrap: "stream.toList() produce o lista read-only; daca echipa ta are nevoie sa adauge elemente ulterior in lista rezultata, stream.toList() va cauza UnsupportedOperationException.",
+    keyTakeaway: "Collectors.toList() creeaza o lista mutabila; Stream.toList() din Java 16 produce o lista imutabila compacta."
+  },
+  {
+    id: "java-106",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Collectors.toSet() si Collectors.toCollection()",
+    question: "Cand folosim Collectors.toSet() si cum putem alege o implementare specifica folosind Collectors.toCollection()?",
+    answer: "1. Collectors.toSet():\\n   - Colecteaza elementele intr-un Set, eliminand automat duplicatele pe baza equals() si hashCode().\\n   - Nu ofera garantii privind ordinea sau implementarea concreta (de obicei returneaza un HashSet).\\n\\n2. Collectors.toCollection(Supplier):\\n   - Folosit atunci cand doresti o implementare concreta specifica (ex: TreeSet pentru ordine sortata, LinkedHashSet pentru ordinea de inserare, sau LinkedList).\\n   - Primeste un constructor reference (ex: TreeSet::new).",
+    codeSnippet: `List<String> items = List.of("mere", "pere", "mere", "nuci");
+
+// Set simplu (duplicate eliminate, ordine nedeterminata):
+Set<String> set = items.stream()
+    .collect(Collectors.toSet());
+
+// TreeSet specific (sortat alfabetic):
+Set<String> sortedSet = items.stream()
+    .collect(Collectors.toCollection(TreeSet::new));
+
+// LinkedList specific:
+List<String> linked = items.stream()
+    .collect(Collectors.toCollection(LinkedList::new));`,
+    interviewTrap: "Daca ai nevoie ca Set-ul rezultat sa fie sortat, nu te baza pe Collectors.toSet(), ci foloseste Collectors.toCollection(TreeSet::new).",
+    keyTakeaway: "toSet() colecteaza intr-un Set general; toCollection(Supplier) permite alegerea implementarii exacte (TreeSet, LinkedList etc.)."
+  },
+  {
+    id: "java-107",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Collectors.toMap() si Gestionarea Cheilor Duplicate",
+    question: "Ce exceptie arunca Collectors.toMap() la aparitia unei chei duplicate si cum se rezolva cu mergeFunction?",
+    answer: "1. Problema cu varianta simpla toMap(keyMapper, valueMapper):\\n   - Daca doua elemente din stream genereaza aceeasi cheie, se arunca IllegalStateException: \"Duplicate key ...\".\\n\\n2. Solutia: Furnizarea functiei de rezolvare a conflictelor (mergeFunction):\\n   - Varianta cu 3 parametri: Collectors.toMap(keyMapper, valueMapper, mergeFunction).\\n   - mergeFunction este un BinaryOperator care decide ce valoare se pastreaza cand cheia este duplicata: valoarea existenta (oldVal), valoarea noua (newVal), sau o combinare a lor.\\n\\n3. Varianta cu 4 parametri:\\n   - Permite si specificarea implementarii de Map dorite (ex: TreeMap::new).",
+    codeSnippet: `class Item {
+    String category;
+    int price;
+    Item(String c, int p) { this.category = c; this.price = p; }
+}
+
+List<Item> items = List.of(
+    new Item("ELECTRONICS", 100),
+    new Item("BOOKS", 20),
+    new Item("ELECTRONICS", 150) // Cheie duplicata!
+);
+
+// Cu mergeFunction: pastram pretul mai mare
+Map<String, Integer> map = items.stream().collect(
+    Collectors.toMap(
+        item -> item.category,
+        item -> item.price,
+        (oldVal, newVal) -> Math.max(oldVal, newVal) // Rezolvare conflict!
+    )
+);
+System.out.println(map); // {BOOKS=20, ELECTRONICS=150}`,
+    interviewTrap: "Daca omiti al 3-lea argument (mergeFunction) si stream-ul primeste date din exterior cu chei duplicate, aplicatia va crapa cu IllegalStateException.",
+    keyTakeaway: "Collectors.toMap arunca IllegalStateException la chei duplicate; parametrul mergeFunction rezolva coliziunea."
+  },
+  {
+    id: "java-108",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Collectors.groupingBy() in Streams",
+    question: "Cum functioneaza Collectors.groupingBy() si cum poti compune clasificatori cu downstream collectors?",
+    answer: "1. groupingBy simplu (clasificare dupa cheie):\\n   - Imparte elementele dintr-un stream in grupuri pe baza unei functii de clasificare (Function<T, K>).\\n   - Returneaza un Map<K, List<T>>.\\n\\n2. groupingBy cu Downstream Collector:\\n   - Permite agregarea valorilor din fiecare grup intr-un mod personalizat in loc de simpla lista:\\n   - Numarare: groupingBy(classifier, counting()) -> Map<K, Long>\\n   - Suma: groupingBy(classifier, summingInt(mapper)) -> Map<K, Integer>\\n   - Colectare valori specifice: groupingBy(classifier, mapping(mapper, toList()))\\n\\n3. Corespunde clauzei GROUP BY din SQL.",
+    codeSnippet: `class Employee {
+    String dept;
+    int salary;
+    Employee(String d, int s) { this.dept = d; this.salary = s; }
+    public String getDept() { return dept; }
+}
+
+List<Employee> emps = List.of(
+    new Employee("IT", 5000),
+    new Employee("HR", 3000),
+    new Employee("IT", 6000)
+);
+
+// 1. Grupare simpla in Map<String, List<Employee>>:
+Map<String, List<Employee>> byDept = emps.stream()
+    .collect(Collectors.groupingBy(Employee::getDept));
+
+// 2. Grupare cu numarare: Map<String, Long>
+Map<String, Long> countByDept = emps.stream()
+    .collect(Collectors.groupingBy(Employee::getDept, Collectors.counting()));
+System.out.println(countByDept); // {HR=1, IT=2}`,
+    interviewTrap: "groupingBy(classifier) este echivalentul groupingBy(classifier, toList()). Daca vrei Set sau numar, trebuie specificat explicit downstream collector-ul.",
+    keyTakeaway: "groupingBy clasifica elementele intr-un Map si suporta downstream collectors (counting, summing, mapping) pentru agregari avansate."
+  },
+  {
+    id: "java-109",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Collectors.partitioningBy() in Streams",
+    question: "Ce face Collectors.partitioningBy() si cum difera de groupingBy()?",
+    answer: "1. Ce este partitioningBy:\\n   - Un caz particular de grupare unde functia de clasificare este un Predicate<T> boolean.\\n   - Imparte intotdeauna elementele in exact DOUA partitii: true si false.\\n   - Returneaza intotdeauna un Map<Boolean, List<T>> (sau Map<Boolean, D> cu downstream collector).\\n\\n2. Diferenta cheie fata de groupingBy:\\n   - groupingBy poate genera oricate chei in Map, in functie de valorile din obiecte.\\n   - partitioningBy are INTOTDEAUNA exact cele doua chei: Boolean.TRUE si Boolean.FALSE, chiar daca una dintre liste este goala.",
+    codeSnippet: `List<Integer> numbers = List.of(1, 2, 3, 4, 5, 6);
+
+// Partitionare in Pare (true) si Impare (false):
+Map<Boolean, List<Integer>> partitioned = numbers.stream()
+    .collect(Collectors.partitioningBy(n -> n % 2 == 0));
+
+System.out.println("Pare: " + partitioned.get(true));   // [2, 4, 6]
+System.out.println("Impare: " + partitioned.get(false)); // [1, 3, 5]`,
+    interviewTrap: "partitioningBy garanteaza ca atat cheia true cat si false exista in Map. Daca nu exista elemente pare, partitioned.get(true) va returna o lista goala [], niciodata null.",
+    keyTakeaway: "partitioningBy foloseste un Predicate si returneaza mereu un Map<Boolean, List<T>> cu cele doua partitii: true si false."
+  },
+  {
+    id: "java-110",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Collectors.joining() pentru concatenare",
+    question: "Cum folosim Collectors.joining() pentru a concatena siruri de caractere si ce parametri accepta?",
+    answer: "1. Ce este Collectors.joining():\\n   - Un colector specializat pe Stream<CharSequence> / Stream<String> pentru concatenarea eficienta a textelor (folosind StringBuilder sub capota).\\n\\n2. Cele 3 variante de supraincarcare:\\n   - joining(): Concateneaza elementele direct fara niciun separator.\\n   - joining(delimiter): Concateneaza elementele cu un separator specificat intre ele (ex: \", \").\\n   - joining(delimiter, prefix, suffix): Concateneaza cu separator si adauga un prefix si sufix la intregul rezultat final (ex: \"[A, B, C]\").",
+    codeSnippet: `List<String> names = List.of("Java", "Kotlin", "Scala");
+
+String direct = names.stream().collect(Collectors.joining());
+// "JavaKotlinScala"
+
+String withComma = names.stream().collect(Collectors.joining(", "));
+// "Java, Kotlin, Scala"
+
+String formatted = names.stream().collect(Collectors.joining(", ", "[", "]"));
+// "[Java, Kotlin, Scala]"`,
+    interviewTrap: "joining() functioneaza doar pe stream-uri de tip String / CharSequence. Daca ai obiecte custom, trebuie sa aplici .map(Object::toString) inainte.",
+    keyTakeaway: "Collectors.joining(delimiter, prefix, suffix) realizeaza concatenarea eleganta a sirurilor fara bucle for manuale."
+  },
+  {
+    id: "java-111",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Colectori de statistica: summarizingInt, averagingDouble, summingInt",
+    question: "Ce statistici ofera Collectors.summarizingInt() si cum se calculeaza mediile si sumele pe stream-uri?",
+    answer: "1. summingInt(ToIntFunction) / summingDouble / summingLong:\\n   - Calculeaza direct suma valorilor returnate de functie.\\n\\n2. averagingInt(ToIntFunction) / averagingDouble:\\n   - Calculeaza media aritmetica (returneaza Double).\\n\\n3. summarizingInt(ToIntFunction):\\n   - Colecteaza intr-o singura parcurgere a stream-ului un set complet de statistici: numar (count), suma (sum), minim (min), medie (average) si maxim (max).\\n   - Returneaza un obiect IntSummaryStatistics.",
+    codeSnippet: `List<String> words = List.of("ana", "are", "mere", "portocale");
+
+IntSummaryStatistics stats = words.stream()
+    .collect(Collectors.summarizingInt(String::length));
+
+System.out.println("Numar elemente: " + stats.getCount()); // 4
+System.out.println("Suma lungimi: " + stats.getSum());       // 19
+System.out.println("Min: " + stats.getMin());                 // 3
+System.out.println("Medie: " + stats.getAverage());           // 4.75
+System.out.println("Max: " + stats.getMax());                 // 9`,
+    interviewTrap: "summarizingInt calculeaza toate cele 5 valori intr-o singura trecere prin stream, evitand parcurgerea multipla.",
+    keyTakeaway: "IntSummaryStatistics ofera count, sum, min, average si max dintr-o singura operatie colectoare."
+  },
+  {
+    id: "java-112",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Primitive Streams: IntStream, LongStream, DoubleStream",
+    question: "Ce sunt Primitive Streams in Java si cum difera IntStream.range() de IntStream.rangeClosed()?",
+    answer: "1. Ce sunt Primitive Streams:\\n   - Specializari ale interfetei Stream pentru primitive: IntStream (int), LongStream (long), DoubleStream (double).\\n   - Evita complet overhead-ul de memorie si performanta al autoboxing-ului Integer/Double.\\n   - Ofera operatii matematice directe: sum(), average(), min(), max(), fara a necesita colectori sau Comparatori.\\n\\n2. range(start, end) vs rangeClosed(start, end):\\n   - range(a, b): interval semi-deschis [a, b) -> include a, dar EXCLUDE b.\\n   - rangeClosed(a, b): interval inchis [a, b] -> include atat a cat si b.",
+    codeSnippet: `// range: 1 la 4 (exclude 5)
+int sum1 = IntStream.range(1, 5).sum(); // 1 + 2 + 3 + 4 = 10
+
+// rangeClosed: 1 la 5 (include 5)
+int sum2 = IntStream.rangeClosed(1, 5).sum(); // 1 + 2 + 3 + 4 + 5 = 15
+
+// Conversie de la Stream de obiecte la Primitive Stream:
+List<String> list = List.of("a", "bb", "ccc");
+int totalChars = list.stream().mapToInt(String::length).sum(); // 6`,
+    interviewTrap: "Daca ai nevoie sa transformi un IntStream inapoi intr-un Stream<Integer>, trebuie sa apelezi metoda .boxed().",
+    keyTakeaway: "Primitive streams (IntStream, LongStream, DoubleStream) elimina autoboxing-ul si ofera metode numerice directe ca sum() si average()."
+  },
+  {
+    id: "java-113",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Parallel Streams: Cand ajuta si cand fac rau?",
+    question: "Cum functioneaza parallelStream(), cand merita folosit si care sunt pericolele ascunse?",
+    answer: "1. Cum functioneaza:\\n   - Imparte datele in chunk-uri si le proceseaza in paralel folosind ForkJoinPool.commonPool() comun al JVM-ului.\\n\\n2. Cand ajuta:\\n   - Seturi MASIVE de date (sute de mii / milioane de elemente).\\n   - Operatii CPU-intensive pe fiecare element, unde fiecare element este complet independent de celelalte.\\n   - Structuri de date usor de divizat (ArrayList, array primitiv; NU LinkedList!).\\n\\n3. Cand face rau (Pericole ascunse):\\n   - Overhead de coordonare: pentru colectii mici, stream-ul paralel este MULT MAI LENT decat cel secvential!\\n   - Thread Pool comun: daca rulezi operatii I/O blocante (apeluri HTTP/DB) in parallelStream(), blochezi tot ForkJoinPool.commonPool(), afectand intreaga aplicatie!\\n   - Race conditions: daca modifici o colectie nesincronizata din interiorul lambda-ului.",
+    codeSnippet: `List<Integer> list = List.of(1, 2, 3, 4, 5);
+
+// GRESIT: Race condition pe ArrayList nesincronizat!
+List<Integer> unsafe = new ArrayList<>();
+list.parallelStream().forEach(unsafe::add); // COMPORTAMENT NEDETERMINAT / Erori!
+
+// CORECT: Folosirea colectorului thread-safe
+List<Integer> safe = list.parallelStream().map(x -> x * 2).toList();`,
+    interviewTrap: "Nu folosi NICIODATA parallelStream() pentru operatii I/O sau blocante, deoarece imparti ForkJoinPool.commonPool() cu toata masina virtuala.",
+    keyTakeaway: "Parallel streams ajuta doar la volume uriase de calcul CPU pur; pe date mici sau I/O scad performanta si pot bloca pool-ul comun."
+  },
+  {
+    id: "java-114",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Reutilizarea unui Stream in Java",
+    question: "Ce se intampla daca incerci sa apelezi doua operatii terminale pe aceeasi instanta de Stream?",
+    answer: "1. Regula:\\n   - Un Stream in Java poate fi consumat o SINGURA DATA.\\n   - Dupa ce o operatie terminala (ex: count, toList, forEach) a fost executata, stream-ul este considerat inchis si epuizat.\\n\\n2. Exceptia aruncata:\\n   - Daca incerci sa apelezi o a doua operatie intermediara sau terminala pe acelasi stream, Java arunca imediat IllegalStateException: \"stream has already been operated upon or closed\".\\n\\n3. Cum se rezolva daca ai nevoie de multiple parcurgeri:\\n   - Re-creeaza un stream nou din colectia sursa: list.stream().\\n   - Foloseste un Supplier<Stream<T>> care genereaza un stream proaspat la fiecare apel.",
+    codeSnippet: `List<String> list = List.of("A", "B", "C");
+Stream<String> stream = list.stream();
+
+stream.forEach(System.out::println); // Operatia 1: OK!
+
+// Incercare de reutilizare a aceluiasi stream:
+// long count = stream.count(); // IllegalStateException: stream has already been operated upon or closed!
+
+// Solutia corecta cu Supplier:
+Supplier<Stream<String>> streamSupplier = () -> list.stream();
+streamSupplier.get().forEach(System.out::println); // OK
+long c = streamSupplier.get().count();             // OK`,
+    interviewTrap: "Nu stoca stream-uri in variabile pe care sa le refolosesti. Creeaza intotdeauna stream-ul ad-hoc din colectie cand vrei sa il parcurgi.",
+    keyTakeaway: "Un Stream este de unica folosinta; a doua operatie pe acelasi stream arunca IllegalStateException."
+  },
+  {
+    id: "java-115",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Optional in Java: Scop si Design",
+    question: "Ce este Optional<T> in Java 8+ si care a fost scopul principal pentru care a fost introdus de creatorii limbajului?",
+    answer: "1. Ce este Optional<T>:\\n   - Un obiect container (wrapper) care poate contine fie o valoare non-null (present), fie nicio valoare (empty).\\n\\n2. Scopul de baza:\\n   - A fost conceput special ca TIP DE RETUR pentru metode de biblioteca si servicii unde o valoare poate lipsi in mod legitim (ex: findById, findFirst).\\n   - Obliga cel care apeleaza metoda (caller-ul) sa se gandeasca si sa trateze explicit cazul in care valoarea lipseste, eliminand erorile neasteptate de tip NullPointerException.\\n\\n3. Ce NU este gandit sa fie:\\n   - NU este o inlocuire generala pentru fiecare referinta posibila de null din cod.\\n   - NU este recomandat ca parametru in metode, nici ca tip de camp (field) in clase de domeniu.",
+    codeSnippet: `// Design bun: tip de retur clar care semnaleaza posibilitatea lipsei valorii
+public Optional<User> findUserById(Long id) {
+    User user = database.find(id);
+    return Optional.ofNullable(user);
+}
+
+// Caller-ul este fortat sa gestioneze absenta:
+findUserById(10L).ifPresentOrElse(
+    u -> System.out.println("Gasit: " + u.getName()),
+    () -> System.out.println("Utilizatorul nu exista!")
+);`,
+    interviewTrap: "Optional nu este Serializable. Daca il folosesti ca tip de camp intr-o entitate Hibernate sau clasa DTO, pot aparea erori la serializare.",
+    keyTakeaway: "Optional este un tip de retur gandit sa semnalizeze explicit absenta valorii si sa elimine riscul de NullPointerException."
+  },
+  {
+    id: "java-116",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Crearea Optional: of() vs ofNullable() vs empty()",
+    question: "Care este diferenta dintre Optional.of(), Optional.ofNullable() si Optional.empty()?",
+    answer: "1. Optional.empty():\\n   - Creeaza o instanta de Optional goala (fara nicio valoare).\\n\\n2. Optional.of(value):\\n   - Creeaza un Optional care contine valoarea specificata.\\n   - CRITIC: Daca valoarea transmisa este null, arunca instantaneu NullPointerException!\\n   - Se foloseste DOAR cand esti 100% sigur ca valoarea nu este si nu poate fi null.\\n\\n3. Optional.ofNullable(value):\\n   - Daca valoarea este diferita de null, returneaza Optional.of(value).\\n   - Daca valoarea este null, returneaza Optional.empty() in mod sigur, fara exceptie!\\n   - Este metoda recomandata cand impachetezi un rezultat primit dintr-o sursa externa ce poate fi null.",
+    codeSnippet: `String safe = "Hello";
+String nullableVal = null;
+
+Optional<String> opt1 = Optional.of(safe); // OK
+
+// Optional<String> opt2 = Optional.of(nullableVal); // NullPointerException instant!
+
+Optional<String> opt3 = Optional.ofNullable(nullableVal); // Sigur: returneaza Optional.empty()
+Optional<String> opt4 = Optional.empty(); // Optional gol`,
+    interviewTrap: "Cea mai frecventa greseala de incepator: folosirea Optional.of(posibilNull) in loc de Optional.ofNullable(posibilNull), ducand la crash prin NullPointerException.",
+    keyTakeaway: "Optional.of arunca NPE daca valoarea e null; Optional.ofNullable returneaza Optional.empty() in mod sigur."
+  },
+  {
+    id: "java-117",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Optional: orElse() vs orElseGet() (Lazy vs Eager)",
+    question: "Care este diferenta critica de evaluare dintre orElse() si orElseGet() intr-un Optional?",
+    answer: "Aceasta este una dintre cele mai frecvente intrebari de interviu Java!\\n\\n1. orElse(T other) - Evaluare EAGER (Imediata):\\n   - Expresia din interiorul lui orElse() este EVALUATA INTOTDEAUNA, chiar daca valoarea din Optional este PREZENTA!\\n   - Daca orElse apeleaza o metoda costisitoare (ex: orElse(createDefaultInDatabase())), acea metoda se va executa de fiecare data, irosind resurse si eventual creand date duplicat!\\n\\n2. orElseGet(Supplier<? extends T> other) - Evaluare LAZY (Leneasa):\\n   - Lambda Supplier-ul este apelat DOAR SI NUMAI DACA Optional-ul este GOL.\\n   - Daca Optional contine deja o valoare, lambda-ul nu este niciodata executat.\\n\\n3. Regula de Aur:\\n   - Foloseste orElse doar pentru constante deja existente in memorie (ex: orElse(\"UNKNOWN\")).\\n   - Foloseste orElseGet cand valoarea default implica calcule, alocari de obiecte noi (new Object()) sau apeluri de retea/DB.",
+    codeSnippet: `String getExpensiveDefault() {
+    System.out.println("--> Apel scump in DB executat!");
+    return "Default";
+}
+
+Optional<String> opt = Optional.of("Exista deja");
+
+// 1. orElse: getExpensiveDefault() SE EXECUTA desi opt contine "Exista deja"!
+String res1 = opt.orElse(getExpensiveDefault()); // Printeaza apelul scump!
+
+// 2. orElseGet: Supplier-ul NU se executa pentru ca opt este prezent!
+String res2 = opt.orElseGet(() -> getExpensiveDefault()); // Eficient, nu printeaza nimic!`,
+    interviewTrap: "Folosirea orElse(new HeavyObject()) intr-un endpoint apelat frecvent creaza instante inutile de HeavyObject la fiecare request, chiar daca Optional-ul era plin.",
+    keyTakeaway: "orElse se evalueaza mereu (eager); orElseGet apeleaza Supplier-ul doar cand valoarea lipseste (lazy)."
+  },
+  {
+    id: "java-118",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Optional.orElseThrow()",
+    question: "Ce face metoda orElseThrow() si cum difera varianta fara parametri din Java 10+ de orElseThrow(Supplier)?",
+    answer: "1. orElseThrow(Supplier<? extends X> exceptionSupplier):\\n   - Returneaza valoarea daca este prezenta.\\n   - Daca valoarea lipseste, arunca exceptia produsa de Supplier (ex: NotFoundException, IllegalArgumentException).\\n   - Este pattern-ul standard in aplicatii Spring REST API pentru a arunca 404 Not Found cand o entitate nu exista.\\n\\n2. orElseThrow() fara parametri (Java 10+):\\n   - Daca valoarea lipseste, arunca NoSuchElementException.\\n   - A fost introdusa in Java 10 ca o alternativa mai clara la get(), care era inselatoare.",
+    codeSnippet: `// 1. Cu exceptie custom de business (recomandat in Spring):
+User user = userRepository.findById(id)
+    .orElseThrow(() -> new UserNotFoundException("User nu exista: " + id));
+
+// 2. Varianta simpla Java 10+ (inlocuieste get()):
+String val = Optional.of("test").orElseThrow();`,
+    interviewTrap: "Evita metoda get() clasica, deoarece numele nu sugereaza ca arunca exceptie cand este gol. In Java 10+, orElseThrow() este varianta recomandata oficial.",
+    keyTakeaway: "orElseThrow() extrage valoarea sau arunca o exceptie specifica atunci cand valoarea lipseste."
+  },
+  {
+    id: "java-119",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "isPresent() vs ifPresent() vs ifPresentOrElse()",
+    question: "Cum folosim isPresent(), ifPresent() si ifPresentOrElse() pe un Optional?",
+    answer: "1. isPresent():\\n   - Returneaza un boolean: true daca valoarea este prezenta, false daca este empty.\\n   - Seamana cu verificarea clasica if (x != null).\\n\\n2. ifPresent(Consumer<T>):\\n   - Executa actiunea specificata (Consumer) DOAR daca valoarea este prezenta.\\n   - Daca valoarea lipseste, nu face nimic.\\n\\n3. ifPresentOrElse(Consumer<T> action, Runnable emptyAction) (Java 9+):\\n   - Ofera ramura completa \"if-else\": executa action daca valoarea este prezenta, sau emptyAction daca valoarea lipseste.",
+    codeSnippet: `Optional<String> nameOpt = Optional.ofNullable(getName());
+
+// 1. ifPresent:
+nameOpt.ifPresent(name -> System.out.println("Salut " + name));
+
+// 2. ifPresentOrElse (Java 9+):
+nameOpt.ifPresentOrElse(
+    name -> System.out.println("Salut " + name),
+    () -> System.out.println("Nume anonim")
+);`,
+    interviewTrap: "Daca scrii: if (opt.isPresent()) { return opt.get(); } else { ... }, folosesti Optional in cel mai prost mod posibil, ca un simplu null check clasic. Foloseste orElse/map/ifPresent.",
+    keyTakeaway: "ifPresent executa actiunea pe valoarea prezenta; ifPresentOrElse gestioneaza ambele ramuri (present vs empty)."
+  },
+  {
+    id: "java-120",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Optional: map() vs flatMap()",
+    question: "Care este diferenta dintre map() si flatMap() aplicate pe o instanta de Optional?",
+    answer: "1. optional.map(Function<T, U>):\\n   - Transforma valoarea continuta aplicand functia si impacheteaza automat rezultatul intr-un nou Optional<U>.\\n   - Daca Optional-ul original este empty sau daca functia returneaza null, rezultatul este Optional.empty().\\n\\n2. optional.flatMap(Function<T, Optional<U>>):\\n   - Se foloseste atunci cand functia de transformare RETURNEAZA DEJA un Optional<U>.\\n   - Daca ai folosi map(), ai obtine un Optional imbricat: Optional<Optional<U>>.\\n   - flatMap() despacheteaza structura imbricata si returneaza direct un singur Optional<U>.",
+    codeSnippet: `class Passport { String number; public String getNumber() { return number; } }
+class Person {
+    Passport passport;
+    // Metoda returneaza deja un Optional!
+    public Optional<Passport> getPassport() { return Optional.ofNullable(passport); }
+}
+
+Optional<Person> personOpt = Optional.of(new Person());
+
+// Daca am folosi map: obtinem Optional<Optional<Passport>> (urat si greoi!)
+// Optional<Optional<Passport>> bad = personOpt.map(Person::getPassport);
+
+// Cu flatMap: structura este aplatizata la un singur Optional:
+Optional<String> passNum = personOpt
+    .flatMap(Person::getPassport)
+    .map(Passport::getNumber);`,
+    interviewTrap: "Daca functia pe care o apelezi returneaza un Optional, foloseste obligatoriu flatMap() pentru a preveni imbricarea Optional<Optional<T>>.",
+    keyTakeaway: "map() impacheteaza automat rezultatul intr-un Optional; flatMap() este necesar cand functia returneaza deja un Optional."
+  },
+  {
+    id: "java-121",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Optional.filter() in Java",
+    question: "Cum functioneaza metoda filter() a clasei Optional si cand este utila?",
+    answer: "1. Cum functioneaza:\\n   - Primeste un Predicate<? super T>.\\n   - Daca Optional-ul este gol (empty), returneaza direct Optional.empty().\\n   - Daca Optional-ul contine o valoare si predicatul returneaza true, pastreaza aceeasi valoare.\\n   - Daca predicatul returneaza false, \"arunca\" valoarea si returneaza Optional.empty().\\n\\n2. Utilizare:\\n   - Validari compacte in chain fluent (ex: verificarea daca un utilizator este activ sau adult).",
+    codeSnippet: `Optional<User> userOpt = userRepository.findById(userId);
+
+// Pastreaza userul doar daca are rol de ADMIN:
+Optional<User> adminOnly = userOpt
+    .filter(u -> "ADMIN".equals(u.getRole()));
+
+adminOnly.ifPresent(admin -> System.out.println("Admin acces permis"));`,
+    interviewTrap: "Nu este nevoie sa verifici manual isPresent() inainte de filter(); daca Optional-ul este empty, filter() returneaza pur si simplu empty fara erori.",
+    keyTakeaway: "Optional.filter() pastreaza valoarea doar daca indeplineste conditia; altfel o transforma in Optional.empty()."
+  },
+  {
+    id: "java-122",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Anti-pattern-uri comune cu Optional in Java",
+    question: "Care sunt cele mai mari 3 greseli / anti-pattern-uri la folosirea Optional in aplicatii Java?",
+    answer: "1. Optional ca parametru de metoda:\\n   - Anti-pattern: void doSomething(Optional<User> user)\\n   - De ce: Cel care apeleaza metoda poate transmite totusi null (doSomething(null)), ceea ce forteaza verificari suplimentare si face API-ul greoi. Se prefera supraincarcarea (overloading) metodelor.\\n\\n2. Optional ca field intr-o entitate JPA/Hibernate sau DTO:\\n   - De ce: Optional nu implementeaza Serializable, iar JPA nu a fost creat sa mapeze coloane pe instante Optional. Creste si consumul de memorie pe Heap.\\n\\n3. Folosirea Optional.get() fara verificare:\\n   - A apela direct opt.get() anuleaza tot scopul clasei si arunca NoSuchElementException la fel ca NullPointerException.\\n\\n4. Folosirea lui if (opt.isPresent()) opt.get() in loc de map, orElse sau ifPresent.",
+    codeSnippet: `// 1. GRESIT (Optional ca parametru):
+public void process(Optional<String> config) {} // Evita!
+
+// 2. GRESIT (Optional ca field in clasa):
+public class Customer {
+    private Optional<String> phone; // Evita!
+}
+
+// 3. GRESIT (Pattern clasic redundant):
+if (opt.isPresent()) {
+    System.out.println(opt.get()); // Uracios!
+}
+// CORECT:
+opt.ifPresent(System.out::println);`,
+    interviewTrap: "La interviu, mentioneaza clar ca Brian Goetz (arhitectul limbajului Java) a specificat ca Optional a fost gandit doar ca return type, nu pentru campuri sau parametri.",
+    keyTakeaway: "Nu folosi Optional ca field sau ca parametru de metoda, si nu apela niciodata get() orbeste fara verificare."
+  },
+  {
+    id: "java-123",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "De ce s-a introdus java.time (Java 8) in locul java.util.Date?",
+    question: "Care au fost marile defecte ale vechilor clase java.util.Date si Calendar si cum le-a rezolvat pachetul java.time?",
+    answer: "1. Defectele vechilor java.util.Date si Calendar:\\n   - Mutabilitate: Date era mutabil (date.setTime(...)), cauzand bug-uri grave de securitate si concurenta daca nu faceai copii defensive.\\n   - Thread-Safety: Nicio clasa nu era thread-safe (in special SimpleDateFormat cauza coruperi de date la acces concurent).\\n   - Design confuz si contra-intuitiv: Luna ianuarie era indexata cu 0 (0 = Ianuarie), iar anul pornea de la 1900 (anul 2024 era 124!).\\n   - Lipsa separatiei de concepte: Date reprezenta de fapt o data + ora UTC, dar toString() o afisa in fusul orar al sistemului.\\n\\n2. Cum rezolva java.time (JSR-310):\\n   - Imutabilitate: Toate clasele (LocalDate, LocalDateTime etc.) sunt strict imutabile si thread-safe.\\n   - Separatie clara: Data fara ora (LocalDate), Ora fara data (LocalTime), Data si Ora cu fus orar (ZonedDateTime), Timestamp UTC masina (Instant).\\n   - Indexare naturala: Luna 1 este Ianuarie.",
+    codeSnippet: `// VECHI si PERICULOS:
+Date oldDate = new Date();
+oldDate.setMonth(0); // Mutabil, deprecated, Ianuarie = 0!
+
+// NOU (java.time, Java 8+):
+LocalDate today = LocalDate.now();
+LocalDate nextWeek = today.plusWeeks(1); // Returneaza o instanta NOUA (imutabila)!`,
+    interviewTrap: "SimpleDateFormat nu este thread-safe! Daca il declari static intr-un controller sau servlet, mai multe thread-uri simultane vor genera date corupte sau erori.",
+    keyTakeaway: "java.time ofera clase imutabile, thread-safe si clar delimitate (LocalDate, LocalDateTime, Instant), inlocuind complet mutabilele Date si Calendar."
+  },
+  {
+    id: "java-124",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "LocalDate, LocalTime si LocalDateTime",
+    question: "Ce reprezinta clasele LocalDate, LocalTime si LocalDateTime si au ele fus orar?",
+    answer: "1. LocalDate:\\n   - Reprezinta o data din calendar (an, luna, zi), cum ar fi \"2026-10-02\".\\n   - Utilizare tipica: data nasterii, sarbatori legale, termene limita.\\n\\n2. LocalTime:\\n   - Reprezinta o ora a zilei fara data (ora, minut, secunda, nanosecunda), cum ar fi \"14:30:00\".\\n   - Utilizare tipica: ora deschiderii unui magazin, alarme.\\n\\n3. LocalDateTime:\\n   - Combina data si ora (an, luna, zi, ora, minut, secunda), cum ar fi \"2026-10-02T14:30:00\".\\n\\n4. AU ELE FUS ORAR?\\n   - NU! Niciuna dintre aceste clase nu contine nicio informatie despre fusul orar (Time Zone) sau decalajul UTC (Offset).\\n   - \"2026-10-02T14:30\" inseamna ora 14:30 pe ceasul de pe perete, indiferent daca esti la Bucuresti, Londra sau Tokyo.",
+    codeSnippet: `LocalDate date = LocalDate.of(2026, Month.OCTOBER, 2);
+LocalTime time = LocalTime.of(15, 30);
+LocalDateTime dateTime = LocalDateTime.of(date, time);
+
+System.out.println(date);     // 2026-10-02
+System.out.println(dateTime); // 2026-10-02T15:30`,
+    interviewTrap: "Nu folosi LocalDateTime pentru timestamp-uri de server sau loguri globale, deoarece fara fus orar nu poti sti momentul exact in timp daca serverele sunt in regiuni diferite.",
+    keyTakeaway: "LocalDate, LocalTime si LocalDateTime reprezinta date/ore pe ceasul local, complet independente de fusul orar."
+  },
+  {
+    id: "java-125",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "ZonedDateTime vs OffsetDateTime",
+    question: "Cum difera ZonedDateTime de OffsetDateTime si cand folosim fiecare?",
+    answer: "1. OffsetDateTime:\\n   - Retine data, ora si doar diferenta fixa fata de UTC/GMT (ex: +02:00, -05:00, \"2026-10-02T14:30:00+02:00\").\\n   - Nu stie despre reguli geografice de trecere la ora de vara/iarna (Daylight Saving Time - DST).\\n   - Se foloseste in protocoale de comunicatie, baze de date (SQL TIMESTAMP WITH TIME ZONE) si mesaje JSON (ISO-8601).\\n\\n2. ZonedDateTime:\\n   - Retine data, ora, offset-ul UTC si o regiune geografica completa (ZoneId, ex: \"Europe/Bucharest\", \"America/New_York\").\\n   - Cunoaste toate regulile istorice si viitoare de Daylight Saving Time ale acelei regiuni.\\n   - Daca adaugi o zi sau o ora peste momentul schimbarii orei de vara, ZonedDateTime ajusteaza automat ora corecta conform regulilor zonei!",
+    codeSnippet: `ZoneId bucZone = ZoneId.of("Europe/Bucharest");
+ZonedDateTime zdt = ZonedDateTime.now(bucZone);
+System.out.println(zdt); // 2026-10-02T22:30:00+03:00[Europe/Bucharest]
+
+// OffsetDateTime (fara reguli DST de regiune):
+OffsetDateTime odt = OffsetDateTime.now(ZoneOffset.ofHours(3));
+System.out.println(odt); // 2026-10-02T22:30:00+03:00`,
+    interviewTrap: "Un offset fix ca +03:00 nu tine cont de ora de vara; daca faci operatii de adaugare peste data trecerii la ora de iarna, doar ZonedDateTime stie sa scada automat o ora.",
+    keyTakeaway: "OffsetDateTime stocheaza data cu un offset fix (ideal pentru DB si REST API); ZonedDateTime stocheaza zona geografica completa cu reguli DST."
+  },
+  {
+    id: "java-126",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Clasa Instant in java.time",
+    question: "Ce reprezinta clasa Instant in Java si cum difera de un LocalDateTime?",
+    answer: "1. Ce este Instant:\\n   - Reprezinta un punct precis pe linia continua a timpului universal (UTC).\\n   - Este masurat ca numarul de secunde si nanosecunde trecute de la Unix Epoch (1 Ianuarie 1970 00:00:00 UTC).\\n   - Este \"timpul masinii\" (machine time).\\n\\n2. Diferenta fata de LocalDateTime:\\n   - Instant este global si identic in toata lumea in acelasi moment (in UTC).\\n   - LocalDateTime este o data/ora umana fara fus orar (depinde de contextul geografic).\\n\\n3. Utilizare ideala:\\n   - Timestamp-uri de loguri, evenimente de audit in baze de date, masurarea duratelor de executie intre doua momente.",
+    codeSnippet: `Instant now = Instant.now();
+System.out.println(now); // ex: 2026-10-02T19:30:00.123456Z (terminat cu Z = Zulu/UTC)
+
+long epochSeconds = now.getEpochSecond();
+long epochMillis = now.toEpochMilli();
+
+// Masurare timp scurs:
+Instant start = Instant.now();
+// ... executie cod ...
+Instant end = Instant.now();
+Duration elapsed = Duration.between(start, end);`,
+    interviewTrap: "Instant nu contine informatii de an, luna sau zi pe ceasul local uman; pentru a extrage ziua sau ora trebuie convertit la ZonedDateTime.",
+    keyTakeaway: "Instant masoara momentul precis in UTC de la 1 Ianuarie 1970 si este ideal pentru loguri, audit si timestamp-uri de sistem."
+  },
+  {
+    id: "java-127",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Duration vs Period in java.time",
+    question: "Care este diferenta dintre Duration si Period in pachetul java.time?",
+    answer: "1. Duration (Bazat pe TIMP / Secunde):\\n   - Masoara o cantitate de timp in ore, minute, secunde si nanosecunde.\\n   - Lucreaza cu clase bazate pe timp: Instant, LocalTime, LocalDateTime.\\n   - Exemplu: \"2 ore si 30 de secunde\".\\n\\n2. Period (Bazat pe CALENDAR / Date):\\n   - Masoara o cantitate de timp in ani, luni si zile.\\n   - Lucreaza exclusiv cu date de calendar: LocalDate.\\n   - Exemplu: \"1 an, 2 luni si 15 zile\".\\n   - Tine cont de diferentele de lungime ale lunilor (28, 30 sau 31 de zile) si anilor bisecti.",
+    codeSnippet: `// 1. Duration: bazat pe secunde/ore
+LocalTime t1 = LocalTime.of(10, 0);
+LocalTime t2 = LocalTime.of(12, 30);
+Duration duration = Duration.between(t1, t2);
+System.out.println("Minute: " + duration.toMinutes()); // 150
+
+// 2. Period: bazat pe ani/luni/zile
+LocalDate d1 = LocalDate.of(2020, 1, 1);
+LocalDate d2 = LocalDate.of(2026, 10, 2);
+Period period = Period.between(d1, d2);
+System.out.println("Ani: " + period.getYears() + ", Luni: " + period.getMonths());`,
+    interviewTrap: "Daca incerci sa faci Period.between(t1, t2) pe ore sau Duration.between(d1, d2) pe LocalDate, vei primi UnsupportedTemporalTypeException!",
+    keyTakeaway: "Duration masoara intervale de timp bazate pe secunde/ore; Period masoara intervale de calendar bazate pe ani/luni/zile."
+  },
+  {
+    id: "java-128",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "DateTimeFormatter vs SimpleDateFormat",
+    question: "De ce este DateTimeFormatter preferat fata de SimpleDateFormat si cum se utilizeaza?",
+    answer: "1. Problema grava cu SimpleDateFormat:\\n   - SimpleDateFormat NU este thread-safe! Are stare interna mutabila (campul calendar).\\n   - Daca o instanta este partajata intre thread-uri, produce corupere de date si rezultate eronate.\\n   - Forta dezvoltatorii sa creeze o instanta noua la fiecare apel sau sa foloseasca ThreadLocal.\\n\\n2. De ce DateTimeFormatter este superior:\\n   - Este STRICT IMUTABIL si complet THREAD-SAFE.\\n   - Poate fi stocat intr-o constanta static final si reutilizat in siguranta de mii de thread-uri concurente.\\n   - Ofera formate predefinite standard (ISO_LOCAL_DATE_TIME etc.) si suport pentru pattern-uri custom (ofPattern).",
+    codeSnippet: `// Sigur pentru partajare intre thread-uri:
+public static final DateTimeFormatter FORMATTER = 
+    DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+LocalDateTime now = LocalDateTime.now();
+
+// Formatare (obiect -> String):
+String text = now.format(FORMATTER);
+
+// Parsing (String -> obiect):
+LocalDateTime parsed = LocalDateTime.parse("02/10/2026 18:00", FORMATTER);`,
+    interviewTrap: "In pattern, literele mici si mari conteaza: \"MM\" reprezinta luna, in timp ce \"mm\" reprezinta minutele! \"HH\" este format 24h, \"hh\" este format 12h (AM/PM).",
+    keyTakeaway: "DateTimeFormatter este imutabil si thread-safe, putand fi declarat static final fara niciun risc de concurenta."
+  },
+  {
+    id: "java-129",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Calculul diferentelor intre date cu ChronoUnit",
+    question: "Cum calculam diferenta exacta in zile, ore sau luni intre doua date folosind ChronoUnit?",
+    answer: "1. Ce este ChronoUnit:\\n   - Un enum din pachetul java.time.temporal care implementeaza unitati standard de timp: DAYS, HOURS, MINUTES, MONTHS, YEARS etc.\\n\\n2. Metoda between(temporal1, temporal2):\\n   - Calculeaza diferenta directa dintre doua obiecte temporale in unitatea ceruta.\\n   - Rezultatul este intotdeauna un numar intreg (long) si este pozitiv daca temporal2 este dupa temporal1, sau negativ daca temporal2 este inainte.\\n   - Este mult mai convenabil decat apelarea metodelor de conversie din Period sau Duration.",
+    codeSnippet: `LocalDate start = LocalDate.of(2026, 1, 1);
+LocalDate end = LocalDate.of(2026, 10, 2);
+
+long daysBetween = ChronoUnit.DAYS.between(start, end);
+long monthsBetween = ChronoUnit.MONTHS.between(start, end);
+
+System.out.println("Zile: " + daysBetween);     // 274
+System.out.println("Luni: " + monthsBetween); // 9`,
+    interviewTrap: "Period.between(start, end).getDays() returneaza doar componenta de zile din perioada (zile ramase dupa calculul anilor si lunilor), NU numarul total de zile! Foloseste ChronoUnit.DAYS.between().",
+    keyTakeaway: "ChronoUnit.DAYS.between() calculeaza direct si exact totalul de unitati dintre doua date temporale."
+  },
+  {
+    id: "java-130",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Imutabilitatea operatiilor pe date in java.time",
+    question: "De ce apelul date.plusDays(5) nu schimba valoarea variabilei date si ce greseala fac incepatorii?",
+    answer: "1. Imutabilitate stricta:\\n   - Toate clasele din pachetul java.time (LocalDate, LocalTime, LocalDateTime, Instant etc.) sunt IMUTABILE.\\n   - Metodele de modificare (plusDays, minusMonths, withYear etc.) NU modifica instanta curenta!\\n   - Ele creeaza si returneaza o NOUA instanta cu valoarea modificata.\\n\\n2. Greseala frecventa a incepatorilor:\\n   - Apelarea metodei fara a salva rezultatul returnat: date.plusDays(5);\\n   - Variabila initiala date ramane complet neschimbata, iar noul obiect creat este abandonat si colectat de Garbage Collector.",
+    codeSnippet: `LocalDate date = LocalDate.of(2026, 10, 2);
+
+// GRESIT: rezultatul este ignorat!
+date.plusDays(5);
+System.out.println(date); // Tot 2026-10-02!
+
+// CORECT: Salvarea noii instante returnate
+LocalDate futureDate = date.plusDays(5);
+System.out.println(futureDate); // 2026-10-07`,
+    interviewTrap: "Daca cineva intreaba la interviu ce printeaza: LocalDate d = LocalDate.now(); d.plusDays(10); System.out.println(d); -> Printeaza data de azi, nu data din viitor!",
+    keyTakeaway: "Clasele java.time sunt imutabile; metodele plus/minus/with returneaza intotdeauna o instanta noua care trebuie salvata."
+  },
+  {
+    id: "java-131",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "java.io.File vs java.nio.file.Path si Files (NIO.2)",
+    question: "De ce pachetul java.nio.file (NIO.2 introdus in Java 7) este superior vechii clase java.io.File?",
+    answer: "1. Defectele vechii clase java.io.File:\\n   - Multe metode returnau doar un simplu boolean false in caz de eroare (ex: file.delete()), fara a sti cauza reala (fisier blocat, lipsa permisiuni, disc plin).\\n   - Nu suporta operatii avansate pe sistemul de fisiere: linkuri simbolice (symlinks), atribute de securitate POSIX.\\n   - Foarte lenta la listarea directoarelor uriase (file.listFiles() aloca un array gigant in memorie dintr-o data).\\n\\n2. Avantajele java.nio.file (Path si Files):\\n   - Exceptii clare: arunca NoSuchFileException, AccessDeniedException etc.\\n   - Operatii atomice de mutare si copiere de fisiere.\\n   - Suport complet pentru Streams (Files.lines, Files.walk, Files.list) cu procesare lazy fara consum urias de memorie.\\n   - Path este o interfata moderna, iar Files contine metode statice utilitare puternice.",
+    codeSnippet: `// Stil vechi:
+File oldFile = new File("data.txt");
+boolean ok = oldFile.delete(); // Daca e false, nu stii de ce a esuat!
+
+// Stil modern recomandat (NIO.2):
+Path path = Path.of("data.txt"); // Sau Paths.get("data.txt")
+try {
+    Files.delete(path); // Arunca exceptie explicita daca lipseste sau nu ai drepturi
+} catch (NoSuchFileException e) {
+    System.out.println("Fisierul nu exista: " + e.getMessage());
+}`,
+    interviewTrap: "In cod modern foloseste interfata Path si clasa Files. Daca primesti un File legacy, converteste-l instant cu file.toPath().",
+    keyTakeaway: "NIO.2 (Path si Files) ofera exceptii detaliate, performanta ridicata si metode lazy bazate pe Streams, depasind vechiul java.io.File."
+  },
+  {
+    id: "java-132",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Citirea fisierelor in Java modern: Files.readString()",
+    question: "Care este cel mai simplu si modern mod de a citi intregul continut al unui fisier text in Java 11+?",
+    answer: "1. Metoda moderna in Java 11+:\\n   - Files.readString(Path path): citeste intregul continut al fisierului intr-un singur String, folosind UTF-8 in mod implicit.\\n   - Elimina zecile de linii de cod boilerplate cu BufferedReader, FileReader si bucle while.\\n\\n2. Alternativa pentru liste de linii:\\n   - Files.readAllLines(Path path): citeste toate liniile intr-o lista List<String>.\\n\\n3. Cand NU trebuie folosite:\\n   - Pentru fisiere foarte mari (sute de MB / GB), deoarece incarca intregul continut in memoria Heap dintr-o data, riscand OutOfMemoryError. Pentru fisiere mari se foloseste Files.lines() (stream) sau BufferedReader.",
+    codeSnippet: `Path path = Path.of("config.json");
+
+// Java 11+: o singura linie pentru intreg fisierul!
+try {
+    String content = Files.readString(path);
+    System.out.println(content);
+} catch (IOException e) {
+    e.printStackTrace();
+}
+
+// Citire linii ca lista:
+List<String> lines = Files.readAllLines(path);`,
+    interviewTrap: "Files.readString() si Files.readAllLines() incarca tot fisierul in RAM. Pentru fisiere uriase (ex: log-uri de 2GB), foloseste Files.lines(path) care citeste linie cu linie ca un Stream lazy.",
+    keyTakeaway: "Files.readString(path) citeste un fisier complet intr-un String intr-o singura linie in Java 11+, fiind ideal pentru fisiere mici si medii."
+  },
+  {
+    id: "java-133",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Files.writeString() si Files.lines() (Stream de linii)",
+    question: "Cum scriem un String intr-un fisier in Java 11+ si cum citim un fisier gigant fara consum mare de memorie cu Files.lines()?",
+    answer: "1. Scriere rapida: Files.writeString(Path, CharSequence, OpenOption...):\\n   - Scrie direct un String intr-un fisier.\\n   - Suporta optiuni: StandardOpenOption.CREATE, APPEND, TRUNCATE_EXISTING.\\n\\n2. Citire eficienta a fisierelor mari: Files.lines(Path):\\n   - Returneaza un Stream<String> evaluat LAZY.\\n   - Citeste cate o linie pe rand pe masura ce stream-ul o cere, folosind un consum minim si constant de memorie Heap.\\n   - IMPORTANT: Files.lines() deschide un fisier nativ in sistemul de operare! Trebuie OBLIGATORIU inchis folosind un bloc try-with-resources, deoarece Stream implementeaza AutoCloseable!",
+    codeSnippet: `Path logPath = Path.of("app.log");
+
+// 1. Scriere rapida in Java 11:
+Files.writeString(logPath, "Log entry\\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+
+// 2. Citire lazy eficienta cu try-with-resources:
+try (Stream<String> lines = Files.lines(logPath)) {
+    lines.filter(line -> line.contains("ERROR"))
+         .limit(5)
+         .forEach(System.out::println);
+} // Fisierul este inchis automat la final!`,
+    interviewTrap: "Daca folosesti Files.lines(path) fara try-with-resources, descriptorul de fisier din sistemul de operare ramane deschis (leak de file descriptor), putand bloca stergerea sau deschiderea altor fisiere.",
+    keyTakeaway: "Files.lines() proceseaza fisiere uriase linie cu linie ca Stream lazy; foloseste intotdeauna try-with-resources pentru a inchide fisierul."
+  },
+  {
+    id: "java-134",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Byte Streams vs Character Streams in Java I/O",
+    question: "Care este diferenta dintre Byte Streams (InputStream/OutputStream) si Character Streams (Reader/Writer)?",
+    answer: "1. Byte Streams (InputStream / OutputStream):\\n   - Lucreaza direct cu octeti cruzi (raw bytes, 8 biti per unitate).\\n   - Se folosesc pentru date binare: imagini, fisiere audio/video, PDF-uri, pachete de retea.\\n   - Exemple: FileInputStream, FileOutputStream, ByteArrayInputStream.\\n\\n2. Character Streams (Reader / Writer):\\n   - Lucreaza cu caractere Unicode (16 biti per char in Java) si encodari de text (UTF-8, UTF-16, ISO-8859-1).\\n   - Se folosesc exclusiv pentru fisiere text.\\n   - Exemple: FileReader, FileWriter, BufferedReader, PrintWriter.\\n\\n3. Podul de legatura intre cele doua lumi:\\n   - InputStreamReader: citeste octeti si ii decodeaza in caractere pe baza unui charset.\\n   - OutputStreamWriter: primeste caractere si le encapzuleaza in octeti.",
+    codeSnippet: `// Binar (Byte Stream):
+try (InputStream in = new FileInputStream("image.png");
+     OutputStream out = new FileOutputStream("copy.png")) {
+    in.transferTo(out); // Copiere eficienta de bytes
+}
+
+// Text (Character Stream) cu encoding explicit:
+try (Reader reader = new InputStreamReader(new FileInputStream("text.txt"), StandardCharsets.UTF_8)) {
+    // Citeste caractere UTF-8
+}`,
+    interviewTrap: "Daca citesti un fisier text UTF-8 cu un Byte Stream direct fara sa tii cont ca un caracter poate ocupa 1 pana la 4 octeti, vei rupe diacriticele si caracterele speciale.",
+    keyTakeaway: "InputStream/OutputStream proceseaza octeti (binar); Reader/Writer proceseaza caractere text cu suport pentru charset-uri (UTF-8)."
+  },
+  {
+    id: "java-135",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "BufferedReader si BufferedWriter: De ce conteaza Buffer-ul?",
+    question: "Ce rol are un BufferedReader sau BufferedWriter si de ce imbunatateste drastic performanta operatiilor I/O?",
+    answer: "1. Problema operatiilor I/O simple (fara buffer):\\n   - Fiecare operatie read() pe un FileReader ne-bufferat trimite un apel de sistem (system call) catre sistemul de operare si disc pentru a citi cate un singur caracter.\\n   - Apelurile de sistem si accesele pe disc fizic sunt de mii de ori mai lente decat operatiile din memoria RAM.\\n\\n2. Rolul Buffer-ului:\\n   - BufferedReader citeste un bloc intreg de date (de obicei 8KB) dintr-un singur apel pe disc si il stocheaza intr-un array intern in RAM.\\n   - Urmatoarele cereri de citire (read() sau readLine()) se servesc instantaneu din memoria RAM.\\n   - Cand buffer-ul se goleste, se aduce automat urmatorul bloc de 8KB de pe disc.\\n\\n3. BufferedWriter:\\n   - Acumuleaza caracterele in memorie si scrie pe disc tot blocul deodata, sau la apelul metodei flush().",
+    codeSnippet: `// Fara buffer: ineficient, mii de accese pe disc
+// FileReader fr = new FileReader("large.txt");
+
+// CU BUFFER (Decorat):
+try (BufferedReader br = new BufferedReader(new FileReader("large.txt"))) {
+    String line;
+    while ((line = br.readLine()) != null) {
+        // Proceseaza linia citita rapid din RAM
+    }
+}`,
+    interviewTrap: "La BufferedWriter, daca uiti sa apelezi flush() sau sa inchizi stream-ul cu close() (sau try-with-resources), ultimele date din buffer s-ar putea sa nu se scrie niciodata pe disc!",
+    keyTakeaway: "BufferedReader citeste blocuri mari de date in RAM (8KB), reducand drastic apelurile lente de sistem pe disc fizic."
+  },
+  {
+    id: "java-136",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Scanner vs BufferedReader",
+    question: "Care este diferenta dintre Scanner si BufferedReader pentru citirea datelor si cand il alegem pe fiecare?",
+    answer: "1. Scanner (java.util.Scanner):\\n   - Un parser de nivel inalt: poate parsa direct tipuri primitive si siruri folosind regex-uri (ex: nextInt(), nextDouble(), nextLine()).\\n   - Buffer mic intern (1KB) si sincronizare interna usoara.\\n   - Semnificativ mai lent in procesarea fisierelor mari din cauza mecanismului complex de parsare prin expresii regulate.\\n\\n2. BufferedReader (java.io.BufferedReader):\\n   - Un simplu cititor rapid de caractere cu un buffer generos (8KB default).\\n   - Citeste doar siruri brute (readLine()) sau caractere unice (read()). Daca ai nevoie de intregi, trebuie sa faci manual Integer.parseInt().\\n   - Este thread-safe (metodele sunt sincronizate).\\n   - Mult mai rapid decat Scanner la citirea fisierelor mari.\\n\\n3. Concluzie:\\n   - Foloseste Scanner pentru citiri simple de la consola sau fisiere mici cu parsare de numere; foloseste BufferedReader pentru fisiere mari si performanta.",
+    codeSnippet: `// 1. Scanner: convenabil pentru parsare de numere
+Scanner scanner = new Scanner(System.in);
+// int age = scanner.nextInt();
+
+// 2. BufferedReader: ultra-rapid pentru text mult
+BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+// String line = reader.readLine();
+// int age = Integer.parseInt(line);`,
+    interviewTrap: "Metoda scanner.nextInt() nu consuma caracterul de sfarsit de linie (\\n)! Daca apelezi ulterior scanner.nextLine(), vei citi un string gol.",
+    keyTakeaway: "Scanner parseaza tipuri de date si regex-uri dar este mai lent; BufferedReader citeste text brut cu viteza maxima prin buffer mare."
+  },
+  {
+    id: "java-137",
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Interfata Serializable si serialVersionUID",
+    question: "Ce inseamna ca o clasa este Serializable in Java si ce rol critic are campul serialVersionUID?",
+    answer: "1. Ce este Serializarea:\\n   - Procesul de transformare a starii unui obiect Java intr-un flux de octeti (byte stream) pentru a fi salvat pe disc sau transmis prin retea (si invers: Deserializare).\\n   - Se realizeaza prin implementarea interfetei marker java.io.Serializable (nu contine nicio metoda).\\n\\n2. Rolul campului serialVersionUID:\\n   - Este un identificator numeric de versiune unic pentru clasa serializata: private static final long serialVersionUID = 1L;\\n   - La deserializare, masina virtuala (JVM) verifica daca serialVersionUID-ul din fluxul de octeti se potriveste exact cu serialVersionUID-ul clasei curente din cod.\\n   - Daca nu declari explicit acest camp, compilatorul Java calculeaza automat un hash complex pe baza structurii clasei (campuri, metode). Daca adaugi sau modifici un simplu camp in clasa, compilatorul va genera un alt ID, iar la deserializarea obiectelor vechi aplicatia va crapa cu InvalidClassException!",
+    codeSnippet: `public class UserDto implements Serializable {
+    // Declarare explicita obligatorie:
+    private static final long serialVersionUID = 1L;
+
+    private Long id;
+    private String username;
+    // ...
+}`,
+    interviewTrap: "Daca omiti serialVersionUID, orice mica modificare de cod (chiar si adaugarea unui comentariu sau schimbarea ordinii metodelor in unele compilatoare) poate face deserializarea obiectelor vechi imposibila.",
+    keyTakeaway: "serialVersionUID asigura compatibilitatea de versiune la deserializare; lipsa lui explicita provoaca InvalidClassException dupa modificari de clasa."
+  },
+  {
+    id: "java-138",
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Cuvantul cheie transient in Java",
+    question: "Ce rol are modificatorul transient si ce valoare primeste un camp transient la deserializare?",
+    answer: "1. Rolul modificatorului transient:\\n   - Se aplica campurilor unei clase care implementeaza Serializable.\\n   - Semnaleaza mecanismului de serializare al JVM-ului ca acel camp NU TREBUIE salvat in fluxul de octeti.\\n\\n2. Cand se foloseste:\\n   - Date sensibile de securitate (parole brute, chei secrete, date de card).\\n   - Campuri calculate sau derivate usor din alte date existente.\\n   - Resurse legate de mediul curent de rulare (referinte la conexiuni de baza de date, Thread-uri, Socket-uri, File descriptor-uri) care nu au sens sa fie serializate.\\n\\n3. Ce valoare primeste la Deserializare:\\n   - Primeste valoarea implicita (default) a tipului de date: null pentru obiecte, 0 pentru int/long/double, false pentru boolean.",
     codeSnippet: `public class UserSession implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String username;
-    private transient String rawPassword; // NU se serializeaza pe disc/retea!
-}`,
-    interviewTrap: "Variabilele statice (static) NU sunt serializate oricum, deoarece ele apartin clasei, nu instantei!",
-    keyTakeaway: "Declara intotdeauna explicit private static final long serialVersionUID = 1L; si marcheaza datele confidentiale cu transient."
-  },
-  {
-    id: "java-49",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Java Reflection API: Putere si Riscuri in Productie",
-    question: "Ce este Java Reflection API, cum il folosesc framework-urile moderne (Spring Boot, Jackson) si care sunt cele 3 dezavantaje majore ale sale?",
-    answer: "Reflection permite inspectarea si modificarea la runtime a claselor, campurilor, metodelor si constructorilor, chiar si a celor private (prin setAccessible(true)).\n\nUtilizare in framework-uri:\n- Spring Boot: Inspecteaza adnotarile (@Autowired, @Service) si instantiaza componentele.\n- Jackson: Citeste campurile claselor pentru a le serializa in JSON.\n\n3 Dezavantaje / Riscuri majore:\n1. Performanta scazuta: Apelurile reflexive nu pot fi optimizate agresiv de compilatorul JIT (inlining-ul este dezactivat) si implica verificari de securitate la fiecare invocare.\n2. Pierderea Compile-Time Safety: Erorile de denumire a metodelor sau tipurilor apar abia la runtime sub forma de NoSuchMethodException sau ClassNotFoundException.\n3. Risc de Securitate si Incapsulare: Incalca incapsularea claselor prin accesarea datelor private; in Java 9+, sistemul de module (JPMS) blocheaza accesul reflexiv pe pachete interne fara configurare explicita (--add-opens).",
-    codeSnippet: `// Inspectare reflexiva camp privat:
-Field field = Candidate.class.getDeclaredField("salary");
-field.setAccessible(true); // Ocoleste modificatorul private!
-field.set(candidateInstance, 5000.0);`,
-    interviewTrap: "Incepand cu Java 17+, comanda setAccessible(true) pe clase interne ale JDK-ului arunca InaccessibleObjectException daca modulul nu este deschis explicit.",
-    keyTakeaway: "Reflection este esential pentru framework-uri si unelte de testare, dar trebuie evitat in logica de business curenta."
-  },
-  {
-    id: "java-50",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Java NIO.2 vs IO Traditional (Streams vs Channels & Buffers)",
-    question: "Care este diferenta dintre vechiul pachet java.io (bazat pe Streams) si java.nio (Non-blocking I/O) introdus pentru servere de inalta performanta?",
-    answer: "1. Java IO Traditional (Stream-Oriented & Blocking):\n   - Functioneaza cu fluxuri secventiale de bytes (InputStream, OutputStream).\n   - Este BLOCKING: Cand un thread citeste din socket sau fisier (read()), el ramane complet blocat pana cand sosesc datele. Pentru a deservi 10.000 de clienti simultan, aveai nevoie de 10.000 de thread-uri (Memory & Context Switching limitat).\n\n2. Java NIO (Buffer & Channel-Oriented & Non-Blocking):\n   - Datele sunt citite dintr-un Channel intr-un Buffer de memorie nativa direct alocat (DirectByteBuffer).\n   - Selector Pattern: Un singur thread poate monitoriza mii de canale deschise folosind mecanismele native ale sistemului de operare (epoll in Linux, kqueue in macOS). Cand un canal are date disponibile pentru citire, Selector-ul notifica thread-ul.\n   - Sta la baza serverelor reactiv-asincrone de mare viteza precum Netty, Tomcat NIO si Node.js.",
-    codeSnippet: `// Citire moderna si rapida cu java.nio.file.Files:
-Path path = Path.of("cv.pdf");
-byte[] data = Files.readAllBytes(path);
-List<String> lines = Files.readAllLines(path);`,
-    interviewTrap: "Pentru fisiere mici pe disc, metodele statice din Files (Files.writeString, Files.readString) sunt mai rapide si mai sigure decat codul vechi cu BufferedReader/FileReader.",
-    keyTakeaway: "IO clasic = stream-uri blocante thread-per-client; NIO = canale non-blocante cu selectoare pentru mii de conexiuni paralele pe un singur thread."
-  },
-  {
-    id: "java-51",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Java Memory Model (JMM) si Relatia Happens-Before",
-    question: "Ce este Java Memory Model (JMM) si ce garanteaza relatia Happens-Before intre instructiuni executate pe thread-uri diferite?",
-    answer: "JMM defineste regulile prin care operatiile de citire si scriere in memorie (in cache-urile CPU si memoria principala) sunt vizibile intre thread-uri concurente.\\n\\nRelatia Happens-Before garanteaza ca scrierile efectuate de o actiune A sunt vizibile garantat pentru actiunea B:\\n1. Program Order Rule: Intr-un singur thread, fiecare actiune se intampla inainte de actiunile urmatoare in ordinea programului.\\n2. Monitor Lock Rule: O deblocare (unlock) a unui monitor happens-before fiecarei blocari ulterioare (lock) pe acelasi monitor.\\n3. Volatile Variable Rule: O scriere intr-un camp volatile happens-before fiecarei citiri ulterioare a aceluiasi camp.\\n4. Thread Start Rule: Apelul Thread.start() pe un fir happens-before oricarei actiuni din interiorul noului fir.\\n5. Thread Termination Rule: Orice actiune dintr-un fir happens-before momentul in care alt fir detecteaza terminarea lui prin join() sau isAlive().\\n6. Transitivity: Daca A happens-before B si B happens-before C, atunci A happens-before C.",
-    codeSnippet: `// Scriere intr-un camp volatile forteaza scrierea tuturor variabilelor modificate anterior in RAM:
-int a = 0;
-volatile boolean flag = false;
+    private transient String password; // NU va fi serializat!
 
-// Thread 1:
-a = 42;          // 1. Modificare variabila normala
-flag = true;     // 2. Scriere volatile (flush in RAM)
-
-// Thread 2:
-if (flag) {      // 3. Citire volatile (invalideaza cache CPU)
-    print(a);    // Garanteaza afisarea 42! Fara volatile, putea fi 0!
-}`,
-    interviewTrap: "Fara o relatie Happens-Before, compilatorul JIT si procesorul au libertatea de a reordona instructiunile (Instruction Reordering), generand valori corupte sau bucle infinite.",
-    keyTakeaway: "Happens-Before este fundamentul JMM care garanteaza ordinea si vizibilitatea memoriei intre fire de executie."
-  },
-  {
-    id: "java-52",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Operatia Atomica CAS (Compare-And-Swap) si CMPXCHG",
-    question: "Cum functioneaza operatia CAS (Compare-And-Swap) la nivel hardware si cum sta la baza claselor atomice din java.util.concurrent?",
-    answer: "CAS este o instructiune atomica sustinuta nativ la nivel de procesor (pe x86: instructiunea CMPXCHG):\\n\\nCum functioneaza CAS:\\n1. Primeste 3 parametri: Adresa de memorie V, Valoarea asteptata (Expected Value A) si Valoarea noua (New Value B).\\n2. Procesorul verifica atomic: Daca valoarea curenta de la adresa V este egala cu A, scrie B la adresa respectiva si returneaza true.\\n3. Daca valoarea a fost schimbata intre timp de alt procesor (V != A), nu face nicio modificare si returneaza false.\\n\\nUtilizare in java.util.concurrent (AtomicInteger, AtomicReference):\\n- In loc sa blocheze thread-ul cu un lock greoi de sistem de operare, clasele atomice folosesc o bucla optimista (spin-loop): citesc valoarea curenta, calculeaza noua valoare si incearca un CAS. Daca esueaza din cauza concurentei, reincearca imediat.",
-    codeSnippet: `// Concept bucla CAS din AtomicInteger.incrementAndGet():
-public final int incrementAndGet() {
-    int current;
-    int next;
-    do {
-        current = get();
-        next = current + 1;
-    } while (!compareAndSet(current, next)); // Reincearca daca alt fir a modificat
-    return next;
-}`,
-    interviewTrap: "CAS este \"lock-free\", dar sub concurenta extrema (sute de thread-uri care modifica aceeasi variabila) genereaza CPU spinning excesiv si poate fi mai lent decat LongAdder.",
-    keyTakeaway: "CAS realizeaza actualizari atomice fara blocare la nivel de instructiune hardware CPU (CMPXCHG)."
-  },
-  {
-    id: "java-53",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Problema ABA in Algoritmi Lock-Free si AtomicStampedReference",
-    question: "Ce este problema ABA in concurenta optimista si cum o rezolva clasa AtomicStampedReference in Java?",
-    answer: "Problema ABA apare in algoritmii concurenti lock-free bazati pe CAS:\\n\\nScenariul ABA:\\n1. Thread-ul 1 citeste valoarea A de la o adresa de memorie.\\n2. Thread-ul 1 este suspendat temporar de sistemul de operare.\\n3. Thread-ul 2 intervine si schimba valoarea din A in B.\\n4. Thread-ul 3 (sau tot Thread-ul 2) schimba valoarea inapoi din B in A!\\n5. Thread-ul 1 se trezeste si executa CAS(expected=A, new=C). Deoarece valoarea curenta este din nou A, operatia CAS reuseste cu succes!\\n\\nDe ce este periculos:\\nIn structuri de date precum stive lock-free (Treiber Stack), nodul A poate parea neschimbat ca valoare, dar referintele sale interne (pointerul next) au fost complet alterate, ducand la coruperea memoriei.\\n\\nSolutia in Java: AtomicStampedReference\\n- Ataseaza fiecarei referinte un numar de versiune (stamp / timestamp intreg).\\n- Verificarea devine: (reference == expectedRef && stamp == expectedStamp). Chiar daca valoarea redevine A, stamp-ul a fost incrementat (ex: de la 1 la 3), iar CAS-ul va esua corect!",
-    codeSnippet: `AtomicStampedReference<String> ref = new AtomicStampedReference<>("A", 1);
-
-int[] stampHolder = new int[1];
-String value = ref.get(stampHolder); // value = "A", stamp = 1
-
-// Modificare cu incrementare stamp:
-boolean updated = ref.compareAndSet("A", "C", stampHolder[0], stampHolder[0] + 1);`,
-    interviewTrap: "Nu confunda AtomicReference cu AtomicStampedReference; prima este vulnerabila la ABA daca logica depinde de starea istorica a nodurilor, nu doar de valoare.",
-    keyTakeaway: "Problema ABA este rezolvata prin versionarea referintelor cu un stamp incrementat la fiecare modificare."
-  },
-  {
-    id: "java-54",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "De ce LongAdder este mai rapid decat AtomicLong sub incarcare mare?",
-    question: "De ce clasa LongAdder introdusa in Java 8 este mult mai performanta decat AtomicLong in scenarii cu concurenta extrema de scriere?",
-    answer: "1. Problema cu AtomicLong:\\n   - Toate thread-urile incearca sa actualizeze aceeasi singura variabila din memorie folosind CAS intr-o bucla.\\n   - Sub incarcare mare (ex: 64 thread-uri), cele mai multe operatii CAS esueaza si reincearca continuu (CPU Cache line bouncing si bus saturation).\\n\\n2. Solutia din LongAdder (Striped64):\\n   - LongAdder mentine intern un array de celule (Cell[]), fiecare celula avand o valoare partiala.\\n   - Cand apare concurenta, fiecare thread este directionat pe o celula diferita pe baza hash-ului thread-ului curent, adunand valoarea la celula respectiva fara a se ciocni cu alte fire!\\n   - Cand este nevoie de valoarea totala (apelul longValue() sau sum()), LongAdder parcurge toate celulele si aduna sumele.\\n\\n3. Cand folosesti fiecare:\\n   - LongAdder: Pentru colectare de metrici, contorizari de cereri HTTP, rate limiters unde scrierile sunt foarte frecvente si citirea sumei este ocazionala.\\n   - AtomicLong: Cand ai nevoie de operatii atomice combinate de citire si scriere (ex: compareAndSet precis, incrementAndGet).",
-    codeSnippet: `// Utilizare LongAdder pentru contorizare de inalta performanta:
-LongAdder requestCounter = new LongAdder();
-
-// In servlet / controller (apel concurent masiv):
-requestCounter.increment(); // Nu blocheaza alte thread-uri!
-
-// La raportare:
-long total = requestCounter.sum();`,
-    interviewTrap: "LongAdder nu ofera o metoda atomica compareAndSet. Daca ai nevoie de verificare si setare simultana a unei secvente de numere, trebuie sa folosesti AtomicLong.",
-    keyTakeaway: "LongAdder disperseaza scrierile concurente pe un array intern de celule, eliminand contention-ul pe o singura adresa de memorie."
-  },
-  {
-    id: "java-55",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "False Sharing pe CPU Cache Lines si adnotarea @Contended",
-    question: "Ce este fenomenul de False Sharing la nivelul cache-ului de procesor si cum il previne adnotarea @Contended in Java?",
-    answer: "1. Structura CPU Cache Line:\\n   - Procesoarele moderne nu citesc memoria octet cu octet, ci in blocuri numite Cache Lines (de regula 64 de bytes).\\n   - Daca doua variabile independente A si B se afla suficient de aproape in memorie incat sa incapa in aceeasi linie de 64 bytes de cache:\\n\\n2. Ce este False Sharing:\\n   - Daca Core 1 modifica variabila A, intregul Cache Line de 64 bytes devine invalidat pe toate celelalte nuclee CPU conform protocolului de coerenta a cache-ului (MESI protocol).\\n   - Chiar daca Core 2 dorea doar sa modifice variabila B (complet independenta de A), nucleul sau trebuie sa astepte reincarcarea liniei de cache din RAM!\\n   - Acest du-te-vino continuu reduce drastic performanta aplicatiilor concurente.\\n\\n3. Solutia in Java: Adnotarea @Contended (si Padding manual):\\n   - Adauga spatiu gol (padding de 128 bytes) in jurul campului, fortandu-l sa ocupe o linie de cache dedicata si eliminand interferenta intre nuclee.",
-    codeSnippet: `// Folosita intern in LongAdder si ConcurrentHashMap:
-// Necesita parametrul JVM: -XX:-RestrictContended
-public class PaddedAtomicCounter {
-    @jdk.internal.vm.annotation.Contended
-    private volatile long counter1;
-
-    @jdk.internal.vm.annotation.Contended
-    private volatile long counter2;
-}`,
-    interviewTrap: "False Sharing este invizibil in codul Java pur si nu arunca erori; se manifesta doar printr-o cadere masiva a throughput-ului la adaugarea de nuclee CPU suplimentare.",
-    keyTakeaway: "False Sharing apare cand doua fire modifica variabile diferite situate pe aceeasi linie de cache CPU (64 bytes); se rezolva prin padding."
-  },
-  {
-    id: "java-56",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "CopyOnWriteArrayList: Mecanism si Cazuri Ideale",
-    question: "Cum functioneaza CopyOnWriteArrayList, ce complexitate au scrierile si de ce este excelent pentru liste de Observeri sau Listeners?",
-    answer: "CopyOnWriteArrayList este o implementare de lista thread-safe bazata pe principiul \"copiaza la fiecare scriere\":\\n\\n1. Cum functioneaza Citirile:\\n   - Citirile (get, iterator) NU folosesc niciun lock sau sincronizare.\\n   - Citesc direct din array-ul intern neschimbat la viteza maxima.\\n   - Iteratorul nu arunca niciodata ConcurrentModificationException si nu reflecta scrierile facute dupa crearea iteratorului.\\n\\n2. Cum functioneaza Scrierile:\\n   - Orice operatie de scriere (add, set, remove) obtine un lock de scriere, creaza o copie completa a array-ului existent, efectueaza modificarea pe copie si apoi schimba referinta array-ului intern (care este volatile).\\n\\n3. Cand se foloseste:\\n   - Ideal pentru liste de Listeneri / Observeri, liste de configuratii sau tabele de rutare unde CITIRILE sunt de 99% iar SCRIERILE sunt foarte rare.\\n   - Ineficient daca ai mii de inserari pe secunda (complexitate O(N) la fiecare scriere si consum urias de memorie).",
-    codeSnippet: `CopyOnWriteArrayList<EventListener> listeners = new CopyOnWriteArrayList<>();
-
-// Citire ultra-rapida fara lock pe mii de fire:
-for (EventListener listener : listeners) {
-    listener.onEvent(event);
-}
-
-// Scriere rara (creeaza o copie a array-ului):
-listeners.add(new CustomListener());`,
-    interviewTrap: "Nu folosi niciodata CopyOnWriteArrayList pentru colectii mari cu scrieri frecvente, deoarece fiecare apel add() aloca si copiaza un array intreg in memorie.",
-    keyTakeaway: "CopyOnWriteArrayList asigura citiri instantanee fara lock-uri pe baza de snapshot, cu pretul unei copieri O(N) la fiecare scriere."
-  },
-  {
-    id: "java-57",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "ReentrantReadWriteLock: Cand aduce un castig real de performanta?",
-    question: "Cum functioneaza ReentrantReadWriteLock si in ce conditii de incarcare merita folosit in locul unui ReentrantLock obisnuit?",
-    answer: "ReentrantReadWriteLock separa operatiile pe doua lock-uri logice:\\n1. Read Lock (Shared Lock): Multipli cititori pot detine lock-ul simultan, cata vreme nu exista niciun fir care scrie.\\n2. Write Lock (Exclusive Lock): Un singur fir poate detine lock-ul pentru scriere; niciun alt cititor sau scriitor nu are acces.\\n\\nCand aduce castig de performanta:\\n- Merita folosit NUMAI daca raportul dintre operatii este covarsitor in favoarea citirilor (ex: peste 90% citiri si sub 10% scrieri) iar durata operatiei protejate este suficient de lunga.\\n- Dezavantaj: Mentinerea starii interne pentru cele doua lock-uri (urmarirea cititorilor concurenti) are un cost de calcul mai mare decat un ReentrantLock simplu. Daca operatia este ultra-scurta (ex: citirea unei variabile intregi), ReentrantLock sau StampedLock este mult mai rapid!",
-    codeSnippet: `ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
-Lock readLock = rwLock.readLock();
-Lock writeLock = rwLock.writeLock();
-
-public String readData(String key) {
-    readLock.lock();
-    try { return cache.get(key); }
-    finally { readLock.unlock(); }
-}
-
-public void writeData(String key, String value) {
-    writeLock.lock();
-    try { cache.put(key, value); }
-    finally { writeLock.unlock(); }
-}`,
-    interviewTrap: "ReentrantReadWriteLock nu suporta promovarea automata de la Read Lock la Write Lock (Lock Upgrade); daca incerci sa iei writeLock in timp ce detii readLock pe acelasi thread, vei provoca un Deadlock!",
-    keyTakeaway: "ReentrantReadWriteLock permite citiri paralele dar necesita ca marea majoritate a cererilor sa fie de citire pentru a compensa overhead-ul intern."
-  },
-  {
-    id: "java-58",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "StampedLock in Java 8: Ce este Optimistic Read?",
-    question: "Cum revolutioneaza StampedLock accesul concurent prin modul Optimistic Read si cum difera de ReentrantReadWriteLock?",
-    answer: "StampedLock (introdus in Java 8) ofera 3 moduri de blocare folosind un identificator de tip \"stamp\" (long):\\n1. Writing Mode: Exclusiv, similar cu write lock clasic.\\n2. Reading Mode: Pessimistic shared lock, similar cu read lock clasic.\\n3. Optimistic Reading Mode (Inovatia cheie):\\n   - Nu obtine un lock real! Nu exista nicio operatie atomica de CAS sau scriere in memorie, ci doar o citire a unui stamp.\\n   - Cititorul citeste datele optimist, crezand ca nu exista nicio scriere in paralel.\\n   - Dupa ce a citit datele, apeleaza validate(stamp) pentru a verifica daca un scriitor a intervenit in timpul citirii.\\n   - Daca validate returneaza true, datele sunt corecte si s-au citit cu ZERO overhead de sincronizare!\\n   - Daca validate returneaza false (a avut loc o scriere), cititorul face fallback la un Pessimistic Read Lock clasic.\\n\\nDiferenta fata de ReentrantReadWriteLock:\\n- Mult mai rapid, dar NU este reentrant (apelarea pe acelasi thread poate bloca definitiv).",
-    codeSnippet: `StampedLock sl = new StampedLock();
-
-public double distanceFromOrigin(double x, double y) {
-    long stamp = sl.tryOptimisticRead(); // Citire optimista fara blocare
-    double curX = x, curY = y;
-    if (!sl.validate(stamp)) {           // A intervenit un scriitor?
-        stamp = sl.readLock();           // Fallback la lock pesimist clasic
-        try {
-            curX = x;
-            curY = y;
-        } finally {
-            sl.unlockRead(stamp);
-        }
-    }
-    return Math.sqrt(curX * curX + curY * curY);
-}`,
-    interviewTrap: "StampedLock NU este reentrant! Daca un thread care detine deja un writeLock incearca sa mai ia o data un writeLock sau readLock, se va bloca pe el insusi pentru totdeauna.",
-    keyTakeaway: "Optimistic Read din StampedLock permite citiri la viteza maxima fara niciun lock, validand la final daca a existat vreo scriere."
-  },
-  {
-    id: "java-59",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "ForkJoinPool si Algoritmul Work-Stealing",
-    question: "Cum functioneaza ForkJoinPool si ce este algoritmul de Work-Stealing in paralelismul de tip Divide-and-Conquer?",
-    answer: "ForkJoinPool este conceput specific pentru task-uri recursive mici care pot fi impartite recursiv in sub-task-uri (Divide and Conquer):\\n\\n1. Structura Cozilor Deque per-Thread:\\n   - Fiecare thread muncitor (Worker Thread) din ForkJoinPool are propria sa coada dubla de task-uri (Double-Ended Queue - Deque).\\n   - Cand un task face fork(), noul sub-task este pus in capul (top) cozii proprii.\\n   - Thread-ul curent proceseaza task-urile din capul propriei cozi in regim LIFO (Last-In-First-Out), profitand de localitatea din cache-ul CPU.\\n\\n2. Algoritmul Work-Stealing (Furt de munca):\\n   - Daca un fir termina toate task-urile din coada sa si devine inactiv, el devine un \"hot\" si fura un task din coada altui fir ocupat!\\n   - Furtul se face intotdeauna de la COADA (bottom/tail) celeilalte cozi in regim FIFO (First-In-First-Out).\\n   - Aceasta asigura ca hotul fura un sub-task mare (care la randul sau poate fi descompus), minimizand conflictele cu firul proprietar.",
-    codeSnippet: `public class SumTask extends RecursiveTask<Long> {
-    private final long[] numbers;
-    private final int start, end;
-
-    @Override
-    protected Long compute() {
-        if (end - start <= 1000) { // Prag secvential
-            return computeDirectly();
-        }
-        int mid = (start + end) / 2;
-        SumTask leftTask = new SumTask(numbers, start, mid);
-        SumTask rightTask = new SumTask(numbers, mid, end);
-        leftTask.fork(); // Trimite pe coada pentru procesare paralela / work-stealing
-        long rightResult = rightTask.compute();
-        long leftResult = leftTask.join();
-        return leftResult + rightResult;
-    }
-}`,
-    interviewTrap: "Streams paralele din Java (parallelStream) folosesc implicit un pool comun ForkJoinPool.commonPool(). Daca rulezi operatii I/O blocante in el, blochezi toate operatiile paralele din intreaga aplicatie.",
-    keyTakeaway: "Work-Stealing echilibreaza dinamic incarcarea intre thread-uri, permitand firelor libere sa fure task-uri de la coada firelor aglomerate."
-  },
-  {
-    id: "java-60",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "De ce Executors.newFixedThreadPool si newCachedThreadPool sunt periculoase in productie?",
-    question: "De ce factory methods din java.util.concurrent.Executors pot cauza OutOfMemoryError in productie si ce ar trebui folosit in schimb?",
-    answer: "1. Pericolul din Executors.newFixedThreadPool(n):\\n   - Foloseste intern o coada LinkedBlockingQueue FARA LIMITA (unbounded queue - Integer.MAX_VALUE = 2 miliarde de elemente).\\n   - Daca cererile vin mai repede decat pot fi procesate de cele n fire, coada acumuleaza milioane de task-uri in Heap pana cand JVM-ul crapa cu java.lang.OutOfMemoryError: Java heap space.\\n\\n2. Pericolul din Executors.newCachedThreadPool():\\n   - Creeaza fire NOI nelimitate (maximumPoolSize = Integer.MAX_VALUE) cu o coada SynchronousQueue.\\n   - Daca apare un varf de trafic (burst de 10.000 cereri simultane), va incerca sa porneasca 10.000 de thread-uri native de OS, ducand la java.lang.OutOfMemoryError: unable to create new native thread.\\n\\n3. Bune Practici in Productie:\\n   - Instantiati direct clasa ThreadPoolExecutor, specificand o coada cu limita stricta (Bounded Queue precum ArrayBlockingQueue), corePoolSize, maximumPoolSize si o politica clara de respingere a cererilor (RejectedExecutionHandler).",
-    codeSnippet: `// Configurarea sigura de productie a unui ThreadPool:
-ThreadPoolExecutor executor = new ThreadPoolExecutor(
-    8,                                   // corePoolSize
-    16,                                  // maxPoolSize
-    60L, TimeUnit.SECONDS,               // keepAliveTime
-    new ArrayBlockingQueue<>(500),       // COADA LIMITATA STRICT la 500 elemente!
-    new ThreadPoolExecutor.CallerRunsPolicy() // Backpressure: firul apelant preia executia
-);`,
-    interviewTrap: "Ghidurile de bune practici (precum SonarQube si Alibaba Java Guidelines) interzic explicit utilizarea metodelor factory din Executors in aplicatii enterprise.",
-    keyTakeaway: "Evita Executors; foloseste intotdeauna ThreadPoolExecutor cu cozi limitate pentru a preveni epuizarea memoriei Heap sau a resurselor OS."
-  },
-  {
-    id: "java-61",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Politici de Saturatie (RejectedExecutionHandler) in ThreadPoolExecutor",
-    question: "Ce se intampla cand coada unui ThreadPool este plina si numarul maxim de fire a fost atins? Ce politici de respingere exista?",
-    answer: "Cand un task nou este trimis catre executor iar coada limitata este plina si worker threads = maximumPoolSize, executorul activeaza un RejectedExecutionHandler:\\n\\nCele 4 Politici Standard in Java:\\n1. AbortPolicy (Default):\\n   - Arunca o exceptie RejectedExecutionException la apelul submit()/execute(). Util daca vrei sa notifici imediat clientul ca sistemul este saturat.\\n2. CallerRunsPolicy (Cea mai buna pentru Backpressure):\\n   - Nu arunca exceptie si nu pierde task-ul; firul apelant (ex: firul HTTP principal) este obligat sa execute el insusi task-ul.\\n   - Acest lucru incetineste automat ritmul de trimitere a cererilor noi, oferind pool-ului timp sa respire.\\n3. DiscardPolicy:\\n   - Ignora task-ul in mod silentios, fara a arunca vreo eroare (risc de pierdere de date).\\n4. DiscardOldestPolicy:\\n   - Sterge cel mai vechi task neprocesat din capul cozii pentru a face loc noului task sosit.",
-    codeSnippet: `// Exemplu CallerRunsPolicy:
-ThreadPoolExecutor pool = new ThreadPoolExecutor(
-    4, 8, 30L, TimeUnit.SECONDS,
-    new ArrayBlockingQueue<>(100),
-    new ThreadPoolExecutor.CallerRunsPolicy()
-);`,
-    interviewTrap: "DiscardPolicy si DiscardOldestPolicy pot cauza bug-uri grave greu de reprodus daca task-urile contin tranzactii critice sau daca se asteapta un Future care nu se va finaliza niciodata.",
-    keyTakeaway: "CallerRunsPolicy este standardul de aur pentru mecanisme de backpressure fara pierderi de task-uri."
-  },
-  {
-    id: "java-62",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Thread Pinning in Virtual Threads (Java 21)",
-    question: "Ce este Thread Pinning in Virtual Threads (Java 21), de ce blocheaza firul OS de transport (Carrier Thread) si cum se evita?",
-    answer: "1. Cum functioneaza Virtual Threads in mod normal:\\n   - Cand un Virtual Thread intalneste o operatie I/O blocanta (citire din socket, query DB, sleep), el se \"demonteaza\" (unmounts) de pe Carrier Thread (firul de sistem de operare). Carrier Thread-ul devine imediat liber sa ruleze alt Virtual Thread.\\n\\n2. Ce este Thread Pinning (Fixare pe fir):\\n   - In anumite situatii, Virtual Thread-ul devine \"prins\" (pinned) pe Carrier Thread si NU se poate demonta in timpul blocajului I/O. Carrier Thread-ul ramane blocat, distrugand scalabilitatea aplicatiei!\\n\\n3. Cauzele Thread Pinning in Java 21:\\n   - Utilizarea blocurilor sau metodelor synchronized in jurul unor operatii I/O blocante (monitoarele native din JVM mentin referinte pe stiva nativa C++).\\n   - Apeluri catre cod nativ prin JNI sau Foreign Function API.\\n\\n4. Solutie:\\n   - Inlocuirea blocurilor synchronized cu java.util.concurrent.locks.ReentrantLock, care permite demontarea normala a Virtual Threads.",
-    codeSnippet: `// PROBLEMA: synchronized cauzeaza Thread Pinning daca face I/O blocant:
-public synchronized String fetchRemoteData() {
-    return restTemplate.getForObject(url, String.class); // Pinning pe Carrier!
-}
-
-// SOLUTIA sigura pentru Virtual Threads: ReentrantLock
-private final ReentrantLock lock = new ReentrantLock();
-public String fetchRemoteDataSafe() {
-    lock.lock();
-    try {
-        return restTemplate.getForObject(url, String.class); // Virtual thread se demonteaza curat!
-    } finally {
-        lock.unlock();
-    }
-}`,
-    interviewTrap: "Poti detecta Thread Pinning in productie folosind parametrul JVM: -Djdk.tracePinnedThreads=full, care emite un stack trace in consolala fiecare eveniment de pinning.",
-    keyTakeaway: "Evita synchronized in jurul operatiilor I/O in Java 21; foloseste ReentrantLock pentru a permite demontarea Virtual Threads de pe Carrier."
-  },
-  {
-    id: "java-63",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Scoped Values (Java 21) vs ThreadLocal",
-    question: "Ce sunt Scoped Values (JEP 446) si de ce au fost introduse pentru a inlocui ThreadLocal in lumea milioanelor de Virtual Threads?",
-    answer: "ThreadLocal are 3 probleme structurale majore in aplicatii moderne cu Virtual Threads:\\n1. Mutabilitate necontrolata: Orice cod din fir poate modifica valoarea din ThreadLocal oricand, facand fluxul de date impredictibil.\\n2. Mostenire costisitoare (InheritableThreadLocal): Copierea tuturor variabilelor locale de thread la crearea unui nou fir devine un dezastru de memorie cand aplicatia creeaza 1.000.000 de Virtual Threads!\\n3. Memory Leaks: Valorile din ThreadLocal raman agatate daca nu apelezi manual remove().\\n\\nCe aduc Scoped Values (ScopedValue<T>):\\n- Imutabilitate: Valoarea este legata (bound) strict pentru durata unui bloc de executie si nu poate fi alterata.\\n- Partajare fara copiere: Sub-task-urile pornite in interiorul aceluiasi scope partajeaza aceeasi instanta prin mostenire usoara, fara overhead de memorie.\\n- Curatare automata: Valoarea expira automat cand blocul de cod se termina.",
-    codeSnippet: `// Definire ScopedValue:
-private static final ScopedValue<UserContext> CURRENT_USER = ScopedValue.newInstance();
-
-// Legare si executie protejata:
-ScopedValue.runWhere(CURRENT_USER, new UserContext("admin"), () -> {
-    processOrder(); // In interiorul metodei: CURRENT_USER.get() este disponibil
-});
-// Aici CURRENT_USER nu mai este disponibil si este curatat garantat!`,
-    interviewTrap: "ScopedValue este imutabil: nu poti apela o metoda de tip set() pentru a reatribui valoarea in interiorul aceluiasi scope; poti doar crea un \"re-binding\" intr-un scope imbricat.",
-    keyTakeaway: "Scoped Values ofera transmitere imutabila si usoara a contextului de securitate sau tranzactie peste milioane de Virtual Threads."
-  },
-  {
-    id: "java-64",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Structured Concurrency in Java 21 (StructuredTaskScope)",
-    question: "Ce este Structured Concurrency (JEP 453) si cum elimina problema task-urilor orfane (Thread Leaks) in Java 21?",
-    answer: "In modelul concurent traditional (ne-structurat), daca pornesti doua operatii asincrone cu CompletableFuture sau ExecutorService:\\n- Daca task-ul A esueaza cu eroare, task-ul B continua sa ruleze in fundal, consumand resurse CPU si DB complet inutil (Thread Leak / Orphan Task).\\n- Daca firul principal este intrerupt, sub-firele nu stiu ca trebuie sa se opreasca.\\n\\nStructured Concurrency trateaza multiple task-uri concurente ca pe o singura unitate atomica de lucru:\\n- Relatie ierarhica parinte-copil: Daca blocul de cod parinte iese din scope, toti copiii sunt garantat finalizati sau anulati.\\n- Doua strategii de baza din StructuredTaskScope:\\n  1. ShutdownOnFailure: Asteapta ca TOATE sub-task-urile sa reuseasca. Daca UNUL SINGUR esueaza, anuleaza imediat toate celelalte sub-task-uri active si propaga exceptia!\\n  2. ShutdownOnSuccess: Returneaza rezultatul PRIMULUI sub-task finalizat cu succes si anuleaza instant restul (ideal pentru redundant queries).",
-    codeSnippet: `// Exemplu ShutdownOnFailure in Java 21:
-try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-    Supplier<String> userTask = scope.fork(() -> fetchUserData(id));
-    Supplier<Integer> balanceTask = scope.fork(() -> fetchBalance(id));
-
-    scope.join();           // Asteapta ambele task-uri
-    scope.throwIfFailed();  // Daca unul a crapat, anuleaza celalalt si arunca eroarea!
-
-    return new AccountView(userTask.get(), balanceTask.get());
-}`,
-    interviewTrap: "In Structured Concurrency, este obligatoriu sa folosesti blocul try-with-resources pe StructuredTaskScope, pentru a forta asteptarea sau anularea tuturor sub-task-urilor inainte de parasirea metodei.",
-    keyTakeaway: "Structured Concurrency leaga durata de viata a sub-task-urilor concurente de blocul de cod apelant, eliminand firele orfane."
-  },
-  {
-    id: "java-65",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Future.get() vs CompletableFuture.join() vs thenApply()",
-    question: "Care este diferenta dintre apelul blocant Future.get(), CompletableFuture.join() si procesarea non-blocanta prin thenApply()?",
-    answer: "1. Future.get():\\n   - Blocant: suspenda firul curent pana cand rezultatul este disponibil.\\n   - Checked Exceptions: Arunca InterruptedException si ExecutionException, obligandu-te sa le prinzi sau sa le declari in semnatura metodei.\\n\\n2. CompletableFuture.join():\\n   - Blocant: asteapta de asemenea finalizarea rezultatului.\\n   - Unchecked Exceptions: Arunca CompletionException (exceptie ne-verificata la runtime), fiind mult mai usor de utilizat in expresii Lambda si Streams API.\\n\\n3. thenApply(Function<T, R>):\\n   - NON-BLOCANT: Inregistreaza o functie callback care se va executa automat cand rezultatul devine disponibil in viitor.\\n   - Firul apelant NU asteapta si este complet liber sa preia alte cereri; transforma rezultatul asincron fara sa iroseasca resurse.",
-    codeSnippet: `CompletableFuture<String> cf = CompletableFuture.supplyAsync(() -> "hello");
-
-// 1. Blocant checked:
-try { String res1 = cf.get(); } catch (Exception e) {}
-
-// 2. Blocant unchecked:
-String res2 = cf.join();
-
-// 3. Non-blocant asincron (Recomandat):
-cf.thenApply(s -> s + " world")
-  .thenAccept(System.out::println);`,
-    interviewTrap: "Apelarea lui .get() sau .join() imediat dupa supplyAsync() anuleaza toate beneficiile programarii asincrone, transformand executia intr-una strict secventiala.",
-    keyTakeaway: "get() si join() blocheaza firul; thenApply() proceseaza rezultatul asincron prin callback fara blocare."
-  },
-  {
-    id: "java-66",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Compunerea Task-urilor Asincrone: thenCompose vs thenCombine",
-    question: "Care este diferenta dintre thenCompose() si thenCombine() in CompletableFuture si cand se foloseste fiecare?",
-    answer: "Ambele metode combina doua operatii asincrone, dar au structuri de dependenta complet diferite:\\n\\n1. thenCompose (Monadic FlatMap - Dependenta Secventiala):\\n   - Se foloseste cand al doilea task asincron depinde direct de rezultatul primului task.\\n   - Daca o functie returneaza un alt CompletableFuture, thenApply ar produce un tip imbricat CompletableFuture<CompletableFuture<User>>, in timp ce thenCompose aplatizeaza rezultatul intr-un singur CompletableFuture<User>.\\n\\n2. thenCombine (Zip / Pair - Independenta Paralela):\\n   - Se foloseste cand cele doua task-uri sunt COMPLET INDEPENDENTE si ruleaza in paralel pe fire diferite.\\n   - Primeste o functie BiFunction pentru a combina ambele rezultate odata ce ambele sunt gata (ex: obtine pretul unui produs si cursul valutar simultan, apoi calculeaza totalul).",
-    codeSnippet: `// 1. thenCompose: Task 2 depinde de Task 1:
-CompletableFuture<User> userCf = fetchUserIdAsync("mihai")
-    .thenCompose(id -> fetchUserDetailsAsync(id)); // inputul vine din primul!
-
-// 2. thenCombine: Task 1 si Task 2 ruleaza in paralel:
-CompletableFuture<Double> priceCf = fetchPriceAsync("laptop");
-CompletableFuture<Double> rateCf = fetchExchangeRateAsync("EUR");
-
-CompletableFuture<Double> totalCf = priceCf.thenCombine(rateCf, (price, rate) -> price * rate);`,
-    interviewTrap: "Daca folosesti thenApply in loc de thenCompose cand functia ta apeleaza un serviciu asincron extern, vei obtine un tip de cosmar CompletableFuture<CompletableFuture<T>>.",
-    keyTakeaway: "thenCompose este FlatMap (pentru pasi secventiali dependenti); thenCombine uneste doua fluxuri paralele independente."
-  },
-  {
-    id: "java-67",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Tratarea Erorilor in CompletableFuture: exceptionally vs handle vs whenComplete",
-    question: "Cum gestionezi exceptiile intr-un lant asincron CompletableFuture folosind exceptionally(), handle() si whenComplete()?",
-    answer: "1. exceptionally(Function<Throwable, T>):\\n   - Actioneaza ca un bloc \"catch\" functional.\\n   - Se activeaza DOAR daca a aparut o exceptie in lantul asincron.\\n   - Permite returnarea unei valori de rezerva (fallback) de acelasi tip T pentru ca fluxul sa poata continua normal.\\n\\n2. handle(BiFunction<T, Throwable, R>):\\n   - Se executa INTOTDEAUNA, indiferent daca executia a reusit sau a aruncat eroare.\\n   - Primeste atat rezultatul cat si exceptia (dintre care exact una va fi null).\\n   - Permite atat transformarea rezultatului cat si recuperarea din erori, putand returna alt tip de date R.\\n\\n3. whenComplete(BiConsumer<T, Throwable>):\\n   - Actioneaza ca un bloc \"finally\".\\n   - Nu poate modifica rezultatul sau tipul; este folosit pentru efecte secundare (side-effects precum logging, metrici sau eliberare de resurse).",
-    codeSnippet: `CompletableFuture.supplyAsync(() -> externalServiceCall())
-    .handle((result, ex) -> {
-        if (ex != null) {
-            log.error("Eroare la apel extern", ex);
-            return "VALOARE_DEFAULT_FALLBACK";
-        }
-        return result.toUpperCase();
-    })
-    .whenComplete((finalResult, ex) -> log.info("Finalizat cu: " + finalResult));`,
-    interviewTrap: "In exceptionally(ex -> ...), parametrul ex este adesea o instanta de CompletionException. Pentru a obtine exceptia de baza din aplicatie, trebuie sa apelezi ex.getCause().",
-    keyTakeaway: "exceptionally pentru fallback la eroare; handle pentru transformare cu tratare completa; whenComplete pentru logging tip finally."
-  },
-  {
-    id: "java-68",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Exchanger si Phaser in java.util.concurrent",
-    question: "Ce rol au clasele de sincronizare Exchanger si Phaser in scenarii avansate de procesare concurenta?",
-    answer: "1. Exchanger<V>:\\n   - Permite ca exact DOUA thread-uri sa faca schimb atomic de obiecte la un punct de intalnire comun.\\n   - Cand un thread apeleaza exchange(bufferA), el se blocheaza pana cand al doilea thread apeleaza exchange(bufferB). In acel moment, JVM schimba referintele: primul fir primeste bufferB, iar al doilea primeste bufferA!\\n   - Ideal pentru modelul Producer-Consumer cu double-buffering (unul umple un buffer, altul il goleste, apoi fac schimb instantaneu fara alocare de memorie).\\n\\n2. Phaser (Evolutia lui CyclicBarrier si CountDownLatch):\\n   - Sincronizeaza executia thread-urilor pe FAZE succesive (faza 0, faza 1, faza 2...).\\n   - Inovatie majora fata de CyclicBarrier: Numarul de participanti este DINAMIC! Thread-urile se pot inregistra (register()) sau deregistra (arriveAndDeregister()) in timpul rularii.\\n   - Suporta actiuni automate la finalul fiecarei faze prin suprascrierea onAdvance().",
-    codeSnippet: `// Exemplu Exchanger:
-Exchanger<ByteBuffer> exchanger = new Exchanger<>();
-// Thread Producer:
-buffer = exchanger.exchange(fullBuffer); // Da bufferul plin, primeste un buffer gol!
-
-// Exemplu Phaser:
-Phaser phaser = new Phaser(1); // Inregistreaza thread-ul parinte
-phaser.register();            // Inregistreaza dinamic un worker nou
-phaser.arriveAndAwaitAdvance(); // Asteapta finalizarea fazei curente`,
-    interviewTrap: "CyclicBarrier are un numar fix de partide specificat in constructor; daca numarul de participanti se schimba la runtime, Phaser este singura optiune corecta.",
-    keyTakeaway: "Exchanger realizeaza schimb bidirectional atomic de date intre 2 fire; Phaser sincronizeaza generatii dinamice de thread-uri pe faze."
-  },
-  {
-    id: "java-69",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Deadlock vs Livelock vs Starvation",
-    question: "Care este diferenta comportamentala si vizuala intre un Deadlock, un Livelock si o situatie de Starvation?",
-    answer: "1. Deadlock (Blocare Permanenta):\\n   - Doua sau mai multe thread-uri sunt blocate pentru totdeauna, fiecare asteptand o resursa detinuta de celalalt (imbratisarea mortala).\\n   - Utilizare CPU: Scade la 0% pentru firele implicate (stare BLOCKED sau WAITING).\\n\\n2. Livelock (Miscare fara progres):\\n   - Thread-urile NU sunt blocate fizic; ele isi schimba continuu starea interna ca raspuns reciproc la actiunile celuilalt, dar niciunul nu face niciun progres util.\\n   - Analogie: Doi oameni politicosi pe un hol ingust care fac simultan pasul in aceeasi directie pentru a se evita, blocandu-se la infinit.\\n   - Utilizare CPU: URIASA (100% CPU spinning) desi aplicatia nu progreseaza deloc!\\n\\n3. Starvation (Infometare):\\n   - Un thread este complet sanatos si gata de executie, dar nu primeste NICIODATA acces la CPU sau resursa dorita deoarece alte thread-uri cu prioritate mai mare ii iau mereu fata.\\n   - Solutie: Folosirea de lock-uri cu echitate (Fair Locks: new ReentrantLock(true)).",
-    codeSnippet: `// Exemplu Livelock: firele cedeaza continuu lock-ul reciproc fara sa termine:
-while (resource.isOwnedByOther()) {
-    releaseMyLock();
-    sleep(1); // Daca sleep-ul este identic, reincearca simultan!
-    tryAcquireLock();
-}`,
-    interviewTrap: "Livelock-ul este mult mai greu de detectat decat Deadlock-ul de uneltele clasice (jstack/ThreadMXBean), deoarece firele par active si consuma CPU.",
-    keyTakeaway: "Deadlock = fire blocate dormind la 0% CPU; Livelock = fire hiperactive blocand sistemul la 100% CPU; Starvation = fir ignorat de prioritati."
-  },
-  {
-    id: "java-70",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Cum detectezi un Deadlock in Productie: jstack si ThreadMXBean",
-    question: "Cum identifici rapid un Deadlock intr-o aplicatie Java aflata in productie folosind linia de comanda sau programatic din cod?",
-    answer: "1. Metoda din Linia de Comanda (jstack / jcmd):\\n   - Pas 1: Gaseste PID-ul procesului cu jps sau ps -ef | grep java.\\n   - Pas 2: Ruleaza: jcmd <PID> Thread.print sau jstack -l <PID>.\\n   - JVM ruleaza automat un algoritm de detectare a ciclurilor de lock-uri si va afisa la sfarsitul raportului sectiunea explicita:\\n     \"Found 1 deadlock.\" urmata de identificatorii thread-urilor si liniile exacte de cod unde se asteapta reciproc!\\n\\n2. Metoda Programatica (Monitorizare & Alerte automate):\\n   - Java ofera MBean-ul ThreadMXBean din java.lang.management:\\n   - Apeleaza: long[] deadlockedThreads = ManagementFactory.getThreadMXBean().findDeadlockedThreads();\\n   - Daca array-ul nu este null, aplicatia poate declansa automat o alerta in PagerDuty sau un restart controlat.",
-    codeSnippet: `// Detectie automata programatica din cod:
-ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
-long[] threadIds = threadBean.findDeadlockedThreads();
-if (threadIds != null) {
-    ThreadInfo[] infos = threadBean.getThreadInfo(threadIds);
-    for (ThreadInfo info : infos) {
-        log.error("Deadlock detectat pe firul: " + info.getThreadName() 
-                  + " blocat pe lock-ul: " + info.getLockName());
-    }
-}`,
-    interviewTrap: "findDeadlockedThreads() detecteaza atat monitoare synchronized cat si ReentrantLocks (OwnableSyncs), in timp ce vechea metoda findMonitorDeadlockedThreads() vedea doar synchronized.",
-    keyTakeaway: "jstack si ThreadMXBean identifica instant ciclurile de Deadlock aratand liniile de cod si lock-urile concurente."
-  },
-  {
-    id: "java-71",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Ce face metoda Thread.yield() si de ce este o simpla sugestie?",
-    question: "Ce efect are apelul Thread.yield() si de ce sistemele de productie nu trebuie sa se bazeze pe el pentru sincronizare?",
-    answer: "1. Ce face Thread.yield():\\n   - Semnalizeaza planificatorului de fire (OS Thread Scheduler) ca firul curent este dispus sa renunte voluntar la cuanta sa ramasa de timp CPU, permitand altor fire de aceeasi prioritate sa ruleze.\\n\\n2. De ce este o SIMPLA SUGESTIE (Hint):\\n   - Specificatia JVM nu ofera nicio garantie ca scheduler-ul va tine cont de acest apel!\\n   - Sistemul de operare poate ignora complet apelul si poate reprograma imediat acelasi fir sa ruleze.\\n   - Comportamentul variaza radical de la o platforma la alta (pe Linux/Solaris se comporta diferit fata de Windows sau macOS).\\n\\n3. Concluzie de interviu:\\n   - yield() este conceput aproape exclusiv pentru optimizari de profiling sau teste concurente speciale. Nu folosi NICIODATA yield() pentru controlul fluxului de date in aplicatii de afaceri.",
-    codeSnippet: `// Utilizare corecta: doar in spin-locks speciale sau teste:
-while (!ready) {
-    Thread.yield(); // Ofera altor fire o sansa sa seteze ready = true
-}`,
-    interviewTrap: "Thread.yield() NU trece firul in starea BLOCKED sau WAITING! Firul ramane in starea RUNNABLE si poate fi reales de CPU in urmatoarea milisecunda.",
-    keyTakeaway: "Thread.yield() este o sugestie neobligatorie catre scheduler-ul OS si nu ofera nicio garantie de pauza sau sincronizare."
-  },
-  {
-    id: "java-72",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "De ce Thread.stop() este interzis si cum folosim Thread.interrupt()",
-    question: "De ce metoda Thread.stop() a fost declarata Deprecated si care este mecanismul cooperativ corect de oprire prin interrupt()?",
-    answer: "1. De ce Thread.stop() este DEPRECIATED si periculos:\\n   - Oprea firul instantaneu \"la rece\", indiferent de instructiunea curenta.\\n   - Elibera automat toate lock-urile intrinsic (monitoarele) detinute de fir.\\n   - Daca firul se afla la jumatatea actualizarii unui cont bancar (a scazut din Cont A dar nu a adaugat in Cont B), datele ramaneau intr-o stare corupta permanenta!\\n\\n2. Modelul Cooperativ prin Thread.interrupt():\\n   - Un fir nu poate fi oprit fortat din exterior; el este rugat politicos sa se opreasca setandu-i-se un fanion (flag) de intrerupere.\\n   - Daca firul este blocat intr-o metoda blocanta (sleep, wait, join), metoda va arunca imediat o exceptie InterruptedException.\\n   - Daca firul ruleaza o bucla de calcul intens, el trebuie sa verifice periodic: Thread.currentThread().isInterrupted() si sa iasa curat din bucla.",
-    codeSnippet: `public void run() {
-    while (!Thread.currentThread().isInterrupted()) {
-        try {
-            doWork();
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // Regula critica: sleep() curata flag-ul de intrerupere!
-            // Trebuie sa re-intrerupem firul pentru ca apelantii superiori sa stie:
-            Thread.currentThread().interrupt();
-            break; // Iesire curata
-        }
-    }
-    cleanUpResources(); // Eliberare sigura
-}`,
-    interviewTrap: "Daca prinzi InterruptedException si lasi blocul catch gol fara a apela Thread.currentThread().interrupt() sau a arunca eroarea mai departe, \"inghiti\" intreruperea si firul nu se va mai opri niciodata.",
-    keyTakeaway: "Oprirea firelor in Java este cooperativa; trateaza InterruptedException si re-declanseaza flag-ul prin Thread.currentThread().interrupt()."
-  },
-  {
-    id: "java-73",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "De ce wait() si notify() sunt in clasa Object si nu in Thread?",
-    question: "De ce metodele fundamentale de asteptare wait(), notify() si notifyAll() sunt declarate in clasa Object si nu in Thread?",
-    answer: "Aceasta este o intrebare clasica de interviu Java, iar explicatia tine de designul orientat pe obiect si monitoare:\\n\\n1. Lock-urile apartin OBIECTELOR, nu firelor:\\n   - In Java, fiecare obiect de pe Heap are un monitor intrinsic (un lock si o coada de asteptare asociata - Wait Set).\\n   - Cand un fir apeleaza wait(), el nu se suspenda pe el insusi in mod abstract, ci \"elibereaza lock-ul obiectului specific pe care a sincronizat si intra in Wait Set-ul acelui obiect\".\\n\\n2. Decuplare si Flexibilitate:\\n   - Daca wait() era pe clasa Thread, cum ar fi putut un fir sa stie pe care resursa partajata (cont bancar, coada de mesaje) asteapta?\\n   - Plasarea pe Object permite oricarui obiect Java sa actioneze ca o conditie de sincronizare intre multiple fire independente.",
-    codeSnippet: `// Sincronizare pe obiectul partajat:
-synchronized (queue) {
-    while (queue.isEmpty()) {
-        queue.wait(); // Elibereaza lock-ul pe 'queue' si asteapta
-    }
-    return queue.poll();
-}`,
-    interviewTrap: "Daca apelezi wait() sau notify() pe un obiect fara sa te afli intr-un bloc synchronized pe ACELASI obiect, JVM va arunca la runtime: IllegalMonitorStateException.",
-    keyTakeaway: "wait() si notify() opereaza pe monitorul si coada de asteptare a obiectului respectiv, de aceea sunt definite in Object."
-  },
-  {
-    id: "java-74",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Spurious Wakeups si De ce wait() se apeleaza intotdeauna in bucla while",
-    question: "Ce este un Spurious Wakeup (Trezire falsa) si de ce este o eroare grava sa apelezi wait() intr-o instructiune if in loc de while?",
-    answer: "1. Ce este un Spurious Wakeup:\\n   - La nivel de kernel si sistem de operare (POSIX threads), un fir aflat in asteptare se poate trezi din motive interne de performanta sau semnale hardware chiar daca NIMENI nu a apelat notify() sau conditia nu a fost indeplinita!\\n\\n2. Ce se intampla daca folosesti IF:\\n   - Daca firul foloseste if (conditionNotMet) wait();:\\n   - Cand firul se trezeste (fie dintr-o trezire falsa, fie pentru ca alt fir trezit inaintea lui a consumat deja resursa din coada), firul iese din if si continua executia crezand ca datele sunt gata, provocand un crash (ex: NoSuchElementException pe coada goala)!\\n\\n3. Solutia OBLIGATORIE: bucla WHILE:\\n   - In bucla while (conditionNotMet) wait();:\\n   - Cand firul se trezeste, conditia este re-evaluata garantat. Daca resursa nu este disponibila, firul se intoarce imediat in starea de somn prin wait().",
-    codeSnippet: `// CORECT: bucla while re-verifica conditia la trezire
-synchronized (lock) {
-    while (!ready) {
-        lock.wait(); // Sigur impotriva Spurious Wakeups si race conditions!
-    }
-    processData();
-}
-
-// GRESIT: bloc if vulnerabil
-// if (!ready) lock.wait(); processData(); // CRASH daca trezirea e falsa!`,
-    interviewTrap: "Chiar si in lipsa trezirilor false, daca folosesti notifyAll(), 10 fire se vor trezi simultan, dar doar primul gaseste elementul; celelalte 9 trebuie sa gaseasca conditia din while si sa adoarma la loc.",
-    keyTakeaway: "Verifica intotdeauna conditia de asteptare intr-o bucla while pentru a fi imun la Spurious Wakeups si competitie concurenta."
-  },
-  {
-    id: "java-75",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Ce este un Daemon Thread si ce se intampla la terminarea aplicatiei?",
-    question: "Ce este un Daemon Thread in Java, cum se configureaza si ce se intampla cu el cand toate firele non-daemon si-au incheiat executia?",
-    answer: "1. Ce este un Daemon Thread:\\n   - Un fir de executie de fundal (serviciu suport) care nu impiedica JVM-ul sa se opreasca.\\n   - Exemple clasice din JVM: Garbage Collector-ul, finalizer threads, firele interne de semnale.\\n\\n2. Comportamentul la Terminarea JVM:\\n   - JVM isi continua executia atata timp cat exista CEL PUTIN UN fir non-daemon (User Thread, cum e firul main) in viata.\\n   - In momentul in care ultimul fir non-daemon s-a incheiat, JVM-ul se opreste IMEDIAT, omorand instantaneu toate firele Daemon ramase active!\\n\\n3. Consecinte Critice:\\n   - Blocurile finally dintr-un thread daemon NU se mai executa la oprirea JVM!\\n   - Nu folosi niciodata daemon threads pentru operatii I/O critice (scriere in baze de date sau tranzactii pe disc) deoarece datele vor ramane incomplete la shutdown.",
-    codeSnippet: `Thread daemonThread = new Thread(() -> {
-    while (true) {
-        System.out.println("Monitoring in background...");
-        Thread.sleep(1000);
-    }
-});
-
-daemonThread.setDaemon(true); // OBLIGATORIU inainte de start()!
-daemonThread.start();`,
-    interviewTrap: "Apelul setDaemon(true) trebuie facut strict INAINTE de apelarea metodei start(). Daca apelezi setDaemon pe un fir deja pornit, JVM va arunca IllegalThreadStateException.",
-    keyTakeaway: "Daemon threads sunt pentru servicii secundare de fundal; JVM se opreste imediat ce toate firele non-daemon au terminat."
-  },
-  {
-    id: "java-76",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Structura Generationala a Heap-ului: Eden, Survivor si Tenured",
-    question: "Cum este impartit Heap-ul in generatii in JVM si de ce ipoteza Weak Generational Hypothesis dicteaza aceasta arhitectura?",
-    answer: "1. Weak Generational Hypothesis (Ipoteza Generationala Slaba):\\n   - Statistic, peste 90-95% din obiectele create intr-o aplicatie Java mor la foarte scurt timp dupa instantiere (variabile locale de metoda, stream-uri, DTO-uri temporare).\\n   - Daca un obiect supravietuieste mai multor cicluri de colectare, cel mai probabil va trai pentru mult timp (cache, servicii singleton, configuratii).\\n\\n2. Compartimentarea Heap-ului:\\n   - Young Generation (Generatia Tanara):\\n     - Eden Space: Unde se aloca initial aproape toate obiectele noi.\\n     - Doua Survivor Spaces (S0 si S1 / From si To): Zone tranzitorii egale ca marime. La fiecare Minor GC, obiectele vii din Eden si S0 sunt copiate compact in S1, iar S0 este golit complet.\\n   - Old Generation (Tenured - Generatia Veche):\\n     - Daca un obiect supravietuieste unui numar de cicluri de colectare (prag numit Tenuring Threshold, de regula 15), este promovat in Old Generation.\\n     - Gazduieste obiecte longevive si este curatat mult mai rar (Major / Full GC).",
-    codeSnippet: `// Monitorizare generatii cu jstat din terminal:
-// jstat -gcutil <PID> 1000
-// Afiseaza S0, S1, E (Eden), O (Old), M (Metaspace) la fiecare secunda.`,
-    interviewTrap: "Daca Eden-ul este dimensionat prea mic, obiectele de scurta durata sunt promovate prematur in Old Generation (Premature Promotion), provocand Full GC-uri dese si pauze lungi.",
-    keyTakeaway: "Heap-ul este separat in Young (Eden, S0, S1) si Old Generation deoarece marea majoritate a obiectelor mor rapid."
-  },
-  {
-    id: "java-77",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Ce este TLAB (Thread-Local Allocation Buffer) in JVM?",
-    question: "Cum asigura TLAB alocarea obiectelor in Heap la viteza comparabila cu alocarea pe stiva fara conflicte de sincronizare?",
-    answer: "1. Problema Alocarii Concurente pe Heap:\\n   - Heap-ul este partajat intre toate thread-urile. Fara un mecanism dedicat, fiecare new Object() ar necesita sincronizare globala (lock sau CAS atomic pe pointerul de memorie din Eden), creand un blocaj urias in aplicatii cu zeci de fire.\\n\\n2. Solutia: TLAB (Thread-Local Allocation Buffer):\\n   - La pornire, JVM aloca fiecarui thread o bucatica exclusiva de memorie din spatiul Eden (ex: 256 KB sau 1 MB).\\n   - Cand firul executa new MyObject(), el aloca obiectul direct in propriul sau TLAB prin simpla incrementare a unui pointer local (Bump-the-Pointer).\\n   - Aceasta operatie dureaza doar 2-3 instructiuni CPU si se executa cu ZERO sincronizare si zero lock-uri!\\n\\n3. Ce se intampla cand TLAB se umple:\\n   - Firul cere un nou bloc TLAB din Eden (operatie cu sincronizare rapida), sau daca obiectul este urias (Humongous), il aloca direct pe Heap-ul general.",
-    codeSnippet: `// Activare/verificare TLAB (activat implicit in JVM):
-// -XX:+UseTLAB
-// -XX:TLABSize=512k`,
-    interviewTrap: "TLAB este doar un mecanism de ALOCARE. Obiectul creat in TLAB ramane fizic pe Heap si este accesibil de alte thread-uri daca referinta este partajata.",
-    keyTakeaway: "TLAB aloca obiecte in Eden prin bump-the-pointer fara nicio sincronizare intre fire, facand instantierea extrem de rapida."
-  },
-  {
-    id: "java-78",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Escape Analysis si Scalar Replacement: Alocarea pe Stiva",
-    question: "Cum permite Escape Analysis compilatorului JIT sa elimine alocarea pe Heap si sa descompuna obiectele pe Stiva (Scalar Replacement)?",
-    answer: "1. Escape Analysis (Analiza de Scapare):\\n   - In timpul compilarii C2 JIT, masina virtuala analizeaza daca referinta unui obiect nou creat scapa din metoda curenta (ex: este returnata, transmisa ca parametru altui thread, sau salvata intr-un camp static).\\n   - Daca referinta NU scapa (NoEscape): Obiectul este utilizat strict local in interiorul metodei si devine inaccesibil la finalul executiei acesteia.\\n\\n2. Optimizari Majore aplicate pe obiecte care nu scapa:\\n   - Scalar Replacement: In loc sa creeze obiectul pe Heap cu header de obiect (12-16 bytes), JVM descompune obiectul in campurile sale scalare primitive (int, long) si le stocheaza direct in registrele CPU sau pe STIVA metodei!\\n   - Lock Elision: Daca pe un obiect local exista un bloc synchronized, lock-ul este eliminat complet deoarece niciun alt fir nu poate ajunge la el.\\n   - Rezultat: Zero presiune pe Garbage Collector; memoria se elibereaza instantaneu la intoarcerea din metoda prin scoaterea cadrului de stiva (Stack Frame pop).",
-    codeSnippet: `public void processCoordinates() {
-    // Obiectul Point nu scapa din metoda:
-    Point p = new Point(10, 20); 
-    int sum = p.x + p.y;
-    // JIT optimizeaza prin Scalar Replacement:
-    // int p_x = 10; int p_y = 20; int sum = p_x + p_y;
-    // Zero obiecte alocate pe Heap!
-}`,
-    interviewTrap: "Escape Analysis functioneaza doar dupa ce codul devine \"fierbinte\" (Hotspot) si este compilat de C2 JIT (dupa mii de executii). La inceput, in faza de interpretare, obiectul se aloca pe Heap.",
-    keyTakeaway: "Escape Analysis transforma obiectele locale care nu scapa din metoda in variabile scalare pe stiva, eliminand alocarea pe Heap."
-  },
-  {
-    id: "java-79",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Metaspace vs PermGen (Java 8): Tuning si OOM",
-    question: "De ce a fost eliminat PermGen in Java 8 si cum functioneaza Metaspace in memoria nativa a sistemului?",
-    answer: "1. Problemele vechiului PermGen (Permanent Generation in Java 7 si anterior):\\n   - PermGen facea parte din spatiul de Heap configurat cu dimensiune fixa (-XX:MaxPermSize=256m).\\n   - Stoca metadatele claselor, metodele, String Constant Pool-ul si clasele statice.\\n   - In aplicatii cu multe biblioteci (Spring, Hibernate, cglib, Tomcat), generarea dinamica de bytecode umplea rapid PermGen-ul, generand faimoasa eroare java.lang.OutOfMemoryError: PermGen space.\\n\\n2. Ce aduce Metaspace in Java 8+:\\n   - Metadatele claselor au fost mutate in Memoria NATIVA a sistemului de operare (Off-Heap).\\n   - Implicit, Metaspace se extinde dinamic pana la limita memoriei fizice a serverului.\\n   - String Pool-ul a fost mutat in Heap-ul obisnuit, beneficiind de Garbage Collection normal.\\n\\n3. Bune Practici de Tuning in Productie:\\n   - Seteaza intotdeauna o limita maxima: -XX:MaxMetaspaceSize=512m pentru a preveni situatia in care un memory leak de ClassLoaders consuma toata memoria RAM a masinii gazda!",
-    codeSnippet: `// Parametri recomandati Metaspace:
-// -XX:MetaspaceSize=128m
-// -XX:MaxMetaspaceSize=512m`,
-    interviewTrap: "Daca nu setezi -XX:MaxMetaspaceSize intr-un container Docker, Metaspace poate creste necontrolat pana cand Linux OOM Killer omoara brusc intregul container.",
-    keyTakeaway: "Metaspace foloseste memoria nativa a sistemului pentru metadatele claselor, eliminand limitarile rigide ale fostului PermGen."
-  },
-  {
-    id: "java-80",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Card Table si Remembered Sets (RSet) in Garbage Collector",
-    question: "Cum evita Garbage Collector-ul scanarea intregii generatii vechi (Old Gen) in timpul unui Minor GC folosind Card Table si Remembered Sets?",
-    answer: "1. Problema Referintelor Inter-Generatii:\\n   - La un Minor GC, colectorul vrea sa curete doar Young Generation.\\n   - Dar ce se intampla daca un obiect din Old Generation detine o referinta catre un obiect din Young Generation? Fara un mecanism special, GC ar trebui sa scaneze TOATA memoria Old Gen pentru a verifica daca obiectul din Young e viu, distrugand viteza de colectare!\\n\\n2. Solutia: Card Table si Write Barriers:\\n   - JVM imparte Old Generation intr-un array de blocuri de memorie de 512 octeti numite \"Cards\".\\n   - JVM mentine un Card Table (un octet per card).\\n   - Cand codul scrie o referinta noua (objOld.child = objYoung), compilatorul JIT injecteaza un \"Write Barrier\" (un mic fragment de cod) care marcheaza cardul respectiv din Card Table ca fiind \"murdar\" (Dirty Card).\\n\\n3. Eficienta:\\n   - La Minor GC, colectorul scaneaza doar Card-urile marcate ca Dirty (o fractiune minuscula din Old Gen), ignorand restul de 99% din Old Generation!",
-    codeSnippet: `// Concept Write Barrier injectat automat de JIT la fiecare atribuire de referinta:
-void post_write_barrier(oop* field, oop new_val) {
-    size_t card_index = ((size_t)field) >> 9; // impartire la 512
-    byte_map_base[card_index] = DIRTY_BYTE;
-}`,
-    interviewTrap: "In G1 GC, fiecare regiune are propriul sau Remembered Set (RSet) bazat pe Card Table, asigurand ca regiunile pot fi colectate complet independent.",
-    keyTakeaway: "Card Table si Write Barriers inregistreaza referintele din Old catre Young, permitand curatarea Young Gen fara scanarea Old Gen."
-  },
-  {
-    id: "java-81",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "G1 GC Internals: Regiuni, SATB si Humongous Objects",
-    question: "Cum organizeaza G1 GC memoria in regiuni, cum previne pierderea referintelor prin SATB si ce este un Humongous Object?",
-    answer: "1. Structura bazata pe Regiuni:\\n   - In loc sa aiba spatii contigue fixe (Young/Old), G1 imparte intregul Heap in 2048 de regiuni de dimensiuni egale (de la 1 MB la 32 MB).\\n   - Fiecare regiune poate actiona dinamic ca Eden, Survivor sau Old.\\n   - Colecteaza cu prioritate regiunile cu cel mai mare volum de gunoi (Garbage-First) pentru a respecta tinta de pauza specificata (-XX:MaxGCPauseMillis=200).\\n\\n2. Algoritmul SATB (Snapshot-At-The-Beginning):\\n   - Permite marcarea concurenta a obiectelor in timp ce aplicatia continua sa ruleze.\\n   - Realizeaza un instantaneu logic al grafului de obiecte la inceputul fazei.\\n   - Daca un fir muta o referinta in timpul marcarii, un Write Barrier captureaza referinta veche si o marcheaza oricum, prevenind stergerea accidentala a obiectelor vii.\\n\\n3. Ce este un Humongous Object:\\n   - Orice obiect a carui marime depaseste 50% din dimensiunea unei regiuni (ex: un array de bytes de 2 MB cand regiunea e de 2 MB).\\n   - Se aloca intr-o secventa contigua de regiuni speciale Humongous direct in Old Gen, provocand fragmentare daca sunt create des.",
-    codeSnippet: `// Configurare G1 GC:
-// -XX:+UseG1GC
-// -XX:MaxGCPauseMillis=200
-// -XX:G1HeapRegionSize=16m`,
-    interviewTrap: "Alocarea frecventa de Humongous Objects (ex: citirea fisierelor mari complet in memorie in loc de streaming) declanseaza colectari premature si degradeaza performanta G1.",
-    keyTakeaway: "G1 imparte memoria in regiuni mici si colecteaza zonele cu cel mai mult gunoi respectand un buget strict de timp de pauza."
-  },
-  {
-    id: "java-82",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "ZGC (Z Garbage Collector): Colored Pointers si Load Barriers",
-    question: "Cum reuseste ZGC sa mentina pauze de Garbage Collection sub 1 milisecunda chiar si pe Heap-uri de zeci de Terabytes?",
-    answer: "ZGC este un colector de gunoi de latenta ultra-redusa (Scalable Low Latency Garbage Collector) care realizeaza aproape TOATE fazele (marcare, relocare, compactare) in mod concurent cu firele aplicatiei:\\n\\n1. Colored Pointers (Pointeri Colorati):\\n   - Pe arhitecturi de 64-bit, un pointer de referinta foloseste doar 44 sau 48 de biti pentru adresa fizica.\\n   - ZGC foloseste bitii superiori ramasi (4 biti de metadate) direct in pointer:\\n     - Marked0 / Marked1: Pentru urmarirea starii de viata a obiectului.\\n     - Remapped: Arata daca obiectul a fost mutat intr-o alta locatie de memorie compactata.\\n\\n2. Load Barriers (Bariere de Incarcare):\\n   - Cand aplicatia citeste o referinta dintr-un camp (obj.field), compilatorul JIT injecteaza o verificare de doar 1-2 instructiuni pe bitul Remapped.\\n   - Daca obiectul a fost mutat la compactare dar pointerul nu a fost inca actualizat, Load Barrier-ul corecteaza instantaneu adresa (Self-Healing) si scrie noua adresa inapoi in camp!\\n   - Niciun fir nu este oprit pentru compactare.",
-    codeSnippet: `// Activare ZGC (Generational ZGC disponibil nativ in Java 21):
-// -XX:+UseZGC -XX:+ZGenerational
-// Ofera pauze medii sub 0.5 milisecunde pe Heap-uri de la 16 MB la 16 TB!`,
-    interviewTrap: "ZGC are un consum usor mai mare de CPU (+2-3%) din cauza Load Barriers comparativ cu Parallel GC, dar elimina complet inghetarile de sistem (STW pauses).",
-    keyTakeaway: "ZGC foloseste bitii din pointeri si Load Barriers pentru a reloca si compacta memoria concurent fara a opri aplicatia."
-  },
-  {
-    id: "java-83",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Shenandoah GC vs ZGC",
-    question: "Cum realizeaza Shenandoah GC compactarea concurenta si prin ce difera abordarea sa fata de ZGC?",
-    answer: "Shenandoah este un alt colector de latenta ultra-redusa dezvoltat initial de Red Hat si inclus in OpenJDK:\\n\\n1. Cum compacteaza Shenandoah concurent:\\n   - Asemenea lui ZGC, muta obiectele dintr-o regiune in alta in timp ce aplicatia ruleaza activ.\\n   - Utilizeaza un Forwarding Pointer (in versiunile noi integrat direct in Mark Word-ul header-ului obiectului).\\n   - Cand un obiect este copiat intr-o noua regiune de memorie, vechiul obiect retine un pointer catre noua sa copie.\\n\\n2. Diferenta esentiala intre Shenandoah si ZGC:\\n   - ZGC intercepteaza referintele la citire prin Colored Pointers si Load Barriers.\\n   - Shenandoah utilizeaza Load-Reference Barriers dar se bazeaza pe modificari in header-ul obiectului, nu pe bitii speciali ai pointerului de 64-bit.\\n   - ZGC este integrat nativ in nucleul OpenJDK (Oracle) si a primit suport generational in Java 21; Shenandoah este sustinut puternic de Red Hat/AWS.",
-    codeSnippet: `// Activare Shenandoah GC:
-// -XX:+UseShenandoahGC
-// -XX:ShenandoahGCMode=iu (sau generational in versiuni experimentale)`,
-    interviewTrap: "Atat ZGC cat si Shenandoah sunt optimizate pentru latenta mica (pauze < 1ms), nu pentru throughput brut. Daca ai un job batch de noapte care proceseaza date masive fara clienti online, Parallel GC este mai rapid.",
-    keyTakeaway: "Shenandoah compacteaza concurent prin Forwarding Pointers in obiect, oferind o alternativa non-STW robusta."
-  },
-  {
-    id: "java-84",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Minor GC vs Major GC vs Full GC",
-    question: "Care este diferenta dintre un Minor GC, un Major GC si un Full GC in comportamentul unei aplicatii Java?",
-    answer: "1. Minor GC (Young GC):\\n   - Se declanseaza atunci cand spatiul Eden se umple cu obiecte noi.\\n   - Colecteaza EXCLUSIV generatia tanara (Eden, Survivor spaces).\\n   - Este foarte frecvent, dureaza extrem de putin (cateva milisecunde) si este in general insesizabil.\\n\\n2. Major GC:\\n   - Colecteaza Old Generation (Tenured space).\\n   - Dureaza semnificativ mai mult decat un Minor GC, deoarece Old Generation este mult mai mare si contine mai multe obiecte.\\n\\n3. Full GC:\\n   - Colecteaza INTREGUL HEAP (atat Young Generation cat si Old Generation) si adesea include si Metaspace-ul!\\n   - Opreste toate firele de executie ale aplicatiei (Stop-The-World) pe o durata ce poate varia de la sute de milisecunde la zeci de secunde!\\n   - Un Full GC frecvent in productie este un semnal clar de degradare grava a memoriei sau Memory Leak.",
-    codeSnippet: `// Comanda de diagnoza loguri GC in Java 17+:
-// -Xlog:gc*,gc+phases=debug:file=gc.log:time,uptime,pid:filecount=5,filesize=50m`,
-    interviewTrap: "Apelul manual System.gc() forteaza un Full GC complet Stop-The-World. De aceea se recomanda parametrul -XX:+DisableExplicitGC in productie.",
-    keyTakeaway: "Minor GC curata doar Young Gen; Major GC curata Old Gen; Full GC curata tot Heap-ul si Metaspace cauzand pauze lungi STW."
-  },
-  {
-    id: "java-85",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "OutOfMemoryError: GC overhead limit exceeded",
-    question: "Ce conditii specifice declanseaza eroarea \"OutOfMemoryError: GC overhead limit exceeded\" si cum o diferentiezi de o simpla lipsa de spatiu pe Heap?",
-    answer: "Aceasta eroare este o masura de siguranta a masinii virtuale pentru a preveni situatia in care aplicatia \"ingheata\" ruland 100% din timp doar Garbage Collector-ul fara a progresa deloc:\\n\\nConditiile exacte de declansare a erorii:\\n1. JVM-ul a petrecut peste 98% din timpul total de executie ruland Garbage Collection;\\n2. Si in urma acestei colectari masive a reusit sa elibereze MAI PUTIN DE 2% din spatiul Heap-ului!\\n3. Aceasta conditie s-a repetat pe parcursul a 5 cicluri consecutive de colectare.\\n\\nCauza de baza:\\n- Heap-ul este aproape 100% plin cu obiecte care au referinte vii (nu pot fi colectate). Aplicatia este la limita sufocarii.\\n- In loc sa lase aplicatia sa mearga la 0.1% viteza consumand 100% CPU in bucle de GC, JVM arunca aceasta exceptie fatala pentru a permite repornirea procesului.",
-    codeSnippet: `// Dezactivare temporara pentru debug (nerecomandat in prod):
-// -XX:-UseGCOverheadLimit`,
-    interviewTrap: "Simpla crestere a parametrului -Xmx poate doar amana aparitia erorii cu cateva ore daca aplicatia are un Memory Leak real (ex: o colectie statica care acumuleaza continuu obiecte).",
-    keyTakeaway: "GC overhead limit exceeded apare cand GC consuma >98% din CPU si elibereaza <2% din Heap; semnaleaza un Heap sufocat de date vii."
-  },
-  {
-    id: "java-86",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "OutOfMemoryError: Unable to create new native thread",
-    question: "Ce cauzeaza eroarea \"OutOfMemoryError: Unable to create new native thread\" si ce setari de OS si JVM trebuie verificate?",
-    answer: "Aceasta eroare NU este cauzata de umplerea Heap-ului, ci de incapacitatea sistemului de operare de a mai aloca un fir nativ de executie pentru procesul Java:\\n\\n3 Cauze Principale:\\n1. Limita de procese/thread-uri a utilizatorului Linux (ulimit):\\n   - Sistemul de operare are o limita maxima de thread-uri per utilizator (vizibila cu ulimit -u).\\n   - Daca limita este setata la 4096 si aplicatia incearca sa porneasca firul 4097, OS returneaza eroare.\\n\\n2. Dimensiunea Stivei de Thread (-Xss):\\n   - Fiecare thread Java primeste o stiva de memorie proprie nativa (implicit 1 MB per thread pe 64-bit).\\n   - 2.000 de fire consuma 2 GB doar pentru stive, in afara memoriei de Heap!\\n\\n3. Epuizarea memoriei RAM a sistemului sau a spatiului de memorie virtuala (swap/cgroups in Docker).\\n\\nSolutii:\\n- Cresterea limitelor in /etc/security/limits.conf (nproc).\\n- Folosirea unui ThreadPool cu numar limitat de fire sau migrarea la Virtual Threads in Java 21.",
-    codeSnippet: `// Verificare limite in terminal Linux:
-// ulimit -u           -> Numar maxim procese/fire
-// cat /proc/sys/kernel/threads-max -> Limita globala sistem`,
-    interviewTrap: "Daca cresti -Xmx (Heap-ul) crezand ca rezolvi acest OOM, de fapt inrautatesti situatia! Heap-ul mai mare lasa MAI PUTINA memorie RAM libera pentru alocarea stivelor thread-urilor native.",
-    keyTakeaway: "Unable to create native thread semnaleaza depasirea limitelor OS (ulimit/nproc) sau lipsa de RAM nativ pentru stivele thread-urilor."
-  },
-  {
-    id: "java-87",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Generarea si Analiza unui Heap Dump la Crash",
-    question: "Cum configurezi JVM-ul sa salveze automat un Heap Dump la aparitia unui OutOfMemoryError si cum il analizezi folosind Eclipse MAT?",
-    answer: "1. Configurarea Automata in Productie (OBLIGATORIE):\\n   - Adauga parametrii JVM in linia de comanda:\\n     -XX:+HeapDumpOnOutOfMemoryError\\n     -XX:HeapDumpPath=/var/log/dumps/app_heap_dump.hprof\\n   - JVM va scrie pe disc o copie fidela a intregii memorii Heap exact in momentul fatal al prabusirii, inainte de oprirea procesului.\\n\\n2. Generare Manuala la cerere (fara crash):\\n   - jcmd <PID> GC.heap_dump /tmp/dump.hprof\\n   - Sau folosind jmap: jmap -dump:live,format=b,file=dump.hprof <PID>\\n\\n3. Analiza cu Eclipse Memory Analyzer Tool (MAT):\\n   - Deschide fisierul .hprof in MAT.\\n   - Ruleaza raportul automat \"Leak Suspects\": identifica instantaneu clasa sau structura de date care retine 80-90% din memoria totala (Retained Heap).\\n   - Inspecteaza \"Dominator Tree\" si drumul de referinte \"Path to GC Roots\" excluzand referintele weak/soft pentru a vedea cine retine obiectul in viata.",
-    codeSnippet: `// Argumente JVM de productie recomandate:
-// -XX:+HeapDumpOnOutOfMemoryError 
-// -XX:HeapDumpPath=/var/log/app_dump.hprof
-// -XX:+ExitOnOutOfMemoryError (opreste containerul imediat pentru a fi recreat de K8s)`,
-    interviewTrap: "Asigura-te ca partitia pe disc are suficient spatiu liber egal cu dimensiunea maxima a Heap-ului (-Xmx). Daca Heap-ul are 16 GB si discul are doar 5 GB liberi, scrierea dump-ului va esua.",
-    keyTakeaway: "HeapDumpOnOutOfMemoryError salveaza starea memoriei la crash; Eclipse MAT identifica obiectele suspecte prin Dominator Tree."
-  },
-  {
-    id: "java-88",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "JIT Compiler: C1 Compiler, C2 Compiler si Tiered Compilation",
-    question: "Cum functioneaza Tiered Compilation in JVM si care este diferenta dintre compilatorul C1 (Client) si C2 (Server)?",
-    answer: "JVM nu executa bytecode-ul doar prin interpretare lenta, ci foloseste un compilator Just-In-Time (JIT) pe niveluri (Tiered Compilation, activat implicit):\\n\\n1. Nivelul 0 (Interpreted Code):\\n   - Bytecode-ul este executat linie cu linie de catre interpretor. Pornire instantanee a aplicatiei, dar viteza de executie redusa.\\n\\n2. Nivelurile 1, 2, 3 (C1 Compiler / Client Compiler):\\n   - Compilator usor si rapid.\\n   - Compileaza metodele apelate frecvent in cod masina nativ rapid, cu optimizari de baza.\\n   - Nivelul 3 injecteaza contoare de profilare (Profiling counters) pentru a monitoriza tipurile de date si frecventa ramurilor din cod.\\n\\n3. Nivelul 4 (C2 Compiler / Server Compiler / Opto):\\n   - Compilator agresiv de inalta performanta.\\n   - Preia datele de profilare din C1 si aplica optimizari profunde: inlining masiv de metode, devirtualizare, loop unrolling, vectorizare SIMD.\\n   - Codul atinge viteze comparabile cu C++.",
-    codeSnippet: `// Verificare faze JIT din linia de comanda:
-// -XX:+PrintCompilation
-// Afiseaza cand o metoda este compilata pe C1 (tiers 1-3) sau promovata pe C2 (tier 4).`,
-    interviewTrap: "Daca o ipoteza optimista a compilatorului C2 este contrazisa ulterior la runtime (ex: apare o clasa polimorfica noua), JVM efectueaza o Deoptimizare (Deopt) si coboara codul inapoi la nivelul interpretat.",
-    keyTakeaway: "Tiered Compilation ofera pornire rapida prin C1 si performanta maxima pe termen lung prin optimizarile agresive din C2."
-  },
-  {
-    id: "java-89",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Tehnici de Optimizare JIT: Method Inlining si Loop Unrolling",
-    question: "Ce este Method Inlining si Loop Unrolling in optimizarile JIT si cum fac codul modular la fel de rapid ca cel monolitic?",
-    answer: "1. Method Inlining (Cea mai importanta optimizare JIT):\\n   - In loc sa faca un apel de metoda real (care implica plasarea parametrilor pe stiva, salt la instructiune CPU si crearea unui Stack Frame), JIT copiaza corpul metodei apelate direct in corpul metodei apelante!\\n   - Permite scrierea de metode mici, curate si reutilizabile in conformitate cu principiile Clean Code, cu ZERO penalizare de performanta la runtime.\\n   - Conditie: Metoda trebuie sa fie suficient de mica (implicit sub 35 bytes de bytecode pentru -XX:MaxInlineSize).\\n\\n2. Loop Unrolling (Derularea Buclelor):\\n   - La bucle for/while, la fiecare pas se face un salt conditional (Branch instruction) si o comparatie de contor.\\n   - JIT dubleaza sau cuadrupleaza corpul buclei (ex: executa 4 iteratii intr-un singur pas), reducand numarul de verificari de conditii si permitand instructiuni paralele pe registri CPU (Vectorizare SIMD).",
-    codeSnippet: `// Inainte de Inlining:
-public int getAge() { return this.age; }
-public void check(Person p) { int a = p.getAge(); }
-
-// Dupa JIT Method Inlining (executat direct in instructiuni masina):
-public void check(Person p) { int a = p.age; } // Zero apel de functie!`,
-    interviewTrap: "Metodele mari de peste 325 bytes de bytecode (-XX:MaxFreqInlineSize) nu vor fi NICIODATA inlinuite de JIT, indiferent cat de des sunt apelate. Pastreaza metodele mici!",
-    keyTakeaway: "Method Inlining elimina costul salturilor de stiva pentru metode mici; Loop Unrolling reduce verificarile de conditii in bucle."
-  },
-  {
-    id: "java-90",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Monomorphic vs Bimorphic vs Megamorphic Call-Sites in JIT",
-    question: "Cum optimizeaza JIT apelurile polimorfice de interfata prin Inline Caching si de ce siturile Megamorphic sunt mai lente?",
-    answer: "Cand apelezi o metoda pe o interfata sau clasa de baza (ex: animal.makeSound()), JVM trebuie in mod normal sa caute adresa metodei in VTable (Virtual Method Table):\\n\\n1. Monomorphic Call-Site (O singura clasa concreta):\\n   - Daca profilarea arata ca la acel punct de apel (call-site) s-a transmis INTOTDEAUNA aceeasi clasa concreta (ex: doar Dog):\\n   - JIT devirtualizeaza apelul si face INLINE direct la Dog.makeSound()! Rapiditate maxima identica cu o metoda statica.\\n\\n2. Bimorphic Call-Site (Exact doua clase concrete):\\n   - Daca apar doar doua implementari (ex: Dog si Cat):\\n   - JIT genereaza un simplu branch if (obj instanceof Dog) Dog.sound() else Cat.sound() si poate inlui ambele ramuri.\\n\\n3. Megamorphic Call-Site (Trei sau mai multe clase):\\n   - Daca prin acelasi punct de apel trec multe implementari diferite (ex: Dog, Cat, Cow, Bird, Horse):\\n   - JIT renunta la inlining si este fortat sa faca o cautare dinamica lenta in VTable la FIECARE apel de instructiune (invokevirtual).",
-    codeSnippet: `// Monomorphic: la apel ajunge doar ServiceA -> JIT face INLINE direct
-for (Task t : tasks) { t.execute(); } // Daca toate t sunt din clasa EmailTask -> ultra-rapid
-
-// Megamorphic: la acelasi punct trec 10 clase diferite -> cautare lenta in VTable`,
-    interviewTrap: "Design-ul cu interfete este excelent, dar daca ai o bucla critica de performanta parcurgand milioane de elemente, asigura-te ca nu treci printr-un call-site megamorphic.",
-    keyTakeaway: "Monomorphic permite inlining direct; Megamorphic forteaza cautarea in tabele virtuale (VTable) la fiecare apel."
-  },
-  {
-    id: "java-91",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "ClassLoader Delegation Model: Bootstrap, Platform si Application",
-    question: "Cum functioneaza modelul ierarhic de delegare (Parent Delegation Model) al ClassLoader-elor in JVM?",
-    answer: "Orice clasa Java este incarcata in memorie de un ClassLoader. Exista o ierarhie standard de 3 niveluri:\\n\\n1. Ierarhia Standard:\\n   - Bootstrap ClassLoader (scris in C/C++): Incarca clasele fundamentale de runtime din modulul java.base (ex: java.lang.Object, String, List).\\n   - Platform ClassLoader (in vechiul Java: Extension ClassLoader): Incarca clasele de platforma si extensii Java.\\n   - Application ClassLoader (System ClassLoader): Incarca clasele din classpath-ul aplicatiei tale (fisierele .class si dependintele din JAR-uri).\\n\\n2. Principiul de Delegare Parinte (Parent-First Delegation):\\n   - Cand un ClassLoader primeste cererea de a incarca o clasa (ex: \"com.ats.User\"):\\n   - Pas 1: Verifica daca clasa nu a fost deja incarcata in cache-ul sau.\\n   - Pas 2: NU incearca sa o incarce el insusi; DELEAGA cererea catre parintele sau ierarhic.\\n   - Pas 3: Doar daca parintele (si toti stramosii pana la Bootstrap) returneaza ClassNotFoundException, ClassLoader-ul copil incearca sa gaseasca si sa incarce fisierul de bytecode.",
-    codeSnippet: `// Verificare ierarhie din cod:
-ClassLoader appCl = Application.class.getClassLoader();
-ClassLoader platCl = appCl.getParent();
-ClassLoader bootCl = platCl.getParent(); // Returneaza null (deoarece Bootstrap e scris in C++)
-System.out.println(appCl);  // jdk.internal.loader.ClassLoaders$AppClassLoader
-System.out.println(platCl); // jdk.internal.loader.ClassLoaders$PlatformClassLoader
-System.out.println(bootCl); // null`,
-    interviewTrap: "Nu poti inlocui clasa java.lang.String cu o clasa proprie falsa creand un fisier String.java in proiect, deoarece parintele Bootstrap o va gasi intotdeauna primul pe cea oficiala (securitate fundamentala in Java).",
-    keyTakeaway: "Modelul de delegare cere parintilor sa incarce clasele primii, asigurand securitatea si integritatea runtime-ului Java."
-  },
-  {
-    id: "java-92",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Custom ClassLoaders si Ruperea Modelului de Delegare",
-    question: "In ce scenarii este necesara crearea unui Custom ClassLoader si cum rupe un container web (Tomcat) modelul de delegare?",
-    answer: "1. De ce cream Custom ClassLoaders:\\n   - Incarcarea de clase din surse non-standard: dintr-o baza de date, peste retea (HTTP/FTP), din fisiere criptate pe disc.\\n   - Hot-reloading si Plugin-uri: Permite descarcarea si reincarcarea de module fara a reporni intregul server JVM.\\n\\n2. Ruperea Modelului de Delegare (Child-First / WebApp-First):\\n   - In servere de aplicatii (Tomcat, Jetty), fiecare aplicatie web (.war) are propriul sau WebAppClassLoader.\\n   - Daca Aplicatia A foloseste Jackson 2.12 si Aplicatia B foloseste Jackson 2.15, delegarea parinte ar forta ambele aplicatii sa foloseasca versiunea globala din Tomcat!\\n   - Pentru a asigura izolarea aplicatiilor, WebAppClassLoader suprascrie metoda loadClass(): incearca sa incarce clasele MAI INTAI din WEB-INF/classes si WEB-INF/lib, si doar daca nu le gaseste apeleaza parintele!\\n   - Exceptie absoluta: Clasele standard Java (java.*) sunt delegate INTOTDEAUNA catre Bootstrap pentru securitate.",
-    codeSnippet: `public class CustomNetworkClassLoader extends ClassLoader {
-    @Override
-    protected Class<?> findClass(String name) throws ClassNotFoundException {
-        byte[] b = loadByteCodeFromNetwork(name); // Descarca octeti de pe server
-        return defineClass(name, b, 0, b.length); // Transforma octetii in clasa JVM
-    }
-}`,
-    interviewTrap: "Doua obiecte create din acelasi bytecode .class sunt considerate clase complet INCOMPATIBILE de catre JVM daca au fost incarcate de instante diferite de ClassLoader (arunca ClassCastException la cast).",
-    keyTakeaway: "Tomcat rupe modelul de delegare (Child-First) pentru a izola versiunile bibliotecilor intre aplicatii web diferite."
-  },
-  {
-    id: "java-93",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "NoClassDefFoundError vs ClassNotFoundException",
-    question: "Care este diferenta fundamentala dintre o exceptie ClassNotFoundException si o eroare fatala NoClassDefFoundError in Java?",
-    answer: "1. ClassNotFoundException (Checked Exception):\\n   - Este o exceptie verificata care apare la incarcare DINAMICA explicita din cod (ex: Class.forName(\"com.mysql.cj.jdbc.Driver\"), ClassLoader.loadClass()).\\n   - Semnificatie: \"Am cautat la runtime un fisier .class cu numele respectiv pe classpath si nu l-am gasit\". Se rezolva adaugand dependinta in pom.xml.\\n\\n2. NoClassDefFoundError (Fatal Error):\\n   - Este o EROARE (subclasa a lui java.lang.Error), aparuta la compilarea cu succes a codului, dar la executie clasa nu mai este gasita sau nu poate fi initializata!\\n   - Doua cauze frecvente:\\n     - Clasa era prezenta la compile-time, dar lipseste din JAR-ul de runtime.\\n     - Initializarea statica a esuat! Daca o clasa a aruncat o exceptie intr-un static initializer block (static { ... }), JVM marcheaza clasa ca defecta. La orice apel ulterior catre acea clasa, JVM nu mai incearca initializarea ci arunca direct NoClassDefFoundError!",
-    codeSnippet: `// Exemplu cauzator de NoClassDefFoundError:
-public class BrokenService {
-    static {
-        // Daca asta arunca RuntimeException la pornire (ex: fisier lipsa),
-        // orice referinta ulterioara arunca NoClassDefFoundError!
-        if (true) throw new RuntimeException("Eroare initializare statica");
-    }
-}`,
-    interviewTrap: "Daca vezi NoClassDefFoundError in loguri, deruleaza intotdeauna logurile mai sus pentru a gasi adevarata eroare initiala: ExceptionInInitializerError.",
-    keyTakeaway: "ClassNotFoundException este eroare la incarcare dinamica prin sir de caractere; NoClassDefFoundError apare cand o clasa existenta la compilare nu poate fi gasita sau initializata la runtime."
-  },
-  {
-    id: "java-94",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "String Deduplication in G1 GC si Compact Strings (Java 9)",
-    question: "Cum reduc Compact Strings (Java 9) si String Deduplication (-XX:+UseStringDeduplication) consumul de memorie in aplicatii?",
-    answer: "In aplicatiile de intreprindere, String-urile consuma frecvent intre 25% si 40% din intregul spatiu Heap:\\n\\n1. Compact Strings (Java 9 - activat nativ):\\n   - Inainte de Java 9, String stoca caracterele intr-un char[] (fiecare caracter ocupa 2 octeti / 16 biti conform UTF-16), chiar daca textul continea doar caractere ASCII obisnuite (1 octet).\\n   - In Java 9, reprezentarea interna a fost schimbata intr-un byte[] compact impreuna cu un flag coder (LATIN1 sau UTF16).\\n   - Daca textul contine doar caractere din alfabetul latin (ASCII), consuma doar 1 octet per caracter, reducand amprenta de memorie la jumatate (50%)!\\n\\n2. String Deduplication in G1 GC (-XX:+UseStringDeduplication):\\n   - Multe String-uri create la runtime (din JSON, baze de date) au continut identic (\"Bucuresti\", \"ACTIVE\"), dar sunt obiecte distincte pe Heap.\\n   - In timpul colectarii de fundal, G1 identifica instantele de String care au aceeasi secventa de caractere si le modifica campul intern value sa puncteze catre ACELASI byte[] partajat, eliberand duplicatele din memorie fara modificari de cod!",
-    codeSnippet: `// Activare String Deduplication in containere cu G1:
-// -XX:+UseG1GC -XX:+UseStringDeduplication`,
-    interviewTrap: "Compact Strings este o optimizare transparenta a JDK-ului. Nu incerca sa convertesti manual sirurile in array-uri de bytes pentru optimizari, deoarece JVM face asta nativ mult mai eficient.",
-    keyTakeaway: "Compact Strings injumatateste memoria pentru texte ASCII (byte[] in loc de char[]); String Deduplication partajeaza array-ul intern intre siruri cu continut identic."
-  },
-  {
-    id: "java-95",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Tipuri de Referinte in Java: Strong, Soft, Weak si Phantom",
-    question: "Care sunt cele 4 tipuri de referinte din java.lang.ref si cand este colectat de Garbage Collector obiectul referit?",
-    answer: "1. Strong Reference (Implicita):\\n   - MyObject o = new MyObject();\\n   - Obiectul NU este colectat NICIODATA atata timp cat exista cel putin un lant de referinte tari pana la un GC Root, chiar daca memoria se epuizeaza complet (arunca OOM).\\n\\n2. SoftReference<T>:\\n   - Obiectul este curatat doar atunci cand JVM-ul are nevoie DISPERATA de memorie (inainte de a arunca OutOfMemoryError).\\n   - Folosita istoric pentru cache-uri sensibile la memorie.\\n\\n3. WeakReference<T>:\\n   - Obiectul este colectat la URMATORUL CICLU de Garbage Collection, daca nu mai exista nicio alta referinta tare catre el.\\n   - Folosita in WeakHashMap si ThreadLocal pentru a preveni memory leaks cand durata de viata a cheii este dictata de restul aplicatiei.\\n\\n4. PhantomReference<T>:\\n   - get() returneaza intotdeauna null.\\n   - Folosita impreuna cu un ReferenceQueue pentru a fi notificat exact cand un obiect a fost curatat din memorie (inlocuitor modern pentru finalize()).",
-    codeSnippet: `// Creare referinta slaba (WeakReference):
-String data = new String("temp_data");
-WeakReference<String> weakRef = new WeakReference<>(data);
-
-data = null; // Stergem referinta tare
-// La primul GC: weakRef.get() va returna null!`,
-    interviewTrap: "Nu folosi SoftReference pentru cache-uri mari de inalta performanta in productie; pe JVM-uri moderne tinde sa se curete brusc in bulk cauzand spike-uri de incarcare pe baze de date.",
-    keyTakeaway: "Strong = nu se curata niciodata; Soft = se curata la OOM iminent; Weak = se curata la primul GC; Phantom = notificare post-mortem."
-  },
-  {
-    id: "java-96",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "WeakReference vs SoftReference in Arhitectura de Cache",
-    question: "De ce o mapa bazata pe SoftReference este superioara uneia bazate pe WeakReference pentru implementarea unui Cache in memorie?",
-    answer: "Diferenta critica intre cele doua este momentul si agresivitatea colectarii:\\n\\n1. Daca folosesti WeakReference pentru un Cache:\\n   - Obiectul din cache este sters la cel mai apropiat Minor GC (adica o data la cateva secunde!), chiar daca serverul are 64 GB de memorie RAM complet libera!\\n   - Rata de \"Cache Miss\" va fi enorma, facand cache-ul complet inutil.\\n\\n2. Daca folosesti SoftReference pentru un Cache:\\n   - JVM garanteaza ca va pastra obiectele in memorie atata timp cat exista suficient spatiu liber pe Heap.\\n   - Colectarea obiectelor protejate prin SoftReference are loc doar daca spatiul de Heap devine critic.\\n   - Comportamentul poate fi fin-tunat prin parametrul JVM: -XX:SoftRefLRUPolicyMSPerMB (milisecunde de viata per MB liber pe Heap).\\n\\n3. Solutia Moderna in Productie:\\n   - In practica moderna nu se mai folosesc implementari manuale cu Soft/Weak; se folosesc biblioteci specializate precum Caffeine Cache sau Guava Cache, bazate pe algoritmi hibrizi de tip Window TinyLFU.",
-    codeSnippet: `// Exemplu SoftReference cache:
-Map<String, SoftReference<BitmapImage>> imageCache = new HashMap<>();
-
-public BitmapImage getImage(String id) {
-    SoftReference<BitmapImage> ref = imageCache.get(id);
-    if (ref != null) {
-        BitmapImage img = ref.get();
-        if (img != null) return img; // Cache hit
-    }
-    BitmapImage loaded = loadFromDisk(id);
-    imageCache.put(id, new SoftReference<>(loaded));
-    return loaded;
-}`,
-    interviewTrap: "Daca creezi un SoftReference catre un obiect, dar obiectul retine la randul sau o referinta tare catre un alt nod din aplicatie, intregul graf de obiecte ramane blocat in memorie.",
-    keyTakeaway: "WeakReference moare la primul GC; SoftReference supravietuieste pana cand memoria devine critica, fiind potrivita pentru cache-uri flexibile."
-  },
-  {
-    id: "java-97",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "De ce Cleaner (Java 9) a inlocuit complet Object.finalize()?",
-    question: "De ce metoda Object.finalize() a fost declarata Deprecated for Removal si cum asigura java.lang.ref.Cleaner eliberarea resurselor native?",
-    answer: "Problemele Catastrofale ale lui finalize():\\n1. Imprevizibilitate totala: JVM nu garanteaza cand sau daca metoda finalize() va fi apelata vreodata!\\n2. Degradare severa GC: Obiectele cu finalize() nu pot fi colectate imediat; necesita cel putin doua cicluri complete de GC si o coada interna lenta (FinalizerQueue).\\n3. Re-inviere periculoasa a obiectului (Object Resurrection): Un obiect murdar se putea salva atribuindu-se din nou unei variabile globale statice in interiorul lui finalize()!\\n4. Vulnerabilitati de securitate prin Finalizer Attacks.\\n\\nSolutia Moderna: java.lang.ref.Cleaner (Java 9)\\n- Cleaner ruleaza intr-un fir dedicat de fundal complet separat.\\n- Actiunea de curatare (Cleaning Action) este implementata ca un Runnable STATIC care NU are acces la referinta obiectului curatat (prevenind re-invierea!).\\n- Resursele native (descriptori de fisiere, pointeri C++) sunt eliberate curat cand obiectul devine phantom reachable.",
-    codeSnippet: `public class NativeResource implements AutoCloseable {
-    private static final Cleaner CLEANER = Cleaner.create();
-    
-    // Clasa statica separata - NU tine referinta catre clasa parinte!
-    private static class State implements Runnable {
-        private long nativeAddress;
-        State(long addr) { this.nativeAddress = addr; }
-        public void run() { freeNativeMemory(nativeAddress); }
-    }
-
-    private final Cleaner.Cleanable cleanable;
-    public NativeResource() {
-        this.cleanable = CLEANER.register(this, new State(allocate()));
-    }
-    public void close() { cleanable.clean(); }
-}`,
-    interviewTrap: "Daca actiunea de curatare dintr-un Cleaner este o clasa anonima interioara non-statica, ea retine o referinta ascunsa catre obiectul parinte, impiedicand pentru totdeauna curatarea acestuia (Memory Leak garantat!).",
-    keyTakeaway: "Cleaner inlocuieste finalize() prin actiuni statice decuplate, eliminand riscul de re-inviere a obiectelor si blocajele GC."
-  },
-  {
-    id: "java-98",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Tranzitia de la sun.misc.Unsafe la VarHandle si Foreign Memory API",
-    question: "De ce a fost descurajata clasa sun.misc.Unsafe si cum ofera VarHandle (Java 9) si FFM API (Java 22) operatii atomice sigure?",
-    answer: "1. Ce a fost sun.misc.Unsafe:\\n   - O poarta secreta interna a JDK-ului folosita masiv de biblioteci de inalta performanta (Netty, Disruptor, Kafka, Spring).\\n   - Permitea alocari de memorie directa in afara Heap-ului (off-heap malloc), acces la memorie prin pointeri directi si instructiuni CAS atomice.\\n   - Risc enorm: Un pointer gresit arunca crash instantaneu cu Segmentation Fault (core dump) omorand intregul proces JVM fara exceptie Java.\\n\\n2. Solutiile Moderne Oficiale:\\n   - VarHandle (Java 9 - JEP 193): Inlocuieste operatiile de memorie din Unsafe cu o interfata tipizata, sigura si verificata de compilator, oferind moduri de acces precise (getAcquire, setRelease, compareAndSet).\\n   - Foreign Function and Memory (FFM) API (Java 22 - JEP 454): Ofera acces complet la memoria nativa Off-Heap (Arena, MemorySegment) si apeluri directe catre biblioteci native C/C++ fara a mai scrie cod JNI!",
-    codeSnippet: `// Utilizare VarHandle in loc de Unsafe:
-public class Account {
-    private volatile int balance;
-    private static final VarHandle VH_BALANCE;
-
-    static {
-        try {
-            VH_BALANCE = MethodHandles.lookup()
-                .findVarHandle(Account.class, "balance", int.class);
-        } catch (ReflectiveOperationException e) { throw new Error(e); }
-    }
-
-    public boolean updateBalance(int expected, int newValue) {
-        return VH_BALANCE.compareAndSet(this, expected, newValue);
-    }
-}`,
-    interviewTrap: "Incepand cu Java 21/22, apelurile catre metodele critice din sun.misc.Unsafe emit avertismente severe la pornire si vor fi eliminate complet in versiunile viitoare.",
-    keyTakeaway: "VarHandle aduce operatii atomice si bariere de memorie sigure; FFM API inlocuieste Unsafe si JNI pentru lucrul cu memoria nativa."
-  },
-  {
-    id: "java-99",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Profiling in Productie: Java Flight Recorder (JFR) si JMC",
-    question: "Ce este Java Flight Recorder (JFR) si cum captureaza evenimente de performanta in productie cu un impact de sub 1% CPU?",
-    answer: "1. Ce este Java Flight Recorder (JFR):\\n   - Un mecanism de inregistrare a evenimentelor de diagnosticare integrat direct in masina virtuala HotSpot JVM (initial comercial in Oracle JDK, open-source complet din Java 11).\\n   - Colecteaza continuu date despre: alocari de memorie pe fir, pauze de GC, thread locks contention, timpi de asteptare I/O pe fisiere si sockets, compilari JIT si consum de CPU.\\n\\n2. De ce are overhead neglijabil (< 1%):\\n   - Este scris direct in nucleul C++ al masinii virtuale; evenimentele sunt scrise in buffere circulare in memorie fara conversii lente in siruri de caractere.\\n   - Poate fi lasat PORNIT PERMANENT in productie (continuous recording).\\n\\n3. Analiza cu JDK Mission Control (JMC):\\n   - Fisierul rezultat .jfr este deschis in JMC sau IntelliJ Profiler.\\n   - Ofera grafice de Flame Graph, identifica exact linia de cod responsabila de alocari excesive de memorie sau thread-ul care blocheaza alte fire pe un lock.",
-    codeSnippet: `// Pornire inregistrare JFR pe o aplicatie activa din consola:
-// jcmd <PID> JFR.start name=ProfileProd settings=profile.jfc duration=60s filename=prod_profile.jfr
-// jcmd <PID> JFR.stop name=ProfileProd`,
-    interviewTrap: "Profilerele clasice prin instrumentare de bytecode (precum cele din versiuni vechi de unelte) incetinesc aplicatia cu 20-50% si altereaza masuratorile. JFR foloseste sampling intern si nu sufera de acest efect.",
-    keyTakeaway: "JFR este profilerul de aur integrat in JVM capabil sa diagnosticheze probleme reale in productie cu sub 1% overhead."
-  },
-  {
-    id: "java-100",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Parametri JVM Critici in Containere Docker: MaxRAMPercentage",
-    question: "De ce o aplicatie Java 8 veche crapat din cauza OOM Killer in Docker si cum rezolva -XX:MaxRAMPercentage problema?",
-    answer: "1. Problema Istorica cu Containerele (Java 8 inainte de update 191):\\n   - JVM nu stia ca ruleaza intr-un container Docker cu cgroups.\\n   - Citea memoria si numarul de core-uri direct de pe masina gazda (Host OS)!\\n   - Daca serverul avea 64 GB RAM iar containerul avea limita de 2 GB, JVM aloca un Heap de 16 GB (25% din gazda). Cand incerca sa foloseasca mai mult de 2 GB, Linux OOM Killer distrugea instantaneu containerul (Exit Code 137)!\\n\\n2. Solutia Moderna: Container Support\\n   - Activata nativ in toate versiunile moderne: -XX:+UseContainerSupport\\n   - Detecteaza corect limitele din Docker/Kubernetes (memory limits si CPU shares).\\n\\n3. De ce folosim -XX:MaxRAMPercentage in loc de -Xmx numeric fix:\\n   - Daca configurezi -Xmx4g si maresti limita pod-ului de Kubernetes la 8g, trebuie sa modifici si fisierul de configurare Java.\\n   - Folosind -XX:MaxRAMPercentage=75.0, JVM aloca automat 75% din memoria containerului pentru Heap, lasand 25% liber pentru Metaspace, thread stacks si OS.",
-    codeSnippet: `# Comanda recomandata in Dockerfile:
-ENTRYPOINT ["java", \
-  "-XX:+UseContainerSupport", \
-  "-XX:MaxRAMPercentage=75.0", \
-  "-XX:InitialRAMPercentage=75.0", \
-  "-jar", "app.jar"]`,
-    interviewTrap: "Nu seta MaxRAMPercentage=100.0! Memoria nativa a procesului, Metaspace-ul si stivele thread-urilor traiesc in afara Heap-ului; daca Heap-ul ia 100%, containerul va fi ucis imediat pentru depasire de memorie.",
-    keyTakeaway: "UseContainerSupport si MaxRAMPercentage scaleaza dinamic Heap-ul in functie de limitele containerului Docker/Kubernetes."
-  },
-  {
-    id: "java-101",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "De ce capacitatea unui HashMap este intotdeauna o putere a lui 2?",
-    question: "De ce HashMap-ul isi forteaza intotdeauna capacitatea sa fie o putere a lui 2 (16, 32, 64...) si cum optimizeaza formula (n - 1) & hash calculul bucket-ului?",
-    answer: "In mod normal, pentru a mapa un hash pe un array de lungime N se foloseste operatia modulo: index = hash % N.\\n\\n1. Problema cu operatia Modulo (%):\\n   - La nivel de procesor (CPU), impartirea si modulo sunt operatii matematice extrem de lente, necesitand 20-40 de cicluri de ceas per calcul.\\n\\n2. Trucul Bitwise din HashMap ((n - 1) & hash):\\n   - Daca N este o putere a lui 2 (ex: N = 16 = 00010000 in binar), atunci N - 1 devine o masca formata exclusiv din biti de 1 (15 = 00001111 in binar).\\n   - Proprietate matematica: Daca N este putere a lui 2, atunci hash % N este EXACT ECHIVALENT cu operatia pe biti: hash & (N - 1)!\\n   - Operatia bitwise AND (&) se executa intr-un SINGUR ciclu de ceas CPU (instantaneu), oferind o viteza uriasa la fiecare get() si put().\\n\\n3. Ce se intampla daca ceri initialCapacity = 20:\\n   - Metoda interna tableSizeFor() rotunjeste automat in sus la cea mai apropiata putere a lui 2 (20 devine 32).",
-    codeSnippet: `// In sursa Java HashMap:
-static int indexFor(int hash, int length) {
-    return hash & (length - 1); // Echivalent ultra-rapid pentru hash % length
-}`,
-    interviewTrap: "Daca N nu ar fi putere a lui 2 (ex: N=15), N-1 ar fi 14 (1110 binar), iar ultimul bit ar fi 0. Astfel, toate bucket-urile cu indici impari nu ar primi niciodata elemente, irosind 50% din spatiul array-ului!",
-    keyTakeaway: "Capacitatea putere a lui 2 permite inlocuirea operatiei lente modulo (%) cu operatia pe biti ultra-rapida (&)."
-  },
-  {
-    id: "java-102",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Functia de Perturbare a Hash-ului in HashMap (Hash Spread)",
-    question: "De ce HashMap nu foloseste direct key.hashCode() si de ce aplica formula (h = key.hashCode()) ^ (h >>> 16)?",
-    answer: "Aceasta operatie se numeste \"Perturbation Function\" sau \"Hash Spreading\":\\n\\n1. Problema cu hashCode() direct:\\n   - Cand capacitatea tabelei este mica (ex: N = 16), masca (N - 1) ia in considerare doar ultimii 4 biti inferiori ai hash-ului (15 = 1111).\\n   - Daca cheile au hashCodes care difera doar in bitii superiori de 16 biti (ex: numere mari float sau adrese de memorie), dar au ultimii 4 biti identici, toate cheile vor nimeri in ACELASI bucket (coliziune 100%)!\\n\\n2. Cum rezolva formula (h ^ (h >>> 16)):\\n   - h >>> 16 deplaseaza bitii superiori (high-order bits) cu 16 pozitii spre dreapta.\\n   - Operatorul XOR (^) combina bitii superiori cu bitii inferiori.\\n   - Efectul: Informatia din toti cei 32 de biti ai hash-ului original este \"amestecata\" si propagata in bitii inferiori, reducand dramatic coliziunile in tabele mici fara cost computational semnificativ.",
-    codeSnippet: `// Metoda hash() din HashMap.java:
-static final int hash(Object key) {
-    int h;
-    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
-}`,
-    interviewTrap: "Daca intervievatorul intreaba cum se calculeaza hash-ul pentru o cheie null in HashMap, raspunsul este: nu apeleaza hashCode(), ci returneaza direct 0 (cheia null sta mereu in bucket-ul 0).",
-    keyTakeaway: "Functia de perturbare coboara bitii superiori peste cei inferiori prin XOR, dispersand uniform cheile in bucket-uri."
-  },
-  {
-    id: "java-103",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Treeification in HashMap: De la LinkedList la Red-Black Tree",
-    question: "Cand se transforma un bucket din HashMap dintr-o lista inlantuita intr-un arbore Rosu-Negru (Java 8) si cand se face de-treeify?",
-    answer: "Inainte de Java 8, coliziunile din acelasi bucket formau o lista simplu inlantuita (LinkedList). Daca un atacator genera intentionat mii de chei cu acelasi hash (Hash Collision DoS Attack), cautarea get() se degrada de la O(1) la O(N).\\n\\nRegulile din Java 8+:\\n1. Treeification (Transformare in Arbore):\\n   - Daca numarul de noduri dintr-un singur bucket atinge pragul TREEIFY_THRESHOLD = 8;\\n   - SI capacitatea totala a tabelei (table.length) este de cel putin MIN_TREEIFY_CAPACITY = 64;\\n   - Atunci lista este convertita intr-un Red-Black Tree (TreeNode), reducand complexitatea de la O(N) la O(log N)!\\n   - Daca table.length < 64, nu face treeify, ci pur si simplu dubleaza capacitatea tabelei (resize/rehash).\\n\\n2. Untreeify (Revenire la Lista):\\n   - Daca in urma stergerilor sau a operatiei de resize, numarul de noduri din arbore scade la UNTREEIFY_THRESHOLD = 6, nodurile sunt convertite inapoi intr-o lista simpla (deoarece pentru <6 elemente lista e mai rapida decat mentinerea echilibrului arborelui).",
-    codeSnippet: `// Praguri critice in HashMap.java:
-static final int TREEIFY_THRESHOLD = 8;
-static final int UNTREEIFY_THRESHOLD = 6;
-static final int MIN_TREEIFY_CAPACITY = 64;`,
-    interviewTrap: "Diferenta dintre pragul de 8 (treeify) si 6 (untreeify) previne fenomenul de \"thrashing\" (conversie continua repetata intre lista si arbore daca se adauga si se sterge succesiv un element).",
-    keyTakeaway: "Un bucket devine Red-Black Tree la 8 elemente si revine la lista la 6 elemente, garantand performanta O(log N) la coliziuni masive."
-  },
-  {
-    id: "java-104",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Bucla Infinita din HashMap in Java 7 la Rehashing Concurent",
-    question: "De ce HashMap-ul standard nu trebuie folosit NICIODATA concurent si ce bug faimos de 100% CPU (Circular Linked List) aparea in Java 7?",
-    answer: "1. Ce este HashMap Race Condition:\\n   - HashMap nu este thread-safe. Daca doua fire apeleaza put() simultan, pot suprascrie date sau pot declansa simultan resize().\\n\\n2. Bug-ul de Bucla Infinita din Java 7:\\n   - In Java 7, la redimensionare (resize), elementele dintr-un bucket erau inserate in noua tabela folosind strategia \"Head Insertion\" (inversand ordinea elementelor din lista).\\n   - Daca Thread 1 si Thread 2 fac resize simultan, o schimbare de context exact la mijlocul re-legarii pointerilor putea face ca nodul A sa puncteze catre nodul B, iar nodul B sa puncteze inapoi catre nodul A (bucla circulara: A -> B -> A)!\\n   - La urmatorul get() pe acel hash, metoda intra intr-o bucla while infinita parcurgand ciclul, blocand procesorul la 100% CPU!\\n\\n3. Ce s-a schimbat in Java 8:\\n   - Java 8 a trecut la \"Tail Insertion\" (pastreaza ordinea originala a nodurilor), eliminand formarea buclelor circulare. Cu toate acestea, HashMap ramane non-thread-safe (pierde date sau intra in inconsistente); foloseste intotdeauna ConcurrentHashMap!",
-    codeSnippet: `// Solutia corecta pentru acces concurent:
-Map<String, String> map = new ConcurrentHashMap<>();`,
-    interviewTrap: "Multi candidati spun: \"In Java 8 HashMap este thread-safe impotriva buclelor infinite\". Desi bucla circulara specifica a fost eliminata, nodurile din Red-Black Tree pot deveni complet corupte sub concurenta, cauzand exceptii bizare sau bucle in arbore.",
-    keyTakeaway: "HashMap devine corupt sub concurenta; in Java 7 genera cicluri circulare la 100% CPU; foloseste exclusiv ConcurrentHashMap."
-  },
-  {
-    id: "java-105",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "IdentityHashMap: Compararea prin == in loc de equals()",
-    question: "Cum functioneaza IdentityHashMap si in ce cazuri speciale este folosit in framework-uri (ex: serializare, clonare)?",
-    answer: "1. Diferenta Fundamentala fata de HashMap:\\n   - HashMap foloseste key.hashCode() si key.equals(otherKey) pentru compararea cheilor.\\n   - IdentityHashMap foloseste System.identityHashCode(key) si OPERATORUL == (egalitate de referinte in memorie)!\\n   - Doua chei sunt considerate egale doar daca k1 == k2 (aceeasi instanta exacta pe Heap).\\n\\n2. Structura Interna (Linear Probing):\\n   - Nu foloseste noduri sau bucket-uri de tip LinkedList/Tree.\\n   - Stocheaza cheile si valorile alternativ intr-un singur array mare: table[2*i] = key, table[2*i+1] = value, rezolvand coliziunile prin Linear Probing.\\n\\n3. Cazuri Reale de Utilizare:\\n   - Serializatoare (Jackson, Gson, Java Serialization) si framework-uri de Deep Copy: Pentru a construi un graf de obiecte si a detecta referinte circulare (verificand daca instanta fizica exacta a mai fost deja vizitata).",
-    codeSnippet: `Map<String, String> map = new IdentityHashMap<>();
-String a = new String("key");
-String b = new String("key");
-
-map.put(a, "val1");
-map.put(b, "val2");
-
-System.out.println(map.size()); // Afiseaza 2! (Doua obiecte diferite in Heap)
-// In HashMap clasic ar fi afisat 1!`,
-    interviewTrap: "IdentityHashMap incalca intentionat contractul general al interfetei Map (care cere utilizarea lui equals). Foloseste-o strict cand ai nevoie de egalitate fizica de instanta.",
-    keyTakeaway: "IdentityHashMap compara cheile prin operatorul == si identityHashCode, ideala pentru detectarea referintelor circulare."
-  },
-  {
-    id: "java-106",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "WeakHashMap: Autocuratare si Prevenirea Scurgerilor de Memorie",
-    question: "Cum functioneaza WeakHashMap si de ce valorile asociate sunt sterse automat cand cheia nu mai este referita in alta parte?",
-    answer: "1. Cum functioneaza intern:\\n   - In WeakHashMap, intrarile (Entry) extind java.lang.ref.WeakReference si retin CHEIA ca pe o referinta slaba (WeakReference pe cheie, dar referinta normala pe valoare).\\n   - Cand o cheie nu mai are nicio referinta tare (Strong Reference) in intregul program, la urmatorul ciclu de Garbage Collection cheia este marcata ca eligibila si colectata din memorie.\\n\\n2. Curatarea Automata a Valorilor (ReferenceQueue):\\n   - Garbage Collector-ul plaseaza intrarea corespunzatoare intr-un ReferenceQueue intern.\\n   - La fiecare operatie get(), put() sau size() pe mapa, WeakHashMap apeleaza intern metoda expungeStaleEntries(), care scoate intrarile din ReferenceQueue si elibereaza si valorile asociate!\\n\\n3. Cazuri de Utilizare:\\n   - Stocarea de metadate temporare despre obiecte (ex: proprietati asociate tranzitoriu unui obiect de domeniu pe durata procesarii).",
-    codeSnippet: `Map<Order, OrderMetadata> map = new WeakHashMap<>();
-Order order = new Order(101);
-map.put(order, new OrderMetadata("pending"));
-
-order = null; // Nu mai exista referinta tare la order
-System.gc();  // Sugeram GC
-// La urmatoarea apelare map.size(), intrarea este stearsa automat!`,
-    interviewTrap: "Daca valoarea din WeakHashMap retine direct sau indirect o referinta tare catre propria sa cheie, cheia nu va fi colectata NICIODATA de GC, creand un Memory Leak masiv.",
-    keyTakeaway: "WeakHashMap sterge automat intrarile cand cheia nu mai are referinte tari, ideala pentru asocieri tranzitorii de metadate."
-  },
-  {
-    id: "java-107",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "EnumMap si EnumSet: De ce sunt cele mai rapide colectii din Java?",
-    question: "De ce EnumMap si EnumSet sunt mult mai rapide si consuma mult mai putina memorie decat HashMap si HashSet obisnuite?",
-    answer: "Deoarece toate valorile unui Enum sunt cunoscute la compilare si au un numar ordinal fix (0, 1, 2...):\\n\\n1. EnumSet (Bit-Vector ultra-compact):\\n   - Nu aloca noduri sau obiecte!\\n   - Pentru Enum-uri cu pana la 64 de valori, foloseste clasa RegularEnumSet care stocheaza intregul set intr-un SINGUR camp primitiv: private long elements!\\n   - Adaugarea, stergerea si testarea existentei se realizeaza prin operatii bitwise pe procesor (AND, OR, NOT) in 1 ciclu de ceas CPU!\\n   - Pentru >64 valori, foloseste JumboEnumSet (un array de long-uri).\\n\\n2. EnumMap (Array indexat direct):\\n   - Nu calculeaza hash, nu are functii de dispersie si nu are coliziuni.\\n   - Stocheaza valorile direct intr-un array compact: Object[] vals, unde indexul este pur si simplu key.ordinal()!\\n   - Complexitate O(1) garantata si zero pointer chasing.",
-    codeSnippet: `// EnumSet:
-Set<DayOfWeek> weekend = EnumSet.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
-
-// EnumMap:
-Map<DayOfWeek, String> schedule = new EnumMap<>(DayOfWeek.class);
-schedule.put(DayOfWeek.MONDAY, "Work"); // Scrie direct in array la indexul 0!`,
-    interviewTrap: "Daca cheile tale sunt instante de Enum si folosesti HashMap sau HashSet in loc de EnumMap / EnumSet, irosesti memorie si ratezi optimizari hardware masive.",
-    keyTakeaway: "EnumSet foloseste masti de biti pe un singur long; EnumMap foloseste array indexat pe ordinal, oferind viteza maxima in Java."
-  },
-  {
-    id: "java-108",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "ConcurrentSkipListMap: Cum ofera o Mapa Sortata Concurenta fara Lock-uri?",
-    question: "Ce structura de date sta la baza ConcurrentSkipListMap si cum asigura acces concurent sortat cu complexitate O(log N)?",
-    answer: "ConcurrentHashMap nu este sortat; TreeMap este sortat (Red-Black Tree), dar NU este thread-safe. Daca pui sincronizare peste TreeMap, devine un bottleneck urias.\\n\\nSolutia: ConcurrentSkipListMap (bazat pe structura Skip List):\\n1. Ce este un Skip List:\\n   - O lista inlantuita ierarhica pe mai multe niveluri (multi-level linked list).\\n   - Nivelul de baza (Level 0) contine toate elementele sortate.\\n   - Nivelurile superioare contin \"expresii\" (skip-uri / punti peste elemente) care actioneaza ca un index asemanator cu un arbore de cautare binar.\\n\\n2. De ce este ideala pentru concurenta:\\n   - Spre deosebire de un arbore rosu-negru care necesita rebalansari globale complexe (rotatii care blocheaza jumatate de arbore), inserarea intr-un Skip List modifica doar cativa pointeri locali de nivel!\\n   - Foloseste operatii atomice CAS pe pointerii nodurilor, fiind complet Lock-Free pentru citiri si scrieri concurente rapide cu complexitate O(log N).",
-    codeSnippet: `// Mapa sortata thread-safe:
-ConcurrentNavigableMap<Integer, String> map = new ConcurrentSkipListMap<>();
-map.put(10, "Zece");
-map.put(5, "Cinci");
-map.put(20, "Douazeci");
-
-// Navigare sigura fara concurenta:
-Integer nearestKey = map.ceilingKey(7); // 10`,
-    interviewTrap: "ConcurrentSkipListMap consuma mai multa memorie decat un TreeMap obisnuit din cauza pointerilor de indexare pe multiple niveluri, dar este singura solutie scalabila pentru mape sortate concurente.",
-    keyTakeaway: "ConcurrentSkipListMap ofera o mapa sortata concurenta lock-free bazata pe liste multi-strat cu performanta O(log N)."
-  },
-  {
-    id: "java-109",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "BlockingQueue: ArrayBlockingQueue vs LinkedBlockingQueue vs SynchronousQueue",
-    question: "Care sunt diferentele arhitecturale si de performanta intre ArrayBlockingQueue, LinkedBlockingQueue si SynchronousQueue?",
-    answer: "Toate cele 3 clase implementeaza BlockingQueue pentru modelul Producer-Consumer cu metode blocante put() si take():\\n\\n1. ArrayBlockingQueue:\\n   - Bazata pe un array circular cu dimensiune STRICT FIXA specificata in constructor.\\n   - Foloseste un SINGUR lock (ReentrantLock) atat pentru operatiile de scriere (put) cat si pentru cele de citire (take).\\n   - Dezavantaj: Producatorii si consumatorii concureaza pe acelasi lock.\\n\\n2. LinkedBlockingQueue:\\n   - Bazata pe noduri inlantuite; poate fi delimitata (bounded) sau nelimitata (implicit Integer.MAX_VALUE).\\n   - Foloseste DOUA lock-uri complet separate: un takeLock pentru cititori si un putLock pentru producatori!\\n   - Producatorii si consumatorii pot rula simultan in paralel fara a se bloca reciproc (throughput superior).\\n\\n3. SynchronousQueue:\\n   - Coada cu capacitate EXACT ZERO!\\n   - Nu stocheaza niciun element; fiecare operatie put() se blocheaza pana cand un alt fir apeleaza take() pentru a prelua elementul \"mana in mana\" (Handoff pattern).\\n   - Folosita implicit in Executors.newCachedThreadPool().",
-    codeSnippet: `BlockingQueue<String> queue = new LinkedBlockingQueue<>(1000);
-
-// Thread Producer:
-queue.put("task"); // Se blocheaza daca coada e plina
-
-// Thread Consumer:
-String task = queue.take(); // Se blocheaza daca coada e goala`,
-    interviewTrap: "Daca folosesti LinkedBlockingQueue fara a specifica capacitatea maxima in constructor, ea devine nelimitata si poate cauza OutOfMemoryError in productie daca producatorii sunt mai rapizi decat consumatorii.",
-    keyTakeaway: "LinkedBlockingQueue are 2 lock-uri separate pentru citire/scriere; ArrayBlockingQueue are 1 lock pe array fix; SynchronousQueue face handoff direct cu capacitate 0."
-  },
-  {
-    id: "java-110",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "DelayQueue si Elementele care Expira (Delayed)",
-    question: "Cum functioneaza DelayQueue si cum se utilizeaza pentru programarea task-urilor sau expirarea sesiunilor in memorie?",
-    answer: "DelayQueue este o coada blocanta nelimitata bazata pe o coada de prioritati (PriorityQueue) in care elementele pot fi consumate DOAR DUPA ce a expirat timpul lor de intarziere (delay):\\n\\n1. Interfata java.util.concurrent.Delayed:\\n   - Elementele adaugate trebuie sa implementeze interfata Delayed, care extinde Comparable<Delayed>.\\n   - Necesita doua metode:\\n     - long getDelay(TimeUnit unit): Returneaza timpul ramas pana la expirare. Daca valoarea este <= 0, elementul este expirat si gata de consumat.\\n     - int compareTo(Delayed other): Sorteaza elementele in coada astfel incat cel mai apropiat element de expirare sa se afle mereu in capul cozii (head).\\n\\n2. Comportamentul metodei take():\\n   - Daca elementul din varf nu a expirat inca, apelul take() suspenda firul apelant exact pentru durata ramasa prin Condition.awaitNanos(delay), fara niciun consum de CPU (zero polling)!\\n   - Cazuri practice: Cache-uri cu TTL (Time-To-Live), retry logic cu exponential backoff, curatare automata de conexiuni idle.",
-    codeSnippet: `public class ExpiringToken implements Delayed {
-    private final String token;
-    private final long expireTimeMillis;
-
-    public ExpiringToken(String token, long delayMs) {
-        this.token = token;
-        this.expireTimeMillis = System.currentTimeMillis() + delayMs;
-    }
-
-    @Override
-    public long getDelay(TimeUnit unit) {
-        long diff = expireTimeMillis - System.currentTimeMillis();
-        return unit.convert(diff, TimeUnit.MILLISECONDS);
-    }
-
-    @Override
-    public int compareTo(Delayed o) {
-        return Long.compare(this.expireTimeMillis, ((ExpiringToken) o).expireTimeMillis);
-    }
-}`,
-    interviewTrap: "Daca getDelay() returneaza intotdeauna o valoare pozitiva din cauza unui calcul gresit, metoda take() se va bloca pentru totdeauna.",
-    keyTakeaway: "DelayQueue tine elementele sortate dupa timpul de expirare si blocheaza consumatorii pana cand primul element devine eligibil."
-  },
-  {
-    id: "java-111",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Comparable vs Comparator in Java",
-    question: "Care este diferenta fundamentala dintre interfata java.lang.Comparable si java.util.Comparator?",
-    answer: "1. Comparable<T> (Ordonare Naturala - Natural Ordering):\\n   - Definita in pachetul java.lang si implementata DIRECT in interiorul clasei de domeniu (ex: clasa Student implements Comparable<Student>).\\n   - Metoda unica: int compareTo(T o).\\n   - Ofera o singura strategie principala de sortare (ex: alfabetic dupa nume sau crescator dupa ID).\\n   - Modifica direct codul sursa al clasei.\\n\\n2. Comparator<T> (Ordonare Personalizata / Multipla):\\n   - Definita in java.util si implementata ca o clasa SEPARATA sau ca o expresie Lambda fara a modifica clasa de domeniu.\\n   - Metoda principala: int compare(T o1, T o2).\\n   - Permite definirea a zeci de criterii de sortare diferite (sortare dupa pret, dupa data crearii, dupa relevanta, descrescator).\\n   - Poate fi transmisa dinamic ca parametru la Collections.sort(list, comparator) sau Stream.sorted(comparator).",
-    codeSnippet: `// 1. Comparable: ordonare naturala interna:
-public class Candidate implements Comparable<Candidate> {
-    private int score;
-    public int compareTo(Candidate o) { return Integer.compare(this.score, o.score); }
-}
-
-// 2. Comparator: ordonari multiple externe:
-Comparator<Candidate> byName = (c1, c2) -> c1.getName().compareTo(c2.getName());
-candidates.sort(byName);`,
-    interviewTrap: "Nu folosi scaderea simpla (return o1.score - o2.score;) pentru comparatie de numere intregi, deoarece in cazul numerelor negative mari sau a lui Integer.MIN_VALUE va aparea un Integer Overflow care inverseaza complet rezultatul!",
-    keyTakeaway: "Comparable defineste ordinea naturala implicita a clasei; Comparator defineste strategii multiple de sortare externa."
-  },
-  {
-    id: "java-112",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Compunerea Avansata de Comparatori in Java 8+",
-    question: "Cum folosesti metodele statice si default din Comparator (comparing, thenComparing, nullsLast) pentru sortari complexe multi-nivel?",
-    answer: "Incepand cu Java 8, interfata Comparator ofera un Fluent API declarativ extrem de puternic:\\n\\n1. Comparator.comparing(Function<T, U>):\\n   - Extrage cheia de comparatie folosind un Method Reference (ex: Comparator.comparing(Person::getLastName)).\\n\\n2. thenComparing(Function<T, U>):\\n   - Adauga un al doilea criteriu de departajare (secondary sort) daca primul criteriu returneaza egalitate (0).\\n   - Poti inlantui oricate criterii succesive.\\n\\n3. reversed():\\n   - Inverseaza complet ordinea comparatorului compus pana in acel punct.\\n\\n4. Comparator.nullsFirst() si Comparator.nullsLast():\\n   - Protejeaza impotriva exceptiilor NullPointerException plasand elementele null la inceputul sau la sfarsitul colectiei sortate.",
-    codeSnippet: `// Sortare multi-nivel: Dupa Departament descrescator, apoi Nume crescator, cu null-uri la final:
-Comparator<Employee> complexComparator = Comparator
-    .comparing(Employee::getDepartment, Comparator.nullsLast(Comparator.reverseOrder()))
-    .thenComparing(Employee::getLastName)
-    .thenComparingInt(Employee::getAge);
-
-employees.sort(complexComparator);`,
-    interviewTrap: "Fii atent la ordinea apelarii lui reversed(): daca apelezi .reversed() la sfarsitul unui lant cu thenComparing, va inversa DOAR ultimul comparator secundar, nu intregul lant!",
-    keyTakeaway: "Comparator.comparing().thenComparing() elimina sute de linii de cod boilerplate pentru sortari multi-criteriale."
-  },
-  {
-    id: "java-113",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Collections.unmodifiableList vs List.copyOf vs List.of (Java 9+)",
-    question: "Care sunt diferentele subtile de imutabilitate si comportament intre Collections.unmodifiableList(), List.of() si List.copyOf()?",
-    answer: "1. Collections.unmodifiableList(list):\\n   - Este doar un \"View\" (o masca) de citire peste lista originala.\\n   - Daca apelezi add() pe masca, arunca UnsupportedOperationException.\\n   - DAR: Daca cineva modifica lista originala (originalList.add(\"nou\")), modificarea se REFLECTA IMEDIAT si in lista nemodificabila! Nu este cu adevarat imutabila.\\n\\n2. List.of(e1, e2, e3) (Java 9):\\n   - Creeaza o colectie complet noua si cu adevarat IMUTABILA.\\n   - Nu accepta elemente NULL (arunca imediat NullPointerException la initializare).\\n   - Amprenta de memorie este minuscula (foloseste clase interne optimizate precum List12, fara array-uri mari).\\n\\n3. List.copyOf(collection) (Java 10):\\n   - Face o copie defensiva imutabila.\\n   - Optimizare inteligenta: Daca colectia transmisa ca parametru este deja o colectie imutabila creata cu List.of(), copyOf NU mai face nicio copiere, ci returneaza direct aceeasi referinta!",
-    codeSnippet: `List<String> original = new ArrayList<>(List.of("A", "B"));
-List<String> unmodifiable = Collections.unmodifiableList(original);
-original.add("C"); 
-System.out.println(unmodifiable.size()); // 3! (S-a modificat prin spatele view-ului!)
-
-List<String> immutable = List.copyOf(original);
-original.add("D");
-System.out.println(immutable.size()); // 3! (Complet izolata si imutabila)`,
-    interviewTrap: "List.of() si Set.of() resping cu strictete elementele null. Daca colectia ta contine chiar si un singur null, apeleaza ArrayList sau gestioneaza-l inainte de List.of().",
-    keyTakeaway: "Collections.unmodifiableList este un view modificabil prin spatele usii; List.of si List.copyOf sunt colectii 100% imutabile."
-  },
-  {
-    id: "java-114",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "De ce Arrays.asList() returneaza o lista cu dimensiune fixa?",
-    question: "De ce apelul Arrays.asList() arunca UnsupportedOperationException la add() si cum influenteaza modificarile array-ul sursa?",
-    answer: "1. Arrays.asList(array) este o clasa interna privata:\\n   - NU returneaza o instanta obisnuita de java.util.ArrayList, ci o clasa interna privata java.util.Arrays$ArrayList.\\n   - Aceasta clasa interna este doar o \"fereastra\" (wrapper) directa peste array-ul original transmis ca parametru.\\n\\n2. Dimensiune Fixa (Fixed-Size):\\n   - Deoarece lungimea unui array primitiv in Java nu poate fi marita sau micsorata niciodata dupa alocare, metodele add() si remove() nu sunt implementate si arunca direct: UnsupportedOperationException!\\n\\n3. Mutabilitate prin set():\\n   - Poti modifica elementele existente: list.set(0, \"modificat\"). Insa atentie: modificarea se scrie direct in array-ul sursa original!",
-    codeSnippet: `String[] arr = {"A", "B"};
-List<String> list = Arrays.asList(arr);
-
-list.set(0, "Z");
-System.out.println(arr[0]); // Afiseaza "Z"! Array-ul original a fost modificat!
-
-// list.add("C"); // CRASH: UnsupportedOperationException!
-
-// Cum creezi o lista complet modificabila si independenta:
-List<String> modifiable = new ArrayList<>(Arrays.asList(arr));`,
-    interviewTrap: "Daca transmiti un array de primitive int[] la Arrays.asList(new int[]{1, 2}), lista rezultata va avea marimea 1 si va contine array-ul int[] ca singur element (din cauza lipsei de boxing automat pe array-uri primitive)!",
-    keyTakeaway: "Arrays.asList creeaza o lista cu dimensiune fixa atasata direct de array-ul sursa; foloseste new ArrayList<>(Arrays.asList(...)) pentru liste modificabile."
-  },
-  {
-    id: "java-115",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Sequenced Collections in Java 21",
-    question: "Ce problema istorica a rezolvat introducerea colectiilor secventiate (Sequenced Collections - JEP 431) in Java 21?",
-    answer: "Inainte de Java 21, Collections Framework suferea de o lipsa bizara de consistenta in accesarea primului si ultimului element:\\n- La List apelai: list.get(0) si list.get(list.size() - 1).\\n- La Deque apelai: deque.getFirst() si deque.getLast().\\n- La SortedSet apelai: set.first() si set.last().\\n- La LinkedHashSet nu exista nicio cale directa fara a parcurge un iterator complet!\\n\\nCe aduce Java 21 (Sequenced Collections):\\n- O interfata unificata SequencedCollection<E> cu semantica definita de ordonare:\\n  - E getFirst(), E getLast()\\n  - void addFirst(E e), void addLast(E e)\\n  - E removeFirst(), E removeLast()\\n  - SequencedCollection<E> reversed(): Ofera un view inversat al colectiei in timp O(1) fara nicio copiere in memorie!\\n- Interfete corespunzatoare pentru seturi si mape: SequencedSet<E> si SequencedMap<K, V> (cu firstEntry(), lastEntry(), pollFirstEntry()).",
-    codeSnippet: `// Functioneaza identic pe List, Deque, LinkedHashSet si TreeSet:
-SequencedCollection<String> seq = new LinkedHashSet<>(List.of("unu", "doi", "trei"));
-
-String first = seq.getFirst(); // "unu"
-String last = seq.getLast();   // "trei"
-
-// View inversat instantaneu:
-for (String s : seq.reversed()) {
-    System.out.println(s); // "trei", "doi", "unu"
-}`,
-    interviewTrap: "Sequenced Collections este disponibila incepand cu Java 21. Mentionarea acestei noutati intr-un interviu demonstreaza ca esti la curent cu cele mai recente caracteristici ale platformei.",
-    keyTakeaway: "Sequenced Collections unifica accesul la primul/ultimul element si inversarea ordonata pe toate colectiile Java 21."
-  },
-  {
-    id: "java-116",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Cum inversezi o colectie in Java 21 fara copiere de memorie?",
-    question: "Cum inverseaza metoda reversed() din Java 21 o colectie in timp O(1) fara sa aloce memorie suplimentara?",
-    answer: "1. Abordarea Traditionala Ineficienta (Inainte de Java 21):\\n   - Collections.reverse(list): Modifica lista pe loc prin mutari succesive, sau necesita alocarea unei liste noi si parcurgerea ei inversa, avand complexitate O(N) de timp si spatiu.\\n\\n2. Abordarea Moderna prin reversed() in Java 21:\\n   - Returneaza un \"Reverse View\" (o clasa de fatada / adaptor) peste colectia existenta.\\n   - Nu copiaza niciun element si nu aloca array-uri noi (timp O(1) si spatiu O(1)).\\n   - Toate apelurile getFirst() pe view apeleaza intern getLast() pe colectia de baza, iar addFirst() pe view apeleaza addLast() pe colectia parinte!\\n   - Modificarile efectuate pe view se reflecta imediat in colectia parinte si invers.",
-    codeSnippet: `List<String> list = new ArrayList<>(List.of("A", "B", "C"));
-SequencedCollection<String> revView = list.reversed();
-
-revView.addFirst("D"); // Adauga "D" ca ultim element in lista originala!
-System.out.println(list); // [A, B, C, D]`,
-    interviewTrap: "Nu confunda reversed() cu o operatie de sortare descrescatoare. reversed() inverseaza strict ordinea de intalnire (encounter order), indiferent daca elementele sunt sortate sau nu.",
-    keyTakeaway: "reversed() creeaza un view inversat instantaneu in timp O(1) cu reflectare bidirectionala a modificarilor."
-  },
-  {
-    id: "java-117",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "BitSet in Java: Optimizare Extrema a Spatiului pe Biti",
-    question: "Ce este clasa java.util.BitSet si cum permite stocarea a 1.000.000 de flag-uri booleene in doar ~122 KB de memorie?",
-    answer: "1. Problema cu boolean[] si List<Boolean>:\\n   - In Java, un tip boolean primitiv dintr-un array boolean[] ocupa fizic 1 OCTET intreg (8 biti) conform specificatiei JVM, deoarece CPU-ul nu poate adresa individual biti izolati.\\n   - Un Boolean obiect (in List<Boolean>) ocupa ~24 de octeti per instanta (header de obiect + referinta)!\\n   - Pentru 1.000.000 de flag-uri booleene, o lista consuma 24 MB de Heap!\\n\\n2. Cum optimizeaza BitSet:\\n   - BitSet stocheaza bitii compact intr-un array de numere long primitive (long[] words, unde fiecare long are 64 de biti).\\n   - Fiecare flag boolean ocupa EXACT 1 SINGUR BIT in memorie!\\n   - 1.000.000 de biti / 8 = 125.000 octeti = ~122 Kilobytes!\\n\\n3. Operatii pe Biti Masive:\\n   - Suporta operatii logice la viteza hardware intre seturi intregi de date: and(), or(), xor(), andNot(), utile pentru filtre Bloom, indecsi bitmap si mascare de permisiuni.",
-    codeSnippet: `BitSet bits = new BitSet();
-bits.set(100);       // Pune bitul 100 pe true (1)
-bits.set(500);       // Pune bitul 500 pe true (1)
-
-boolean isSet = bits.get(100); // true
-boolean notSet = bits.get(101); // false (default 0)
-
-int totalActive = bits.cardinality(); // 2 biti activi`,
-    interviewTrap: "BitSet nu este thread-safe. Daca mai multe thread-uri modifica biti din acelasi cuvant de 64-bit fara sincronizare, actualizarile se pot suprascrie reciproc.",
-    keyTakeaway: "BitSet impacheteaza 64 de valori booleene intr-un singur long primitiv, reducand consumul de RAM cu pana la 99%."
-  },
-  {
-    id: "java-118",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Algoritmul TimSort in Arrays.sort() si Collections.sort()",
-    question: "Ce algoritm de sortare foloseste Java pentru sortarea obiectelor (TimSort) si de ce este superior algoritmilor QuickSort sau MergeSort simpli?",
-    answer: "Pentru primitive (int[], double[]), Java foloseste Dual-Pivot Quicksort. Pentru colectii de OBIECTE, Java foloseste TimSort (creat de Tim Peters pentru Python si adaptat in Java 7):\\n\\nDe ce este TimSort atat de eficient pe date din lumea reala:\\n1. Hibrid MergeSort + InsertionSort:\\n   - Datele reale sunt arareori complet aleatorii; adesea contin secvente deja ordonate (runs) crescatoare sau descrescatoare.\\n   - TimSort identifica aceste secvente naturale ordonate (\"runs\").\\n   - Daca o secventa este prea scurta, o extinde folosind Binary Insertion Sort (extrem de rapid pentru sub-array-uri mici de pana la 32-64 elemente).\\n\\n2. Proprietati Remarcabile:\\n   - Stabilitate Garantata: Este un algoritm STABIL (pastreaza ordinea relativa a elementelor egale, esential pentru sortari succesive dupa coloane diferite).\\n   - Complexitate O(N) in cel mai bun caz (daca datele sunt deja sortate, face doar o singura trecere) si O(N log N) in cel mai rau caz, fara a suferi de degradarea la O(N^2) a QuickSort-ului!",
-    codeSnippet: `// Sortare bazata pe TimSort:
-List<Candidate> list = getCandidates();
-list.sort(Comparator.comparing(Candidate::getScore)); // Ruleaza TimSort garantat stabil!`,
-    interviewTrap: "Daca metoda compareTo() sau Comparator-ul tau incalca regulile de tranzitivitate (ex: daca A > B si B > C, dar codul returneaza eronat C > A), TimSort va arunca la runtime: Comparison method violates its general contract!",
-    keyTakeaway: "TimSort combina MergeSort si InsertionSort, fiind un algoritm stabil adaptiv cu performanta O(N) pe date partial sortate."
-  },
-  {
-    id: "java-119",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Ce este un Spliterator si ce rol au Characteristics Flags?",
-    question: "Cum functioneaza interfata Spliterator (Java 8) si cum permite impartirea paralela a datelor in Parallel Streams?",
-    answer: "Spliterator (Splitable Iterator) este motorul de baza din spatele Streams API (atat secvential cat si paralel):\\n\\n1. Doua Responsabilitati Majore:\\n   - Parcurgere (Traversal): metoda tryAdvance(Consumer<T> action) consuma elementele pe rand (similar cu hasNext() + next() combinat intr-o singura operatie eficienta).\\n   - Impartire (Partitioning): metoda trySplit() imparte sursa de date in doua: returneaza un NOU Spliterator care preia o jumatate din date, in timp ce Spliterator-ul curent pastreaza cealalta jumatate! Aceasta permite executia paralela lina pe ForkJoinPool.\\n\\n2. Characteristics Flags (Optimizari Interne):\\n   - Un Spliterator emite flag-uri intregi care informeaza Streams API despre structura datelor:\\n     - SIZED: Numarul de elemente este exact cunoscut (permite alocarea perfecta de memorie la toList()).\\n     - ORDERED: Elementele au o ordine stricta.\\n     - DISTINCT: Nu exista duplicate (Stream.distinct() devine o operatie gratuita O(1) fara HashSet suplimentar!).\\n     - SORTED: Elementele sunt deja sortate (Stream.sorted() este ignorat cu zero cost!).\\n     - IMMUTABLE sau CONCURRENT: Sursa este sigura la modificari concurente.",
-    codeSnippet: `Spliterator<String> spliterator1 = list.spliterator();
-// Impartire pentru rulare paralela:
-Spliterator<String> spliterator2 = spliterator1.trySplit();
-// spliterator1 si spliterator2 pot fi procesate acum pe thread-uri diferite!`,
-    interviewTrap: "Daca creezi un Custom Spliterator si marchezi eronat flag-ul DISTINCT sau SORTED fara ca datele sa respecte aceasta regula, operatiile de Streams vor returna rezultate eronate in mod silentios.",
-    keyTakeaway: "Spliterator permite impartirea datelor prin trySplit() si ofera metadate (flags) pentru optimizarea automata a fluxurilor Stream."
-  },
-  {
-    id: "java-120",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Collections.emptyList() vs Collections.EMPTY_LIST vs new ArrayList<>()",
-    question: "Care este diferenta de siguranta si performanta intre Collections.emptyList(), campul legacy EMPTY_LIST si instantierea new ArrayList<>() cand o metoda returneaza o colectie goala?",
-    answer: "Cand o metoda nu gaseste niciun rezultat, bunele practici dicteaza returnarea unei colectii goale in loc de NULL (evitand NullPointerException la apelant):\\n\\n1. new ArrayList<>() (De Evitat daca nu e nevoie de mutabilitate):\\n   - Aloca un obiect nou pe Heap si un array intern de obiecte (consum inutil de memorie si presiune pe Garbage Collector daca metoda e apelata de milioane de ori pe secunda).\\n\\n2. Collections.EMPTY_LIST (Legacy din Java 1.2):\\n   - Este un camp static partajat (Singleton), dar este un Raw Type (fara Generics)!\\n   - Genereaza avertismente de compilare (Type Safety Warning) si risca erori la runtime.\\n\\n3. Collections.emptyList() (Solutia Ideala Recomandata):\\n   - Returneaza aceeasi instanta unica Singleton imutabila partajata global (zero alocare de memorie pe Heap!).\\n   - Este Generic Type-Safe prin inferenta automata a tipului: List<User> list = Collections.emptyList();\\n   - Este strict imutabila: apelul add() va arunca UnsupportedOperationException.",
-    codeSnippet: `// Bune practici: returneaza colectie imutabila singleton partajata
-public List<User> findUsersByCity(String city) {
-    if (city == null) {
-        return Collections.emptyList(); // ZERO alocari in memorie, type-safe!
-    }
-    return userRepository.findByCity(city);
-}`,
-    interviewTrap: "Nu returna niciodata NULL cand metoda ta trebuie sa returneze o lista sau un array! Returneaza intotdeauna o colectie goala imutabila (Collections.emptyList(), Set.of() sau Map.of()).",
-    keyTakeaway: "Collections.emptyList() este type-safe, complet imutabila si refoloseste un singleton global cu zero consum de memorie."
-  },
-  {
-    id: "java-121",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "De ce parcurgerea unei matrici pe randuri este de 10x mai rapida decat pe coloane?",
-    question: "De ce parcurgerea unei matrici matrix[row][col] este de pana la 10-20 de ori mai rapida decat parcurgerea pe coloane matrix[col][row] in Java?",
-    answer: "Aceasta intrebare testeaza intelegerea profunda a interactiunii dintre codul Java si arhitectura hardware a procesoarelor moderne (CPU Cache Locality):\\n\\n1. Dispunerea Memoriei (Row-Major Order si Spatial Locality):\\n   - In Java, un array bidimensional este de fapt un array de array-uri, unde elementele fiecarui rand [row] sunt alocate in blocuri contigue de memorie fizica.\\n   - Cand procesorul citeste elementul matrix[0][0], el nu aduce doar 4 octeti din RAM, ci incarca o intreaga linie de cache CPU (Cache Line de 64 octeti), aducand automat si matrix[0][1], matrix[0][2], matrix[0][3] in cel mai rapid cache L1!\\n   - La urmatorul pas al buclei pe randuri, datele sunt deja prezente in cache (Cache Hit la 1 nanosecunda).\\n\\n2. Ce se intampla la parcurgerea pe coloane (Column-Major):\\n   - La fiecare iteratie, codul sare la adrese de memorie complet diferite (la urmatorul array de rand).\\n   - Fiecare acces provoaca un Cache Miss (asteptare de 50-100 nanosecunde pentru citirea din RAM-ul principal lenta), provocand o prabusire masiva a vitezei de executie.",
-    codeSnippet: `// 1. ULTRA-RAPID: Parcurgere pe randuri (Spatial Cache Locality):
-for (int r = 0; r < rows; r++) {
-    for (int c = 0; c < cols; c++) {
-        sum += matrix[r][c]; // Cache Hit continuu!
+    public UserSession(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 }
-
-// 2. EXTREM DE LENT: Parcurgere pe coloane:
-for (int c = 0; c < cols; c++) {
-    for (int r = 0; r < rows; r++) {
-        sum += matrix[r][c]; // Cache Miss la fiecare pas!
-    }
-}`,
-    interviewTrap: "Desi ambele bucle au exact aceeasi complexitate algoritmica teoretica Big-O O(N*M), diferenta de timp real pe hardware modern depaseste 1000% din cauza cache-ului L1/L2.",
-    keyTakeaway: "Localitatea spatiala a cache-ului CPU face parcurgerea contigua pe randuri de 10x mai rapida decat sariturile pe coloane."
-  },
-  {
-    id: "java-122",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Cum eviti ConcurrentModificationException la stergerea in bucla?",
-    question: "De ce o bucla for-each obisnuita arunca ConcurrentModificationException la stergerea unui element si care sunt cele 3 solutii corecte?",
-    answer: "1. De ce crapa bucla for-each (Enhanced For-Loop):\\n   - Bucla for (String s : list) este transformata la compilare intr-un Iterator.\\n   - Colectia mentine un contor intern numit modCount (incrementat la fiecare add/remove direct pe colectie).\\n   - Iteratorul retine propriul sau expectedModCount.\\n   - Daca apelezi list.remove(s) direct pe lista in interiorul buclei, modCount se schimba, iar la urmatorul iterator.next(), iteratorul detecteaza modCount != expectedModCount si arunca instantaneu: ConcurrentModificationException!\\n\\n2. Cele 3 Solutii Corecte:\\n   - Solutia 1 (Traditionala): Folosirea explicita a metodei iterator.remove(), care actualizeaza sincronizat si expectedModCount.\\n   - Solutia 2 (Moderna in Java 8+): Metoda list.removeIf(predicate) (cea mai eleganta si rapida).\\n   - Solutia 3: Filtrarea prin Streams API colectand rezultatul intr-o lista noua.",
-    codeSnippet: `List<String> names = new ArrayList<>(List.of("Alex", "Ion", "Maria"));
-
-// Solutia 1: Iterator.remove()
-Iterator<String> it = names.iterator();
-while (it.hasNext()) {
-    if (it.next().startsWith("I")) it.remove();
-}
-
-// Solutia 2: removeIf (Recomandata in Java 8+)
-names.removeIf(name -> name.startsWith("I"));`,
-    interviewTrap: "Daca folosesti o colectie concurenta precum CopyOnWriteArrayList, iteratorul ei nu va arunca ConcurrentModificationException, dar nu suporta iterator.remove() (arunca UnsupportedOperationException).",
-    keyTakeaway: "Nu sterge direct din colectie in timpul unei bucle for-each; foloseste list.removeIf() sau iterator.remove()."
-  },
-  {
-    id: "java-123",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Map.computeIfAbsent() vs Map.putIfAbsent()",
-    question: "Care este diferenta critica de performanta si comportament intre Map.computeIfAbsent() si Map.putIfAbsent()?",
-    answer: "Diferenta esentiala tine de evaluarea Eager (imediata) vs Lazy (la cerere) a valorii:\\n\\n1. Map.putIfAbsent(key, value):\\n   - Eager Evaluation (Evaluare Imediata): Valoarea trebuie calculata si instantiata INAINTE de apelarea metodei, indiferent daca cheia exista deja sau nu in mapa!\\n   - Daca valoarea implica un calcul costisitor (un query greu in baza de date, un apel REST extern sau o alocare mare de memorie), acel calcul se va executa degeaba chiar daca cheia era deja prezenta!\\n\\n2. Map.computeIfAbsent(key, mappingFunction):\\n   - Lazy Evaluation (Evaluare Lenesa): Functia Lambda mappingFunction se executa NUMAI SI NUMAI DACA cheia lipseste sau are valoarea null in mapa!\\n   - Daca cheia exista deja, functia lambda nu este apelata deloc, economisind timp CPU si apeluri I/O pretioase.",
-    codeSnippet: `// 1. INEFICIENT: expensiveDbCall() se apeleaza MEREU la putIfAbsent:
-map.putIfAbsent("key", expensiveDbCall()); 
-
-// 2. OPTIM: Lambda se executa DOAR daca "key" chiar lipseste:
-map.computeIfAbsent("key", k -> expensiveDbCall());`,
-    interviewTrap: "In ConcurrentHashMap, computeIfAbsent() executa functia lambda atomic sub lock-ul bucket-ului respectiv. Daca functia lambda incearca la randul sau sa acceseze sau sa modifice aceeasi mapa, va produce un Deadlock garantat!",
-    keyTakeaway: "computeIfAbsent este lazy si calculeaza valoarea doar cand cheia lipseste; putIfAbsent cere valoarea deja instantiata eager."
-  },
-  {
-    id: "java-124",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Map.merge() in Java 8: Contorizare si Agregare Curata",
-    question: "Cum simplifica metoda Map.merge() contorizarea frecventei sau concatenarea valorilor fata de verificarile clasice cu if (containsKey)?",
-    answer: "Inainte de Java 8, contorizarea aparitiilor unui cuvant intr-o mapa necesita verificari redundante (contains -> get -> put):\\n\\nCum functioneaza Map.merge(key, value, remappingFunction):\\n1. Daca cheia NU exista in mapa (sau valoarea curenta este null):\\n   - Insereaza direct noua valoare specificata in mapa.\\n2. Daca cheia EXISTA deja:\\n   - Apeleaza functia BiFunction: (oldVal, newVal) -> combinedVal si asociaza rezultatul combinat cheii respective.\\n3. Daca functia remappingFunction returneaza null:\\n   - Intrarea este stearsa automat din mapa!\\n\\nRezultat: Transforma 6 linii de cod boilerplate pline de ramificatii if intr-o singura linie atomica si expresiva.",
-    codeSnippet: `Map<String, Integer> wordCounts = new HashMap<>();
-List<String> words = List.of("java", "spring", "java", "docker", "java");
-
-// Contorizare eleganta cu Map.merge():
-for (String word : words) {
-    wordCounts.merge(word, 1, Integer::sum);
-}
-// Rezultat: {spring=1, docker=1, java=3}`,
-    interviewTrap: "Daca functia transmisa la merge() returneaza null, intrarea este eliminata din mapa (remove), ceea ce poate fi surprinzator daca nu cunosti specificatia.",
-    keyTakeaway: "Map.merge() combina inserarea initiala cu agregarea ulterioara a valorilor existente intr-o singura operatie fluenta."
-  },
-  {
-    id: "java-125",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Set.of() si Respingerea Explicita a Duplicatelor",
-    question: "De ce factory method-ul Set.of(\"A\", \"A\") arunca IllegalArgumentException in loc sa ignore duplicatul ca un HashSet obisnuit?",
-    answer: "1. Comportamentul lui HashSet.add(\"A\"):\\n   - Cand adaugi un element existent intr-un HashSet, metoda add() returneaza pur si simplu false si ignora operatia in mod silentios.\\n\\n2. De ce Set.of() este Strict (Fail-Fast):\\n   - Set.of(...) este folosit pentru declararea de constante imutabile direct in codul sursa (ex: Set.of(\"PENDING\", \"APPROVED\", \"REJECTED\")).\\n   - Daca un dezvoltator scrie Set.of(\"ADMIN\", \"USER\", \"ADMIN\"), existenta duplicatului este aproape intotdeauna un BUG de logica, o greseala de copy-paste sau o neintelegere a setului de date!\\n   - Designerii limbajului Java (Brian Goetz et al.) au decis ca aruncarea imediata a unei exceptii IllegalArgumentException este mult mai sigura decat ignorarea tacuta a erorii de programare.",
-    codeSnippet: `// Arunca IllegalArgumentException la compilare/runtime:
-// Set<String> roles = Set.of("ADMIN", "USER", "ADMIN"); // CRASH: duplicate element: ADMIN!
-
-// Daca datele vin dinamic dintr-o lista si pot avea duplicate legitime, foloseste:
-Set<String> safeRoles = new HashSet<>(dynamicList);`,
-    interviewTrap: "Acelasi comportament strict se aplica si la Map.of(\"k1\", 1, \"k1\", 2): arunca IllegalArgumentException daca gaseste chei duplicate la initializare.",
-    keyTakeaway: "Set.of() este fail-fast si refuza duplicatele la initializare pentru a prinde bug-urile de programare din fasa."
-  },
-  {
-    id: "java-126",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Ce se intampla sub capota la un Lambda: invokedynamic vs Clase Anonime",
-    question: "Cum implementeaza JVM-ul expresiile Lambda si de ce NU foloseste generarea de clase anonime clasice (MyClass$1.class)?",
-    answer: "1. De ce NU s-au folosit Clase Anonime clasice:\\n   - Fiecare clasa anonima genera un fisier fizic separat pe disc (ex: App$1.class) la compilare.\\n   - La rulare, fiecare clasa trebuia incarcata de ClassLoader, verificata si stocata in Metaspace, crescand timpul de startup si consumul de memorie.\\n   - Fiecare instantiere crea un obiect nou pe Heap (fara caching automat al instantelor stateless).\\n\\n2. Solutia Moderna: Instructiunea invokedynamic (JEP 92):\\n   - Compilatorul Java nu genereaza o clasa anonima, ci emite o singura instructiune bytecode invokedynamic catre un bootstrap method: LambdaMetafactory.metafactory().\\n   - La prima executie a expresiei lambda, JVM genereaza dinamic in memorie o clasa anonima compacta (hidden class) optimizata direct pentru acea functie.\\n   - Daca expresia lambda este \"non-capturing\" (nu captureaza variabile locale din exterior), instanta este salvata in cache ca un Singleton si refolosita la toate apelurile viitoare cu ZERO alocare de memorie pe Heap!",
-    codeSnippet: `// Non-capturing lambda -> se aloca o singura data si se refoloseste:
-Runnable r1 = () -> System.out.println("Hello");
-
-// Capturing lambda -> retine variabila 'x', creeaza instanta noua la fiecare pas:
-int x = 10;
-Runnable r2 = () -> System.out.println(x);`,
-    interviewTrap: "Daca un lambda captureaza o variabila locala din metoda, el devine \"capturing lambda\" si va crea un obiect nou la fiecare executie, crescand alocarile pe Heap.",
-    keyTakeaway: "Expresiile Lambda folosesc invokedynamic si LambdaMetafactory pentru generare dinamica usoara in memorie si caching inteligent."
-  },
-  {
-    id: "java-127",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "De ce variabilele locale din Lambdas trebuie sa fie \"effectively final\"?",
-    question: "De ce o expresie Lambda poate accesa doar variabile locale care sunt \"final\" sau \"effectively final\" in Java?",
-    answer: "Aceasta restrictie tine de modelul de memorie al Java si de ciclul de viata al stivei (Stack) vs Heap:\\n\\n1. Cum captureaza Lambda variabilele locale (Variable Capture):\\n   - O variabila locala simpla (ex: int count = 0;) traieste exclusiv pe STIVA (Stack Frame) a metodei curente.\\n   - O expresie Lambda poate fi trimisa pe alt fir de executie sau salvata intr-un camp pentru a fi executata mai tarziu, mult dupa ce metoda originala s-a incheiat si cadrul sau de stiva a fost distrus!\\n   - Prin urmare, Lambda nu poate retine adresa de pe stiva; el face o COPIE a valorii variabilei pe Heap.\\n\\n2. De ce trebuie sa fie neschimbata (effectively final):\\n   - Daca Java ar permite modificarea variabilei in lambda sau in metoda (count++), ar aparea o iluzie ca cele doua parti modifica aceeasi variabila, cand in realitate ar exista o copie pe Heap si una pe Stiva!\\n   - Pentru a preveni desincronizarea si erorile concurente de memorie, Java impune ca variabila sa nu fie niciodata reatribuita dupa initializare.",
-    codeSnippet: `int factor = 2; // effectively final (nu este reatribuita nicaieri)
-List<Integer> list = List.of(1, 2, 3);
-list.stream().map(n -> n * factor).forEach(System.out::println);
-
-// factor = 3; // Daca de-comentezi asta, linia de mai sus crapa la compilare!`,
-    interviewTrap: "Poti ocoli tehnic restrictia folosind un array de un singur element int[] wrapper = {0}; sau AtomicInteger, dar aceasta practica poate introduce race conditions ascunse in medii multi-threaded.",
-    keyTakeaway: "Lambda primeste o copie a variabilei locale de pe stiva; pentru a evita inconsistentele, Java cere ca variabila sa fie effectively final."
-  },
-  {
-    id: "java-128",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Cele 4 Tipuri de Method References in Java",
-    question: "Care sunt cele 4 forme de Method References in Java (operatorul ::) si cum se mapeaza fiecare pe o expresie Lambda?",
-    answer: "Method References sunt prescurtari compacte si lizibile pentru expresii Lambda care nu fac altceva decat sa redirectioneze parametrii catre o metoda existenta:\\n\\n1. Referinta la o metoda statica (ContainingClass::staticMethod):\\n   - Lambda: (s) -> Integer.parseInt(s)\\n   - Method Ref: Integer::parseInt\\n\\n2. Referinta la o metoda de instanta a unui obiect existent (containingObject::instanceMethod):\\n   - Lambda: (s) -> System.out.println(s)\\n   - Method Ref: System.out::println\\n\\n3. Referinta la o metoda de instanta a unui obiect de un tip arbitrar (ContainingType::methodOnFirstParam):\\n   - Primul parametru devine instanta (target-ul) pe care se apeleaza metoda, iar restul parametrilor devin argumente!\\n   - Lambda: (str) -> str.toUpperCase()\\n   - Method Ref: String::toUpperCase\\n   - Lambda cu 2 parametri: (str, prefix) -> str.startsWith(prefix) => String::startsWith\\n\\n4. Referinta la un Constructor (ClassName::new):\\n   - Lambda: () -> new ArrayList<>()\\n   - Method Ref: ArrayList::new",
-    codeSnippet: `// 1. Static:
-Function<String, Integer> f1 = Integer::parseInt;
-// 2. Bound Instance:
-Consumer<String> f2 = System.out::println;
-// 3. Unbound Type:
-Function<String, String> f3 = String::toLowerCase;
-// 4. Constructor:
-Supplier<List<String>> f4 = ArrayList::new;`,
-    interviewTrap: "Fii atent la tipul 3 (Unbound Instance): String::compareTo primeste doi parametri (s1, s2) si apeleaza s1.compareTo(s2). Primul parametru din lambda devine intotdeauna receptorul apelului.",
-    keyTakeaway: "Operatorul :: simplifica lambda-urile redirectand parametrii catre metode statice, metode de instanta sau constructori."
-  },
-  {
-    id: "java-129",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "map() vs flatMap() in Streams API",
-    question: "Care este diferenta conceptuala si functionala intre Stream.map() si Stream.flatMap() si cand este flatMap() obligatoriu?",
-    answer: "1. Stream.map(Function<T, R>):\\n   - Relatie 1-la-1 (One-to-One Mapping).\\n   - Fiecare element de intrare T este transformat intr-un SINGUR element de iesire R.\\n   - Exemplu: dintr-un User extragi un String (username).\\n   - Daca functia de transformare returneaza o lista sau un alt Stream (ex: user.getOrders()), map() va produce un flux imbricat: Stream<List<Order>>!\\n\\n2. Stream.flatMap(Function<T, Stream<R>>):\\n   - Relatie 1-la-Multi (One-to-Many Mapping) cu Aplatizare (Flattening).\\n   - Fiecare element genereaza un flux de elemente, iar flatMap DESPACHETEAZA (aplatizeaza) toate aceste sub-fluxuri intr-un singur flux continuu unificat Stream<Order>!\\n   - Eliminarea containerelor imbricate: Transforma List<List<T>> intr-un singur List<T>.",
-    codeSnippet: `List<Order> orders1 = List.of(new Order(1), new Order(2));
-List<Order> orders2 = List.of(new Order(3));
-List<List<Order>> nested = List.of(orders1, orders2);
-
-// 1. map() -> pastreaza imbricarea:
-List<List<Order>> mapped = nested.stream().map(l -> l).toList();
-
-// 2. flatMap() -> aplatizeaza intr-o singura lista de 3 elemente:
-List<Order> flat = nested.stream()
-    .flatMap(Collection::stream)
-    .toList(); // [Order(1), Order(2), Order(3)]`,
-    interviewTrap: "Daca ai un Optional<User> si apelezi o metoda care returneaza un alt Optional<Address>, foloseste optional.flatMap(User::getAddress) pentru a evita tipul Optional<Optional<Address>>.",
-    keyTakeaway: "map transforma 1-la-1; flatMap transforma 1-la-multi si aplatizeaza fluxurile imbricate intr-un singur flux liniar."
-  },
-  {
-    id: "java-130",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Stream.reduce() vs Stream.collect(): Imutabil vs Mutabil",
-    question: "De ce Stream.collect() este preferat in locul lui Stream.reduce() pentru acumularea elementelor in colectii (liste, seturi)?",
-    answer: "Diferenta esentiala tine de eficienta alocarii de memorie si conceptul de \"Mutable Reduction\":\\n\\n1. Stream.reduce() (Reducere Imutabila):\\n   - Este conceput pentru operatii matematice imutabile pe valori primitive sau scalare (ex: suma, produs, minim, maxim, concatenare usoara).\\n   - La fiecare pas de reducere, functia returneaza o valoare NOUA.\\n   - Daca ai incerca sa acumulezi intr-o lista folosind reduce(), la FIECARE element din stream ar trebui sa aloci o lista noua, sa copiezi toate elementele anterioare si sa adaugi noul element (complexitate O(N^2) si mii de liste alocate in Heap)!\\n\\n2. Stream.collect() (Reducere Mutabila):\\n   - Este conceput specific pentru containere mutabile (ArrayList, HashSet, StringBuilder).\\n   - Mentine un container existent si apeleaza pe loc metoda de mutatie (ex: list.add(x)) fara nicio copiere suplimentara (complexitate O(N) si o singura alocare).\\n   - In rulari paralele, colecteaza bucati partiale pe fiecare fir si le imbina eficient prin combiner.",
-    codeSnippet: `// 1. reduce() este ideal pentru primitive / valori unice:
-int sum = numbers.stream().reduce(0, Integer::sum);
-
-// 2. collect() este ideal pentru colectii mutabile:
-List<String> list = names.stream()
-    .filter(s -> s.length() > 3)
-    .collect(Collectors.toList());`,
-    interviewTrap: "Nu folosi reduce((acc, item) -> { acc.add(item); return acc; }), deoarece incalca specificatia functionala pura a lui reduce() si produce corupere de date in stream-uri paralele.",
-    keyTakeaway: "reduce() este pentru agregari matematice imutabile; collect() este pentru acumulare eficienta in containere mutabile."
-  },
-  {
-    id: "java-131",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Collectors.groupingBy() cu Downstream Collectors",
-    question: "Cum realizezi grupari avansate multi-nivel in Java Streams folosind Collectors.groupingBy() si Downstream Collectors?",
-    answer: "Collectors.groupingBy() este echivalentul clauzei GROUP BY din SQL aplicata peste obiecte in memorie:\\n\\n1. groupingBy(classifier) simplu:\\n   - Grupeaza dupa o cheie si plaseaza obiectele intr-o mapa de tip Map<K, List<T>>.\\n\\n2. groupingBy cu Downstream Collector (groupingBy(classifier, downstream)):\\n   - In loc sa pastreze pur si simplu lista de obiecte, aplica o a doua operatie de transformare sau agregare direct pe valorile din fiecare grup!\\n   - Exemple de Downstream Collectors:\\n     - Collectors.counting(): Calculeaza numarul de elemente din fiecare categorie (Map<Department, Long>).\\n     - Collectors.summingDouble(): Calculeaza suma unui camp (ex: total salarii per departament).\\n     - Collectors.mapping(): Extrage doar anumite proprietati (ex: Map<Department, List<String>> cu numele angajatilor).\\n     - Collectors.groupingBy() imbricat: Creeaza o grupare pe 2 nivele (Map<Country, Map<City, List<User>>>).",
-    codeSnippet: `// Calcul total salarii per departament:
-Map<Department, Double> salaryPerDept = employees.stream()
-    .collect(Collectors.groupingBy(
-        Employee::getDepartment,
-        Collectors.summingDouble(Employee::getSalary)
-    ));
-
-// Extragere doar lista de email-uri per rol:
-Map<Role, Set<String>> emailsPerRole = users.stream()
-    .collect(Collectors.groupingBy(
-        User::getRole,
-        Collectors.mapping(User::getEmail, Collectors.toSet())
-    ));`,
-    interviewTrap: "Daca ai nevoie de o mapa sortata (TreeMap) ca rezultat al gruparii, transmite un MapFactory ca al doilea parametru: groupingBy(classifier, TreeMap::new, downstream).",
-    keyTakeaway: "Downstream collectors permit agregari SQL puternice (count, sum, maxBy, map) direct in interiorul gruparilor groupingBy."
-  },
-  {
-    id: "java-132",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Collectors.partitioningBy(): Impartirea in Doua Categorii Booleene",
-    question: "Ce este Collectors.partitioningBy(), prin ce difera de groupingBy() si de ce este mai eficienta cand conditia este un Predicate?",
-    answer: "1. Ce este partitioningBy(Predicate<T>):\\n   - Este un caz special si optimizat de grupare unde cheia este INTOTDEAUNA un boolean (true sau false).\\n   - Imparte intregul flux in exact doua categorii: cele care indeplinesc conditia si cele care nu o indeplinesc.\\n   - Returneaza garantat o mapa de tip Map<Boolean, List<T>> (sau Downstream type).\\n\\n2. De ce este superioara lui groupingBy in acest caz:\\n   - Este mult mai rapida deoarece mapa rezultata contine intotdeauna exact doua intrari pre-alocate: Boolean.TRUE si Boolean.FALSE.\\n   - Garanteaza ca ambele chei (true si false) vor exista in mapa chiar daca una din categorii nu are niciun element (returneaza o lista goala, niciodata null).\\n   - groupingBy ar omite complet cheia daca nu exista elemente corespunzatoare.",
-    codeSnippet: `List<Candidate> candidates = getCandidates();
-
-// Partitionare candidati Admis (scor >= 70) vs Respins:
-Map<Boolean, List<Candidate>> passFail = candidates.stream()
-    .collect(Collectors.partitioningBy(c -> c.getScore() >= 70));
-
-List<Candidate> passed = passFail.get(true);
-List<Candidate> failed = passFail.get(false);`,
-    interviewTrap: "Daca folosesti groupingBy cu o functie care returneaza boolean, mapa poate sa nu contina cheia false daca toate elementele au fost true, obligandu-te la verificari suplimentare de null.",
-    keyTakeaway: "partitioningBy este optimizata pentru clasificari booleene si garanteaza prezenta cheilor true si false in mapa rezultat."
-  },
-  {
-    id: "java-133",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Collectors.toMap() si Rezolvarea Coliziunilor de Chei",
-    question: "Ce exceptie arunca Collectors.toMap() la aparitia unor chei duplicate si cum se rezolva coliziunea folosind mergeFunction?",
-    answer: "1. Problema cu varianta simpla Collectors.toMap(keyMapper, valueMapper):\\n   - Daca doua obiecte din stream produc aceeasi cheie, metoda NU suprascrie valoarea in mod silentios, ci arunca direct: java.lang.IllegalStateException: Duplicate key!\\n   - Aceasta este una dintre cele mai frecvente erori neasteptate in productie la procesarea datelor din fisiere sau DB.\\n\\n2. Solutia: Al treilea parametru Merge Function (BinaryOperator):\\n   - Specifici explicit cum sa fie tratata coliziunea intre valoarea existenta (oldVal) si valoarea nou sosita (newVal):\\n     - Pastreaza prima valoare: (existing, incoming) -> existing\\n     - Suprascrie cu noua valoare: (existing, incoming) -> incoming\\n     - Aduna valorile: Integer::sum\\n\\n3. Al patrulea parametru Map Factory:\\n   - Permite specificarea tipului de mapa dorit (ex: LinkedHashMap::new pentru pastrarea ordinii sau TreeMap::new pentru sortare).",
-    codeSnippet: `List<User> users = List.of(new User("alex", 10), new User("alex", 25));
-
-// Rezolvare coliziune: pastreaza scorul cel mai mare:
-Map<String, Integer> userScores = users.stream()
-    .collect(Collectors.toMap(
-        User::getUsername,
-        User::getScore,
-        (oldScore, newScore) -> Math.max(oldScore, newScore), // Merge function!
-        LinkedHashMap::new                                   // Map factory!
-    ));`,
-    interviewTrap: "Daca valueMapper returneaza null pentru vreun element din stream, toMap() arunca NullPointerException chiar daca nu exista duplicate (datorita utilizarii interne a lui Map.merge).",
-    keyTakeaway: "Foloseste intotdeauna parametrul mergeFunction in Collectors.toMap() pentru a fi protejat de DuplicateKeyException."
-  },
-  {
-    id: "java-134",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Operatiuni de Short-Circuiting in Streams API",
-    question: "Ce sunt operatiunile de Short-Circuiting in Streams API si de ce permit procesarea eficienta a fluxurilor de dimensiuni infinite?",
-    answer: "O operatie de Short-Circuiting (Scurtcircuitare) este o operatie terminala sau intermediara care NU are nevoie sa parcurga intregul stream pentru a produce rezultatul:\\n\\n1. Operatii Terminale de Short-Circuiting:\\n   - findFirst() si findAny(): Se opresc imediat ce primul element compatibil a fost gasit.\\n   - anyMatch(predicate): Se opreste imediat ce a gasit un element care returneaza true.\\n   - allMatch(predicate): Se opreste imediat ce a gasit primul element care returneaza false.\\n   - noneMatch(predicate): Se opreste imediat ce a gasit primul element care returneaza true.\\n\\n2. Operatii Intermediare de Short-Circuiting:\\n   - limit(n): Taie fluxul imediat ce au fost procesate primele n elemente.\\n   - takeWhile(predicate) (Java 9): Opreste stream-ul la primul element care nu mai respecta conditia.\\n\\n3. Aplicabilitate pe Stream-uri Infinite:\\n   - Datorita executiei Lazy, poti genera un stream infinit de numere (Stream.iterate(1, n -> n + 1)), iar aplicarea limit(10) va evalua strict primele 10 numere fara a bloca memoria.",
-    codeSnippet: `// findFirst se opreste dupa primul element gasit (nu parcurge 1.000.000 de elemente!):
-Optional<String> match = hugeList.stream()
-    .filter(s -> s.startsWith("XYZ"))
-    .findFirst();`,
-    interviewTrap: "Operatia findAny() este mult mai rapida decat findFirst() pe stream-uri paralele (parallelStream), deoarece firele concurente nu trebuie sa sincronizeze ordinea originala din colectie.",
-    keyTakeaway: "Short-circuiting opreste procesarea la indeplinirea conditiei, facand posibila lucrul cu date mari sau infinite."
-  },
-  {
-    id: "java-135",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Stream.peek(): De ce este strict pentru Debugging?",
-    question: "De ce documentatia oficiala Java avertizeaza ca Stream.peek() nu trebuie folosit pentru logica de afaceri si cand poate fi ignorat de JVM?",
-    answer: "Stream.peek(Consumer<T>) este conceput strict pentru a permite \"aruncarea unei priviri\" (inspectare / debugging) asupra elementelor pe masura ce traverseaza pipeline-ul:\\n\\n1. De ce NU trebuie folosit pentru modificarea starii (Side-Effects):\\n   - Streams sunt proiectate conform principiilor de programare functionala pura (fara efecte secundare).\\n   - Daca folosesti peek() pentru a altera obiecte sau pentru a salva date intr-o baza de date externa, comportamentul devine impredictibil pe parallelStream.\\n\\n2. Optimizarea Compiler-ului (JIT Stream Fusion):\\n   - Incepand cu Java 9+, daca operatia terminala poate calcula rezultatul fara a evalua elementele (ex: count() pe o colectie a carei marime este deja cunoscuta din Spliterator.SIZED):\\n   - JVM-ul ELIMINA COMPLET operatiile intermediare din pipeline! Apelul peek() NU VA FI EXECUTAT DELOC!\\n   - Daca aveai logica de afaceri in peek(), ea nu se va rula niciodata.",
-    codeSnippet: `// GRESIT: peek() poate sa NU se execute deloc in Java 9+!
-long total = Stream.of("a", "b", "c")
-    .peek(s -> logToDatabase(s)) // Poate fi optimizat si sarit complet de JVM!
-    .count();
-
-// CORECT: foloseste forEach terminal daca vrei actiuni explicite:
-Stream.of("a", "b", "c").forEach(this::logToDatabase);`,
-    interviewTrap: "Intrebare tipica de interviu: \"Va afisa codul de mai sus ceva in consola?\". Daca stream-ul este sized si operatia este count(), raspunsul corect este: nu, in Java 9+ peek() este sarit complet.",
-    keyTakeaway: "Stream.peek() este strict pentru diagnostic; JVM il poate optimiza si ignora complet daca operatia terminala nu necesita parcurgerea."
-  },
-  {
-    id: "java-136",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Stream-uri Infinite in Java: Stream.iterate() si Stream.generate()",
-    question: "Cum creezi fluxuri infinite de date folosind Stream.iterate() si Stream.generate() si cum eviti buclele infinite?",
-    answer: "Java permite crearea de secvente infinite evaluate lenes (Lazy Evaluation):\\n\\n1. Stream.generate(Supplier<T>):\\n   - Produce un stream infinit unde fiecare element este generat independent de un Supplier (stateless).\\n   - Exemple: generare de numere aleatorii, UUID-uri, timestamp-uri.\\n\\n2. Stream.iterate(seed, UnaryOperator<T>):\\n   - Produce un stream infinit unde fiecare element nou este calculat pe baza elementului anterior (f(f(seed))).\\n   - Exemplu clasic: sirul numerelor pare, sirul lui Fibonacci.\\n   - In Java 9, iterate a primit si o varianta cu 3 parametri: Stream.iterate(seed, hasNextPredicate, nextOperator), care actioneaza exact ca o bucla for traditionala si se opreste singur!\\n\\n3. Evitarea Buclelor Infinite:\\n   - Orice stream infinit creat fara predicat TREBUIE limitat printr-o operatie de short-circuiting precum .limit(n) inainte de operatia terminala.",
-    codeSnippet: `// 1. Generare 10 numere pare:
-List<Integer> evens = Stream.iterate(0, n -> n + 2)
-    .limit(10)
-    .toList();
-
-// 2. Varianta cu predicat de oprire (Java 9):
-List<Integer> bounded = Stream.iterate(0, n -> n < 20, n -> n + 2).toList();
-
-// 3. Generare UUID-uri infinite:
-Stream<UUID> uuids = Stream.generate(UUID::randomUUID);`,
-    interviewTrap: "Daca incerci sa aplici sorted() sau toList() direct pe un stream infinit fara a folosi limit(), programul va intra intr-o bucla infinita si va crapa cu OutOfMemoryError.",
-    keyTakeaway: "Stream.generate pentru elemente independente; Stream.iterate pentru secvente recursive; limiteaza intotdeauna cu limit()."
-  },
-  {
-    id: "java-137",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Stream-uri Primitive: IntStream, LongStream si DoubleStream",
-    question: "De ce este recomandata utilizarea lui IntStream in loc de Stream<Integer> pentru calcule numerice intensive?",
-    answer: "Stream<Integer> foloseste tipul de referinta Integer (obiect), in timp ce IntStream lucreaza direct pe tipul primitiv int pe 32 de biti:\\n\\n1. Costul de Boxing si Unboxing:\\n   - Intr-un Stream<Integer> cu 10.000.000 de numere, fiecare operatie matematica necesita despachetarea obiectului Integer (unboxing), efectuarea calculului si impachetarea rezultatului intr-un nou obiect Integer pe Heap (boxing).\\n   - Consuma cantitati uriase de memorie si produce garbage masiv pentru GC.\\n\\n2. IntStream (Zero Overhead pe Heap):\\n   - Toate operatiile au loc direct pe stiva si in registrele CPU (instructiuni native ultra-rapide SIMD).\\n   - Este de pana la 5-10 ori mai rapid decat Stream<Integer>.\\n\\n3. Metode Utile Dedicate:\\n   - IntStream ofera metode de agregare directe absente pe Stream generic: .sum(), .average(), .min(), .max(), .summaryStatistics().\\n   - Generare de intervale: IntStream.range(0, 100) si IntStream.rangeClosed(1, 100).",
-    codeSnippet: `// Ineficient (boxing/unboxing pe 1 milion de obiecte):
-// Stream<Integer> s = ...;
-
-// Eficient: conversie la IntStream nativ:
-int totalAge = employees.stream()
-    .mapToInt(Employee::getAge) // Devine IntStream!
-    .sum();                     // Operatie atomica directa`,
-    interviewTrap: "Daca ai nevoie sa convertesti un IntStream inapoi intr-un Stream<Integer> de obiecte (ex: pentru toList()), foloseste metoda .boxed().",
-    keyTakeaway: "IntStream elimina costul de boxing/unboxing, oferind calcule numerice de 10x mai rapide si metode directe precum sum() si average()."
-  },
-  {
-    id: "java-138",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Cum construiesti un Custom Collector in Java?",
-    question: "Care sunt cele 5 componente definite in interfata Collector<T, A, R> si cum implementezi un colector personalizat?",
-    answer: "Interfata java.util.stream.Collector<T, A, R> defineste modul in care elementele de tip T sunt acumulate intr-un container intermediar A si transformate in rezultatul final R:\\n\\nCele 5 Metode Obligatorii ale interfetei:\\n1. supplier(): Retine o functie Supplier<A> care creeaza un container nou gol de acumulare (ex: () -> new StringBuilder()).\\n2. accumulator(): Retine un BiConsumer<A, T> care adauga un element T in containerul de acumulare A (ex: (sb, str) -> sb.append(str)).\\n3. combiner(): Retine un BinaryOperator<A> care imbina doua containere partiale de acumulare rezultate din rulari paralele pe thread-uri diferite (ex: (sb1, sb2) -> sb1.append(sb2)).\\n4. finisher(): Retine o Function<A, R> care transforma containerul intermediar in rezultatul final (ex: StringBuilder::toString, sau Function.identity() daca A == R).\\n5. characteristics(): Returneaza un Set de flag-uri (CONCURRENT, UNORDERED, IDENTITY_FINISH) pentru optimizari interne.",
-    codeSnippet: `// Custom Collector simplificat folosind Collector.of():
-Collector<String, StringBuilder, String> customJoining = Collector.of(
-    StringBuilder::new,                    // 1. Supplier
-    (sb, s) -> sb.append(s).append(", "), // 2. Accumulator
-    StringBuilder::append,                 // 3. Combiner
-    sb -> sb.toString(),                   // 4. Finisher
-    Collector.Characteristics.IDENTITY_FINISH // 5. Characteristics
-);`,
-    interviewTrap: "Daca marchezi IDENTITY_FINISH, metoda finisher() nu va fi apelata niciodata de JVM, iar containerul A este convertit fortat prin cast la R. Asigura-te ca A este compatibil cu R daca folosesti acest flag.",
-    keyTakeaway: "Un Custom Collector este definit prin: supplier (creare), accumulator (adaugare), combiner (unire paralela) si finisher (rezultat final)."
+// Dupa deserializare:
+// session.getUsername() -> "admin"
+// session.getPassword() -> null !`,
+    interviewTrap: "Campurile marcate static nu sunt nici ele serializate, deoarece apartin clasei si nu instantei particulare a obiectului, fara sa fie nevoie de cuvantul transient.",
+    keyTakeaway: "Campurile marcate transient sunt excluse de la serializare si devin null (sau valoarea default a tipului) la deserializare."
   },
   {
     id: "java-139",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Optional.orElse() vs Optional.orElseGet()",
-    question: "Care este diferenta critica de comportament si performanta intre orElse() si orElseGet() in clasa Optional?",
-    answer: "Diferenta esentiala este identica cu cea dintre evaluarea Eager si Lazy:\\n\\n1. orElse(T other):\\n   - Eager Evaluation (Evaluare Imediata): Valoarea din orElse(...) este calculata si instantiata INTOTDEAUNA, chiar daca Optional-ul contine deja o valoare valida!\\n   - Daca parametrul este un apel de metoda (ex: orElse(createDefaultUser())), acea metoda va fi apelata la FIECARE executie, irosind timp CPU, conexiuni DB sau generand duplicate in baza de date!\\n\\n2. orElseGet(Supplier<T> supplier):\\n   - Lazy Evaluation (Evaluare Lenesa): Functia Supplier se executa NUMAI SI NUMAI DACA Optional-ul este gol (empty)!\\n   - Daca valoarea este prezenta, functia lambda nu este apelata deloc.\\n\\n3. Regula de Interviu:\\n   - Foloseste orElse() doar pentru constante deja existente in memorie (ex: orElse(\"UNKNOWN\") sau orElse(0)).\\n   - Foloseste orElseGet() pentru orice implica apel de metoda, alocare de obiect nou sau operatie I/O.",
-    codeSnippet: `Optional<User> opt = Optional.of(currentUser);
+    title: "Enum in Java: Caracteristici speciale",
+    question: "Ce este un Enum in Java si de ce este considerat mult mai puternic decat enum-urile din limbajele C/C++?",
+    answer: "1. In C/C++, un enum este un simplu alias peste un numar intreg.\\n2. In Java, un Enum este o CLASA COMPLETA:\\n   - Mosteneste automat clasa abstracta java.lang.Enum.\\n   - Fiecare constanta din Enum este o instanta unica, publica, statica si finala a acelei clase (Singleton per constanta).\\n   - Poate avea campuri de instanta, constructori (strict privati), metode de instanta si metode statice.\\n   - Poate implementa una sau mai multe interfete (dar NU poate mosteni alta clasa, deoarece mosteneste deja java.lang.Enum).\\n   - Este 100% sigur impotriva instantiatilor nepermise (nici macar prin Java Reflection nu poti crea o instanta noua de Enum!).",
+    codeSnippet: `public enum OrderStatus {
+    PENDING("In asteptare", 1),
+    PROCESSING("In procesare", 2),
+    DELIVERED("Livrat", 3);
 
-// GRESIT: apelul catre DB se executa MEREU, chiar daca currentUser exista!
-User u1 = opt.orElse(userRepository.fetchDefaultUser());
+    private final String description;
+    private final int code;
 
-// CORECT: apelul catre DB se executa DOAR daca opt este gol:
-User u2 = opt.orElseGet(() -> userRepository.fetchDefaultUser());`,
-    interviewTrap: "Un bug frecvent de junior in Spring Boot este: opt.orElse(userRepository.save(new User())). Chiar daca userul exista, codul salveaza un user nou in baza de date la fiecare apel!",
-    keyTakeaway: "orElse evalueaza mereu valoarea; orElseGet primeste un Supplier si se executa doar daca Optional-ul este gol."
+    // Constructorul este implicit private:
+    OrderStatus(String desc, int code) {
+        this.description = desc;
+        this.code = code;
+    }
+
+    public String getDescription() { return description; }
+    public int getCode() { return code; }
+}`,
+    interviewTrap: "Constructorul unui Enum NU poate fi declarat public sau protected! Daca incerci sa scrii public OrderStatus(...), primesti eroare de compilare.",
+    keyTakeaway: "Enum-urile in Java sunt clase complete cu campuri, metode si constructori privati; constantele sunt instante singleton thread-safe."
   },
   {
     id: "java-140",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Optional.flatMap(): Rezolvarea Imbricarilor de Optionale",
-    question: "Cum elimina Optional.flatMap() problema obiectelor imbricate de tip Optional<Optional<T>> la navigarea prin proprietati optionale?",
-    answer: "Cand modelezi obiecte de domeniu unde anumite relatii sunt optionale (ex: un User poate avea sau nu un Address, iar un Address poate avea sau nu un ZipCode):\\n\\n1. Problema cu Optional.map():\\n   - Daca user.getAddress() returneaza Optional<Address>:\\n   - Apelul optUser.map(User::getAddress) va produce un tip de cosmar imbricat: Optional<Optional<Address>>!\\n   - Pentru a ajunge la date, ar trebui sa faci multiple verificari si apeluri .get().get().\\n\\n2. Solutia: Optional.flatMap():\\n   - Daca functia de mapare returneaza deja un Optional, flatMap DESPACHETEAZA automat valoarea interioara, returnand un simplu Optional<Address> unificat.\\n   - Permite inlantuiri sigure si lizibile prin graful de obiecte fara niciun if (null) sau NullPointerException.",
-    codeSnippet: `public record Address(Optional<String> street) {}
-public record User(Optional<Address> address) {}
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Metodele Enum-urilor: values(), valueOf() si capcana ordinal()",
+    question: "Ce fac metodele values(), valueOf(String) si name() si de ce este considerata o capcana metoda ordinal()?",
+    answer: "1. values():\\n   - Metoda generata automat de compilator care returneaza un array cu toate constantele enum-ului in ordinea declararii lor.\\n\\n2. valueOf(String name):\\n   - Converteste un String in constanta corespunzatoare din enum. Arunca IllegalArgumentException daca nu exista nicio constanta cu acel nume exact.\\n\\n3. name():\\n   - Returneaza numele exact al constantei ca String (ex: \"PENDING\"). Se prefera fata de toString() pentru ca nu poate fi suprascrisa.\\n\\n4. Capcana metodei ordinal():\\n   - ordinal() returneaza pozitia numerica (indexul pornind de la 0) a constantei in declaratie.\\n   - DE CE E O MARE GRESEALA sa o folosesti in logica de business sau in baza de date: Daca un coleg schimba ordinea constantelor in cod sau adauga o constanta noua la inceput, toate valorile ordinal se schimba! Datele salvate in baza de date devin complet corupte!",
+    codeSnippet: `public enum Priority { LOW, MEDIUM, HIGH }
 
-Optional<User> userOpt = Optional.of(user);
+// 1. values():
+for (Priority p : Priority.values()) {
+    System.out.println(p.name() + " la indexul " + p.ordinal());
+}
 
-// Navigare sigura prin flatMap:
-Optional<String> street = userOpt
-    .flatMap(User::address)   // Transforma din Optional<User> in Optional<Address>
-    .flatMap(Address::street); // Transforma in Optional<String>`,
-    interviewTrap: "Daca functia ta returneaza o valoare simpla T (nu un Optional), foloseste map(). Daca functia returneaza Optional<T>, foloseste flatMap().",
-    keyTakeaway: "Optional.flatMap() aplatizeaza containerele imbricate Optional<Optional<T>> intr-un singur Optional simplu."
+// 2. valueOf():
+Priority p = Priority.valueOf("HIGH"); // OK
+// Priority err = Priority.valueOf("UNKNOWN"); // IllegalArgumentException!
+
+// 3. CAPCANA:
+// Daca salvezi p.ordinal() in DB (2 pentru HIGH) si maine cineva adauga URGENT inainte de HIGH,
+// HIGH devine 3, iar datele din DB pointeaza acum la alta prioritate!`,
+    interviewTrap: "Nu folosi niciodata ordinal() pentru salvarea in baza de date sau in reguli de business. In JPA/Hibernate, foloseste intotdeauna @Enumerated(EnumType.STRING).",
+    keyTakeaway: "values() parcurge constantele, valueOf() parseaza din String; evita metoda ordinal() in logica de business pentru ca se schimba daca ordinea din cod este modificata."
   },
   {
     id: "java-141",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "De ce Optional nu este Serializable si nu se foloseste in Entitati JPA?",
-    question: "De ce clasa Optional nu implementeaza java.io.Serializable si de ce este o eroare grava sa o folosesti ca tip de camp intr-o entitate JPA/Hibernate?",
-    answer: "1. Intentia de Design a lui Optional (Brian Goetz):\\n   - Optional a fost creat strict ca un tip de RETURNARE din metode pentru a semnaliza clar apelantului ca rezultatul poate lipsi.\\n   - Nu a fost conceput niciodata sa fie folosit ca variabila membru (camp) intr-o clasa sau ca parametru de intrare intr-o metoda.\\n\\n2. De ce NU implementeaza Serializable:\\n   - Designerii Java au decis intentionat sa nu faca Optional serializabil pentru a descuraja folosirea lui in structuri persistente.\\n   - Daca il folosesti ca tip de camp intr-o clasa de date care este serializata peste retea (RMI, sesiune HTTP, cache Redis), aplicatia va arunca: java.io.NotSerializableException: java.util.Optional!\\n\\n3. Incompatibilitatea cu JPA / Hibernate:\\n   - Hibernate se bazeaza pe Reflection si Proxy-uri de bytecode pentru a injecta valori direct in campuri.\\n   - O coloana nullable din baza de date trebuie mapata pe tipul obiect normal (ex: private String middleName;), iar metoda getter poate returna Optional: public Optional<String> getMiddleName() { return Optional.ofNullable(middleName); }.",
-    codeSnippet: `// GRESIT: Nu folosi Optional ca si camp in JPA Entity:
-// @Entity class User { private Optional<String> middleName; } // CRASH!
+    title: "Records in Java 16+ - Ce sunt si cand se folosesc",
+    question: "Ce este un Record in Java (introdus ca feature standard in Java 16) si ce problema rezolva?",
+    answer: "1. Ce este un Record:\\n   - O clasa speciala imutabila de date (data carrier) gandita pentru a modela date pure fara cod boilerplate.\\n   - Se defineste cu cuvantul cheie record (ex: public record UserDto(Long id, String name) {}).\\n\\n2. Ce problema rezolva:\\n   - In Java clasic, crearea unui DTO sau POJO imutabil necesita zeci de linii repetitive: campuri private final, constructor, getteri, equals(), hashCode() si toString().\\n   - Record genereaza toate aceste componente automat la compilare intr-o singura linie de cod!\\n\\n3. Proprietati esentiale:\\n   - Toate campurile sunt automat private final.\\n   - Clasa Record este automat final (nu poate fi mostenita) si mosteneste clasa java.lang.Record.\\n   - Nu poate mosteni alte clase, dar poate implementa interfete.",
+    codeSnippet: `// Inainte (zeci de linii de boilerplate cu equals/hashCode/getters):
+// public final class Point { private final int x; private final int y; ... }
 
-// CORECT: Camp normal pe entitate, getter returneaza Optional:
-@Entity
-public class User {
-    private String middleName; // JPA functioneaza nativ
-    
-    public Optional<String> getMiddleName() {
-        return Optional.ofNullable(middleName); // Sigur pentru apelanti!
-    }
-}`,
-    interviewTrap: "Folosirea lui Optional ca parametru in metode (ex: doSomething(Optional<User> user)) este un anti-pattern; forteaza apelantul sa impacheteze datele si poate primi el insusi valoarea null.",
-    keyTakeaway: "Optional este strict pentru tipul de retur al metodelor; nu este Serializable si nu se foloseste ca si camp in clase sau entitati JPA."
+// Cu Record (Java 16+): o singura linie!
+public record Point(int x, int y) {}
+
+// Utilizare:
+Point p = new Point(10, 20);
+System.out.println(p.x()); // 10 (fara prefixul "get"!)
+System.out.println(p);     // Point[x=10, y=20]`,
+    interviewTrap: "Getteri-i generati de un Record NU au prefixul \"get\"! Nu apelezi p.getX(), ci direct p.x().",
+    keyTakeaway: "Record este o clasa de date imutabila concisa care genereaza automat constructorul, getterii, equals, hashCode si toString."
   },
   {
     id: "java-142",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Optional.ifPresentOrElse() si Optional.or() in Java 9",
-    question: "Ce imbunatatiri majore au adus metodele ifPresentOrElse() si or() clasei Optional incepand cu Java 9?",
-    answer: "In Java 8, cand un Optional era gol, trebuia sa apelezi isPresent() intr-un if-else traditional, anuland stilul functional:\\n\\n1. Optional.ifPresentOrElse(Consumer, Runnable) (Java 9):\\n   - Ofera un flux complet functional If-Else:\\n     - Daca valoarea este prezenta: executa Consumer-ul cu valoarea respectiva.\\n     - Daca Optional-ul este gol: executa Runnable-ul de fallback!\\n   - Elimina complet blocurile if (opt.isPresent()) ... else ...\\n\\n2. Optional.or(Supplier<Optional<T>>) (Java 9):\\n   - Permite crearea de lanturi de fallback intre multiple surse de Optionale.\\n   - Daca primul Optional are valoare, il returneaza; daca este gol, evalueaza Supplier-ul si returneaza al doilea Optional.\\n   - Ideal pentru cautari ierarhice (ex: cauta in L1 Cache -> daca e gol cauta in Redis -> daca e gol cauta in DB).",
-    codeSnippet: `// 1. ifPresentOrElse:
-userOpt.ifPresentOrElse(
-    user -> sendWelcomeEmail(user),
-    () -> log.warn("Utilizatorul nu a fost gasit!")
-);
+    title: "Componentele generate automat de un Java Record",
+    question: "Ce metode si constructori genereaza compilatorul Java in mod automat pentru un Record?",
+    answer: "Compilatorul Java genereaza automat urmatoarele componente pentru fiecare Record:\\n\\n1. Campuri private si finale pentru fiecare componenta din antet.\\n2. Constructor Canonic (Canonical Constructor): Un constructor public cu aceeasi semnatura si parametri ca lista de componente a record-ului.\\n3. Metode accesor (Getters): Cate o metoda publica pentru fiecare camp, purtand EXACT acelasi nume cu campul (ex: name(), age(), id()), fara prefixul \"get\".\\n4. equals(Object o): Compara toate campurile pentru egalitate valorica.\\n5. hashCode(): Calculeaza codul hash pe baza tuturor campurilor.\\n6. toString(): Returneaza o reprezentare text eleganta cu numele clasei si valorile campurilor (ex: UserDto[id=1, name=Ana]).",
+    codeSnippet: `public record Customer(Long id, String email) {}
 
-// 2. or() - Lant de Fallback intre surse Optionale:
-Optional<Product> product = findInLocalCache(id)
-    .or(() -> findInRedis(id))
-    .or(() -> findInDatabase(id));`,
-    interviewTrap: "Nu confunda or() (care returneaza un alt Optional) cu orElse() / orElseGet() (care despacheteaza valoarea si returneaza tipul T).",
-    keyTakeaway: "ifPresentOrElse ofera tratare completa functional if-else; or() permite compunerea de fallback intre multiple surse Optionale."
+Customer c1 = new Customer(1L, "ana@test.com");
+Customer c2 = new Customer(1L, "ana@test.com");
+
+// 1. Getters fara prefix get:
+System.out.println(c1.email()); // ana@test.com
+
+// 2. equals si hashCode bazat pe valori:
+System.out.println(c1.equals(c2)); // true!
+
+// 3. toString:
+System.out.println(c1); // Customer[id=1, email=ana@test.com]`,
+    interviewTrap: "Nu poti adauga campuri de instanta suplimentare in interiorul acoladelor unui Record! Sunt permise doar campuri statice: public static final ...",
+    keyTakeaway: "Record genereaza campuri finale, constructor canonic, getteri fara \"get\", equals, hashCode si toString."
   },
   {
     id: "java-143",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Compunerea de Predicate: and(), or() si negate()",
-    question: "Cum folosesti metodele default din interfata Predicate (and, or, negate) pentru a construi filtre de business dinamice si reutilizabile?",
-    answer: "Interfata functional java.util.function.Predicate<T> evalueaza o conditie si returneaza boolean. In loc sa scrii conditii monolitice uriase, poti compune conditii atomice:\\n\\n1. Predicate.and(other):\\n   - Echivalentul logic al operatorului && (AND).\\n   - Scurtcircuiteaza: daca primul predicat este false, al doilea nu se mai evalueaza.\\n\\n2. Predicate.or(other):\\n   - Echivalentul logic al operatorului || (OR).\\n   - Scurtcircuiteaza: daca primul predicat este true, al doilea nu se mai evalueaza.\\n\\n3. Predicate.negate():\\n   - Echivalentul logic al operatorului ! (NOT).\\n\\n4. Predicate.not(Predicate<T>) (Java 11):\\n   - Metoda statica excelenta pentru inversarea unui method reference (ex: Predicate.not(String::isBlank)).",
-    codeSnippet: `Predicate<Candidate> isAdult = c -> c.getAge() >= 18;
-Predicate<Candidate> hasDegree = Candidate::hasUniversityDegree;
-Predicate<Candidate> knowsJava = c -> c.getSkills().contains("Java");
-
-// Compunere dinamica eleganta:
-Predicate<Candidate> eligible = isAdult
-    .and(hasDegree)
-    .and(knowsJava.or(Candidate::hasExtensiveExperience));
-
-List<Candidate> qualified = candidates.stream().filter(eligible).toList();`,
-    interviewTrap: "Inainte de Java 11, pentru a nega un method reference trebuia sa scrii: filter(s -> !s.isBlank()). In Java 11+ poti folosi metoda curata: filter(Predicate.not(String::isBlank)).",
-    keyTakeaway: "Predicate.and(), or() si not() permit compunerea modulara a regulilor complexe de filtrare din componente atomice."
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Compact Constructor intr-un Java Record",
+    question: "Ce este un Compact Constructor intr-un Record si cum se foloseste pentru validare?",
+    answer: "1. Ce este un Compact Constructor:\\n   - O sintaxa speciala oferita de Java pentru constructorul canonic al unui Record, fara lista de parametri in paranteze rotunde: public MyRecord { ... }.\\n   - Permite validarea sau normalizarea (curatarea) argumentelor INAINTE ca acestea sa fie atribuite campurilor finale.\\n\\n2. Cum functioneaza:\\n   - Nu este nevoie sa scrii this.x = x; this.y = y;! Compilatorul Java insereaza automat atribuirile campurilor la sfarsitul blocului compact.\\n   - Daca un argument este invalid, arunci exceptie (ex: IllegalArgumentException).\\n   - Poti si modifica parametrii inainte de atribuire (ex: name = name.trim()).",
+    codeSnippet: `public record BankAccount(String iban, double balance) {
+    // Compact Constructor (fara paranteze cu parametri!):
+    public BankAccount {
+        if (iban == null || iban.isBlank()) {
+            throw new IllegalArgumentException("IBAN-ul nu poate fi gol!");
+        }
+        if (balance < 0) {
+            throw new IllegalArgumentException("Balanta initiala nu poate fi negativa!");
+        }
+        // Normalizare automata:
+        iban = iban.toUpperCase().trim();
+        // this.iban = iban se apeleaza automat de compilator!
+    }
+}`,
+    interviewTrap: "In interiorul unui compact constructor, scrierea explicita a lui this.iban = iban va produce o eroare de compilare! Modifici direct parametrul iban.",
+    keyTakeaway: "Compact constructorul elimina asignarea manuala this.x = x si este locul perfect pentru validari si sanitizari de date in Record."
   },
   {
     id: "java-144",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Function.andThen() vs Function.compose() in Java",
-    question: "Care este diferenta in ordinea de executie intre Function.andThen() si Function.compose()?",
-    answer: "Ambele metode compun doua functii matematice f si g intr-una singura, dar ordinea de executie este inversa:\\n\\n1. f.andThen(g):\\n   - Executie \"de la stanga la dreapta\": executa MAI INTAI f, iar rezultatul lui f este transmis ca input catre g.\\n   - Corespunde formulei matematice: g(f(x)).\\n\\n2. f.compose(g):\\n   - Executie \"de la dreapta la stanga\": executa MAI INTAI functia g transmisa ca parametru, iar rezultatul lui g este transmis ca input catre f.\\n   - Corespunde formulei matematice clasice de compunere a functiilor: f(g(x)).\\n\\n3. Recomandare practica:\\n   - andThen() este de regula mult mai intuitiva pentru citirea codului (urmeaza ordinea fireasca a evenimentelor: fa asta, SI APOI fa cealalta).",
-    codeSnippet: `Function<Integer, Integer> multiplyBy2 = x -> x * 2;
-Function<Integer, Integer> add3 = x -> x + 3;
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Switch Expressions in Java 14+",
+    question: "Care sunt imbunatatirile aduse de Switch Expressions (sintaxa -> si cuvantul cheie yield)?",
+    answer: "1. Sintaxa tip sageata (->):\\n   - Elimina complet riscul de fall-through accidental! Nu mai este nevoie de cuvantul cheie break la finalul fiecarui case.\\n   - Doar codul din dreapta sagetii se executa.\\n   - Permite multiple constante per case separate prin virgula (ex: case \"A\", \"B\" ->).\\n\\n2. Poate returna o valoare:\\n   - Switch devine o expresie (Expression) ce poate fi atribuita direct unei variabile.\\n\\n3. Cuvantul cheie yield:\\n   - Daca o ramura case necesita un bloc cu acolade { ... }, valoarea de retur este transmisa folosind instructiunea yield (in loc de return).",
+    codeSnippet: `DayOfWeek day = DayOfWeek.FRIDAY;
 
-// 1. andThen: (5 * 2) = 10 -> (10 + 3) = 13
-int r1 = multiplyBy2.andThen(add3).apply(5); // 13
+// Switch clasic era predispus la lipsa break-ului.
+// Switch Expression modern returneaza valoare direct:
+String typeOfDay = switch (day) {
+    case MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY -> "Lucratoare";
+    case SATURDAY, SUNDAY -> {
+        System.out.println("Weekend placut!");
+        yield "Weekend"; // yield returneaza valoarea din bloc
+    }
+};
 
-// 2. compose: (5 + 3) = 8 -> (8 * 2) = 16
-int r2 = multiplyBy2.compose(add3).apply(5); // 16`,
-    interviewTrap: "Fii foarte atent la tipurile de date de iesire si intrare: in f.andThen(g), tipul de return al lui f trebuie sa fie compatibil cu tipul de input al lui g.",
-    keyTakeaway: "f.andThen(g) executa f si apoi g (g(f(x))); f.compose(g) executa g si apoi f (f(g(x)))."
+System.out.println(typeOfDay); // Lucratoare`,
+    interviewTrap: "Daca folosesti switch ca expresie (atribuit la o variabila), compilatorul cere ca toate cazurile posibile sa fie tratate exhaustiv (sau sa existe clauza default).",
+    keyTakeaway: "Switch Expressions elimina break-ul prin operatorul ->, pot returna valori direct si folosesc yield in blocuri cu acolade."
   },
   {
     id: "java-145",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Ce este Currying Function in Java?",
-    question: "Ce este tehnica de Currying in programarea functionala si cum se implementeaza in Java folosind interfata Function?",
-    answer: "1. Ce este Currying (numit dupa matematicianul Haskell Curry):\\n   - O tehnica prin care o functie care primeste mai multi parametri (ex: f(x, y, z)) este transformata intr-o secventa de functii de UN SINGUR parametru: f(x)(y)(z).\\n   - Fiecare apel consuma primul parametru si returneaza o noua functie care asteapta urmatorul parametru.\\n\\n2. De ce este utila in Java:\\n   - Permite \"Evaluare Partiala\" (Partial Application): Poti fixa unii parametri de configurare la pornirea aplicatiei si poti transmite functia pre-configurata altor module.\\n   - Java nu are suport de sintaxa speciala pentru Currying, dar se implementeaza elegant prin functii de ordin superior (Higher-Order Functions): Function<A, Function<B, C>>.",
-    codeSnippet: `// Functie Curried: calculeaza taxa pe baza cotei de TVA si a sumei:
-Function<Double, Function<Double, Double>> taxCalculator = 
-    rate -> amount -> amount * (1 + rate);
-
-// Aplicare partiala: fixam cota de TVA pentru Romania (19%):
-Function<Double, Double> roTax = taxCalculator.apply(0.19);
-
-// Utilizare ulterioara in aplicatie:
-double totalProduct = roTax.apply(100.0); // 119.0
-double totalService = roTax.apply(250.0); // 297.5`,
-    interviewTrap: "Nu abuza de Currying in codul obisnuit de afaceri; poate face stack trace-urile de erori greu de citit din cauza generarii de zeci de instante anonime de Function.",
-    keyTakeaway: "Currying descompune o functie cu multi parametri intr-un lant de functii unare, permitand evaluarea partiala a parametrilor."
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Pattern Matching for switch in Java",
+    question: "Cum functioneaza Pattern Matching for switch (Java 21) si cum simplifica verificarea tipurilor?",
+    answer: "1. Ce rezolva:\\n   - In Java clasic, switch accepta doar numere primitive, String si Enum-uri. Pentru obiecte, trebuia sa folosesti un lant urat de if (obj instanceof A) { A a = (A) obj; } else if ...\\n\\n2. Cu Pattern Matching for switch:\\n   - Poti face switch direct pe tipul unui Object!\\n   - Face cast automat in variabila declarata pe ramura respectiva.\\n   - Suporta clauze de garda (when clause) pentru a adauga conditii booleene suplimentare.\\n   - Trateaza explicit cazul de null (case null ->).",
+    codeSnippet: `static String formatObject(Object obj) {
+    return switch (obj) {
+        case Integer i -> "Numar intreg: " + i;
+        case String s when s.length() > 5 -> "String lung: " + s.toUpperCase();
+        case String s -> "String scurt: " + s;
+        case null -> "Obiect nul!";
+        default -> "Tip necunoscut: " + obj.toString();
+    };
+}`,
+    interviewTrap: "Ordinea clauzelor conteaza: daca pui case String s inainte de case String s when s.length() > 5, compilatorul va arunca eroare de unreachable code.",
+    keyTakeaway: "Pattern Matching for switch testeaza tipul obiectului, extrage variabila castata si permite conditii suplimentare cu clauza when."
   },
   {
     id: "java-146",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Stream.takeWhile() si dropWhile() in Java 9",
-    question: "Cum functioneaza metodele takeWhile() si dropWhile() introduse in Java 9 si de ce sunt mult mai eficiente decat filter() pe colectii sortate?",
-    answer: "1. De ce filter() este ineficient pe colectii sortate:\\n   - Daca ai o lista sortata de 1.000.000 de numere si vrei doar numerele < 50:\\n   - filter(n -> n < 50) va verifica TOATE cele 1.000.000 de elemente pana la capat, chiar daca dupa al 50-lea element stie sigur ca restul de 999.950 sunt mai mari!\\n\\n2. Stream.takeWhile(Predicate<T>):\\n   - Preia elemente atata timp cat predicatul este TRUE.\\n   - In momentul in care intalneste PRIMUL element care returneaza false, operatia scurtcircuiteaza si OPRESTE IMEDIAT stream-ul! Pe date sortate are complexitate O(K) in loc de O(N).\\n\\n3. Stream.dropWhile(Predicate<T>):\\n   - Ignora (arunca) elementele atata timp cat predicatul este true.\\n   - La primul element care returneaza false, inceteaza ignorarea si returneaza acel element impreuna cu TOATE elementele ramase din stream.",
-    codeSnippet: `List<Integer> sortedNumbers = List.of(2, 4, 6, 8, 10, 1, 3);
+    title: "Pattern Matching for instanceof (Java 16+)",
+    question: "Cum simplifica Pattern Matching for instanceof verificarea si cast-ul tipurilor in Java?",
+    answer: "1. Sintaxa clasica (boilerplate si risc de eroare):\\n   - Inainte trebuia intai sa testezi cu instanceof si apoi pe linia urmatoare sa faci cast manual explicit: if (obj instanceof String) { String s = (String) obj; ... }.\\n\\n2. Pattern Matching modern (Java 16+):\\n   - Declari variabila tinta direct in instructiunea instanceof: if (obj instanceof String s) { ... }.\\n   - Compilatorul face automat cast-ul; variabila s este disponibila direct in interiorul blocului if cu tipul String deja definit!\\n   - Variabila s poate fi folosita si in aceeasi conditie if dupa operatorul && (ex: if (obj instanceof String s && s.length() > 5)).",
+    codeSnippet: `Object obj = "Hello Java";
 
-// takeWhile: se opreste la 10 (primele 5 elemente)
-List<Integer> taken = sortedNumbers.stream()
-    .takeWhile(n -> n < 10)
-    .toList(); // [2, 4, 6, 8]
+// Stil vechi:
+// if (obj instanceof String) {
+//     String s = (String) obj; // cast redundant
+//     System.out.println(s.toUpperCase());
+// }
 
-// dropWhile: ignora pana la 10, apoi ia restul:
-List<Integer> dropped = sortedNumbers.stream()
-    .dropWhile(n -> n < 10)
-    .toList(); // [10, 1, 3]`,
-    interviewTrap: "Daca stream-ul este neordonat (unordered), takeWhile() poate returna un subset nepredictibil de elemente. Foloseste-l intotdeauna pe stream-uri cu ordine bine definita.",
-    keyTakeaway: "takeWhile opreste stream-ul la primul element care incalca conditia; dropWhile sare peste primele elemente pana la prima incalcare."
+// Stil modern cu Pattern Matching:
+if (obj instanceof String s && !s.isBlank()) {
+    System.out.println(s.toUpperCase()); // s este de tip String garantat!
+}`,
+    interviewTrap: "Nu poti folosi operatorul || cu variabila pattern matching (ex: obj instanceof String s || s.length() > 0), deoarece daca primul test este false, s nu exista!",
+    keyTakeaway: "Pattern matching for instanceof elimina cast-ul manual redundant, legand variabila direct in testul logic."
   },
   {
     id: "java-147",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Stream.toList() (Java 16) vs Stream.collect(Collectors.toList())",
-    question: "Care este diferenta de imutabilitate si performanta intre noua metoda Stream.toList() din Java 16 si clasicul Collectors.toList()?",
-    answer: "1. Stream.collect(Collectors.toList()):\\n   - Specificatia Java NU garanteaza tipul sau mutabilitatea listei returnate, desi in practica majoritatea implementarilor HotSpot returneaza un java.util.ArrayList modificabil.\\n   - Daca apelezi list.add(\"x\"), operatia va reusi, ceea ce poate duce la mutatii accidentale nedorite.\\n\\n2. Stream.toList() (Java 16+ - JEP 395):\\n   - Metoda directa adaugata direct pe interfata Stream (fara a mai importa Collectors).\\n   - Returneaza o lista complet IMUTABILA (unmodifiable list).\\n   - Orice apel add() sau set() pe lista rezultata arunca imediat UnsupportedOperationException!\\n   - Este mai rapida si consuma mai putina memorie deoarece JVM-ul foloseste o structura interna compacta de dimensiune fixa bazata direct pe numarul de elemente din stream.",
-    codeSnippet: `// 1. Clasic (Java 8) - lista modificabila:
-List<String> list1 = stream.collect(Collectors.toList());
-list1.add("nou"); // Functioneaza!
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Sealed Classes si Sealed Interfaces (Java 17+)",
+    question: "Ce sunt Sealed Classes in Java, ce rol are clauza permits si ce modificatori pot avea subclasele?",
+    answer: "1. Ce sunt Sealed Classes:\\n   - Clase sau interfete care restrictioneaza strict ce alte clase sau interfete le pot mosteni sau implementa.\\n   - Ofera control total autorului clasei asupra ierarhiei de mostenire.\\n\\n2. Clauza permits:\\n   - Specifica explicit lista exhaustiva a subclaselor autorizate: public sealed class Shape permits Circle, Square {}.\\n\\n3. Modificatorii obligatorii pentru subclase:\\n   - Fiecare subclasa specificata in permits TREBUIE sa declare exact unul dintre acesti 3 modificatori:\\n     1. final: Nu mai poate fi mostenita deloc.\\n     2. sealed: Continua ierarhia controlata, declarand propriile sale permisiuni.\\n     3. non-sealed: Se deschide din nou la mostenire libera de catre oricine.",
+    codeSnippet: `public sealed interface PaymentMethod permits CardPayment, CashPayment {}
 
-// 2. Modern (Java 16+) - lista imutabila:
-List<String> list2 = stream.toList();
-// list2.add("nou"); // CRASH: UnsupportedOperationException!`,
-    interviewTrap: "Daca ai nevoie neaparat de o lista modificabila la care vrei sa mai adaugi elemente ulterior in cod, Stream.toList() nu este potrivita; trebuie sa folosesti collect(Collectors.toCollection(ArrayList::new)).",
-    keyTakeaway: "Stream.toList() din Java 16 este mai compacta, mai performanta si returneaza o lista strict imutabila."
+// Subclasa finala:
+public final class CardPayment implements PaymentMethod {}
+
+// Subclasa deschisa pentru alte extinderi:
+public non-sealed class CashPayment implements PaymentMethod {}
+
+// Ilegal:
+// public class CryptoPayment implements PaymentMethod {} // Eroare: nu este in permits!`,
+    interviewTrap: "Beneficiul urias apare in switch expressions: compilatorul stie toate subclasele posibile, eliminand necesitatea clauzei default!",
+    keyTakeaway: "Sealed classes definesc un set inchis si exhaustiv de subclase permise, fiecare fiind final, sealed sau non-sealed."
   },
   {
     id: "java-148",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "De ce nu poti reutiliza un Stream consumat?",
-    question: "Ce se intampla daca apelezi doua operatii terminale pe aceeasi instanta de Stream si cum este modelat ciclul de viata al unui Stream?",
-    answer: "1. Comportamentul la Reutilizare:\\n   - Un Stream in Java reprezinta o \"conducta de date de unica folosinta\" (one-time pipeline).\\n   - In momentul in care o operatie terminala (forEach, toList, count, reduce) a fost executata, stream-ul este marcat ca fiind CONSUMAT (closed/consumed).\\n   - Daca incerci sa apelezi o alta operatie intermediara sau terminala pe aceeasi instanta de stream, JVM va arunca intotdeauna: java.lang.IllegalStateException: stream has already been operated upon or closed!\\n\\n2. Ratiunea de Arhitectura:\\n   - Stream-urile nu stocheaza elemente in memorie; ele trag date din sursa (pull-based pipeline). Odata ce datele au traversat conducta, starea interna este invalidata pentru a permite colectarea resurselor de catre GC.\\n\\n3. Cum rezolvi daca ai nevoie de reutilizare:\\n   - Creeaza un Supplier<Stream<T>>: supplier.get() va instantia un stream proaspat de fiecare data cand este apelat.",
-    codeSnippet: `Stream<String> stream = Stream.of("A", "B", "C");
-stream.forEach(System.out::println); // Operatie terminala 1: SUCCESS
-// stream.forEach(System.out::println); // CRASH: IllegalStateException!
+    title: "Thread vs Proces in Sistemul de Operare",
+    question: "Care este diferenta fundamentala dintre un Proces si un Thread in contextul executiei programelor Java?",
+    answer: "1. Proces (Process):\\n   - O instanta a unui program in executie, gestionata de sistemul de operare.\\n   - Fiecare proces are propriul sau spatiu izolat de memorie (adrese virtuale, registri, descriptori).\\n   - Doua procese nu pot accesa direct memoria celuilalt (comunicarea necesita mecanisme IPC greoaie: sockets, pipe-uri, shared memory).\\n   - Cand pornesti o aplicatie Java (java Main), OS aloca un proces JVM separat.\\n\\n2. Thread (Fir de executie):\\n   - Este cea mai mica unitate de executie din cadrul unui proces (adesea numit \"lightweight process\").\\n   - Toate thread-urile din acelasi proces PARTAJEAZA aceeasi memorie Heap (obiectele create), zona de cod si variabilele statice.\\n   - Fiecare thread are propria sa Stiva (Stack) privata pentru variabile locale si apeluri de functii.\\n   - Comutarea de context (context switch) intre thread-uri este mult mai rapida decat intre procese.",
+    codeSnippet: `// Proces: Aplicatia JVM pornita in OS
+// Thread-uri in interiorul procesului:
+Thread t1 = new Thread(() -> System.out.println("Thread 1 pe acelasi Heap"));
+Thread t2 = new Thread(() -> System.out.println("Thread 2 pe acelasi Heap"));
 
-// Solutie prin Supplier:
-Supplier<Stream<String>> streamSupplier = () -> Stream.of("A", "B", "C");
-streamSupplier.get().forEach(System.out::println); // OK
-streamSupplier.get().filter(s -> !s.isEmpty()).count(); // OK (stream nou)`,
-    interviewTrap: "Nu stoca stream-uri in variabile membru de clasa sau campuri singleton; genereaza-le local la cerere si consuma-le imediat.",
-    keyTakeaway: "Un Stream poate fi consumat o singura data; apelurile multiple arunca IllegalStateException; foloseste Supplier pentru recreare."
+t1.start();
+t2.start();`,
+    interviewTrap: "Pentru ca thread-urile partajeaza aceeasi memorie Heap, accesul concurent nesincronizat la obiecte comune duce la Race Conditions.",
+    keyTakeaway: "Un proces are spatiu de memorie propriu si izolat; thread-urile ruleaza in acelasi proces si partajeaza memoria Heap."
   },
   {
     id: "java-149",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Tratarea Checked Exceptions in Expresii Lambda si Streams",
-    question: "De ce interfetele functionale standard (Function, Consumer) nu permit aruncarea de Checked Exceptions si cum se rezolva aceasta problema?",
-    answer: "1. Problema de Compilare:\\n   - Semnaturile metodelor din java.util.function (ex: R apply(T t)) NU declara nicio clauza throws Exception.\\n   - Daca in interiorul unui lambda apelezi o metoda care arunca o exceptie verificata (ex: IOException, SQLException, ClassNotFoundException), compilatorul refuza sa compileze codul: \"Unhandled exception type IOException\".\\n\\n2. Cele 3 Abordari de Rezolvare:\\n   - Abordarea 1 (Naiva): Prinderea cu try-catch in interiorul corpului lambda-ului si re-aruncarea sub forma de RuntimeException (ex: throw new UncheckedIOException(e)).\\n   - Abordarea 2 (Wrapper Functional): Crearea unei interfete functionale custom @FunctionalInterface ThrowingFunction<T, R, E extends Exception> si a unei functii utilitare unchecked() care converteste automat exceptia.\\n   - Abordarea 3 (Sneaky Throws - Lombok @SneakyThrows): Pacalirea compilatorului la nivel de bytecode pentru a arunca checked exceptions ca unchecked fara conversie de tip.",
-    codeSnippet: `// Wrapper utilitar elegant:
-@FunctionalInterface
-public interface ThrowingFunction<T, R> {
-    R apply(T t) throws Exception;
-
-    static <T, R> Function<T, R> unchecked(ThrowingFunction<T, R> f) {
-        return t -> {
-            try { return f.apply(t); }
-            catch (Exception e) { throw new RuntimeException(e); }
-        };
-    }
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Crearea unui Thread: extends Thread vs implements Runnable",
+    question: "Care sunt cele doua moduri clasice de a crea un Thread in Java si de ce este preferata implementarea Runnable?",
+    answer: "1. Cele doua moduri:\\n   - Varianta 1: Extinderea clasei Thread: class MyThread extends Thread { public void run() { ... } }\\n   - Varianta 2: Implementarea interfetei Runnable: class MyTask implements Runnable { public void run() { ... } } urmat de new Thread(myTask).start().\\n\\n2. De ce se prefera implements Runnable:\\n   - Java nu suporta mostenire multipla: daca extinzi clasa Thread, nu mai poti mosteni nicio alta clasa! Prin Runnable, clasa ta este libera sa extinda o alta clasa de business.\\n   - Separarea responsabilitatilor: Runnable reprezinta doar sarcina de lucru (Task-ul), in timp ce Thread este mecanismul de executie.\\n   - Reutilizare in Thread Pools: Obiectele Runnable pot fi trimise direct catre ExecutorService / ThreadPool-uri, in timp ce obiectele Thread nu sunt reutilizabile dupa ce s-au oprit.",
+    codeSnippet: `// 1. Varianta mostenire (mai putin flexibila):
+class WorkerThread extends Thread {
+    @Override
+    public void run() { System.out.println("Worker ruleaza"); }
 }
 
-// Utilizare curata in Stream:
-List<String> contents = filePaths.stream()
-    .map(ThrowingFunction.unchecked(Files::readString))
-    .toList();`,
-    interviewTrap: "Daca folosesti Sneaky Throws, apelantul nu va sti ca metoda poate arunca IOException si nu va avea un bloc catch pregatit, ceea ce poate cauza crash-uri neasteptate.",
-    keyTakeaway: "Interfetele functionale standard nu suporta checked exceptions; rezolva prin wrappere unchecked sau re-aruncare ca RuntimeException."
+// 2. Varianta recomandata (Runnable + Lambda):
+Runnable task = () -> System.out.println("Task executat");
+Thread thread = new Thread(task);
+thread.start();`,
+    interviewTrap: "Daca extinzi Thread, irosesti singura posibilitate de mostenire din Java si legi strans logica de business de ciclul de viata al firului.",
+    keyTakeaway: "Implementarea interfetei Runnable este recomandata pentru ca permite mostenirea altei clase si decupleaza task-ul de executia pe thread."
   },
   {
     id: "java-150",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Date & Time API (JSR-310): Instant vs LocalDateTime vs ZonedDateTime",
-    question: "Care sunt diferentele intre Instant, LocalDateTime si ZonedDateTime si de ce clasele vechi Date si Calendar sunt descurajate?",
-    answer: "Problemele vechiului java.util.Date:\\n- Era MUTABIL (un apel date.setTime() modifica obiectul partajat, provocand bug-uri de concurenta masive).\\n- Lunile incepeau de la 0 (0 = Ianuarie), generand erori frecvente.\\n- Nu avea concepte clare de TimeZone.\\n\\nArhitectura Moderna java.time (JSR-310, Java 8) - Toate clasele sunt STRICT IMUTABILE si THREAD-SAFE:\\n1. Instant (Timp Masina):\\n   - Reprezinta un punct precis pe linia universala a timpului UTC (secunde si nanosecunde de la Unix Epoch 1970-01-01T00:00:00Z).\\n   - Folosit pentru timestamp-uri in baze de date, evenimente Kafka si loguri de sistem.\\n2. LocalDateTime (Timp Uman fara Fus Orar):\\n   - Reprezinta data si ora din calendar (ex: 2026-10-02 14:30), dar NU STIE in ce tara sau fus orar se afla! \"14:30 in Bucuresti\" este un moment fizic complet diferit de \"14:30 in New York\".\\n   - Nu se foloseste pentru programari globale!\\n3. ZonedDateTime (Timp Uman Complet cu Fus Orar):\\n   - Include LocalDateTime + ZoneId (ex: Europe/Bucharest) + ZoneOffset (+03:00).\\n   - Trateaza automat trecerea la ora de vara/iarna (Daylight Saving Time).",
-    codeSnippet: `// 1. Timp UTC masina:
-Instant nowUtc = Instant.now();
+    title: "Diferenta dintre start() si run() in clasa Thread",
+    question: "Ce se intampla daca apelezi metoda run() direct in loc de start() pe un obiect Thread?",
+    answer: "Aceasta este o intrebare clasica de interviu pentru orice junior!\\n\\n1. Apelul thread.start():\\n   - Solicita sistemului de operare si JVM-ului crearea unui fir de executie NOU si separat.\\n   - Aloca o noua stiva (Call Stack) pentru noul thread.\\n   - Cand noul fir este planificat (scheduled), acesta va executa automat metoda run() pe propriul sau fir in paralel.\\n\\n2. Apelul thread.run() direct:\\n   - NU creeaza niciun thread nou!\\n   - Executa codul din metoda run() ca pe o simpla metoda Java obisnuita, pe firul CURENT (de regula firul main), in mod sincron si secvential.\\n   - Nicio paralelizare nu are loc.",
+    codeSnippet: `Thread t = new Thread(() -> {
+    System.out.println("Thread curent: " + Thread.currentThread().getName());
+});
 
-// 2. Data si ora curenta cu fus orar specific:
-ZonedDateTime tokyoTime = ZonedDateTime.now(ZoneId.of("Asia/Tokyo"));
+// GRESIT: Executa sincron pe firul 'main'!
+t.run(); // Output: Thread curent: main
 
-// 3. Conversie sigura intre fusuri orare:
-ZonedDateTime roTime = tokyoTime.withZoneSameInstant(ZoneId.of("Europe/Bucharest"));`,
-    interviewTrap: "Nu salva niciodata LocalDateTime in baze de date globale daca ai utilizatori pe mai multe continente; salveaza intotdeauna Instant sau timpi in UTC.",
-    keyTakeaway: "Instant este timpul universal UTC pentru masini; LocalDateTime nu are fus orar; ZonedDateTime contine reguli complete de fus si ora de vara."
+// CORECT: Creeaza un fir nou!
+t.start(); // Output: Thread curent: Thread-0`,
+    interviewTrap: "Daca apelezi start() de doua ori pe acelasi obiect Thread, se va arunca IllegalThreadStateException. Un thread terminat nu poate fi repornit.",
+    keyTakeaway: "start() creeaza un fir de executie nou si porneste metoda run() pe el; run() direct este doar un simplu apel sincron de metoda pe firul curent."
   },
   {
     id: "java-151",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Polimorfism la Compile-Time vs Polimorfism la Runtime",
-    question: "Care este diferenta dintre polimorfismul static (la compilare) si cel dinamic (la executie) in Java?",
-    answer: "1. Polimorfism la Compile-Time (Static Polymorphism / Early Binding):\\n   - Realizat prin Method Overloading (Supraincarcarea metodelor).\\n   - Metode cu acelasi nume in aceeasi clasa, dar cu parametri diferiti ca numar, tip sau ordine.\\n   - Compilatorul decide EXACT care metoda va fi apelata la compilare, bazandu-se pe tipul static al referintei (instructiunea bytecode invokestatic sau invokevirtual legata din timp).\\n\\n2. Polimorfism la Runtime (Dynamic Polymorphism / Late Binding):\\n   - Realizat prin Method Overriding (Suprascrierea metodelor).\\n   - O subclasa ofera o implementare specifica pentru o metoda definita in parinte, pastrand exact aceeasi semnatura.\\n   - Decizia despre ce metoda se executa este luata la RUNTIME de JVM pe baza tipului real al obiectului instantiat pe Heap, inspectand Virtual Method Table (VTable).",
-    codeSnippet: `// 1. Overloading (Compile-time):
-class Calculator {
-    int add(int a, int b) { return a + b; }
-    double add(double a, double b) { return a + b; }
-}
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Ciclul de viata al unui Thread in Java (Stari)",
+    question: "Care sunt cele 6 stari (states) ale unui fir de executie definite in Thread.State in Java?",
+    answer: "Java defineste 6 stari in enum-ul Thread.State (accesibile prin thread.getState()):\\n\\n1. NEW: Thread-ul a fost instantiat (new Thread()), dar start() nu a fost inca apelat.\\n2. RUNNABLE: Thread-ul se executa in JVM sau asteapta planificarea pe procesor (CPU scheduler).\\n3. BLOCKED: Thread-ul este blocat asteptand sa achizitioneze un monitor lock (la intrarea intr-un bloc synchronized).\\n4. WAITING: Asteapta la nesfarsit ca un alt thread sa execute o actiune specifica (fara timeout: apel de Object.wait(), Thread.join() sau LockSupport.park()).\\n5. TIMED_WAITING: Asteapta o perioada specificata de timp (cu timeout: Thread.sleep(ms), Object.wait(ms), Thread.join(ms)).\\n6. TERMINATED: Executia metodei run() s-a finalizat (normal sau prin exceptie nearuncata).",
+    codeSnippet: `Thread t = new Thread(() -> {
+    try {
+        Thread.sleep(1000); // Intra in TIMED_WAITING
+    } catch (InterruptedException e) {}
+});
 
-// 2. Overriding (Runtime):
-Animal a = new Dog(); // Tip static Animal, obiect real Dog
-a.sound(); // La runtime JVM apeleaza Dog.sound()!`,
-    interviewTrap: "Daca o metoda este privata, final sau statica, ea NU poate fi suprascrisa (overridden) la runtime, deoarece compilatorul aplica early binding (legare timpurie).",
-    keyTakeaway: "Overloading este rezolvat la compilare prin parametri; Overriding este rezolvat la executie pe baza obiectului real de pe Heap."
+System.out.println(t.getState()); // NEW
+t.start();
+System.out.println(t.getState()); // RUNNABLE sau TIMED_WAITING`,
+    interviewTrap: "Starea RUNNABLE include atat thread-urile care consuma CPU in acest moment, cat si pe cele gata de executie (Ready) care asteapta o felie de procesor de la SO.",
+    keyTakeaway: "Cele 6 stari sunt: NEW, RUNNABLE, BLOCKED (pe lock), WAITING (fara limita), TIMED_WAITING (cu timer) si TERMINATED."
   },
   {
     id: "java-152",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Covariant Return Types in Java",
-    question: "Ce sunt Covariant Return Types (introduse in Java 5) si cum elimina nevoia de cast-uri explicite la suprascrierea metodelor?",
-    answer: "Inainte de Java 5, cand o subclasa suprascria o metoda din parinte, trebuia sa returneze EXACT acelasi tip de date declarat in parinte.\\n\\nCe sunt Covariant Return Types (Tipuri de Retur Covariante):\\n- Permite unei metode suprascrise intr-o subclasa sa declare ca tip de retur un SUBTIP (o clasa derivata) al tipului returnat de metoda din superclasa.\\n- Respecta principiul Liskov Substitution Principle (LSP): daca un client asteapta un Animal, primirea unui Dog este 100% valida.\\n- Beneficiu practic urias: Elimina cast-urile manuale urate si periculoase la apelant.",
-    codeSnippet: `class Producer {
-    public Object produce() { return new Object(); }
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Thread.sleep() vs Object.wait()",
+    question: "Care este diferenta cruciala dintre Thread.sleep() si Object.wait() privind eliberarea lock-urilor?",
+    answer: "Aceasta diferenta este intrebata la 90% din interviurile tehnice Java!\\n\\n1. Thread.sleep(ms):\\n   - Este o metoda STATICA din clasa Thread.\\n   - NU ELIBEREAZA NICIUN LOCK! Daca thread-ul detine un lock (synchronized), il pastreaza pe toata durata somnului, blocand toate celelalte thread-uri care doresc acel lock.\\n   - Nu necesita bloc synchronized pentru a fi apelata.\\n\\n2. Object.wait():\\n   - Este o metoda de INSTANTA din clasa java.lang.Object.\\n   - ELIBEREAZA IMEDIAT lock-ul pe care il detine pe acel obiect, permitand altor thread-uri sa intre in sectiuni sincronizate pe acelasi obiect.\\n   - Poate fi apelata DOAR dintr-un context sincronizat (synchronized) pe acelasi obiect, altfel arunca IllegalMonitorStateException.",
+    codeSnippet: `Object lock = new Object();
+
+// 1. sleep pastreaza lock-ul:
+synchronized (lock) {
+    Thread.sleep(1000); // Nimeni altcineva nu poate accesa lock timp de 1 secunda!
 }
 
-class StringProducer extends Producer {
-    @Override
-    public String produce() { // Returneaza String (subtip al lui Object) - Covariant!
-        return "Hello World";
-    }
-}
-
-// La apelant:
-StringProducer p = new StringProducer();
-String result = p.produce(); // Zero cast manual (nu mai trebuie (String) p.produce())!`,
-    interviewTrap: "Covarianta se aplica DOAR tipului de retur al metodei, NU si parametrilor de intrare! Daca modifici tipul unui parametru intr-o subclasa, metoda devine un Overload, nu un Override.",
-    keyTakeaway: "Covariant Return Types permit subclasei sa returneze un tip mai specific decat parintele, eliminand cast-urile redundante."
+// 2. wait elibereaza lock-ul:
+synchronized (lock) {
+    lock.wait(); // Elibereaza lock-ul si asteapta notify() de la alt thread!
+}`,
+    interviewTrap: "Daca apelezi lock.wait() in afara unui bloc synchronized (lock), primesti imediat IllegalMonitorStateException la runtime!",
+    keyTakeaway: "sleep() pastreaza lock-ul dobandit; wait() elibereaza lock-ul si cere sa fie apelat dintr-un bloc synchronized."
   },
   {
     id: "java-153",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "De ce constructorul nu poate fi static, final sau abstract?",
-    question: "De ce un constructor nu poate fi marcat cu modificatorii static, final sau abstract in Java?",
-    answer: "Constructorul are un rol unic in limbaj: initializarea unei noi instante fizice de obiect pe Heap:\\n\\n1. De ce nu poate fi STATIC:\\n   - static inseamna ca membrul apartine clasei ca intreg si nu unei instante specifice.\\n   - Un constructor este apelat strict pentru a da nastere unei instante NOI si are acces la cuvantul cheie \"this\". Daca ar fi static, \"this\" nu ar avea sens.\\n\\n2. De ce nu poate fi FINAL:\\n   - final pe o metoda impiedica suprascrierea (overriding) ei in subclase.\\n   - Constructorii NU se mostenesc NICIODATA in Java (fiecare clasa isi defineste proprii constructori), deci conceptul de a preveni suprascrierea unui constructor este redundant si ilogic.\\n\\n3. De ce nu poate fi ABSTRACT:\\n   - abstract inseamna o metoda fara corp de implementare, destinata sa fie implementata in viitor de o subclasa.\\n   - Daca un constructor ar fi abstract, nu ar exista niciun cod pentru a initializa campurile obiectului curent!",
-    codeSnippet: `// ILEGALE - nu compileaza:
-// public static MyClass() {}   // ERROR: modifier static not allowed here
-// public final MyClass() {}    // ERROR: modifier final not allowed here
-// public abstract MyClass() {} // ERROR: modifier abstract not allowed here`,
-    interviewTrap: "Constructorul poate apela alt constructor prin this(...) sau super(...), dar acest apel trebuie sa fie strict pe prima linie executabila a constructorului.",
-    keyTakeaway: "Constructorul este dedicat initializarii unei instante noi pe Heap; nu are mostenire (non-final), nu e global (non-static) si cere corp (non-abstract)."
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "De ce wait(), notify() si notifyAll() sunt in Object?",
+    question: "De ce metodele wait(), notify() si notifyAll() sunt definite in java.lang.Object si nu in clasa Thread?",
+    answer: "1. Motivul de baza (Monitor Lock per Obiect):\\n   - In Java, fiecare obiect are asociat un Lock intern si o Coada de Asteptare (Wait Set), numite impreuna Monitor.\\n   - Mecanismul de sincronizare asteapta pe o RESURSA (obiectul pe care se face sincronizarea), nu pe firul de executie in sine.\\n   - Cand un thread apeleaza lock.wait(), el elibereaza monitorul ACELUI obiect si intra in wait set-ul acelui obiect.\\n\\n2. Daca erau in clasa Thread:\\n   - Ar fi fost confuz pe ce resursa asteapta thread-ul si cum comunica mai multe thread-uri printr-un obiect partajat.\\n\\n3. notify() vs notifyAll():\\n   - notify() trezeste un SINGUR thread arbitrar din wait set.\\n   - notifyAll() trezeste TOATE thread-urile din wait set (recomandat pentru a preveni deadlock si starvation).",
+    codeSnippet: `synchronized (sharedQueue) {
+    while (sharedQueue.isEmpty()) {
+        sharedQueue.wait(); // Asteapta pe resursa partajata!
+    }
+    String item = sharedQueue.poll();
+    sharedQueue.notifyAll(); // Notifica toate thread-urile care asteapta pe sharedQueue
+}`,
+    interviewTrap: "Apelul wait() trebuie pus intotdeauna intr-o bucla while (nu if!), pentru a preveni trezirile false (spurious wakeups).",
+    keyTakeaway: "wait si notify sunt in Object deoarece monitorul si lock-ul apartin fiecarui obiect Java individual, nu thread-ului."
   },
   {
     id: "java-154",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Initializator Static vs Initializator de Instanta",
-    question: "Cand se executa un bloc de initializare static (static { }) fata de un bloc de initializare de instanta ({ }) in Java?",
-    answer: "1. Static Initialization Block (static { ... }):\\n   - Se executa o SINGURA DATA in intregul ciclu de viata al aplicatiei, in momentul in care clasa este incarcata si initializata de ClassLoader in Metaspace.\\n   - Se executa inainte de crearea oricarei instante de obiect si inainte de apelarea oricarei metode statice.\\n   - Folosit pentru initializarea configuratiilor globale, tabelelor constante sau incarcarea bibliotecilor native (System.loadLibrary).\\n\\n2. Instance Initialization Block ({ ... }):\\n   - Se executa la FIECARE apel al operatorului new (la fiecare instantiere a unui obiect nou pe Heap).\\n   - Se executa DUPA apelul super() al constructorului parinte, dar INAINTE de corpul constructorului curent!\\n   - Folosit rar, util pentru partajarea logicii comune intre mai multi constructori supraincarcati.",
-    codeSnippet: `public class Example {
-    static {
-        System.out.println("1. Static Block (O singura data la Class Loading)");
+    title: "Cuvantul cheie synchronized in Java",
+    question: "Pe ce lock se sincronizeaza o metoda de instanta, o metoda statica si un bloc synchronized(lock)?",
+    answer: "Cuvantul cheie synchronized asigura excludere mutuala (un singur thread poate executa codul la un moment dat) si vizibilitate in memorie:\\n\\n1. Metoda de instanta sincronizata:\\n   - public synchronized void update() { ... }\\n   - Lock-ul dobandit este instanta curenta a obiectului: this.\\n\\n2. Metoda statica sincronizata:\\n   - public static synchronized void init() { ... }\\n   - Lock-ul dobandit este obiectul Class al clasei din Metaspace: MyClass.class.\\n   - Un thread pe o metoda statica NU blocheaza un alt thread pe o metoda de instanta non-statica a aceluiasi obiect!\\n\\n3. Bloc de cod sincronizat:\\n   - synchronized (lockObject) { ... }\\n   - Lock-ul este obiectul explicit specificat intre paranteze (recomandat: private final Object lock = new Object()).",
+    codeSnippet: `public class Counter {
+    private int count = 0;
+    private final Object customLock = new Object();
+
+    // Sincronizat pe 'this':
+    public synchronized void increment() { count++; }
+
+    // Sincronizat pe un lock dedicat (recomandat, ascunde lock-ul):
+    public void add() {
+        synchronized (customLock) {
+            count++;
+        }
     }
 
-    {
-        System.out.println("2. Instance Block (La fiecare new, inainte de constructor)");
-    }
-
-    public Example() {
-        System.out.println("3. Constructor");
-    }
+    // Sincronizat pe Counter.class:
+    public static synchronized void globalReset() {}
 }`,
-    interviewTrap: "Daca un bloc static arunca o exceptie neverificata la runtime (RuntimeException), JVM va arunca ExceptionInInitializerError si clasa devine inutilizabila (orice apel viitor arunca NoClassDefFoundError).",
-    keyTakeaway: "Blocul static ruleaza o singura data la incarcarea clasei; blocul de instanta ruleaza la fiecare nou obiect inaintea constructorului."
+    interviewTrap: "Daca sincronizezi o metoda pe this si cineva din exterior sincronizeaza din greseala pe instanta ta, poti provoca un deadlock accidental. Foloseste lock-uri private interne: private final Object lock = new Object().",
+    keyTakeaway: "Metodele de instanta sincronizeaza pe this; metodele statice pe Class.class; blocurile synchronized pe obiectul specificat."
   },
   {
     id: "java-155",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Cuvantul cheie transient in Java Serialization",
-    question: "Ce rol are cuvantul cheie transient in Java si ce valoare primesc campurile transient dupa deserializare?",
-    answer: "1. Ce face cuvantul cheie transient:\\n   - Marcheaza un camp dintr-o clasa Serializable ca fiind EXCLUS de la procesul de serializare automata.\\n   - La salvarea obiectului intr-un flux de octeti (ObjectOutputStream) pe disc sau peste retea, campul marcat cu transient este complet ignorat.\\n\\n2. Cand se foloseste:\\n   - Campuri sensibile de securitate (parole in text clar, tokeni JWT, chei de criptare).\\n   - Resurse legate de starea procesului local care nu au sens dupa restaurare (pointeri nativi, socket-uri de retea, fisiere deschise, Thread-uri).\\n   - Campuri derivate sau de cache care pot fi recalculate usor la cerere.\\n\\n3. Ce valoare are dupa Deserializare:\\n   - Campul primeste VALOAREA IMPLICITA (default) a tipului sau de date: null pentru obiecte, 0 pentru intregi, false pentru boolean!",
-    codeSnippet: `public class UserSession implements Serializable {
-    private String username;
-    private transient String passwordHash; // NU va fi salvat in stream!
-    private transient Connection dbConn;    // Conexiunea locala nu se poate serializa
+    title: "Ce este o Conditie de Cursa (Race Condition)?",
+    question: "Ce este o conditie de cursa (Race Condition) si de ce operatia count++ nu este thread-safe?",
+    answer: "1. Ce este o Conditie de Cursa:\\n   - O anomalie software care apare atunci cand doua sau mai multe thread-uri acceseaza simultan o resursa mutabila partajata, iar rezultatul final depinde de ordinea si sincronizarea imprevizibila a pasilor de executie pe CPU.\\n\\n2. De ce operatia count++ NU este atomica:\\n   - La nivel de bytecode Java si procesor, count++ este compusa din 3 instructiuni distincte:\\n     1. READ: Citeste valoarea curenta a lui count din memorie in registrul CPU.\\n     2. MODIFY: Incrementeaza valoarea in registru (val + 1).\\n     3. WRITE: Scrie noua valoare inapoi in memorie.\\n   - Daca Thread 1 citeste valoarea 5, iar Thread 2 citeste tot 5 inainte ca Thread 1 sa scrie, ambele vor scrie inapoi 6! In loc de 7, valoarea ramane 6 (actualizare pierduta - lost update).",
+    codeSnippet: `public class UnsafeCounter {
+    private int count = 0;
+
+    // Nesigur! Poate pierde incrementari cand este apelat concurent:
+    public void increment() {
+        count++; // 3 operatii: read, modify, write!
+    }
+
+    // Sigur 1:
+    public synchronized void safeIncrement() { count++; }
+
+    // Sigur 2:
+    // private AtomicInteger count = new AtomicInteger(0);
+    // count.incrementAndGet();
 }`,
-    interviewTrap: "Campurile statice (static) NU sunt serializate nici ele, dar nu din cauza lui transient, ci pentru ca apartin clasei si nu starii obiectului individual.",
-    keyTakeaway: "transient exclude campurile sensibile de la serializare; la deserializare acestea revin la valoarea implicita (null/0/false)."
+    interviewTrap: "Chiar daca declari volatile int count;, count++ ramane in continuare nesigur la concurenta, deoarece volatile asigura doar vizibilitate, nu si atomicitate!",
+    keyTakeaway: "Race condition apare la modificari concurente nesincronizate; count++ consta din 3 pasi neatomici (read-modify-write) si poate pierde date."
   },
   {
     id: "java-156",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "Externalizable vs Serializable in Java",
-    question: "Care este diferenta dintre interfata java.io.Serializable si java.io.Externalizable si ce cerinta stricta de constructor are Externalizable?",
-    answer: "1. Serializable (Marker Interface):\\n   - Este o interfata vida (fara metode).\\n   - Foloseste mecanismul standard al JVM-ului bazat pe Reflection pentru a inspecta si serializa automat toate campurile non-transient.\\n   - Usor de folosit, dar lenta si consuma mai mult spatiu (include multe metadate despre clase si campuri).\\n\\n2. Externalizable (Control Manual Total):\\n   - Extinde Serializable si contine 2 metode obligatorii:\\n     - void writeExternal(ObjectOutput out) throws IOException;\\n     - void readExternal(ObjectInput in) throws IOException, ClassNotFoundException;\\n   - Programatorul preia controlul complet: scrie si citeste manual exact campurile dorite, in ordinea dorita.\\n   - Este de pana la 3-5 ori mai rapida si produce fluxuri binare mult mai compacte.\\n\\n3. Cerinta Stricta de Constructor:\\n   - O clasa Externalizable TREBUIE sa aiba un Constructor PUBLIC FARA PARAMETRI (public no-arg constructor)!\\n   - La deserializare, JVM instantiaza obiectul apeland acest constructor public no-arg si abia apoi apeleaza readExternal(). Fara el, arunca InvalidClassException!",
-    codeSnippet: `public class Account implements Externalizable {
-    private String id;
-    private int balance;
+    title: "Ce este Deadlock (Interblocare) si cum apare?",
+    question: "Ce este un Deadlock in Java si care este un exemplu clasic cu doua thread-uri si doua lock-uri?",
+    answer: "1. Ce este un Deadlock:\\n   - O situatie de blocare definitiva in care doua sau mai multe thread-uri sunt suspendate permanent, fiecare asteptand o resursa/lock detinuta de un alt thread din acelasi grup, creand o dependenta circulara.\\n\\n2. Scenariul clasic cu 2 lock-uri (A si B):\\n   - Thread 1 dobandeste Lock A si doreste sa obtina Lock B.\\n   - In acelasi timp, Thread 2 dobandeste Lock B si doreste sa obtina Lock A.\\n   - Thread 1 nu poate inainta pana nu primeste Lock B de la Thread 2.\\n   - Thread 2 nu poate inainta pana nu primeste Lock A de la Thread 1.\\n   - Ambele raman blocate pentru totdeauna!",
+    codeSnippet: `Object lockA = new Object();
+Object lockB = new Object();
 
-    public Account() {} // OBLIGATORIU public no-arg constructor!
-
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeUTF(id);
-        out.writeInt(balance);
+// Thread 1:
+new Thread(() -> {
+    synchronized (lockA) {
+        try { Thread.sleep(50); } catch (Exception e) {}
+        synchronized (lockB) { /* Deadlock! */ }
     }
+}).start();
 
-    @Override
-    public void readExternal(ObjectInput in) throws IOException {
-        this.id = in.readUTF();
-        this.balance = in.readInt();
+// Thread 2:
+new Thread(() -> {
+    synchronized (lockB) {
+        try { Thread.sleep(50); } catch (Exception e) {}
+        synchronized (lockA) { /* Deadlock! */ }
     }
-}`,
-    interviewTrap: "Daca constructorul fara parametri este protected sau package-private, codul va compila fara probleme, dar va crapa catastrofal la runtime la prima deserializare cu InvalidClassException: no valid constructor.",
-    keyTakeaway: "Externalizable ofera control manual prin writeExternal/readExternal si cere obligatoriu un constructor public fara parametri."
+}).start();`,
+    interviewTrap: "Deadlock-ul nu arunca nicio exceptie! Aplicatia pur si simplu ingheata (sau endpoint-ul ramane agatat la nesfarsit) fara mesaje de eroare in loguri.",
+    keyTakeaway: "Deadlock-ul apare cand thread-urile achizitioneaza multiple lock-uri in ordini diferite, creand o dependenta ciclica permanenta."
   },
   {
     id: "java-157",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Vulnerabilitati de Securitate prin Java Deserialization (RCE)",
-    question: "De ce Java Deserialization este considerata una dintre cele mai periculoase vulnerabilitati si cum poate duce la Remote Code Execution (RCE)?",
-    answer: "1. Cum functioneaza un Atac de Deserializare:\\n   - Metoda ObjectInputStream.readObject() citeste un flux binar primit dintr-o sursa nesigura (peste retea, dintr-un cookie sau dintr-un parametru HTTP).\\n   - In timpul deserializarii, JVM instantiaza automat obiecte si incepe sa apeleze metode speciale precum readObject(), readResolve(), sau metode de apelare a hash-ului (hashCode(), equals()) daca obiectul era cheie intr-un HashMap.\\n\\n2. Ce sunt Gadget Chains (Lanturi de Gadget-uri):\\n   - Un atacator construieste un payload format din clase legitime aflate deja pe classpath-ul aplicatiei (ex: biblioteci populare precum Apache Commons Collections, Spring, Groovy).\\n   - Prin legarea inteligenta a apelurilor intre aceste clase (Gadget Chain), executia automata a lui readObject() declanseaza in cascada un apel catre Runtime.getRuntime().exec() sau invocari dinamice de cod (Remote Code Execution - RCE)!\\n\\n3. Aparare in Productie:\\n   - Folosirea filtrelor de deserializare (Serialization Filters - JEP 290): ObjectInputFilter pentru a aproba strict o lista alba de clase permise.\\n   - Evitarea serializarii native Java; folosirea de formate textuale structurate (JSON, Protocol Buffers).",
-    codeSnippet: `// Configurare filtru lista alba (Whitelist) cu ObjectInputFilter (Java 9+):
-ObjectInputFilter filter = ObjectInputFilter.Config.createFilter(
-    "com.ats.model.*;java.base/*;!*" // Permite doar pachetele proprii si java.base, refuza restul!
-);
-objectInputStream.setObjectInputFilter(filter);`,
-    interviewTrap: "Joshua Bloch a afirmat in Effective Java: \"Cea mai buna cale de a te apara impotriva vulnerabilitatilor de serializare este sa nu deserializezi niciodata date nesigure\".",
-    keyTakeaway: "Deserializarea nativa de date nesigure permite atacuri RCE prin Gadget Chains; protejeaza intotdeauna cu ObjectInputFilter sau JSON."
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Detectarea si Prevenirea unui Deadlock in Java",
+    question: "Cum previi aparitia unui Deadlock si cum il poti detecta intr-o aplicatie in productie?",
+    answer: "1. Cum se PREVINE un Deadlock:\\n   - Ordonarea globala a Lock-urilor (Lock Ordering): Regula fundamentala! Toate thread-urile trebuie sa achizitioneze lock-urile in EXACT aceeasi ordine prestabilita (ex: intotdeauna lockA inainte de lockB, sau ordonare dupa ID numeric unic).\\n   - Folosirea ReentrantLock cu timeout: lock.tryLock(timeout, unit) in loc de bloc synchronized infinit. Daca nu poate obtine lock-ul in timp util, elibereaza tot si reincearca.\\n   - Evitarea imbricarii de lock-uri cand nu este strict necesar.\\n\\n2. Cum se DETECTEAZA in Productie:\\n   - Thread Dump: generat prin comanda jcmd <PID> Thread.print sau jstack <PID>.\\n   - Masina virtuala Java cauta automat cicluri si afiseaza la sfarsitul dump-ului: \"Found one Java-level deadlock: ...\".\\n   - JConsole / VisualVM: instrumente grafice cu tab dedicat de \"Detect Deadlock\".",
+    codeSnippet: `// Solutia 1: Ordonare consistenta a lock-urilor:
+void safeTransfer(Account from, Account to, double amount) {
+    Account first = from.getId() < to.getId() ? from : to;
+    Account second = from.getId() < to.getId() ? to : from;
+
+    synchronized (first) {
+        synchronized (second) {
+            from.withdraw(amount);
+            to.deposit(amount);
+        }
+    }
+}`,
+    interviewTrap: "Tranzactiile bancare clasice transfer(acc1, acc2) sunt cel mai des intalnit exemplu de deadlock cand utilizatorul A trimite bani lui B in acelasi timp in care B trimite lui A!",
+    keyTakeaway: "Prevenirea deadlock-ului se bazeaza pe ordinea stricta de achizitie a lock-urilor si tryLock cu timeout; detectia se face prin Thread Dump (jstack)."
   },
   {
     id: "java-158",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "De ce Joshua Bloch recomanda Copy Constructor in loc de clone()?",
-    question: "Care sunt defectele structurale ale interfetei Cloneable si de ce este Copy Constructor-ul sau o Factory Method alternativa superioara?",
-    answer: "Mecanismul java.lang.Cloneable si Object.clone() este considerat pe scara larga un accident de design in Java:\\n\\n1. Defectele Metodei clone():\\n   - Cloneable este o interfata marker, dar metoda clone() este declarata PROTECTED in Object (nu poti apela obj.clone() direct fara sa suprascrii metoda si sa o faci publica)!\\n   - Nu apeleaza niciun constructor! Creeaza obiectul prin copiere oarba de memorie la nivel de JVM, ocolind validarile din constructori si campurile final.\\n   - clone() realizeaza doar Shallow Copy; campurile mutabile referite sunt partajate periculos intre ambele instante.\\n   - Arunca CloneNotSupportedException daca ai uitat sa implementezi Cloneable.\\n\\n2. Alternativa Recomandata: Copy Constructor sau Static Factory Method\\n   - Nu arunca exceptii checked.\\n   - Este explicit, flexibil si apeleaza constructorul normal.\\n   - Suporta polimorfism de interfata (Conversion Constructor): poti transmite o interfata ca parametru (ex: new HashSet<>(otherCollection)).",
-    codeSnippet: `public class Candidate {
-    private String name;
-    private List<String> skills;
+    title: "Cuvantul cheie volatile in Java",
+    question: "Ce garantii ofera cuvantul cheie volatile si ce inseamna \"vizibilitate in memorie\"?",
+    answer: "1. Problema memoriei cache a procesoarelor (CPU Cache):\\n   - Fiecare nucleu de CPU are propriul cache L1/L2 ultra-rapid. Cand un thread citeste o variabila, valoarea poate fi stocata in cache-ul nucleului sau.\\n   - Daca un thread pe CPU 1 modifica valoarea, CPU 2 s-ar putea sa continue sa citeasca valoarea veche din cache-ul sau propriu zile intregi (lipsa de vizibilitate)!\\n\\n2. Garantiile oferite de volatile:\\n   - Vizibilitate imediata: Orice scriere intr-o variabila volatile este scrisa imediat in memoria principala (RAM), iar orice citire este citita direct din RAM, invalidand cache-urile CPU.\\n   - Prevenirea reordonarii (Happens-Before): Compilatorul si procesorul nu au voie sa reordoneze instructiunile de citire/scriere in jurul variabilei volatile.",
+    codeSnippet: `public class WorkerTask implements Runnable {
+    // Fara volatile, thread-ul worker ar putea rula la infinit
+    // chiar daca main seteaza running = false!
+    private volatile boolean running = true;
 
-    // Copy Constructor recomandat (Deep Copy):
-    public Candidate(Candidate other) {
-        this.name = other.name;
-        this.skills = new ArrayList<>(other.skills); // Copie defensiva a colectiei!
-    }
+    public void stop() { running = false; }
 
-    // Sau Static Factory Method:
-    public static Candidate newInstance(Candidate other) {
-        return new Candidate(other);
+    @Override
+    public void run() {
+        while (running) {
+            // Executa munca...
+        }
+        System.out.println("Oprit curat!");
     }
 }`,
-    interviewTrap: "Daca suprascrii clone() pe o clasa care contine campuri declarate final, nu le poti modifica in clone() pentru a face Deep Copy, deoarece campurile final pot fi atribuite exclusiv in constructor!",
-    keyTakeaway: "clone() este un mecanism defectuos fara constructori; foloseste intotdeauna Copy Constructor pentru clonare sigura si lizibila."
+    interviewTrap: "Daca uiti volatile pe un flag boolean partajat, bucla while(running) poate fi optimizata de compilatorul JIT in while(true), cauzand bucla infinita!",
+    keyTakeaway: "volatile asigura ca toate thread-urile vad instantaneu cea mai recenta valoare a unei variabile in memoria RAM."
   },
   {
     id: "java-159",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Nivelurile de Accesibilitate in Java: private, default, protected, public",
-    question: "Care este matricea exacta de vizibilitate pentru cei 4 modificatori de acces (private, package-private, protected, public) in Java?",
-    answer: "Matricea de vizibilitate controleaza incapsularea in limbajul Java:\\n\\n1. private:\\n   - Vizibil DOAR in interiorul aceleiasi clase.\\n\\n2. Default (Package-Private - fara modificator):\\n   - Vizibil in aceeasi clasa SI in toate clasele din ACELASI PACHET.\\n   - NU este vizibil in afara pachetului, chiar daca o clasa este subclasa!\\n\\n3. protected:\\n   - Vizibil in aceeasi clasa, in toate clasele din ACELASI PACHET,\\n   - SI in toate SUBCLASELE (indiferent de pachetul in care se afla subclasa)!\\n   - Atentie: o subclasa din alt pachet poate accesa membrul protected doar prin intermediul mostenirii (prin \"this\" sau \"super\"), nu pe o instanta a parintelui creata din exterior.\\n\\n4. public:\\n   - Vizibil de pretutindeni (din orice pachet si orice modul care are acces).",
-    codeSnippet: `// Tabel Sintetic:
-// Modificator    | Aceeasi Clasa | Acelasi Pachet | Subclasa Alt Pachet | Toata Lumea
-// private        |     DA        |       NU       |          NU         |     NU
-// default        |     DA        |       DA       |          NU         |     NU
-// protected      |     DA        |       DA       |          DA         |     NU
-// public         |     DA        |       DA       |          DA         |     DA`,
-    interviewTrap: "Daca o clasa din pachetul B mosteneste o clasa din pachetul A cu un camp protected x, ea poate accesa this.x, dar NU poate accesa parentInstance.x creat cu new Parent().",
-    keyTakeaway: "protected ofera acces in acelasi pachet plus tuturor subclaselor derivate prin mostenire."
+    title: "De ce volatile NU garanteaza atomicitatea?",
+    question: "De ce declararea unei variabile ca volatile int count nu face instructiunea count++ sigura pentru concurenta?",
+    answer: "1. Diferenta dintre Vizibilitate si Atomicitate:\\n   - Vizibilitate (ce ofera volatile): Garanteaza doar ca valoarea citita este cea mai recenta din RAM.\\n   - Atomicitate (ce NU ofera volatile): Garanteaza ca un grup de operatii se executa ca un intreg indivizibil, fara intrerupere de la alte thread-uri.\\n\\n2. Ce se intampla la volatile int count; count++:\\n   - count++ ramane tot un proces in 3 pasi separati: 1. Read din RAM, 2. Add 1, 3. Write in RAM.\\n   - volatile garanteaza doar ca pasul 1 citeste valoarea curenta si pasul 3 scrie direct in RAM.\\n   - Insa intre pasul 1 si pasul 3, un alt thread poate citi, incrementa si scrie propria valoare! Scrierile se vor suprascrie reciproc.\\n\\n3. Concluzie:\\n   - volatile este adecvat DOAR cand scrierea nu depinde de valoarea citita anterior (ex: simple flag-uri booleene running = true/false).",
+    codeSnippet: `// GRESIT: count++ pierde update-uri chiar si cu volatile!
+private volatile int count = 0;
+public void inc() { count++; } // Nesigur!
+
+// CORECT: Foloseste AtomicInteger pentru atomicitate fara lock-uri
+private AtomicInteger safeCount = new AtomicInteger(0);
+public void safeInc() { safeCount.incrementAndGet(); }`,
+    interviewTrap: "La interviu se testeaza daca candidatul confunda \"vizibilitatea\" cu \"thread-safety-ul complet\". Subliniaza ca volatile nu ofera atomicitate operatiilor compuse.",
+    keyTakeaway: "volatile garanteaza vizibilitatea valorii, dar NU ofera atomicitate pentru operatii compuse de tip read-modify-write precum count++."
   },
   {
     id: "java-160",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "Metode Default in Interfete si Rezolvarea Diamond Problem",
-    question: "De ce au fost introduse metodele default in Java 8 si cum se rezolva coliziunea daca o clasa implementeaza doua interfete cu aceeasi metoda default?",
-    answer: "1. De ce au fost create metodele Default (Defender Methods):\\n   - Pentru Backward Compatibility (compatibilitate retroactiva): Permite adaugarea de metode noi in interfete existente (cum a fost adaugata metoda stream() sau forEach() pe interfata Collection din 1998) fara a strica milioanele de clase existente din lume care implementau interfata respectiva!\\n\\n2. Coliziunea Diamond Problem (Ambiguitatea Mostenirii Multiple):\\n   - Daca o clasa implementeaza InterfaceA si InterfaceB, si ambele contin aceeasi semnatura de metoda default (ex: default void log()):\\n   - Compilatorul Java refuza compilarea cu eroarea: \"class inherits unrelated defaults for log() from types InterfaceA and InterfaceB\".\\n\\n3. Cum se Rezolva Coliziunea:\\n   - Clasa este OBLIGATA sa suprascrie (override) metoda conflictuala si sa decida implementarea:\\n     - Fie scrie propria logica de la zero;\\n     - Fie deleaga explicit catre una dintre interfete folosind sintaxa: InterfaceA.super.log();.",
-    codeSnippet: `interface InterfaceA {
-    default void log() { System.out.println("Log A"); }
-}
-interface InterfaceB {
-    default void log() { System.out.println("Log B"); }
-}
+    title: "AtomicInteger si Principiul CAS (Compare-And-Swap)",
+    question: "Cum realizeaza clasele atomice (AtomicInteger, AtomicBoolean) siguranta thread-urilor fara a folosi synchronized?",
+    answer: "1. Clasele Atomice (java.util.concurrent.atomic):\\n   - AtomicInteger, AtomicLong, AtomicBoolean, AtomicReference.\\n   - Permit operatii thread-safe, atomice si extrem de performante fara a bloca thread-urile (lock-free programming).\\n\\n2. Principiul CAS (Compare-And-Swap):\\n   - Este o instructiune atomica sustinuta direct de hardware-ul procesoarelor moderne (la nivel de CPU, ex: instructiunea CMPXCHG pe x86).\\n   - Cum functioneaza:\\n     1. Citeste valoarea curenta (expectedValue).\\n     2. Calculeaza noua valoare (newValue).\\n     3. Trimite procesorului comanda: \"Daca valoarea din memorie este in continuare egala cu expectedValue, schimb-o cu newValue; daca s-a schimbat intre timp, nu face nimic si intoarce false\".\\n     4. Daca a esuat din cauza unui alt thread, se reincearca intr-o bucla rapida pana reuseste.\\n   - Nu suspenda thread-ul in starea BLOCKED, eliminand costul scump de context switch al sistemului de operare.",
+    codeSnippet: `AtomicInteger counter = new AtomicInteger(0);
 
-class Service implements InterfaceA, InterfaceB {
-    @Override
-    public void log() {
-        // Rezolvare explicita a conflictului:
-        InterfaceA.super.log(); // Alege implementarea din A
-    }
-}`,
-    interviewTrap: "Daca o superclasa parinte contine o metoda concreta cu aceeasi semnatura ca o metoda default dintr-o interfata, \"Clasa bate intotdeauna Interfata\" (Class Wins Rule) fara niciun conflict!",
-    keyTakeaway: "Metodele default asigura evolutia interfetelor; conflictele intre doua interfete se rezolva obligatoriu prin suprascriere cu Interface.super.method()."
+// Operatii atomice directe:
+int val1 = counter.incrementAndGet(); // ++counter atomic
+int val2 = counter.addAndGet(5);       // counter += 5 atomic
+
+// CAS explicit manual:
+boolean updated = counter.compareAndSet(6, 10);
+System.out.println("S-a facut update: " + updated); // true (daca era 6, devine 10)`,
+    interviewTrap: "Clasele atomice sunt mult mai rapide decat synchronized cand competitia este redusa sau medie, dar sub competitie extrema pot cauza incarcare CPU prin rotirea buclei CAS.",
+    keyTakeaway: "Clasele atomice folosesc instructiunea hardware CAS (Compare-And-Swap) pentru actualizari lock-free fara blocarea thread-urilor."
   },
   {
     id: "java-161",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Clasa Anonima vs Expresie Lambda: Diferente la nivel de this",
-    question: "Care este diferenta dintre cuvantul cheie this intr-o clasa anonima interna si intr-o expresie Lambda?",
-    answer: "Diferenta esentiala tine de crearea unui nou domeniu de vizibilitate (Scope):\\n\\n1. In Clasa Anonima (Anonymous Inner Class):\\n   - Clasa anonima creeaza o CLASA COMPLETA separata.\\n   - Cuvantul cheie \"this\" din interiorul clasei anonime face referire la INSTANTA CLASEI ANONIME INSESI, nu la clasa exterioara!\\n   - Pentru a accesa instanta exterioara, trebuie sa scrii: OuterClass.this.\\n\\n2. In Expresie Lambda (Lexical Scoping):\\n   - O expresie Lambda NU defineste un domeniu nou de vizibilitate pentru \"this\".\\n   - Domeniul este strict LEXICAL: cuvantul cheie \"this\" din interiorul unui lambda face referire EXACT la instanta clasei exterioare in care este scris lambda-ul!\\n   - Nu poti \"umbra\" (shadow) variabile din clasa exterioara declarand parametri cu acelasi nume in lambda.",
-    codeSnippet: `public class ScopeDemo {
-    public void test() {
-        // 1. Clasa Anonima:
-        Runnable r1 = new Runnable() {
-            public void run() {
-                System.out.println(this); // Afiseaza ScopeDemo$1 (clasa anonima)
-            }
-        };
+    title: "Ce este un Thread Pool si de ce este esential?",
+    question: "De ce este considerata o practica proasta crearea manuala de noi instante Thread (new Thread().start()) in aplicatii web?",
+    answer: "1. Costul ridicat al crearii unui Thread in OS:\\n   - Un fir Java clasic corespunde unui fir nativ al sistemului de operare (1:1 mapping).\\n   - Crearea unui thread presupune: apeluri de sistem catre kernelul OS, alocarea a 1MB de memorie fixa pe stiva (Stack) per thread, initializare de registri.\\n   - Crearea si distrugerea continua de thread-uri consuma cantitati uriase de timp CPU si memorie.\\n\\n2. Risc de OutOfMemoryError:\\n   - Daca un server web primeste 10.000 cereri concurente si creeaza cate un thread manual pentru fiecare, serverul va consuma 10GB doar pe stive si va crapa rapid cu OutOfMemoryError: unable to create new native thread.\\n\\n3. Ce ofera un Thread Pool:\\n   - Refolosirea thread-urilor: Un numar controlat de thread-uri sunt create la inceput si mentinute in viata pentru a procesa o coada de task-uri.\\n   - Controlul resurselor: Limiteaza numarul maxim de sarcini simultane, protejand serverul de prabusire.",
+    codeSnippet: `// GRESIT: Creare necontrolata de thread-uri
+for (int i = 0; i < 10_000; i++) {
+    new Thread(() -> doWork()).start(); // CRASH garantat in productie!
+}
 
-        // 2. Lambda:
-        Runnable r2 = () -> {
-            System.out.println(this); // Afiseaza ScopeDemo (instanta exterioara!)
-        };
-    }
-}`,
-    interviewTrap: "Daca ai nevoie sa apelezi o metoda proprie a unei clase abstracte care implementeaza o interfata, Lambda nu poate fi folosit; ai nevoie de o clasa anonima.",
-    keyTakeaway: "this intr-o clasa anonima se refera la instanta anonima; this intr-un lambda se refera la instanta clasei exterioare (lexical scope)."
+// CORECT: Folosirea unui Thread Pool limitat
+ExecutorService pool = Executors.newFixedThreadPool(10);
+for (int i = 0; i < 10_000; i++) {
+    pool.submit(() -> doWork()); // Se executa controlat pe 10 thread-uri!
+}
+pool.shutdown();`,
+    interviewTrap: "Spunand ca un Thread Pool doar \"porneste mai multe thread-uri\" este incomplet. Subliniaza refolosirea thread-urilor existente si limitarea consumului de memorie/CPU.",
+    keyTakeaway: "Thread Pool refoloseste un numar controlat de thread-uri active, eliminand costul scump de creare si prevenind OutOfMemoryError."
   },
   {
     id: "java-162",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Type Inference cu var in Java 10: Unde este permis si unde este interzis?",
-    question: "Unde poate fi folosit cuvantul cheie var (Local-Variable Type Inference) si unde este strict interzis in Java?",
-    answer: "Introdus in Java 10 (JEP 286) pentru a reduce redundanta tipurilor lungi fara a compromite Static Typing-ul (tipul este inferat la compilare, nu la runtime ca in JS/Python):\\n\\nUnde ESTE Permis var:\\n1. Variabile locale declarate si initializate in interiorul metodelor: var list = new ArrayList<String>();\\n2. Variabile de control in bucle for-each: for (var item : items)\\n3. Resurse in blocuri try-with-resources: try (var stream = Files.newInputStream(path))\\n4. Parametri de expresii Lambda in Java 11 (pentru a aplica adnotari): (var a, @Nullable var b) -> a + b\\n\\nUnde este STRICT INTERZIS var:\\n- Campuri membru de clasa (instanta sau statice).\\n- Parametri de metoda sau tipuri de retur din metode.\\n- Variabile locale fara initializare imediata (ex: var x; // EROARE).\\n- Initializate cu null (ex: var x = null; // EROARE).\\n- Cu expresii lambda fara cast (ex: var f = x -> x + 1; // EROARE).",
-    codeSnippet: `// Permis:
-var users = new HashMap<String, List<Order>>(); // Tip inferat: HashMap<String, List<Order>>
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "ExecutorService si Fabrica Executors",
+    question: "Cum cream un ExecutorService si care este diferenta dintre newFixedThreadPool si newCachedThreadPool?",
+    answer: "1. Ce este ExecutorService:\\n   - Interfata standard din java.util.concurrent care gestioneaza un pool de thread-uri si executia asincrona a sarcinilor (Runnable / Callable).\\n\\n2. newFixedThreadPool(nThreads):\\n   - Creeaza un pool cu un numar FIX de thread-uri (ex: 10).\\n   - Daca toate cele 10 sunt ocupate, noile sarcini sunt stocate intr-o coada nelimitata (LinkedBlockingQueue).\\n   - Ideal pentru servere de productie cu incarcare predictibila.\\n\\n3. newCachedThreadPool():\\n   - Creeaza thread-uri noi la nevoie si refoloseste thread-urile eliberate in ultimele 60 de secunde.\\n   - Nu are limita superioara de thread-uri!\\n   - Riscant in productie: daca vine o avalansa de cereri, poate crea mii de thread-uri si prabusi masina.",
+    codeSnippet: `// Pool cu 4 thread-uri fixe:
+ExecutorService fixedPool = Executors.newFixedThreadPool(4);
 
-// Ilegal:
-// public var calculate(var input) {} // ERROR: var not allowed on method parameters/return`,
-    interviewTrap: "var NU este un cuvant cheie rezervat (keyword), ci un \"reserved type name\". Asta inseamna ca poti avea variabile sau metode cu numele var (ex: int var = 5; este cod perfect legal!).",
-    keyTakeaway: "var infera tipul static la compilare si este permis exclusiv pe variabile locale initializate imediat."
+fixedPool.submit(() -> {
+    System.out.println("Executat de: " + Thread.currentThread().getName());
+});
+
+// Inchidere la final:
+fixedPool.shutdown();`,
+    interviewTrap: "newFixedThreadPool foloseste o coada nelimitata (Unbounded Queue). Daca task-urile vin mai repede decat pot fi procesate, coada va umple memoria Heap cauzand OutOfMemoryError. In aplicatii critice se configureaza direct un ThreadPoolExecutor cu coada de capacitate limitata.",
+    keyTakeaway: "newFixedThreadPool mentine un numar fix de thread-uri; newCachedThreadPool creste dinamic fara limita."
   },
   {
     id: "java-163",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Switch Expressions (Java 14): Sageata -> si cuvantul cheie yield",
-    question: "Ce avantaje aduc Switch Expressions fata de traditionalul Switch Statement si cum se foloseste yield?",
-    answer: "Switch Expressions (standardizate in Java 14 - JEP 361) transforma switch dintr-o simpla instructiune de control intr-o EXPRESIE care produce o valoare de retur:\\n\\n1. Sintaxa cu Sageata (Arrow Syntax ->):\\n   - Elimina complet riscul de Fall-Through (nu mai este nevoie sa pui break dupa fiecare case)!\\n   - Doar expresia din dreapta sagetii se executa.\\n   - Permite valori multiple pe aceeasi linie: case MONDAY, FRIDAY, SUNDAY -> ...\\n\\n2. Cuvantul cheie yield:\\n   - Se foloseste atunci cand o ramura case necesita un bloc cu acolade multi-linie ({ ... }).\\n   - yield returneaza valoarea din blocul case catre asignarea generala (similar cu un return dedicat switch-ului).\\n\\n3. Exhaustivitate Obligatorie (Exhaustiveness):\\n   - Cand este folosit ca expresie, switch-ul TREBUIE sa acopere toate cazurile posibile (prin acoperirea tuturor valorilor de Enum sau prin definirea obligatorie a clauzei default).",
-    codeSnippet: `int numLetters = switch (day) {
-    case MONDAY, FRIDAY, SUNDAY -> 6;
-    case TUESDAY -> 7;
-    case THURSDAY, SATURDAY -> 8;
-    case WEDNESDAY -> {
-        System.out.println("Ziua de mijloc a saptamanii");
-        yield 9; // Returneaza 9 din blocul multi-linie!
-    }
-};`,
-    interviewTrap: "Daca folosesti switch traditional cu doua puncte (case MONDAY:), lipsa unui break continua executia in urmatorul case (Fall-Through), in timp ce sintaxa cu sageata (->) exclude complet acest comportament.",
-    keyTakeaway: "Switch expressions returneaza valori, folosesc -> fara break si yield pentru blocuri multi-linie, garantand exhaustivitatea."
+    title: "Callable vs Runnable in Java Concurrency",
+    question: "Care sunt cele 3 mari diferente dintre interfata Callable<V> si interfata Runnable?",
+    answer: "1. Returnarea unei valori:\\n   - Runnable are metoda public void run() -> nu poate returna niciun rezultat.\\n   - Callable<V> are metoda public V call() -> returneaza un rezultat de tip generic V catre apelant prin intermediul unui obiect Future<V>.\\n\\n2. Tratarea Exceptiilor:\\n   - Runnable.run() nu declara nicio checked exception (nu are throws). Orice exceptie verificata trebuie prinsa manual intr-un try-catch in interiorul metodei.\\n   - Callable.call() declara throws Exception -> poate arunca liber orice checked exception, care va fi impachetata si transmisa mai departe in ExecutionException la apelul future.get().\\n\\n3. Pachetul de provenienta:\\n   - Runnable exista din Java 1.0 in java.lang.\\n   - Callable a fost adaugat in Java 5 in java.util.concurrent special pentru ExecutorService.",
+    codeSnippet: `// 1. Runnable: fara retur, fara checked exceptions
+Runnable r = () -> System.out.println("Ruleaza");
+
+// 2. Callable: returneaza String si poate arunca Exception
+Callable<String> c = () -> {
+    // Simulare calcul sau I/O
+    return "Rezultat calculat";
+};
+
+ExecutorService executor = Executors.newSingleThreadExecutor();
+Future<String> future = executor.submit(c);`,
+    interviewTrap: "Daca ai nevoie sa afli rezultatul executiei sau daca task-ul a crapat cu o exceptie de I/O, nu poti folosi Runnable simplu fara hack-uri; foloseste intotdeauna Callable.",
+    keyTakeaway: "Callable returneaza o valoare si poate arunca checked exceptions; Runnable returneaza void si nu poate arunca checked exceptions."
   },
   {
     id: "java-164",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Text Blocks in Java 15: Ghilimele triple si Gestionarea Spatiilor",
-    question: "Cum functioneaza Text Blocks (ghilimele triple \"\"\" \"\"\") in Java 15 si cum determina compilatorul indentarea incidentala?",
-    answer: "Text Blocks (JEP 378, Java 15) permit scrierea de siruri de caractere multi-linie (JSON, SQL, HTML, XML) fara concatenari inestetice cu + si fara escape-uri obositoare pentru ghilimele (\\\\\"):\\n\\n1. Reguli Sintactice Stricte:\\n   - Un Text Block incepe cu trei ghilimele (\"\"\") urmate OBLIGATORIU de o linie noua (newline)! Nu poti pune text pe aceeasi linie cu primele trei ghilimele.\\n\\n2. Strip Indentation (Indentare Incidentala vs Esentiala):\\n   - Compilatorul Java scaneaza toate liniile din bloc pentru a gasi spatiul alb comun cel mai din stanga (inclusiv pozitia ghilimelelor de inchidere).\\n   - Acel spatiu alb comun (indentarea de cod Java) este eliminat automat (stripped)!\\n   - Daca vrei ca intregul bloc sa fie indentat in string-ul final, plasezi ghilimelele de inchidere \"\"\" mai la stanga decat textul.\\n\\n3. Caractere de Control Noi:\\n   - \\\\ la final de linie: Impiedica adaugarea caracterului newline (uneste liniile logic).\\n   - \\\\s: Forteaza pastrarea spatiilor albe de la sfarsitul liniei.",
-    codeSnippet: `// Query SQL lizibil fara concatenari:
-String query = """
-    SELECT id, email, status
-    FROM candidates
-    WHERE active = true
-    ORDER BY created_at DESC;
-    """;`,
-    interviewTrap: "Daca plasezi text imediat dupa primele ghilimele triple (\"\"\"SELECT...), compilatorul va arunca eroare de sintaxa: \"illegal text block open delimiter sequence, missing newline\".",
-    keyTakeaway: "Text Blocks permit siruri multi-linie curate eliminand automat indentarea incidentala comuna din cod."
+    title: "Interfata Future in Java",
+    question: "Ce reprezinta un obiect Future<T>, care sunt principalele sale metode si de ce get() este blocant?",
+    answer: "1. Ce este Future<T>:\\n   - Reprezinta promisiunea sau rezultatul eventual al unei operatii asincrone care se executa pe un alt thread.\\n\\n2. Principalele metode:\\n   - get(): Returneaza rezultatul final. ATENTIE: Daca sarcina nu s-a incheiat inca, metoda get() BLOCHEAZA thread-ul apelant pana cand rezultatul este disponibil!\\n   - get(timeout, unit): Blocheaza maxim perioada specificata; daca expira, arunca TimeoutException.\\n   - isDone(): Returneaza true daca sarcina s-a terminat (cu succes, exceptie sau anulare).\\n   - cancel(mayInterrupt): Incearca sa anuleze executia sarcinii.\\n   - isCancelled(): Returneaza true daca sarcina a fost anulata.",
+    codeSnippet: `ExecutorService executor = Executors.newSingleThreadExecutor();
+
+Future<Integer> future = executor.submit(() -> {
+    Thread.sleep(1000);
+    return 42;
+});
+
+// Facem altceva in paralel...
+System.out.println("Task trimis, asteptam rezultatul...");
+
+try {
+    // get() blocheaza pana cand cele 1000ms s-au scurs:
+    Integer result = future.get(2, TimeUnit.SECONDS);
+    System.out.println("Rezultat: " + result); // 42
+} catch (TimeoutException | InterruptedException | ExecutionException e) {
+    e.printStackTrace();
+}
+executor.shutdown();`,
+    interviewTrap: "Daca apelezi future.get() imediat pe linia urmatoare dupa submit, anulezi tot avantajul asincronismului, deoarece thread-ul curent ramane blocat asteptand finalizarea.",
+    keyTakeaway: "Future reprezinta rezultatul unui calcul asincron; metoda get() este blocanta pana la terminarea calculului."
   },
   {
     id: "java-165",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "Record Compact Constructor vs Canonical Constructor in Java Records",
-    question: "Ce este un Compact Constructor intr-un Java Record si cum asigura validarea imutabila a campurilor fara boilerplate?",
-    answer: "Java Records (Java 16) sunt clase imutabile transparente pentru transport de date (Data Carriers) care genereaza automat constructori, getteri, equals, hashCode si toString:\\n\\n1. Canonical Constructor (Constructorul Canonic):\\n   - Constructorul complet generat automat de compilator a carui lista de parametri este identica cu componentele recordului: public CandidateRecord(String name, int score) { ... }.\\n\\n2. Compact Constructor (Inovatia Cheie):\\n   - Un constructor specific recordurilor care NU DECLARA parametri si paranteze rotunde: public CandidateRecord { ... }!\\n   - Are acces direct la parametrii transmisi inainte ca acestia sa fie atribuiti campurilor private final.\\n   - Permite validari defensive si normalizari (ex: Objects.requireNonNull, toLowerCase).\\n   - La sfarsitul blocului compact, JVM atribuie automat parametrii (eventual modificati) catre campurile campurilor interne.",
-    codeSnippet: `public record CandidateRecord(String name, int score) {
-    // Compact Constructor: zero parametri declarati, doar validari:
-    public CandidateRecord {
-        Objects.requireNonNull(name, "Numele nu poate fi null");
-        if (score < 0 || score > 100) {
-            throw new IllegalArgumentException("Scor invalid: " + score);
-        }
-        name = name.trim(); // Normalizare directa inainte de atribuire!
-    }
-}`,
-    interviewTrap: "In interiorul unui Compact Constructor nu ai voie sa faci atribuiri explicite catre this.name = ...; compilatorul se ocupa automat de atribuire la sfarsitul blocului!",
-    keyTakeaway: "Compact Constructor permite validarea si normalizarea campurilor dintr-un Record fara repetarea atribuirilor this.field = field."
+    title: "CompletableFuture Basics in Java 8+",
+    question: "De ce este CompletableFuture superior vechiului Future si cum inlantuim operatii cu thenApply()?",
+    answer: "1. Limitarile vechiului Future:\\n   - Nu putea fi completat manual (nu puteai seta direct o valoare).\\n   - Singura modalitate de a obtine rezultatul era blocant prin get().\\n   - Nu puteai combina sau compune doua operatii asincrone fara blocare.\\n\\n2. Avantajele CompletableFuture:\\n   - Programare asincrona non-blocanta bazata pe callback-uri reactive (similar cu Promises in JavaScript).\\n   - supplyAsync(Supplier): Ruleaza o operatie asincrona pe ForkJoinPool.\\n   - thenApply(Function): Transforma rezultatul cand este gata (fara a bloca thread-ul apelant!).\\n   - thenAccept(Consumer): Consuma rezultatul final.\\n   - exceptionally(Function): Gestioneaza erorile intr-un mod elegant.",
+    codeSnippet: `CompletableFuture.supplyAsync(() -> {
+    // Simulare apel extern API:
+    return "Date Utilizator";
+}).thenApply(data -> {
+    return data.toUpperCase(); // Se executa automat cand supplyAsync termina!
+}).thenAccept(upperData -> {
+    System.out.println("Primit: " + upperData); // DATE UTILIZATOR
+}).exceptionally(ex -> {
+    System.out.println("Eroare: " + ex.getMessage());
+    return null;
+});`,
+    interviewTrap: "Daca aplicatia ta main se termina inainte ca thread-ul din pool sa termine CompletableFuture, executia se poate opri deoarece ForkJoinPool foloseste daemon threads.",
+    keyTakeaway: "CompletableFuture permite pipeline-uri asincrone non-blocante prin metode precum supplyAsync, thenApply si thenAccept."
   },
   {
     id: "java-166",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Algebraic Data Types (ADT) cu Sealed Interfaces si Record Patterns in Java 21",
-    question: "Cum permit Sealed Interfaces combinate cu Records si Record Patterns (Java 21) modelarea de Algebraic Data Types tipice limbajelor functionale?",
-    answer: "In limbaje functionale precum Haskell sau Scala, Algebraic Data Types (Sum Types si Product Types) sunt fundamentale. Java 21 aduce acest suport complet:\\n\\n1. Product Types (Tipuri Produs):\\n   - Modelate prin Java Records (ex: record Point(int x, int y) - produsul a doua intregi).\\n\\n2. Sum Types (Tipuri Suma / Disjoint Unions):\\n   - Modelate prin Sealed Interfaces: interfata restrictioneaza strict cine o poate implementa (permits).\\n   - Compilatorul stie la compilare TOATE variantele posibile existente in lume!\\n\\n3. Exhaustive Pattern Matching fara clauza default:\\n   - La evaluarea unui sealed type intr-un switch expression cu Record Patterns, compilatorul verifica daca toate cazurile permise sunt tratate.\\n   - Nu mai este nevoie de clauza default! Daca in viitor cineva adauga un nou tip in permits, compilatorul va arunca eroare in toate switch-urile din aplicatie, fortand tratarea noului caz.",
-    codeSnippet: `// Sealed Interface (Sum Type):
-public sealed interface PaymentMethod permits CardPayment, PixPayment, CryptoPayment {}
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Oprirea unui ExecutorService: shutdown() vs shutdownNow()",
+    question: "Care este diferenta dintre shutdown() si shutdownNow() si ce rol are awaitTermination()?",
+    answer: "1. executor.shutdown():\\n   - Oprire \"ordonata\" (graceful shutdown).\\n   - Nu mai accepta NICIUN task nou (submit() va arunca RejectedExecutionException).\\n   - Continua insa sa execute pana la capat toate task-urile aflate in desfasurare si cele aflate deja in coada.\\n\\n2. executor.shutdownNow():\\n   - Oprire \"brusca\" (immediate shutdown).\\n   - Incearca sa opreasca imediat task-urile active trimitand interrupt() (Thread.interrupt()) catre fiecare thread.\\n   - Scoate din coada task-urile care asteptau si le returneaza ca o lista List<Runnable>.\\n\\n3. awaitTermination(timeout, unit):\\n   - Blocheaza thread-ul curent pana cand toate task-urile si-au incheiat executia dupa shutdown sau pana cand expira timpul.",
+    codeSnippet: `ExecutorService executor = Executors.newFixedThreadPool(2);
+// ... trimitere de task-uri ...
 
-public record CardPayment(String cardNumber, double amount) implements PaymentMethod {}
-public record PixPayment(String pixKey, double amount) implements PaymentMethod {}
-public record CryptoPayment(String walletAddress, double amount) implements PaymentMethod {}
-
-// Pattern Matching exhaustiv in Java 21:
-String describe(PaymentMethod pm) {
-    return switch (pm) {
-        case CardPayment(var num, var amt) -> "Card: " + num + " -> $" + amt;
-        case PixPayment(var key, var amt)  -> "Pix: " + key + " -> $" + amt;
-        case CryptoPayment(var w, var amt) -> "Crypto: " + w + " -> $" + amt;
-        // Zero default! Compilatorul garanteaza acoperirea totala!
-    };
+executor.shutdown(); // Nu mai primeste task-uri noi
+try {
+    if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+        executor.shutdownNow(); // Forteaza oprirea daca a depasit 5 secunde
+    }
+} catch (InterruptedException e) {
+    executor.shutdownNow();
 }`,
-    interviewTrap: "Daca adaugi o subclasa noua intr-o Sealed Hierarchy, compilatorul iti va arata imediat toate locurile din aplicatie unde lipseste logica pentru ea, eliminand bug-urile subtile de business la runtime.",
-    keyTakeaway: "Sealed interfaces si Records creeaza Algebraic Data Types sigure si exhaustive verificate 100% de compilator in switch."
+    interviewTrap: "Daca uiti sa apelezi shutdown() pe un ExecutorService creat intr-o aplicatie de sine statatoare, aplicatia JVM nu se va opri niciodata, deoarece thread-urile non-daemon raman active.",
+    keyTakeaway: "shutdown() finalizeaza sarcinile curente fara a primi altele noi; shutdownNow() intrerupe sarcinile active si goleste coada."
   },
   {
     id: "java-167",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "Bill Pugh Singleton (Initialization-on-demand Holder)",
-    question: "De ce idiomul Bill Pugh Singleton este considerat cea mai eleganta implementare de Singleton in Java si cum asigura thread-safety fara synchronized?",
-    answer: "Multe abordari de Singleton au dezavantaje: Eager Singleton aloca memoria la pornire chiar daca nu e folosit; Double-Checked Locking este complex si predispus la erori JMM.\\n\\nSolutia lui Bill Pugh: Clasa Statica Interioara (Holder Pattern):\\n1. Cum functioneaza:\\n   - Clasa principala contine o clasa statica privata interioara (ex: SingletonHolder) care detine instanta: private static final MySingleton INSTANCE = new MySingleton();.\\n\\n2. De ce este Lazy (Lenes):\\n   - Cand clasa MySingleton este incarcata de ClassLoader, clasa interioara SingletonHolder NU ESTE INCARCATA in memorie!\\n   - SingletonHolder este incarcata strict la PRIMUL APEL al metodei getInstance(), realizand initializare lazy perfecta.\\n\\n3. De ce este Thread-Safe fara sincronizare:\\n   - Specificatia limbajului Java (JLS 12.4.2) garanteaza ca faza de initializare a unei clase este sincronizata nativ si atomic de catre JVM.\\n   - Niciun alt fir nu poate vedea instanta partial creata, eliminand orice nevoie de bloc synchronized sau volatile!",
-    codeSnippet: `public class BillPughSingleton {
-    private BillPughSingleton() {} // Constructor privat
+    title: "Ce este ThreadLocal in Java si cand se foloseste?",
+    question: "Ce este clasa ThreadLocal, cum functioneaza si care sunt cele mai frecvente cazuri de utilizare?",
+    answer: "1. Ce este ThreadLocal:\\n   - O clasa care permite stocarea de date izolate per fir de executie.\\n   - Fiecare thread care apeleaza threadLocal.get() sau set() acceseaza propria sa copie independenta a variabilei, complet invizibila pentru celelalte thread-uri.\\n   - Nu necesita nicio sincronizare, lock-uri sau blocuri synchronized, deoarece nu exista partajare de date!\\n\\n2. Cazuri de utilizare comune in Framework-uri (Spring, Jakarta):\\n   - Stocarea contextului de securitate: SecurityContextHolder in Spring Security stocheaza utilizatorul autentificat curent pe thread-ul cererii HTTP.\\n   - Gestionarea tranzactiilor: Conexiunea curenta de baza de date (@Transactional) asociata tranzactiei pe thread-ul respectiv.\\n   - Obiecte non-thread-safe care sunt scumpe de creat (ex: instante vechi SimpleDateFormat reutilizate per thread).",
+    codeSnippet: `public class UserContext {
+    private static final ThreadLocal<String> CURRENT_USER = new ThreadLocal<>();
 
-    // Clasa statica se incarca DOAR cand este referita in getInstance():
-    private static class InstanceHolder {
-        private static final BillPughSingleton INSTANCE = new BillPughSingleton();
-    }
-
-    public static BillPughSingleton getInstance() {
-        return InstanceHolder.INSTANCE; // Thread-safe garantat de JVM!
-    }
+    public static void setUser(String username) { CURRENT_USER.set(username); }
+    public static String getUser() { return CURRENT_USER.get(); }
+    public static void clear() { CURRENT_USER.remove(); } // Curatare obligatorie!
 }`,
-    interviewTrap: "Chiar si Bill Pugh Singleton poate fi spart prin Java Reflection (setAccessible(true)) sau prin deserializare daca nu suprascrii metoda readResolve(). Singurul singleton 100% imun la reflection este Enum Singleton.",
-    keyTakeaway: "Bill Pugh Singleton foloseste mecanismul de incarcare a claselor JVM pentru a asigura initializare lazy si thread-safety fara niciun lock."
+    interviewTrap: "Daca nu stergi valoarea dintr-un ThreadLocal cu remove() la finalul procesarii unei cereri intr-un server web cu Thread Pool, provoci Memory Leaks si amestecarea datelor intre utilizatori!",
+    keyTakeaway: "ThreadLocal ofera variabile izolate per thread, ideale pentru contexte de securitate si tranzactii pe cererea HTTP curenta."
   },
   {
     id: "java-168",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "Double-Checked Locking pe Singleton: De ce volatile este obligatoriu?",
-    question: "De ce cuvantul cheie volatile este absolut obligatoriu pe instanta intr-o implementare de tip Double-Checked Locking (DCL)?",
-    answer: "Double-Checked Locking verifica daca instanta este null inainte si dupa intrarea intr-un bloc synchronized pentru a evita sincronizarea la fiecare apel:\\n\\nDe ce fara volatile este CATASTROFAL (Instruction Reordering):\\nInstructiunea Java new Singleton() NU este atomica; procesorul o descompune in 3 pasi:\\n1. Aloca spatiu de memorie in Heap pentru obiect;\\n2. Apeleaza constructorul pentru a initializa campurile obiectului;\\n3. Atribuie adresa de memorie a noului obiect catre variabila instanta.\\n\\nPericolul Reordonarii JIT/CPU:\\n- Compilatorul sau procesorul pot reordona pasii in secventa: Pas 1 -> Pas 3 -> Pas 2 (atribuie referinta INAINTE de executia constructorului)!\\n- Daca Thread 1 este la pasul 3 iar Thread 2 apeleaza getInstance(), Thread 2 gaseste instanta != null la prima verificare, sare peste lock si returneaza instanta PARTIAL INITIALIZATA (campurile sunt inca null sau 0), cauzand crash-uri masive in aplicatie!\\n\\nSolutia volatile:\\n- Introduce bariere de memorie (Memory Barriers) care interzic strict reordonarea pasului 2 si 3, garantand ca constructorul se termina inainte ca referinta sa devina vizibila altor fire.",
-    codeSnippet: `public class DclSingleton {
-    // volatile este OBLIGATORIU pentru a preveni Instruction Reordering!
-    private static volatile DclSingleton instance;
-
-    private DclSingleton() {}
-
-    public static DclSingleton getInstance() {
-        if (instance == null) { // Verificare 1 (fara lock pentru viteza)
-            synchronized (DclSingleton.class) {
-                if (instance == null) { // Verificare 2 (sub lock)
-                    instance = new DclSingleton();
-                }
-            }
-        }
-        return instance;
-    }
+    title: "Capcana Memory Leak cu ThreadLocal in Thread Pools",
+    question: "De ce lipsa apelului threadLocal.remove() intr-un mediu cu Thread Pool duce la scurgeri de memorie (Memory Leaks)?",
+    answer: "1. Mecanismul intern al ThreadLocal:\\n   - Fiecare obiect Thread detine o harta interna numita threadLocals (de tip ThreadLocalMap).\\n   - Cheile din aceasta harta sunt referinte slabe (WeakReference) catre obiectul ThreadLocal, dar VALORILE sunt referinte tari (Strong References) catre obiectele tale de date!\\n\\n2. Ce se intampla intr-un Thread Pool (Tomcat, Jetty, Spring):\\n   - Thread-urile nu mor niciodata! Dupa finalizarea cererii HTTP a utilizatorului A, thread-ul este pus inapoi in pool pentru a servi urmatorul utilizator B.\\n   - Daca nu ai apelat threadLocal.remove(), obiectul din valoare ramane agatat in memorie pe durata intregii vieti a thread-ului (adica pana cand opresti serverul!), blocand eliberarea sa de catre Garbage Collector.\\n   - Mai mult, utilizatorul B ar putea citi datele confidentiale ale utilizatorului A!\\n\\n3. Regula absoluta:\\n   - Apelul threadLocal.remove() se plaseaza INTOTDEAUNA intr-un bloc finally!",
+    codeSnippet: `try {
+    UserContext.setUser("mihai");
+    processRequest();
+} finally {
+    // CRUCIAL: Previne scurgerea de memorie si coruperea contextului!
+    UserContext.clear(); // Apeleaza ThreadLocal.remove()
 }`,
-    interviewTrap: "Daca intervievatorul te intreaba: \"Functioneaza DCL corect in Java fara volatile?\", raspunsul este categoric NU (inainte de Java 5 era defectuos chiar si cu volatile din cauza vechiului JMM).",
-    keyTakeaway: "volatile pe DCL impiedica reordonarea instructiunilor CPU, asigurand ca niciun thread nu vede un obiect incomplet initializat."
+    interviewTrap: "Intotdeauna mentioneaza blocul try-finally si metoda .remove() cand vorbesti despre ThreadLocal la orice interviu tehnic.",
+    keyTakeaway: "Thread-urile din pool sunt refolosite permanent; apelul threadLocal.remove() in bloc finally este obligatoriu pentru a preveni memory leaks."
   },
   {
     id: "java-169",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Builder Pattern cu Fluent API",
-    question: "Cand si de ce folosim Builder Pattern (Effective Java Item 2) in locul constructorilor telescopici sau a setterilor clasici?",
-    answer: "1. Problema Constructorilor Telescopici (Telescoping Constructors):\\n   - O clasa cu multi parametri (5-10 campuri, multe optionale) necesita zeci de constructori supraincarcati: MyClass(a), MyClass(a, b), MyClass(a, b, c)...\\n   - Cod greu de citit si predispus la inversari accidentale de parametri de acelasi tip (ex: transmiterea email-ului in locul numelui fara nicio eroare la compilare).\\n\\n2. Problema JavaBeans Pattern (getters/setters):\\n   - Obiectul ramane intr-o stare inconsistenta (partial initializata) pe durata apelurilor succesive de set().\\n   - Clasa devine complet mutabila, distrugand siguranta concurenta (Thread-Safety).\\n\\n3. Avantajele Builder Pattern:\\n   - Mentine imutabilitatea: Obiectul final are doar campuri private final si nu are setteri.\\n   - Fluent API: Fiecare metoda de setare pe builder returneaza this, permitand inlantuiri declarative lizibile.\\n   - Validare atomica: Metoda build() verifica toate constrangerile de validitate inainte de a returna instanta.",
-    codeSnippet: `public class HttpRequest {
-    private final String url;
-    private final String method;
-    private final int timeout;
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "ReentrantLock vs cuvantul cheie synchronized",
+    question: "Care sunt avantajele clasei ReentrantLock fata de blocul synchronized standard?",
+    answer: "1. Ce este ReentrantLock:\\n   - O implementare explicita a interfetei Lock din java.util.concurrent.locks, oferind aceleasi garantii de baza ca synchronized, dar cu capabilitati extinse.\\n\\n2. Avantaje cheie ale ReentrantLock:\\n   - tryLock(timeout): Permite incercarea de a obtine lock-ul fara a ramane blocat pentru totdeauna daca lock-ul este ocupat (previne deadlock).\\n   - lockInterruptibly(): Un thread blocat poate fi intrerupt din asteptare prin thread.interrupt().\\n   - Fairness (Echitate): Poti crea un Fair Lock (new ReentrantLock(true)) unde cel mai vechi thread care asteapta primeste lock-ul primul (evita starvation).\\n   - Conditii multiple: Permite crearea de multiple Condition pe acelasi lock (ex: notFull, notEmpty) in loc de un singur wait set.\\n\\n3. Dezavantaj:\\n   - Necesita deblocare manuala obligatorie intr-un bloc finally: lock.unlock().",
+    codeSnippet: `Lock lock = new ReentrantLock();
 
-    private HttpRequest(Builder b) {
-        this.url = b.url;
-        this.method = b.method;
-        this.timeout = b.timeout;
-    }
+lock.lock(); // Obtine lock-ul
+try {
+    // Sectiune critica protejata
+} finally {
+    lock.unlock(); // OBLIGATORIU in finally!
+}
 
-    public static class Builder {
-        private String url;
-        private String method = "GET"; // Valoare implicita
-        private int timeout = 5000;
-
-        public Builder url(String url) { this.url = url; return this; }
-        public Builder method(String method) { this.method = method; return this; }
-        public Builder timeout(int t) { this.timeout = t; return this; }
-
-        public HttpRequest build() {
-            if (url == null) throw new IllegalStateException("URL obligatoriu");
-            return new HttpRequest(this);
-        }
-    }
+// Incercare non-blocanta cu timeout:
+if (lock.tryLock(1, TimeUnit.SECONDS)) {
+    try { /* proceseaza */ }
+    finally { lock.unlock(); }
 }`,
-    interviewTrap: "Daca ai clase derivate cu mostenire, Builder-ul clasic devine complicat. Se foloseste tehnica \"Recursive Type Bounds\" (Generic Builder cu <T extends Builder<T>>) pentru a pastra polimorfismul.",
-    keyTakeaway: "Builder Pattern construieste obiecte complexe imutabile pas cu pas, eliminand constructorii telescopici si inconsistentele setterilor."
+    interviewTrap: "Daca uiti sa apelezi lock.unlock() in blocul finally, lock-ul nu se va debloca niciodata la aparitia unei exceptii, cauzand blocarea intregii aplicatii.",
+    keyTakeaway: "ReentrantLock ofera tryLock cu timeout, fairness si intrerupere, dar necesita eliberare manuala stricta in bloc finally."
   },
   {
     id: "java-170",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Strategy Pattern in Java Modern folosind Lambdas",
-    question: "Cum a transformat aparitia expresiilor Lambda implementarea clasica a sablonului Strategy in Java?",
-    answer: "1. Strategy Pattern Clasic (Inainte de Java 8):\\n   - Necesita o interfata separata (ex: PaymentStrategy) si crearea de clase concrete separate pentru fiecare strategie (CreditCardStrategy.java, PayPalStrategy.java, CryptoStrategy.java).\\n   - Mult boilerplate si fisiere de clasa mici inutile.\\n\\n2. Strategy Pattern Modern in Java 8+:\\n   - Orice strategie care are o singura metoda abstracta devine o Interfata Functionala (@FunctionalInterface)!\\n   - Poti transmite strategii diferite direct ca expresii Lambda sau Method References fara a mai crea nicio clasa suplimentara.\\n   - Strategiile pot fi stocate intr-o mapa (Map<PaymentType, Consumer<PaymentRequest>>) sau compuse dinamic la runtime.",
-    codeSnippet: `// 1. Interfata functionala pentru strategie:
-@FunctionalInterface
-public interface DiscountStrategy {
-    double applyDiscount(double price);
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "CountDownLatch in Java Concurrency",
+    question: "Ce este un CountDownLatch, cum functioneaza si cand se foloseste?",
+    answer: "1. Ce este CountDownLatch:\\n   - Un utilitar de sincronizare care permite unuia sau mai multor thread-uri sa astepte pana cand un set de operatii executate pe alte thread-uri s-a finalizat.\\n\\n2. Cum functioneaza:\\n   - Se initializeaza cu un contor numeric: CountDownLatch latch = new CountDownLatch(N).\\n   - Fiecare thread lucrator care isi finalizeaza sarcina apeleaza latch.countDown(), ceea ce decrementeaza contorul cu 1.\\n   - Thread-ul coordonator apeleaza latch.await(), ramanand blocat pana cand contorul ajunge exact la 0.\\n\\n3. Proprietate importanta:\\n   - Este ONE-SHOT (de unica folosinta): Contorul nu poate fi resetat dupa ce a ajuns la 0. (Pentru resetare se foloseste CyclicBarrier).",
+    codeSnippet: `int workers = 3;
+CountDownLatch latch = new CountDownLatch(workers);
+
+for (int i = 0; i < workers; i++) {
+    new Thread(() -> {
+        System.out.println("Worker a terminat treaba.");
+        latch.countDown(); // Scade contorul
+    }).start();
 }
 
-// 2. Transmitere directa prin Lambda:
-DiscountStrategy blackFriday = price -> price * 0.50;
-DiscountStrategy vipCustomer = price -> price * 0.80;
-
-public double checkout(double amount, DiscountStrategy strategy) {
-    return strategy.applyDiscount(amount);
-}`,
-    interviewTrap: "Daca strategiile contin stare interna complexa sau dependinte injectate de Spring, clasele dedicate raman potrivite; daca strategia este un calcul pur (stateless), foloseste intotdeauna Lambdas.",
-    keyTakeaway: "Strategy Pattern este simplificat masiv in Java modern prin tratarea strategiilor ca functii lambda de ordin superior."
+// Thread-ul principal asteapta ca toti cei 3 lucratori sa termine:
+latch.await(); 
+System.out.println("Toti lucratorii au terminat, pornim aplicatia!");`,
+    interviewTrap: "Daca un thread worker crapa cu o exceptie inainte de a apela latch.countDown(), contorul nu va ajunge niciodata la 0 si latch.await() va ramane blocat pe vecie! Plaseaza countDown() in finally.",
+    keyTakeaway: "CountDownLatch blocheaza executia pana cand un numar fix de evenimente au apelat countDown(); este de unica folosinta."
   },
   {
     id: "java-171",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "Decorator Pattern in Arhitectura Claselor java.io",
-    question: "Cum utilizeaza pachetul java.io sablonul Decorator in clase precum BufferedInputStream si GZIPInputStream?",
-    answer: "Pachetul java.io este exemplul canonic din JDK pentru Decorator Pattern (adaugarea dinamica de functionalitati fara mostenire rigida):\\n\\n1. Componenta de Baza:\\n   - Clasa abstracta InputStream defineste contractul minim de citire a octetilor (read()).\\n   - Implementari concrete de baza: FileInputStream (citeste din fisier), ByteArrayInputStream (citeste din memorie), SocketInputStream (din retea).\\n\\n2. Decoratorul Abstract (FilterInputStream):\\n   - Extinde InputStream si detine o referinta (compunere) catre un alt InputStream: protected volatile InputStream in;.\\n\\n3. Decoratori Concreti:\\n   - BufferedInputStream: Adauga capacitatea de buffering in memorie pentru a evita apelurile I/O repetate pe disc.\\n   - GZIPInputStream: Adauga decompresie gzip la zbor pe fluxul de date.\\n   - DataInputStream: Adauga metode pentru citirea tipurilor primitive (readInt(), readDouble()).\\n\\n4. Puterea Compunerii:\\n   - Poti impacheta oricati decoratori unul in altul: new DataInputStream(new BufferedInputStream(new GZIPInputStream(new FileInputStream(\"data.gz\"))))!",
-    codeSnippet: `// Compunere dinamica de decoratori I/O:
-InputStream rawFile = new FileInputStream("report.txt.gz");
-InputStream decompress = new GZIPInputStream(rawFile);
-InputStream buffered = new BufferedInputStream(decompress);
-DataInputStream in = new DataInputStream(buffered);
+    title: "CyclicBarrier vs CountDownLatch",
+    question: "Care este diferenta principala dintre CyclicBarrier si CountDownLatch?",
+    answer: "1. CountDownLatch:\\n   - Se bazeaza pe numararea unor EVENIMENTE (apeluri countDown()).\\n   - Un thread asteapta ca N operatii sa se finalizeze.\\n   - Nu poate fi reutilizat: odata ce contorul ajunge la 0, obiectul este consumat definitiv.\\n\\n2. CyclicBarrier:\\n   - Se bazeaza pe sincronizarea unor THREAD-URI la un punct comun de intalnire (bariera).\\n   - Toate thread-urile apeleaza barrier.await() si asteapta pana cand TOATE thread-urile au ajuns la aceeasi bariera inainte ca oricare dintre ele sa poata continua.\\n   - Este REUTILIZABIL (ciclic): Odata ce toate thread-urile au ajuns la bariera, aceasta se reseteaza automat si poate fi folosita pentru urmatoarea runda/faza a algoritmului.",
+    codeSnippet: `// 3 participanti la bariera:
+CyclicBarrier barrier = new CyclicBarrier(3, () -> {
+    System.out.println("--> Toti au ajuns! Faza curenta s-a incheiat.");
+});
 
-int recordId = in.readInt();`,
-    interviewTrap: "Daca apelezi close() pe cel mai exterior decorator din lant (in.close()), acesta apeleaza automat in cascada close() pe toate stream-urile interioare decorate, eliberand descriptorul de fisier fizic.",
-    keyTakeaway: "java.io foloseste Decorator Pattern pentru a adauga functionalitati (buffering, decompresie, parsing) peste fluxuri de date de baza."
+Runnable task = () -> {
+    try {
+        System.out.println("Pasul 1 facut, astept la bariera...");
+        barrier.await(); // Blocheaza pana ajung toti 3!
+        System.out.println("Pasul 2 pornit!");
+    } catch (Exception e) {}
+};`,
+    interviewTrap: "CountDownLatch este ideal pentru a astepta finalizarea task-urilor paralele (ex: initializare servicii); CyclicBarrier este ideal pentru calcule pe iteratii unde thread-urile trebuie sa avanseze sincron runda de runda.",
+    keyTakeaway: "CountDownLatch numara evenimente si este one-shot; CyclicBarrier opreste thread-urile la un punct comun si se reseteaza ciclic."
   },
   {
     id: "java-172",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "Observer Pattern si Java 9 Flow API (Reactive Streams)",
-    question: "De ce vechea clasa java.util.Observer a fost declarata Deprecated si cum functioneaza java.util.concurrent.Flow (Reactive Streams)?",
-    answer: "1. Defectele lui java.util.Observable (Java 1.0):\\n   - Observable era o CLASA, nu o interfata! Deoarece Java nu suporta mostenire multipla de clase, o clasa care trebuia sa mosteneasca altceva nu putea deveni Observable.\\n   - Nu era thread-safe in mod fiabil si nu suporta serializare curata.\\n   - Nu avea concept de Backpressure (daca observabilul emitea 1 milion de evenimente pe secunda, coplesea si bloca observatorii).\\n\\n2. Solutia Moderna: java.util.concurrent.Flow (Java 9 - Reactive Streams):\\n   - Standardizeaza 4 interfete fundamentale:\\n     - Flow.Publisher<T>: Emite fluxuri de date.\\n     - Flow.Subscriber<T>: Consuma datele si reactioneaza la onNext(), onError(), onComplete().\\n     - Flow.Subscription: Legatura dintre publisher si subscriber; include metoda cruciala subscription.request(n) prin care consumatorul cere EXACT n elemente (Backpressure nativ)!\\n     - Flow.Processor<T, R>: Actioneaza atat ca subscriber cat si ca publisher (filtrare/transformare).",
-    codeSnippet: `// Implementare de baza cu SubmissionPublisher:
-SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
+    title: "BlockingQueue si Pattern-ul Producer-Consumer",
+    question: "Cum simplifica BlockingQueue implementarea modelului Producer-Consumer si cum functioneaza put() si take()?",
+    answer: "1. Ce este BlockingQueue:\\n   - O coada thread-safe din java.util.concurrent care suporta operatii blocante de inserare si extragere.\\n   - Implementari uzuale: ArrayBlockingQueue (capacitate fixa), LinkedBlockingQueue.\\n\\n2. Metodele blocante esentiale:\\n   - put(E e): Adauga un element in coada. Daca coada este plina, thread-ul PRODUCER este blocat automat pana cand se elibereaza un loc!\\n   - take(): Extrage si sterge primul element. Daca coada este goala, thread-ul CONSUMER este blocat automat pana cand apare un element!\\n\\n3. De ce este ideala pentru Producer-Consumer:\\n   - Elimina complet necesitatea scrierii de cod manual cu synchronized, wait() si notifyAll(), prevenind toate bug-urile de sincronizare.",
+    codeSnippet: `BlockingQueue<String> queue = new ArrayBlockingQueue<>(10);
 
-Flow.Subscriber<String> subscriber = new Flow.Subscriber<>() {
-    private Flow.Subscription subscription;
-    public void onSubscribe(Flow.Subscription s) { this.subscription = s; s.request(1); }
-    public void onNext(String item) { System.out.println(item); subscription.request(1); }
-    public void onError(Throwable t) {}
-    public void onComplete() {}
-};
+// Producer:
+new Thread(() -> {
+    try {
+        queue.put("Mesaj 1"); // Blocheaza daca e plina (10 elemente)
+    } catch (InterruptedException e) {}
+}).start();
 
-publisher.subscribe(subscriber);
-publisher.submit("Mesaj reactiv");`,
-    interviewTrap: "Daca in onSubscribe() uiti sa apelezi subscription.request(n), consumatorul nu va primi NICIODATA niciun eveniment, deoarece modelul reactiv este bazat pe cerere (pull-based backpressure).",
-    keyTakeaway: "Flow API inlocuieste vechiul Observer cu un contract reactiv standardizat cu control nativ al contrapresiunii (Backpressure)."
+// Consumer:
+new Thread(() -> {
+    try {
+        String msg = queue.take(); // Blocheaza daca e goala
+        System.out.println("Procesat: " + msg);
+    } catch (InterruptedException e) {}
+}).start();`,
+    interviewTrap: "Nu folosi add() si remove() pe o coada blocanta la concurenta, deoarece acestea arunca exceptii in loc sa astepte; foloseste put() si take() pentru comportament blocant cooperant.",
+    keyTakeaway: "BlockingQueue gestioneaza automat blocarea producatorilor (coada plina) si consumatorilor (coada goala) prin put() si take()."
   },
   {
     id: "java-173",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Java Dynamic Proxy (Proxy.newProxyInstance)",
-    question: "Cum functioneaza mecanismul de Dynamic Proxy nativ din Java (java.lang.reflect.Proxy) si care este limitarea sa structurala majora?",
-    answer: "Dynamic Proxy permite generarea dinamica a unei clase proxy direct in memorie la runtime pentru a intercepta apelurile de metode:\\n\\n1. Cum se creeaza (Proxy.newProxyInstance):\\n   - Primeste 3 parametri: ClassLoader-ul, un array de interfete (Class<?>[] interfaces) si un InvocationHandler.\\n   - Cand o metoda este apelata pe instanta de proxy, apelul este redirectionat automat catre metoda unica: public Object invoke(Object proxy, Method method, Object[] args) din InvocationHandler.\\n   - Acolo poti adauga comportamente transversale (Cross-Cutting Concerns): logging, masurarea duratei de executie, securitate, tranzactii DB, inainte si dupa apelarea metodei reale pe obiectul tinta (target).\\n\\n2. Limitarea Structurala Majora:\\n   - JDK Dynamic Proxy functioneaza EXCLUSIV PE INTERFETE!\\n   - Nu poate genera un proxy peste o clasa concreta care nu implementeaza nicio interfata. Pentru clase concrete este nevoie de generatoare de bytecode la nivel de clasa precum CGLIB sau ByteBuddy.",
-    codeSnippet: `InvocationHandler handler = (proxy, method, args) -> {
-    System.out.println("Inainte de executia: " + method.getName());
-    Object result = method.invoke(targetService, args);
-    System.out.println("Dupa executia: " + method.getName());
-    return result;
-};
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "De ce metodele Thread.stop(), suspend() si resume() sunt Deprecated?",
+    question: "De ce metodele stop(), suspend() si resume() din clasa Thread au fost marcate ca periculoase si depreciate?",
+    answer: "1. Thread.stop():\\n   - Oprea instantaneu firul de executie in mijlocul oricarei instructiuni, aruncand un ThreadDeath error.\\n   - Elibera toate lock-urile monitor detinute de acel thread intr-un mod haotic! Daca obiectul era partial modificat (stare inconsistenta), celelalte thread-uri vedeau date corupte, provocand crash-uri masive imprevizibile.\\n\\n2. Thread.suspend() si resume():\\n   - suspend() ingheta thread-ul fara a elibera lock-urile pe care le detinea!\\n   - Daca thread-ul care urma sa apeleze resume() avea nevoie de oricare dintre acele lock-uri pentru a rula, rezulta un DEADLOCK instantaneu si irecuperabil.\\n\\n3. Concluzie:\\n   - Oprirea unui thread trebuie sa fie COOPERANTA, folosind mecanismul de intrerupere (interrupt).",
+    codeSnippet: `// GRESIT si DEPRECATED (nu folosi niciodata!):
+// thread.stop();
+// thread.suspend();
 
-UserService proxy = (UserService) Proxy.newProxyInstance(
-    UserService.class.getClassLoader(),
-    new Class<?>[]{UserService.class},
-    handler
-);`,
-    interviewTrap: "Metodele interne apelate din interiorul aceleiasi clase (Self-Invocation) ocolesc complet proxy-ul! Acesta este motivul pentru care adnotarea @Transactional din Spring esueaza cand o metoda apeleaza alta metoda din aceeasi clasa.",
-    keyTakeaway: "JDK Dynamic Proxy intercepteaza apelurile pe baza de interfete si InvocationHandler; Self-Invocation ocoleste intotdeauna proxy-ul."
+// CORECT: Semnalizare cooperanta prin interrupt
+thread.interrupt();`,
+    interviewTrap: "Daca un intervievator te intreaba cum opresti un thread, nu spune niciodata ca apelezi thread.stop()! Spune ca folosesti cooperarea prin interrupt() sau un flag atomic/volatile.",
+    keyTakeaway: "stop() lasa datele corupte prin eliberarea brusca a lock-urilor; suspend() provoaca deadlock-uri tinand lock-urile blocate."
   },
   {
     id: "java-174",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "CGLIB si ByteBuddy vs JDK Dynamic Proxy",
-    question: "Cum functioneaza bibliotecile CGLIB si ByteBuddy pentru a crea proxy-uri pe clase concrete si de ce clasele final nu pot fi proxate?",
-    answer: "Cand o clasa nu implementeaza nicio interfata (sau cand Spring Boot activeaza proxyTargetClass=true implicit din versiunea 2.x):\\n\\n1. Cum functioneaza CGLIB / ByteBuddy (Subclassing Proxy):\\n   - In loc sa implementeze interfete, generatorul de bytecode creaza la runtime o SUBCLASA NOUA care extinde clasa concreta tinta (ex: UserService$$EnhancerBySpringCGLIB extends UserService).\\n   - Suprascrie (overrides) toate metodele non-private si injecteaza codul de interceptare prin MethodInterceptor.\\n\\n2. De ce metodele sau clasele FINAL nu pot fi proxate:\\n   - Daca clasa este declarata \"public final class TargetService\", ea NU POATE FI EXTINSA (mostenirea este interzisa de JVM)! Generarea de proxy va arunca eroare fatala.\\n   - Daca o metoda individuala este \"final\", ea nu poate fi suprascrisa, iar apelurile catre ea vor executa codul original ocolind complet aspectele de securitate sau tranzactie!",
-    codeSnippet: `// In Spring Boot:
-// spring.aop.proxy-target-class=true (implicit in Spring Boot 2/3 - foloseste CGLIB/ByteBuddy)
-// Daca marchezi clasa cu 'final', pornirea aplicatiei crapa:
-// @Service public final class UserService {} // ERROR: Cannot subclass final class!`,
-    interviewTrap: "Constructorul clasei tinta este apelat de doua ori in cazul CGLIB (o data la crearea instantei reale si o data la crearea subclasei proxy), motiv pentru care constructorul nu trebuie sa contina operatii I/O grele.",
-    keyTakeaway: "ByteBuddy/CGLIB creeaza proxy-uri prin mostenirea clasei tinta; clasele si metodele final nu pot fi proxate prin aceasta metoda."
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Oprirea corecta a unui Thread cu interrupt()",
+    question: "Cum se opreste corect si cooperant un Thread in Java folosind interrupt() si isInterrupted()?",
+    answer: "1. Mecanismul de intrerupere (Cooperative Cancellation):\\n   - In Java, un thread nu poate fi fortat din exterior sa se opreasca; i se poate doar transmite o cerere politicoasa de oprire setand flag-ul de intrerupere prin thread.interrupt().\\n\\n2. Cum reactioneaza thread-ul tinta:\\n   - Cazul 1: Thread-ul este blocat intr-o metoda care arunca InterruptedException (sleep(), wait(), join()):\\n     - Se trezeste imediat aruncand InterruptedException, iar flag-ul de intrerupere este resetat pe false.\\n     - In blocul catch (InterruptedException e) trebuie sa cureti resursele si sa opresti bucla sau sa restaurezi flag-ul cu Thread.currentThread().interrupt().\\n   - Cazul 2: Thread-ul ruleaza o bucla CPU-intensive:\\n     - Trebuie sa verifice periodic flag-ul: while (!Thread.currentThread().isInterrupted()) { ... }.",
+    codeSnippet: `public class CleanWorker extends Thread {
+    @Override
+    public void run() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                // Operatie cu posibila blocare:
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                System.out.println("Primit semnal de oprire in timpul somnului!");
+                break; // Iesim curat din bucla!
+            }
+        }
+        System.out.println("Resurse eliberate, thread oprit.");
+    }
+}`,
+    interviewTrap: "Daca prinzi InterruptedException si lasi blocul catch gol (swallowed exception), thread-ul nu se va opri niciodata! Trebuie sa apelezi break sau Thread.currentThread().interrupt().",
+    keyTakeaway: "Oprirea unui thread se face cooperant verificand isInterrupted() si tratand corespunzator InterruptedException in bucla de executie."
   },
   {
     id: "java-175",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "De ce trebuie evitata metoda System.gc() in Aplicatii?",
-    question: "De ce apelarea explicita a metodei System.gc() este considerata un anti-pattern grav si ce flag JVM o dezactiveaza in productie?",
-    answer: "1. De ce este periculoasa apelarea System.gc():\\n   - Cand apelezi System.gc() (sau Runtime.getRuntime().gc()), JVM incearca sa forteze un FULL GARBAGE COLLECTION complet.\\n   - Un Full GC opreste toate firele aplicatiei (Stop-The-World pause), inghetand complet procesarea cererilor utilizatorilor pe o durata ce poate depasi zeci de secunde pe Heap-uri mari!\\n   - Strica planificarea inteligenta si efortul colectorilor moderni (G1, ZGC), care sunt optimizati sa curete incremental memoria fara pauze mari.\\n\\n2. Este doar o sugestie (dar respectata de HotSpot):\\n   - Specificatia JVM spune ca System.gc() este o sugestie, dar in configuratia standard HotSpot JVM o trateaza intotdeauna cu maxima prioritate, declansand STW imediat.\\n\\n3. Protectia in Productie (OBLIGATORIE):\\n   - Adauga intotdeauna parametrul JVM: -XX:+DisableExplicitGC.\\n   - Acest flag transforma orice apel System.gc() (chiar si din dependinte externe de la terti precum biblioteci vechi RMI) intr-o instructiune complet ignorata (No-Op).",
-    codeSnippet: `// Argument JVM obligatoriu pentru servere de productie:
-// java -XX:+DisableExplicitGC -jar app.jar`,
-    interviewTrap: "Daca folosesti DirectByteBuffers (memorie off-heap in Netty), Netty apela istoric System.gc() cand memoria off-heap se umplea pentru a declansa Phantom Cleaners. Cu -XX:+DisableExplicitGC activat, se recomanda asigurarea limitelor prin -XX:MaxDirectMemorySize.",
-    keyTakeaway: "System.gc() declanseaza Full GC si pauze lungi STW; blocheaza apelurile explicite in productie folosind -XX:+DisableExplicitGC."
+    title: "Daemon Thread vs User Thread in Java",
+    question: "Ce este un Daemon Thread si ce se intampla cu el cand toate User Threads si-au incheiat executia?",
+    answer: "1. User Thread (Thread Utilizator / Non-Daemon):\\n   - Toate thread-urile standard create de dezvoltator (inclusiv firul main) sunt User Threads in mod implicit.\\n   - Masina virtuala Java (JVM) NU se va opri cat timp exista macar un singur User Thread inca activ in executie!\\n\\n2. Daemon Thread (Thread Serviciu / Fundal):\\n   - Thread de prioritate joasa gandit pentru sarcini de suport in fundal (ex: Garbage Collector din JVM, thread-uri de curatare a cache-ului).\\n   - Comportament critic la oprire: Cand toate User Threads s-au terminat, JVM se opreste IMEDIAT, omorand instantaneu toate Daemon Threads fara ca blocurile lor finally sa mai fie executate!\\n\\n3. Cum se configureaza:\\n   - thread.setDaemon(true) - OBLIGATORIU inainte de apelul start()!",
+    codeSnippet: `Thread daemon = new Thread(() -> {
+    while (true) {
+        System.out.println("Background cleanup...");
+        try { Thread.sleep(500); } catch (InterruptedException e) {}
+    }
+});
+
+// Setare ca daemon inainte de start:
+daemon.setDaemon(true);
+daemon.start();
+
+// Daca firul 'main' se termina acum, JVM se opreste imediat
+// chiar daca thread-ul daemon avea bucla infinita!`,
+    interviewTrap: "Daca apelezi thread.setDaemon(true) DUPA thread.start(), vei primi IllegalThreadStateException la runtime!",
+    keyTakeaway: "JVM ramane in viata cat timp exista cel putin un User Thread; Daemon Threads sunt oprite brusc cand toate User Threads se termina."
   },
   {
     id: "java-176",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "De ce nu poti face new T() sau new T[10] in Java Generics?",
-    question: "De ce instantierea directa new T() sau new T[10] este strict interzisa de compilator in Java si cum se rezolva aceasta problema?",
-    answer: "Aceasta limitare este consecinta directa a mecanismului de Type Erasure (Stergerea Tipurilor):\\n\\n1. Cauza Tehnica:\\n   - La compilare, parametrul de tip generic T este sters si inlocuit cu Object (sau cu prima sa limita, bounded type).\\n   - La runtime, in bytecode, tipul T NU MAI EXISTA! JVM-ul habar nu are ce reprezinta T (este String? este Integer? este Candidate?).\\n   - Prin urmare, instructiunea new T() ar trebui sa stie ce constructor sa apeleze si cata memorie sa aloce pe Heap, informatie care lipseste cu desavarsire la runtime!\\n\\n2. Cele Doua Solutii Canonice:\\n   - Solutia 1 (Reflection cu Class<T>): Transmiterea explicita a obiectului de clasa Class<T> clazz si apelarea clazz.getDeclaredConstructor().newInstance().\\n   - Solutia 2 (Functional Supplier): Transmiterea unui Supplier<T> factory in constructor sau metoda: supplier.get().",
-    codeSnippet: `public class GenericFactory<T> {
-    // 1. Prin Supplier (Modern, curat, fara reflection):
-    public T create(Supplier<T> supplier) {
-        return supplier.get();
-    }
+    title: "Virtual Threads in Java 21 (Project Loom)",
+    question: "Ce sunt Virtual Threads introduse in Java 21 si de ce revolutioneaza aplicatiile I/O intensive?",
+    answer: "1. Problema Platform Threads (thread-urile traditionale Java):\\n   - Fiecare thread Java este mapat 1:1 pe un thread nativ al SO (cost scump de memorie ~1MB stiva, maxim cateva mii per masina).\\n   - Cand un thread face un apel blocant (I/O catre DB sau REST API), thread-ul de SO este tinut blocat fara sa faca nimic, irosind resurse masive.\\n\\n2. Ce aduc Virtual Threads (Java 21):\\n   - Thread-uri \"usoare\" (lightweight) gestionate direct de JVM, nu de sistemul de operare.\\n   - Cost infim de memorie (cativa KB) si creare aproape instantanee (poti crea milioane de Virtual Threads pe un singur laptop!).\\n   - Cand un Virtual Thread face un apel I/O blocant, JVM il suspenda automat (unmount) si aloca thread-ul fizic (Carrier Thread) altui Virtual Thread!\\n   - Cand datele sosesc, thread-ul este reluat fara a bloca thread-ul de sistem de operare.\\n\\n3. Utilizare ideala:\\n   - Arhitectura clasica thread-per-request pentru servicii web cu sute de mii de cereri I/O simultane.",
+    codeSnippet: `// 1. Pornire directa a unui Virtual Thread in Java 21:
+Thread.startVirtualThread(() -> {
+    System.out.println("Ruleaza pe Virtual Thread!");
+});
 
-    // 2. Prin Class<T> token (Reflection):
-    public T create(Class<T> clazz) throws Exception {
-        return clazz.getDeclaredConstructor().newInstance();
+// 2. ExecutorService cu Virtual Threads (un thread nou per task!):
+try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    for (int i = 0; i < 100_000; i++) {
+        executor.submit(() -> {
+            Thread.sleep(1000); // Nu blocheaza niciun thread OS!
+            return 42;
+        });
     }
-}`,
-    interviewTrap: "La crearea de array-uri generice, poti face cast (T[]) new Object[size]; dar acest cod genereaza un warning Unchecked Cast si poate provoca ArrayStoreException daca array-ul este expus in afara clasei.",
-    keyTakeaway: "new T() nu compileaza din cauza Type Erasure; se rezolva prin transmiterea unui Class<T> token sau a unui Supplier<T>."
+} // Se inchide automat la final`,
+    interviewTrap: "Virtual Threads NU sporesc viteza sarcinilor intensive de calcul CPU pur (unde numarul de nuclee fizice este factorul limitator); ele sunt o revolutie exclusiv pentru aplicatii blocante I/O.",
+    keyTakeaway: "Virtual Threads sunt thread-uri usoare gestionate de JVM (Java 21), permitand milioane de operatii I/O concurente fara a bloca thread-urile sistemului de operare."
   },
   {
     id: "java-177",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Invarianta Generics vs Covarianta Array-urilor in Java",
-    question: "De ce Array-urile sunt covariante in Java dar Colectiile Generice sunt invariante si de ce List<String> nu mosteneste List<Object>?",
-    answer: "1. Array-urile sunt Covariante (Design din Java 1.0):\\n   - Daca String este subtip al lui Object, atunci String[] este considerat automat un subtip al lui Object[].\\n   - Poti scrie: Object[] arr = new String[5];\\n   - Problema grava: Array-ul stie tipul sau real la runtime (Reified Type). Daca incerci sa scrii arr[0] = Integer.valueOf(42);, codul compileaza fara eroare, dar crapa la executie cu: java.lang.ArrayStoreException!\\n\\n2. Generics sunt Invariante (Design sigur din Java 5):\\n   - List<String> NU ESTE un subtip al lui List<Object>, chiar daca String extinde Object!\\n   - De ce a fost proiectat asa: Daca Java ar fi permis List<Object> list = new ArrayList<String>();, atunci ai fi putut apela list.add(42);. La urmatoarea citire din lista originala de string-uri ar fi crapat aplicatia!\\n   - Prin impunerea invariantei, compilatorul garanteaza 100% Type Safety la compilare (Compile-time Safety), eliminand erorile la runtime.",
-    codeSnippet: `// Array (Covariant - riscant la runtime):
-Object[] arr = new String[2];
-// arr[0] = 100; // CRASH la runtime: ArrayStoreException!
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ce este JDBC si pasii de executie ai unei interogari",
+    question: "Ce reprezinta JDBC in Java si care sunt pasii standard pentru a rula o interogare pe o baza de date relationala?",
+    answer: "1. Ce este JDBC (Java Database Connectivity):\\n   - API-ul standard din pachetul java.sql care defineste modul in care o aplicatie Java comunica si executa comenzi pe baze de date relationale (PostgreSQL, MySQL, Oracle).\\n\\n2. Pasii standard de executie:\\n   - Pasul 1: Incarcarea driver-ului (automat prin SPI in versiuni moderne).\\n   - Pasul 2: Stabilirea conexiunii prin DriverManager.getConnection(url, user, pass) sau un DataSource.\\n   - Pasul 3: Crearea unui obiect Statement sau PreparedStatement.\\n   - Pasul 4: Executarea interogarii (executeQuery() pentru SELECT sau executeUpdate() pentru INSERT/UPDATE/DELETE).\\n   - Pasul 5: Procesarea rezultatelor din ResultSet (bucla while (rs.next())).\\n   - Pasul 6: Inchiderea resurselor in ordine inversa (try-with-resources pe ResultSet, Statement, Connection).",
+    codeSnippet: `String url = "jdbc:postgresql://localhost:5432/mydb";
+String sql = "SELECT id, name FROM users";
 
-// Generics (Invariant - protejat la compilare):
-// List<Object> list = new ArrayList<String>(); // ERROR de compilare! Type mismatch!`,
-    interviewTrap: "Daca ai nevoie sa accepti o lista de orice tip derivat din Object intr-o metoda de citire, foloseste Wildcard-ul delimitat: List<? extends Object> (sau List<?>).",
-    keyTakeaway: "Array-urile sunt covariante si pot arunca ArrayStoreException la runtime; Generics sunt invariante pentru a garanta siguranta tipurilor la compilare."
+try (Connection conn = DriverManager.getConnection(url, "user", "pass");
+     Statement stmt = conn.createStatement();
+     ResultSet rs = stmt.executeQuery(sql)) {
+
+    while (rs.next()) {
+        long id = rs.getLong("id");
+        String name = rs.getString("name");
+        System.out.println(id + ": " + name);
+    }
+} catch (SQLException e) {
+    e.printStackTrace();
+}`,
+    interviewTrap: "Daca nu inchizi conexiunile si statement-urile (recomandat prin try-with-resources), vei epuiza rapid numarul maxim de conexiuni permise de baza de date (connection leak).",
+    keyTakeaway: "JDBC conecteaza Java la baze de date; pasii sunt Conexiune -> Statement -> Executie -> Procesare ResultSet -> Inchidere resurse."
   },
   {
     id: "java-178",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Heap Pollution si adnotarea @SafeVarargs",
-    question: "Ce este fenomenul de Heap Pollution in Java si cand este obligatorie adnotarea @SafeVarargs pe metode cu varargs generici?",
-    answer: "1. Ce este Heap Pollution (Poluarea Heap-ului):\\n   - Apare atunci cand o variabila de un tip generic parametrizat (ex: List<String>) ajunge sa retina o referinta catre un obiect care nu este de acel tip (ex: o lista care contine de fapt Integeri).\\n   - Cand incerci sa citesti un element din lista, compilatorul injecteaza un cast ascuns (String) list.get(0), care va arunca subit: ClassCastException intr-un loc din cod complet neasteptat!\\n\\n2. De ce Varargs Generici produc Heap Pollution:\\n   - In Java, varargs (T... args) este implementat sub capota ca un simplu array T[].\\n   - Deoarece array-urile sunt reificate iar genericele sunt sterse (Type Erasure), combinarea lor forteaza compilatorul sa creeze un Object[] array ascuns, poluand Heap-ul si generand avertismentul \"Possible heap pollution from parameterized vararg type\".\\n\\n3. Ce face adnotarea @SafeVarargs:\\n   - Asigura compilatorul ca metoda este SIGURA: corpul metodei doar citeste elementele din array-ul varargs si NU modifica array-ul si nu expune referinta array-ului in exterior.\\n   - Suprima avertismentul; poate fi aplicata doar pe metode statice, finale sau constructori.",
-    codeSnippet: `@SafeVarargs // Declaram ca nu modificam si nu expunem array-ul varargs
-public static <T> List<T> asListSafe(T... elements) {
-    List<T> list = new ArrayList<>();
-    for (T el : elements) { // Doar citire sigura!
-        list.add(el);
-    }
-    return list;
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Statement vs PreparedStatement in JDBC",
+    question: "De ce PreparedStatement este intotdeauna preferat in locul unui Statement obisnuit in JDBC?",
+    answer: "Aceasta este o intrebare obligatorie la orice interviu Java Junior/Mid!\\n\\n1. Prevenirea atacurilor SQL Injection (Securitate):\\n   - Statement foloseste concatenare directa de siruri de caractere. Daca un atacator introduce ghilimele si comenzi SQL (ex: ' OR '1'='1), interogarea este alterata.\\n   - PreparedStatement foloseste parametri cu semnul intrebarii (?). Valorile parametrilor sunt transmise separat de textul SQL si tratate strict ca date literale, facand SQL Injection imposibil!\\n\\n2. Performanta ridicata prin Precompilare (Caching):\\n   - Baza de date compileaza planul de executie o singura data pentru structura interogarii cu ?.\\n   - Cand rulezi aceeasi interogare de mii de ori cu valori diferite ale parametrilor, baza de date refoloseste direct planul compilat, fiind mult mai rapida decat Statement (care recompileaza la fiecare interogare).\\n\\n3. Lizibilitate: Elimina ghilimelele si concatenarile complexe de String-uri.",
+    codeSnippet: `// GRESIT: Vulnerabil la SQL Injection!
+String sql1 = "SELECT * FROM users WHERE email = '" + userInput + "'";
+Statement stmt = conn.createStatement();
+ResultSet rs1 = stmt.executeQuery(sql1);
+
+// CORECT si SIGUR: PreparedStatement
+String sql2 = "SELECT * FROM users WHERE email = ?";
+try (PreparedStatement pstmt = conn.prepareStatement(sql2)) {
+    pstmt.setString(1, userInput); // Tratat strict ca valoare literala!
+    ResultSet rs2 = pstmt.executeQuery();
 }`,
-    interviewTrap: "Daca o metoda marcheaza @SafeVarargs dar face arr[0] = (T) new Object(), este o minciuna adresata compilatorului si va produce ClassCastException la apelant.",
-    keyTakeaway: "Heap Pollution apare cand un tip generic retine alt tip din cauza stergerii; @SafeVarargs garanteaza ca o metoda cu varargs generic nu polueaza array-ul."
+    interviewTrap: "La interviu explica ambele motive: atat securitatea (prevenirea SQL Injection), cat si performanta (precompilarea planului de executie in baza de date).",
+    keyTakeaway: "PreparedStatement previne 100% atacurile SQL Injection si creste performanta bazei de date prin precompilarea planului de executie."
   },
   {
     id: "java-179",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "List<?> vs List<Object> vs Raw Type List",
-    question: "Care este diferenta critica de siguranta si functionalitate intre un Wildcard nelegat List<?>, o lista de obiecte List<Object> si un Raw Type List?",
-    answer: "1. Raw Type List (Invechit din Java 1.4):\\n   - Nu foloseste Generics deloc.\\n   - Poti adauga ORICE obiect in ea (list.add(\"test\"), list.add(10)).\\n   - Dezactiveaza complet verificarile de tip ale compilatorului, necesitand cast-uri manuale si riscand ClassCastException la runtime. De evitat categoric!\\n\\n2. List<Object>:\\n   - Este o lista tipizata generic care accepta strict obiecte de tip Object.\\n   - Datorita invariantei, NU poti atribui un List<String> unei variabile de tip List<Object> (arunca eroare de compilare).\\n   - Poti adauga orice obiect in ea prin apelul list.add(obj).\\n\\n3. List<?> (Unbounded Wildcard - \"Lista de un tip necunoscut\"):\\n   - Este supertipul universal pentru ORICE lista generica (poti atribui un List<String>, List<Integer> sau List<Candidate>).\\n   - ESTE READ-ONLY pentru scrieri: NU poti adauga NICIUN obiect in ea (in afara de valoarea null)! Daca incerci list.add(\"abc\"), compilatorul refuza, deoarece nu stie care este tipul real din spatele wildcard-ului.",
-    codeSnippet: `// 1. List<?> accepta orice lista ca parametru de citire:
-public void printSize(List<?> list) {
-    System.out.println(list.size()); // Citire permisa
-    // list.add("test"); // CRASH la compilare! Nu poti adauga in List<?>
-}
+    title: "CallableStatement in JDBC",
+    question: "Ce este CallableStatement in JDBC si cand se foloseste?",
+    answer: "1. Ce este CallableStatement:\\n   - O subinterfata a lui PreparedStatement folosita special pentru executarea procedurilor stocate (Stored Procedures) si functiilor stocate definite in baza de date.\\n\\n2. Sintaxa standard:\\n   - Foloseste sintaxa de escape standard JDBC: {call procedure_name(?, ?)}.\\n\\n3. Gestionarea parametrilor IN si OUT:\\n   - Parametri IN (de intrare): se seteaza cu metode clasice (ex: setInt, setString).\\n   - Parametri OUT (de iesire): trebuie inregistrati inainte de executie cu registerOutParameter(index, java.sql.Types) si extrasi dupa executie (ex: getDouble(index)).",
+    codeSnippet: `String sql = "{call get_employee_bonus(?, ?)}";
 
-// 2. List<Object> accepta doar liste create explicit ca List<Object>:
-List<String> strings = new ArrayList<>();
-// List<Object> objs = strings; // ERROR! Invarianta nu permite!
-List<?> wildcard = strings;     // OK!`,
-    interviewTrap: "Poti citi din List<?>, iar elementele citite au intotdeauna tipul static Object. Singurul lucru pe care il poti adauga vreodata intr-un List<?> este literalul null.",
-    keyTakeaway: "List<?> este pentru citire polimorfica universala (read-only); List<Object> este invariant si accepta orice la scriere; Raw List este nesigur."
+try (CallableStatement cstmt = conn.prepareCall(sql)) {
+    cstmt.setLong(1, 101L); // Parametru IN: employee_id
+
+    // Inregistrare parametru OUT: bonus_amount (FLOAT / NUMERIC)
+    cstmt.registerOutParameter(2, java.sql.Types.DECIMAL);
+
+    cstmt.execute();
+
+    BigDecimal bonus = cstmt.getBigDecimal(2); // Extragere valoare returnata
+    System.out.println("Bonus: " + bonus);
+}`,
+    interviewTrap: "Daca uiti sa apelezi registerOutParameter() pe un parametru de iesire inainte de cstmt.execute(), vei primi SQLException.",
+    keyTakeaway: "CallableStatement se utilizeaza pentru apelarea procedurilor stocate din baza de date si gestioneaza parametri IN si OUT."
   },
   {
     id: "java-180",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Multiple Bounded Type Parameters: <T extends Number & Comparable<T>>",
-    question: "Cum declari limite multiple pentru un parametru generic (Multiple Bounds) si de ce regula ordonarii impune clasa inaintea interfetelor?",
-    answer: "In Java Generics, poti restrictiona un tip generic T sa indeplineasca mai multe contracte simultan folosind operatorul ampersand (&):\\n\\nSintaxa: <T extends ClassBound & InterfaceBound1 & InterfaceBound2>\\n\\nRegula Stricta de Ordonare:\\n1. Daca una dintre limite este o CLASA concreta sau abstracta (nu o interfata), acea clasa TREBUIE sa fie plasata OBLIGATORIU pe PRIMA POZITIE din lista de limite!\\n2. Dupa clasa pot urma oricate interfete separate prin &.\\n3. De ce impune compilatorul aceasta regula:\\n   - Java nu suporta mostenire multipla de clase; o clasa poate extinde cel mult un singur parinte direct.\\n   - Daca prima pozitie nu era rezervata pentru clasa, compilatorul ar fi trebuit sa rezolve ambiguitati masive de generare a bytecode-ului (la Type Erasure, clasa este inlocuita cu primul tip din lista de bounds!).",
-    codeSnippet: `// CORECT: Clasa Number pe prima pozitie, urmata de interfata Comparable:
-public <T extends Number & Comparable<T>> T findMax(T a, T b) {
-    return a.compareTo(b) > 0 ? a : b;
-}
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "ResultSet in JDBC: Navigare si Indici",
+    question: "Cum se parcurge un ResultSet in JDBC si de ce indicii coloanelor incep de la 1 si nu de la 0?",
+    answer: "1. Navigarea cu rs.next():\\n   - La deschidere, cursorul ResultSet-ului este pozitionat chiar INAINTE de primul rand (beforeFirst).\\n   - Metoda rs.next() muta cursorul pe urmatorul rand valid si returneaza true daca mai exista un rand, sau false cand s-au terminat datele.\\n   - De aceea se parcurge intotdeauna cu bucla while (rs.next()).\\n\\n2. De ce indicii coloanelor incep de la 1:\\n   - Standardul SQL (ANSI SQL) defineste coloanele incepand cu indexul 1, nu 0 ca in array-urile de programare din C sau Java.\\n   - Prin urmare, rs.getString(1) extrage prima coloana! Daca scrii rs.getString(0), JDBC arunca SQLException: Column Index out of range.\\n\\n3. Nume de coloana vs Index:\\n   - rs.getString(\"email\") este mai sigur la refactoring decat rs.getString(2).",
+    codeSnippet: `try (ResultSet rs = pstmt.executeQuery()) {
+    while (rs.next()) {
+        // Indicii incep de la 1 in JDBC!
+        long id = rs.getLong(1);
+        String name = rs.getString(2);
 
-// GRESIT - eroare de compilare:
-// public <T extends Comparable<T> & Number> ... // ERROR: interface expected here!`,
-    interviewTrap: "Nu poti declara doua clase in lista de multiple bounds (ex: <T extends Number & String>), deoarece nicio clasa Java nu poate mosteni doua superclase simultan.",
-    keyTakeaway: "Multiple bounds foloseste & pentru a combina o clasa si interfete; clasa trebuie sa fie obligatoriu pe prima pozitie."
+        // Sau dupa numele coloanei (mai clar):
+        String email = rs.getString("email");
+    }
+}`,
+    interviewTrap: "Daca incerci sa citesti rs.getString(...) inainte de a apela macar o data rs.next(), vei primi SQLException: \"Before start of result set\".",
+    keyTakeaway: "ResultSet necesita apelul next() pentru mutarea pe primul rand; indicii coloanelor incep de la 1, conform standardului SQL."
   },
   {
     id: "java-181",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "De ce este periculos sa prinzi catch (Throwable t) sau catch (Error e)?",
-    question: "De ce prinderea lui Throwable sau Error este considerata o practica periculoasa in codul de aplicatie?",
-    answer: "Ierarhia de exceptii are la baza java.lang.Throwable, care se imparte in doua ramuri majore:\\n1. java.lang.Exception (si RuntimeException): Erori de logica sau conditii anormale de aplicatie din care sistemul se poate recupera (ex: fisier negasit, validare esuata, timeout).\\n2. java.lang.Error: Probleme catastrofale la nivelul masinii virtuale JVM sau a resurselor de sistem hardware (ex: OutOfMemoryError, StackOverflowError, InternalError, UnknownError).\\n\\nDe ce nu trebuie prinse Error sau Throwable:\\n- Un Error semnaleaza ca mediul de executie este compromis grav si ireversibil (memoria este corupta, stiva s-a terminat, sau thread-ul a fost oprit fortat).\\n- Daca prinzi catch (Throwable t) si continui executia, lasi aplicatia sa ruleze intr-o stare zombie nepredictibila, putand corupe baze de date sau bloca definitiv alte module!\\n- Singurul loc unde se accepta catch (Throwable) este in framework-uri de nivel foarte inalt (ex: Tomcat/Netty event loop) strict pentru a loga eroarea fatala inainte de restart.",
-    codeSnippet: `// GRESIT: prinde si inghite erori fatale de JVM:
-try {
-    processBatch();
-} catch (Throwable t) { // Poate prinde OutOfMemoryError si sa continue!
-    log.error("Ceva a mers prost");
-}
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Tranzactii manuale in JDBC (ACID)",
+    question: "Cum gestionezi o tranzactie manuala in JDBC folosind setAutoCommit, commit si rollback?",
+    answer: "1. Comportamentul implicit al JDBC:\\n   - In mod implicit, conexiunea are auto-commit activat (conn.getAutoCommit() == true).\\n   - Fiecare comanda SQL executata este comisa automat si imediat ca o tranzactie separata in baza de date.\\n\\n2. Cum creezi o Tranzactie compusa (Atomicitate):\\n   - Dezactivezi auto-commit: conn.setAutoCommit(false).\\n   - Executi comenzile SQL din cadrul tranzactiei (ex: scadere bani cont A, adaugare bani cont B).\\n   - Daca toate au reusit: apelezi conn.commit() pentru a salva modificarile definitiv.\\n   - Daca oricare comanda a aruncat o exceptie: apelezi conn.rollback() in blocul catch pentru a anula toate operatiile si a reveni la starea initiala.\\n   - In blocul finally restaurezi conn.setAutoCommit(true).",
+    codeSnippet: `try (Connection conn = dataSource.getConnection()) {
+    conn.setAutoCommit(false); // 1. Pornim tranzactia manuala
 
-// CORECT: prinde strict exceptiile din care te poti recupera:
-try {
-    processBatch();
-} catch (Exception e) {
-    log.error("Eroare de procesare", e);
+    try (PreparedStatement withdraw = conn.prepareStatement("UPDATE accounts SET bal = bal - 100 WHERE id = 1");
+         PreparedStatement deposit  = conn.prepareStatement("UPDATE accounts SET bal = bal + 100 WHERE id = 2")) {
+
+        withdraw.executeUpdate();
+        deposit.executeUpdate();
+
+        conn.commit(); // 2. Confirmam salvarea daca totul e OK
+    } catch (SQLException e) {
+        conn.rollback(); // 3. Anulam tot in caz de eroare!
+        throw e;
+    } finally {
+        conn.setAutoCommit(true); // Restabilim starea
+    }
 }`,
-    interviewTrap: "Daca prinzi InterruptedException si nu o repui pe fir, ai inghitit semnalul de oprire; daca prinzi VirtualMachineError, impiedici sistemul sa se opreasca curat.",
-    keyTakeaway: "Prinde doar Exception; lasa Error si Throwable sa se propage pentru a permite JVM-ului sau orchestratorului sa gestioneze situatiile fatale."
+    interviewTrap: "Daca uiti sa apelezi conn.rollback() in catch si conexiunea este returnata intr-un connection pool, tranzactia neterminata poate cauza lock-uri pe tabele si date inconsistente pentru urmatorii clienti.",
+    keyTakeaway: "Tranzactiile manuale in JDBC folosesc setAutoCommit(false), urmat de commit() in caz de succes si rollback() in caz de eroare."
   },
   {
     id: "java-182",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Exception Masking (Swallowing) in blocul finally",
-    question: "Ce este fenomenul de Exception Masking cand atat blocul try cat si blocul finally arunca exceptii si cum il rezolva try-with-resources?",
-    answer: "1. Ce este Exception Masking (Mascarea Exceptiilor) in try-finally clasic:\\n   - Daca blocul try arunca o exceptie critica de business (ex: PaymentFailedException);\\n   - Iar in blocul finally (unde inchizi resursele manual) metoda close() arunca o alta exceptie (ex: SocketException);\\n   - Comportamentul JVM este dramatic: exceptia din finally O MASCHEAZA (o inghite si o suprascrie complet) pe cea din try!\\n   - Apelantul va vedea DOAR SocketException din finally, iar cauza originala a esecului de plata se pierde pentru totdeauna din log-uri!\\n\\n2. Solutia Moderna: try-with-resources si Suppressed Exceptions:\\n   - In try-with-resources, exceptia din interiorul blocului try este intotdeauna EXCEPTIA PRINCIPALA (Primara).\\n   - Daca si apelul automat close() arunca o eroare, acea eroare secundara este atasata ca \"Suppressed Exception\" (adaugata prin e.addSuppressed()) la exceptia principala!\\n   - Ambele stack trace-uri raman vizibile complet in log-uri.",
-    codeSnippet: `try (CustomResource res = new CustomResource()) {
-    throw new BusinessException("Tranzactie esuata!"); // Exceptia Primara
-} // La iesire res.close() arunca CloseException!
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Connection Pooling in Java (HikariCP)",
+    question: "Ce este un Connection Pool (ex: HikariCP) si de ce este esential in aplicatiile backend enterprise?",
+    answer: "1. De ce deschiderea de conexiuni noi la fiecare request este lenta:\\n   - Deschiderea unei conexiuni fizice TCP catre baza de date presupune: TCP 3-way handshake, autentificare SSL/TLS, validare username/parola si alocare de sesiune in serverul DB.\\n   - Aceasta operatie poate dura intre 50ms si 300ms per request, distrugand performanta aplicatiei.\\n\\n2. Ce face un Connection Pool:\\n   - La pornirea aplicatiei, creaza si mentine un set de conexiuni fizice gata deschise (ex: 10 conexiuni).\\n   - Cand o metoda cere o conexiune (dataSource.getConnection()), primeste instantaneu o conexiune gata deschisa din pool in doar cateva microsecunde.\\n   - Cand apelezi conn.close(), conexiunea NU se inchide fizic pe retea! Metoda close() a fost suprascrisa (wrapper) pentru a returna conexiunea inapoi in pool pentru a fi refolosita.\\n\\n3. HikariCP:\\n   - Cel mai rapid si mai utilizat connection pool in ecosistemul Java / Spring Boot modern.",
+    codeSnippet: `// In Spring Boot, HikariCP este default-ul:
+HikariConfig config = new HikariConfig();
+config.setJdbcUrl("jdbc:postgresql://localhost:5432/mydb");
+config.setUsername("user");
+config.setPassword("secret");
+config.setMaximumPoolSize(10); // Maxim 10 conexiuni active
 
-// In log-uri apare:
-// BusinessException: Tranzactie esuata!
-//     Suppressed: CloseException: Eroare la inchidere!`,
-    interviewTrap: "Daca pui o instructiune return sau throw in interiorul unui bloc finally traditional, acea instructiune va anula orice exceptie aruncata anterior in blocul try.",
-    keyTakeaway: "try-with-resources pastreaza exceptia originala ca principala si ataseaza erorile de inchidere ca Suppressed Exceptions."
+HikariDataSource dataSource = new HikariDataSource(config);
+
+try (Connection conn = dataSource.getConnection()) {
+    // Luat instantaneu din pool!
+    // conn.close() la final doar returneaza conexiunea in pool
+}`,
+    interviewTrap: "Apelul connection.close() pe o conexiune obtinuta dintr-un DataSource cu connection pool NU inchide conexiunea la baza de date, ci doar o returneaza ca disponibila in pool.",
+    keyTakeaway: "HikariCP mentine conexiuni pre-deschise, evitand negocierea TCP costisitoare la fiecare cerere HTTP si returnand conexiunile la close()."
   },
   {
     id: "java-183",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "AutoCloseable vs Closeable in Java",
-    question: "Care este diferenta dintre interfata java.lang.AutoCloseable si java.io.Closeable?",
-    answer: "1. java.io.Closeable (Introdusa in Java 5):\\n   - Este interfata traditionala din pachetul java.io.\\n   - Semnatura metodei: void close() throws IOException;\\n   - Specificatia impune IDEMPOTENTA: Apelarea metodei close() a doua oara pe o resursa deja inchisa nu trebuie sa aiba niciun efect si nu trebuie sa arunce eroare.\\n\\n2. java.lang.AutoCloseable (Introdusa in Java 7 pentru try-with-resources):\\n   - Este interfata parinte pe care o extinde Closeable (Closeable extends AutoCloseable).\\n   - Semnatura metodei: void close() throws Exception; (poate arunca orice tip de exceptie, nu doar IOException!).\\n   - Specificatia NU impune obligativitatea idempotentei (desi este puternic recomandata).\\n   - Permite utilizarea oricaror resurse (conexiuni DB, lock-uri, client-i de retea) in blocuri try-with-resources.",
-    codeSnippet: `// Custom resource moderna:
-public class TransactionScope implements AutoCloseable {
-    @Override
-    public void close() throws SQLException { // Semnatura specifica, nu generala Exception!
-        rollbackIfNotCommitted();
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Design Pattern: Singleton in Java",
+    question: "Ce este Singleton si care sunt cele mai sigure si recomandate moduri de implementare thread-safe in Java?",
+    answer: "1. Ce este Singleton:\\n   - Un sablon creational (GoF) care asigura ca o clasa are o SINGURA instanta in toata aplicatia si ofera un punct global de acces la ea.\\n   - Elementele de baza: constructor strict private, camp static pentru instanta, metoda publica statica getInstance().\\n\\n2. Implementarea 1: Initialization-on-Demand Holder (Recomandata):\\n   - Se bazeaza pe mecanismul de incarcare al claselor din JVM (Class specifications). Clasa interna statica Holder este incarcata DOAR la primul apel al getInstance(), fiind 100% thread-safe si lazy fara niciun cuvant cheie synchronized!\\n\\n3. Implementarea 2: Enum Singleton (Joshua Bloch - Effective Java):\\n   - public enum AppConfig { INSTANCE; }\\n   - Este cea mai sigura implementare impotriva atacurilor prin Java Reflection si serializare.",
+    codeSnippet: `// Varianta moderna "Holder" (Thread-safe, Lazy, Zero Lock Overhead):
+public class DatabaseManager {
+    private DatabaseManager() {
+        // Previne instantierea prin Reflection:
+        if (Holder.INSTANCE != null) throw new IllegalStateException();
     }
+
+    private static class Holder {
+        private static final DatabaseManager INSTANCE = new DatabaseManager();
+    }
+
+    public static DatabaseManager getInstance() {
+        return Holder.INSTANCE;
+    }
+}
+
+// Varianta Enum (recomandata de Joshua Bloch):
+public enum EasySingleton {
+    INSTANCE;
+    public void doWork() { /* operatii */ }
 }`,
-    interviewTrap: "Cand implementezi AutoCloseable pe o clasa proprie, este recomandat sa restrangi clauza throws la exceptia specifica (ex: throws SQLException sau chiar fara throws), in loc sa declari throws Exception in mod generic.",
-    keyTakeaway: "Closeable arunca strict IOException si cere idempotenta; AutoCloseable este parintele general care poate arunca orice Exception."
+    interviewTrap: "Vechiul Double-Checked Locking (DCL) necesita obligatoriu ca variabila de instanta sa fie marcata volatile, altfel alte thread-uri pot vedea un obiect partial initializat din cauza reordonarii de instructiuni.",
+    keyTakeaway: "Singleton asigura o instanta unica; cele mai bune implementari sunt Bill Pugh Holder Pattern si Enum Singleton."
   },
   {
     id: "java-184",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Ordinea Blocurilor Catch: De la Derivat la Parinte",
-    question: "De ce ordinea blocurilor catch trebuie sa fie intotdeauna de la subclasa spre superclasa si ce restrictie are Multi-Catch?",
-    answer: "1. Regula Ierarhiei in Blocuri Catch Multiple:\\n   - Compilatorul Java verifica blocurile catch secvential, de sus in jos, exact in ordinea scrisa.\\n   - Daca pui o superclasa mai generala (ex: catch (Exception e)) inaintea unei subclase specifice (ex: catch (IOException e)):\\n   - Blocul superior va intercepta absolut toate exceptiile, facand blocul inferior cu IOException complet INACCESIBIL (Unreachable Code)!\\n   - Compilatorul va refuza sa compileze codul cu eroarea: \"exception has already been caught\".\\n\\n2. Regula in Multi-Catch (Java 7 - catch (A | B e)):\\n   - Poti prinde mai multe exceptii pe o singura linie folosind bara verticala (|).\\n   - Restrictie stricta: Tipurile de exceptii listate in multi-catch NU AU VOIE sa aiba relatie de mostenire directa (nu poti scrie catch (IOException | FileNotFoundException e) deoarece FileNotFoundException este deja o subclasa a lui IOException)!\\n   - In multi-catch, variabila e este implicit FINAL.",
-    codeSnippet: `// 1. Ordinea corecta: de la specific la general:
-try {
-    process();
-} catch (FileNotFoundException e) {
-    // Specific
-} catch (IOException e) {
-    // Mai general
-} catch (Exception e) {
-    // Cel mai general
-}
+    title: "Design Pattern: Factory Method",
+    question: "Ce este Factory Method Pattern si de ce preferam sa delegam instantierea unei fabrici in loc de a apela new direct?",
+    answer: "1. Ce este Factory Method:\\n   - Un sablon creational care defineste o interfata sau o metoda pentru crearea unui obiect, lasand subclasele sau fabrica sa decida ce clasa concreta sa instantieze.\\n\\n2. De ce este superior apelului direct new MyClass():\\n   - Decuplare (Loose Coupling): Clientul depinde doar de interfata abstracta (ex: Notification), nu de clasele concrete (EmailNotification, SmsNotification).\\n   - Extensibilitate (Open/Closed Principle): Daca adaugi un nou tip de notificare (ex: PushNotification), modifici doar fabrica, fara a atinge zecile de clase client care folosesc interfata.\\n   - Incapsularea complexitatii de creare: Permite ascunderea parametrilor greoi de configurare necesari la crearea obiectului.",
+    codeSnippet: `public interface Notification { void send(String msg); }
+public class EmailNotification implements Notification { public void send(String msg) { ... } }
+public class SmsNotification implements Notification { public void send(String msg) { ... } }
 
-// 2. Multi-catch valid (fara relatie de mostenire directa):
-try {
-    run();
-} catch (SQLException | IOException e) {
-    log.error("Eroare de IO sau DB", e);
+// Fabrica:
+public class NotificationFactory {
+    public static Notification createNotification(String type) {
+        return switch (type.toUpperCase()) {
+            case "EMAIL" -> new EmailNotification();
+            case "SMS" -> new SmsNotification();
+            default -> throw new IllegalArgumentException("Tip necunoscut: " + type);
+        };
+    }
 }`,
-    interviewTrap: "In multi-catch (catch (SQLException | IOException e)), parametrul \"e\" este final; nu poti face reatribuire (e = new IOException() este interzis).",
-    keyTakeaway: "Catch-urile se ordoneaza de la subclasa la superclasa; in multi-catch exceptiile nu trebuie sa se mosteneasca reciproc."
+    interviewTrap: "Daca creezi obiecte concrete cu new peste tot in codul de business, creezi o legatura rigida care face testarea unitara cu mock-uri foarte anevoioasa.",
+    keyTakeaway: "Factory Method incapsuleaza logica de instantiere, decupland codul client de clasele concrete conform principiului Dependency Inversion."
   },
   {
     id: "java-185",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Exceptii Custom Ultra-Rapide fara StackTrace",
-    question: "De ce crearea si aruncarea de exceptii in Java este costisitoare si cum optimizezi o exceptie de control prin writableStackTrace=false?",
-    answer: "1. De unde vine costul urias al unei exceptii in Java:\\n   - Aruncarea si prinderea unei exceptii nu este costisitoare in sine; pasul de 100 de ori mai lent este GENERAREA STACK TRACE-ULUI in momentul instantierii obiectului Throwable (apelul metodei native Throwable.fillInStackTrace())!\\n   - JVM trebuie sa suspende firul si sa parcurga toata stiva de apeluri (stack frames), inspectand metodele si numerele de linie.\\n\\n2. Solutia pentru Exceptii Frecvente de Control (Flow Control):\\n   - Daca folosesti o exceptie doar pentru a semnala o conditie frecventa de business (ex: RecordNotFoundException sau TokenExpiredException) si nu ai nevoie de stack trace pentru debugging:\\n   - Foloseste constructorul protejat cu 4 parametri introdus in Java 7, setand writableStackTrace = false!\\n   - Instantierea devine instantanee (la fel de rapida ca crearea unui simplu obiect POJO), eliminand orice degradare de performanta sub sarcina mare.",
-    codeSnippet: `public class FastBusinessException extends RuntimeException {
-    public FastBusinessException(String message) {
-        // message, cause, enableSuppression, writableStackTrace
-        super(message, null, false, false); // ZERO generare de StackTrace!
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Design Pattern: Builder",
+    question: "Ce problema rezolva Builder Pattern si cum se implementeaza o clasa Builder cu Fluent API?",
+    answer: "1. Ce problema rezolva (Constructor Telescopic Anti-Pattern):\\n   - Cand o clasa are multi parametri (ex: 8-10 campuri), dintre care majoritatea sunt optionali, esti fortat sa creezi zeci de constructori supraincarcati cu combinatii diferite de parametri sau sa transmiti liste lungi de null (ex: new User(\"Ion\", null, null, 25, null, true)).\\n   - Este greu de citit si usor sa inversezi ordinea argumentelor de acelasi tip (ex: doua String-uri: firstName, lastName).\\n\\n2. Ce aduce Builder:\\n   - Permite crearea pas cu pas a obiectelor complexe folosind un Fluent API (metode de chaining return this).\\n   - Permite mentinerea obiectului tinta ca fiind STRICT IMUTABIL (campuri private final si fara setteri!).\\n   - Biblioteca Lombok ofera adnotarea @Builder care genereaza tot acest cod automat.",
+    codeSnippet: `public class UserProfile {
+    private final String username; // obligatoriu
+    private final String email;    // obligatoriu
+    private final int age;         // optional
+    private final String phone;    // optional
+
+    private UserProfile(Builder b) {
+        this.username = b.username;
+        this.email = b.email;
+        this.age = b.age;
+        this.phone = b.phone;
     }
 
-    // Sau poti suprascrie direct metoda:
-    @Override
-    public synchronized Throwable fillInStackTrace() {
-        return this; // Nu face nimic, zero overhead CPU!
+    public static class Builder {
+        private final String username;
+        private final String email;
+        private int age;
+        private String phone;
+
+        public Builder(String username, String email) {
+            this.username = username;
+            this.email = email;
+        }
+        public Builder age(int age) { this.age = age; return this; }
+        public Builder phone(String phone) { this.phone = phone; return this; }
+        public UserProfile build() { return new UserProfile(this); }
     }
-}`,
-    interviewTrap: "Daca setezi writableStackTrace=false, logarea e.printStackTrace() va afisa doar mesajul exceptiei, fara nicio linie de cod sau clasa apelanta. Foloseste-l strict pe erori de flux de date asteptate.",
-    keyTakeaway: "Dezactivarea StackTrace-ului (writableStackTrace=false) face exceptiile de 100x mai rapide, ideale pentru validari masive."
+}
+
+// Utilizare eleganta si lizibila:
+UserProfile user = new UserProfile.Builder("mihai", "m@test.com")
+    .age(28)
+    .phone("0712345678")
+    .build();`,
+    interviewTrap: "Builder este recomandat in special cand obiectul trebuie sa fie imutabil. Daca ai folosi un constructor default + setteri, obiectul ar ramane mutabil pe toata durata aplicatiei.",
+    keyTakeaway: "Builder construieste obiecte complexe cu multi parametri optionali in mod fluent si lizibil, pastrand imutabilitatea obiectului final."
   },
   {
     id: "java-186",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Zero-Copy in Java NIO: FileChannel.transferTo()",
-    question: "Ce este mecanismul de Zero-Copy in Java NIO si cum transfera FileChannel.transferTo() date fara comutari de context in User Space?",
-    answer: "1. Cum functioneaza transferul traditional I/O (4 Buffer Copies + 4 Context Switches):\\n   - Daca vrei sa trimiti un fisier de pe disc pe un socket de retea:\\n     - 1. DMA (Direct Memory Access) copiaza fisierul de pe disc in Kernel Read Buffer.\\n     - 2. CPU copiaza datele din Kernel Space in User Space Buffer (aplicatia Java).\\n     - 3. CPU copiaza datele din User Space inapoi in Kernel Socket Buffer.\\n     - 4. DMA copiaza din Socket Buffer pe placa de retea (NIC Buffer).\\n   - Presupune 4 schimbari de context intre User Mode si Kernel Mode si 4 copieri de memorie!\\n\\n2. Ce aduce Zero-Copy (FileChannel.transferTo):\\n   - Utilizeaza apelul de sistem nativ de kernel Linux: sendfile().\\n   - Datele sunt citite direct de placa de retea din buffer-ul de kernel al discului prin descriptori DMA!\\n   - Datele NU MAI TREC NICIODATA prin memoria procesului Java (User Space).\\n   - Rezultat: Zero cicluri CPU irosite pe copiere de octeti si throughput masiv (folosit de Kafka, Netty, Tomcat).",
-    codeSnippet: `FileChannel fileChannel = new FileInputStream("large_video.mp4").getChannel();
-SocketChannel socketChannel = SocketChannel.open(new InetSocketAddress("remotehost", 8080));
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Design Pattern: Prototype si Capcana Cloneable",
+    question: "Ce este Prototype Pattern, ce face interfata Cloneable si de ce copy constructorul este mult mai recomandat?",
+    answer: "1. Ce este Prototype Pattern:\\n   - Un sablon creational utilizat pentru a crea obiecte noi prin clonarea (copierea) unei instante existente gata configurate (prototip), in loc de recrearea de la zero cu operatii costisitoare.\\n\\n2. Capcana interfetei Cloneable si a metodei clone():\\n   - Cloneable este o interfata marker cu un design defectuos recunoscut oficial: metoda clone() este declarata in Object ca protected si arunca CloneNotSupportedException!\\n   - In mod implicit, super.clone() realizeaza doar un SHALLOW COPY (copie superficiala): copiaza doar referintele obiectelor continute, nu si obiectele din interior! Daca obiectul clonat modifica o lista interna, o va modifica si in original!\\n\\n3. Ce se recomanda in schimb (Joshua Bloch):\\n   - Copy Constructor: public User(User other) { ... }\\n   - Copy Factory: public static User newInstance(User other) { ... }\\n   - Simplu, sigur, fara exceptii verificate si permite realizarea unui Deep Copy explicit.",
+    codeSnippet: `// Abordarea moderna recomandata: Copy Constructor
+public class Address {
+    private String city;
+    public Address(Address other) { this.city = other.city; }
+}
 
-// ZERO-COPY nativ prin kernel:
-long transferred = fileChannel.transferTo(0, fileChannel.size(), socketChannel);`,
-    interviewTrap: "Apache Kafka este atat de rapid tocmai datorita folosirii lui FileChannel.transferTo() si a operatiilor secventiale pe disc prin OS PageCache.",
-    keyTakeaway: "FileChannel.transferTo utilizeaza apelul nativ sendfile(), transferand datele direct intre buffere de kernel fara a atinge memoria aplicatiei."
+public class Customer {
+    private String name;
+    private Address address;
+
+    // Copy Constructor curat (Deep Copy):
+    public Customer(Customer other) {
+        this.name = other.name;
+        this.address = new Address(other.address); // copie noua profunda!
+    }
+}`,
+    interviewTrap: "Evita utilizarea interfetei Cloneable in Java modern. In interviuri, argumenteaza ca Joshua Bloch (autorul cartii Effective Java) sfatuieste folosirea unui Copy Constructor.",
+    keyTakeaway: "Prototype cloneaza instante existente; prefera intotdeauna Copy Constructor in loc de defectuoasa interfata Cloneable."
   },
   {
     id: "java-187",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Direct ByteBuffer vs Heap ByteBuffer in Java NIO",
-    question: "Care este diferenta dintre un ByteBuffer alocat pe Heap si un Direct ByteBuffer (Off-Heap) si cum sunt eliberate resursele native?",
-    answer: "1. Heap ByteBuffer (ByteBuffer.allocate(size)):\\n   - Memoria este alocata pe Heap-ul Java normal.\\n   - Rapid de creat si curatat automat de Garbage Collector.\\n   - Dezavantaj la operatii I/O: Cand scrii un Heap Buffer pe un socket de retea, JVM-ul este obligat sa creeze temporar un buffer nativ intern, sa copieze datele din Heap in memoria nativa si abia apoi sa apeleze kernel-ul (deoarece GC poate muta obiectele din Heap in memorie la compactare in timp ce I/O-ul ruleaza!).\\n\\n2. Direct ByteBuffer (ByteBuffer.allocateDirect(size)):\\n   - Aloca memoria in memoria NATIVA a sistemului de operare (Off-Heap, folosind malloc C++).\\n   - Paginile de memorie sunt blocate fizic (Pinned Memory), permitand kernel-ului si DMA sa scrie/citeasca direct din ele cu zero copiere intermediara.\\n   - Ideal pentru buffere de I/O de lunga durata in servere de inalta performanta (Netty).\\n\\n3. Cum se elibereaza memoria Off-Heap:\\n   - DirectByteBuffer retine un obiect special java.lang.ref.Cleaner.\\n   - Cand obiectul Java devine inaccesibil pe Heap, Cleaner-ul apeleaza functia nativa de eliberare a memoriei C++ (free).",
-    codeSnippet: `// 1. Heap Buffer:
-ByteBuffer heapBuf = ByteBuffer.allocate(1024);
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Design Pattern: Adapter",
+    question: "Ce este Adapter Pattern si cum permite colaborarea intre doua interfete incompatibile?",
+    answer: "1. Ce este Adapter Pattern:\\n   - Un sablon structural (GoF) care converteste interfata unei clase intr-o alta interfata pe care o asteapta clientul.\\n   - Permite claselor cu interfete incompatibile sa lucreze impreuna, exact ca un adaptor de priza de calatorie care conecteaza un stecher european la o priza americana.\\n\\n2. Cum se implementeaza (Object Adapter):\\n   - Creezi o clasa Adapter care implementeaza interfata tinta asteptata de client.\\n   - Adapter-ul primeste prin compozitie instanta clasei incompatibile (Adaptee) si traduce apelurile de metode catre metodele specifice ale acesteia.",
+    codeSnippet: `// Interfata dorita de aplicatie:
+public interface ModernPayment {
+    void payInEur(double amount);
+}
 
-// 2. Direct Off-Heap Buffer:
-ByteBuffer directBuf = ByteBuffer.allocateDirect(1024); // Ideal pentru I/O intensiv`,
-    interviewTrap: "Alocarea si de-alocarea de Direct ByteBuffers este mult mai lenta decat pe Heap. Nu aloca Direct Buffers la fiecare cerere; foloseste un Pool de buffere reutilizabile (Buffer Pool precum ByteBufAllocator din Netty).",
-    keyTakeaway: "Direct ByteBuffer traieste in memoria nativa si permite I/O direct fara copiere intermediara prin Heap."
+// Serviciu extern legacy incompatibil:
+public class LegacyPayPalService {
+    public void makePaymentUSD(double usdAmount) { /* plata */ }
+}
+
+// Adapter:
+public class PayPalAdapter implements ModernPayment {
+    private final LegacyPayPalService legacyService;
+
+    public PayPalAdapter(LegacyPayPalService legacyService) {
+        this.legacyService = legacyService;
+    }
+
+    @Override
+    public void payInEur(double amount) {
+        double usd = amount * 1.08; // conversie
+        legacyService.makePaymentUSD(usd); // delegare catre legacy
+    }
+}`,
+    interviewTrap: "Un exemplu clasic din biblioteca Java standard este Arrays.asList(array), care adapteaza un array nativ T[] la interfata List<T>.",
+    keyTakeaway: "Adapter transpune o interfata incompatibila intr-o forma ceruta de client, folosind delegarea prin compozitie."
   },
   {
     id: "java-188",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Cum functioneaza Selector in Java NIO (I/O Multiplexing)?",
-    question: "Cum permite clasa Selector multiplexarea a mii de conexiuni de retea pe un singur thread folosind mecanismele epoll din Linux?",
-    answer: "1. Limitarea Modelului Vechi I/O (One-Thread-per-Connection):\\n   - ServerSocket clasic aloca un thread dedicat de sistem de operare pentru fiecare conexiune client (ex: 10.000 clienti = 10.000 thread-uri).\\n   - Marea majoritate a firelor stateau blocate dormind asteptand date, consumand gigabytes de memorie RAM pentru stive si provocand Context Switching masiv.\\n\\n2. Arhitectura NIO Selector (I/O Multiplexing):\\n   - Canalele de retea (SocketChannel) sunt configurate in mod non-blocant: channel.configureBlocking(false).\\n   - Multiple canale sunt inregistrate pe un singur obiect comun Selector, specificand evenimentele de interes (SelectionKey.OP_READ, OP_WRITE, OP_ACCEPT).\\n   - La nivel de kernel OS, Selector foloseste apeluri de sistem native ultra-scalabile: epoll pe Linux, kqueue pe macOS, IOCP pe Windows.\\n   - Un singur thread apeleaza selector.select(): firul doarme pana cand CEL PUTIN UN canal are date disponibile pentru citire sau o conexiune noua. La trezire, parcurge doar canalele gata si le proceseaza rapid.",
-    codeSnippet: `Selector selector = Selector.open();
-ServerSocketChannel serverChannel = ServerSocketChannel.open();
-serverChannel.configureBlocking(false);
-serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Design Pattern: Decorator",
+    question: "Ce este Decorator Pattern si cum este el folosit in clasele din pachetul java.io (BufferedReader)?",
+    answer: "1. Ce este Decorator Pattern:\\n   - Un sablon structural care permite adaugarea dinamica de noi responsabilitati si functionalitati unui obiect, fara a folosi mostenirea (extinderea clasei).\\n   - Respecta principiul Open/Closed (deschis pentru extensie, inchis pentru modificare).\\n\\n2. Cum se construieste:\\n   - Decoratorul implementeaza aceeasi interfata cu a obiectului decorat si contine o referinta catre acelasi tip de interfata (compozitie).\\n   - Adauga propriul comportament inainte sau dupa delegarea catre obiectul original.\\n\\n3. Exemplu celebru din Java SDK:\\n   - Pachetul java.io este construit in intregime pe Decorator:\\n     BufferedReader reader = new BufferedReader(new FileReader(\"file.txt\"));\\n     - FileReader citeste caractere.\\n     - BufferedReader decoreaza FileReader-ul cu un buffer de memorie in RAM, fara ca FileReader sa stie!",
+    codeSnippet: `public interface Coffee { double getCost(); }
+public class SimpleCoffee implements Coffee { public double getCost() { return 10.0; } }
 
-while (true) {
-    selector.select(); // Se blocheaza pana cand apare un eveniment pe oricare canal
-    Set<SelectionKey> selectedKeys = selector.selectedKeys();
-    Iterator<SelectionKey> it = selectedKeys.iterator();
-    while (it.hasNext()) {
-        SelectionKey key = it.next();
-        if (key.isAcceptable()) { /* Accepta client nou */ }
-        if (key.isReadable()) { /* Citeste date fara blocare */ }
-        it.remove(); // OBLIGATORIU: scoate cheia procesata!
-    }
-}`,
-    interviewTrap: "Daca uiti sa apelezi it.remove() pe cheia selectata, ea ramane in selectedKeys set, iar la urmatoarea iteratie Selector-ul va procesa din nou acelasi canal, intrand intr-o bucla infinita de 100% CPU.",
-    keyTakeaway: "Selector utilizeaza epoll pentru a monitoriza mii de canale non-blocante pe un singur fir de executie."
+// Decorator abstract:
+public abstract class CoffeeDecorator implements Coffee {
+    protected final Coffee decoratedCoffee;
+    public CoffeeDecorator(Coffee c) { this.decoratedCoffee = c; }
+    public double getCost() { return decoratedCoffee.getCost(); }
+}
+
+// Decorator concret:
+public class MilkDecorator extends CoffeeDecorator {
+    public MilkDecorator(Coffee c) { super(c); }
+    @Override
+    public double getCost() { return super.getCost() + 3.0; }
+}
+
+// Utilizare:
+Coffee myCoffee = new MilkDecorator(new SimpleCoffee()); // Cost: 13.0`,
+    interviewTrap: "Mostenirea clasica este statica la compilare; Decoratorul adauga comportamente flexibil la runtime prin combinare (invelire) de obiecte.",
+    keyTakeaway: "Decorator adauga functionalitati dinamice prin compozitie si invelire (wrapping), utilizat masiv in java.io."
   },
   {
     id: "java-189",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Files.lines() vs Files.readAllLines(): Prevenirea OOM pe fisiere mari",
-    question: "De ce Files.readAllLines() este periculos pentru fisiere mari si cum asigura Files.lines() procesarea streaming?",
-    answer: "1. Pericolul din Files.readAllLines(Path):\\n   - Citeste INTREGUL continut al fisierului si incarca toate liniile deodata sub forma unei liste List<String> in memoria Heap.\\n   - Daca fisierul are 5 GB iar Heap-ul are 4 GB, aplicatia va crapa instantaneu cu OutOfMemoryError: Java heap space.\\n\\n2. Solutia: Files.lines(Path) (Streaming Lenes):\\n   - Returneaza un Stream<String> evaluat lenes (Lazy Evaluation).\\n   - Liniile sunt citite pe masura ce sunt consumate, pastrand in memorie doar linia curenta la un moment dat.\\n   - Poti procesa un fisier de 100 de Gigabytes folosind doar cativa Megabytes de memorie RAM!\\n\\n3. Regula Obligatorie de Utilizare:\\n   - Stream-ul returnat de Files.lines() detine o referinta catre un descriptor de fisier de sistem deschis.\\n   - TREBUIE utilizat INTOTDEAUNA intr-un bloc try-with-resources pentru a garanta inchiderea fisierului la terminare sau in caz de eroare!",
-    codeSnippet: `Path logFile = Paths.get("/var/log/app.log");
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Design Pattern: Proxy in Java",
+    question: "Ce este Proxy Pattern si cum este folosit in framework-ul Spring pentru tranzactii (@Transactional) si Securitate?",
+    answer: "1. Ce este Proxy Pattern:\\n   - Un sablon structural care ofera un obiect substitut (place-holder / intermediar) pentru un alt obiect pentru a controla si intercepta accesul la acesta.\\n\\n2. Tipuri comune de Proxy:\\n   - Virtual Proxy (Lazy Loading): amana crearea unui obiect costisitor pana la primul acces (utilizat masiv in Hibernate pentru entitati @ManyToOne lazy).\\n   - Protection Proxy: verifica permisiunile de securitate inainte de a permite accesul.\\n   - Remote Proxy: reprezinta un obiect aflat pe o alta masina in retea.\\n\\n3. Cum foloseste Spring Boot Dynamic Proxies:\\n   - Cand adaugi @Transactional sau @Secured pe o metoda de Service, Spring nu apeleaza direct obiectul tau, ci creeaza un Proxy (folosind CGLIB sau JDK Dynamic Proxy).\\n   - Proxy-ul intercepteaza apelul, deschide tranzactia (conn.setAutoCommit(false)), apeleaza metoda ta, si apoi face commit sau rollback inainte de a intoarce rezultatul!",
+    codeSnippet: `// Cand declari:
+@Service
+public class OrderService {
+    @Transactional
+    public void createOrder() { /* logica de business */ }
+}
 
-// Sigur impotriva OOM chiar si pe fisiere gigantice:
-try (Stream<String> lines = Files.lines(logFile)) {
-    long errorCount = lines
-        .filter(line -> line.contains("ERROR"))
-        .count();
-    System.out.println("Total erori: " + errorCount);
+// In spate, Spring ruleaza un Proxy similar cu:
+public class OrderServiceProxy extends OrderService {
+    @Override
+    public void createOrder() {
+        transactionManager.begin();
+        try {
+            super.createOrder(); // Apel la metoda ta reala
+            transactionManager.commit();
+        } catch (Exception e) {
+            transactionManager.rollback();
+            throw e;
+        }
+    }
 }`,
-    interviewTrap: "Daca folosesti Files.lines() fara try-with-resources, descriptorul de fisier ramane deschis, ceea ce pe Linux va duce rapid la eroarea: Too many open files.",
-    keyTakeaway: "Files.readAllLines incarca totul in memorie provocand OOM; Files.lines proceseaza fisierul linie cu linie prin stream."
+    interviewTrap: "Daca o metoda din interiorul aceleiasi clase apeleaza o alta metoda adnotata cu @Transactional din aceeasi clasa (self-invocation: this.methodB()), Proxy-ul este ocolit si tranzactia NU va porni!",
+    keyTakeaway: "Proxy controleaza si intercepteaza accesul la un obiect; sta la baza arhitecturii Spring AOP (@Transactional, @Cacheable, @Async)."
   },
   {
     id: "java-190",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Path vs File: De ce API-ul modern java.nio.file.Path a inlocuit java.io.File?",
-    question: "Ce limitari majore ale vechii clase java.io.File au dus la crearea interfetei java.nio.file.Path si a clasei utilitare Files?",
-    answer: "Vechea clasa java.io.File (Java 1.0) avea defecte structurale majore:\\n1. Trateaza erorile prin returnarea valorii booleene false in loc de exceptii clare (ex: file.delete() returna false daca esua, fara sa spuna de ce: lipsa de permisiuni? fisier blocat? cale gresita?).\\n2. Metoda file.length() returna 0L daca fisierul nu exista, creand ambiguitati.\\n3. Performanta catastrofala pe directoare mari: file.listFiles() incarca toate fisierele intr-un array in memorie, blocand procesul pe directoare cu 500.000 de fisiere.\\n4. Nu suporta atribute avansate de fisiere (simlink-uri, atribute POSIX, permisiuni ACL, monitorizare de modificari).\\n\\nCe aduce java.nio.file.Path si Files (Java 7 - NIO.2):\\n- Arunca exceptii explicite (NoSuchFileException, AccessDeniedException).\\n- Suport complet pentru sisteme de fisiere virtuale (ZipFileSystem, MemoryFileSystem).\\n- Metode de inalta performanta bazate pe Streams: Files.walk(), Files.find(), Files.list().\\n- Monitorizare in timp real a modificarilor din directoare prin WatchService.",
-    codeSnippet: `Path path = Paths.get("data/report.pdf");
+    title: "Design Pattern: Strategy",
+    question: "Ce este Strategy Pattern si cum permite schimbarea algoritmilor la runtime?",
+    answer: "1. Ce este Strategy Pattern:\\n   - Un sablon comportamental (Behavioral) care defineste o familie de algoritmi, incapsuleaza fiecare algoritm intr-o clasa separata si le face interschimbabile la runtime.\\n   - Permite algoritmului sa varieze independent de clientul care il utilizeaza.\\n\\n2. Cum elimina structurile urate de if-else / switch:\\n   - In loc sa ai un switch urias de 200 de linii pentru calculul metodelor de plata sau de livrare, creezi o interfata PaymentStrategy si implementari separate (CreditCardPayment, PayPalPayment, CryptoPayment).\\n   - Contextul primeste strategia dorita prin injectie de dependinte (Dependency Injection).\\n\\n3. Exemplu din Java standard: Comparator<T> este un Strategy Pattern clasic!",
+    codeSnippet: `public interface PaymentStrategy { void pay(double amount); }
+public class CardStrategy implements PaymentStrategy { public void pay(double amount) { ... } }
+public class PayPalStrategy implements PaymentStrategy { public void pay(double amount) { ... } }
 
-// Verificare existenta si stergere cu exceptie clara la eroare:
-try {
-    Files.delete(path);
-} catch (NoSuchFileException e) {
-    System.out.println("Fisierul nu exista!");
-} catch (AccessDeniedException e) {
-    System.out.println("Lipsa permisiuni!");
+public class ShoppingCart {
+    private PaymentStrategy strategy;
+
+    public void setStrategy(PaymentStrategy s) { this.strategy = s; }
+    public void checkout(double total) {
+        strategy.pay(total); // Algoritmul variaza la runtime!
+    }
 }`,
-    interviewTrap: "Clasa File are metoda toPath(), iar Path are metoda toFile(), facand trecerea intre cele doua API-uri foarte usoara in proiecte legacy.",
-    keyTakeaway: "Path si Files ofera tratare explicita a erorilor prin exceptii, suport pentru simlink-uri si parcurgere eficienta prin stream-uri."
+    interviewTrap: "In Java 8+, expresiile Lambda si method references sunt de fapt implementari directe si concise de Strategy Pattern (ex: list.sort((a,b) -> a - b)).",
+    keyTakeaway: "Strategy incapsuleaza algoritmi in clase interschimbabile, eliminand lanturile stufoase de if-else/switch."
   },
   {
     id: "java-191",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Ce este un Memory Mapped File (MappedByteBuffer) in Java?",
-    question: "Cum functioneaza maparea fisierelor direct in memoria virtuala a procesului folosind FileChannel.map() si la ce performanta se ajunge?",
-    answer: "1. Ce este un Memory Mapped File (mmap):\\n   - Un mecanism avansat de kernel prin care o portiune dintr-un fisier de pe disc este mapata direct in spatiul de adrese de memorie virtuala al procesului Java.\\n   - La apelul fileChannel.map(MapMode.READ_WRITE, position, size), JVM returneaza un MappedByteBuffer.\\n\\n2. De ce atinge viteza extrema (comparabila cu memoria RAM):\\n   - Aplicatia citeste si scrie date folosind simple operatii de memorie (get/put pe buffer), FARA a mai apela metode de I/O de citire/scriere (read() / write())!\\n   - Sistemul de operare se ocupa in mod transparent prin mecanismul de Page Faults de incarcarea blocurilor din disc in RAM si de sincronizarea asincrona a modificarilor inapoi pe disc (Dirty Pages flush).\\n   - Utilizat in baze de date de inalta performanta si cozi de mesagerie ultra-rapide (Chronicle Queue, LMDB, Kafka).",
-    codeSnippet: `try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-    // Mapam primii 10 MB ai fisierului direct in memorie:
-    MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, 10 * 1024 * 1024);
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Design Pattern: Observer",
+    question: "Ce este Observer Pattern si cum functioneaza relatia Publish-Subscribe (Subiect - Observatori)?",
+    answer: "1. Ce este Observer Pattern:\\n   - Un sablon comportamental care defineste o dependenta de tip \"one-to-many\" intre obiecte, astfel incat atunci cand un obiect (Subiectul / Subject / Publisher) isi schimba starea, toti dependentii sai (Observatorii / Observers / Subscribers) sunt notificati si actualizati automat.\\n\\n2. Componente:\\n   - Subject: mentine o lista de observatori si ofera metode de abonare: attach(Observer), detach(Observer) si notifyObservers().\\n   - Observer: interfata cu o metoda de notificare (ex: update(event)).\\n\\n3. Utilizari comune:\\n   - Event Listeners in UI (onClick, onChange).\\n   - Spring ApplicationEvent si @EventListener.\\n   - Arhitecturi asincrone si Reactive Streams.",
+    codeSnippet: `public interface Observer { void update(String news); }
 
-    buffer.put(0, (byte) 65); // Modificare directa a primului octet din fisier!
-    buffer.force();          // Forteaza scrierea imediata din OS cache pe disc
+public class NewsAgency {
+    private final List<Observer> observers = new ArrayList<>();
+
+    public void subscribe(Observer obs) { observers.add(obs); }
+    public void broadcast(String news) {
+        for (Observer obs : observers) {
+            obs.update(news); // Notifica toti abonatii
+        }
+    }
 }`,
-    interviewTrap: "Un MappedByteBuffer nu poate fi de-mapat manual in mod trivial; fisierul poate ramane blocat pe Windows pana cand colectorul de gunoi curata instanta de ByteBuffer.",
-    keyTakeaway: "MappedByteBuffer mapeaza fisierul direct in memoria virtuala prin mmap, permitand acces la viteza nativa a memoriei RAM."
+    interviewTrap: "Daca observatorii se aboneaza dar uita sa se dezaboneze cand nu mai sunt folositi, apar scurgeri de memorie cunoscute ca \"Lapsed Listener Problem\".",
+    keyTakeaway: "Observer stabileste o relatie 1-la-multi de notificare automata a schimbarilor de stare catre abonati."
   },
   {
     id: "java-192",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "FileChannel.tryLock(): Prevenirea Rularii Concurente a Aplicatiei",
-    question: "Cum utilizezi FileLock si FileChannel.tryLock() pentru a preveni pornirea a doua instante ale aceleiasi aplicatii Java pe acelasi server?",
-    answer: "Cand vrei sa te asiguri ca un proces batch sau o aplicatie Java ruleaza ca o instanta unica (Single Instance Application):\\n\\n1. Cum functioneaza FileLock:\\n   - Foloseste mecanismul de blocare a fisierelor la nivel de kernel al sistemului de operare (OS File Locking).\\n   - Doua tipuri de lock-uri: Shared Lock (pentru citire) si Exclusive Lock (pentru scriere unica).\\n\\n2. Metoda tryLock() (Non-Blocanta):\\n   - Metoda fileChannel.tryLock() incearca sa obtina un lock exclusiv pe un fisier de blocare (lockfile.lck).\\n   - Daca obtine lock-ul (returneaza un obiect FileLock non-null): Aplicatia este prima instanta si poate rula in siguranta.\\n   - Daca returneaza null (sau arunca OverlappingFileLockException): O alta instanta a aplicatiei ruleaza deja pe acel server! Aplicatia noua se opreste imediat cu un mesaj clar.",
-    codeSnippet: `File file = new File(System.getProperty("user.home"), ".app.lock");
-FileChannel channel = new RandomAccessFile(file, "rw").getChannel();
-FileLock lock = channel.tryLock();
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Design Pattern: Template Method",
+    question: "Ce este Template Method Pattern si cum utilizeaza mostenirea pentru a defini scheletul unui algoritm?",
+    answer: "1. Ce este Template Method:\\n   - Un sablon comportamental care defineste scheletul (structura pasilor) unui algoritm intr-o metoda dintr-o clasa parinte abstracta, delegand implementarea pasilor individuali catre subclase.\\n   - Permite subclaselor sa redefineasca anumiti pasi ai algoritmului fara a altera structura generala a acestuia.\\n\\n2. Regula Hollywood (\"Don't call us, we'll call you\"):\\n   - Clasa parinte apeleaza metodele abstracte ale copilului la momentul potrivit in flux.\\n   - Metoda principala de template este adesea declarata final pentru a preveni suprascrierea structurii fluxului.",
+    codeSnippet: `public abstract class DataProcessor {
+    // Metoda Template principala (nu poate fi modificata!):
+    public final void process() {
+        readData();
+        processData();
+        writeData();
+    }
 
-if (lock == null) {
-    System.err.println("O instanta a aplicatiei ruleaza deja! Iesire.");
-    System.exit(1);
+    protected abstract void readData();
+    protected abstract void processData();
+
+    // Pas comun gata implementat:
+    protected void writeData() {
+        System.out.println("Salvare in baza de date standard.");
+    }
 }
-// Aplicatia ruleaza normal... Lock-ul se elibereaza automat la terminarea procesului!`,
-    interviewTrap: "FileLock este eliberat automat de sistemul de operare daca procesul Java este oprit sau crapa brusc, ceea ce il face mult mai sigur decat simpla verificare if (file.exists()).",
-    keyTakeaway: "FileChannel.tryLock() foloseste mecanismele de blocare de fisiere ale sistemului de operare pentru a garanta instante unice."
+
+public class ExcelProcessor extends DataProcessor {
+    @Override protected void readData() { System.out.println("Citire Excel"); }
+    @Override protected void processData() { System.out.println("Parsare coloane"); }
+}`,
+    interviewTrap: "Nu confunda Template Method (bazat pe mostenire) cu Strategy (bazat pe compozitie). Template Method schimba parti dintr-un algoritm la compilare, Strategy inlocuieste intregul algoritm la runtime.",
+    keyTakeaway: "Template Method defineste scheletul neschimbat al unui algoritm intr-o metoda finala de baza, lasand detaliile pe seama subclaselor."
   },
   {
     id: "java-193",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Reflection si restrictiile Strong Encapsulation in Java Module System (Java 9+)",
-    question: "De ce field.setAccessible(true) arunca InaccessibleObjectException incepand cu Java 9 si ce directiva este necesara in module-info.java?",
-    answer: "1. Ce facea setAccessible(true) istoric:\\n   - Permitea oricarui cod Java sa rupa incapsularea (Breaking Encapsulation): sa citeasca sau sa modifice campuri private dintr-o alta clasa fara nicio restrictie.\\n   - Framework-uri precum Spring si Hibernate se bazau masiv pe acest mecanism pentru dependency injection si mapare ORM.\\n\\n2. Ce a adus Java 9 (Strong Encapsulation in JPMS - JEP 261):\\n   - Pachetele din interiorul unui modul sunt strict protejate. Chiar daca un camp este accesat prin Reflection, daca pachetul nu a acordat permisiune explicita, JVM blocheaza accesul si arunca: java.lang.reflect.InaccessibleObjectException!\\n\\n3. Directiva opens in module-info.java:\\n   - Pentru a permite unui framework extern (ex: Spring, Jackson) sa acceseze campuri private prin reflection, modulul trebuie sa declare explicit:\\n     - opens com.ats.model to spring.core, com.fasterxml.jackson.databind;\\n     - Sau open module my.module { ... } pentru a deschide intregul modul la reflection.",
-    codeSnippet: `// In module-info.java:
-module ats.job.tracker {
-    requires spring.boot;
-    requires spring.web;
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "SOLID: Single Responsibility Principle (SRP)",
+    question: "Ce reprezinta Single Responsibility Principle (SRP) si care este definitia lui Robert C. Martin?",
+    answer: "1. Definitia SRP (Robert C. Martin - Uncle Bob):\\n   - \"O clasa ar trebui sa aiba o singura responsabilitate si un singur motiv de a fi schimbata\" (A class should have one, and only one, reason to change).\\n\\n2. Ce inseamna in practica:\\n   - O clasa nu trebuie sa fie un \"God Object\" care face de toate: sa contina logica de business, sa comunice cu baza de date, sa formateze raspunsul JSON si sa trimita email-uri!\\n   - Fiecare functionalitate trebuie separata in clase distincte: UserService (business), UserRepository (acces date), EmailService (notificari).\\n\\n3. Beneficii:\\n   - Clase mici, usor de inteles, testat unitar si intretinut pe termen lung.",
+    codeSnippet: `// GRESIT (Violeaza SRP - prea multe motive de schimbare):
+public class UserManager {
+    public void saveUser(User u) { /* DB logic */ }
+    public void sendEmail(User u) { /* SMTP logic */ }
+    public void generateReportPdf(User u) { /* PDF logic */ }
+}
 
-    // Deschide pachetul de entitati pentru acces prin Reflection de catre Hibernate:
-    opens com.ats.model to org.hibernate.orm.core;
-}`,
-    interviewTrap: "Poti ocoli temporar restrictiile din linia de comanda pentru biblioteci legacy folosind parametrul: --add-opens java.base/java.lang=ALL-UNNAMED.",
-    keyTakeaway: "Java 9 impune incapsulare puternica; reflection pe campuri private necesita directiva explicita opens in module-info.java."
+// CORECT (SRP respectat):
+public class UserRepository { public void save(User u) {} }
+public class EmailService { public void sendWelcome(User u) {} }
+public class UserReportService { public void generatePdf(User u) {} }`,
+    interviewTrap: "O \"responsabilitate\" nu inseamna o singura metoda, ci un singur domeniu de expertiza sau actor/utilizator de business pentru care lucreaza clasa.",
+    keyTakeaway: "SRP cere ca fiecare clasa sa aiba o singura responsabilitate bine delimitata si un singur motiv de modificare."
   },
   {
     id: "java-194",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Java Module System (JPMS): module-info.java, exports vs opens",
-    question: "Care este diferenta dintre directiva exports si opens in fisierul module-info.java din sistemul de module Java?",
-    answer: "Sistemul de Module (Project Jigsaw / Java 9) a introdus fisierul descriptor module-info.java situat la radacina surselor:\\n\\n1. Directiva exports packageName;:\\n   - Face toate clasele publice (public) din acel pachet accesibile celorlalte module atat la COMPILARE cat si la RUNTIME.\\n   - Clasele din pachetele care NU sunt exportate devin complet INVIZIBILE pentru alte module (chiar daca sunt declarate public in cod!).\\n   - Nu permite accesul la membri privati prin Reflection.\\n\\n2. Directiva opens packageName;:\\n   - Acorda acces exclusiv la RUNTIME prin intermediul Reflection API (Deep Reflection).\\n   - Permite framework-urilor (Spring, Jackson, Hibernate) sa inspecteze si sa populeze campuri private, dar pachetul NU este disponibil pentru compilare normala.\\n\\n3. Directiva requires moduleName;:\\n   - Declara o dependenta obligatorie catre un alt modul la compilare si executie.",
-    codeSnippet: `module com.ats.service {
-    requires java.sql;              // Dependinta la modulul SQL
-    exports com.ats.service.api;    // API public expus altora la compilare
-    opens com.ats.service.dto to com.fasterxml.jackson.databind; // Doar reflection pentru JSON
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "SOLID: Open/Closed Principle (OCP)",
+    question: "Ce spune Open/Closed Principle (OCP) si cum se obtine in Java prin polimorfism?",
+    answer: "1. Definitia OCP:\\n   - \"Entitatile software (clase, module, functii) ar trebui sa fie DESCHISE pentru EXTENSIE, dar INCHISE pentru MODIFICARE\" (Open for extension, closed for modification).\\n\\n2. Ce inseamna in practica:\\n   - Cand trebuie sa adaugi o functionalitate noua in aplicatie, ar trebui sa poti face asta prin ADOUGAREA DE COD NOU (clase noi, implementari noi de interfata), FARA A MODIFICA codul existent gata testat si functional.\\n\\n3. Cum se obtine in Java:\\n   - Prin intermediul interfetelor si al abstractizarii (polimorfism). In loc de lanturi if-else pe tipul obiectului, apelezi o metoda din interfata comuna.",
+    codeSnippet: `// Incalcarea OCP: la fiecare discount nou trebuie sa modifici clasa existenta!
+// if (type.equals("VIP")) return price * 0.8;
+
+// Respectarea OCP:
+public interface DiscountStrategy {
+    double apply(double price);
+}
+
+public class VipDiscount implements DiscountStrategy {
+    public double apply(double price) { return price * 0.8; }
+}
+
+// Functionalitate noua adaugata fara a modifica codul existent:
+public class BlackFridayDiscount implements DiscountStrategy {
+    public double apply(double price) { return price * 0.5; }
 }`,
-    interviewTrap: "Un modul nu poate deschide pachete care au fost declarate intr-un modul open module (deoarece un modul \"open\" deschide deja absolut toate pachetele sale la reflection).",
-    keyTakeaway: "exports expune clase publice la compilare; opens acorda acces la membri privati la runtime prin Reflection."
+    interviewTrap: "Daca observi un bloc mare de if-else sau switch care testeaza tipul obiectului si necesita editare la fiecare nou feature, principiul OCP este violat.",
+    keyTakeaway: "OCP cere ca extinderea comportamentului sa se faca prin clase si implementari noi, fara modificarea codului existent."
   },
   {
     id: "java-195",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "String.intern() si Riscurile de Degradare a Performantei",
-    question: "Ce face metoda String.intern() si de ce utilizarea sa necontrolata pe siruri arbitrare poate crea probleme de performanta in JVM?",
-    answer: "1. Ce face String.intern():\\n   - Cauta sirul de caractere in String Constant Pool-ul global al masinii virtuale.\\n   - Daca exista deja, returneaza referinta partajata din Pool.\\n   - Daca nu exista, adauga sirul curent in Pool si returneaza referinta.\\n   - Permite compararea sirurilor prin operatorul == in loc de .equals().\\n\\n2. Riscuri si Probleme de Performanta in Productie:\\n   - String Pool-ul este implementat intern in C++ ca un HashMap nativ cu dimensiune fixa de bucket-uri (-XX:StringTableSize, implicit ~65.536 pe 64-bit).\\n   - Daca apelezi intern() pe milioane de siruri unice (ex: ID-uri unice, timestamp-uri, adrese email):\\n     - Tabela interna de hash se umple masiv de coliziuni extreme;\\n     - Fiecare apel intern() viitor va parcurge liste lungi de coliziuni, ducand la degradarea dramatica a timpului de raspuns (CPU spike la 100%)!\\n   - In plus, sirurile internate traiesc mult timp pe Heap, crescand presiunea pe GC.",
-    codeSnippet: `String dynamic1 = new String("ACTIVE");
-String dynamic2 = new String("ACTIVE");
+    title: "SOLID: Liskov Substitution Principle (LSP)",
+    question: "Ce stipuleaza Liskov Substitution Principle (LSP) si de ce exemplul Clasa Dreptunghi vs Patrat este clasic?",
+    answer: "1. Definitia LSP (Barbara Liskov):\\n   - \"Obiectele dintr-un program ar trebui sa poata fi inlocuite cu instante ale subclaselor lor fara a altera corectitudinea si functionarea programului\".\\n   - Cu alte cuvinte: o clasa copil trebuie sa respecte contractul clasei parinte si sa nu aiba comportamente neasteptate.\\n\\n2. Exemplul clasic Dreptunghi (Rectangle) vs Patrat (Square):\\n   - Matematic, un patrat este un dreptunghi. Insa in OOP, daca clasa Square extinde Rectangle si suprascrie setWidth(w) { this.width = w; this.height = w; }:\\n   - Daca un client primeste un Rectangle si apeleaza rect.setWidth(5); rect.setHeight(10);, se asteapta ca aria sa fie 50!\\n   - Daca obiectul real transmis este un Square, aria va fi 100! Comportamentul contractului a fost rupt, violand LSP!\\n\\n3. Regula:\\n   - Subclasele nu trebuie sa arunce exceptii neasteptate pe metodele mostenite si sa nu relaxeze/stranga preconditiile.",
+    codeSnippet: `// Incalcare clasica de LSP:
+public class Rectangle {
+    protected int width, height;
+    public void setWidth(int w) { this.width = w; }
+    public void setHeight(int h) { this.height = h; }
+    public int getArea() { return width * height; }
+}
 
-System.out.println(dynamic1 == dynamic2); // FALSE
-
-// Dupa intern():
-String interned1 = dynamic1.intern();
-String interned2 = dynamic2.intern();
-System.out.println(interned1 == interned2); // TRUE (aceeasi referinta din Pool)`,
-    interviewTrap: "Nu folosi niciodata String.intern() pentru a face cache pe date de intrare necontrolate de la utilizatori (User Input), deoarece expune aplicatia la atacuri de tip Denial of Service prin epuizarea tabelei de hash.",
-    keyTakeaway: "String.intern() pune sirul in String Pool; abuzul pe siruri unice creste dramatic coliziunile in tabela interna StringTable."
+public class Square extends Rectangle {
+    @Override
+    public void setWidth(int w) { this.width = w; this.height = w; } // Rupe contractul!
+}`,
+    interviewTrap: "Nu mosteni o clasa doar pentru a refolosi cod daca relatia IS-A nu pastreaza comportamentul logic al contractului in toate contextele.",
+    keyTakeaway: "LSP cere ca orice subclasa sa poata inlocui clasa parinte fara a strica logica sau contractul asteptat de client."
   },
   {
     id: "java-196",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Cele 5 Reguli Fundamentale pentru a Construi un Obiect Imutabil",
-    question: "Care sunt cele 5 reguli stabilite in Effective Java (Item 17) pentru a construi o clasa 100% imutabila in Java?",
-    answer: "Un obiect imutabil este un obiect a carui stare interna nu poate fi modificata niciodata dupa instantiere. Cele 5 reguli de aur sunt:\\n\\n1. Nu oferi nicio metoda mutatoare (zero metode de tip set...()).\\n2. Asigura-te ca clasa NU POATE FI EXTINSA (mostenita):\\n   - Marcare ca \"final\" (public final class), sau prin folosirea de constructori privati combinati cu Static Factory Methods.\\n3. Declara TOATE campurile ca \"final\" (public final type):\\n   - Garanteaza initializarea sigura peste fire concurente conform JMM (Java Memory Model) fara sincronizare.\\n4. Declara TOATE campurile ca \"private\":\\n   - Impiedica accesul direct si alterarea campurilor din exterior.\\n5. Asigura acces exclusiv la orice componenta mutabila (Defensive Copying):\\n   - Daca clasa contine campuri care refera obiecte mutabile (Date, List, Map), realizeaza copii defensive atat in constructor cat si la returnarea din getteri!",
-    codeSnippet: `public final class ImmutableUser {
-    private final String username;
-    private final List<String> roles; // Obiect mutabil interior
+    title: "SOLID: Interface Segregation Principle (ISP)",
+    question: "Ce presupune Interface Segregation Principle (ISP) si de ce sunt preferate interfetele mici si specifice?",
+    answer: "1. Definitia ISP:\\n   - \"Niciun client nu ar trebui fortat sa depinda de metode pe care nu le utilizeaza\" (Clients should not be forced to depend upon interfaces that they do not use).\\n\\n2. Ce inseamna in practica:\\n   - Este mult mai bine sa ai mai multe interfete mici, specializate si cu rol clar (Single Role Interfaces) decat o singura interfata gigant (\"Fat Interface\").\\n   - Daca o interfata are 20 de metode si o clasa are nevoie doar de 2, acea clasa este fortata sa implementeze celelalte 18 metode cu corp gol sau aruncand UnsupportedOperationException!\\n\\n3. Exemplu din Java:\\n   - In loc de o interfata monolitica, Java standard are interfete fine: AutoCloseable, Readable, Appendable, Comparable.",
+    codeSnippet: `// GRESIT: Interfata monolitica (violeaza ISP)
+public interface Worker {
+    void work();
+    void eat(); // Un robot nu mananca!
+}
 
-    public ImmutableUser(String username, List<String> roles) {
-        this.username = username;
-        // Regula 5: Copie defensiva la intrare:
-        this.roles = List.copyOf(roles);
-    }
+// CORECT: Interfete segregate (respecta ISP)
+public interface Workable { void work(); }
+public interface Feedable { void eat(); }
 
-    public String getUsername() { return username; }
-    // Regula 5: Returnare copie sau colectie imutabila la iesire:
-    public List<String> getRoles() { return roles; } // Deja imutabila prin List.copyOf
+public class HumanWorker implements Workable, Feedable {
+    public void work() { /* lucreaza */ }
+    public void eat() { /* mananca */ }
+}
+
+public class RobotWorker implements Workable {
+    public void work() { /* lucreaza fara sa fie fortat sa implementeze eat()! */ }
 }`,
-    interviewTrap: "Daca clasa ta este declarata final si toate campurile sunt private final, dar retii o referinta catre un Date sau un ArrayList fara a face copie defensiva, clasa ta NU este imutabila!",
-    keyTakeaway: "Imutabilitatea cere: fara setteri, clasa final, campuri private final si copiere defensiva pe toate campurile mutabile."
+    interviewTrap: "Daca o clasa implementeaza o metoda aruncand UnsupportedOperationException(\"Not implemented\"), acesta este cel mai clar semn de violare a principiului ISP.",
+    keyTakeaway: "ISP recomanda interfete mici si specifice pe roluri in locul interfetelor mari si incarcate cu metode inutile."
   },
   {
     id: "java-197",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Defensive Copying (Copiere Defensiva) in Constructori si Getteri",
-    question: "De ce este necesara copierea defensiva atat in constructor cat si in getteri si cum poate fi spart un obiect aparent imutabil fara ea?",
-    answer: "Copierea defensiva protejeaza un obiect imutabil de modificarile exterioare realizate prin referinte partajate:\\n\\n1. Vulnerabilitatea in Constructor (Fara Defensive Copy):\\n   - Daca constructorul face simplu: this.items = items;\\n   - Apelantul pastreaza referinta originala: list.add(\"Element rau\") DUPA ce a creat obiectul! Modificarea se reflecta imediat in interiorul obiectului tau \"imutabil\"!\\n\\n2. Vulnerabilitatea in Getter (Fara Defensive Copy):\\n   - Daca getter-ul returneaza direct referinta interna: return this.items;\\n   - Orice client care apeleaza obj.getItems().clear() va distruge starea interna a obiectului din exterior!\\n\\n3. Regula de Aur a Ordinii Copierii in Constructori:\\n   - Realizeaza copierea defensiva INAINTE de a valida parametrii (pentru a evita atacurile concurente Time-Of-Check to Time-Of-Use / TOCTOU).",
-    codeSnippet: `public final class Order {
-    private final List<Item> items;
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "SOLID: Dependency Inversion Principle (DIP)",
+    question: "Ce este Dependency Inversion Principle (DIP) si cum relationeaza cu Dependency Injection in Spring?",
+    answer: "1. Definitia DIP:\\n   - 1. Modulele de nivel inalt nu ar trebui sa depinda de modulele de nivel scazut. Ambele ar trebui sa depinda de abstractizari (interfete).\\n   - 2. Abstractizarile nu ar trebui sa depinda de detalii. Detaliile (implementarile concrete) ar trebui sa depinda de abstractizari.\\n\\n2. Relatia cu Dependency Injection (DI) in Spring:\\n   - DIP este un principiu conceptual de design software.\\n   - Dependency Injection (DI) si Inversion of Control (IoC) sunt mecanismele practice prin care aplici acest principiu!\\n   - In loc ca un UserService sa instantieze new PostgresUserRepository() direct (cuplare stransa), clasa UserService depinde doar de interfata UserRepository, iar Spring ii injecteaza implementarea la runtime (@Autowired / constructor injection).",
+    codeSnippet: `// GRESIT (Modul de nivel inalt depinde direct de detaliu concret):
+public class OrderService {
+    private MySqlDatabase database = new MySqlDatabase(); // Cuplare rigida!
+}
 
-    public Order(List<Item> items) {
-        // 1. Copie defensiva in constructor INAINTE de validare:
-        this.items = new ArrayList<>(items);
-        if (this.items.isEmpty()) throw new IllegalArgumentException("Lista goala");
-    }
+// CORECT (Ambele depind de interfata Database):
+public interface Database { void save(Order o); }
 
-    public List<Item> getItems() {
-        // 2. Copie defensiva sau wrapper nemodificabil la retur:
-        return Collections.unmodifiableList(items);
+public class OrderService {
+    private final Database database; // Depinde de interfata
+
+    // Injectat prin constructor (DIP respectat!):
+    public OrderService(Database database) {
+        this.database = database;
     }
 }`,
-    interviewTrap: "Nu folosi clone() pentru a face copiere defensiva a parametrilor din constructor daca tipul de parametru poate fi extins de terte parti, deoarece o subclasa malitioasa poate suprascrie clone() si poate pastra o referinta secreta.",
-    keyTakeaway: "Copierea defensiva atat la intrare (constructor) cat si la iesire (getter) izoleaza complet starea interna a clasei."
+    interviewTrap: "Nu confunda Dependency Inversion (principiul arhitectural) cu Dependency Injection (tehnica de a pasa dependintele prin constructor).",
+    keyTakeaway: "DIP impune ca modulele de business sa depinda de interfete abstracte si nu de clase concrete specifice."
   },
   {
     id: "java-198",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Prevenirea Atacurilor de tip Timing Attack cu MessageDigest.isEqual()",
-    question: "Ce este un Timing Attack la compararea parolelor sau tokenilor si cum il elimina MessageDigest.isEqual() prin comparare in timp constant?",
-    answer: "1. Ce este un Timing Attack (Atac pe baza Timpului de Raspuns):\\n   - Metoda standard String.equals(other) sau Arrays.equals() compara caracterele unul cate unul incepand de la stanga la dreapta.\\n   - In momentul in care intalneste PRIMUL caracter diferit, metoda scurtcircuiteaza si returneaza false IMEDIAT!\\n   - Un atacator poate trimite milioane de cereri si poate masura timpul de raspuns la nivel de nanosecunde: daca cererea a durat cu 20 nanosecunde mai mult, stie sigur ca primele 3 caractere au fost corecte! Poate ghici parole si semnaturi HMAC caracter cu caracter.\\n\\n2. Solutia: Comparare in Timp Constant (Constant-Time Comparison):\\n   - Metoda MessageDigest.isEqual(byte[] digesta, byte[] digestb):\\n   - Parcurge INTREGUL array de octeti pana la capat folosind operatia bitwise OR pe diferente: result |= (a[i] ^ b[i]).\\n   - Timpul de executie este STRICT IDENTIC indiferent daca primul caracter este gresit sau daca toate caracterele se potrivesc, facand imposibila scurgerea de informatii prin analiza de latenta!",
-    codeSnippet: `// GRESIT (vulnerabil la Timing Attack pe semnaturi secrete/parole):
-if (expectedToken.equals(userToken)) { ... }
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Principiile DRY, KISS si YAGNI",
+    question: "Ce inseamna acronimele DRY, KISS si YAGNI si de ce sunt principii fundamentale de Clean Code?",
+    answer: "1. DRY (Don't Repeat Yourself):\\n   - Fiecare bucata de cunostinta sau logica de business trebuie sa aiba o reprezentare unica si neambigua in sistem.\\n   - Evita duplicarea de cod: extrage logica repetitiva in metode, utilitare sau clase reutilizabile. Daca apare un bug in logica duplicata, trebuie sa il repari in 10 locuri diferite!\\n\\n2. KISS (Keep It Simple, Stupid):\\n   - Cele mai bune sisteme sunt cele care raman cat mai simple posibile.\\n   - Evita solutiile ultra-complexe, ingineria exagerata (over-engineering) si sintaxa criptica doar pentru a parea inteligent. Codul este citit de 10 ori mai mult decat este scris!\\n\\n3. YAGNI (You Aren't Gonna Need It):\\n   - Nu implementa functionalitati, flexibilitati ipotetice sau campuri viitoare astazi, doar pe presupunerea ca \"s-ar putea sa avem nevoie de ele candva\".\\n   - Construieste doar ce este cerut acum.",
+    codeSnippet: `// Incalcare YAGNI / KISS:
+// Crearea a 5 layere de abstractizare si fabrici pentru o simpla salvare in memorie!
 
-// CORECT (sigur impotriva atacurilor de timp):
-byte[] expected = expectedSignature.getBytes(StandardCharsets.UTF_8);
-byte[] actual = incomingSignature.getBytes(StandardCharsets.UTF_8);
-
-if (MessageDigest.isEqual(expected, actual)) {
-    // Autentificare autorizata
+// Respectare KISS:
+public String formatFullName(String first, String last) {
+    return first + " " + last;
 }`,
-    interviewTrap: "Timing attacks se pot desfasura chiar si peste internet prin masuratori statistice avansate. Orice comparatie de semnaturi webhook, chei API sau tokeni de resetare parola trebuie facuta obligatoriu in timp constant.",
-    keyTakeaway: "MessageDigest.isEqual() compara octetii in timp constant fara scurtcircuitare, eliminand riscul atacurilor de tip Timing Attack."
+    interviewTrap: "Uneori aplicarea oarba a lui DRY poate duce la cuplare prematura intre module diferite (accidental duplication). Pastreaza echilibrul cu KISS.",
+    keyTakeaway: "DRY elimina codul duplicat; KISS pastreaza solutiile simple; YAGNI previne adaugarea de complexitate inutila bazata pe presupuneri."
   },
   {
     id: "java-199",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "SecureRandom vs java.util.Random: De ce Random nu este sigur?",
-    question: "De ce clasa standard java.util.Random este complet nesigura in aplicatii de securitate si cum genereaza SecureRandom numere criptografice?",
-    answer: "1. De ce java.util.Random este Nesigur (Predictibil):\\n   - Foloseste un algoritm Linear Congruential Generator (LCG) simplu cu o stare interna de doar 48 de biti.\\n   - Daca un atacator observa doar 2 valori succesive generate de Random, el poate deduce matematic valoarea exacta a semintei (seed) si poate prezice cu certitudine de 100% toate numerele si tokenii viitori care vor fi generati vreodata!\\n   - In plus, foloseste un AtomicLong intern pe seed, devenind lent sub concurenta.\\n\\n2. SecureRandom (Criptografic Sigur - CSPRNG):\\n   - Foloseste surse de entropie hardware din sistemul de operare (/dev/urandom sau /dev/random pe Linux, CryptoAPI pe Windows).\\n   - Respecta standardele FIPS 140-2; starea interna este complet imprevizibila si non-reversibila.\\n   - Obligatoriu pentru: generare de tokeni de autentificare, parole temporare, coduri OTP 2FA, chei de sesiune, sare (salt) pentru hashing de parole (BCrypt/Argon2).",
-    codeSnippet: `// INACCEPTABIL in securitate:
-// Random rand = new Random(); int token = rand.nextInt();
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Ce este Java Reflection API si cand este utilizat?",
+    question: "Ce reprezinta mecanismul de Reflection in Java si de ce este atat de intens folosit de framework-uri ca Spring, Jackson sau JUnit?",
+    answer: "1. Ce este Reflection (java.lang.reflect):\\n   - Capacitatea unui program Java de a inspecta, analiza si modifica la runtime structura interna a claselor, interfetelor, campurilor si metodelor, chiar si a celor private!\\n\\n2. Cum il folosesc marile framework-uri:\\n   - Spring Framework: scaneaza adnotarile (@Component, @Autowired, @Service) la runtime si instantiaza clasele prin reflexie (clazz.getDeclaredConstructor().newInstance()).\\n   - Jackson / Gson: serializeaza si deserializeaza obiecte in JSON citind direct campurile private ale claselor tale DTO fara setteri.\\n   - JUnit: descopera automat toate metodele marcate cu adnotarea @Test si le apeleaza la rularea testelor.\\n\\n3. Dezavantaje majore ale reflexiei:\\n   - Performanta mai lenta decat apelul direct de cod (ocoleste optimizarile JIT).\\n   - Sparge incapsularea (poate accesa campuri private cu setAccessible(true)).\\n   - Lipsa verificarii la compilare (erorile apar doar la runtime ca NoSuchMethodException).",
+    codeSnippet: `// Inspectarea unei clase la runtime:
+Class<?> clazz = Class.forName("com.example.User");
 
-// SIGUR din punct de vedere criptografic:
-SecureRandom secureRandom = new SecureRandom();
-byte[] salt = new byte[16];
-secureRandom.nextBytes(salt); // Entropie hardware reala!`,
-    interviewTrap: "Pe Linux vechi, apelul SecureRandom.getInstanceStrong() se putea bloca nedefinit daca folosea /dev/random si sistemul nu avea suficienta entropie de tastatura/mouse. In mod normal, new SecureRandom() foloseste surse non-blocante sigure.",
-    keyTakeaway: "java.util.Random este predictibil matematic; foloseste exclusiv SecureRandom pentru orice tine de securitate, tokeni sau chei."
+// Afiseaza toate metodele declarate:
+for (Method m : clazz.getDeclaredMethods()) {
+    System.out.println("Metoda: " + m.getName());
+}
+
+// Apelare dinamica a unui constructor:
+Object instance = clazz.getDeclaredConstructor().newInstance();`,
+    interviewTrap: "In Java modern (Java 9+ Modules), mecanismul de module (JPMS) blocheaza accesul reflexiv pe campuri private din alte module daca pachetul nu este declarat ca \"opens\".",
+    keyTakeaway: "Reflection inspecteaza si apeleaza clase la runtime; sta la baza framework-urilor moderne (Spring, Jackson, JUnit), dar are cost de performanta."
   },
   {
     id: "java-200",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "ThreadLocalRandom: Eliminarea Contention-ului pe Generare de Numere",
-    question: "De ce ThreadLocalRandom depaseste masiv java.util.Random in aplicatii multi-threaded concurente?",
-    answer: "1. Problema de Performanta cu java.util.Random in Fire Multiple:\\n   - O instanta de java.util.Random partajata intre 10 thread-uri foloseste o variabila atomica interna: private final AtomicLong seed;.\\n   - La fiecare apel nextInt(), toate cele 10 thread-uri incearca sa actualizeze atomul de seed folosind o bucla CAS (Compare-And-Swap).\\n   - Cand concurenta creste, 9 din 10 operatii CAS esueaza continuu si fac retry, generand un blocaj urias pe magistrala CPU.\\n\\n2. Solutia: ThreadLocalRandom (Java 7):\\n   - Mentine semintele (seed-urile) separat direct pe campuri interne din clasa java.lang.Thread curenta.\\n   - Fiecare thread isi actualizeaza propria samanta locala fara niciun AtomicLong, fara lock-uri si cu ZERO sincronizare!\\n   - Ofera generare de numere pseudo-aleatorii aproape la viteza unei simple instructiuni de calcul scalar.",
-    codeSnippet: `// Folosire directa in thread-uri concurente:
-int randomNum = ThreadLocalRandom.current().nextInt(1, 101); // Numar intre 1 si 100`,
-    interviewTrap: "Nu salva niciodata instanta returnata de ThreadLocalRandom.current() intr-o variabila statica partajata! Apeleaza intotdeauna ThreadLocalRandom.current() la cerere pe firul respectiv.",
-    keyTakeaway: "ThreadLocalRandom aloca seminte independente per-thread, eliminand complet contention-ul atomic din Random-ul clasic."
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Inspectarea claselor cu Reflection: getMethods vs getDeclaredMethods",
+    question: "Care este diferenta dintre getMethods() si getDeclaredMethods() in clasa java.lang.Class?",
+    answer: "1. clazz.getMethods():\\n   - Returneaza TOATE metodele PUBLICE ale clasei, INCLUSIV metodele publice mostenite din clasele parinte si interfete (ex: toString(), equals(), hashCode() mostenite din Object).\\n   - Nu returneaza metode private sau protected.\\n\\n2. clazz.getDeclaredMethods():\\n   - Returneaza TOATE metodele declarate DIRECT in clasa curenta (indiferent daca sunt public, protected, package-private sau private!).\\n   - NU include metodele mostenite din clasele parinte.\\n\\n3. Aceeasi regula se aplica si pentru getFields() vs getDeclaredFields().\\n4. Pentru a invoca o metoda privata din exterior cu Reflection, trebuie apelat method.setAccessible(true).",
+    codeSnippet: `class Parent { public void parentPublic() {} }
+class Child extends Parent {
+    public void childPublic() {}
+    private void childPrivate() {}
+}
+
+Class<?> c = Child.class;
+
+// getMethods(): childPublic, parentPublic, plus metodele din Object (doar publice!)
+System.out.println(c.getMethods().length);
+
+// getDeclaredMethods(): doar childPublic si childPrivate (toate vizibilitatile, doar Child!)
+System.out.println(c.getDeclaredMethods().length); // 2`,
+    interviewTrap: "Daca incerci sa gasesti un camp privat cu getField(\"secret\"), vei primi NoSuchFieldException! Campurile private se cauta exclusiv cu getDeclaredField(\"secret\").",
+    keyTakeaway: "getMethods() gaseste doar metode publice inclusiv din parinti; getDeclaredMethods() gaseste toate metodele din clasa curenta, inclusiv private."
   },
   {
     id: "java-201",
-    category: "JAVA",
-    difficulty: "USOR",
-    title: "Statement vs PreparedStatement vs CallableStatement in JDBC",
-    question: "Care sunt diferentele de arhitectura si securitate intre Statement, PreparedStatement si CallableStatement si de ce PreparedStatement previne SQL Injection?",
-    answer: "1. Statement:\\n   - Folosit pentru executarea de interogari SQL statice simple.\\n   - Trimite textul SQL catre baza de date ca un simplu sir de caractere. La FIECARE executie, motorul DB trebuie sa parseze, sa compileze si sa optimizeze planul de executie de la zero.\\n   - Vulnerabilitate critica: Daca concatenezi variabile de la utilizator (\"SELECT * FROM u WHERE id = \" + input), este 100% vulnerabil la atacuri de tip SQL Injection!\\n\\n2. PreparedStatement (Standardul Absolut):\\n   - Precompileaza interogarea SQL parametrizata (cu semne de intrebare ? placeholders) o singura data in baza de date.\\n   - Reutilizeaza planul de executie compilat pentru rulari repetate (viteza mult mai mare).\\n   - Prevenire SQL Injection: Parametrii transmisi prin setString() sau setInt() sunt trimisi complet separat de codul SQL; baza de date ii trateaza strict ca date literale pasive, facand imposibila injectarea de comenzi SQL malitioase!\\n\\n3. CallableStatement:\\n   - Extinde PreparedStatement; este dedicat apelarii de Proceduri Stocate (Stored Procedures) si Functii din baza de date, suportand parametri de intrare (IN) si parametri de iesire (OUT).",
-    codeSnippet: `// PreparedStatement imun la SQL Injection:
-String sql = "SELECT * FROM candidates WHERE email = ? AND status = ?";
-try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-    pstmt.setString(1, userEmail); // Chiar daca userEmail contine "' OR '1'='1", e tratat ca text!
-    pstmt.setString(2, "ACTIVE");
-    ResultSet rs = pstmt.executeQuery();
+    category: 'JAVA',
+    difficulty: "MEDIU",
+    title: "Adnotari Custom in Java: @Target si @Retention",
+    question: "Cum definim o adnotare personalizata (custom annotation) si care este rolul metadnotarilor @Target si @Retention?",
+    answer: "1. Cum se defineste:\\n   - Se foloseste sintaxa @interface (ex: public @interface Auditable {}).\\n   - Elementele adnotarii sunt metode fara parametri, ce pot avea valori implicite (default).\\n\\n2. Meta-adnotarea @Target:\\n   - Specifica UNDE poate fi aplicata adnotarea (Element-ul Java tinta):\\n   - ElementType.TYPE (pe clase/interfete), ElementType.METHOD (pe metode), ElementType.FIELD (pe campuri), ElementType.PARAMETER (pe parametri de metoda).\\n\\n3. Meta-adnotarea @Retention:\\n   - Specifica CAT TIMP este pastrata adnotarea in viata:\\n   - RetentionPolicy.SOURCE: doar in codul sursa (stearsa la compilare, ex: @Override, @SuppressWarnings).\\n   - RetentionPolicy.CLASS: pastrata in fisierul .class (bytecode), dar ignorata de JVM la runtime (default-ul!).\\n   - RetentionPolicy.RUNTIME: incarcata in memorie de JVM la runtime si accesibila prin Reflection!",
+    codeSnippet: `@Target({ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME) // OBLIGATORIU pentru a fi citita la runtime!
+public @interface TrackExecutionTime {
+    String unit() default "MS"; // parametru optional cu valoare default
+}
+
+// Utilizare:
+public class Service {
+    @TrackExecutionTime(unit = "SEC")
+    public void calculate() {}
 }`,
-    interviewTrap: "Daca folosesti PreparedStatement dar concatenezi parametrii manual in loc sa folosesti ? (ex: conn.prepareStatement(\"SELECT * FROM u WHERE id = \" + id)), esti in continuare 100% vulnerabil la SQL Injection!",
-    keyTakeaway: "PreparedStatement precompileaza planul SQL si separa datele de instructiuni prin parametri (?), facand aplicatia imuna la SQL Injection."
+    interviewTrap: "Daca uiti sa pui @Retention(RetentionPolicy.RUNTIME), adnotarea ta va avea implicit retentie CLASS si va fi INVIZIBILA la runtime prin Reflection (clazz.isAnnotationPresent() va returna false)!",
+    keyTakeaway: "@Target stabileste unde se aplica adnotarea; @Retention(RetentionPolicy.RUNTIME) o face vizibila la runtime prin Reflection."
   },
   {
     id: "java-202",
-    category: "JAVA",
-    difficulty: "MEDIU",
-    title: "Connection Pooling in JDBC (HikariCP) si Parametri Critici",
-    question: "De ce este deschiderea unei conexiuni JDBC traditionale extrem de lenta si cum optimizeaza HikariCP gestionarea conexiunilor?",
-    answer: "1. Costul Deschiderii unei Conexiuni JDBC Clasice (DriverManager):\\n   - O conexiune fizica implica: rezolutie DNS, 3-way handshake TCP/IP, negociere TLS/SSL, autentificare pe serverul DB, alocare de memorie pe serverul PostgreSQL.\\n   - Dureaza intre 50 si 200 milisecunde per request! Daca creezi si inchizi conexiuni manual la fiecare apel HTTP, serverul va suferi o degradare masiva de performanta.\\n\\n2. Ce este un Connection Pool (HikariCP - default in Spring Boot):\\n   - Mentine un \"bazin\" de conexiuni fizice gata deschise si active in fundal.\\n   - Cand aplicatia apeleaza dataSource.getConnection(), HikariCP ii imprumuta instantaneu o conexiune existenta in doar cativa microsecunde!\\n   - Cand apelezi connection.close(), conexiunea NU se inchide fizic; ea este doar curatata (resetata starea de tranzactie) si returnata inapoi in bazin.\\n\\n3. Parametri Critici de Configurare in Productie:\\n   - maximumPoolSize: Numarul maxim de conexiuni fizice active (regula de aur PostgreSQL: core_count * 2 + disk_spindle_count; de regula 10-20 de conexiuni sunt suficiente chiar si pentru mii de cereri/sec!).\\n   - connectionTimeout: Timpul maxim de asteptare pentru o conexiune libera inainte de a arunca exceptie (ex: 30.000 ms).\\n   - maxLifetime: Durata maxima de viata a unei conexiuni inainte de a fi reciclata pentru a preveni memory leaks pe serverul de DB.",
-    codeSnippet: `HikariConfig config = new HikariConfig();
-config.setJdbcUrl("jdbc:postgresql://localhost:5432/ats_db");
-config.setUsername("ats_user");
-config.setPassword("secret");
-config.setMaximumPoolSize(10);           // Bounded pool
-config.setConnectionTimeout(30000);      // 30s timeout
-HikariDataSource dataSource = new HikariDataSource(config);`,
-    interviewTrap: "Multi dezvoltatori cred ca marirea pool-ului la 200 de conexiuni creste viteza. In realitate, un pool supradimensionat provoaca \"Connection Thrashing\" si satura procesorul serverului de baza de date cu schimbari de context.",
-    keyTakeaway: "HikariCP reutilizeaza conexiuni pre-deschise reducand latenta de la 100ms la microsecunde; pastreaza pool-ul mic si eficient."
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "De ce @Retention(RetentionPolicy.RUNTIME) este cruciala in Spring?",
+    question: "De ce adnotarile din Spring precum @Service, @Autowired sau @Transactional folosesc obligatoriu RetentionPolicy.RUNTIME?",
+    answer: "1. Cum functioneaza Spring Boot la startup:\\n   - Cand aplicatia porneste, Spring scaneaza fisierele bytecode (.class) din classpath si incarca clasele in memorie.\\n   - Foloseste mecanismul de Reflection pentru a intreba clasa: method.isAnnotationPresent(Transactional.class) sau clazz.isAnnotationPresent(Service.class).\\n\\n2. Ce s-ar intampla cu SOURCE sau CLASS:\\n   - SOURCE: compilatorul javac o arunca complet la salvarea bytecode-ului (Spring nu ar avea nicio sansa sa o vada).\\n   - CLASS: adnotarea exista in fisierul fizic .class de pe disc, dar cand ClassLoader-ul incarca clasa in masina virtuala (JVM), metadatele adnotarii NU sunt incarcate in memoria RAM!\\n\\n3. Concluzie:\\n   - RetentionPolicy.RUNTIME este singura politica care mentine adnotarea in memoria activa a JVM-ului, permitand framework-urilor sa o citeasca.",
+    codeSnippet: `// Inspectie la runtime similara cu Spring:
+Method method = MyService.class.getMethod("saveData");
+
+if (method.isAnnotationPresent(Transactional.class)) {
+    System.out.println("Pornim tranzactie pentru aceasta metoda!");
+}`,
+    interviewTrap: "Multi candidati cred ca default-ul pentru @Retention este RUNTIME. FALS! Daca nu specifici @Retention pe adnotarea ta, default-ul este RetentionPolicy.CLASS.",
+    keyTakeaway: "RetentionPolicy.RUNTIME pastreaza adnotarile in memoria activa a JVM, permitand inspectia lor de catre Spring si Reflection."
   },
   {
     id: "java-203",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "MEDIU",
-    title: "Top 4 Cauze Comune de Memory Leaks in Aplicatii Java de Productie",
-    question: "Cum poate aparea un Memory Leak intr-un limbaj cu Garbage Collector automat si care sunt cele mai frecvente 4 cauze in productie?",
-    answer: "Un Memory Leak in Java nu inseamna memorie pierduta fizic de OS, ci obiecte care NU MAI SUNT UTILE aplicatiei, dar raman agatate printr-un lant de referinte tari (Strong References) pana la un GC Root, impiedicand Garbage Collector-ul sa le elibereze:\\n\\nCele mai Frecvente 4 Cauze in Productie:\\n1. Colectii Statice fara Curatare (Static Collections):\\n   - Campurile declared static (ex: public static Map<String, User> cache = new HashMap<>()) traiesc pe toata durata de viata a aplicatiei. Daca adaugi elemente si nu ai o politica de evacuare (LRU sau TTL), mapa creste la infinit pana la OOM.\\n2. ThreadLocal ne-curatat in Thread Pools (Tomcat/Executors):\\n   - Thread-urile dintr-un pool sunt refolosite permanent. Daca pui date in ThreadLocal si nu apelezi remove() intr-un bloc finally, datele raman stocate pe firul de executie la infinit.\\n3. Listeners si Callbacks ne-deregistrati:\\n   - Daca inregistrezi un listener intr-un serviciu singleton cu viata lunga, dar uiti sa il dezabonezi cand componenta moare, singletonul retine intreaga componenta in viata.\\n4. Resurse Neinchise (Unclosed Streams, DB Connections):\\n   - Conexiuni JDBC, socket-uri sau fisiere uitate deschise.",
-    codeSnippet: `// 1. Memory leak tipic cu ThreadLocal:
-public void processRequest() {
-    try {
-        USER_CONTEXT.set(new UserContext("admin"));
-        doBusinessLogic();
-    } finally {
-        USER_CONTEXT.remove(); // OBLIGATORIU! Fara asta, datele raman pe firul reutilizat!
-    }
-}`,
-    interviewTrap: "Folosirea unei chei mutabile intr-un HashSet sau HashMap: daca adaugi un obiect si apoi ii modifici un camp folosit la hashCode, nu mai poti gasi niciodata obiectul pentru a-l sterge (remove() esueaza silentios), lasandu-l blocat in memorie.",
-    keyTakeaway: "Memory Leaks in Java apar prin referinte tari uitate (colectii statice, ThreadLocal necuratat, listeners); se rezolva prin igiena riguroasa a ciclului de viata."
+    title: "ClassLoader in Java: Rol si Ierarhie",
+    question: "Ce este un ClassLoader in Java si cum functioneaza modelul de delegare ierarhica (Delegation Hierarchy)?",
+    answer: "1. Ce este un ClassLoader:\\n   - O componenta a Masinii Virtuale Java (JVM) responsabila de incarcarea fisierelor de bytecode (.class) de pe disc sau retea in memoria Metaspace a JVM-ului la runtime.\\n\\n2. Ierarhia standard a ClassLoader-elor:\\n   1. Bootstrap ClassLoader: Scris in C/C++, incarca clasele fundamentale de sistem Java (pachetul java.base, java.lang.*).\\n   2. Platform / Extension ClassLoader: Incarca extensiile standard si modulele platformei.\\n   3. Application (System) ClassLoader: Incarca clasele scrise de tine din classpath-ul aplicatiei si bibliotecile din pom.xml / build.gradle.\\n\\n3. Modelul de Delegare (Parent Delegation Model):\\n   - Cand un ClassLoader primeste cererea de a incarca o clasa, NU o incarca el direct!\\n   - Deleaga cererea mai intai parintelui sau. Daca parintele nu o gaseste, doar atunci incearca el sa o incarce.\\n   - Previne atacurile de securitate (nimeni nu poate inlocui java.lang.String cu o clasa malitioasa proprie).",
+    codeSnippet: `ClassLoader appLoader = ClassLoaderExample.class.getClassLoader();
+System.out.println("App Loader: " + appLoader);
+
+ClassLoader platformLoader = appLoader.getParent();
+System.out.println("Platform Loader: " + platformLoader);
+
+ClassLoader bootstrapLoader = platformLoader.getParent();
+System.out.println("Bootstrap Loader: " + bootstrapLoader); // Afiseaza null (implementat nativ in C++)`,
+    interviewTrap: "Daca apelezi String.class.getClassLoader(), vei primi null! Nu este o eroare, ci semnalul ca a fost incarcat de Bootstrap ClassLoader nativ.",
+    keyTakeaway: "ClassLoader incarca bytecode-ul in memorie delegand intai catre parinte (Bootstrap -> Platform -> Application) pentru securitate si consistenta."
   },
   {
     id: "java-204",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "De ce Thread.sleep() pastreaza lock-urile in timp ce Object.wait() le elibereaza?",
-    question: "Care este diferenta critica de comportament asupra lock-urilor (monitoarelor) intre Thread.sleep() si Object.wait()?",
-    answer: "Aceasta este o intrebare clasica de interviu:\\n\\n1. Thread.sleep(milliseconds):\\n   - Este o metoda statica a clasei Thread.\\n   - Pune firul curent de executie la somn pentru o durata determinata de timp.\\n   - NU ELIBEREAZA NICIUN LOCK! Daca firul se afla intr-un bloc synchronized, el continua sa tina lock-ul strans in timp ce doarme. Niciun alt fir nu poate accesa resursa respectiva pe toata durata somnului, putand cauza blocaje masive in aplicatie!\\n\\n2. Object.wait():\\n   - Este o metoda de instanta a clasei Object.\\n   - Este conceputa pentru comunicare si coordonare intre fire.\\n   - ELIBEREAZA IMEDIAT monitorul (lock-ul) obiectului pe care a fost apelata! Firul este trecut in Wait Set-ul obiectului si renunta la control, permitand altor fire sa intre in blocul sincronizat si sa modifice starea sau sa apeleze notify().",
-    codeSnippet: `// 1. sleep: Tine lock-ul ocupat in timp ce doarme (Blocant pentru altii):
-synchronized (lock) {
-    Thread.sleep(5000); // Toti ceilalti asteapta 5 secunde!
-}
+    title: "Shallow Copy vs Deep Copy in Java",
+    question: "Care este diferenta dintre Shallow Copy (copie superficiala) si Deep Copy (copie profunda) in Java?",
+    answer: "1. Shallow Copy (Copie Superficiala):\\n   - Creeaza o instanta noua a obiectului principal, dar copiaza valorile campurilor asa cum sunt.\\n   - Pentru primitive (int, double) copiaza valoarea.\\n   - Pentru campuri de tip OBIECT (ex: liste, adrese), copiaza doar REFERINTA de memorie!\\n   - Pericol: Atat originalul cat si copia pointeaza catre ACELASI obiect intern. Daca copia modifica un element din lista interna, se va modifica si in original!\\n\\n2. Deep Copy (Copie Profunda):\\n   - Creeaza o copie 100% independenta a intregului graf de obiecte.\\n   - Pentru fiecare obiect imbricat (nested), se creeaza o noua instanta separata pe Heap.\\n   - Orice modificare ulterioara facuta in copie NU afecteaza sub nicio forma obiectul original.",
+    codeSnippet: `class Department { String name; Department(String n) { this.name = n; } }
+class Employee {
+    String empName;
+    Department dept;
 
-// 2. wait: Elibereaza lock-ul si permite altora sa progreseze:
-synchronized (lock) {
-    lock.wait(); // Elibereaza lock-ul pe 'lock' si doarme pana la notify()
+    // Shallow Copy:
+    Employee shallowCopy() {
+        Employee e = new Employee();
+        e.empName = this.empName;
+        e.dept = this.dept; // Aceeasi referinta de memorie partajata!
+        return e;
+    }
+
+    // Deep Copy:
+    Employee deepCopy() {
+        Employee e = new Employee();
+        e.empName = this.empName;
+        e.dept = new Department(this.dept.name); // Obiect nou complet independent!
+        return e;
+    }
 }`,
-    interviewTrap: "Daca apelezi sleep() in interiorul unei tranzactii sau a unei metode synchronized de inalta frecventa, vei crea instantaneu un blocaj artificial de performanta pentru toti ceilalti utilizatori.",
-    keyTakeaway: "sleep() doarme tinand lock-urile ocupate; wait() elibereaza lock-ul obiectului pentru a permite altor fire sa execute."
+    interviewTrap: "new ArrayList<>(originalList) creeaza un shallow copy al listei. Daca lista contine obiecte mutabile, ambele liste vor pointa la aceleasi obiecte!",
+    keyTakeaway: "Shallow copy copiaza referintele catre aceleasi obiecte interne; Deep copy cloneaza intregul arbore de obiecte in mod independent."
   },
   {
     id: "java-205",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "De ce apelul Thread.run() NU porneste un thread nou?",
-    question: "Ce se intampla daca apelezi thread.run() in loc de thread.start() si de ce este o greseala frecventa a incepatorilor?",
-    answer: "1. Ce face thread.start():\\n   - Apeleaza o metoda nativa JVM (private native void start0()) care cere sistemului de operare alocarea unui fir nou de executie nativ si a unei stive dedicate.\\n   - Noul fir este planificat independent si va executa corpul metodei run() in paralel cu firul apelant.\\n\\n2. Ce face thread.run():\\n   - Este o simpla metoda Java obisnuita declarata in interfata Runnable.\\n   - Daca apelezi direct thread.run(), NU se creeaza niciun fir nou! Metoda se va executa sincron si secvential exact pe firul curent apelant (ex: firul main)!\\n   - Firul principal va fi blocat asteptand terminarea metodei run(), anuland complet orice idee de paralelism.",
-    codeSnippet: `Thread t = new Thread(() -> {
-    System.out.println("Ruleaza pe: " + Thread.currentThread().getName());
-});
+    title: "Copii Defensive (Defensive Copying)",
+    question: "Ce este o copie defensiva (Defensive Copy) si cum previne alterarea starii interne a unei clase imutabile?",
+    answer: "1. Problema de securitate / mutatie ascunsa:\\n   - Daca creezi o clasa cu campuri final, dar unul dintre campuri este o colectie mutabila (ex: List<String>), iar constructorul tau salveaza direct referinta primita din exterior: this.list = list;\\n   - Clientul din exterior poate apela list.add(\"hacked\") DUPA crearea obiectului si sa-i altereze starea interna, desi clasa parea imutabila!\\n   - La fel, daca metoda getList() returneaza direct referinta interna: return this.list;, oricine poate chema getList().clear()!\\n\\n2. Solutia: Copia Defensiva:\\n   - In constructor: salveaza o copie noua (ex: this.list = new ArrayList<>(list) sau List.copyOf(list)).\\n   - In getter: returneaza o copie noua sau o vizualizare ne-modificabila (ex: Collections.unmodifiableList(this.list)).",
+    codeSnippet: `public final class Order {
+    private final List<String> items;
 
-// 1. Apel gresit (ruleaza pe firul curent main):
-t.run(); // Afiseaza: "Ruleaza pe: main"
+    public Order(List<String> items) {
+        // Copie defensiva la intrare:
+        this.items = new ArrayList<>(items);
+    }
 
-// 2. Apel corect (creeaza un fir nou in paralel):
-t.start(); // Afiseaza: "Ruleaza pe: Thread-0"`,
-    interviewTrap: "Daca apelezi start() de doua ori pe aceeasi instanta de Thread (ex: t.start(); t.start();), JVM va arunca intotdeauna la runtime: IllegalThreadStateException (un fir nu poate fi restartat dupa pornire).",
-    keyTakeaway: "start() aloca un fir nou nativ de OS si ruleaza asincron; run() este o metoda normala care se executa sincron pe firul curent."
+    public List<String> getItems() {
+        // Copie defensiva sau unmodifiable la iesire:
+        return Collections.unmodifiableList(items);
+    }
+}`,
+    interviewTrap: "Chiar daca un camp este marcat private final List<String> items, el este final ca referinta, NU ca si continut! Elementele listei pot fi adaugate sau sterse daca nu faci copii defensive.",
+    keyTakeaway: "Copiile defensive izoleaza starea interna a clasei copiind colectiile atat la primire in constructor cat si la returnare in getteri."
   },
   {
     id: "java-206",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "De ce este recomandat EnumSet in loc de Bitwise Flags (int)?",
-    question: "De ce ghidurile de bune practici (Effective Java) recomanda EnumSet in locul mastilor de biti pe intregi (Bit Field Pattern)?",
-    answer: "1. Modelul Vechi de Masti pe Biti (Bit Fields - stil C):\\n   - public static final int STYLE_BOLD = 1 << 0; (1)\\n   - public static final int STYLE_ITALIC = 1 << 1; (2)\\n   - public static final int STYLE_UNDERLINE = 1 << 2; (4)\\n   - Combinare prin: applyStyles(STYLE_BOLD | STYLE_ITALIC);\\n   - Defecte majore: Nu exista Type Safety (poti transmite orice numar arbitrar int precum 999 fara nicio eroare la compilare); depanarea in log-uri este oribila (afiseaza doar un numar intreg bizar \"3\" in loc de nume lizibile); nu poti itera usor peste optiuni.\\n\\n2. Solutia Moderna: EnumSet\\n   - Definesti un Enum curat: public enum Style { BOLD, ITALIC, UNDERLINE }\\n   - Creezi setul: EnumSet.of(Style.BOLD, Style.ITALIC);\\n   - Este 100% Type-Safe la compilare.\\n   - Performanta este IDENTICA cu operatiile pe biti primitive, deoarece intern EnumSet foloseste exact aceleasi masti de biti pe un camp long (bit vector)!",
-    codeSnippet: `public enum Permission { READ, WRITE, EXECUTE }
+    title: "Clasa utilitara java.util.Objects",
+    question: "Ce metode utile ofera clasa java.util.Objects si cum simplifica validarile de null?",
+    answer: "Clasa utilitara java.util.Objects (introdusa in Java 7) contine metode statice sigure impotriva NullPointerException:\\n\\n1. Objects.requireNonNull(obj, \"Mesaj\"):\\n   - Daca obj este null, arunca imediat NullPointerException cu mesajul furnizat.\\n   - Daca nu este null, returneaza obiectul (ideal pentru validarea parametrilor in constructori).\\n\\n2. Objects.equals(a, b):\\n   - Compara doua obiecte pentru egalitate in mod null-safe!\\n   - Daca ambele sunt null -> returneaza true. Daca unul este null -> false. Daca ambele sunt nenule -> a.equals(b).\\n\\n3. Objects.hash(a, b, c):\\n   - Genereaza cod hash combinat dintr-un numar variabil de campuri.\\n\\n4. Objects.isNull(obj) si Objects.nonNull(obj):\\n   - Predicate ideale pentru Stream API: .filter(Objects::nonNull).",
+    codeSnippet: `public class Person {
+    private final String name;
 
-// Type-Safe, lizibil si la fel de rapid ca masca de biti pe procesor:
-Set<Permission> perms = EnumSet.of(Permission.READ, Permission.WRITE);
+    public Person(String name) {
+        // Validare eleganta de null:
+        this.name = Objects.requireNonNull(name, "Numele nu poate fi null!");
+    }
 
-if (perms.contains(Permission.WRITE)) {
-    System.out.println("Are drept de scriere");
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Person p)) return false;
+        return Objects.equals(this.name, p.name); // Null-safe!
+    }
+
+    public int hashCode() {
+        return Objects.hash(name);
+    }
 }`,
-    interviewTrap: "EnumSet este la fel de rapid ca int bitmask, dar ofera siguranta compilatorului, lizibilitate totala in JSON/log-uri si metode declarative (allOf, noneOf, complementOf).",
-    keyTakeaway: "EnumSet combina siguranta si lizibilitatea Enum-urilor cu viteza operatiilor pe biti, eliminand complet mastile int invechite."
+    interviewTrap: "Objects.equals(a, b) elimina necesitatea verificarii manuale if (a != null && a.equals(b)), prevenind erori comune de scriere.",
+    keyTakeaway: "java.util.Objects ofera metode utilitare null-safe esentiale: requireNonNull, equals, hash si predicatele isNull/nonNull."
   },
   {
     id: "java-207",
-    category: "JAVA",
+    category: 'JAVA',
     difficulty: "USOR",
-    title: "Objects.requireNonNull() si Validari Defensive",
-    question: "Cum folosesti utilitarele din java.util.Objects (requireNonNull, requireNonNullElse) pentru a scrie cod defensiv curat?",
-    answer: "Clasa utilitara java.util.Objects (Java 7/9) elimina codul boilerplate plin de if (x == null) throw new...:\\n\\n1. Objects.requireNonNull(T obj, String message):\\n   - Verifica daca parametrul este null. Daca este null, arunca imediat un NullPointerException clar cu mesajul specificat.\\n   - Daca nu este null, RETURNEAZA valoarea verificata! Permite utilizarea fluenta direct in atribuirea campurilor in constructori intr-o singura linie.\\n\\n2. Objects.requireNonNullElse(T obj, T defaultObj) (Java 9):\\n   - Returneaza primul parametru daca nu este null, sau valoarea default specificata daca primul este null (fara a aloca obiecte Optional suplimentare).\\n\\n3. Objects.equals(a, b):\\n   - Compara doua obiecte fiind complet imun la NullPointerException (daca ambele sunt null returneaza true, daca doar unul e null returneaza false fara crash).",
-    codeSnippet: `public class CandidateService {
-    private final CandidateRepository repo;
-    private final String defaultRole;
+    title: "De ce NU folosim float sau double pentru bani?",
+    question: "De ce este strict interzisa folosirea tipurilor float sau double pentru calcule financiare si ce folosim in schimb?",
+    answer: "1. Cauza tehnica (Standardul IEEE 754):\\n   - Tipurile primitive float si double reprezinta numere in virgula mobila binara (baza 2), nu zecimala (baza 10).\\n   - Multe fractii zecimale simple precum 0.1, 0.2 sau 0.7 nu pot fi reprezentate exact in binar finit (exact cum 1/3 devine 0.33333... in zecimal).\\n   - Rezultatul operatiei 0.1 + 0.2 in Java NU este 0.3, ci 0.30000000000000004!\\n\\n2. Consecinte in aplicatii bancare / e-commerce:\\n   - Dupa mii de tranzactii sau calcul de TVA, diferentele de fractii de ban duc la pierderi masive financiare si balante contabile compromise.\\n\\n3. Solutia corecta in Java:\\n   - Folosirea clasei java.math.BigDecimal: ofera precizie arbitrara exacta in baza 10 si control deplin asupra modului de rotunjire (RoundingMode.HALF_UP).",
+    codeSnippet: `// Problema uriasa cu double:
+double val = 0.1 + 0.2;
+System.out.println(val); // 0.30000000000000004 !
 
-    public CandidateService(CandidateRepository repo, String defaultRole) {
-        // Validare si atribuire atomica pe o singura linie:
-        this.repo = Objects.requireNonNull(repo, "Repository nu poate fi null");
-        this.defaultRole = Objects.requireNonNullElse(defaultRole, "CANDIDATE");
-    }
-}`,
-    interviewTrap: "Daca nu faci validare defensiva cu requireNonNull in constructor, obiectul tau va fi creat pe Heap cu un camp null ascuns, iar NullPointerException-ul va sari mult mai tarziu intr-o alta metoda greu de depanat.",
-    keyTakeaway: "Objects.requireNonNull valideaza si returneaza valoarea intr-o singura linie, asigurand fail-fast la instantiere."
+// Solutia CORECTA cu BigDecimal:
+BigDecimal a = new BigDecimal("0.1");
+BigDecimal b = new BigDecimal("0.2");
+BigDecimal sum = a.add(b);
+System.out.println(sum); // 0.3 (Exact!)`,
+    interviewTrap: "La interviu, intervievatorii adora sa intrebe: \"Ce afiseaza System.out.println(0.1 + 0.2 == 0.3)?\". Raspunsul este FALSE!",
+    keyTakeaway: "double si float au erori de precizie binara; pentru bani si calcule financiare se foloseste exclusiv BigDecimal."
   },
   {
     id: "java-208",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "AtomicReferenceFieldUpdater: De ce il folosesc Framework-urile de Top?",
-    question: "De ce biblioteci de inalta performanta precum Netty si Spring folosesc AtomicReferenceFieldUpdater in loc de mii de instante AtomicReference?",
-    answer: "1. Problema de Memorie cu AtomicReference:\\n   - Daca ai o structura de date (ex: un nod de graf, o conexiune de retea, sau un buffer Netty) instantiata de 10.000.000 de ori:\\n   - Daca fiecare nod contine un private final AtomicReference<Node> next = new AtomicReference<>();:\\n   - Vei aloca 10.000.000 de instante suplimentare de AtomicReference pe Heap! Fiecare AtomicReference are propriul sau header de obiect (16 octeti) si referinta (8 octeti), irosind sute de Megabytes de RAM doar pe wrappere!\\n\\n2. Solutia: AtomicReferenceFieldUpdater (sau AtomicIntegerFieldUpdater):\\n   - Se declara o SINGURA instanta STATICA de updater pe intreaga clasa: private static final AtomicReferenceFieldUpdater<Node, Node> UPDATER;.\\n   - Campul din interiorul nodului ramane o simpla variabila volatila normala: private volatile Node next;!\\n   - Updaterul executa instructiuni CAS atomice direct pe campul volatil prin Reflection de inalta performanta, cu ZERO obiecte alocate suplimentar pe instanta!",
-    codeSnippet: `public class Node {
-    private volatile Node next; // Camp volatil obisnuit (zero obiect wrapper!)
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Crearea corecta a unui BigDecimal in Java",
+    question: "Care este diferenta dintre new BigDecimal(\"0.1\") si new BigDecimal(0.1) si de ce varianta cu double este o capcana?",
+    answer: "Aceasta este o intrebare clasica si eliminatorie de interviu!\\n\\n1. Constructorul cu double: new BigDecimal(0.1) -> CAPCANA MAJORA!\\n   - Literalul 0.1 este deja un double inexact in memorie inainte de a fi transmis constructorului.\\n   - In loc de 0.1, valoarea BigDecimal va fi exact: 0.1000000000000000055511151231257827021181583404541015625! Erorile de aproximare sunt preluate direct in BigDecimal.\\n\\n2. Variantele CORECTE:\\n   - Varianta 1 (Constructorul cu String): new BigDecimal(\"0.1\") -> Creeaza exact valoarea 0.1.\\n   - Varianta 2 (Metoda statica de fabrica): BigDecimal.valueOf(0.1) -> Converteste intern double-ul in String prin Double.toString(d) inainte de creare, fiind sigura si refolosind instante din cache pentru valori comune (0, 1, 10).",
+    codeSnippet: `// GRESIT:
+BigDecimal bad = new BigDecimal(0.1);
+System.out.println(bad); 
+// Output: 0.1000000000000000055511151231257827021181583404541015625
 
-    // O singura instanta statica pentru toata aplicatia:
-    private static final AtomicReferenceFieldUpdater<Node, Node> NEXT_UPDATER =
-        AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "next");
+// CORECT (String):
+BigDecimal good1 = new BigDecimal("0.1");
+System.out.println(good1); // 0.1
 
-    public boolean casNext(Node expected, Node newNext) {
-        return NEXT_UPDATER.compareAndSet(this, expected, newNext);
-    }
-}`,
-    interviewTrap: "Campul tinta trebuie sa fie obligatoriu declarat volatile si non-static, altfel newUpdater() va arunca IllegalArgumentException: Must be volatile type.",
-    keyTakeaway: "AtomicFieldUpdater aplica operatii CAS direct pe campuri volatile existente fara a aloca obiecte wrapper, economisind memorie masiva."
+// CORECT (valueOf):
+BigDecimal good2 = BigDecimal.valueOf(0.1);
+System.out.println(good2); // 0.1`,
+    interviewTrap: "Nu folosi niciodata new BigDecimal(double)! Foloseste intotdeauna constructorul cu String new BigDecimal(\"...\") sau metoda statica BigDecimal.valueOf(...).",
+    keyTakeaway: "new BigDecimal(0.1) preia eroarea de precizie a double-ului; foloseste new BigDecimal(\"0.1\") sau BigDecimal.valueOf(0.1)."
   },
   {
     id: "java-209",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Foreign Function & Memory (FFM) API in Java 22 (JEP 454)",
-    question: "Cum inlocuieste Foreign Function and Memory (FFM) API vechiul mecanism JNI (Java Native Interface) si accesul direct la memoria Off-Heap?",
-    answer: "1. Cosmarul Istoric al JNI (Java Native Interface):\\n   - Necesita scrierea manuala de cod C/C++, compilarea de biblioteci native (.so/.dll) pentru fiecare platforma, generarea de headere cu javah.\\n   - Daca un apel nativ greseste un pointer, intregul proces JVM crapa cu Segmentation Fault (Core Dump).\\n\\n2. Ce aduce FFM API (Standardizat complet in Java 22):\\n   - Permite programelor Java sa apeleze functii native din biblioteci C (ex: glibc, OpenSSL, OpenGL) DIRECT DIN JAVA fara nicio linie de cod C intermediar!\\n   - Permite gestionarea sigura a memoriei native in afara Heap-ului (Off-Heap) prin Arena si MemorySegment:\\n     - Arena.ofConfined(): Memorie legata de un singur fir, eliberata garantat si deterministic la inchidere.\\n     - Arena.ofShared(): Memorie partajabila concurent intre multiple fire.\\n   - Siguranta: JVM valideaza limitele spatiale si temporale ale memoriei native, eliminand Use-After-Free si buffer overflows.",
-    codeSnippet: `// Apel direct al functiei strlen din biblioteca standard C (Java 22):
-Linker linker = Linker.nativeLinker();
-SymbolLookup stdlib = linker.defaultLookup();
-MemorySegment strlenAddr = stdlib.find("strlen").orElseThrow();
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Java Varargs (Variable Arguments)",
+    question: "Ce este mecanismul Varargs (Type... args) in Java, cum functioneaza sub capota si care sunt cele doua reguli de utilizare?",
+    answer: "1. Ce este Varargs (introdus in Java 5):\\n   - O sintaxa care permite unei metode sa accepte un numar variabil de argumente (zero, unul sau mai multe) de acelasi tip (ex: void printAll(String... names)).\\n\\n2. Cum functioneaza sub capota (Bytecode):\\n   - Compilatorul Java impacheteaza automat argumentele transmise intr-un simplu array nativ!\\n   - In interiorul corpului metodei, variabila names este tratata exact ca un array: String[].\\n\\n3. Cele doua reguli OBLIGATORII:\\n   - Regula 1: Parametrul varargs trebuie sa fie ULTIMUL parametru din lista de argumente a metodei.\\n   - Regula 2: O metoda poate avea CEL MULT UN SINGUR parametru varargs.",
+    codeSnippet: `// CORECT: varargs este ultimul parametru
+public void logMessage(String level, String... messages) {
+    System.out.print("[" + level + "] ");
+    for (String msg : messages) {
+        System.out.print(msg + " ");
+    }
+    System.out.println();
+}
 
-MethodHandle strlen = linker.downcallHandle(strlenAddr, 
-    FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+// Apeluri valide:
+logMessage("INFO");                          // 0 argumente varargs
+logMessage("WARN", "Disk 90% plin");        // 1 argument
+logMessage("ERROR", "Eroare DB", "Timeout"); // 2 argumente
 
-try (Arena arena = Arena.ofConfined()) {
-    MemorySegment cString = arena.allocateFrom("Hello from Java 22!");
-    long len = (long) strlen.invoke(cString);
-    System.out.println("Lungime string C: " + len); // 19
-}`,
-    interviewTrap: "FFM API este oficial standardizat in Java 22 (JEP 454). A revolutionat ecosistemul Java permitand integrarea instantanee a modelelor AI (LLaMA C++, TensorRT) direct in Java.",
-    keyTakeaway: "FFM API inlocuieste JNI si Unsafe, permitand apeluri native C si alocari sigure off-heap direct din cod Java pur."
+// ILEGAL la compilare:
+// void bad(String... msgs, int count) {} // Eroare: varargs nu este ultimul!
+// void bad2(int... a, String... b) {}    // Eroare: mai mult de un varargs!`,
+    interviewTrap: "Daca apelezi metoda fara niciun argument pentru varargs (ex: logMessage(\"INFO\")), parametrul devine un array gol (new String[0]), NU null! Insa transmiterea explicita a lui null (logMessage(\"INFO\", null)) seteaza array-ul ca null.",
+    keyTakeaway: "Varargs (Type... args) compileaza ca un array nativ si trebuie sa fie obligatoriu ultimul si unicul parametru de acest fel din metoda."
   },
   {
     id: "java-210",
-    category: "JAVA",
-    difficulty: "DIFICIL",
-    title: "Pregatirea pentru Interviul Tehnic Java Senior: Cele 5 Semnale Majore",
-    question: "Care sunt cele 5 semnale calitative pe care un intervievator tehnic de nivel Senior / Staff le urmareste in rezolvarea unei probleme de cod in Java?",
-    answer: "La un interviu de nivel Senior sau Lead, intervievatorii nu testeaza doar daca codul compileaza, ci urmaresc 5 semnale de maturitate inginereasca:\\n\\n1. Intelegerea Implicatiilor de Memorie si GC:\\n   - Candidatul nu se gandeste doar la algoritm, ci constientizeaza amprenta de memorie pe Heap (ex: evita crearea inutila de milioane de obiecte temporare, alege tipuri primitive sau colectii optime, previne memory leaks pe thread pools).\\n2. Siguranta Concurentei si a Firelor (Thread-Safety):\\n   - Abordeaza proactiv concurenta: stie cand sa foloseasca imutabilitatea in loc de sincronizare greoaie, intelege JMM (Happens-Before, volatile, atomics) si cand se preteaza Virtual Threads.\\n3. Stapanirea Colectiilor si a Complexitatii Big-O:\\n   - Alege structura de date ideala nu doar teoretic, ci si practic (intelege de ce ArrayList bate LinkedList pe hardware modern datorita CPU cache-ului, intelege functionarea HashMap-ului).\\n4. Clean Code si Idiomuri Moderne de Limbaj:\\n   - Scrie cod expresiv folosind facilitati moderne (Java 17/21 Records, Sealed Classes, Pattern Matching, Streams corecte, Optional elegant).\\n5. Tratarea Robusta a Erorilor si a Resurselor:\\n   - Nu lasa blocuri catch goale, foloseste try-with-resources garantat pe orice resursa I/O, nu ignora intreruperile si foloseste fail-fast defensive coding.",
-    codeSnippet: `// Semnatura codului de nivel Senior:
-// - Imutabilitate prin Records si unmodifiable collections
-// - Validare defensiva rapida prin Objects.requireNonNull
-// - Stream-uri declarative curate si concise
-public record UserSummary(String username, int orderCount) {
-    public UserSummary {
-        Objects.requireNonNull(username, "Username obligatoriu");
-        if (orderCount < 0) throw new IllegalArgumentException("Contor negativ");
+    category: 'JAVA',
+    difficulty: "USOR",
+    title: "Clean Code: Cele mai bune practici pentru un interviu tehnic",
+    question: "Care sunt cele mai importante principii si bune practici de Clean Code pe care un dezvoltator Java Junior/Mid trebuie sa le demonstreze la un interviu tehnic?",
+    answer: "La un interviu tehnic, calitatea codului cantareste adesea mai mult decat viteza:\\n\\n1. Denumiri sugestive si intuitive (Meaningful Names):\\n   - Fara variabile de o litera (x, a, t, flag). Foloseste nume explicite: userList, isExpired, calculateTotalSalary.\\n   - Numele claselor sunt substantive (OrderService), metodele sunt verbe (processPayment).\\n\\n2. Functii mici si cu un singur scop (Single Purpose):\\n   - O metoda ar trebui sa aiba ideal sub 15-20 de linii si sa faca un singur lucru bine (SRP).\\n   - Nivel redus de imbricare (nesting): evita if-uri imbricate pe 4 niveluri; foloseste Guard Clauses (return devreme: if (invalid) return;).\\n\\n3. Evitarea numerelor si string-urilor magice (Magic Numbers/Strings):\\n   - Nu scrie if (status == 3); extrage intr-o constanta static final int STATUS_ACTIVE = 3 sau un Enum!\\n\\n4. Tratarea adecvata a erorilor:\\n   - Nu lasa blocuri catch goale; logheaza exceptia sau arunca o exceptie specifica de domeniu.\\n   - Nu returna null din metode cand poti returna o colectie goala (Collections.emptyList()) sau un Optional.\\n\\n5. Testabilitate si Modularitate:\\n   - Cod usor de testat unitar, cu dependinte injectate prin constructor.",
+    codeSnippet: `// GRESIT (Cod murdar):
+public void proc(int d) {
+    if (d > 0) {
+        if (d == 1) { /* status 1 */ }
+    }
+}
+
+// CORECT (Clean Code cu Guard Clauses si constante):
+public static final int ACTIVE_STATUS = 1;
+
+public void processUserStatus(int status) {
+    if (status <= 0) {
+        return; // Guard clause: returneaza devreme!
+    }
+    if (status == ACTIVE_STATUS) {
+        activateAccount();
     }
 }`,
-    interviewTrap: "Cea mai mare greseala la interviurile de senior este tacerea sau saritul direct in scrierea de cod fara clarificarea cerintelor nefunctionale (volum de date, concurenta, cerinte de latenta).",
-    keyTakeaway: "Un Java Senior exceleaza prin: constientizarea memoriei, design thread-safe prin imutabilitate, colectii optime si cod modern curat."
+    interviewTrap: "Daca la interviu scrii o metoda de 100 de linii plina de if-uri si numere magice care functioneaza, intervievatorul ar putea sa te respinga pentru ca acel cod va fi greu de mentinut in echipa.",
+    keyTakeaway: "Clean Code inseamna: denumiri clare, metode scurte cu guard clauses, eliminarea numerelor magice, evitarea returnarii de null si tratarea corecta a erorilor."
   }
 ];
