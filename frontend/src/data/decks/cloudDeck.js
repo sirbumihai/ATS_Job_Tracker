@@ -1,792 +1,1106 @@
-// Deck Masiv: Cloud Computing, AWS Architecture, Serverless & Terraform
-// Preluat din: AWS Certified Solutions Architect Guides, HashiCorp Terraform Docs, DopplerHQ
+// Deck Masiv: Cloud Computing, AWS Architecture, Serverless & Terraform (Junior / Mid Level)
+// Preluat din: AWS Certified Solutions Architect Guides, HashiCorp Terraform Docs, DevOps & Cloud Engineering Interviews
 // STRICT ZERO DIACRITICE IN TOATE TEXTELE
 
 export const CLOUD_DECK = [
   {
-    id: 'cloud-01',
-    category: 'CLOUD',
-    difficulty: 'USOR',
-    title: 'Ce este un VPC si cum organizezi Subnet-urile Publice vs Private in AWS?',
-    question: 'Ce este un Virtual Private Cloud (VPC) in AWS si de ce o baza de date sau un backend nu trebuie puse NICIODATA intr-un Subnet Public?',
-    answer: 'Un VPC (Virtual Private Cloud) este o retea virtuala complet izolata si dedicata contului tau in infrastructura cloud.\n\nOrganizarea Subnet-urilor (Arhitectura pe 3 Nivele):\n1. Public Subnet:\n   - Are o tabela de rutare asociata direct cu un Internet Gateway (IGW).\n   - Resursele primesc adrese IP publice accesibile din Internet.\n   - Aici se plaseaza DOAR Load Balancer-ul (ALB) si eventual un Bastion Host (SSH Jump Server).\n\n2. Private Subnet:\n   - NU are ruta directa catre Internet Gateway; traficul outbound iese doar printr-un NAT Gateway controlat.\n   - Nu are IP-uri publice. Aici se plaseaza serverele de aplicatii backend (Spring Boot/Node.js) si nodurile de Kubernetes.\n\n3. Isolated Database Subnet:\n   - Nu are nici macar acces catre NAT Gateway; comunica doar intern in VPC cu backend-ul.\n   - Aici se plaseaza instantele de baze de date (RDS PostgreSQL, Aurora, Redis). Aceasta izolare previne orice atac direct din exterior pe portul 5432!',
-    codeSnippet: `// Arhitectura VPC:
-// Internet -> Internet Gateway -> Public Subnet (ALB)
-//                                     |
-//                               Private Subnet (Spring Boot Backend)
-//                                     |
-//                             Database Subnet (PostgreSQL RDS)`,
-    interviewTrap: 'Daca plasezi baza de date in subnet public chiar si cu parola complexa, este scanata continuu de boti de brute-force si risca sa fie compromisa. Plaseaz-o mereu in subnet privat.',
-    keyTakeaway: 'ALB in subnet public; backend si baze de date exclusiv in subneturi private protejate de Security Groups.'
+    "id": "cloud-01",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Ce este un VPC si cum organizezi Subnet-urile Publice vs Private in AWS?",
+    "question": "Ce este un Virtual Private Cloud (VPC) in AWS si de ce o baza de date sau un backend nu trebuie puse NICIODATA intr-un Subnet Public?",
+    "answer": "Un VPC (Virtual Private Cloud) este o retea virtuala complet izolata si dedicata contului tau in infrastructura cloud.\n\nOrganizarea Subnet-urilor (Arhitectura pe 3 Nivele):\n1. Public Subnet:\n   - Are o tabela de rutare asociata direct cu un Internet Gateway (IGW).\n   - Resursele primesc adrese IP publice accesibile din Internet.\n   - Aici se plaseaza DOAR Load Balancer-ul (ALB) si eventual un Bastion Host (SSH Jump Server).\n\n2. Private Subnet:\n   - NU are ruta directa catre Internet Gateway; traficul outbound iese doar printr-un NAT Gateway controlat.\n   - Nu are IP-uri publice. Aici se plaseaza serverele de aplicatii backend (Spring Boot/Node.js) si nodurile de Kubernetes.\n\n3. Isolated Database Subnet:\n   - Nu are nici macar acces catre NAT Gateway; comunica doar intern in VPC cu backend-ul.\n   - Aici se plaseaza instantele de baze de date (RDS PostgreSQL, Aurora, Redis). Aceasta izolare previne orice atac direct din exterior pe portul 5432!",
+    "codeSnippet": "// Arhitectura VPC clasica pe 3 straturi:\n// Internet -> Internet Gateway -> Public Subnet (ALB)\n//                                     |\n//                               Private Subnet (Spring Boot Backend)\n//                                     |\n//                             Database Subnet (PostgreSQL RDS)",
+    "interviewTrap": "Daca plasezi baza de date in subnet public chiar si cu parola complexa, este scanata continuu de boti de brute-force si risca sa fie compromisa. Plaseaz-o mereu in subnet privat fara ruta catre Internet Gateway.",
+    "keyTakeaway": "ALB in subnet public; backend si baze de date exclusiv in subneturi private protejate de Security Groups."
   },
   {
-    id: 'cloud-02',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Security Groups vs Network Access Control Lists (NACLs) in AWS',
-    question: 'Care este diferenta dintre un Security Group (Stateful) si un Network ACL (Stateless) in securitatea cloud?',
-    answer: '1. Security Groups (Nivel de Instanta / Stateful):\n   - Actioneaza ca un firewall virtual atasat direct unei placi de retea (ENI) a instantei (EC2, RDS, ECS).\n   - Sunt STATEFUL: Daca permiti traficul de intrare pe portul 443 (Inbound), traficul de raspuns este permis automat inapoi pe outbound, indiferent de regulile de iesire!\n   - Suporta doar reguli de PERMISIUNE (Allow Rules), tot restul fiind blocat implicit.\n\n2. Network ACLs (Nivel de Subnet / Stateless):\n   - Actioneaza ca un firewall la granita intregului Subnet.\n   - Sunt STATELESS: Fiecare pachet de intrare si iesire este verificat separat conform unei liste numerotate de reguli.\n   - Suporta atat reguli de ALLOW cat si reguli explicite de DENY (ideale pentru a bloca o adresa IP sau o clasa specifica de atacatori).',
-    codeSnippet: `// Security Group Stateful:
-// Inbound: Permite TCP 8080 de la Security Group-ul Load Balancer-ului
-// Outbound: Raspunsul se intoarce automat fara configurare separata!`,
-    interviewTrap: 'Daca configurezi o regula inbound intr-un NACL, trebuie sa configurezi explicit si porturile efemere (1024-65535) pe outbound pentru ca raspunsul sa poata parasi subnetul!',
-    keyTakeaway: 'Security Groups sunt principala linie de aparare stateful la nivel de server; NACLs blocheaza adrese IP la granita subnetului.'
+    "id": "cloud-02",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Security Groups vs Network Access Control Lists (NACLs) in AWS",
+    "question": "Care este diferenta fundamentala dintre un Security Group (Stateful) si un Network ACL (Stateless) in securitatea cloud?",
+    "answer": "1. Security Groups (Nivel de Instanta / Stateful):\n   - Actioneaza ca un firewall virtual atasat direct unei placi de retea (ENI) a instantei (EC2, RDS, ECS).\n   - Sunt STATEFUL: Daca permiti traficul de intrare pe portul 443 (Inbound), traficul de raspuns este permis automat inapoi pe outbound, indiferent de regulile de iesire!\n   - Suporta doar reguli de PERMISIUNE (Allow Rules), tot restul fiind blocat implicit.\n\n2. Network ACLs (Nivel de Subnet / Stateless):\n   - Actioneaza ca un firewall la granita intregului Subnet.\n   - Sunt STATELESS: Fiecare pachet de intrare si iesire este verificat separat conform unei liste numerotate de reguli.\n   - Suporta atat reguli de ALLOW cat si reguli explicite de DENY (ideale pentru a bloca o adresa IP sau o clasa specifica de atacatori).",
+    "codeSnippet": "// Security Group Stateful:\n// Inbound: Permite TCP 8080 de la Security Group-ul Load Balancer-ului\n// Outbound: Raspunsul se intoarce automat fara configurare separata!",
+    "interviewTrap": "Daca configurezi o regula inbound intr-un NACL, trebuie sa configurezi explicit si porturile efemere (1024-65535) pe outbound pentru ca raspunsul sa poata parasi subnetul!",
+    "keyTakeaway": "Security Groups sunt principala linie de aparare stateful la nivel de server; NACLs blocheaza adrese IP la granita subnetului."
   },
   {
-    id: 'cloud-03',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Ce este Infrastructure as Code (IaC) si de ce folosim Terraform?',
-    question: 'Ce avantaje aduce Terraform (IaC) fata de crearea manuala a resurselor in consola AWS/Azure si ce este Terraform State File?',
-    answer: 'Infrastructure as Code (IaC) inseamna definirea intregii infrastructuri (servere, baze de date, retele, permisiuni) in fisiere declarative de cod versionate cu Git.\n\nAvantaje Terraform:\n1. Repetabilitate & Audit: Poti recrea un mediu intreg identic (dev, staging, prod) in 5 minute, eliminand configuratiile manuale gresite.\n2. Cloud-Agnostic: Un singur limbaj declarativ (HCL - HashiCorp Configuration Language) pentru AWS, Azure, GCP, Cloudflare.\n3. Plan inainte de Apply: Comanda terraform plan arata exact ce resurse vor fi create, modificate sau distruse inainte de executie.\n\nTerraform State (terraform.tfstate):\nEste "sursa de adevar" care mapeaza codul tau cu resursele reale din cloud. In echipe se stocheaza securizat intr-un backend la distanta (ex: AWS S3 cu criptare si DynamoDB pentru state locking, prevenind rulari concurente simultane).',
-    codeSnippet: `# Exemplu resursa declarativa Terraform:
-resource "aws_s3_bucket" "cv_storage" {
-  bucket = "jobflow-candidate-resumes-prod"
-
-  tags = {
-    Environment = "Production"
-    ManagedBy   = "Terraform"
-  }
-}`,
-    interviewTrap: 'Nu comite NICIODATA fisierul terraform.tfstate in repozitoriul Git public! Poate contine chei secrete, parole de baze de date si configuratii private in text clar.',
-    keyTakeaway: 'IaC asigura consistenta infrastructurii; stocheaza state-ul in S3 cu DynamoDB locking pentru colaborare sigura.'
+    "id": "cloud-03",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "IaaS vs PaaS vs SaaS: Diferente, Exemple si Responsabilitati",
+    "question": "Care sunt cele trei modele majore de servicii Cloud (IaaS, PaaS, SaaS) si care este impartirea responsabilitatilor intre furnizor si client?",
+    "answer": "1. IaaS (Infrastructure as a Service):\n   - Furnizorul ofera: hardware virtualizat, retea, stocare fizica si servere.\n   - Clientul gestioneaza: sistemul de operare (OS), patch-uri de kernel, runtime-ul aplicatiei, datele si codul.\n   - Exemple: AWS EC2, Google Compute Engine, Azure Virtual Machines.\n\n2. PaaS (Platform as a Service):\n   - Furnizorul ofera: hardware, OS preconfigurat, runtime-ul de executie, patching automat si scalare.\n   - Clientul gestioneaza: doar codul aplicatiei si configuratiile de business.\n   - Exemple: AWS Elastic Beanstalk, Heroku, Google App Engine, Render.\n\n3. SaaS (Software as a Service):\n   - Furnizorul ofera: intreaga aplicatie end-to-end, mentenanta, backup-uri si securitate.\n   - Clientul gestioneaza: doar datele utilizatorilor si accesul (login).\n   - Exemple: GitHub, Gmail, Jira, Slack, Salesforce.",
+    "codeSnippet": "// Piramida controlului vs responsabilitatii:\n// SaaS: Folosesti softul (Gmail, Slack) -> 0 mentenanta server\n// PaaS: Pui codul (Beanstalk, Render) -> Fara grija OS\n// IaaS: Instalezi OS si librarii (EC2) -> Control complet",
+    "interviewTrap": "Nu confunda PaaS cu Serverless (FaaS). La PaaS ai adesea un server sau container care ruleaza continuu in spate (platesti pe ora de rulare), in timp ce la FaaS (Lambda) platesti strict per invocare si milisecunda de executie.",
+    "keyTakeaway": "IaaS iti ofera control maxim asupra OS-ului; PaaS se concentreaza pe cod; SaaS este aplicatia finala gata de utilizat."
   },
   {
-    id: 'cloud-04',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS IAM: Users, Groups, Roles si Instance Profiles',
-    question: 'De ce serverele EC2 sau functiile Lambda nu trebuie sa foloseasca niciodata chei statice (Access Keys) si cum functioneaza IAM Roles?',
-    answer: 'Pericolul Cheilor Statice (AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY):\nCheile statice sunt usor de comis accidental in GitHub, nu expira automat si reprezinta cauza principala a breselor de securitate in cloud.\n\nSolutie: IAM Roles & Instance Profiles\n1. Un IAM Role nu are credentiale permanente.\n2. Atasezi un Role unei instante EC2 sau functii Lambda.\n3. Serviciul intern AWS Metadata Service (IMDSv2) genereaza automat credentiale temporare cu expirare scurta (1 ora) si le roteste continuu in fundal.\n4. SDK-ul AWS (Java/Node) detecteaza automat aceste credentiale fara a fi nevoie sa configurezi vreo cheie secreta in cod!',
-    codeSnippet: `// In codul Spring Boot / Java SDK - zero chei configurate in cod:
-// SDK-ul ia automat credentialele din IAM Role Instance Profile:
-S3Client s3 = S3Client.builder()
-    .region(Region.EU_CENTRAL_1)
-    .build();`,
-    interviewTrap: 'Nu atasa politici cu drepturi de Administrator (AdministratorAccess) la un IAM Role de aplicatie; foloseste intotdeauna principiul privilegiilor minime (Least Privilege).',
-    keyTakeaway: 'Foloseste IAM Roles pentru resurse de calcul pentru a elimina complet cheile statice de acces din cod si fisiere de configurare.'
+    "id": "cloud-04",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Regiuni AWS (Regions) vs Zone de Disponibilitate (Availability Zones - AZ)",
+    "question": "Ce este o Regiune AWS, ce este un Availability Zone (AZ) si de ce o aplicatie de productie trebuie sa fie intotdeauna Multi-AZ?",
+    "answer": "1. AWS Region (Regiune):\n   - O zona geografica fizica separata pe glob (ex: eu-central-1 in Frankfurt, us-east-1 in North Virginia).\n   - Fiecare regiune este complet izolata si independenta de celelalte, minimizand riscul de caderi globale.\n\n2. Availability Zone (AZ - Zona de Disponibilitate):\n   - Unul sau mai multe centre de date (data centers) fizice discrete, cu alimentare electrica independenta, racire separata si retea redundanta, dar conectate intre ele prin fibra optica ultra-rapida de joasa latenta (<1-2 ms).\n   - O regiune are cel putin 3 AZ-uri (ex: eu-central-1a, eu-central-1b, eu-central-1c).\n\n3. De ce Multi-AZ in Productie:\n   - Daca un data center sufera o pana masiva de curent, un incendiu sau o inundatie (cadere de AZ), aplicatia configurata in mai multe AZ-uri continua sa functioneze pe celelalte zone fara intrerupere (High Availability).",
+    "codeSnippet": "// AWS Hierarchy:\n// Global -> Region (eu-central-1 Frankfurt)\n//             |-> AZ-a (Data Center 1 & 2)\n//             |-> AZ-b (Data Center 3)\n//             |-> AZ-c (Data Center 4)",
+    "interviewTrap": "Un AZ nu este o singura camera de servere, ci poate fi compus din mai multe cladiri de centre de date fizice grupate.",
+    "keyTakeaway": "Multi-AZ ofera High Availability locala in caz de dezastru hardware; Multi-Region ofera Disaster Recovery la scara continentala."
   },
   {
-    id: 'cloud-05',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Terraform Remote State si State Locking cu DynamoDB',
-    question: 'Cum configurezi un backend la distanta in Terraform folosind S3 si DynamoDB si de ce este obligatoriu State Locking?',
-    answer: 'Problema State-ului Local:\nDaca doi ingineri ruleaza terraform apply simultan de pe calculatoare diferite fara coordonare, amandoi vor citi si suprascrie fisierul de stare in acelasi timp, provocand coruperea ireversibila a starii si distrugerea de resurse!\n\nConfigurarea Backend-ului la Distanta (Remote State):\n1. AWS S3 Bucket: Stocheaza fisierul terraform.tfstate criptat cu KMS si cu versionare activa (Versioning) pentru a permite recuperarea in caz de corupere accidentala.\n2. AWS DynamoDB Table: Asigura mecanismul de State Locking. Cand un inginer ruleaza terraform plan sau apply, Terraform scrie o cheie atomica de lock in tabela DynamoDB. Daca altcineva incearca sa ruleze comanda in acelasi timp, primeste imediat mesajul "Error: Error acquiring the state lock" si executia este blocata pana la finalizarea primului proces.',
-    codeSnippet: `# In main.tf / versions.tf:
-terraform {
-  backend "s3" {
-    bucket         = "ats-terraform-state-prod"
-    key            = "infrastructure/prod/terraform.tfstate"
-    region         = "eu-central-1"
-    dynamodb_table = "terraform-locks"
-    encrypt        = true
-  }
-}`,
-    interviewTrap: 'Daca o rulare de Terraform este intrerupta violent (SIGKILL), lock-ul poate ramane blocat in DynamoDB; acesta se elibereaza manual cu comanda: terraform force-unlock <LOCK_ID>.',
-    keyTakeaway: 'S3 cu versionare ofera stocare sigura a starii, iar DynamoDB previne conflictele concurente prin locking atomic.'
+    "id": "cloud-05",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Modelul Responsabilitatii Partajate (Shared Responsibility Model)",
+    "question": "Ce inseamna \"Security OF the Cloud\" versus \"Security IN the Cloud\" conform modelului de responsabilitate partajata AWS?",
+    "answer": "Securitatea in Cloud este o parteneriat strict intre furnizor (AWS/Azure/GCP) si client:\n\n1. Furnizorul Cloud este responsabil pentru \"Securitatea CLOUD-ului\" (Security OF the Cloud):\n   - Securitatea fizica a centrelor de date (paza, acces biometric, camere).\n   - Hardware-ul fizic (rack-uri de servere, discuri, cabluri de retea, generatoare de rezerva).\n   - Stratul de virtualizare si hypervisor (izolarea hardware a masinilor virtuale).\n\n2. Clientul este responsabil pentru \"Securitatea IN Cloud\" (Security IN the Cloud):\n   - Configurarea sistemului de operare si instalarea patch-urilor de securitate (pe EC2).\n   - Configurarea corecta a firewall-urilor (Security Groups, Network ACLs).\n   - Managementul utilizatorilor si parolelor prin IAM (Identity and Access Management).\n   - Criptarea datelor (la stocare si in tranzit) si securitatea propriului cod al aplicatiei.",
+    "codeSnippet": "// Impartire clara:\n// AWS:   Hardware fizic, Data Centers, Cabluri, Hypervisor\n// TU:    Parole, IAM Roles, Patch-uri OS pe EC2, Criptare Date, SQL Injection",
+    "interviewTrap": "Daca cineva lasa un bucket S3 public sau o parola scrisa in clar in cod pe GitHub, NU este vina AWS! Este esecul clientului in privinta Security IN the Cloud.",
+    "keyTakeaway": "AWS securizeaza infrastructura fizica; clientul securizeaza datele, accesul IAM si sistemele de operare instalate."
   },
   {
-    id: 'cloud-06',
-    category: 'CLOUD',
-    difficulty: 'USOR',
-    title: 'Clase de Stocare AWS S3 si Optimizarea Costurilor cu Lifecycle Rules',
-    question: 'Care sunt clasele de stocare S3 (Standard, Intelligent-Tiering, Glacier) si cum configurezi o regula de Lifecycle pentru economisire?',
-    answer: 'Niveluri de Stocare S3:\n1. S3 Standard: Disponibilitate maxima, acces instantaneu de mare viteza. Cel mai scump pe gigabyte (recomandat pentru CV-uri active, imagini de profil).\n2. S3 Intelligent-Tiering: Muta automat obiectele intre acces frecvent si infrecvent pe baza tiparelor reale de acces, fara taxe de recuperare (ideal cand nu stii cat de des vor fi accesate fisierele).\n3. S3 Standard-IA (Infrequent Access): Cost mic de stocare pe gigabyte, dar exista o mica taxa per cerere de descarcare. Recomandat pentru date arhivate lunar.\n4. S3 Glacier Flexible / Deep Archive: Cost minuscul (sub 1$ per TB/luna). Recuperarea fisierului dureaza de la cateva minute pana la 12 ore. Ideal pentru copii de siguranta anuale si cerinte legale de pastrare a arhivelor.',
-    codeSnippet: `# Regula de Lifecycle in Terraform:
-resource "aws_s3_bucket_lifecycle_configuration" "cv_lifecycle" {
-  bucket = aws_s3_bucket.cv_storage.id
-
-  rule {
-    id     = "archive-old-cvs"
-    status = "Enabled"
-
-    transition {
-      days          = 90
-      storage_class = "STANDARD_IA" # Dupa 90 zile -> Standard-IA
-    }
-
-    transition {
-      days          = 365
-      storage_class = "GLACIER"     # Dupa 1 an -> Glacier
-    }
-  }
-}`,
-    interviewTrap: 'Nu muta fisiere minuscule sub 128 KB in Glacier sau Standard-IA; S3 aplica o taxa minima de 128 KB per obiect, facand stocarea fisierelor mici mai scumpa decat pe S3 Standard!',
-    keyTakeaway: 'Lifecycle Rules automatizeaza tranzitia datelor catre clase mai ieftine, reducand costurile de stocare cu pana la 80%.'
+    "id": "cloud-06",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Public Cloud vs Private Cloud vs Hybrid Cloud",
+    "question": "Care sunt diferentele principale intre Public Cloud, Private Cloud si arhitectura Hybrid Cloud?",
+    "answer": "1. Public Cloud (AWS, Azure, GCP):\n   - Infrastructura hardware partajata (multi-tenant) detinuta si administrata de furnizor.\n   - Accesibila prin internet conform modelului Pay-As-You-Go (platesti doar ce consumi).\n   - Scalabilitate practic nelimitata si costuri initiale zero de infrastructura hardware.\n\n2. Private Cloud:\n   - Infrastructura dedicata exclusiv unei singure organizatii (single-tenant), gazduita on-premise sau la un furnizor specializat.\n   - Ofera control total si conformitate stricta pentru reglementari legale dure (banci, armata, spitale), dar necesita investitii uriase (CapEx) in echipamente si personal de mentenanta.\n\n3. Hybrid Cloud:\n   - Combinatie intre mediul on-premise (private) si cloud-ul public (ex: AWS).\n   - Conexiunea se realizeaza securizat prin AWS Direct Connect sau VPN IPSec.\n   - Permite pastrarea datelor extrem de sensibile in propriul data center, in timp ce sarcinile dinamice (burst traffic) scaleaza in cloud-ul public.",
+    "codeSnippet": "// Conectivitate Hybrid Cloud:\n// Data Center On-Premise <--- AWS Direct Connect / VPN ---> AWS VPC",
+    "interviewTrap": "Multi-cloud (utilizarea concomitenta a doi furnizori publici, de exemplu AWS si Azure) nu este identic cu Hybrid Cloud (combinarea on-premise cu cloud public).",
+    "keyTakeaway": "Public Cloud optimizeaza viteza si costurile; Private Cloud ofera control strict; Hybrid Cloud uneste on-premise cu flexibilitatea cloud-ului."
   },
   {
-    id: 'cloud-07',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Serverless Computing cu AWS Lambda: Cold Starts si Optimizare',
-    question: 'Ce este un Cold Start in AWS Lambda, de ce este mai pronuntat pentru aplicatii Java si cum il reduci cu SnapStart?',
-    answer: 'Ce este un Cold Start:\nCand o functie Lambda este apelata dupa o perioada de inactivitate, AWS trebuie sa aloce un microVM Firecracker nou, sa initializeze containerul de runtime si sa incarce codul aplicatiei in memorie inainte de a executa cererea (adaugand o latenta de 100ms - 3 secunde).\n\nDe ce Java are Cold Starts mari:\nJVM-ul clasic trebuie sa porneasca procesul Java, sa incarce sute de clase din JAR-uri si sa initializeze framework-ul (Spring Boot), putand atinge un Cold Start de 6-10 secunde!\n\nOptimizari de Productie:\n1. AWS Lambda SnapStart (Nativ pentru Java 11/17/21): La publicarea versiunii, AWS porneste functia o data, face un SNAPSHOT complet al memoriei JVM initializate si il stocheaza criptat pe disc. La un apel rece, AWS incarca snapshot-ul direct in memorie in sub 200 milisecunde!\n2. Provisioned Concurrency: Mentine un numar fix de instante Lambda calde si gata de executie continua (cu un mic cost fix).\n3. Compilare Nativa GraalVM: Transforma codul Java intr-un binar nativ executabil cu pornire instantanee in sub 50ms.',
-    codeSnippet: `# Activare SnapStart in Terraform:
-resource "aws_lambda_function" "job_processor" {
-  function_name = "ats-job-processor"
-  runtime       = "java21"
-  handler       = "com.ats.LambdaHandler::handleRequest"
-  snap_start {
-    apply_on = "PublishedVersions" # SnapStart activ!
-  }
-}`,
-    interviewTrap: 'La folosirea SnapStart, variabilele statice cu generare de numere aleatorii sau chei unice la startup trebuie resetate prin callback-ul CRaC (Coordinated Restore at Checkpoint) pentru a nu partaja aceeasi valoare pe toate instantele restaurate!',
-    keyTakeaway: 'SnapStart si GraalVM reduc timpul de pornire al functiilor serverless Java la valori comparabile cu Go sau Node.js.'
+    "id": "cloud-07",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Elasticitate vs Scalabilitate Orizontala si Verticala in Cloud",
+    "question": "Ce este scalabilitatea orizontala vs verticala si cum se defineste elasticitatea in cloud computing?",
+    "answer": "1. Scalabilitate Verticala (Scaling Up / Down):\n   - Marirea resurselor pe o singura instanta (ex: schimbi un EC2 t3.micro cu 1 GB RAM intr-un t3.2xlarge cu 32 GB RAM).\n   - Dezavantaj: Are o limita fizica hardware si necesita de cele mai multe ori restart (downtime temporar).\n\n2. Scalabilitate Orizontala (Scaling Out / In):\n   - Adaugarea mai multor instante identice in paralel in spatele unui Load Balancer (ex: treci de la 2 servere la 10 servere in varf de trafic).\n   - Este fundamentul arhitecturilor moderne cloud reziliente si stateless.\n\n3. Elasticitate:\n   - Capacitatea unui sistem de a-si adapta automat resursele in timp real, conform cererii (scaleaza in sus la varf de utilizatori si se micsoreaza automat noaptea pentru a economisi bani).\n   - Implementata in AWS prin Auto Scaling Groups (ASG) pe baza metricilor CloudWatch (CPU > 70%).",
+    "codeSnippet": "// Scalabilitate Orizontala cu Auto Scaling:\n// CPU Usage > 70%  --> ASG porneste 2 instante EC2 noi\n// CPU Usage < 30%  --> ASG opreste 2 instante pentru economie",
+    "interviewTrap": "Scalabilitatea inseamna ca sistemul POATE creste pentru a sustine trafic mare. Elasticitatea inseamna ca sistemul creste SI scade AUTOMAT in functie de variatiile traficului.",
+    "keyTakeaway": "In cloud preferam intotdeauna scalarea orizontala (scale-out) cu instante stateless mici pentru disponibilitate maxima si cost minim."
   },
   {
-    id: 'cloud-08',
-    category: 'CLOUD',
-    difficulty: 'DIFICIL',
-    title: 'Amazon RDS vs Amazon Aurora: Arhitectura de Stocare',
-    question: 'Ce diferentiaza Amazon Aurora de un PostgreSQL RDS standard si cum asigura replicarea pe 6 copii in 3 Zone de Disponibilitate?',
-    answer: '1. Standard RDS PostgreSQL:\n- Foloseste un server EC2 cu disc atasat prin retea (AWS EBS).\n- Replicarea catre Read Replicas se face clasic prin streaming WAL peste retea.\n- Daca discul EBS este saturat de I/O, intreaga baza de date incetineste.\n\n2. Amazon Aurora (Cloud-Native Architecture):\n- Separa complet Procesarea (Compute) de Stocare (Storage Layer distribuit proprietar).\n- Aurora scrie DOAR logul de modificari (redo log) direct intr-o flota distribuita de mii de discuri SSD.\n- Scrie automat 6 copii ale datelor pe 3 Zone de Disponibilitate (2 copii per AZ), necesitand un cvorum de 4 din 6 pentru scriere si 3 din 6 pentru citire.\n- Replicile de citire (pana la 15 Read Replicas) citesc direct din acelasi strat comun de stocare, reducand Replication Lag-ul la sub 10 milisecunde!\n- Throughput de scriere de pana la 3-5 ori mai mare decat PostgreSQL standard.',
-    codeSnippet: `# Terraform Aurora PostgreSQL Cluster:
-resource "aws_rds_cluster" "aurora_db" {
-  cluster_identifier = "ats-aurora-cluster"
-  engine             = "aurora-postgresql"
-  engine_version     = "16.1"
-  database_name      = "ats_db"
-  master_username    = "ats_admin"
-  master_password    = var.db_password
-}`,
-    interviewTrap: 'Aurora este considerabil mai scumpa pe ora decat un mic RDS t4g.micro; pentru aplicatii mici de test RDS simplu este mai ieftin, dar pentru scalabilitate enterprise Aurora este imbatabila.',
-    keyTakeaway: 'Amazon Aurora decupleaza stocarea de procesare, oferind replicare pe 3 zone si performanta de 5x peste RDS clasic.'
+    "id": "cloud-08",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Ce este un Internet Gateway (IGW) si ce rol are intr-un VPC?",
+    "question": "Ce rol indeplineste componenta Internet Gateway (IGW) intr-un AWS VPC si cum este atasata?",
+    "answer": "1. Ce este IGW:\n   - Internet Gateway este o componenta VPC administrata complet de AWS, redundanta si inalt disponibila, fara limite de latime de banda.\n   - Actioneaza ca puntea de legatura dintre resursele din VPC si Internetul public.\n\n2. Cum functioneaza:\n   - Ofera rutare bidirectionala intre VPC si internet.\n   - Efectueaza translatare NAT de la adresele IP private ale instantelor din public subnet catre adresele lor IP publice asociate (Public IPv4).\n\n3. Atasare si Regula de Aur:\n   - Un VPC poate avea atasat EXACT UN SINGUR Internet Gateway.\n   - Pentru ca un subnet sa devina \"Public Subnet\", tabela sa de rutare trebuie sa aiba o ruta explicita: destinatia 0.0.0.0/0 directionata catre target-ul igw-xxxxxxx.",
+    "codeSnippet": "# Ruta in Route Table pentru Subnet Public:\n# Destination      Target\n# 10.0.0.0/16      local       (trafic intern in VPC)\n# 0.0.0.0/0        igw-1234567 (orice alt trafic iese pe Internet)",
+    "interviewTrap": "Doar atasarea unui IGW la VPC nu face subneturile publice! Trebuie neaparat modificata tabela de rutare a subnetului respectiv cu ruta 0.0.0.0/0 -> igw.",
+    "keyTakeaway": "Un VPC suporta un singur IGW; subneturile devin publice doar daca route table-ul lor are ruta 0.0.0.0/0 indreptata spre acel IGW."
   },
   {
-    id: 'cloud-09',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Modele de Pret EC2: On-Demand vs Reserved vs Spot Instances',
-    question: 'Cum alegi intre instantele EC2 On-Demand, Savings Plans si Spot Instances pentru a reduce costurile cu pana la 70%?',
-    answer: 'Modele de Cost EC2 in Cloud:\n1. On-Demand (Pret Intreg, Flexibilitate Maxima):\n- Platesti pe secunda/ora, poti porni si opri instanta oricand.\n- Cel mai scump model. Recomandat: aplicatii imprevizibile, teste de scurta durata.\n\n2. Savings Plans / Reserved Instances (Angajament pe 1 sau 3 ani):\n- Iti asumi un angajament de utilizare constanta (ex: 20$/ora timp de 1 an).\n- Ofera reduceri masive de pret intre 30% si 60% fata de On-Demand!\n- Recomandat: Baze de date de productie (RDS), clustere Kubernetes de baza care ruleaza 24/7.\n\n3. Spot Instances (Capacitate Excedenta Neutilizata):\n- AWS vinde serverele fizice libere ramase nefolosite cu reduceri uriase de pana la 70-90%!\n- Clauza Critica: Daca un client On-Demand cere serverul, AWS iti trimite o notificare de oprire cu doar 2 minute in avans si opreste instanta Spot!\n- Utilizare Ideala: Noduri de procesare in loturi (batch jobs), procesare video, noduri de worker stateless in Kubernetes (Karpenter).',
-    codeSnippet: `// Mix de Flota in Kubernetes (EKS / Karpenter):
-// 20% Noduri On-Demand / Savings Plan (pentru stabilitate de baza)
-// 80% Noduri Spot Instances (pentru scalare masiva ieftina cu 70% discount)`,
-    interviewTrap: 'Nu rula niciodata baze de date cu un singur nod pe Spot Instances; instanta poate fi terminata de AWS oricand la un varf de cerere globala in acea regiune.',
-    keyTakeaway: 'Combina Savings Plans pentru sarcina de baza stabila cu Spot Instances pentru scalare elastica ieftina.'
+    "id": "cloud-09",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "NAT Gateway vs NAT Instance in AWS",
+    "question": "Cum permite un NAT Gateway serverelor din subneturile private sa descarce update-uri din internet fara a fi expuse la atacuri si de ce este preferat fata de un NAT Instance?",
+    "answer": "1. Problema:\n   - Serverele backend dintr-un subnet privat nu au IP public si nu pot accesa direct Internetul. Totusi, ele au nevoie sa descarce patch-uri de securitate, pachete npm sau sa apeleze API-uri externe (ex: Stripe).\n\n2. Solutia NAT Gateway:\n   - Un NAT Gateway (Network Address Translation) este plasat obligatoriu intr-un Subnet PUBLIC si primeste un Elastic IP public fix.\n   - Traficul outbound din subnetul privat este trimis catre NAT Gateway, care il trimite mai departe in Internet, primeste raspunsul si il retransmite instantei private.\n   - NICIUN utilizator de pe Internet NU poate initia o conexiune inbound catre serverele din subnetul privat!\n\n3. NAT Gateway vs NAT Instance:\n   - NAT Gateway: Serviciu managed de AWS, scaleaza automat pana la 45 Gbps, are high availability integrata in cadrul unui AZ, fara patch-uri de administrat.\n   - NAT Instance: O masina EC2 obisnuita configurata manual cu iptables, punct unic de defectiune (SPOF) daca pica instanta, bandwidth limitat de marimea instantei.",
+    "codeSnippet": "# Route Table Subnet Privat:\n# Destination    Target\n# 10.0.0.0/16    local\n# 0.0.0.0/0      nat-0abc1234 (trimite traficul de internet prin NAT)",
+    "interviewTrap": "Un NAT Gateway trebuie plasat intotdeauna intr-un subnet PUBLIC (care are ruta catre IGW), nu in subnetul privat pe care il deserveste!",
+    "keyTakeaway": "NAT Gateway permite traficul unidirectional OUTBOUND din subneturi private catre internet, blocand complet conexiunile de intrare (INBOUND)."
   },
   {
-    id: 'cloud-10',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS CloudFront si Origin Access Control (OAC)',
-    question: 'Cum securizezi un bucket S3 astfel incat fisierele sa poata fi accesate EXCLUSIV prin CloudFront si niciodata direct prin link de S3?',
-    answer: 'Problema Expunerii Directe a Bucket-ului S3:\nDaca lasi un bucket S3 deschis public pentru ca utilizatorii sa descarce avatare sau imagini, utilizatorii pot ocoli CDN-ul CloudFront, cauzand costuri mai mari de transfer de date si pierderea beneficiilor de Web Application Firewall (WAF) si caching.\n\nSolutie Moderna: Origin Access Control (OAC):\n1. S3 Block Public Access este activat 100% pe bucket (bucketul este complet privat).\n2. Se creeaza o resursa CloudFront OAC care semneaza criptografic (AWS SigV4) cererile trimise de CloudFront catre S3.\n3. Se adauga o Bucket Policy pe S3 care permite comanda s3:GetObject DOAR daca cererea provine de la identitatea distributiei tale specifice CloudFront!\n4. Orice incercare de accesare directa a link-ului s3.amazonaws.com este respinsa cu HTTP 403 Forbidden.',
-    codeSnippet: `# S3 Bucket Policy restrictionata strict la CloudFront OAC:
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Principal": { "Service": "cloudfront.amazonaws.com" },
-    "Action": "s3:GetObject",
-    "Resource": "arn:aws:s3:::ats-assets-bucket/*",
-    "Condition": {
-      "StringEquals": {
-        "AWS:SourceArn": "arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHXR"
-      }
-    }
-  }
-}`,
-    interviewTrap: 'Vechiul Origin Access Identity (OAI) este deprecated; foloseste intotdeauna noul Origin Access Control (OAC) care suporta toate regiunile si criptare KMS.',
-    keyTakeaway: 'OAC garanteaza ca tot traficul catre fisierele S3 trece obligatoriu prin reteaua securizata si optimizata CloudFront.'
+    "id": "cloud-10",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Route Tables in AWS VPC: Cum ruteaza traficul?",
+    "question": "Ce este un Route Table intr-un VPC si cum determina AWS ce cale urmeaza fiecare pachet de date?",
+    "answer": "1. Ce este o Tabela de Rutare (Route Table):\n   - Un set de reguli (rute) care determina directia in care este trimis traficul de retea ce paraseste un subnet.\n   - Fiecare subnet din VPC trebuie sa fie asociat cu exact o tabela de rutare (daca nu asociezi una manual, este folosit Main Route Table-ul implicit al VPC-ului).\n\n2. Regula \"Longest Prefix Match\":\n   - AWS evalueaza rutele folosind cea mai specifica ruta disponibila (cea mai lunga masca de retea CIDR).\n   - Daca o ruta specifica 10.0.1.0/24 si alta 0.0.0.0/0, pachetele destinate lui 10.0.1.50 vor alege ruta 10.0.1.0/24 deoarece este mai precisa.\n\n3. Ruta Implicita \"local\":\n   - Fiecare tabela de rutare include o ruta implicita (ex: 10.0.0.0/16 -> local) care nu poate fi stearsa si permite comunicarea libera intre toate subneturile din cadrul aceluiasi VPC.",
+    "codeSnippet": "# Exemplu Route Table:\n# Destination       Target          Tip\n# 10.0.0.0/16       local           Intern in VPC\n# 10.1.0.0/16       pcx-11223344    Trafic catre alt VPC (Peering)\n# 0.0.0.0/0         igw-55667788    Tot restul catre Internet",
+    "interviewTrap": "Nu lasa toate subneturile legate de Main Route Table-ul implicit, deoarece o modificare accidentala la acel tabel poate deschide subneturi private catre internet.",
+    "keyTakeaway": "Route Tables asociaza subneturile cu portile de iesire (IGW, NAT, Peering); ruta locala asigura interconectarea interna implicita in VPC."
   },
   {
-    id: 'cloud-11',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS Route 53: Politici Avansate de Rutare DNS',
-    question: 'Care sunt principalele politici de rutare in Route 53 (Latency, Failover, Geolocation) si cand le folosesti?',
-    answer: 'Amazon Route 53 este serviciul de DNS gestionat de inalta disponibilitate:\n1. Simple Routing: Mapeaza un nume de domeniu pe o singura resursa sau returneaza o lista statica de IP-uri.\n2. Latency-Based Routing: Directioneaza utilizatorul catre regiunea AWS care ofera cea mai mica latenta de retea pentru locatia sa (ex: un user din Londra este trimis la eu-west-2, unul din New York la us-east-1).\n3. Failover Routing (Active-Passive Disaster Recovery):\nAsociat cu un Route 53 Health Check. Daca regiunea Primara pica, Route 53 ruteaza automat tot traficul catre regiunea Secundara de rezerva (sau catre o pagina statica de mentenanta pe S3).\n4. Geolocation Routing: Ruteaza traficul pe baza locatiei geografice exacte a utilizatorului (tara, continent) - ideal pentru conformitate legala GDPR (redirectionare automata a utilizatorilor din UE catre servere din UE) sau limba specifica.\n5. Weighted Routing: Imparte traficul procentual (ex: 90% pe v1, 10% pe v2 pentru teste canary).',
-    codeSnippet: `# Record Route 53 Failover in Terraform:
-resource "aws_route53_record" "primary" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "api.ats.com"
-  type    = "A"
-  failover_routing_policy { type = "PRIMARY" }
-  health_check_id = aws_route53_health_check.primary_check.id
-  alias { ... }
-}`,
-    interviewTrap: 'Route 53 Geolocation ruteaza dupa tara utilizatorului; Geoproximity ruteaza dupa proximitatea geografica a resurselor cu posibilitate de bias ajustabil.',
-    keyTakeaway: 'Route 53 ofera rutare inteligenta la nivel global si automatizeaza failover-ul in caz de dezastru prin health checks active.'
+    "id": "cloud-11",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "CIDR Blocks si Notatia /16, /24 in configurarea unui VPC",
+    "question": "Ce inseamna un bloc CIDR (Classless Inter-Domain Routing), cum calculezi numarul de adrese IP intr-un subnet /24 si de ce AWS rezerva 5 adrese IP in fiecare subnet?",
+    "answer": "1. Notatia CIDR (ex: 10.0.0.0/16 sau 10.0.1.0/24):\n   - Numarul de dupa slash reprezinta bitii de retea fixati din cei 32 de biti ai unei adrese IPv4.\n   - /16 inseamna 32 - 16 = 16 biti pentru hosturi -> 2^16 = 65.536 adrese IP (ideal pentru dimensiunea intregului VPC).\n   - /24 inseamna 32 - 24 = 8 biti pentru hosturi -> 2^8 = 256 adrese IP.\n\n2. Cele 5 Adrese IP Rezervate de AWS in orice subnet:\n   - Intr-un subnet /24 (256 IP-uri teoretice), sunt disponibile doar 251 adrese IP, deoarece AWS rezerva intotdeauna 5 adrese:\n     * .0: Adresa de retea (Network address)\n     * .1: Router-ul intern VPC\n     * .2: Serverul DNS intern AWS (Route 53 Resolver)\n     * .3: Rezervat de AWS pentru utilizari viitoare\n     * .255: Adresa de broadcast (chiar daca AWS nu suporta clasic broadcast in VPC).",
+    "codeSnippet": "// Calcul rapid CIDR:\n// /16 = 65,536 IP-uri (marime tipica VPC)\n// /24 = 256 - 5 rezervate = 251 IP-uri utilizabile per subnet\n// /28 = 16 - 5 rezervate = 11 IP-uri utilizabile (minim recomandat)",
+    "interviewTrap": "Daca configurezi un subnet minuscul /28 crezand ca ai 16 masini, vei ramane fara IP-uri dupa doar 11 servere din cauza celor 5 IP-uri rezervate obligatoriu de AWS.",
+    "keyTakeaway": "AWS rezerva intotdeauna primele 4 adrese IP si ultima adresa din orice subnet (in total 5 IP-uri indisponibile)."
   },
   {
-    id: 'cloud-12',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS SQS vs SNS si Modelul Fan-Out',
-    question: 'Care este diferenta dintre Amazon SNS (Push) si Amazon SQS (Pull) si cum functioneaza arhitectura Fan-Out?',
-    answer: '1. Amazon SNS (Simple Notification Service - Pub/Sub / Push Model):\n- Un emitent publica un mesaj intr-un SNS Topic.\n- SNS "impinge" (push) mesajul instantaneu catre toti abonatii inregistrati (multiple endpoint-uri HTTP, functii Lambda, SMS, email sau cozi SQS).\n- SNS nu pastreaza mesajele; daca niciun abonat nu asculta, mesajul este pierdut.\n\n2. Amazon SQS (Simple Queue Service - Coada de Mesaje / Pull Model):\n- Mesajele sunt stocate durabil pe disc intr-o coada pana cand un consumator le citeste (polling) si le sterge.\n\nArhitectura Fan-Out (SNS + Multiple Cozi SQS):\nUn emitent publica un eveniment "CandidateApplied" o singura data intr-un topic SNS.\nSNS multiplica mesajul si il trimite catre 3 cozi SQS independente:\n- Coada 1: Serviciul de Notificari Email\n- Coada 2: Serviciul de Evaluare CV cu AI\n- Coada 3: Serviciul de Audit si Conformitate\nFiecare serviciu isi consuma propria coada la propriul ritm, fara blocaje!',
-    codeSnippet: `// Arhitectura Fan-Out:
-// [Publisher] -> [SNS Topic: CandidateApplied]
-//                     |--> [SQS Queue 1] -> [Email Worker]
-//                     |--> [SQS Queue 2] -> [AI Worker]
-//                     |--> [SQS Queue 3] -> [Analytics Worker]`,
-    interviewTrap: 'Daca trimiti un mesaj dintr-o aplicatie catre o coada SQS standard, mesajele pot ajunge intr-o ordine usor diferita; daca ordinea stricta este obligatorie, foloseste o coada SQS FIFO (.fifo)!',
-    keyTakeaway: 'Modelul Fan-Out combina broadcast-ul instant al SNS-ului cu persistenta si decuplarea cozilor SQS.'
+    "id": "cloud-12",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "VPC Peering: Cum conectezi doua VPC-uri si ce limitare are rutarea transitiva?",
+    "question": "Ce este o conexiune VPC Peering si de ce rutarea transitiva (Transitive Peering) NU este suportata?",
+    "answer": "1. Ce este VPC Peering:\n   - O conexiune de retea 1-la-1 intre doua VPC-uri care permite instantelor sa comunice intre ele folosind adrese IP private, ca si cum ar fi in aceeasi retea.\n   - Traficul ramane complet pe fibra privata AWS (nu iese pe internetul public).\n   - Functioneaza intre VPC-uri din aceeasi regiune sau regiuni diferite (Inter-Region VPC Peering), chiar si intre conturi AWS diferite.\n\n2. Regula Absoluta: Fara suprapunere CIDR:\n   - Cele doua VPC-uri NU trebuie sa aiba blocuri CIDR care se suprapun (ex: daca ambele au 10.0.0.0/16, peering-ul este imposibil).\n\n3. Limitarea Non-Tranzitiva:\n   - Daca VPC-A este conectat cu VPC-B, iar VPC-B este conectat cu VPC-C, VPC-A NU poate vorbi cu VPC-C prin VPC-B!\n   - Daca vrei ca A sa vorbeasca cu C, trebuie sa creezi o conexiune directa de peering intre A si C, sau sa folosesti un AWS Transit Gateway (arhitectura hub-and-spoke).",
+    "codeSnippet": "// Non-Transitive Peering:\n// [VPC A] <---> [VPC B] <---> [VPC C]\n// VPC A NU poate accesa VPC C!\n// Solutie: Creezi Peering direct [VPC A] <---> [VPC C] sau folosesti Transit Gateway.",
+    "interviewTrap": "Dupa acceptarea conexiunii de peering, multi candidati uita ca trebuie modificate si tabelele de rutare in ambele VPC-uri pentru ca traficul sa stie sa treaca prin conexiunea de peering!",
+    "keyTakeaway": "VPC Peering este conexiune privata punct-la-punct, netranzitiva, posibila doar intre VPC-uri cu CIDR-uri non-suprapuse."
   },
   {
-    id: 'cloud-13',
-    category: 'CLOUD',
-    difficulty: 'DIFICIL',
-    title: 'SQS Visibility Timeout si Dead Letter Queue (DLQ)',
-    question: 'Ce este Visibility Timeout intr-o coada SQS si ce se intampla cand un mesaj ajunge in Dead Letter Queue?',
-    answer: '1. Visibility Timeout in SQS:\nCand un worker consumator citeste un mesaj din coada (ReceiveMessage), mesajul NU este sters automat din SQS!\nIn schimb, SQS il marcheaza ca "invizibil" pentru toate celelalte workere concurente pe durata Visibility Timeout-ului configurat (implicit 30 de secunde).\n- Cazul Fericit: Workerul proceseaza mesajul cu succes si apeleaza explicit DeleteMessage. Mesajul este sters definitiv.\n- Cazul de Eseu: Workerul crapa sau arunca exceptie inainte de a sterge mesajul. Dupa expirarea celor 30 de secunde, mesajul redevine automat "VIZIBIL" in coada si este preluat de un alt worker sanatos!\n\n2. Dead Letter Queue (DLQ):\nDaca un mesaj contine date corupte (Poison Pill) si esueaza de fiecare data cand este preluat, acesta ar intra intr-o bucla infinita de esec.\nConfigurand o politica Redrive Policy (ex: maxReceiveCount = 3), dupa ce mesajul a esuat de 3 ori, SQS il muta automat intr-o coada separata de Dead Letter Queue (DLQ) pentru analiza manuala si alerte catre echipa.',
-    codeSnippet: `# Configurare Redrive Policy pentru DLQ in Terraform:
-resource "aws_sqs_queue" "job_dlq" {
-  name = "job-processing-dlq"
-}
-
-resource "aws_sqs_queue" "job_queue" {
-  name = "job-processing-queue"
-  redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.job_dlq.arn
-    maxReceiveCount     = 3 # Dupa 3 esecuri -> trimis in DLQ
-  })
-}`,
-    interviewTrap: 'Daca procesarea unui mesaj dureaza 45 de secunde si Visibility Timeout este de doar 30 de secunde, alt worker va prelua acelasi mesaj inainte ca primul sa termine, cauzand procesare dubla! Mareste Visibility Timeout sau foloseste changeMessageVisibility dinamic.',
-    keyTakeaway: 'Visibility Timeout asigura recuperarea la caderi de workere, iar DLQ izoleaza mesajele irecuperabile.'
+    "id": "cloud-13",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Ce este o instanta Amazon EC2 si ce este o imagine AMI?",
+    "question": "Ce reprezinta Amazon EC2 (Elastic Compute Cloud) si care este rolul unei imagini AMI (Amazon Machine Image)?",
+    "answer": "1. Amazon EC2:\n   - Serviciu IaaS fundamental care ofera capacitate de calcul redimensionabila sub forma de masini virtuale (instante) in cloud.\n   - Iti permite sa rulezi orice sistem de operare (Linux, Windows) si sa configurezi CPU, memorie RAM, stocare pe disc si placi de retea.\n\n2. Ce este o AMI (Amazon Machine Image):\n   - Un sablon (blueprint) preconfigurat utilizat pentru a lansa o instanta EC2.\n   - Contine: sistemul de operare (ex: Ubuntu 22.04 LTS sau Amazon Linux 2023), configuratii initiale si aplicatii preinstalate.\n   - Poti folosi AMI-uri publice puse la dispozitie de AWS, sau iti poti crea \"Golden AMI\" propriu (cu Java, Node.js, agenti de securitate si logging preconfigurate cu un tool precum Packer).",
+    "codeSnippet": "// Lansare instanta EC2 din terminal CLI:\n// aws ec2 run-instances \\\n//   --image-id ami-0c55b159cbfafe1f0 \\\n//   --instance-type t3.micro \\\n//   --key-name my-ssh-key \\\n//   --security-group-ids sg-0123456789abcdef0",
+    "interviewTrap": "O imagine AMI este specifica unei anumite regiuni (Region-bound). O imagine creata in Frankfurt (eu-central-1) nu poate fi lansata direct in N. Virginia decat dupa ce a fost copiata explicit in acea regiune.",
+    "keyTakeaway": "EC2 este masina virtuala; AMI este imaginea (snapshot-ul de disc bootabil) din care instanta este creata."
   },
   {
-    id: 'cloud-14',
-    category: 'CLOUD',
-    difficulty: 'DIFICIL',
-    title: 'Amazon DynamoDB: Partition Key vs Sort Key si Indecsi GSI',
-    question: 'Cum alegi o cheie primara compusa in DynamoDB si care este diferenta dintre un Global Secondary Index (GSI) si un Local Secondary Index (LSI)?',
-    answer: 'DynamoDB este o baza de date NoSQL complet gestionata cu scalabilitate orizontala automata:\n1. Partition Key (PK / HASH):\nValoarea este trecuta printr-o functie de hash interna pentru a determina pe care partitie fizica de server este stocat randul. Trebuie sa aiba cardinalitate mare pentru a evita "Hot Partitions".\n2. Sort Key (SK / RANGE):\nStocheaza elementele din cadrul aceleiasi partitii ordonate fizic, permitand interogari de tip interval (<, >, BETWEEN, begins_with).\n\nIndecsi Secundari:\n1. LSI (Local Secondary Index):\n- Are aceeasi Partition Key ca tabela, dar o Sort Key diferita.\n- Poate fi creat EXCLUSIV la crearea tabelei (nu poate fi adaugat ulterior!).\n2. GSI (Global Secondary Index):\n- Poate avea o Partition Key COMPLET DIFERITA si o Sort Key complet diferita!\n- Poate fi creat sau sters oricand, chiar si pe tabele populate de productie cu miliarde de inregistrari.\n- Are propriile sale unitati independente de capacitate alocata (RCU/WCU).',
-    codeSnippet: `// Model de Date Single-Table Design in DynamoDB:
-// PK: "USER#123" | SK: "PROFILE" (Date utilizator)
-// PK: "USER#123" | SK: "JOB#992"  (Aplicatie la job)
-// GSI1-PK: "JOB#992" | GSI1-SK: "2026-03-01" (Interogheaza candidatii unui job)`,
-    interviewTrap: 'Scrierile intr-un GSI sunt asincrone; un query pe un GSI ofera doar Eventual Consistency (nu suporta Strongly Consistent Reads).',
-    keyTakeaway: 'Partition Key dicteaza distribuirea pe servere; GSI permite interogari flexibile pe atribute secundare.'
+    "id": "cloud-14",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Familii de instante EC2: General Purpose, Compute si Memory Optimized",
+    "question": "Cum alegi familia de instante EC2 potrivita pentru aplicatia ta (t3, c5, r5, m5)?",
+    "answer": "AWS foloseste litere conventionale pentru a identifica profilul hardware al instantelor:\n\n1. \"t\" si \"m\" - General Purpose (Echilibru CPU/RAM):\n   - t3/t4g: Instante ieftine \"burstable\", ideale pentru medii de dev, testare, microservicii mici sau aplicatii cu trafic fluctuant (acumuleaza CPU credits).\n   - m5/m6g: Instante generale robuste cu raport 1 vCPU la 4 GB RAM, excelente pentru backend-uri Spring Boot de productie.\n\n2. \"c\" - Compute Optimized (Focus pe CPU):\n   - c5/c6g: Raport mare de vCPU per GB RAM (1 vCPU la 2 GB RAM).\n   - Ideale pentru procesare video, batch jobs, algoritmi de calcul matematic intens si servere web de ultra-mare performanta.\n\n3. \"r\" - Memory Optimized (Focus pe RAM):\n   - r5/r6g: Raport mare de RAM per vCPU (1 vCPU la 8 GB RAM).\n   - Ideale pentru baze de date in-memory (Redis, Memcached) si baze de date relationale cu cache mare de date.",
+    "codeSnippet": "// Mnemonic popular in interviuri:\n// T = Tiny / Burstable (Dev/Test)\n// M = Medium / General (Spring Boot, Node.js)\n// C = Compute (CPU intensiv)\n// R = RAM (Memorie mare, Redis, PostgreSQL)",
+    "interviewTrap": "Daca pui o aplicatie de productie cu load constant de 90% CPU pe o instanta din clasa T (t3.medium), aceasta isi va consuma toate \"CPU credits\" si va suferi throttling sever de performanta. Pentru load constant se alege seria C sau M!",
+    "keyTakeaway": "Alege seria T pentru dev/burstable, M pentru backend-uri generale, C pentru CPU intensiv si R pentru baze de date cu consum mare de RAM."
   },
   {
-    id: 'cloud-15',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS ECS Fargate vs EKS: Cum Alegi Platforma de Containere',
-    question: 'Cand alegi AWS ECS cu Fargate si cand este justificata trecerea la Kubernetes gestionat (AWS EKS)?',
-    answer: '1. AWS ECS cu Fargate (Serverless Container Orchestration):\n- Simplu, nativ AWS, integrat perfect cu IAM, ALB si CloudWatch.\n- Cu Fargate (Serverless), nu administrezi nicio masina virtuala EC2! Pur si simplu ii spui "ruleaza containerul cu 1 CPU si 2GB RAM", iar AWS se ocupa de patching de securitate, scaling si operatiuni.\n- Curba de invatare foarte mica. Alegerea ideala pentru echipe mici si mijlocii care vor sa ruleze microservicii Docker fara batai de cap operationale.\n\n2. AWS EKS (Elastic Kubernetes Service):\n- Platforma standard Kubernetes open-source completa.\n- Ofera portabilitate totala (acelasi manifest K8s ruleaza pe AWS, Azure sau On-Premises) si acces la intregul ecosistem CNCF (Helm, ArgoCD, Istio, Prometheus).\n- Complexitate ridicata de configurare, necesita echipa dedicata de DevOps/SRE si vine cu o taxa fixa minima de ~75$/luna per cluster doar pentru control plane.',
-    codeSnippet: `// Ghid de Decizie:
-// Ai nevoie de portabilitate multi-cloud sau unelte specifice K8s? -> EKS
-// Vrei sa rulezi containere rapid, ieftin si simplu pe AWS? -> ECS Fargate`,
-    interviewTrap: 'Multe companii aleg EKS doar pentru ca este "la moda", irosind luni intregi pe configurare de retea si permisiuni cand ECS Fargate le-ar fi rezolvat cerintele intr-o saptamana.',
-    keyTakeaway: 'ECS Fargate ofera simplitate serverless fara management de servere; EKS ofera portabilitate open-source si flexibilitate maxima.'
+    "id": "cloud-15",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Modele de pret EC2: On-Demand vs Reserved vs Spot Instances vs Savings Plans",
+    "question": "Care sunt principalele modele de pret pentru EC2 si in ce scenarii folosesti Spot Instances?",
+    "answer": "1. On-Demand:\n   - Platesti pe secunda/ora fara angajament pe termen lung.\n   - Cel mai scump model per ora, dar perfect pentru medii imprevizibile, teste scurte si aplicatii noi.\n\n2. Reserved Instances (RI) & Compute Savings Plans:\n   - Te angajezi contractual pe 1 an sau 3 ani pentru un volum stabil de calcul.\n   - Ofera discounturi masive de pana la 40% - 72% comparativ cu pretul On-Demand.\n   - Ideal pentru servere de productie care ruleaza 24/7/365.\n\n3. Spot Instances:\n   - Cumperi capacitatea hardware neutilizata din centrele de date AWS cu discounturi de pana la 90%!\n   - MARELE COMPROMIS: AWS iti poate revoca instanta in orice clipa cu un preaviz de doar 2 minute daca are nevoie de ea un client On-Demand!\n   - Cand folosesti Spot: Doar pentru sarcini stateless tolerante la intreruperi: CI/CD runners, procesare de date Big Data/Hadoop, randare 3D sau batch processing.",
+    "codeSnippet": "// Comparatie preturi estimative:\n// On-Demand:  100% cost (flexibilitate maxima)\n// Savings:    30-60% discount (angajament 1-3 ani, 24/7)\n// Spot:       70-90% discount (poate fi oprita oricand cu preaviz de 2 minute)",
+    "interviewTrap": "Nu plasa NICIODATA o baza de date sau o aplicatie stateful critica pe o instanta Spot fara redundanta, pentru ca AWS o poate distruge oricand in 2 minute!",
+    "keyTakeaway": "On-Demand pentru sarcini neprevazute; Savings Plans pentru nucleul stabil de productie; Spot pentru procesari paralele tolerante la erori."
   },
   {
-    id: 'cloud-16',
-    category: 'CLOUD',
-    difficulty: 'USOR',
-    title: 'AWS CloudWatch vs CloudTrail: Monitorizare vs Audit',
-    question: 'Care este diferenta esentiala intre Amazon CloudWatch si AWS CloudTrail?',
-    answer: 'Regula Simpla de Retinut: CloudWatch priveste la CE FACE APLICATIA; CloudTrail priveste la CINE A FACUT CE IN CONTUL AWS.\n\n1. Amazon CloudWatch (Monitorizare si Performanta):\n- Colecteaza metrici de performanta (utilizare CPU, numar cereri HTTP pe Load Balancer, spatiu liber pe disc).\n- Colecteaza logurile de aplicatie (CloudWatch Logs) emise de containere sau functii Lambda.\n- Declanseaza alerte (CloudWatch Alarms) cand un prag este depasit (ex: CPU > 80% trimite SMS prin SNS).\n\n2. AWS CloudTrail (Audit de Securitate si Guvernanta):\n- Inregistreaza fiecare apel de API efectuat in contul tau AWS!\n- Daca cineva sterge o baza de date sau creeaza un utilizator nou, CloudTrail inregistreaza exact: CINE a facut actiunea (utilizatorul IAM / adresa IP), CAND (timestamp precis) si CE comanda a rulat (DeleteDBInstance).',
-    codeSnippet: `// CloudWatch = "Serverul are 90% CPU load si 5 erori in app.log"
-// CloudTrail = "Inginerul Andrei a rulat StopInstances de la IP-ul 82.77.x.x la ora 14:02"`,
-    interviewTrap: 'CloudTrail vine activat gratuit pe ultimele 90 de zile; pentru arhivare de audit pe termen lung de conformitate (ani de zile), trebuie sa creezi un "Trail" care salveaza evenimentele intr-un bucket S3 securizat.',
-    keyTakeaway: 'CloudWatch monitorizeaza performanta aplicatiei; CloudTrail asigura auditul de securitate al tuturor actiunilor din cont.'
+    "id": "cloud-16",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Auto Scaling Groups (ASG) si Launch Templates in EC2",
+    "question": "Cum asigura un Auto Scaling Group disponibilitatea si scalarea automata a unei flote de servere EC2?",
+    "answer": "1. Ce este un Auto Scaling Group (ASG):\n   - O colectie logica de instante EC2 configurate identic, gestionate automat de AWS pentru a mentine numarul dorit de servere.\n   - ASG monitorizeaza sanatatea instantelor: daca o instanta pica sau devine unhealthy, ASG o termina automat si lanseaza una noua in loc (Self-Healing).\n\n2. Parametrii esentiali ASG:\n   - Min Size (numarul minim de instante, ex: 2 pentru multi-AZ).\n   - Desired Capacity (numarul curent de instante active, ex: 3).\n   - Max Size (limita superioara pentru a proteja bugetul impotriva costurilor uriase, ex: 10).\n\n3. Launch Template:\n   - Specificatia tehnica pe care ASG o foloseste pentru a lansa instante: ID-ul imaginii AMI, tipul de instanta (ex: t3.medium), cheia SSH, Security Groups si scriptul de pornire (User Data).\n\n4. Politici de Scalare:\n   - Target Tracking Scaling: mentine o metrica constanta (ex: mentine utilizarea medie CPU la 60%). Daca CPU urca la 80%, adauga instante; daca scade la 30%, opreste instante.",
+    "codeSnippet": "# Exemplu Terraform pentru ASG:\nresource \"aws_autoscaling_group\" \"app_asg\" {\n  min_size         = 2\n  max_size         = 8\n  desired_capacity = 2\n  vpc_zone_identifier = [aws_subnet.private_1.id, aws_subnet.private_2.id]\n  \n  launch_template {\n    id      = aws_launch_template.app_template.id\n    version = \"$Latest\"\n  }\n}",
+    "interviewTrap": "Multi uita sa seteze Max Size sau pun o valoare uriasa fara alerte de cost; daca aplicatia are un bug de memorie sau CPU infinit, ASG va scala pana la max si va genera o factura uriasa.",
+    "keyTakeaway": "ASG ofera atat scalare dinamica pe baza de cerere, cat si self-healing automat prin inlocuirea instantelor defecte."
   },
   {
-    id: 'cloud-17',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS KMS si Conceptul de Envelope Encryption',
-    question: 'Ce este Envelope Encryption in AWS Key Management Service (KMS) si de ce nu folosim cheia principala pentru a cripta fisiere mari?',
-    answer: 'AWS KMS (Key Management Service) gestioneaza cheile de criptare in module hardware de securitate (HSM - FIPS 140-2).\n\nDe ce nu criptam direct fisiere mari cu KMS:\nKMS suporta criptarea directa a unor date de maxim 4 KB per apel de API, iar trimiterea a gigabytes de date prin apeluri de retea catre KMS ar fi extrem de lenta si costisitoare!\n\nCum functioneaza Envelope Encryption (Criptarea in Plic):\n1. Cheia Principala (KMS Key / KMS Master Key): Nu paraseste niciodata modulul hardware securizat HSM.\n2. Generare Cheie de Date (DEK - Data Encryption Key):\nAplicatia apeleaza comanda kms:GenerateDataKey. KMS returneaza doua chei: o cheie DEK in clar (plaintext) si o copie a aceleiasi chei DEK criptata cu Master Key.\n3. Criptare Locala Rapida: Aplicatia cripteaza fisierul gigant local in memoria sa folosind cheia DEK in clar (algoritm AES-256 ultra-rapid).\n4. Stergerea Cheii DEK din Memorie: Imediat dupa criptare, aplicatia sterge cheia in clar din RAM si ataseaza cheia DEK criptata direct langa fisierul criptat (ca un plic exterior).\n5. La decriptare, trimiti doar plicul mic (cheia DEK criptata) la KMS pentru decriptare!',
-    codeSnippet: `// Pasii Envelope Encryption:
-// 1. GenerateDataKey() -> [DEK Plaintext] + [DEK Encrypted]
-// 2. Encrypt(LargeFile, DEK Plaintext)
-// 3. Delete DEK Plaintext from RAM
-// 4. Save: [EncryptedFile] + [DEK Encrypted]`,
-    interviewTrap: 'Envelope Encryption permite criptarea rapida a terabytes de date fara limitari de retea, combinand securitatea HSM cu viteza procesarii locale.',
-    keyTakeaway: 'KMS protejeaza cheia principala, in timp ce cheile de date derivate (DEK) cripteaza fisierele mari local.'
+    "id": "cloud-17",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Elastic Load Balancer (ELB): ALB (Application) vs NLB (Network)",
+    "question": "Care este diferenta dintre Application Load Balancer (ALB) si Network Load Balancer (NLB) in AWS?",
+    "answer": "1. Application Load Balancer (ALB - Layer 7 OSI / HTTP/HTTPS):\n   - Intelege protocoalele de nivel aplicatie: HTTP, HTTPS, gRPC si WebSockets.\n   - Rutare inteligenta: poate trimite traficul catre servicii diferite in functie de URL Path (ex: /api/users -> Microserviciu A, /api/orders -> Microserviciu B) sau Host header (ex: app1.domain.com vs app2.domain.com).\n   - Gestioneaza SSL/TLS Termination (descarca certificatul HTTPS direct pe balancer) si se integreaza nativ cu AWS WAF.\n\n2. Network Load Balancer (NLB - Layer 4 OSI / TCP/UDP/TLS):\n   - Opereaza la nivel de transport de retea; nu inspecteaza headerele HTTP.\n   - Performanta extrema: capabil sa proceseze milioane de cereri pe secunda cu o latenta ultra-redusa de sub 1 milisecunda (microsecunde).\n   - Ofera IP-uri statice publice fixe (Elastic IP) per Availability Zone (ALB ofera doar un nume DNS dinamic).",
+    "codeSnippet": "// Comparatie practica:\n// Folosesti ALB: Aplicatii web REST, GraphQL, microservicii pe path-uri (/auth, /billing)\n// Folosesti NLB: Jocuri online multiplayer, streaming video live, conexiuni TCP brute, adresa IP fixa ceruta de clienti",
+    "interviewTrap": "Daca clientul cere ca load balancer-ul sa aiba o adresa IP publica statica fixa (whitelisted in firewall-ul lor corporativ), ALB nu poate oferi direct acest lucru fara Global Accelerator, in timp ce NLB suporta nativ Elastic IP static!",
+    "keyTakeaway": "ALB este optimizat pentru rutare inteligenta la nivel HTTP/HTTPS (Layer 7); NLB este optimizat pentru viteza extrema si IP static (Layer 4)."
   },
   {
-    id: 'cloud-18',
-    category: 'CLOUD',
-    difficulty: 'USOR',
-    title: 'AWS Secrets Manager vs Systems Manager (SSM) Parameter Store',
-    question: 'Cand alegi SSM Parameter Store si cand merita sa platesti pentru AWS Secrets Manager?',
-    answer: '1. SSM Parameter Store:\n- Gratuit (in nivelul standard) sau cost extrem de mic per parametru.\n- Suporta tipuri String, StringList si SecureString (criptat gratuit cu cheie KMS).\n- Ideal pentru: variabile de configurare, URL-uri, flag-uri de mediu si token-uri simple care nu se schimba des.\n- Nu are rotire automata nativa integrata.\n\n2. AWS Secrets Manager:\n- Cost fix de ~0.40$ per secret pe luna plus o mica taxa per apel.\n- Functie Cheie Speciala: Suport Nativ pentru Rotire Automata de Parole (Automatic Secret Rotation):\nSe integreaza nativ cu Amazon RDS (PostgreSQL, MySQL). La fiecare 30 de zile, o functie Lambda schimba automat parola in baza de date si actualizeaza secretul in Secrets Manager FARA DOWNTIME pentru aplicatie!',
-    codeSnippet: `# Citire parametru din SSM in Spring Boot (folosind spring-cloud-starter-aws):
-spring:
-  config:
-    import: "aws-parameterstore:/config/ats-backend/"`,
-    interviewTrap: 'Daca ai nevoie doar sa stochezi un secret care nu necesita rotire automata lunara, foloseste SSM Parameter Store SecureString pentru a economisi costurile lunare din Secrets Manager.',
-    keyTakeaway: 'SSM Parameter Store pentru configurari generale si secrete statice; Secrets Manager pentru rotire automata de parole de baze de date.'
+    "id": "cloud-18",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Health Checks pe Load Balancer: Cum detecteaza instantele bolnave?",
+    "question": "Cum functioneaza mecanismul de Health Check al unui Elastic Load Balancer (ELB) si ce se intampla cand o instanta pica testul?",
+    "answer": "1. Mecanismul de Health Check:\n   - Load Balancer-ul trimite periodic o cerere HTTP (ex: GET /actuator/health sau GET /healthz) pe un port specificat catre fiecare instanta inregistrata in Target Group.\n\n2. Parametrii esentiali:\n   - Health Check Path: endpoint-ul dedicat de testare (ex: /health).\n   - Interval: frecventa trimiterii cererilor (ex: la fiecare 15 secunde).\n   - Healthy Threshold: cate cereri de succes consecutive sunt necesare pentru a marca instanta drept sanatoasa (ex: 2 raspunsuri HTTP 200).\n   - Unhealthy Threshold: cate esecuri consecutive marcheaza instanta ca bolnava (ex: 3 timeout-uri sau coduri 500).\n\n3. Ce se intampla cand devine Unhealthy:\n   - ALB opreste imediat redirectionarea traficului de utilizatori catre acea instanta bolnava.\n   - Daca instanta este gestionata de un Auto Scaling Group, ASG detecteaza starea Unhealthy raportata de ELB, distruge instanta defecta si lanseaza una noua.",
+    "codeSnippet": "// Exemplu raspuns optim din Spring Boot Actuator:\n// GET /actuator/health -> HTTP 200 OK\n// { \"status\": \"UP\" }",
+    "interviewTrap": "Nu seta Health Check-ul pe un endpoint greu care face query-uri complexe in baza de date la fiecare 10 secunde! Daca baza e incarcata, health check-ul va da timeout si ALB va distruge toate serverele sanatoase simultan!",
+    "keyTakeaway": "Health check-urile protejeaza utilizatorii directionand traficul doar catre instante sanatoase; trebuie sa fie rapide si usoare."
   },
   {
-    id: 'cloud-19',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'VPC Peering vs AWS Transit Gateway',
-    question: 'De ce conexiunile VPC Peering devin greu de intretinut in companii mari si cum simplifica AWS Transit Gateway arhitectura de retea?',
-    answer: 'Problema VPC Peering ("Mesh Hell"):\n1. Non-Tranzitivitate: Daca VPC A este legat de VPC B, si VPC B este legat de VPC C, VPC A NU POATE vorbi cu VPC C prin tranzitul lui B!\n2. La 10 retele VPC diferite (pentru microservicii, securitate, baze de date), ai nevoie de: N * (N - 1) / 2 = 45 de conexiuni de peering individuale si sute de rute de intretinut manual!\n\nSolutie: AWS Transit Gateway (Modelul Hub-and-Spoke):\n- Actioneaza ca un ruter de retea central in cloud.\n- Fiecare VPC se conecteaza printr-o singura legatura la Transit Gateway (Hub).\n- Retelele VPC pot comunica instantaneu intre ele prin intermediul gateway-ului central, permitand adaugarea de noi medii in mod modular si integrarea simpla cu conexiunile On-Premises (VPN / Direct Connect).',
-    codeSnippet: `// VPC Peering: 10 VPC-uri = 45 conexiuni complexe "panza de paianjen"
-// Transit Gateway: 10 VPC-uri = 10 conexiuni catre un ruter central`,
-    interviewTrap: 'Transit Gateway are un cost orar fix per atasament plus taxa pe gigabyte transferat; pentru doua VPC-uri simple, un VPC Peering direct gratuit este mai economic.',
-    keyTakeaway: 'Transit Gateway transforma o retea fragmentata intr-o arhitectura centralizata Hub-and-Spoke scalabila la zeci de conturi.'
+    "id": "cloud-19",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Bastion Host vs AWS Systems Manager (SSM) Session Manager",
+    "question": "De ce conexiunea traditionala prin SSH cu Bastion Host este considerata invechita si cum aduce SSM Session Manager mai multa securitate?",
+    "answer": "1. Abordarea Traditionala (Bastion Host / Jump Server):\n   - O instanta EC2 plasata in subnetul public cu portul 22 (SSH) deschis.\n   - Administratorii se conecteaza prin SSH pe Bastion, iar de acolo sar pe serverele private.\n   - Riscuri: Necesita gestionarea si rotirea cheilor SSH private (.pem), deschiderea portului 22 in internet (tinta preferata pentru atacuri brute-force) si cost suplimentar pentru instanta de bastion.\n\n2. Abordarea Moderna (AWS Systems Manager Session Manager):\n   - Acces direct in terminalul instantelor EC2 (inclusiv cele din subnet privat complet izolat) direct din browser sau AWS CLI fara SSH!\n   - Portul 22 NU este deschis in Security Group (0 porturi inbound deschise!).\n   - Nu exista chei SSH de administrat: autentificarea se face strict prin permisiuni IAM.\n   - Toate comenzile tastate de ingineri in terminal sunt inregistrate si auditate automat in AWS CloudWatch Logs sau S3.",
+    "codeSnippet": "# Conectare instantanee in terminal prin AWS CLI fara chei SSH:\naws ssm start-session --target i-0123456789abcdef0",
+    "interviewTrap": "Pentru ca SSM sa functioneze, instanta EC2 trebuie sa aiba instalat agentul SSM (preinstalat pe Amazon Linux/Ubuntu oficial) si sa aiba asociat un IAM Role cu permisiunea AmazonSSMManagedInstanceCore.",
+    "keyTakeaway": "SSM Session Manager elimina portul 22 si cheile SSH, oferind acces securizat prin IAM si audit complet in CloudWatch."
   },
   {
-    id: 'cloud-20',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS WAF (Web Application Firewall): Protectie Anti-Atacuri',
-    question: 'Ce tipuri de atacuri opreste AWS WAF si cum configurezi o regula de Rate-Limiting la nivel de IP?',
-    answer: 'AWS WAF este un firewall de nivel aplicatie (Layer 7) care se ataseaza pe Application Load Balancer (ALB), CloudFront sau API Gateway:\n\nProtectii Asigurate:\n1. Prevenirea atacurilor OWASP Top 10: SQL Injection (SQLi), Cross-Site Scripting (XSS), Log4j RCE exploits (reguli gestionate automat de AWS - Managed Rulesets).\n2. Rate-Based Rules (Anti-DDoS la nivel de aplicatie):\nPoti defini o regula care blocheaza automat orice adresa IP care trimite mai mult de 500 de cereri intr-un interval de 5 minute, protejand backend-ul de atacuri de forta bruta sau scraperi agresivi.\n3. Blocare Geografica: Interzice accesul cererilor provenite din tari specifice.',
-    codeSnippet: `# Regula Rate-Based in Terraform pentru AWS WAFv2:
-resource "aws_wafv2_web_acl" "main_waf" {
-  name  = "ats-web-waf"
-  scope = "REGIONAL"
-
-  rule {
-    name     = "RateLimitPerIP"
-    priority = 1
-    action { block {} }
-
-    statement {
-      rate_based_statement {
-        limit              = 500 # Max 500 cereri / 5 min
-        aggregate_key_type = "IP"
-      }
-    }
-    visibility_config { ... }
-  }
-}`,
-    interviewTrap: 'Daca plasezi WAF pe Load Balancer-ul intern in spatele CloudFront, IP-ul vazut va fi al CloudFront-ului decat daca configurezi corect verificarea antetului X-Forwarded-For.',
-    keyTakeaway: 'AWS WAF filtreaza traficul HTTP malitios si blocheaza tentativele de abuz si SQL Injection inainte ca cererea sa ajunga la codul Java.'
+    "id": "cloud-20",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Ce este Serverless Computing si cand este recomandat AWS Lambda?",
+    "question": "Ce este Serverless Computing, cum functioneaza AWS Lambda si care sunt avantajele sale fata de un server EC2 traditional?",
+    "answer": "1. Ce inseamna Serverless:\n   - Nu inseamna ca nu exista servere fizice, ci ca DEZVOLTATORUL NU ADMINISTREAZA NICIUN SERVER.\n   - Nu instalezi sisteme de operare, nu aplici patch-uri de securitate si nu configurezi scalare manuala.\n   - Modelul economic: Platesti STRICT pentru timpul de executie efectiv (masurat in milisecunde) si numarul de invocari. Daca nimeni nu apeleaza functia, costul este ZERO!\n\n2. AWS Lambda (Function-as-a-Service - FaaS):\n   - Rulezi fragmente de cod (Java, Node.js, Python, Go) ca raspuns la evenimente (un fisier uploadat in S3, un mesaj in SQS, un request HTTP prin API Gateway).\n   - AWS aloca automat containere izolate pentru fiecare executie si scaleaza de la 1 la mii de executii simultane.\n\n3. Cand este recomandat:\n   - Microservicii cu trafic variabil, procesare asincrona de imagini/fisiere, triggere de baze de date, webhook-uri si integrari API.",
+    "codeSnippet": "// Handler clasic AWS Lambda in Node.js:\nexport const handler = async (event) => {\n  const body = JSON.parse(event.body);\n  console.log(\"Procesare comanda ID:\", body.orderId);\n  return {\n    statusCode: 200,\n    body: JSON.stringify({ message: \"Comanda procesata cu succes!\" }),\n  };\n};",
+    "interviewTrap": "Daca ai un proces continuu de fundal care ruleaza 24/7 cu consum constant si masiv de resurse (ex: procesare video continua sau WebSocket persistent), Lambda va fi mult mai scumpa decat o instanta EC2 rezervata!",
+    "keyTakeaway": "Serverless inseamna zero administrare de servere si plata per milisecunda; ideal pentru aplicatii event-driven si trafic fluctuant."
   },
   {
-    id: 'cloud-21',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Comenzi Avansate de Stare in Terraform: import, state rm si mv',
-    question: 'Cum aduci o resursa creata manual in consola AWS sub controlul Terraform folosind comanda terraform import?',
-    answer: 'Deseori o resursa critica (ex: un bucket S3 sau o baza de date) este creata manual din consola inainte de a adopta Terraform.\n\nCum o aduci in codul Terraform fara a o recrea sau sterge:\n1. Scrii definitia resursei goale in fisierul .tf: resource "aws_s3_bucket" "existing" { bucket = "nume-real-bucket" }.\n2. Rulezi comanda de import: terraform import aws_s3_bucket.existing nume-real-bucket.\n3. Terraform citeste metadatele reale din cloud si le scrie in fisierul local terraform.tfstate!\n4. Rulezi terraform plan pentru a alinia proprietatile din cod cu starea reala pana cand planul arata: "No changes. Your infrastructure matches the configuration."\n\nAlte Comenzi de Stare:\n- terraform state rm: Scoate o resursa din starea Terraform fara a o sterge din cloud-ul real (util cand vrei sa nu mai fie gestionata de IaC).\n- terraform state mv: Redenumeste o resursa in cod fara ca Terraform sa incerce sa o distruga si sa o recreeze.',
-    codeSnippet: `# Importul unui bucket existent in codul Terraform:
-terraform import aws_s3_bucket.resumes ats-candidate-resumes-2026`,
-    interviewTrap: 'Incepand cu Terraform 1.5+, poti folosi blocul declarativ import { to = aws_s3_bucket.x, id = "nume" } direct in codul .tf fara a rula comenzi manuale din CLI.',
-    keyTakeaway: 'terraform import leaga resursele existente din cloud de definitiile declarative de cod fara pierdere de date.'
+    "id": "cloud-21",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "AWS Lambda: Cold Starts, Cauze si Cum le Minimizezi",
+    "question": "Ce este un \"Cold Start\" in AWS Lambda, de ce apare si cum poate fi minimizat in aplicatiile de productie?",
+    "answer": "1. Ce este un Cold Start:\n   - Timpul suplimentar de latenta (de la sute de milisecunde la cateva secunde) necesar la prima invocare a unei functii Lambda sau dupa o perioada de inactivitate.\n   - Ce face AWS in timpul Cold Start-ului: descarca codul functiei, initializeaza containerul de executie, porneste runtime-ul (JVM, Node.js) si ruleaza codul de initializare global (conexiuni la DB, incarcare clase).\n\n2. Factori care cresc Cold Start-ul:\n   - Limbajul de programare: Java si .NET au cold start considerabil mai mare (1-3 secunde) din cauza greutatii JVM-ului, comparativ cu Python sau Go/Node.js (100-300 ms).\n   - Dimensiunea pachetului zip/containerului si dependintele mari.\n\n3. Cum minimizezi Cold Start-ul:\n   - Foloseste Provisioned Concurrency: AWS mentine un numar prestabilit de instante de executie gata initializate (warm) 24/7.\n   - Initializeaza conexiunile la baza de date si clientii AWS in afara metodei handler (reutilizate la invocari calde).\n   - In Java: foloseste GraalVM Native Image (Quarkus / Spring Native) pentru compilare AOT.",
+    "codeSnippet": "// Optimizare: Obiectul DB este initializat o singura data in context global\nconst dbClient = new DatabaseClient(); // Cold start plateste costul o singura data!\n\nexport const handler = async (event) => {\n  // Reutilizat la cald (Warm Execution) fara reinitializare!\n  return await dbClient.query(\"SELECT * FROM candidates\");\n};",
+    "interviewTrap": "Crearea conexiunii la baza de date in interiorul functiei handler() forteaza deschiderea unei conexiuni TCP noi la fiecare apel, epuizand conexiunile bazei de date.",
+    "keyTakeaway": "Cold start-ul este faza de initializare a containerului; se rezolva cu cod global reutilizat, pachete mici sau Provisioned Concurrency."
   },
   {
-    id: 'cloud-22',
-    category: 'CLOUD',
-    difficulty: 'USOR',
-    title: 'FinOps: Practici de Optimizare a Facturii de Cloud',
-    question: 'Ce este practica de FinOps si care sunt primele 4 actiuni pe care le iei pentru a reduce o factura umflata de AWS?',
-    answer: 'FinOps (Financial Operations) este practica culturala de a aduce responsabilitatea financiara a costurilor de cloud in mainile echipelor de dezvoltare si operatiuni.\n\nTop 4 Actiuni Imediate de Reducere a Costurilor:\n1. Identificarea si Stergerea Resurselor Neutilizate (Zombie Resources):\n- Volume de disc EBS neatasate niciunui server (Available EBS volumes).\n- Adrese Elastic IP neasociate care genereaza taxe pe ora.\n- Snapshot-uri vechi uitate de ani de zile.\n2. Corectarea Supradimensionarii (Right-Sizing):\nVerificarea metricilor CloudWatch: daca o instanta EC2 sau RDS ruleaza constant la sub 10% CPU, se retrogradeaza la o clasa mai mica (ex: de la m5.xlarge la t4g.medium).\n3. Trecerea la Procesoare ARM Graviton: Trecerea instantanee de la instante x86 (m5) la instante ARM AWS Graviton (m7g) aduce o economie de 20% la pret si 20% spor de performanta!\n4. Aplicarea de Savings Plans si reguli de S3 Lifecycle.',
-    codeSnippet: `# AWS Cost Allocation Tags esentiale:
-tags = {
-  Project     = "ATS_Tracker"
-  Environment = "Staging"
-  Owner       = "Mihai"
-  CostCenter  = "HR_Tech"
-}`,
-    interviewTrap: 'Niciodata nu poti optimiza ce nu poti masura: fara aplicarea de Tag-uri obligatorii pe resurse (Cost Allocation Tags), este imposibil sa stii ce microserviciu consuma banii.',
-    keyTakeaway: 'FinOps asigura eficienta financiara prin eliminarea risipei, right-sizing si adoptarea arhitecturilor ARM Graviton.'
+    "id": "cloud-22",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "AWS Lambda: Timeout Maxim (15 minute), Concurrency si Alocare de Memorie",
+    "question": "Care sunt limitele arhitecturale de baza ale AWS Lambda privind durata de executie, memoria si alocarea de CPU?",
+    "answer": "1. Timeout Maxim:\n   - O functie Lambda poate rula maximum 15 minute (900 secunde) per executie.\n   - Daca o functie depaseste 15 minute, AWS o intrerupe fortat cu eroare de timeout. Pentru sarcini lungi (batch jobs de ore intregi), se foloseste AWS ECS Fargate sau AWS Batch.\n\n2. Alocarea de Memorie si CPU:\n   - Poti configura memoria RAM de la 128 MB pana la 10.240 MB (10 GB).\n   - Important: NU poti configura CPU-ul direct! AWS aloca putere de procesare CPU proportional cu cantitatea de memorie RAM aleasa (la 1.769 MB RAM primesti echivalentul exact a 1 vCPU complet).\n\n3. Stocare temporara (/tmp):\n   - Fiecare instanta Lambda primeste spatiu pe disc temporar efemer in directorul /tmp (de la 512 MB pana la 10 GB).\n\n4. Concurrency Limit:\n   - Limita implicita standard per cont AWS intr-o regiune este de 1.000 de executii simultane (concurrency pool partajat).",
+    "codeSnippet": "// Daca ai nevoie de mai mult CPU pentru calcule matematice sau procesare imagine:\n// Creste memoria functiei de la 512 MB la 2048 MB -> primesti automat mai multe cicluri CPU!",
+    "interviewTrap": "Daca ai un job de migrare sau import de date care dureaza 20 de minute, nu incerca sa il inghesui in Lambda cu hack-uri; foloseste ECS Fargate care nu are limita de timp!",
+    "keyTakeaway": "Lambda are timeout maxim de 15 minute; puterea CPU este legata direct proportional de memoria RAM configurata."
   },
   {
-    id: 'cloud-23',
-    category: 'CLOUD',
-    difficulty: 'USOR',
-    title: 'Modelul Responsabilitatii Partajate (Shared Responsibility Model)',
-    question: 'Care este impartirea responsabilitatilor intre furnizorul cloud (AWS) si client pentru un serviciu IaaS (EC2) vs PaaS (RDS) vs SaaS?',
-    answer: 'Principiul Oficial: AWS este responsabil pentru Securitatea CLOUD-ULUI (Security OF the Cloud), iar Clientul este responsabil pentru Securitatea IN CLOUD (Security IN the Cloud).\n\n1. Infrastructura ca Serviciu (IaaS - ex: EC2):\n- AWS raspunde de: centre de date fizice, hardware, cabluri de retea, virtualizare (Hypervisor).\n- Clientul raspunde de: sistemul de operare de pe server (patching Linux/Windows), antivirus, firewall (Security Groups), date, cod si configuratii de retea.\n\n2. Platforma ca Serviciu (PaaS - ex: RDS PostgreSQL, Lambda):\n- AWS raspunde in plus si de: sistemul de operare al bazei de date, actualizari de securitate ale motorului Postgres, runtime-ul Java.\n- Clientul raspunde de: datele stocate, parolele de utilizatori, configuratiile de conexiune si regulile de firewall de retea.\n\n3. Software ca Serviciu (SaaS):\n- Furnizorul gestioneaza aproape totul; clientul raspunde doar de credentialele sale de login si de datele introduse.',
-    codeSnippet: `// Tabel IaaS vs PaaS:
-// EC2 (IaaS): Tu faci "sudo apt-get update" si instalezi patch-uri de Linux kernel!
-// RDS (PaaS): AWS face patch-urile de OS automat in ferestrele de mentenanta!`,
-    interviewTrap: 'Multi candidati cred gresit ca daca sunt in cloud, AWS le face backup automat la servere si le protejeaza codul de SQL Injection; ambele sunt 100% responsabilitatea clientului!',
-    keyTakeaway: 'Furnizorul asigura fundatia fizica si infrastructura; clientul isi protejeaza intotdeauna propriile date si aplicatii.'
+    "id": "cloud-23",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "AWS Lambda Concurrency: Reserved Concurrency vs Provisioned Concurrency",
+    "question": "Care este diferenta dintre Reserved Concurrency si Provisioned Concurrency in administrarea functiilor Lambda?",
+    "answer": "1. Problema Concurrency-ului Partajat:\n   - Un cont AWS are o limita implicita de 1.000 executii simultane partajata intre toate functiile din acea regiune. Daca o functie buguita o ia razna si consuma 1.000 executii, toate celelalte functii din cont vor primi eroare 429 Too Many Requests (Throttling).\n\n2. Reserved Concurrency (Garantare + Plafonare):\n   - Garanteaza ca o functie specifica are intotdeauna rezervat un numar de executii paralele (ex: 200 din cele 1000).\n   - Actioneaza si ca plafon maxim (circuit breaker): functia nu poate depasi 200 de executii simultane, protejand baza de date relationala RDS din spate de la suprasolicitare.\n\n3. Provisioned Concurrency (Eliminarea Cold Starts):\n   - Initializeaza in avans un numar fix de medii de executie (containere warm) care asteapta cereri.\n   - Cand vine traficul, functiile raspund instantaneu cu latenta de sub 10 ms (fara faza de initializare cold start).\n   - Atentie: Provisioned Concurrency costa continuu atata timp cat este activat, indiferent daca vin sau nu cereri.",
+    "codeSnippet": "// Reserved Concurrency = Izolare si protectie backend (evita epuizarea pool-ului)\n// Provisioned Concurrency = Performanta critica si latenta garantata (elimina Cold Start)",
+    "interviewTrap": "Setarea Reserved Concurrency la 0 opreste complet executia functiei (comportament util ca un kill switch de urgenta in caz de incident).",
+    "keyTakeaway": "Reserved Concurrency limiteaza si garanteaza capacitate; Provisioned Concurrency tine containerele gata pornite pentru zero cold start."
   },
   {
-    id: 'cloud-24',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS Step Functions: Orchestarea Fluxurilor Serverless',
-    question: 'Ce este o masina de stari in AWS Step Functions si cum inlocuieste lanturile complexe de apeluri Lambda in cascada?',
-    answer: 'Problema Inlantuiri Lambdas (Lambda Spaghetti Anti-Pattern):\nDaca Lambda A apeleaza sincron Lambda B, care apeleaza Lambda C: Lambda A sta blocata in asteptare si platesti pentru timpul ei de inactivitate! Daca Lambda C pica, este extrem de greu sa faci rollback sau reincercari automate.\n\nAWS Step Functions (Serverless State Machine):\n1. Defineste vizual un flux complet de lucru (Workflows) in limbajul Amazon States Language (JSON/YAML):\n   - Pasi secventiali\n   - Ramuri paralele (Parallel State)\n   - Decizii conditionale (Choice State)\n   - Bucle si asteptari de timp (Wait State).\n2. Gestionare Automata a Erorilor: Configureaza politici native de Retry cu backoff exponential si Catch blocks pentru erori specifice.\n3. Implementarea Saga Pattern: Permite definirea de actiuni compensatorii automate in caz de esec la jumatatea fluxului fara nicio linie de cod de infrastructura!',
-    codeSnippet: `{
-  "StartAt": "ValideazaCV",
-  "States": {
-    "ValideazaCV": {
-      "Type": "Task",
-      "Resource": "arn:aws:lambda:...:valideaza",
-      "Next": "TrimiteLaProcesareAI"
-    },
-    "TrimiteLaProcesareAI": {
-      "Type": "Task",
-      "Resource": "arn:aws:lambda:...:procesareAi",
-      "End": true
-    }
-  }
-}`,
-    interviewTrap: 'Step Functions este extrem de robust, dar fiecare tranzitie de stare are un mic cost de apel; pentru micro-operatiuni de milioane de ori pe secunda, Express Workflows este optiunea mai ieftina decat Standard Workflows.',
-    keyTakeaway: 'Step Functions aduce vizibilitate grafica, rezilienta la erori si management al tranzactiilor compensatorii peste arhitecturile serverless.'
+    "id": "cloud-24",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon API Gateway: Ce este, ce rol are si cum se integreaza cu Lambda?",
+    "question": "Ce rol are Amazon API Gateway intr-o arhitectura serverless si ce functionalitati ofera in fata functiilor backend?",
+    "answer": "1. Ce este API Gateway:\n   - Un serviciu complet gestionat care simplifica crearea, publicarea, securizarea si monitorizarea API-urilor REST, HTTP si WebSocket la orice scara.\n   - Actioneaza ca \"Usa de intrare\" (Front Door) pentru traficul din internet catre Lambda, containere ECS sau alte servicii backend.\n\n2. Responsabilitati Cheie:\n   - Autentificare si Autorizare: Se integreaza nativ cu Amazon Cognito, JWT tokens sau Lambda Authorizers personalizate inainte ca requestul sa ajunga la backend.\n   - Suport CORS: Gestioneaza preflight requests (OPTIONS) direct la poarta de intrare.\n   - Transformare cereri/raspunsuri: Validare schema JSON payload.\n   - Generare de chei API (API Keys) si facturare per utilizator/client.\n   - Throttling si protectie impotriva suprasolicitarii.",
+    "codeSnippet": "// Arhitectura Serverless clasica:\n// Frontend (React) -> API Gateway -> Lambda Function -> DynamoDB / RDS\n//                      | (Valideaza JWT, aplica Rate Limit, CORS)",
+    "interviewTrap": "API Gateway are un timeout maxim hard de 29 de secunde pentru integrare HTTP/REST. Daca Lambda ruleaza mai mult de 29s, API Gateway va intoarce HTTP 504 Gateway Timeout catre client!",
+    "keyTakeaway": "API Gateway gestioneaza rutele, autentificarea, CORS-ul si rate limiting-ul inainte ca traficul sa atinga functiile Lambda."
   },
   {
-    id: 'cloud-25',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Amazon Athena si AWS Glue: Serverless Data Analytics',
-    question: 'Cum rulezi interogari SQL direct peste fisiere JSON sau Parquet stocate in S3 folosind Amazon Athena fara a rula un server de baza de date?',
-    answer: 'Amazon Athena este un motor de interogare distribuit interactiv serverless bazat pe open-source-ul Trino/Presto:\n1. Fara Baza de Date Traditionala: Datele raman nemodificate in bucket-ul tau S3 sub forma de fisiere brute (CSV, JSON, Apache Parquet sau ORC).\n2. AWS Glue Data Catalog: Actioneaza ca un catalog central de metadate (schema). Un Glue Crawler scaneaza fisierele din S3 si deduce automat schema tabelelor si tipurile de coloane.\n3. Interogare SQL Standard: Deschizi consola Athena si scrii comenzi SQL standard: SELECT * FROM ats_logs WHERE status = \'FAILED\' LIMIT 10.\n4. Model de Cost: Platesti exclusiv pentru cantitatea de date SCANATE de pe disc (5$ per 1 TB scanat). Daca convertesti fisierele in format columnar comprimat Parquet, scanarea scade cu 90%, costand cativa centi!',
-    codeSnippet: `-- Interogare SQL pur peste fisiere din S3 in Amazon Athena:
-SELECT 
-    candidate_id, 
-    COUNT(*) as total_applications
-FROM ats_analytics_database.job_events_parquet
-WHERE event_date >= '2026-01-01'
-GROUP BY candidate_id;`,
-    interviewTrap: 'Daca interoghezi fisiere mari CSV necomprimate, Athena va scana tot fisierul de la cap la coada si va costa mai mult; converteste intotdeauna datele in format columnar Parquet cu partitionare dupa data.',
-    keyTakeaway: 'Athena si Glue ofera capabilitati analitice de Big Data direct peste datele din S3 fara a intretine baze de date costisitoare.'
+    "id": "cloud-25",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "API Gateway: Rate Limiting, Throttling si Usage Plans",
+    "question": "Cum protejeaza API Gateway serviciile backend impotriva atacurilor DoS sau abuzurilor prin Rate Limiting si Throttling?",
+    "answer": "1. Mecanismul Token Bucket:\n   - API Gateway foloseste algoritmul Token Bucket pentru a regla fluxul de cereri.\n   - Exista doi parametri cheie:\n     * Rate (Rate Limiting): Numarul mediu constant de cereri pe secunda (RPS) permise (ex: 500 RPS).\n     * Burst: Numarul maxim de cereri concurente pe care API Gateway le accepta intr-o fractiune de secunda inainte de throttling (ex: 1.000 cereri).\n\n2. Throttling (Cod de raspuns HTTP 429):\n   - Daca un client depaseste limita de tokens din bucket, API Gateway blocheaza cererile suplimentare direct la nivel de poarta si intoarce codul HTTP 429 Too Many Requests, fara sa incarce functiile Lambda sau serverele backend!\n\n3. Usage Plans & API Keys:\n   - Permite crearea de tier-uri de clienti (ex: Basic Tier: 10 req/sec si 10.000 req/luna; Premium Tier: 500 req/sec si cereri nelimitate).\n   - Fiecare client primeste un API Key unic asociat unui Usage Plan.",
+    "codeSnippet": "// Raspuns automat generat de API Gateway cand clientul face spam:\n// HTTP/1.1 429 Too Many Requests\n// { \"message\": \"Limit Exceeded\" }",
+    "interviewTrap": "API Keys din API Gateway NU trebuie folosite ca mecanism principal de securitate si autentificare a identitatii (foloseste JWT / Cognito pentru identitate; API Keys se folosesc pentru tracking de usage si facturare).",
+    "keyTakeaway": "Rate limiting-ul din API Gateway respinge apelurile abuzive cu HTTP 429 direct la intrare, salvand backend-ul de la crash."
   },
   {
-    id: 'cloud-26',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS Organizations si Service Control Policies (SCPs)',
-    question: 'Ce sunt Service Control Policies (SCPs) si cum impun bariere de securitate (Guardrails) deasupra tuturor conturilor dintr-o organizatie?',
-    answer: 'In companii moderne, mediile sunt separate pe conturi AWS complet diferite (Cont de Dev, Cont de Staging, Cont de Audit, Cont de Productie) unite sub AWS Organizations.\n\nService Control Policies (SCPs):\nSunt politici de securitate la cel mai inalt nivel administrativ al organizatiei:\n- Ofera "Guardrails" obligatorii care NU POT fi ocolite de niciun utilizator din conturile copil, NICI MACAR DE CATRE ROOT-UL acelui cont!\n\nExemple Clasice de Reguli SCP in Productie:\n1. Restrictie Geografica: Interzice crearea oricarei resurse in afara regiunii aprobate eu-central-1 (pentru a preveni costuri sau incalcari GDPR).\n2. Protectia Jurnalelor: Blocheaza comanda de oprire sau stergere a log-urilor CloudTrail si a regulilor GuardDuty.\n3. Interzicerea Instantelor Scumpe: Blocheaza pornirea de servere EC2 gigantice neautorizate in mediile de dezvoltare.',
-    codeSnippet: `# SCP care blocheaza orice regiune in afara de Frankfurt (eu-central-1):
-{
-  "Version": "2012-10-17",
-  "Effect": "Deny",
-  "NotAction": [ "iam:*", "organizations:*", "route53:*" ],
-  "Resource": "*",
-  "Condition": {
-    "StringNotEquals": {
-      "aws:RequestedRegion": ["eu-central-1"]
-    }
-  }
-}`,
-    interviewTrap: 'SCPs pot doar sa interzica (Deny) permisiuni; ele nu acorda drepturi direct (utilizatorii au nevoie in continuare de politici IAM normale in interiorul contului lor).',
-    keyTakeaway: 'SCPs asigura guvernanta centralizata a securitatii si previn configuratiile gresite in arhitecturi multi-cont.'
+    "id": "cloud-26",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "AWS Elastic Beanstalk: Deployment rapid de aplicatii web (PaaS)",
+    "question": "Ce este AWS Elastic Beanstalk si cum simplifica lansarea unei aplicatii web pentru dezvoltatori?",
+    "answer": "1. Ce este Elastic Beanstalk:\n   - Platforma ca Serviciu (PaaS) oferita de AWS pentru a rula aplicatii web scrise in Java, Node.js, Python, Go, Docker sau .NET.\n   - Dezvoltatorul doar incarca codul (sau un fisier .jar / .zip) prin consola sau CLI, iar Beanstalk configureaza automat toata infrastructura necesara.\n\n2. Ce automatizeaza in spate:\n   - Aprovizioneaza instantele EC2 cu sistemul de operare si runtime-ul corect instalat.\n   - Configureaza Load Balancer-ul (ALB) si Auto Scaling Group-ul.\n   - Configureaza alarmele CloudWatch si alocarea de adrese IP/DNS.\n\n3. Avantaj major fata de Heroku:\n   - Fara \"Vendor Lock-in\" de infrastructura: Resursele create de Beanstalk (EC2, ALB, SG) sunt vizibile in contul tau AWS si ai control complet sa le modifici direct prin SSH sau configuratii avansate .ebextensions.",
+    "codeSnippet": "# Comanda de deploy simplu prin Beanstalk CLI:\neb init -p java-17 my-spring-app\neb create my-prod-env\neb deploy",
+    "interviewTrap": "Daca creezi baza de date relationala direct din interiorul configuratiei Beanstalk, atunci cand stergi mediul de aplicatie Beanstalk, baza de date va fi distrusa impreuna cu el! Baza de date de productie trebuie creata separat in RDS.",
+    "keyTakeaway": "Elastic Beanstalk este solutia PaaS de la AWS pentru lansat aplicatii rapid fara a scrie Terraform sau a configura manual EC2/ALB."
   },
   {
-    id: 'cloud-27',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Terraform count vs for_each: Prevenirea Distrugerilor Accidentale',
-    question: 'De ce este periculos sa folosesti count pentru liste de resurse in Terraform si de ce for_each este solutia recomandata?',
-    answer: 'Problema cu count (Index Numeric 0, 1, 2):\nDaca creezi resurse cu count = length(var.subnets) peste o lista ["subnet-a", "subnet-b", "subnet-c"]:\nTerraform le asociaza intern ca subnet[0], subnet[1], subnet[2].\nDaca cineva STERGE primul element ("subnet-a") din lista, noul element de pe indexul 0 devine "subnet-b"!\nLa urmatorul terraform apply, Terraform va incerca sa distruga si sa recreeze TOATE resursele pentru ca indicii numerici s-au decalat cu o pozitie!\n\nSolutie: for_each (Asociere dupa Cheie Unica de String):\nfor_each mapeaza resursele dupa un Set sau Dictionar cu chei explicite: subnet["subnet-a"], subnet["subnet-b"].\nDaca stergi "subnet-a", Terraform stie sa stearga EXCLUSIV acea resursa, lasand restul de resurse complet neatinse!',
-    codeSnippet: `# GRESIT si FRAGIL (count):
-# resource "aws_subnet" "list" { count = length(var.cidrs) }
-
-# CORECT si SIGUR (for_each):
-resource "aws_subnet" "safe" {
-  for_each   = toset(["10.0.1.0/24", "10.0.2.0/24"])
-  cidr_block = each.value
-}`,
-    interviewTrap: 'for_each necesita valori cunoscute la faza de plan (nu poti folosi un output generat dinamic in timpul aplicarii decat daca este derivat din chei statice).',
-    keyTakeaway: 'Foloseste for_each pentru a asigura stabilitatea resurselor si a evita recrearea in cascada a infrastructurii la modificari de liste.'
+    "id": "cloud-27",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "AWS ECS (Elastic Container Service): EC2 Launch Type vs AWS Fargate",
+    "question": "Care este diferenta principala dintre Amazon ECS cu EC2 Launch Type si Amazon ECS cu AWS Fargate?",
+    "answer": "Amazon Elastic Container Service (ECS) este un serviciu nativ AWS de orchestrare a containerelor Docker. Poate rula in doua moduri:\n\n1. ECS cu EC2 Launch Type (Gestionat de tine):\n   - Creezi si administrezi un cluster de masini virtuale EC2.\n   - Esti responsabil de alegerea instantelor EC2, aplicarea patch-urilor de securitate pe OS si scalarea numarului de servere din cluster.\n   - Avantaj: Poti folosi Reserved Instances sau Spot Instances pentru optimizarea costurilor.\n\n2. ECS cu AWS Fargate (Serverless Containers):\n   - Nu vezi si nu gestionezi niciun server EC2 fizic sau virtual!\n   - Tu doar definesti specificatiile containerului (Task Definition: ex: 0.5 vCPU si 1 GB RAM) si imaginea Docker de descarcat din ECR.\n   - AWS aloca si scaleaza capacitatea hardware instant in fundal.\n   - Platesti doar pentru secundele de viata ale containerului conform vCPU si RAM consumat.",
+    "codeSnippet": "// Comparatie rapida:\n// EC2 Launch Type: Administrezi servere, aplici patch-uri OS, controlezi costurile fine\n// Fargate: Zero servere de administrat, pornesti direct containerul Docker (True Serverless)",
+    "interviewTrap": "Fargate este usor mai scump per unitate de CPU/RAM decat instantele EC2 brute rezervate, dar economiseste masiv timpul inginerilor de operatiuni si mentenanta.",
+    "keyTakeaway": "Fargate elimina complet administrarea nodurilor EC2; definesti doar memoria si CPU-ul containerului, iar AWS ruleaza task-ul."
   },
   {
-    id: 'cloud-28',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Terraform Lifecycle: create_before_destroy si prevent_destroy',
-    question: 'Cum previi stergerea accidentala a unei baze de date de productie in Terraform si cum asiguri zero downtime la inlocuirea unui certificat TLS?',
-    answer: 'Blocul lifecycle dintr-o resursa Terraform controleaza modul in care Terraform gestioneaza schimbarile:\n\n1. prevent_destroy = true (Protectie Anti-Dezastru):\nDaca un inginer modifica codul intr-un mod care ar forta stergerea bazei de date (ex: modificarea numelui bazei), comanda terraform apply va esua imediat cu eroare, refuzand sa distruga resursa protejata!\n\n2. create_before_destroy = true (Zero Downtime):\nIn mod normal, daca o resursa trebuie inlocuita, Terraform o sterge pe cea veche si apoi o creeaza pe cea noua (cauzand cateva minute de downtime!). Cu acest flag, Terraform creeaza MAI INTAI noua resursa (ex: noul certificat SSL), o leaga, si abia dupa ce este activa o sterge pe cea veche.\n\n3. ignore_changes: Instruieste Terraform sa ignore modificarile facute in mod dinamic din exterior pe anumite atribute (ex: tag-uri adaugate automat de AWS sau numarul curent de replici scalat de un HPA extern).',
-    codeSnippet: `resource "aws_db_instance" "production_db" {
-  allocated_storage = 100
-  engine            = "postgres"
-
-  lifecycle {
-    prevent_destroy = true # Blocheaza orice stergere accidentala!
-  }
-}`,
-    interviewTrap: 'Daca ai prevent_destroy activat si chiar vrei sa stergi resursa in mod legitim, trebuie sa comentezi manual blocul lifecycle inainte de apply.',
-    keyTakeaway: 'Meta-argumentele de lifecycle protejeaza datele critice de distrugeri accidentale si asigura tranzitii fara downtime.'
+    "id": "cloud-28",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "AWS App Runner: Rulare rapida de containere fara configurare de cluster",
+    "question": "Ce este AWS App Runner si in ce scenarii este preferat fata de ECS sau Kubernetes (EKS)?",
+    "answer": "1. Ce este AWS App Runner:\n   - Un serviciu complet gestionat de rulare a containerelor web si API-urilor, conceput pentru echipele de dezvoltare care nu vor complexitatea de orchestrare a ECS sau Kubernetes.\n   - Tot ce ii furnizezi este o imagine Docker din Amazon ECR sau direct un depozit GitHub cu cod sursa.\n\n2. Functionalitati automate out-of-the-box:\n   - Auto-scaling automat: scaleaza numarul de instante de la cererea minima pana la varfuri de trafic pe baza de concurenta.\n   - Load Balancer si certificat SSL/TLS integrat automat (iti ofera direct un URL public HTTPS functional).\n   - Pipeline de CI/CD automat integrat: la fiecare git push sau imagine Docker noua in ECR, App Runner face redeploy automat fara downtime.\n\n3. Cand este preferat:\n   - Pentru aplicatii web monolitice, API-uri backend clasice (Spring Boot, NestJS, FastAPI) sau startup-uri care doresc simplitate maxima.",
+    "codeSnippet": "// Flux App Runner:\n// Git Push / Docker Image in ECR -> App Runner preia automat -> HTTPS Endpoint activ!\n// Zero ALB manual, Zero VPC peering, Zero configurare Kubernetes!",
+    "interviewTrap": "App Runner este destinat exclusiv aplicatiilor web orientate pe request-response (HTTP/HTTPS); nu este potrivit pentru joburi de background fara port HTTP sau procesare streaming continua.",
+    "keyTakeaway": "App Runner este cea mai simpla cale de a rula un container web HTTPS pe AWS cu auto-scaling si pipeline integrat."
   },
   {
-    id: 'cloud-29',
-    category: 'CLOUD',
-    difficulty: 'USOR',
-    title: 'AWS Systems Manager Session Manager in Loc de Bastion Host SSH',
-    question: 'Cum te conectezi securizat la un server privat din AWS fara a avea portul SSH 22 deschis si fara chei .pem folosind SSM Session Manager?',
-    answer: 'Problema Bastion Host-ului Traditional:\nNecesita un server expus public pe internet, portul 22 deschis, mentinerea de chei private SSH (.pem) si riscuri continue de scanare si atacuri de forta bruta.\n\nRevolutia AWS Systems Manager (SSM) Session Manager:\n1. Zero Porturi Deschise: Serverul din subnetul privat NU ARE NICIUN PORT DESCHIS in Security Group (nici macar portul 22!). Nu are IP public.\n2. Comunicare Outbound Sigura: Un agent (SSM Agent instalat pe instanta) deschide o conexiune criptata de iesire (outbound HTTPS pe portul 443) catre endpoint-ul securizat AWS SSM.\n3. Autentificare prin IAM: Inginerul se autentifica prin consola AWS sau AWS CLI (aws ssm start-session --target i-12345). Accesul este controlat prin permisiuni IAM si autentificare multi-factor (MFA).\n4. Audit Integrat: Fiecare comanda tastata in terminal este inregistrata integral in CloudWatch Logs si S3 pentru audit.',
-    codeSnippet: `# Conectare sigura din terminal fara chei SSH:
-aws ssm start-session --target i-0a8b7c6d5e4f3210`,
-    interviewTrap: 'Pentru ca SSM sa functioneze, instanta EC2 trebuie sa aiba atasat un IAM Role cu politica AmazonSSMManagedInstanceCore si acces outbound la internet sau un VPC Endpoint pentru SSM.',
-    keyTakeaway: 'Session Manager elimina cheile SSH si porturile publice deschise, aducand acces securizat gestionat prin IAM.'
+    "id": "cloud-29",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Ce este Amazon S3 (Simple Storage Service) si ce este un S3 Bucket?",
+    "question": "Ce este Amazon S3, cum functioneaza stocarea de tip obiect (Object Storage) si care sunt regulile de denumire a unui Bucket?",
+    "answer": "1. Ce este Amazon S3:\n   - Un serviciu de stocare de tip obiect (Object Storage) scalabil la scara infinita, proiectat pentru o durabilitate exceptionala de 99.999999999% (11 de 9) a datelor.\n   - Un \"obiect\" este compus din: fisierul brut de date (data payload), metadate descriptive (key-value) si o cheie unica de identificare (Key / Path).\n\n2. Diferenta fata de Block Storage (EBS) si File Storage (EFS):\n   - Nu este un sistem de fisiere clasic; nu poti modifica doar un octet dintr-un fisier de 10 GB. Pentru a actualiza un obiect, trebuie sa rescrii intregul fisier (sau sa versiuni).\n   - Accesibil direct prin API HTTP/HTTPS (GET, PUT, DELETE).\n\n3. Regula Critica de Denumire a unui S3 Bucket:\n   - Numele unui bucket S3 trebuie sa fie UNIC LA NIVEL GLOBAL in tot AWS-ul (pe toate conturile din lume, nu doar in contul sau regiunea ta)!\n   - Trebuie sa respecte formatul DNS: doar litere mici, cifre si cratime (intre 3 si 63 de caractere).",
+    "codeSnippet": "# URL direct catre un obiect S3:\n# https://my-unique-company-resumes.s3.eu-central-1.amazonaws.com/cv-123.pdf",
+    "interviewTrap": "Multi candidati spun gresit ca numele bucket-ului trebuie sa fie unic doar in regiunea lor. Numele unui bucket S3 este unic in intreaga lume pe intreaga platforma AWS!",
+    "keyTakeaway": "S3 stocheaza obiecte cu 11 de 9 durabilitate; bucket-ul are nume unic global si se acceseaza prin protocoale web REST."
   },
   {
-    id: 'cloud-30',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Amazon EventBridge: Decuplare Event-Driven in Cloud',
-    question: 'Ce este Amazon EventBridge si cum simplifica arhitectura bazata pe evenimente comparativ cu apelurile directe de API?',
-    answer: 'Amazon EventBridge este un magistral serverless de evenimente (Serverless Event Bus) care ruteaza date in timp real intre aplicatiile tale, servicii native AWS si aplicatii SaaS partenere (Stripe, Datadog, Zendesk):\n\nCaracteristici Cheie:\n1. Content-Based Filtering: Ruteaza evenimentele pe baza continutului payload-ului JSON! Un consumer poate primi evenimente DOAR daca status === "ACCEPTED" si salary > 50000, eliminand necesitatea ca aplicatia consumatoare sa filtreze mesaje irelevante.\n2. Decuplare Totala: Emitentul arunca un eveniment in EventBridge fara sa stie cine il va consuma (Lambda, SQS, Step Functions sau un endpoint HTTP extern prin API Destinations).\n3. Schema Registry: Detecteaza si valideaza automat structura JSON a evenimentelor.',
-    codeSnippet: `# Regula EventBridge care filtreaza cereri de angajare urgente:
-{
-  "source": ["ats.jobs"],
-  "detail-type": ["JobApplicationSubmitted"],
-  "detail": {
-    "priority": ["HIGH"],
-    "department": ["Engineering"]
-  }
-}`,
-    interviewTrap: 'EventBridge are o latenta medie de ~20-50ms; daca ai nevoie de procesare de mare viteza la microsecunde, Kafka (MSK) sau Kinesis sunt solutiile mai potrivite.',
-    keyTakeaway: 'EventBridge simplifica rutarea inteligenta a evenimentelor in cloud prin filtrare declarativa pe continutul JSON.'
+    "id": "cloud-30",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Clase de stocare S3: Standard, Intelligent-Tiering, Standard-IA, Glacier",
+    "question": "Care sunt principalele clase de stocare in Amazon S3 si cum optimizezi costurile in functie de frecventa de acces a datelor?",
+    "answer": "1. S3 Standard:\n   - Stocare implicita pentru date accesate frecvent (imagini de profil, asset-uri active).\n   - Latenta de milisecunde, disponibilitate ridicata, dar cel mai mare cost per GB stocat.\n\n2. S3 Intelligent-Tiering:\n   - Muta automat obiectele intre niveluri de cost in functie de tiparul de acces al utilizatorilor, fara taxa de recuperare si fara impact de performanta. Ideal cand tiparul de acces este necunoscut.\n\n3. S3 Standard-Infrequent Access (Standard-IA):\n   - Pentru date accesate rar, dar care necesita acces instantaneu cand sunt cerute (ex: backup-uri recente, rapoarte lunare).\n   - Cost de stocare per GB redus la jumatate, dar platesti o mica taxa per GB recuperat (retrieval fee).\n\n4. S3 Glacier Flexible Retrieval & Glacier Deep Archive:\n   - Pentru arhivare pe termen lung (pastrare legala a contractelor timp de 7 ani).\n   - Deep Archive este incredibil de ieftin (~$1 per TB/luna), dar timpul de recuperare al datelor dureaza intre 3 si 12 ore.",
+    "codeSnippet": "// De la Scump/Rapid la Foarte Ieftin/Arhiva:\n// S3 Standard (Acces instant, $0.023/GB)\n// S3 Standard-IA (Acces rar, $0.0125/GB + retrieval fee)\n// S3 Glacier Flexible (Ore de asteptare, $0.004/GB)\n// S3 Glacier Deep Archive (Pana la 12 ore, $0.00099/GB)",
+    "interviewTrap": "Daca plasezi fisiere accesate zilnic in S3 Glacier sau Standard-IA, factura de retrieval fees va depasi masiv costul clasei S3 Standard!",
+    "keyTakeaway": "Foloseste S3 Standard pentru date active, Intelligent-Tiering cand tiparul e imprevizibil si Glacier pentru arhive pe ani de zile."
   },
   {
-    id: 'cloud-31',
-    category: 'CLOUD',
-    difficulty: 'DIFICIL',
-    title: 'AWS Global Accelerator vs CloudFront: Diferente Cheie',
-    question: 'Care este diferenta dintre AWS Global Accelerator si CloudFront si cand alegi Global Accelerator pentru protocoale non-HTTP?',
-    answer: '1. Amazon CloudFront (Content Delivery Network - Layer 7):\n- Conceput special pentru CACHING de continut HTTP/HTTPS (fisiere statice, video, HTML, API-uri).\n- Termina conexiunea TLS la Edge si memoreaza fisierele in cache-ul local.\n\n2. AWS Global Accelerator (Optimizare de Retea - Layer 4 TCP/UDP):\n- NU FACE CACHING de continut!\n- Ofera doua adrese IP Anycast statice globale care ruteaza traficul direct catre cel mai apropiat punct de prezenta (PoP) al retelei private din fibra optica a AWS.\n- Traficul utilizatorului intra pe reteaua privata ultra-rapida a AWS chiar din orasul sau, evitand aglomeratia si pierderile de pachete de pe internetul public!\n- Suporta orice protocol TCP/UDP (jocuri video multiplayer, VoIP, streaming WebRTC, conexiuni IoT, socket-uri) si ofera failover instantaneu de adrese IP intre regiuni in sub 30 de secunde.',
-    codeSnippet: `// CloudFront: Pentru caching HTTP/HTTPS (Web sites, Imagini, REST APIs)
-// Global Accelerator: Pentru conexiuni TCP/UDP continue rapide si IP-uri Anycast fixe`,
-    interviewTrap: 'Daca ai nevoie de caching de imagini, Global Accelerator nu te ajuta deloc deoarece nu stocheaza nimic in cache; el optimizeaza exclusiv viteza rutelor de retea.',
-    keyTakeaway: 'CloudFront este pentru caching web HTTP; Global Accelerator accelereaza traficul TCP/UDP direct pe reteaua privata de fibra AWS.'
+    "id": "cloud-31",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "S3 Lifecycle Rules: Arhivarea si stergerea automata a obiectelor vechi",
+    "question": "Cum functioneaza o politica S3 Lifecycle Rule si cum ajuta la reducerea masiva a facturii de stocare?",
+    "answer": "1. Ce este o Lifecycle Rule (Regula de Ciclu de Viata):\n   - O configuratie automata definita la nivel de S3 Bucket (sau pe un prefix de directoare, ex: /logs/) care gestioneaza tranzitiile si expirarea obiectelor in timp.\n\n2. Doua tipuri majore de actiuni:\n   - Transition Actions (Tranzitii de clasa): Muta automat obiectele intr-o clasa de stocare mai ieftina pe masura ce se invechesc.\n     * Exemplu: Dupa 30 de zile de la upload -> muta fisierul din S3 Standard in S3 Standard-IA.\n     * Dupa 90 de zile -> muta fisierul in S3 Glacier.\n   - Expiration Actions (Stergere automata): Sterge definitiv obiectele dupa o anumita perioada.\n     * Exemplu: Sterge logurile aplicatiei dupa 365 de zile.\n\n3. Curatarea versiunilor vechi:\n   - Daca versionarea este activata, poti seta ca versiunile non-curente (vechi) ale fisierelor sa fie sterse dupa 14 zile.",
+    "codeSnippet": "# Exemplu Terraform S3 Lifecycle:\nresource \"aws_s3_bucket_lifecycle_configuration\" \"cv_lifecycle\" {\n  bucket = aws_s3_bucket.resumes.id\n\n  rule {\n    id     = \"archive-old-resumes\"\n    status = \"Enabled\"\n\n    transition {\n      days          = 60\n      storage_class = \"STANDARD_IA\"\n    }\n    transition {\n      days          = 180\n      storage_class = \"GLACIER\"\n    }\n  }\n}",
+    "interviewTrap": "Obiectele foarte mici (sub 128 KB) nu beneficiaza de tranzitia catre Standard-IA sau Glacier, deoarece exista o limita minima de facturare de 128 KB per obiect.",
+    "keyTakeaway": "S3 Lifecycle Rules automatizeaza mutarea datelor vechi catre clase mai ieftine si stergerea logurilor expirate, economisind pana la 80% din costuri."
   },
   {
-    id: 'cloud-32',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Disaster Recovery in Cloud: Multi-AZ vs Multi-Region',
-    question: 'Care este diferenta de cost, complexitate si latenta intre o arhitectura Multi-AZ si o arhitectura Multi-Region?',
-    answer: '1. Multi-AZ (High Availability in Aceeasi Regiune):\n- Instantele ruleaza in centre de date fizice diferite (Zone de Disponibilitate, ex: Frankfurt AZ-1a si AZ-1b) situate la cativa kilometri distanta.\n- Replicare Sincrona: Latenta de retea este infima (< 2ms).\n- Protejeaza impotriva: Caderii unui intreg centru de date (inundatie, pana masiva de curent).\n- Cost si complexitate reduse: Standardul de aur pentru 99% din aplicatii.\n\n2. Multi-Region (Disaster Recovery Global peste Continente):\n- Aplicatia ruleaza pe regiuni geografice complet separate (ex: Frankfurt eu-central-1 si Virginia us-east-1).\n- Replicare Asincrona: Din cauza vitezei luminii pe distante de mii de kilometri, replicarea sincrona este imposibila (latenta de 80-120ms).\n- Protejeaza impotriva: Unui dezastru catastrofal la nivelul unei intregi tari sau caderii globale a serviciilor AWS dintr-o regiune intreaga.\n- Costuri uriase de infrastructura dublata si complexitate masiva de sincronizare a bazelor de date.',
-    codeSnippet: `// Nivele de protectie:
-// Multi-AZ = Inalta Disponibilitate (High Availability, 99.99%)
-// Multi-Region = Recuperare dupa Dezastru (Disaster Recovery & Business Continuity)`,
-    interviewTrap: 'Multi-Region aduce provocarea transferului de date intre regiuni (Data Transfer Out fees) si rezolvarea conflictelor de scriere; nu o adopta decat daca cerintele de afaceri o impun categoric.',
-    keyTakeaway: 'Multi-AZ asigura rezilienta la caderi de datacenter local cu latenta minima; Multi-Region asigura supravietuirea globala a afacerii.'
+    "id": "cloud-32",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "S3 Versioning si MFA Delete: Cum previi stergerea accidentala?",
+    "question": "Cum protejeaza S3 Versioning datele impotriva suprascrierilor accidentale si ce rol are MFA Delete?",
+    "answer": "1. S3 Versioning (Versionarea Obiectelor):\n   - Odata activata pe un bucket, S3 pastreaza toate versiunile fiecarui obiect (versiunea curenta si versiunile anterioare istorice).\n   - Daca suprascrii un fisier (ex: cv.pdf) cu un continut nou, ambele versiuni sunt pastrate cu Version ID-uri unice.\n\n2. Ce se intampla cand stergi un obiect versionat:\n   - S3 NU sterge fizic fisierul! In schimb, creeaza un \"Delete Marker\" care devine versiunea curenta. Fisierul pare sters in consola, dar poate fi restaurat oricand prin simpla stergere a acelui Delete Marker!\n   - Pentru a sterge definitiv un obiect, trebuie sa trimiti o comanda specificand explicit Version ID-ul exact al acelui obiect.\n\n3. MFA Delete (Multi-Factor Authentication Delete):\n   - Ofera securitate maxima: cere un cod MFA temporar fizic (Google Authenticator) pentru a putea schimba starea de versionare a bucket-ului sau pentru a sterge definitiv o versiune de obiect.",
+    "codeSnippet": "// Restaurare fisier sters accidental:\n// 1. Identifici Delete Marker-ul:\n// aws s3api list-object-versions --bucket my-bucket --prefix cv.pdf\n// 2. Stergi Delete Marker-ul -> Fisierul reapare magic ca activ!\n// aws s3api delete-object --bucket my-bucket --key cv.pdf --version-id \"marker-id\"",
+    "interviewTrap": "Daca activezi versionarea, fiecare versiune veche ocupa spatiu de stocare si este facturata! Daca nu adaugi o regula de lifecycle care sa expire versiunile vechi, costul bucket-ului se va dubla sau tripla rapid.",
+    "keyTakeaway": "Versioning previne pierderea accidentala de date prin pastrarea istoricului si crearea de Delete Markers recuperabile."
   },
   {
-    id: 'cloud-33',
-    category: 'CLOUD',
-    difficulty: 'USOR',
-    title: 'AWS Well-Architected Framework: Cele 6 Coloane Fundamentale',
-    question: 'Care sunt cele 6 coloane (Pillars) ale AWS Well-Architected Framework si ce principii ghideaza fiecare?',
-    answer: 'AWS Well-Architected Framework ofera principiile arhitecturale oficiale pentru crearea de sisteme sigure si eficiente in cloud:\n1. Operational Excellence: Rularea si monitorizarea sistemelor pentru a livra valoare de business, automatizarea proceselor de lansare si invatarea din fiecare incident (post-mortems).\n2. Security: Protectia datelor, sistemelor si activelor prin aplicarea privilegiilor minime, criptare in repaus si tranzit si audit continuu.\n3. Reliability: Capacitatea sistemului de a-si reveni automat din caderi (Self-Healing), testarea procedurilor de recuperare si scalare orizontala.\n4. Performance Efficiency: Utilizarea eficienta a resurselor de calcul, selectarea tipului optim de instanta (ARM vs x86) si arhitecturi serverless/event-driven.\n5. Cost Optimization: Eliminarea risipei de bani, intelegerea cheltuielilor prin tagging si utilizarea de modele rezervate/spot.\n6. Sustainability: Minimizarea impactului asupra mediului prin reducerea consumului inutil de energie si calcul.',
-    codeSnippet: `// Cele 6 Coloane:
-// 1. Operational Excellence | 2. Security | 3. Reliability
-// 4. Performance Efficiency | 5. Cost Optimization | 6. Sustainability`,
-    interviewTrap: 'Coloana "Sustainability" este cea mai recent adaugata (2021); mentionarea ei la interviuri arata cunostinte la zi ale standardelor cloud.',
-    keyTakeaway: 'Cele 6 coloane Well-Architected asigura o viziune holistica si echilibrata asupra oricarei solutii tehnice de cloud.'
+    "id": "cloud-33",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "S3 Pre-signed URLs: Upload si Download direct de fisiere mari",
+    "question": "De ce upload-ul fisierelor mari (video, PDF de sute de MB) nu trebuie sa treaca prin serverul de backend si cum rezolva S3 Pre-signed URLs aceasta problema?",
+    "answer": "1. Problema Arhitecturala clasica:\n   - Utilizatorul uploadeaza un fisier de 500 MB in interfata web (React).\n   - Fisierul ajunge pe serverul de backend (Spring Boot / Node.js), ocupand memorie RAM si latime de banda de retea, iar apoi backend-ul il retransmite catre S3.\n   - Aceasta abordare blocheaza thread-urile serverului si creaza un bottleneck masiv.\n\n2. Solutia: S3 Pre-signed URLs:\n   - Backend-ul genereaza prin AWS SDK un URL special semnat criptografic cu cheile sale IAM (operatiune de doar 5 milisecunde).\n   - Acest URL ii da utilizatorului dreptul temporar (ex: timp de 15 minute) de a face un HTTP PUT direct catre S3 Bucket!\n   - Frontend-ul primeste URL-ul semnat de la backend si uploadeaza fisierul DIRECT din browser in Amazon S3, eliberand complet backend-ul de traficul masiv de date.",
+    "codeSnippet": "// Backend Node.js genereaza un URL semnat pentru Upload direct:\nimport { getSignedUrl } from \"@aws-sdk/s3-request-presigner\";\nimport { S3Client, PutObjectCommand } from \"@aws-sdk/client-s3\";\n\nconst client = new S3Client({ region: \"eu-central-1\" });\nconst command = new PutObjectCommand({ Bucket: \"my-resumes\", Key: \"cv-user123.pdf\" });\n\n// URL-ul expira automat in 15 minute (900 secunde)\nconst uploadUrl = await getSignedUrl(client, command, { expiresIn: 900 });",
+    "interviewTrap": "Multi candidati cred ca bucket-ul trebuie facut public pentru ca frontend-ul sa poata uploada direct. Fals! Bucket-ul ramane 100% PRIVAT; pre-signed URL-ul imprumuta temporar permisiunea rolului IAM al backend-ului.",
+    "keyTakeaway": "Pre-signed URLs permit utilizatorilor sa faca upload/download direct in S3 securizat si temporar, fara a incarca serverul backend."
   },
   {
-    id: 'cloud-34',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Strategii de Migrare in Cloud: Cele 7 R-uri (The 7 Rs of Migration)',
-    question: 'Care sunt strategiile clasice de migrare in cloud (Rehost, Replatform, Refactor etc.) si cum alegi intre ele?',
-    answer: 'Strategiile canonice AWS pentru migrarea aplicatiilor din datacenter (On-Premises) in cloud:\n1. Rehost ("Lift and Shift"):\nMuta masinile virtuale asa cum sunt, fara nicio modificare de cod sau arhitectura (folosind AWS Application Migration Service). Cel mai rapid mod de migrare, dar nu profita de avantajele native cloud.\n2. Replatform ("Lift, Tinker and Shift"):\nFace mici optimizari de platforma fara modificari majore de cod (ex: migrarea de la o baza de date PostgreSQL instalata manual pe un VM la Amazon RDS administrat).\n3. Refactor / Re-architect:\nRescrierea completa a aplicatiei intr-o arhitectura cloud-native (microservicii, containere pe EKS sau functii Serverless Lambda). Cel mai mare efort, dar cea mai mare scalabilitate si reducere de costuri pe termen lung.\n4. Repurchase ("Drop and Shop"): Trecerea la un produs SaaS existent (ex: migrarea unui CRM intern catre Salesforce).\n5. Retain: Pastrarea anumitor aplicatii on-premises din motive de reglementare stricta.\n6. Retire: Inchiderea aplicatiilor vechi inutile.\n7. Relocate: Mutarea de masini virtuale VMware direct pe VMware Cloud on AWS.',
-    codeSnippet: `// Traseu tipic in organizatii mari:
-// Faza 1: Rehost (pentru a elibera rapid datacenterul fizic)
-// Faza 2: Replatform (trecere la baze de date gestionate)
-// Faza 3: Refactor (modernizare in microservicii si serverless)`,
-    interviewTrap: 'Incercarea de a face Refactor direct pe un monolit gigant in timpul unei migrari grabite esueaza frecvent; o migrare Rehost urmata de Refactor iterativ este mult mai sigura.',
-    keyTakeaway: 'Cele 7 R-uri permit adaptarea abordarii de migrare in functie de constrangerile de timp, cost si valoare de business.'
+    "id": "cloud-34",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "S3 Static Website Hosting vs CloudFront Distribution",
+    "question": "De ce gazduirea unui Single Page Application (React / Angular) pe S3 Static Website Hosting singur este insuficienta pentru productie si necesita Amazon CloudFront?",
+    "answer": "1. S3 Static Website Hosting (Limitari in Productie):\n   - Permite servirea fisierelor statice (HTML, JS, CSS, imagini) direct dintr-un bucket S3.\n   - Nu suporta HTTPS nativ pe domenii personalizate (doar HTTP necriptat sau URL-ul implicit AWS S3).\n   - Fisierele sunt servite dintr-o singura regiune geografica fizica (ex: daca bucketul e in Frankfurt, un utilizator din New York sau Tokyo va avea latenta mare).\n\n2. De ce adaugam Amazon CloudFront (CDN):\n   - HTTPS Complet: Ofera suport nativ gratuit pentru certificate SSL/TLS (prin AWS Certificate Manager) pe propriul domeniu (ex: https://app.mycompany.com).\n   - Edge Caching Global: Fisierele statice sunt stocate in cache in peste 400 de Edge Locations pe intreg globul, reducand latenta la sub 20 ms.\n   - Securitate OAC (Origin Access Control): Bucket-ul S3 ramane complet blocat si privat pentru public; doar reteaua CloudFront are voie sa citeasca fisierele din el.",
+    "codeSnippet": "// Arhitectura ideala de Frontend:\n// User Browser -> CloudFront (HTTPS, Edge Cache global) -> S3 Bucket (Privat cu OAC)",
+    "interviewTrap": "Daca configurezi o aplicatie React pe S3 fara CloudFront, la fiecare refresh pe o ruta interna (ex: /dashboard) vei primi 404 Not Found de la S3, deoarece S3 cauta fisierul fizic /dashboard/index.html. In CloudFront se configureaza Custom Error Response: redirectioneaza 404 catre /index.html cu cod 200!",
+    "keyTakeaway": "S3 stocheaza fisierele statice; CloudFront adauga HTTPS, viteza globala prin CDN si rutare SPA corecta."
   },
   {
-    id: 'cloud-35',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS SQS FIFO: Deduplicare si Message Group ID',
-    question: 'Cum garanteaza cozile SQS FIFO ordinea stricta a mesajelor si procesarea Exactly-Once fara duplicate?',
-    answer: 'O coada SQS FIFO (First-In, First-Out, cu extensia obligatorie .fifo):\n1. Garantie de Ordine Stricta: Mesajele sunt livrate exact in ordinea in care au fost trimise.\n2. Deduplicare Automata (Exactly-Once Delivery):\n- Fiecare mesaj include un MessageDeduplicationId (sau hash pe continutul mesajului).\n- Daca acelasi mesaj este trimis de mai multe ori in decurs de 5 minute, SQS accepta mesajul dar il stocheaza o singura data, eliminand duplicatele la nivel de retea!\n3. MessageGroupId (Procesare Paralela Ordonata):\n- Mesajele care au acelasi MessageGroupId sunt procesate strict secvential in ordine.\n- Insa mesaje cu MessageGroupId diferit pot fi procesate simultan in paralel de workere diferite! Astfel poti avea ordonare perfecta per candidat (MessageGroupId = candidateId), dar paralelizare pe mii de candidati simultani!',
-    codeSnippet: `// Trimitere mesaj in SQS FIFO:
-SendMessageRequest sendMsg = SendMessageRequest.builder()
-    .queueUrl("https://sqs.eu-central-1.amazonaws.com/123/jobs.fifo")
-    .messageBody("{\"action\": \"UPDATE_STATUS\"}")
-    .messageGroupId("candidate-42") # Garanteaza ordinea pentru acest candidat!
-    .messageDeduplicationId(UUID.randomUUID().toString())
-    .build();`,
-    interviewTrap: 'Cozile FIFO au o limita de throughput standard de 300 mesaje/secunda (sau 3000 cu batching); daca ai nevoie de sute de mii de mesaje pe secunda si ordinea stricta nu conteaza, foloseste cozi SQS Standard.',
-    keyTakeaway: 'SQS FIFO asigura ordinea stricta si deduplicarea mesajelor, iar MessageGroupId permite paralelizarea inteligenta per entitate.'
+    "id": "cloud-35",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon CloudFront (CDN): Cum functioneaza Edge Caching si TTL?",
+    "question": "Ce este o retea CDN (Content Delivery Network), cum functioneaza Amazon CloudFront si ce rol are parametrul TTL?",
+    "answer": "1. Ce este un CDN (Amazon CloudFront):\n   - O retea globala distribuita de servere proxy (Edge Locations) care livreaza continut web static si dinamic (HTML, CSS, JS, imagini, video) utilizatorilor cu latenta minima.\n\n2. Cum functioneaza Edge Caching:\n   - Cand un utilizator din Bucuresti cere logo.png, cererea ajunge la cea mai apropiata locatie Edge AWS.\n   - Daca fisierul este deja in cache-ul Edge (Cache Hit), este returnat instantaneu.\n   - Daca nu este in cache (Cache Miss), CloudFront il descarca din sursa originala (Origin - S3 sau server backend), il stocheaza local in cache si il livreaza clientului.\n\n3. Ce este TTL (Time To Live):\n   - Durata de timp (in secunde) pentru care un obiect ramane valid in cache-ul Edge inainte ca CloudFront sa verifice din nou la origine daca exista o versiune mai noua.\n   - Poti configura Default TTL (ex: 24 ore), Minimum TTL si Maximum TTL.",
+    "codeSnippet": "// Flux CloudFront:\n// User -> Edge Location (Cache Hit? -> Livrare rapida in 10ms)\n//                     (Cache Miss? -> Fetch de la S3 Origin -> Salvare in Cache -> Livrare)",
+    "interviewTrap": "Nu pune continut dinamic cu date confidentiale de utilizator (ex: GET /api/user-profile) in cache-ul public al CDN-ului fara antete Cache-Control: no-cache, altfel toti utilizatorii vor vedea profilul primului vizitator!",
+    "keyTakeaway": "CloudFront distribuie continutul prin sute de locatii Edge; TTL dicteaza cat timp ramane fisierul salvat in cache."
   },
   {
-    id: 'cloud-36',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Terraform Drift Detection si Sincronizarea Starii',
-    question: 'Ce este "Configuration Drift" in Terraform si cum readuci infrastructura la starea declarata din cod?',
-    answer: 'Ce este Drift-ul:\nO situatie in care starea reala a resurselor din cloud nu mai coincide cu ce este descris in codul Terraform (de exemplu, un inginer a intrat noaptea in consola AWS si a marit manual dimensiunea unui server sau a deschis un port in Security Group).\n\nDetectare si Reparare:\n1. Detectie: Comanda terraform plan contacteaza API-ul cloud-ului, compara resursele reale cu fisierul .tfstate si iti afiseaza exact diferentele nesincronizate!\n2. Remediere Automata (Reconciliere):\nRularea comenzii terraform apply va anula modificarile manuale din consola si va readuce serverul la starea declarata in codul versionat Git!\n3. Automatizare in CI/CD: Se programeaza un cron job zilnic in GitHub Actions care ruleaza terraform plan -detailed-exitcode; daca gaseste drift, alerteaza echipa pe Slack.',
-    codeSnippet: `# Comanda de verificare a drift-ului fara a aplica modificari:
-terraform plan -refresh-only`,
-    interviewTrap: 'Daca modificarea manuala din consola este buna si vrei sa o pastrezi, trebuie sa actualizezi codul .tf corespunzator inainte de apply, altfel Terraform o va suprascrie inapoi la valoarea veche!',
-    keyTakeaway: 'Terraform plan detecteaza drift-ul de configuratie si asigura ca realitatea din cloud respecta strict codul din Git.'
+    "id": "cloud-36",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "CloudFront Cache Invalidation: Cum fortezi actualizarea la deploy?",
+    "question": "Ce este o invalidare de cache (Cache Invalidation) in CloudFront si de ce este esentiala la fiecare deploy de frontend?",
+    "answer": "1. Problema la Deployment:\n   - Dupa ce faci build la aplicatia React si uploadezi noul fisier index.html in S3, utilizatorii continua sa vada vechea versiune a site-ului deoarece serverele Edge din CloudFront au fisierul vechi salvat in cache conform valorii TTL (ex: inca 24 de ore).\n\n2. Solutia: Cache Invalidation:\n   - O comanda trimisa catre distributia CloudFront prin care ii ordoni sa stearga imediat copia din cache a anumitor fisiere de pe toate cele peste 400 de Edge Locations din lume.\n   - La urmatoarea cerere, serverele Edge vor descarca obligatoriu noua versiune proaspata direct din S3.\n\n3. Best Practice: Hash-uri in numele fisierelor (Cache Busting):\n   - Fisierele JS si CSS au hash-uri unice generate de Vite/Webpack (ex: main.a1b2c3d4.js). Pentru ele nu e nevoie de invalidare!\n   - Invalidezi DOAR fisierul index.html (invalidation path: \"/index.html\" sau \"/*\").",
+    "codeSnippet": "# Comanda de invalidare lansata in pipeline-ul de CI/CD dupa deploy S3:\naws cloudfront create-invalidation \\\n  --distribution-id E1A2B3C4D5E6F7 \\\n  --paths \"/index.html\"",
+    "interviewTrap": "Invalidarea intregii distributii cu \"/*\" la fiecare minut genereaza costuri suplimentare daca depasesti cele 1.000 de cai gratuite lunare; este mai eficient sa invalidezi doar \"/index.html\".",
+    "keyTakeaway": "Cache Invalidation forteaza CDN-ul sa renunte la fisierele vechi; se foloseste dupa fiecare release pe fisierul index.html."
   },
   {
-    id: 'cloud-37',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS Karpenter: Autoscaling Modern de Noduri in Kubernetes',
-    question: 'De ce a inlocuit Karpenter traditionalul Cluster Autoscaler in gestionarea nodurilor Kubernetes pe AWS EKS?',
-    answer: 'Limitari ale Vechiului Cluster Autoscaler (CA):\n1. Functioneaza rigid prin intermediul AWS Auto Scaling Groups (ASG). Daca ai nevoie de tipuri diferite de instante (CPU mare, GPU, memorie mare), trebuie sa configurezi si sa intretii zeci de grupuri ASG diferite.\n2. Viteza lenta: Poate dura 3-5 minute pana cand o noua masina virtuala EC2 este pornita si integrata in cluster.\n\nAvantajele Karpenter (Creat de AWS & CNCF):\n1. Group-less Autoscaling: Nu foloseste Auto Scaling Groups deloc! Comunica direct cu flota EC2 din AWS.\n2. Selectie Inteligenta: Priveste specificatiile exacte ale pod-ului aflat in Pending si comanda direct instanta EC2 optima si cea mai ieftina disponibila in acea secunda (inclusiv Spot).\n3. Pornire Fulger: Adauga noduri noi in cluster in sub 30-45 de secunde!\n4. Consolidare Automata: Cand traficul scade, Karpenter muta activ pod-urile pe mai putine noduri si opreste masinile nefolosite pentru a reduce factura la minim.',
-    codeSnippet: `# Karpenter NodePool manifest:
-apiVersion: karpenter.sh/v1beta1
-kind: NodePool
-metadata:
-  name: default
-spec:
-  template:
-    spec:
-      requirements:
-        - key: "karpenter.sh/capacity-type"
-          operator: In
-          values: ["spot", "on-demand"]
-        - key: "kubernetes.io/arch"
-          operator: In
-          values: ["arm64", "amd64"]
-  disruption:
-    consolidationPolicy: WhenUnderutilized`,
-    interviewTrap: 'Karpenter functioneaza direct pe nivelul EKS; el asigura o reducere masiva a costurilor prin consolidarea proactiva a nodurilor subutilizate.',
-    keyTakeaway: 'Karpenter ofera autoscaling ultra-rapid si optimizare de costuri pentru nodurile Kubernetes fara complexitatea grupurilor ASG.'
+    "id": "cloud-37",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "EBS (Elastic Block Store) vs EFS (Elastic File System)",
+    "question": "Care este diferenta arhitecturala fundamentala dintre un volum Amazon EBS si un sistem de fisiere Amazon EFS?",
+    "answer": "1. Amazon EBS (Elastic Block Store - Block Storage):\n   - Actioneaza ca un \"Hard Disk / SSD virtual\" atasat unei instante EC2.\n   - Nivel de bloc de date (raw block volume), formatat cu un sistem de fisiere (ext4, NTFS, XFS).\n   - Limitare Critica: Un volum EBS standard este blocat intr-un SINGUR Availability Zone (AZ) si poate fi atasat la o SINGURA instanta EC2 in acelasi timp (Single-AZ, Single-Attach).\n   - Ideal pentru: discul de boot al sistemului de operare, baze de date (PostgreSQL, MySQL) care cer viteza maxima si latenta sub milisecunda.\n\n2. Amazon EFS (Elastic File System - Managed NFS File Storage):\n   - Sistem de fisiere de retea complet gestionat (Network File System - NFSv4).\n   - Multi-AZ si Multi-Attach: Poate fi montat simultan de SUTE de instante EC2 sau containere ECS din mai multe zone de disponibilitate diferite!\n   - Scaleaza automat capacitatea de stocare (creste si scade automat fara provisioning prealabil).\n   - Ideal pentru: fisiere partajate intre servere web (upload-uri WordPress, shared assets).",
+    "codeSnippet": "// Comparatie rapida:\n// EBS = Stick USB / SSD intern (atasat la un singur server dintr-un singur AZ)\n// EFS = Share de retea de birou (NFS accesat simultan de 100 de servere din AZ-uri diferite)",
+    "interviewTrap": "Daca ai nevoie sa muti un volum EBS intr-un alt Availability Zone, nu il poti atasa direct! Trebuie sa faci un EBS Snapshot si sa creezi un volum nou din acel snapshot in noul AZ.",
+    "keyTakeaway": "EBS este un disc rapid dedicat unei singure masini dintr-un singur AZ; EFS este un sistem de fisiere partajat multi-AZ intre multe masini."
   },
   {
-    id: 'cloud-38',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Criptare in Tranzit (TLS) si in Repaus (At-Rest) in Cloud',
-    question: 'Care sunt tehnicile standard de criptare a datelor in tranzit si a datelor in repaus pentru conformitate enterprise?',
-    answer: '1. Criptare in Tranzit (In-Transit / In-Flight):\n- Protejeaza datele care calatoresc prin retea impotriva interceptarilor (Man-in-the-Middle).\n- Implementare:\n  - Conexiuni HTTPS pe portul 443 cu certificate TLS 1.3 gestionate automat de AWS Certificate Manager (ACM).\n  - Conexiuni JDBC securizate catre baza de date (sslmode=require).\n  - mTLS (Mutual TLS) intre microservicii prin Service Mesh.\n\n2. Criptare in Repaus (At-Rest):\n- Protejeaza datele stocate fizic pe discurile din datacenter impotriva sustragerii fizice a mediilor de stocare.\n- Implementare:\n  - Criptare transparenta pe discuri AWS EBS folosind chei KMS (AES-256).\n  - Criptare pe bucket-uri S3 (Server-Side Encryption SSE-KMS sau SSE-S3).\n  - Criptare transparenta de baza de date (TDE) pe instantele RDS PostgreSQL.',
-    codeSnippet: `# Fortare conexiune SSL/TLS catre PostgreSQL in application.yml:
-spring:
-  datasource:
-    url: jdbc:postgresql://db.ats.internal:5432/ats_db?sslmode=require`,
-    interviewTrap: 'Criptarea in repaus protejeaza datele de furtul fizic al discului; odata ce aplicatia se autentifica in DB, datele sunt decriptate transparent, deci aplicatia are nevoie in continuare de controale stricte de acces.',
-    keyTakeaway: 'Criptarea TLS in tranzit si AES-256 cu KMS in repaus sunt cerintele obligatorii pentru conformitate ISO 27001 si SOC 2.'
+    "id": "cloud-38",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Tipuri de volume EBS: GP3 (General Purpose) vs IO2 (Provisioned IOPS)",
+    "question": "Ce este un volum EBS de tip GP3 si cand este justificat sa alegi un volum scump IO2 (Provisioned IOPS)?",
+    "answer": "1. EBS General Purpose SSD (gp3):\n   - Tipul implicit si cel mai recomandat pentru marea majoritate a aplicatiilor si bazelor de date standard.\n   - Ofera o performanta de baza inclusa excelenta: 3.000 IOPS si 125 MB/s throughput, indiferent de dimensiunea volumului stocat!\n   - Iti permite sa cumperi IOPS suplimentar sau throughput independent de marimea discului (spre deosebire de vechiul gp2).\n\n2. Provisioned IOPS SSD (io2 / io2 Block Express):\n   - Conceput pentru aplicatii critice de business cu cerinte extreme de I/O si durabilitate de 99.999%.\n   - Ofera pana la 256.000 IOPS si latenta garantata de sub o milisecunda (sub-millisecond).\n   - Este mult mai scump decat gp3.\n   - Cand este justificat: Baze de date relationale gigantice de productie (Oracle, Microsoft SQL Server, cluster PostgreSQL cu tranzactii masive financiare).",
+    "codeSnippet": "# Exemplu Terraform pentru volum gp3 de 100 GB:\nresource \"aws_ebs_volume\" \"app_disk\" {\n  availability_zone = \"eu-central-1a\"\n  size              = 100\n  type              = \"gp3\"\n  iops              = 3000\n  throughput        = 125\n}",
+    "interviewTrap": "Multe proiecte irosesc bugete imense punand io2 pe medii de test sau baze de date cu trafic mic. GP3 acopera 95% din nevoile oricarei aplicatii moderne la o fractiune din pret!",
+    "keyTakeaway": "GP3 este standardul rentabil pentru majoritatea sarcinilor; IO2 se foloseste strict pentru baze de date cu cerinte extreme de tranzactii I/O."
   },
   {
-    id: 'cloud-39',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS App Runner: Containere Fara Administrare de Infrastructura',
-    question: 'Ce este AWS App Runner si de ce este cea mai rapida cale de a duce un container Spring Boot sau Node.js in productie pe AWS?',
-    answer: 'Pentru echipe care nu doresc complexitatea de retea a unui VPC, a unui Load Balancer si a unui cluster Kubernetes:\n\nCe ofera AWS App Runner:\n1. Zero Infrastructura: Tu oferi doar imaginea ta Docker din ECR (sau legi repository-ul Git).\n2. Totul Inclus Automat: App Runner configureaza automat:\n   - Load Balancer de nivel inalt\n   - Certificat SSL/TLS cu domeniu custom\n   - Auto-scaling automat pe baza numarului de conexiuni concurente\n   - Health checks si rolling deployments la fiecare nou push de imagine.\n3. Model Simplu de Cost: Platesti doar pentru memoria RAM mentinuta la cald si pentru CPU-ul consumat activ in timpul procesarii cererilor.',
-    codeSnippet: `# Resursa Terraform pentru App Runner:
-resource "aws_apprunner_service" "backend" {
-  service_name = "ats-backend"
-  source_configuration {
-    image_repository {
-      image_identifier      = "123456789.dkr.ecr.eu-central-1.amazonaws.com/ats-backend:v1"
-      image_repository_type = "ECR"
-    }
-  }
-}`,
-    interviewTrap: 'App Runner este ideal pentru API-uri web si microservicii stateless; daca ai nevoie de retele private complexe cu zeci de subnet-uri specifice, ECS Fargate ofera un control de retea mai granular.',
-    keyTakeaway: 'AWS App Runner ofera simplitatea PaaS (similar cu Heroku sau Render) direct pe infrastructura scalabila enterprise a AWS.'
+    "id": "cloud-39",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "EBS Snapshots: Cum functioneaza copiile incrementale in S3?",
+    "question": "Cum functioneaza copiile de rezerva (Snapshots) pentru volumele EBS si unde sunt ele salvate fizic?",
+    "answer": "1. Ce este un EBS Snapshot:\n   - O copie de rezerva \"point-in-time\" a starii unui volum EBS.\n   - Fizic, AWS stocheaza toate snapshot-urile EBS in Amazon S3, beneficiind de durabilitatea de 11 de 9 a lui S3 (desi nu le vezi direct ca fisiere in bucket-urile tale de utilizator).\n\n2. Functionare Incrementala (Economie de spatiu si cost):\n   - Primul snapshot (Initial): Salveaza toate blocurile de date utilizate de pe disc (Full Backup).\n   - Snapshot-urile urmatoare (Incrementale): Salveaza STRICT blocurile care s-au modificat de la ultimul snapshot efectuat!\n   - Chiar daca sunt incrementale, procesul de stergere este inteligent: daca stergi un snapshot intermediar, AWS consolideaza automat datele astfel incat celelalte snapshot-uri raman complete si functionale pentru restaurare.\n\n3. Utilizari Majore:\n   - Disaster recovery, clonarea discurilor pentru medii de staging sau migrarea instantelor intre Availability Zones diferite.",
+    "codeSnippet": "// EBS Snapshot Lifecycle:\n// Snapshot 1 (Ziua 1): 10 GB date unice salvate in S3\n// Snapshot 2 (Ziua 2): Doar 2 GB modificati salvati (facturat doar pentru 2 GB in plus!)",
+    "interviewTrap": "Daca faci un snapshot in timp ce o baza de date scrie masiv pe disc fara a opri I/O-ul (sync/flush to disk), snapshot-ul poate contine date incomplete in cache-ul sistemului de operare (crash-consistent). Se recomanda oprirea momentana a scrierilor sau utilizarea AWS Backup.",
+    "keyTakeaway": "EBS Snapshots sunt stocate incremental in S3; fiecare snapshot pastreaza doar datele modificate, optimizand costurile."
   },
   {
-    id: 'cloud-40',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS S3 Bucket Policies vs IAM Policies: Cum se Evalueaza Permisiunile',
-    question: 'Cum decide AWS daca o cerere catre un bucket S3 este autorizata atunci cand exista atat o IAM Policy catre utilizator, cat si o S3 Bucket Policy?',
-    answer: 'Logica de Evaluare a Politicilor in AWS (Least Privilege):\n1. Implicit Deny (Refuz Implicit): Toate cererile sunt respinse in mod implicit.\n2. Verificare Explicit Deny: Daca EXISTA MACAR UN SINGUR "DENY" in oricare dintre politici (IAM Policy, Bucket Policy, SCP sau Boundary), cererea este RESPINSA DEFINITIV! Un Deny explicit bate intotdeauna orice Allow.\n3. Pentru ca o cerere sa fie permisa:\nTrebuie sa existe cel putin un "ALLOW" explicit si niciun "DENY".\n\nDiferenta de Atasare:\n- IAM Policy: Este atasata la Identitate (Utilizator, Grup, Role): "Ce are voie sa faca Andrei".\n- S3 Bucket Policy: Este o Resource-Based Policy atasata direct la Resursa (la Bucket): "Cine are voie sa intre in acest bucket si de unde".',
-    codeSnippet: `// Regula Suprema de Aur a Securitatii AWS:
-// Explicit Deny > Explicit Allow > Default Deny`,
-    interviewTrap: 'Chiar daca un utilizator are AdministratorAccess in IAM, daca pe bucket-ul S3 este configurata o Bucket Policy cu un bloc explicit "Deny", utilizatorul va fi blocat!',
-    keyTakeaway: 'Un Explicit Deny anuleaza orice permisiune anterioara in ierarhia de evaluare a politicilor AWS.'
+    "id": "cloud-40",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "S3 Block Public Access si prevenirea leak-urilor de securitate",
+    "question": "Ce este functionalitatea \"S3 Block Public Access\" si de ce este activata implicit pe toate bucket-urile noi?",
+    "answer": "1. Problema Istorica:\n   - Mii de companii din intreaga lume au suferit brese uriase de securitate (milioane de date medicale, parole si documente private scurse pe internet) pentru ca dezvoltatorii au setat din greseala permisiuni publice pe bucket-urile S3.\n\n2. Ce este S3 Block Public Access:\n   - Un comutator de securitate centralizat (\"Master Kill Switch\") care suprascrie orice politica gresita de bucket sau ACL permisiv.\n   - Vine activat implicit pe absolut toate bucket-urile create in AWS din 2023 incoace.\n\n3. Cele 4 Nivele de Protectie:\n   - Blocheaza crearea de noi liste de control al accesului (ACL) publice.\n   - Ignora orice ACL-uri publice existente.\n   - Blocheaza setarea de politici de bucket publice noi.\n   - Restrange accesul public general chiar daca o politica de bucket a fost creata public.",
+    "codeSnippet": "# In Terraform, pastreaza intotdeauna Block Public Access activat:\nresource \"aws_s3_bucket_public_access_block\" \"secure_block\" {\n  bucket = aws_s3_bucket.my_secure_bucket.id\n\n  block_public_acls       = true\n  block_public_policy     = true\n  ignore_public_acls      = true\n  restrict_public_buckets = true\n}",
+    "interviewTrap": "Nu dezactiva niciodata S3 Block Public Access pentru a servi fisiere utilizatorilor frontend! Foloseste CloudFront cu Origin Access Control (OAC) sau Pre-signed URLs, pastrand bucket-ul 100% privat.",
+    "keyTakeaway": "S3 Block Public Access este scutul de baza impotriva scurgerilor de date in cloud; trebuie mentinut activ pe toate bucket-urile."
   },
   {
-    id: 'cloud-41',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'Amazon Managed Streaming for Apache Kafka (AWS MSK)',
-    question: 'Ce beneficii aduce un cluster gestionat Amazon MSK comparativ cu instalarea manuala de Apache Kafka pe instante EC2?',
-    answer: 'Instalarea si operarea manuala a unui cluster Kafka este una dintre cele mai dificile sarcini de infrastructura (management de discuri, brokeri, Zookeeper/KRaft, patch-uri de securitate, rebalansare de partitii).\n\nCe face Amazon MSK in mod automat:\n1. Managed Infrastructure: Creeaza si administreaza brokerii Kafka pe 2 sau 3 Zone de Disponibilitate diferite.\n2. Inlocuire Automata de Noduri (Self-Healing): Daca un broker Kafka moare hardware, MSK il inlocuieste automat cu un nod nou, atasandu-i acelasi disc de date EBS cu zero pierderi de mesaje!\n3. Securitate Nativa: Criptare automata in tranzit (TLS) si in repaus (KMS), autentificare securizata prin IAM (fara parole text in configuratii).\n4. Integrare Serverless (MSK Serverless): Scaleaza automat capacitatea de streaming pe baza traficului fara a gestiona deloc noduri.',
-    codeSnippet: `// Conectare Spring Boot la Amazon MSK cu autentificare IAM sigura:
-spring.kafka.properties.security.protocol=SASL_SSL
-spring.kafka.properties.sasl.mechanism=AWS_MSK_IAM
-spring.kafka.properties.sasl.jaas.config=software.amazon.msk.auth.iam.IAMLoginModule required;`,
-    interviewTrap: 'Amazon MSK gestioneaza brokerii de Kafka, dar dimensionarea partitiilor pe topicuri si configurarea consumatorilor raman in continuare in responsabilitatea arhitectului de aplicatie.',
-    keyTakeaway: 'Amazon MSK elimina complexitatea mentenantei hardware a clusterului Kafka, oferind inalta disponibilitate pe multiple zone.'
+    "id": "cloud-41",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon RDS: Ce operatiuni de mentenanta preia AWS?",
+    "question": "Ce este Amazon RDS (Relational Database Service) si care sunt avantajele sale fata de instalarea manuala a unui PostgreSQL pe un server EC2?",
+    "answer": "1. Ce este Amazon RDS:\n   - Un serviciu de baze de date relationale complet gestionat (Managed DB) compatibil cu PostgreSQL, MySQL, MariaDB, Oracle si SQL Server.\n\n2. Ce sarcini de mentenanta preia AWS in RDS:\n   - Aprovizionarea si configurarea automata a hardware-ului si a sistemului de operare.\n   - Patch-uri automate de securitate pentru OS si motorul de baza de date in ferestre prestabilite de mentenanta.\n   - Backup-uri zilnice automate si recuperare la orice secunda din ultimele 35 de zile (Point-in-Time Recovery - PITR).\n   - High Availability cu un singur click prin Multi-AZ (replicare sincrona automata).\n   - Monitorizare integrata a metricilor hardware (CPU, RAM, Disk IOPS, conexiuni active) in CloudWatch.\n\n3. Cand instalezi DB pe EC2 manual:\n   - Doar daca ai nevoie de acces root la sistemul de operare de sub baza de date sau plugin-uri exotice nesuportate de RDS.",
+    "codeSnippet": "// Comparatie efort:\n// DB pe EC2:  Configurezi backup manual, replici, patch-uri OS, failover de mana (zile de munca)\n// Amazon RDS: Bifezi Multi-AZ + Automated Backups = 0 griji operationale",
+    "interviewTrap": "In Amazon RDS NU ai acces SSH pe serverul gazda si nu ai utilizator de root la sistemul de operare Linux; tot managementul se face prin API-ul AWS si clientul SQL obisnuit.",
+    "keyTakeaway": "RDS elimina povara administrativa a backup-urilor, actualizarilor si failover-ului bazei de date relationale."
   },
   {
-    id: 'cloud-42',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS Backup: Politici Centralizate de Protectie a Datelor',
-    question: 'Cum automatizezi si centralizezi crearea si copierea de copii de siguranta intre regiuni folosind AWS Backup?',
-    answer: 'In trecut, fiecare serviciu AWS avea propriul mecanism disparat de backup (RDS snapshots, EBS snapshots, DynamoDB on-demand backups, EFS backup scripts).\n\nAWS Backup ofera o consola unica centralizata:\n1. Backup Plans: Reguli bazate pe politici (ex: "ruleaza backup in fiecare noapte la ora 01:00, pastreaza datele timp de 30 de zile").\n2. Asignare Automata prin Taguri: Adaugi eticheta BackupPlan = "Daily" pe orice resursa (un disc EBS, o baza de date RDS, un cluster EFS), iar AWS Backup o include automat in planul de backup!\n3. Cross-Region & Cross-Account Copy: Copiaza automat copiile de siguranta intr-o regiune geografica secundara sau intr-un cont AWS de arhivare izolat (protectie esentiala impotriva atacurilor de tip Ransomware care sterg contul principal).',
-    codeSnippet: `# Resursa Terraform AWS Backup Plan:
-resource "aws_backup_plan" "daily_plan" {
-  name = "daily-production-backup"
-
-  rule {
-    rule_name         = "daily-midnight"
-    target_vault_name = "production-vault"
-    schedule          = "cron(0 1 * * ? *)"
-
-    lifecycle {
-      delete_after = 30 # Stergere automata dupa 30 de zile
-    }
-  }
-}`,
-    interviewTrap: 'Daca nu protejezi seiful de backup cu AWS Backup Vault Lock (modul imutabil WORM - Write Once, Read Many), un atacator care obtine drepturi de admin ar putea sterge atat baza de date cat si backup-urile!',
-    keyTakeaway: 'AWS Backup centralizeaza strategiile de salvare a datelor si asigura protectie impotriva dezastrelor prin copiere cross-region.'
+    "id": "cloud-42",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Amazon RDS Multi-AZ Deployment: High Availability si Failover automat",
+    "question": "Cum functioneaza o configuratie Amazon RDS Multi-AZ si ce se intampla in mod automat in timpul unui dezastru hardware in data center?",
+    "answer": "1. Arhitectura Multi-AZ:\n   - Creeaza o instanta primara (Primary DB) intr-un Availability Zone (ex: AZ-a) si o instanta secundara pasiva (Standby Replica) intr-un alt Availability Zone fizic diferit (ex: AZ-b).\n   - Replicare Sincrona: Fiecare tranzactie (INSERT/UPDATE/COMMIT) este scrisa sincron pe ambele instante inainte ca operatiunea sa fie confirmata aplicatiei. Zero pierderi de date!\n\n2. Failover Automat (High Availability):\n   - Daca instanta primara pica (pana de curent, defectiune de disc pe AZ-a):\n     * RDS detecteaza automat defectiunea in cateva zeci de secunde.\n     * Modifica inregistrarea DNS a endpoint-ului bazei de date (CNAME) sa pointeze catre instanta de Standby din AZ-b.\n     * Instanta din AZ-b devine noua instanta Primara.\n     * Aplicatia backend nu trebuie sa schimbe niciun URL de conexiune; se reconecteaza automat la acelasi CNAME!",
+    "codeSnippet": "// Multi-AZ Failover:\n// 1. Primary DB (AZ-a) [CRASH]\n// 2. AWS CNAME redirectat automat catre Standby (AZ-b)\n// 3. Backend reconectat in 60-120 secunde fara interventie umana!",
+    "interviewTrap": "Instanta de Standby dintr-un Multi-AZ clasic este PASIVA! Ea NU poate fi folosita pentru a rula query-uri de SELECT pentru a usura citirile; rolul ei este strict de rezerva in caz de failover. Pentru scalarea citirilor se folosesc Read Replicas!",
+    "keyTakeaway": "RDS Multi-AZ asigura redundanta fizica si failover automat sincron prin redirectionare DNS in caz de dezastru hardware."
   },
   {
-    id: 'cloud-43',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS Cost Explorer si Bugete Automate cu Alerte',
-    question: 'Cum configurezi un buget AWS (AWS Budgets) cu alerte automate pe Slack/Email pentru a preveni facturi surpriza de mii de dolari?',
-    answer: 'Una dintre cele mai mari spaime ale dezvoltatorilor cloud este o factura neasteptata generata de un loop infinit sau o resursa uitata pornita.\n\nProtectia prin AWS Budgets:\n1. Definirea Bugetului: Setezi un buget lunar fix (ex: 200$/luna pentru contul de dezvoltare).\n2. Alerte Proactive Reale si Forecasted:\n   - Alerta pe Cost Real: Primesti alerta cand costul atinge 80% din buget (160$).\n   - Alerta pe Cost Prognozat (Forecasted): Primesti alerta daca algoritmii AWS calculeaza ca la ritmul curent de consum vei depasi bugetul pana la sfarsitul lunii!\n3. Actiuni Automate: Un buget poate declansa o politica IAM sau o functie Lambda care opreste automat masinile virtuale sau reduce capacitatile de calcul in caz de urgenta financiara.',
-    codeSnippet: `# Configurare AWS Budget in Terraform:
-resource "aws_budgets_budget" "monthly_limit" {
-  name         = "monthly-cost-budget"
-  budget_type  = "COST"
-  limit_amount = "250"
-  limit_unit   = "USD"
-  time_unit    = "MONTHLY"
-
-  notification {
-    comparison_operator        = "GREATER_THAN"
-    threshold                  = 80
-    threshold_type             = "PERCENTAGE"
-    notification_type          = "ACTUAL"
-    subscriber_email_addresses = ["team-alerts@ats.com"]
-  }
-}`,
-    interviewTrap: 'Alertele de cost prognozat (Forecasted) sunt mult mai utile decat cele pe cost real; ele te alerteaza din a treia zi a lunii ca o resursa consuma prea mult, in loc sa afli in ultima saptamana!',
-    keyTakeaway: 'AWS Budgets cu alerte forecast previne facturile neasteptate si protejeaza bugetul proiectului.'
+    "id": "cloud-43",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Amazon RDS Read Replicas: Scalarea performantei la citire",
+    "question": "Ce este un Read Replica in Amazon RDS, cum difera de Multi-AZ si cum optimizeaza aplicatiile cu trafic mare de citire?",
+    "answer": "1. Ce este un Read Replica:\n   - O copie a bazei de date primare creata special pentru a prelua interogarile de citire (SELECT-uri grele, rapoarte analitice, cautari).\n   - Poti crea pana la 5 sau 15 replici (in functie de motor), in aceeasi zona, in zone diferite sau chiar in regiuni diferite (Cross-Region Read Replica).\n\n2. Replicare Asincrona:\n   - Modificarile din baza primara sunt propagate ASINCRON catre replicile de citire.\n   - Consecinta: Exista o latenta infima (Replication Lag, de obicei cativa milisecunde). Daca un utilizator salveaza o postare si citeste instant replica, e posibil sa existe o intarziere infima (consistenta eventuala).\n\n3. Endpoint Separat:\n   - Fiecare Read Replica primeste propriul sau URL DNS separat.\n   - In aplicatie (ex: Spring Boot cu RoutingDataSource), configurezi: scrierile (INSERT/UPDATE/DELETE) merg la Primary Endpoint; citirile (SELECT) merg la Replica Endpoint.",
+    "codeSnippet": "// Impartire trafic in aplicatie:\n// Primary DB Endpoint (Write-Only):   db-prod.c123.eu-central-1.rds.amazonaws.com\n// Read Replica Endpoint (Read-Only): db-prod-replica.c123.eu-central-1.rds.amazonaws.com",
+    "interviewTrap": "Multi-AZ este pentru High Availability si Disaster Recovery (sincron, standby pasiv); Read Replicas sunt pentru Performanta si Scalare la Citire (asincron, endpoint activ accesibil). Nu le confunda!",
+    "keyTakeaway": "Read Replicas degreveaza baza de date primara de SELECT-uri prin replicare asincrona si endpoint-uri dedicate."
   },
   {
-    id: 'cloud-44',
-    category: 'CLOUD',
-    difficulty: 'DIFICIL',
-    title: 'Terraform Dynamic Blocks: Cand si Cum le Folosesti',
-    question: 'Ce sunt blocurile dinamice (dynamic blocks) in Terraform si cum le folosesti pentru a evita repetarea blocurilor imbricate?',
-    answer: 'In Terraform, anumite resurse au blocuri imbricate repetitive (precum blocurile ingress/egress dintr-un Security Group sau regulile de rutare dintr-un Ingress).\n\nCe face un Dynamic Block:\nPermite iterarea peste o lista sau o harta de configurari (folosind for_each) pentru a genera dinamic blocurile imbricate in interiorul unei singure definitii de resursa, eliminand duplicarea codului!',
-    codeSnippet: `variable "service_ports" {
-  default = [8080, 8081, 9090]
-}
-
-resource "aws_security_group" "dynamic_sg" {
-  name = "app-security-group"
-
-  dynamic "ingress" {
-    for_each = var.service_ports
-    content {
-      from_port   = ingress.value
-      to_port     = ingress.value
-      protocol    = "tcp"
-      cidr_blocks = ["10.0.0.0/16"]
-    }
-  }
-}`,
-    interviewTrap: 'Nu folosi dynamic blocks in mod excesiv pentru orice parametru; codul poate deveni greu de citit si depanat; foloseste-le doar cand numarul blocurilor imbricate este cu adevarat variabil.',
-    keyTakeaway: 'Dynamic blocks genereaza blocuri imbricate repetitive dintr-o lista de date, pastrand codul Terraform curat si usor de intretinut.'
+    "id": "cloud-44",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Amazon RDS vs Amazon Aurora: De ce Aurora este de 5x mai rapida?",
+    "question": "Ce este Amazon Aurora si ce inovatie arhitecturala aduce la nivelul stocarii fata de un RDS PostgreSQL clasic?",
+    "answer": "1. Ce este Amazon Aurora:\n   - Motor de baza de date relationala proprietar AWS, 100% compatibil la nivel de protocol cu PostgreSQL si MySQL.\n   - Ofera o performanta de pana la 5x mai mare fata de MySQL standard si de pana la 3x mai mare fata de PostgreSQL standard pe acelasi hardware.\n\n2. Inovatia Arhitecturala (Decuplarea calculului de stocare):\n   - In RDS traditional, masina EC2 contine si CPU/RAM si discul EBS atasat.\n   - In Aurora, stratul de calcul (Compute) este complet decuplat de stratul de stocare (Storage Fleet distribuita).\n\n3. Stratul de stocare Aurora:\n   - Datele sunt replicate automat in 6 copii distribuite in 3 Availability Zones diferite.\n   - Aurora are nevoie de acordul a doar 4 noduri din 6 pentru a confirma o scriere (Quorum Write) si 3 din 6 pentru citire, continuand sa functioneze chiar daca un intreg AZ devine indisponibil plus inca un nod picat!\n   - Stocarea este auto-scalabila: creste automat de la 10 GB pana la 128 TB fara downtime.",
+    "codeSnippet": "// Arhitectura Aurora:\n// Compute Layer: [Primary Writer Instance]    [Read Replica 1]    [Read Replica 2]\n//                                   \\               |               /\n// Shared Storage Layer:       [Aurora Shared Storage - 6 Copii pe 3 AZ-uri]",
+    "interviewTrap": "In Aurora, Read Replicas folosesc acelasi disc comun de stocare ca si instanta Writer! Nu exista duplicare fizica a discurilor si latenta de replicare este adesea sub 10 milisecunde.",
+    "keyTakeaway": "Aurora decupleaza compute-ul de disc si distribuie 6 copii pe 3 AZ-uri, oferind viteza si disponibilitate superioara."
   },
   {
-    id: 'cloud-45',
-    category: 'CLOUD',
-    difficulty: 'MEDIU',
-    title: 'AWS Lambda Concurrency: Reserved vs Provisioned Concurrency',
-    question: 'Care este diferenta dintre Reserved Concurrency si Provisioned Concurrency in scalarea functiilor AWS Lambda?',
-    answer: 'Fiecare cont AWS are o limita implicita de 1.000 de executii concurente de functii Lambda partajata intre toate functiile din acea regiune.\n\n1. Unreserved Concurrency (Partajata):\nToate functiile concureaza pentru aceleasi 1.000 de sloturi. Daca o functie secundara de procesare imagini consuma toate cele 1.000 de executii, functia ta critica de plati va primi erori de Throttling (HTTP 429)!\n\n2. Reserved Concurrency (Garantare si Plafonare):\n- Garanteaza un numar fix de sloturi concurente exclusiv pentru functia ta (ex: 200).\n- Nicio alta functie nu poate atinge aceste 200 de sloturi.\n- Actioneaza si ca o LIMITA maxima: functia nu poate depasi niciodata 200 de executii simultane (util pentru a nu coplesi o baza de date din spate cu prea multe conexiuni!).\n\n3. Provisioned Concurrency (Instante Pre-Incalzite):\n- Initializeaza si mentine un numar configurat de instante Lambda gata de executie in memorie continua, eliminand complet orice Cold Start!',
-    codeSnippet: `# Reserved Concurrency pentru protectia bazei de date in Terraform:
-resource "aws_lambda_function" "db_writer" {
-  function_name                  = "ats-db-writer"
-  reserved_concurrent_executions = 50 # Maxim 50 conexiuni concurente catre DB!
-}`,
-    interviewTrap: 'Daca setezi Reserved Concurrency pe 0, opresti complet executia functiei (comutator instantaneu de oprire de urgenta in caz de atac sau bug).',
-    keyTakeaway: 'Reserved Concurrency plafoneaza si garanteaza capacitatea; Provisioned Concurrency elimina cold start-ul.'
+    "id": "cloud-45",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Aurora Serverless v2: Cum scaleaza automat resursele de baza de date?",
+    "question": "Ce este Amazon Aurora Serverless v2 si cum ajusteaza resursele CPU si RAM in fractiuni de secunda?",
+    "answer": "1. Ce este Aurora Serverless v2:\n   - O configuratie on-demand de autoscaling pentru Amazon Aurora (PostgreSQL / MySQL) care ajusteaza automat capacitatea hardware in functie de cererea reala a aplicatiei.\n\n2. Cum masoara resursele (ACU - Aurora Capacity Units):\n   - 1 ACU corespunde aproximativ la 2 GB de RAM si puterea de calcul CPU asociata.\n   - Poti configura o plaja de scalare, de exemplu: Min ACU = 0.5 (~1 GB RAM) si Max ACU = 16 (~32 GB RAM).\n\n3. Scalare instantanee in milisecunde:\n   - Spre deosebire de Aurora Serverless v1 (care astepta ferestre calme fara conexiuni), v2 scaleaza vertical memoria si CPU-ul instantaneu, chiar in timp ce proceseaza tranzactii active, fara sa rupa conexiunile clientilor!\n\n4. Cand este ideala:\n   - Aplicatii de comert (varfuri de Black Friday), medii de dezvoltare/testare (consum minim noaptea) si aplicatii SaaS multi-tenant.",
+    "codeSnippet": "# Configurare Terraform Aurora Serverless v2:\nresource \"aws_rds_cluster\" \"serverless_db\" {\n  cluster_identifier = \"aurora-serverless-prod\"\n  engine             = \"aurora-postgresql\"\n  engine_mode        = \"provisioned\"\n\n  serverlessv2_scaling_configuration {\n    min_capacity = 0.5\n    max_capacity = 16.0\n  }\n}",
+    "interviewTrap": "Daca setezi Min ACU la 0.5, costul minim lunar va fi de aproximativ $40-$50/luna deoarece instanta nu se opreste complet la 0 (pentru a pastra conexiunile active si memoria warm). Nu este complet gratuita cand e idle!",
+    "keyTakeaway": "Aurora Serverless v2 scaleaza resursele ACU in milisecunde fara intreruperea conexiunilor, platind strict capacitatea consumata."
+  },
+  {
+    "id": "cloud-46",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Ce este Amazon DynamoDB si cand alegi o baza NoSQL in cloud?",
+    "question": "Ce este Amazon DynamoDB si in ce conditii alegi o baza de date NoSQL Key-Value in loc de o baza relationala SQL?",
+    "answer": "1. Ce este Amazon DynamoDB:\n   - O baza de date NoSQL complet gestionata, serverless, de tip Key-Value si Document.\n   - Ofera performanta ultra-rapida de nivel de o singura milisecunda (single-digit millisecond latency) la orice scara de date (de la 10 KB la sute de Terabytes).\n   - Nu administrezi servere, clustere, replici sau versiuni de software.\n\n2. Cand alegi DynamoDB (NoSQL):\n   - Ai nevoie de latenta predictibila sub 10 ms la volume masive de trafic (milioane de cereri pe secunda).\n   - Schema datelor este flexibila sau simpla (sesiuni de utilizator, carucioare de cumparaturi, telemetrie IoT, metadata de autentificare).\n   - Interogarile sunt simple si cunoscute in avans (acces direct dupa Primary Key).\n\n3. Cand ramai la SQL Relational (PostgreSQL/RDS):\n   - Ai nevoie de tranzactii complexe multi-tabel, interogari analitice ad-hoc cu JOIN-uri si clauze GROUP BY frecvente.",
+    "codeSnippet": "// Salvare element in DynamoDB prin AWS SDK:\nawait dynamoClient.send(new PutItemCommand({\n  TableName: \"UserSessions\",\n  Item: {\n    sessionId: { S: \"sess-987654\" },\n    userId: { S: \"user-123\" },\n    expiresAt: { N: \"1727889600\" }\n  }\n}));",
+    "interviewTrap": "In DynamoDB nu exista comanda SQL de JOIN! Daca incerci sa faci operatiuni de tip JOIN in cod facand 10 apeluri succesive in tabele diferite, vei irosi latenta si costuri imense.",
+    "keyTakeaway": "DynamoDB ofera latenta de 5ms la orice scara pentru acces dupa cheie primara; nu este potrivita pentru interogari analitice cu JOIN."
+  },
+  {
+    "id": "cloud-47",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Amazon DynamoDB: Partition Key (PK) vs Sort Key (SK)",
+    "question": "Cum functioneaza cheia primara compusa (Partition Key + Sort Key) in DynamoDB si cum asigura distributia uniforma a datelor?",
+    "answer": "1. Partition Key (PK - Hash Key):\n   - DynamoDB trece valoarea Partition Key printr-o functie interna de hash pentru a decide pe ce partitie fizica de server din cluster va fi stocat elementul.\n   - Regula vitala: Partition Key-ul trebuie sa aiba o cardinalitate ridicata (valori foarte variate, ex: userId, orderId) pentru a distribui datele uniform si a evita aparitia de \"Hot Partitions\" (o partitie suprasolicitata in timp ce altele stau idle).\n\n2. Sort Key (SK - Range Key):\n   - Permite stocarea mai multor elemente cu acelasi Partition Key.\n   - Toate elementele cu acelasi PK sunt stocate impreuna pe aceeasi partitie fizica, dar ordonate crescator/descrescator dupa valoarea Sort Key.\n   - Iti permite sa faci interogari eficiente folosind operatori de comparatie: begins_with(), between, >, <.",
+    "codeSnippet": "// Exemplu Tabel: Comenzi Clienti\n// Partition Key (PK) = \"CustomerID#1042\"\n// Sort Key (SK)      = \"OrderDate#2026-10-02\"\n//\n// Poti interoga instant: \"Da-mi toate comenzile clientului 1042 din 2026\"\n// Query: PK = \"CustomerID#1042\" AND SK begins_with(\"OrderDate#2026\")",
+    "interviewTrap": "Nu alege niciodata o valoare cu diversitate mica (cum ar fi statusul \"ACTIV/INACTIV\" sau data curenta \"2026-10-02\") drept Partition Key, deoarece tot traficul va lovi o singura partitie fizica si va primi eroare de Throttling!",
+    "keyTakeaway": "Partition Key determina partitia fizica prin hashing; Sort Key ordoneaza datele din aceeasi partitie pentru cautari rapide."
+  },
+  {
+    "id": "cloud-48",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "DynamoDB Capacity Modes: On-Demand vs Provisioned Capacity",
+    "question": "Care sunt cele doua moduri de capacitate in DynamoDB (On-Demand vs Provisioned) si cum alegi intre ele?",
+    "answer": "1. On-Demand Capacity Mode:\n   - Platesti strict per fiecare cerere individuala de citire si scriere efectuata in tabel.\n   - Scaleaza instantaneu pentru a sustine orice varf de trafic neasteptat fara sa configurezi nimic.\n   - Ideal pentru: aplicatii noi cu trafic imprevizibil, aplicatii cu sarcini de lucru necunoscute sau care stau complet idle mult timp.\n\n2. Provisioned Capacity Mode:\n   - Specifici dinainte numarul de unitati de capacitate dorite:\n     * RCU (Read Capacity Units) si WCU (Write Capacity Units).\n   - Platesti o taxa orara fixa pentru capacitatea alocata, indiferent daca o folosesti sau nu.\n   - Poti activa Auto Scaling pe RCU/WCU pentru a scala intre o limita minima si maxima.\n   - Ideal pentru: aplicatii cu trafic stabil, predictibil si continuu (costa considerabil mai putin decat On-Demand daca utilizarea este constanta).",
+    "codeSnippet": "// On-Demand:    Platesti $1.25 per milion de scrieri (Fara stres de dimensionare)\n// Provisioned:  Platesti per RCU/WCU alocat (Mult mai ieftin la trafic mare si constant)",
+    "interviewTrap": "Daca esti pe Provisioned Mode si traficul tau depaseste brusc numarul de WCU/RCU alocate, DynamoDB va respinge cererile cu eroarea ProvisionedThroughputExceededException.",
+    "keyTakeaway": "Alege On-Demand pentru trafic variabil sau imprevizibil; alege Provisioned pentru trafic stabil si optimizare de cost."
+  },
+  {
+    "id": "cloud-49",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "DynamoDB: Global Secondary Index (GSI) vs Local Secondary Index (LSI)",
+    "question": "Ce este un Global Secondary Index (GSI) in DynamoDB si de ce este preferat fata de un Local Secondary Index (LSI)?",
+    "answer": "1. Problema de Interogare in DynamoDB:\n   - Dintr-un tabel poti face cautari rapide doar dupa cheia primara (PK si SK). Daca ai un tabel de utilizatori cu PK = userId si vrei sa gasesti un utilizator dupa email, ai fi nevoit sa faci un SCAN (citeste tot tabelul, foarte lent si extrem de scump!).\n\n2. Solutia: Global Secondary Index (GSI):\n   - Creeaza o vedere indexata separata a tabelului cu o alta cheie de partitie si de sortare (ex: PK = email).\n   - Poate fi creat, modificat sau sters ORICAND pe parcursul vietii tabelului.\n   - Are propriile sale unitati de capacitate (RCU/WCU) si scaleaza independent.\n\n3. Local Secondary Index (LSI):\n   - Foloseste acelasi Partition Key ca tabelul de baza, dar o cheie de sortare (SK) diferita.\n   - LIMITARE URIASA: Poate fi creat STRICT la momentul crearii initiale a tabelului! Nu mai poate fi adaugat sau sters ulterior!\n   - Imparte limitele de capacitate de 10 GB per partitie cu tabelul de baza.",
+    "codeSnippet": "// In practica moderna:\n// 99% din cazuri folosesc GSI (Global Secondary Index) datorita flexibilitatii de a fi adaugat oricand.",
+    "interviewTrap": "Nu abuza de crearea multor GSI-uri inutile: fiecare scriere in tabelul principal declanseaza automat o scriere asincrona in toate GSI-urile asociate, crescand costurile de stocare si WCU!",
+    "keyTakeaway": "GSI permite cautari dupa atribute non-cheie si poate fi creat oricand; LSI poate fi creat doar odata cu tabelul initial."
+  },
+  {
+    "id": "cloud-50",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon DynamoDB TTL (Time to Live): Stergerea automata a datelor",
+    "question": "Ce este mecanismul TTL in DynamoDB si cum sterge automat inregistrarile expirate fara a consuma unitati de scriere (WCU)?",
+    "answer": "1. Ce este TTL (Time to Live):\n   - O functionalitate nativa DynamoDB care permite definirea unui atribut timestamp (in format Unix Epoch time in secunde, ex: 1727889600) la nivelul fiecarui element.\n   - DynamoDB compara continuu acel timestamp cu timpul curent.\n\n2. Stergere Automata Gratuita:\n   - Cand data curenta depaseste timestamp-ul din atribut, elementul este marcat ca expirat si sters automat din tabel in mod asincron in termen de 48 de ore.\n   - MARELE BENEFICIU: Aceasta stergere automata NU consuma Write Capacity Units (WCU) si NU te costa niciun cent in plus!\n\n3. Cazuri Excelente de Utilizare:\n   - Sesiuni de autentificare web (expira dupa 24h), coduri OTP/SMS temporare (expira dupa 5 minute), loguri de evenimente si carucioare abandonate.",
+    "codeSnippet": "// Exemplu element cu TTL:\n{\n  \"sessionId\": \"sess-xyz789\",\n  \"userId\": \"usr-42\",\n  \"ttl_timestamp\": 1727893200 // Unix Epoch Time in SECUNDE (nu milisecunde!)\n}",
+    "interviewTrap": "Timestamp-ul pentru TTL trebuie sa fie obligatoriu in SECUNDE (Unix Epoch Time), nu in milisecunde! Daca pui valoarea din JavaScript Date.now() (milisecunde), DynamoDB va crede ca data este in anul 50.000 si nu va sterge niciodata elementul!",
+    "keyTakeaway": "TTL sterge automat datele expirate in fundal fara a consuma WCU sau a taxa operatiunea de stergere."
+  },
+  {
+    "id": "cloud-51",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon ElastiCache: Redis vs Memcached in arhitecturi cloud",
+    "question": "Ce este Amazon ElastiCache si care sunt diferentele practice dintre motoarele Redis si Memcached?",
+    "answer": "1. Ce este Amazon ElastiCache:\n   - Un serviciu de in-memory caching complet gestionat de AWS care plaseaza datele frecvent accesate direct in memoria RAM, reducand timpul de raspuns de la milisecunde la microsecunde.\n\n2. Memcached (Simplu & Multi-Threaded):\n   - Motor pur de memorie, extrem de simplu, de tip key-value.\n   - Arhitectura multi-threaded (poate scala usor pe instante mari cu multe core-uri de CPU).\n   - Nu suporta persistenta pe disc, replicare automata sau structuri complexe de date.\n   - Ideal pentru: cache simplu de fragmente HTML sau sesiuni web fara cerinte de salvare permanenta.\n\n3. Redis / Valkey (Complex & Feature-Rich):\n   - Suporta structuri bogate de date: String-uri, Liste, Set-uri, Hashes, Sorted Sets, Bitmaps.\n   - Ofera replicare Multi-AZ cu failover automat, persistenta pe disc (AOF / RDB snapshots) si capabilitati Pub/Sub de mesagerie.\n   - Ideal pentru: leaderboarde in timp real (Sorted Sets), rate limiters, token blacklists si cache avansat.",
+    "codeSnippet": "// In interviuri, 90% din arhitecturile moderne prefera Redis datorita structurilor avansate de date si failover-ului automat!",
+    "interviewTrap": "Daca pica nodul de Memcached, toate datele din memorie se pierd instantaneu; la Redis cu Multi-AZ activat, replica este promovata automat fara downtime!",
+    "keyTakeaway": "Alege Redis pentru structuri bogate, persistenta si failover automat; alege Memcached pentru caching pur multi-threaded simplu."
+  },
+  {
+    "id": "cloud-52",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Strategii de Caching in Cloud: Cache-Aside vs Write-Through",
+    "question": "Care este diferenta dintre tiparele de caching Cache-Aside (Lazy Loading) si Write-Through si cum gestionezi invalidarea datelor?",
+    "answer": "1. Cache-Aside (Lazy Loading):\n   - Aplicatia incearca mai intai sa citeasca din cache (Redis):\n     * Cache Hit: Returneaza datele instant.\n     * Cache Miss: Aplicatia citeste datele din baza de date relationala (RDS), le scrie in Redis si le returneaza utilizatorului.\n   - Avantaj: In cache ajung strict datele solicitate efectiv de utilizatori.\n   - Dezavantaj: Daca datele se schimba in baza de date, cache-ul devine invechit (stale data) pana cand expira valoarea TTL (Time To Live).\n\n2. Write-Through:\n   - Cand aplicatia salveaza sau actualizeaza o entitate, scrie CONCOMITENT atat in cache cat si in baza de date (sau scrie in cache, iar cache-ul scrie sincron in baza de date).\n   - Avantaj: Datele din cache sunt intotdeauna 100% proaspete si consistente.\n   - Dezavantaj: Scrierile au latenta mai mare (scrii in doua sisteme) si poluezi memoria cache-ului cu date care s-ar putea sa nu fie citite niciodata.",
+    "codeSnippet": "// Tipar Cache-Aside in Spring Boot / Node:\nasync function getUser(id) {\n  let user = await redis.get(`user:${id}`);\n  if (!user) {\n    user = await db.findUserById(id);\n    await redis.set(`user:${id}`, JSON.stringify(user), 'EX', 3600); // TTL 1 ora\n  }\n  return user;\n}",
+    "interviewTrap": "In Cache-Aside, daca nu setezi NICIODATA un TTL pe cheile Redis, datele modificate in baza de date vor fi servite gresit utilizatorilor la infinit!",
+    "keyTakeaway": "Cache-Aside populeaza cache-ul la cerere (necesita TTL); Write-Through mentine cache-ul sincronizat la fiecare scriere."
+  },
+  {
+    "id": "cloud-53",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Database Migration Service (AWS DMS): Cum migrezi o baza on-premise?",
+    "question": "Ce este AWS DMS (Database Migration Service) si cum permite migrarea bazelor de date in cloud cu zero downtime?",
+    "answer": "1. Ce este AWS DMS:\n   - Un serviciu gestionat conceput pentru a migra baze de date relationale, depozite de date (data warehouses) si baze NoSQL catre AWS rapid si securizat.\n   - Suporta atat migrari omogene (ex: PostgreSQL on-premise catre Amazon RDS PostgreSQL), cat si migrari eterogene (ex: Oracle catre PostgreSQL cu ajutorul AWS Schema Conversion Tool - SCT).\n\n2. Cum realizeaza migrarea cu Zero Downtime (CDC - Change Data Capture):\n   - Pasul 1: DMS face o incarcare completa a datelor existente (Full Load) din baza on-premise in RDS in timp ce aplicatia continua sa ruleze nestingherita.\n   - Pasul 2: Activeaza CDC (Change Data Capture) — citeste tranzactiile din logurile bazei de date (WAL in PostgreSQL sau Redo Logs in Oracle) si replica in timp real toate noile INSERT-uri si UPDATE-uri catre baza din cloud.\n   - Pasul 3 (Cutover): Cand replicarea este sincronizata la secunda, schimbi conexiunea aplicatiei catre RDS in cateva secunde si migrarea este gata!",
+    "codeSnippet": "// Flux AWS DMS:\n// Sursa On-Premise -> [AWS DMS Replication Instance] -> Tinta AWS RDS\n//                      (Full Load + CDC continuu in fundal)",
+    "interviewTrap": "DMS nu migreaza intotdeauna automat indecsii secundari sau procedurile stocate complexe in migrari eterogene; foloseste AWS Schema Conversion Tool (SCT) pentru conversia schemelor!",
+    "keyTakeaway": "AWS DMS utilizeaza Change Data Capture (CDC) pentru a sincroniza continuu modificarile, permitand trecerea in cloud cu zero downtime."
+  },
+  {
+    "id": "cloud-54",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "RDS Subnet Groups si plasarea bazei exclusiv in subneturi izolate",
+    "question": "Ce este un DB Subnet Group in Amazon RDS si de ce AWS te obliga sa selectezi cel putin doua subnet-uri din Zone de Disponibilitate diferite?",
+    "answer": "1. Ce este un DB Subnet Group:\n   - O colectie de subneturi dintr-un VPC pe care le asociezi unei instante sau cluster de baze de date RDS.\n   - Regula de aur de securitate: Aceste subneturi trebuie sa fie STRICT PRIVATE sau complet IZOLATE (fara ruta catre Internet Gateway si fara IP-uri publice).\n\n2. De ce cere AWS minim 2 Availability Zones (AZ-uri):\n   - Chiar daca creezi initial o instanta Single-AZ, AWS te obliga arhitectural sa specifici subneturi din cel putin 2 AZ-uri distincte in acel Subnet Group!\n   - Ratiune: Daca decizi mai tarziu sa transformi instanta intr-o configuratie Multi-AZ de High Availability sau creezi un Read Replica, RDS va avea deja pregatita infrastructura de retea in al doilea data center fara a reconfigura reteaua bazei de date.",
+    "codeSnippet": "# Exemplu Terraform DB Subnet Group:\nresource \"aws_db_subnet_group\" \"rds_subnets\" {\n  name       = \"main-db-subnet-group\"\n  subnet_ids = [aws_subnet.private_db_az1.id, aws_subnet.private_db_az2.id]\n\n  tags = {\n    Name = \"Isolated DB Subnets\"\n  }\n}",
+    "interviewTrap": "Daca pui un subnet public si un subnet privat in acelasi DB Subnet Group, la un eventual failover RDS instanta ta se poate trezi lansata intr-un subnet neasteptat!",
+    "keyTakeaway": "DB Subnet Group grupeaza subneturile private din minim 2 AZ-uri pentru a permite failover-ul Multi-AZ la nevoie."
+  },
+  {
+    "id": "cloud-55",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "AWS IAM: Ce sunt Users, Groups, Roles si Policies?",
+    "question": "Care sunt cele 4 concepte fundamentale ale serviciului AWS IAM (Identity and Access Management) si cum relationeaza intre ele?",
+    "answer": "AWS IAM este serviciul global gratuit care controleaza autentificarea (cine esti) si autorizarea (ce ai voie sa faci) in contul AWS:\n\n1. IAM User:\n   - O identitate creata pentru o persoana fizica specifica (ex: programatorul Mihai).\n   - Se autentifica prin consola cu parola si cod MFA, sau prin CLI/API cu Access Key ID si Secret Access Key.\n\n2. IAM Group:\n   - O colectie logica de utilizatori IAM (ex: grupul \"Developers\", \"DevOps\", \"ReadOnlyAuditors\").\n   - Atasezi permisiunile direct la grup, iar toti utilizatorii din acel grup mostenesc automat aceleasi drepturi.\n\n3. IAM Role:\n   - O identitate securizata temporara care NU are credentiale permanente (parola sau chei statice).\n   - Este \"asumata\" (assumed) de servicii AWS (ex: o instanta EC2 sau Lambda primeste un Role pentru a citi din S3) sau de utilizatori externi federati (via Google/Okta).\n\n4. IAM Policy:\n   - Un document JSON care defineste formal permisiunile (ce actiuni sunt permise sau interzise pe ce resurse).",
+    "codeSnippet": "// Relatie IAM:\n// [IAM User] apartine de -> [IAM Group]\n// [IAM Group] / [IAM Role] primesc atasat -> [IAM Policy (JSON)]",
+    "interviewTrap": "Nu atasa permisiuni direct fiecarui utilizator in parte! Pune utilizatorii in Grupuri si ataseaza politicile la Grup, altfel auditul securitatii devine un haos de negestionat.",
+    "keyTakeaway": "Users sunt persoane fizice; Groups organizeaza userii; Roles ofera acces temporar serviciilor; Policies definesc regulile in JSON."
+  },
+  {
+    "id": "cloud-56",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Principiul Least Privilege (Privilegiul Minim) in IAM",
+    "question": "Ce este principiul \"Least Privilege\" in securitatea cloud si de ce este periculos sa oferi permisiunea AdministratorAccess dezvoltatorilor?",
+    "answer": "1. Ce inseamna Principiul Least Privilege:\n   - Ofera fiecarui utilizator, aplicatie sau serviciu DOAR permisiunile strict minime necesare pentru a-si indeplini sarcinile curente, si NIMIC MAI MULT!\n   - Permisiunile trebuie acordate doar pe resursele exacte pe care opereaza (Resource-level permissions) si doar pentru timpul necesar.\n\n2. Pericolele atasarii politicii AdministratorAccess:\n   - O comanda gresita tastata intr-un terminal sau un script rulat din greseala poate sterge baza de date de productie sau distruge tabelele de retea.\n   - Daca un dezvoltator are laptopul infectat cu malware sau comite accidental credentialele pe internet, atacatorul preia controlul complet al intregului cont AWS si poate lansa sute de servere masive pentru minat criptomonede in numele firmei!\n\n3. Exemplu practic:\n   - Un backend care doar citeste poze din S3 are nevoie STRICT de permisiunea \"s3:GetObject\" pe bucket-ul \"my-app-photos/*\", NU \"s3:*\" si in niciun caz acces la baze de date sau VPC-uri.",
+    "codeSnippet": "// Exemplu Politica Least Privilege:\n{\n  \"Effect\": \"Allow\",\n  \"Action\": [ \"s3:GetObject\" ],\n  \"Resource\": \"arn:aws:s3:::my-company-cvs/*\"\n}",
+    "interviewTrap": "Multi candidati pun \"*\" la Action si \"*\" la Resource cand testeaza in dev pentru a \"merge din prima\", dar uita aceste wildcard-uri si le imping in codul de productie!",
+    "keyTakeaway": "Least Privilege garanteaza ca o bresa intr-o componenta nu compromite intreaga infrastructura cloud a companiei."
+  },
+  {
+    "id": "cloud-57",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "De ce nu trebuie folosite AWS Access Keys pe servere si ce este IAM Instance Profile?",
+    "question": "De ce salvarea cheilor AWS Access Key in fisiere `.env` pe servere este o practica periculoasa si cum rezolva IAM Instance Profile aceasta problema?",
+    "answer": "1. Riscul Cheilor Statice (Access Key ID & Secret Access Key):\n   - Cheile statice nu expira niciodata pana nu sunt revocate manual.\n   - Daca serverul este compromis sau cineva uploadeaza un backup cu fisierul .env pe GitHub, cheile sunt furate si folosite de hackeri din orice colt al lumii.\n   - Rotirea cheilor statice necesita actualizarea manuala a fisierelor pe zeci de servere si restart de aplicatie.\n\n2. Solutia Nativ Cloud: IAM Instance Profile & Roles:\n   - Creezi un IAM Role cu permisiunile necesare (ex: citire din DynamoDB).\n   - Creezi un Instance Profile si il asociezi masinii EC2 sau task-ului ECS.\n   - Serviciul intern AWS Metadata Service (IMDSv2, accesibil la IP-ul de retea local 169.254.169.254) furnizeaza automat aplicatiei credentiale temporare valabile o ora.\n   - AWS SDK-urile oficiale (Java, Node.js, Python boto3) detecteaza si reinnoiesc automat aceste chei temporare in fundal, fara nicio linie de cod de credentiale!",
+    "codeSnippet": "// SDK-ul Java / Node NU are nevoie de chei!\n// Preia automat credentialele din IAM Instance Profile al masinii:\nconst s3 = new S3Client({ region: \"eu-central-1\" }); // Gata, 100% securizat!",
+    "interviewTrap": "Niciodata sa nu scrii chei statice AWS in variabile de mediu sau fisiere properties in productie; foloseste exclusiv IAM Roles atasate resurselor.",
+    "keyTakeaway": "IAM Instance Profile injecteaza automat credentiale temporare care se rotesc la fiecare ora, eliminand riscul scurgerii de chei statice."
+  },
+  {
+    "id": "cloud-58",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Structura unui document IAM Policy: Effect, Action, Resource, Condition",
+    "question": "Care sunt cele 4 blocuri esentiale dintr-o declaratie IAM Policy in format JSON si care este ordinea de evaluare a permisiunilor?",
+    "answer": "1. Structura JSON a unei declaratii IAM:\n   - Effect: Poate fi strict \"Allow\" (permite) sau \"Deny\" (interzice).\n   - Action: Lista operatiunilor API AWS vizate (ex: [\"s3:GetObject\", \"s3:PutObject\"]).\n   - Resource: Resursa AWS exacta identificata prin ARN (Amazon Resource Name, ex: \"arn:aws:s3:::my-bucket/*\").\n   - Condition (Optional): Conditii suplimentare pentru ca regula sa se aplice (ex: solicitarea sa vina dintr-un IP specific de birou sau utilizatorul sa aiba MFA activat).\n\n2. Ordinea de Evaluare a Permisiunilor in AWS:\n   - PASUL 1: Implicit, totul este BLOCAT (Default Deny).\n   - PASUL 2: Daca exista o declaratie explicita \"Allow\", actiunea este permisa.\n   - PASUL 3: REGULA ABSOLUTA: Un \"Explicit Deny\" bate intotdeauna orice \"Allow\"! Daca ai 100 de reguli de Allow si o singura regula de Deny aplicabila acelei actiuni, cererea este REPINSA instant.",
+    "codeSnippet": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Effect\": \"Allow\",\n      \"Action\": \"s3:GetObject\",\n      \"Resource\": \"arn:aws:s3:::contracts-bucket/*\",\n      \"Condition\": {\n        \"Bool\": { \"aws:MultiFactorAuthPresent\": \"true\" }\n      }\n    }\n  ]\n}",
+    "interviewTrap": "Daca ai primit acces la un serviciu printr-o politica de grup, dar exista o politica de companie (SCP) cu \"Effect\": \"Deny\" pe acel serviciu, accesul tau va fi blocat definitiv deoarece Deny castiga intotdeauna.",
+    "keyTakeaway": "AWS evalueaza politicile cu Default Deny; Explicit Deny anuleaza orice permisiune Allow existenta."
+  },
+  {
+    "id": "cloud-59",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "AWS IAM Root User: Cele mai bune practici de securitate",
+    "question": "Ce este contul AWS Root User si de ce prima regula de securitate este sa NU il folosesti niciodata pentru sarcini zilnice de dezvoltare?",
+    "answer": "1. Ce este Root User:\n   - Identitatea creata automat odata cu deschiderea contului AWS, asociata cu adresa de email si parola initiala.\n   - Are puteri absolute si nelimitate asupra tuturor resurselor, facturilor si configuratiilor din cont (nu poate fi limitat prin nicio politica IAM!).\n\n2. De ce NU se foloseste pentru sarcini zilnice:\n   - Daca un atacator obtine acces la Root User, poate inchide intregul cont, sterge toate backup-urile si bloca accesul inginerilor companiei.\n\n3. Top 3 Best Practices pentru Root User:\n   - Activeaza imediat MFA hardware sau pe telefon (Multi-Factor Authentication) cu o parola extrem de puternica.\n   - NU crea niciodata Access Keys (Access Key ID si Secret) pentru Root User (daca exista, sterge-le imediat!).\n   - Creeaza utilizatori IAM individuali sau foloseste AWS IAM Identity Center pentru ingineri, iar credentialele Root pastreaza-le intr-un seif digital de securitate folosit doar in cazuri exceptionale (ex: schimbarea planului de suport AWS).",
+    "codeSnippet": "// Raport de securitate AWS IAM Credential Report:\n// Root Access Keys: None (Sterse complet!)\n// Root MFA: Active (Obligatoriu!)",
+    "interviewTrap": "Daca un intervievator te intreaba: \"Cum configurez CLI-ul local cu cheile de Root pentru a crea un VPC?\", raspunsul corect este: \"Niciodata nu generam chei de Root! Cream un IAM User dedicat de admin sau un Role temporar!\"",
+    "keyTakeaway": "Root are putere absoluta in cont; blocheaza-l cu MFA, sterge-i cheile API si foloseste IAM pentru munca de zi cu zi."
+  },
+  {
+    "id": "cloud-60",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "AWS Secrets Manager vs AWS Systems Manager (SSM) Parameter Store",
+    "question": "Care este diferenta dintre AWS Secrets Manager si SSM Parameter Store si cum alegi unde sa salvezi secretele aplicatiei?",
+    "answer": "1. AWS Secrets Manager (Focus pe Secrete Critice & Rotire Automata):\n   - Conceput special pentru parole de baze de date, chei API de plata (Stripe) si token-uri OAuth.\n   - Functionalitate Cheie: Rotire Automata a Secretelor (Automatic Secret Rotation) out-of-the-box integrata cu Amazon RDS (modifica parola in RDS si in Secrets Manager sincron prin functii Lambda fara downtime al aplicatiei).\n   - Cost: Mai scump (~$0.40 per secret pe luna + o mica taxa per apel API).\n\n2. AWS SSM Parameter Store (Configuratii Generale & Secrete Ieftine):\n   - Depozit ierarhic de configuratii (ex: /config/app/database_url, /config/app/max_threads).\n   - Suporta tipuri de date: String, StringList si SecureString (criptat cu AWS KMS).\n   - Nivelul Standard este complet GRATUIT pentru stocarea a pana la 10.000 de parametri!\n   - Nu are rotire automata nativa de parole ca Secrets Manager.",
+    "codeSnippet": "// Cand alegi fiecare:\n// Secrets Manager:  Parola bazei de date RDS (pentru ca vrei rotire automata la fiecare 30 de zile)\n// SSM Parameter Store: Variabile de mediu, URL-uri de microservicii, secrete ieftine fara rotire automata",
+    "interviewTrap": "Daca salvezi 500 de parametri de configurare simpli (non-secrete) in Secrets Manager, vei plati $200/luna pe factura; aceiasi parametri in SSM Parameter Store Standard costa $0!",
+    "keyTakeaway": "Secrets Manager ofera rotire automata a parolelor de baze de date dar costa per secret; SSM Parameter Store este ideal si adesea gratuit pentru configuratii."
+  },
+  {
+    "id": "cloud-61",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "AWS KMS (Key Management Service) si Criptarea Simetrica vs Asimetrica",
+    "question": "Ce este AWS KMS si cum gestioneaza cheile de criptare in cloud?",
+    "answer": "1. Ce este AWS KMS:\n   - Un serviciu complet gestionat care simplifica crearea si controlul cheilor criptografice folosite pentru a proteja datele in repaus (encryption at rest).\n   - Cheile din KMS (numite KMS Keys) sunt protejate in module hardware de securitate (HSM - Hardware Security Modules) certificate FIPS 140-2. Nimeni, nici macar inginerii AWS, nu poate extrage cheia master in text clar din hardware!\n\n2. Chei Simetrice (Symmetric Keys - Standardul de baza in Cloud):\n   - Aceeasi cheie secreta (AES-256) este utilizata atat pentru criptarea cat si pentru decriptarea datelor.\n   - Este modelul implicit integrat automat cu toate serviciile AWS (S3, EBS, RDS, DynamoDB, Secrets Manager).\n\n3. Chei Asimetrice (Asymmetric Keys):\n   - O pereche de chei matematica: Cheie Publica (folosita de oricine pentru criptare sau verificare semnatura) si Cheie Privata (pastrata in KMS pentru decriptare sau semnare digitala RSA/ECC).\n   - Utilizate pentru semnaturi digitale si schimb de mesaje cu parteneri externi.",
+    "codeSnippet": "# Criptare rapida prin AWS CLI folosind KMS:\naws kms encrypt \\\n  --key-id alias/my-app-key \\\n  --plaintext \"ParolaSecreta123\" \\\n  --output text --query CiphertextBlob",
+    "interviewTrap": "AWS KMS este proiectat pentru a cripta volume mici de date (maximum 4 KB direct per apel API)! Pentru a cripta fisiere mari de gigabytes, KMS foloseste conceptul de Envelope Encryption (genereaza un Data Key).",
+    "keyTakeaway": "KMS gestioneaza chei securizate hardware in cloud; cheile simetrice AES-256 sunt standardul nativ integrat cu serviciile AWS."
+  },
+  {
+    "id": "cloud-62",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Conceptul de Envelope Encryption in AWS",
+    "question": "Cum functioneaza Envelope Encryption si de ce fisierele mari din S3 sau EBS nu sunt criptate direct cu cheia principala KMS?",
+    "answer": "1. Problema de Performanta si Limita KMS:\n   - Serviciul AWS KMS poate procesa criptografic direct volume de date de maximum 4 Kilobytes per apel de retea.\n   - Trimiterea unui fisier video de 5 GB prin reteaua KMS pentru a fi criptat ar bloca conexiunile si ar genera latente si costuri enorme.\n\n2. Ce este Envelope Encryption (Criptarea in Plic):\n   - Strategia de securitate prin care criptezi datele cu o cheie de date (Data Key), iar cheia de date o criptezi la randul ei sub o cheie principala master (KMS Key / CMK).\n\n3. Fluxul Pas cu Pas:\n   - 1. Aplicatia cere de la KMS un Data Key (GenerateDataKey).\n   - 2. KMS returneaza doua componente: Cheia de Date in Text Clar (Plaintext Data Key) si Cheia de Date Criptata (Encrypted Data Key).\n   - 3. Aplicatia cripteaza local fisierul de 5 GB in memorie folosind Plaintext Data Key (rapiditate maxima locala).\n   - 4. CRITIC: Plaintext Data Key este stearsa imediat din memorie!\n   - 5. Fisierul criptat este salvat impreuna cu Encrypted Data Key atasata ca metadate.",
+    "codeSnippet": "// Flux Envelope Encryption:\n// [KMS Master Key] cripteaza -> [Data Key]\n// [Data Key] cripteaza -> [Fisierul tau de 5 GB]",
+    "interviewTrap": "La decriptare, aplicatia trimite doar micul Encrypted Data Key catre KMS pentru decriptare, primeste cheia de date si decripteaza fisierul masiv local.",
+    "keyTakeaway": "Envelope Encryption permite criptarea rapida a fisierelor oricat de mari local, protejand cheia de date cu o cheie KMS master."
+  },
+  {
+    "id": "cloud-63",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Criptare in Repaus (At-Rest) vs Criptare in Tranzit (In-Transit)",
+    "question": "Care este diferenta dintre Encryption at Rest si Encryption in Transit si cum se asigura fiecare in AWS?",
+    "answer": "1. Encryption in Transit (Criptare in Tranzit / In Miscare):\n   - Protejeaza datele in timp ce circula prin retea intre client si server sau intre serverele interne de backend.\n   - Previne interceptarea datelor (Man-in-the-Middle, eavesdropping) de catre atacatori pe retea.\n   - Cum se asigura: Folosind protocolul HTTPS / TLS (Transport Layer Security) v1.2 sau v1.3 cu certificate digitale eliberate gratuit de AWS Certificate Manager (ACM).\n\n2. Encryption at Rest (Criptare in Repaus / Pe Disc):\n   - Protejeaza datele atunci cand sunt stocate fizic pe un suport persistent (HDD, SSD, benzi de backup).\n   - Previne citirea datelor in cazul in care cineva ar fura fizic un hard disk dintr-un data center AWS sau ar accesa un snapshot neautorizat.\n   - Cum se asigura: Criptare transparenta la nivel de disc (AES-256) oferita nativ de AWS KMS pe S3, EBS, RDS si DynamoDB cu un singur click.",
+    "codeSnippet": "// Criptare completa End-to-End:\n// Browser --(HTTPS / TLS 1.3 / In-Transit)--> ALB/Backend --(AES-256 / At-Rest)--> EBS/RDS/S3",
+    "interviewTrap": "Doar pentru ca o baza de date este criptata at-rest cu KMS nu inseamna ca datele sunt protejate de SQL Injection! SQL Injection fura datele prin aplicatie, unde datele sunt deja decriptate legitim.",
+    "keyTakeaway": "In-Transit protejeaza datele pe retea prin TLS/HTTPS; At-Rest protejeaza datele pe disc prin KMS AES-256."
+  },
+  {
+    "id": "cloud-64",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "AWS WAF (Web Application Firewall): Protectie Layer 7",
+    "question": "Ce este AWS WAF, la ce nivel OSI actioneaza si cum protejeaza aplicatiile impotriva atacurilor de tip OWASP Top 10?",
+    "answer": "1. Ce este AWS WAF:\n   - Un firewall de aplicatii web care monitorizeaza cererile HTTP si HTTPS directionate catre Amazon CloudFront, Application Load Balancer (ALB), Amazon API Gateway sau AWS AppSync.\n   - Actioneaza la Layer 7 (Nivel Aplicatie) al modelului OSI.\n\n2. Cum protejeaza aplicatia:\n   - Inspecteaza continutul cererilor HTTP: adresa IP sursa, headere, query parameters si corpul cererii (JSON body).\n   - Poate lua 3 actiuni: Allow (permite), Block (blocheaza cu cod HTTP 403 Forbidden), sau Count (doar numara pentru monitorizare).\n\n3. Managed Rule Groups (Reguli preconfigurate):\n   - AWS Managed Rules (Core Rule Set - CRS): Blocheaza automat atacuri precum SQL Injection, Cross-Site Scripting (XSS), Path Traversal si tentative de Remote Code Execution (RCE).\n   - Rate-based Rules: Blocheaza automat adresele IP care depasesc un prag (ex: mai mult de 2.000 de cereri in 5 minute), protejand rutele de /login impotriva atacurilor brute-force.",
+    "codeSnippet": "// Inspectie WAF la intrare:\n// POST /api/login?user=admin' OR '1'='1 -- [Detectat SQLi de WAF] -> 403 Forbidden!\n// Cererea este oprita la ALB inainte de a atinge codul Spring Boot!",
+    "interviewTrap": "Un Security Group nu poate opri un atac SQL Injection, deoarece Security Group-ul doar verifica portul (permite portul 443 liber). Doar WAF poate citi payload-ul HTTP pentru a detecta injectia!",
+    "keyTakeaway": "AWS WAF filtreaza traficul web la Layer 7, blocand SQL Injection, XSS si brute-force inainte ca traficul sa atinga serverele."
+  },
+  {
+    "id": "cloud-65",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "AWS Shield Standard vs Shield Advanced: Protectie DDoS",
+    "question": "Care este diferenta dintre AWS Shield Standard si AWS Shield Advanced in apararea impotriva atacurilor Distributed Denial of Service (DDoS)?",
+    "answer": "1. Ce este un atac DDoS:\n   - O incercare rau-intentionata de a intrerupe traficul normal al unei aplicatii prin coplesirea infrastructurii cu un potop masiv de trafic fals generat de o retea de calculatoare infectate (botnet).\n\n2. AWS Shield Standard (Inclus Gratuit):\n   - Protectie automata inclusa pentru absolut toti clientii AWS, fara costuri suplimentare.\n   - Apara impotriva celor mai comune atacuri DDoS de nivel de retea si transport (Layer 3 si 4), cum ar fi SYN Floods, UDP Floods si atacuri de reflectie DNS.\n   - Protejeaza automat CloudFront, Route 53 si Load Balancers.\n\n3. AWS Shield Advanced (Protectie Enterprise Platita):\n   - Serviciu premium ($3.000/luna angajament pe 1 an).\n   - Include protectie extinsa la Layer 7, acces direct 24/7 la echipa specializata de experti AWS Shield Response Team (SRT).\n   - Protectie Financiara (Cost Spike Protection): Daca serverele tale scaleaza masiv in timpul unui atac DDoS generand o factura uriasa, AWS iti ramburseaza creditele financiare pentru costurile cauzate de atac!",
+    "codeSnippet": "// Nivele de protectie DDoS:\n// Shield Standard:  Layer 3/4 gratuit activat automat pentru toti utilizatorii AWS\n// Shield Advanced:  Layer 7, asistenta 24/7 SRT si garantie financiara contra suprataxarii",
+    "interviewTrap": "Pentru a beneficia de protectia maxima implicita a lui Shield Standard, plaseaza intotdeauna aplicatia web in spatele lui Amazon CloudFront si Route 53.",
+    "keyTakeaway": "Shield Standard apara gratuit fiecare cont AWS de atacurile de retea Layer 3/4; Advanced aduce suport dedicat si asigurare de cost."
+  },
+  {
+    "id": "cloud-66",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "AWS Organizations si Service Control Policies (SCPs)",
+    "question": "Ce este AWS Organizations si cum functioneaza politicile de control al serviciilor (SCPs) in companii cu multiple conturi AWS?",
+    "answer": "1. De ce folosesc companiile Multi-Account Strategy:\n   - Separarea mediilor in conturi AWS fizic diferite (ex: Cont Dev, Cont Staging, Cont Productie, Cont de Securitate/Audit).\n   - Izoleaza complet impactul incidentelor (un incident in dev nu poate afecta productia) si simplifica facturarea pe departamente.\n\n2. AWS Organizations:\n   - Un serviciu de guvernanta centralizata care uneste multiple conturi AWS intr-o ierarhie de Organizational Units (OUs), cu o singura factura consolidata platita de contul Master (Management Account).\n\n3. Service Control Policies (SCPs - Gardurile de protectie):\n   - Politici JSON aplicate de sus in jos la nivelul intregului cont sau OU.\n   - Definesc limita maxima absoluta de permisiuni pe care le pot avea conturile membre.\n   - IMPORTANT: O politica SCP poate bloca o actiune CHIAR SI PENTRU UTILIZATORUL ROOT al unui cont membru! De exemplu, poti interzice crearea oricarei resurse in afara regiunii eu-central-1 in toate conturile din organizatie.",
+    "codeSnippet": "// Exemplu SCP: Blocheaza toate regiunile cu exceptia Frankfurt (eu-central-1):\n{\n  \"Effect\": \"Deny\",\n  \"NotAction\": \"iam:*\",\n  \"Resource\": \"*\",\n  \"Condition\": {\n    \"StringNotEquals\": { \"aws:RequestedRegion\": \"eu-central-1\" }\n  }\n}",
+    "interviewTrap": "SCPs nu acorda permisiuni direct unui utilizator! SCP-ul doar stabileste \"plafonul maxim\" (guardrail). Utilizatorul are in continuare nevoie de o politica IAM Policy in contul sau pentru a efectua actiunea.",
+    "keyTakeaway": "AWS Organizations permite managementul multi-account, iar SCP-urile impun limite inviolabile chiar si pentru administratorii conturilor membre."
+  },
+  {
+    "id": "cloud-67",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Origin Access Control (OAC) intre CloudFront si S3",
+    "question": "Ce este Origin Access Control (OAC) in AWS CloudFront si cum asigura ca fisierele din S3 nu pot fi accesate direct prin bypass-ul CDN-ului?",
+    "answer": "1. Problema de Securitate:\n   - Cand creezi o distributie CloudFront in fata unui S3 Bucket, vrei ca utilizatorii sa acceseze fisierele STRICT prin CDN (pentru a beneficia de cache, WAF, HTTPS si protectie DDoS).\n   - Daca bucket-ul S3 ar avea permisiuni publice directe, utilizatorii ar putea ocoli CDN-ul accesand direct URL-ul https://bucket.s3.amazonaws.com/secret.pdf, generand costuri necontrolate si ocolind regulile WAF.\n\n2. Solutia: Origin Access Control (OAC):\n   - Succesorul modern al vechiului OAI (Origin Access Identity), cu suport complet pentru toate regiunile AWS, criptare SSE-KMS si upload HTTP PUT/POST.\n   - Bucket-ul S3 ramane 100% PRIVAT (Block Public Access activat complet).\n   - In S3 Bucket Policy adaugi o regula care permite actiunea \"s3:GetObject\" STRICT entitatii CloudFront asociate distributiei tale specifice.",
+    "codeSnippet": "# S3 Bucket Policy care accepta trafic doar de la CloudFront OAC:\n{\n  \"Effect\": \"Allow\",\n  \"Principal\": { \"Service\": \"cloudfront.amazonaws.com\" },\n  \"Action\": \"s3:GetObject\",\n  \"Resource\": \"arn:aws:s3:::my-private-bucket/*\",\n  \"Condition\": {\n    \"StringEquals\": {\n      \"AWS:SourceArn\": \"arn:aws:cloudfront::123456789012:distribution/E12345EXAMPLE\"\n    }\n  }\n}",
+    "interviewTrap": "OAI (Origin Access Identity) este considerat legacy de AWS si nu suporta criptarea cu AWS KMS sau HTTP PUT; in interviuri si proiecte noi se specifica intotdeauna OAC (Origin Access Control).",
+    "keyTakeaway": "OAC garanteaza ca doar reteaua CloudFront poate citi din bucket-ul S3, mentinand datele complet private fata de internet."
+  },
+  {
+    "id": "cloud-68",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "AWS IAM Identity Center (fost AWS SSO) pentru autentificarea echipelor",
+    "question": "Ce este AWS IAM Identity Center (fost AWS Single Sign-On) si cum elimina crearea manuala de utilizatori IAM in fiecare cont?",
+    "answer": "1. Problema Managementului de Utilizatori Multi-Account:\n   - Daca o companie are 20 de conturi AWS si 50 de dezvoltatori, crearea si administrarea manuala a 1.000 de utilizatori IAM individuali cu parole si chei proprii este o sarcina imposibila si un cosmar de securitate.\n\n2. Ce este IAM Identity Center:\n   - Serviciul recomandat de AWS pentru gestionarea centralizata a accesului la toate conturile AWS si aplicatiile business.\n   - Se integreaza nativ cu furnizorul de identitate existent al companiei (Identity Provider - IdP), cum ar fi Microsoft Azure AD (Entra ID), Okta sau Google Workspace prin protocolul SAML 2.0.\n\n3. Experienta Dezvoltatorului:\n   - Inginerul se logheaza o singura data intr-un portal web unic al companiei cu email-ul si parola corporativa.\n   - Vede o lista cu toate conturile AWS la care are acces (ex: Dev, Staging) si rolurile atribuite.\n   - Cu un click deschide consola AWS sau ruleaza \"aws sso login\" in terminal, primind automat credentiale temporare cu expirare rapida fara chei statice pe laptop!",
+    "codeSnippet": "# Autentificare sigura din terminal prin Identity Center:\naws sso login --profile dev-account",
+    "interviewTrap": "Nu crea utilizatori IAM traditionali pentru angajatii unei companii mari; AWS recomanda ferm folosirea IAM Identity Center pentru a preveni credentialele uitate si pentru a revoca accesul instant la plecarea unui angajat.",
+    "keyTakeaway": "IAM Identity Center ofera SSO federat si genereaza credentiale temporare, eliminand definitiv utilizatorii IAM individuali pe conturi."
+  },
+  {
+    "id": "cloud-69",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "AWS SQS: Standard Queues vs FIFO Queues",
+    "question": "Care sunt cele doua tipuri de cozi de mesaje in Amazon SQS (Standard vs FIFO) si prin ce caracteristici majore difera?",
+    "answer": "Amazon SQS (Simple Queue Service) este un serviciu complet gestionat de cozi de mesaje distribuite pentru decuplarea microserviciilor:\n\n1. SQS Standard Queue (Throughput Practic Nelimitat):\n   - Scalabilitate uriasa: suporta un numar practic nelimitat de mesaje pe secunda.\n   - Livrare \"At-Least-Once\" (Cel putin o data): In cazuri rare de retea distribuita, acelasi mesaj poate fi livrat de mai multe ori catre consumator (consumatorul trebuie sa fie IDEMPOTENT!).\n   - Best-effort Ordering: Ordinea mesajelor poate sa nu fie perfect pastrata (un mesaj trimis al doilea poate ajunge primul).\n\n2. SQS FIFO Queue (First-In, First-Out):\n   - Ordine Stricta Garantata: Mesajele sunt procesate exact in ordinea in care au fost trimise.\n   - Livrare \"Exactly-Once\": Niciun mesaj duplicat nu este livrat consumatorului pe baza mecanismului de deduplicare (Deduplication ID).\n   - Numele cozii trebuie obligatoriu sa se termine cu sufixul \".fifo\" (ex: orders.fifo).\n   - Limita de Throughput: Pana la 3.000 de mesaje/secunda cu batching (mult mai mic decat Standard).",
+    "codeSnippet": "// Comparatie rapida:\n// Standard: Viteza nelimitata, livrare cel-putin-o-data, ordine aproximativa (logs, emailuri, resize imagini)\n// FIFO:     Ordine stricta garantata, zero duplicate, throughput limitat (tranzactii bancare, plati)",
+    "interviewTrap": "Daca ai nevoie de coada FIFO, numele cozii trebuie sa contina obligatoriu extensia .fifo la final, altfel AWS API respinge crearea cozii!",
+    "keyTakeaway": "Standard Queue ofera throughput nelimitat si livrare at-least-once; FIFO garanteaza ordinea stricta si deduplicare la viteza mai mica."
+  },
+  {
+    "id": "cloud-70",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "SQS Visibility Timeout: Cum previi procesarea duplicata?",
+    "question": "Ce este parametrul Visibility Timeout in Amazon SQS si ce se intampla daca un consumator are nevoie de mai mult timp pentru a procesa mesajul?",
+    "answer": "1. Ce este Visibility Timeout:\n   - O perioada de timp (implicita: 30 de secunde, configurabila de la 0 secunde la 12 ore) in care un mesaj extras de un consumator devine \"invizibil\" pentru toti ceilalti consumatori concurenti ai cozii.\n   - Scop: Previne ca doi consumatori paraleli sa preia si sa proceseze acelasi mesaj in acelasi timp.\n\n2. Scenariul de Succes:\n   - Consumatorul citeste mesajul -> Mesajul devine invizibil timp de 30s -> Consumatorul proceseaza comanda cu succes in 5 secunde -> Consumatorul APELEAZA EXPLICIT DeleteMessage catre SQS -> Mesajul este sters definitiv din coada.\n\n3. Scenariul de Crash / Timeout:\n   - Daca consumatorul pica (crash de aplicatie) sau procesarea dureaza 45 de secunde (depasind cele 30s de vizibilitate):\n     * Perioada de Visibility expira!\n     * Mesajul redevine vizibil in coada SQS!\n     * Un alt consumator disponibil va prelua mesajul si il va procesa din nou.",
+    "codeSnippet": "// Prelungirea dinamica a vizibilitatii in cod cand procesarea este lunga:\nawait sqsClient.send(new ChangeMessageVisibilityCommand({\n  QueueUrl: queueUrl,\n  ReceiptHandle: message.ReceiptHandle,\n  VisibilityTimeout: 60 // Preia inca 60 de secunde suplimentare\n}));",
+    "interviewTrap": "SQS NU sterge automat mesajul dupa ce ti l-a livrat! Daca dupa procesare codul tau uita sa apeleze DeleteMessageCommand, mesajul va reaparea in coada dupa expirarea Visibility Timeout si va fi procesat la infinit!",
+    "keyTakeaway": "Visibility Timeout ascunde temporar mesajul in timpul procesarii; consumatorul trebuie sa apeleze explicit DeleteMessage dupa succes."
+  },
+  {
+    "id": "cloud-71",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "SQS Dead Letter Queue (DLQ): Gestionarea mesajelor otravite",
+    "question": "Ce este un Dead Letter Queue (DLQ) in Amazon SQS, ce inseamna un \"Poison Pill Message\" si cum se configureaza politica de Redrive?",
+    "answer": "1. Problema \"Poison Pill\" (Mesaj Otravit):\n   - Un mesaj corupt sau cu un JSON invalid ajunge in coada SQS.\n   - Un worker il preia -> aplicatia arunca NullPointerException si da crash -> Visibility Timeout expira -> alt worker il preia -> da crash din nou.\n   - Mesajul creeaza o bucla infinita de erori, irosind resurse si blocand procesarea.\n\n2. Solutia: Dead Letter Queue (DLQ):\n   - O a doua coada SQS obisnuita configurata ca destinatie finala de izolare pentru mesajele care nu pot fi procesate cu succes.\n\n3. Politica de Redrive (Redrive Policy):\n   - Setezi parametrul \"maxReceiveCount\" (ex: 3 sau 5).\n   - Fiecare incercare esuata incrementeaza un contor intern in SQS (ApproximateReceiveCount).\n   - Cand contorul depaseste maxReceiveCount, SQS muta automat mesajul in coada DLQ fara interventie manuala.\n   - Inginerii primesc o alerta CloudWatch, inspecteaza mesajul corupt din DLQ, repara bug-ul din aplicatie si dau \"Redrive to Source\" pentru a reprocesa mesajul.",
+    "codeSnippet": "# Exemplu Redrive Policy in Terraform:\nredrive_policy = jsonencode({\n  deadLetterTargetArn = aws_sqs_queue.orders_dlq.arn\n  maxReceiveCount     = 3\n})",
+    "interviewTrap": "Pentru o coada SQS de tip FIFO, coada DLQ asociata trebuie sa fie obligatoriu tot de tip FIFO (.fifo). Nu poti asocia un DLQ standard la o coada principala FIFO!",
+    "keyTakeaway": "DLQ izoleaza mesajele eronate dupa un numar maxim de incercari esuate (maxReceiveCount), prevenind blocarea cozilor de procesare."
+  },
+  {
+    "id": "cloud-72",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon SNS: Modelul Publisher-Subscriber (Pub/Sub)",
+    "question": "Ce este Amazon SNS (Simple Notification Service) si cum implementeaza modelul Publish/Subscribe (1-la-Multi)?",
+    "answer": "1. Ce este Amazon SNS:\n   - Un serviciu complet gestionat de mesagerie de tip Publish / Subscribe (Pub/Sub) de mare viteza si disponibilitate.\n   - Permite producatorilor (Publishers) sa trimita mesaje catre un \"Topic\" (subiect logic), iar SNS livreaza instantaneu mesajul catre toti consumatorii abonati (Subscribers) la acel topic.\n\n2. Modelul 1-la-Multi (Push Notification):\n   - Spre deosebire de SQS (unde consumatorii trebuie sa faca \"Poll\" periodic pentru a trage mesaje), SNS foloseste un model PUSH: impinge mesajul catre abonati in fractiuni de secunda.\n\n3. Tipuri de Abonati Suportati (Endpoints):\n   - Cozi Amazon SQS (decuplare arhitecturala).\n   - Functii AWS Lambda (executie serverless imediata).\n   - Webhook-uri HTTP/HTTPS externe.\n   - Email-uri si SMS-uri catre telefoane mobile.\n   - Notificari Push mobile (iOS APNs, Android FCM).",
+    "codeSnippet": "// Trimitere notificare pe Topic prin AWS SDK:\nawait snsClient.send(new PublishCommand({\n  TopicArn: \"arn:aws:sns:eu-central-1:123456789012:UserRegisteredTopic\",\n  Message: JSON.stringify({ userId: 42, email: \"mihai@example.com\" }),\n  Subject: \"Utilizator Nou Inregistrat\"\n}));",
+    "interviewTrap": "Daca trimiti un mesaj pe un topic SNS iar niciun abonat nu este conectat sau abonatii sunt picati fara o coada in spate, mesajul este pierdut definitiv! SNS nu stocheaza mesaje pe disc pe termen lung ca SQS.",
+    "keyTakeaway": "SNS impinge mesaje instant catre mai multi abonati prin modelul Pub/Sub; nu retine mesaje persistente daca abonatii lipsesc."
+  },
+  {
+    "id": "cloud-73",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Modelul de Fan-Out cu SNS si SQS",
+    "question": "Ce este tiparul arhitectural \"Fan-Out\" (SNS + SQS) si de ce este considerat standardul de aur pentru decuplarea microserviciilor?",
+    "answer": "1. Scenariul de Business:\n   - Un utilizator plaseaza o comanda intr-un magazin online. Cand comanda este creata, trei sisteme diferite trebuie sa reactioneze simultan:\n     * 1. Serviciul de Facturare (genereaza PDF si trimite factura pe email).\n     * 2. Serviciul de Depozit (rezerva produsele fizice in stoc).\n     * 3. Serviciul de Analitica / Fraud Detection (calculeaza scorul de risc).\n\n2. Arhitectura gresita (Monolit strans legat):\n   - Daca serviciul de comenzi apeleaza HTTP direct toate cele 3 servicii, orice cadere a depozitului blocheaza finalizarea comenzii utilizatorului!\n\n3. Solutia Fan-Out (SNS -> Multiple SQS Queues):\n   - Serviciul de comenzi publica UN SINGUR eveniment pe topicul SNS \"OrderCreatedTopic\".\n   - Fiecare microserviciu are propria sa coada SQS dedicata abonata la topic (ex: BillingQueue, WarehouseQueue, AnalyticsQueue).\n   - SNS multiplica automat mesajul si il depoziteaza in toate cele 3 cozi paralele.\n   - Fiecare serviciu proceseaza mesajul in propriul ritm asincron. Daca depozitul este in mentenanta 2 ore, mesajele se aduna sigur in coada sa SQS fara a pierde vreo comanda!",
+    "codeSnippet": "// Diagrama Fan-Out:\n//                          /---> [Billing SQS Queue]    ---> [Billing Service]\n// [Order API] ---> [SNS Topic] -> [Warehouse SQS Queue]  ---> [Warehouse Service]\n//                          \\---> [Analytics SQS Queue]  ---> [Analytics Service]",
+    "interviewTrap": "Nu trimite apeluri HTTP directe intre microservicii pentru evenimente asincrone de broadcast; tiparul Fan-Out ofera rezilienta completa si decuplare la scara.",
+    "keyTakeaway": "Fan-Out foloseste SNS pentru a broadcasta un mesaj catre mai multe cozi SQS independente, asigurand procesare paralela rezilienta."
+  },
+  {
+    "id": "cloud-74",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Amazon EventBridge: Bus de evenimente serverless",
+    "question": "Ce este Amazon EventBridge si cum simplifica arhitecturile Event-Driven fata de traditionalul SNS?",
+    "answer": "1. Ce este Amazon EventBridge (fost CloudWatch Events):\n   - Un autobuz de evenimente serverless (Serverless Event Bus) conceput pentru a conecta aplicatii folosind date din propriile tale microservicii, servicii native AWS si aplicatii SaaS partenere integrate (ex: Datadog, Zendesk, Stripe, Auth0).\n\n2. Filtrare Avansata pe Payload (Content-based Filtering):\n   - In SNS mesajele sunt trimise brut tuturor abonatilor (sau au filtrare rudimentara pe atribute).\n   - In EventBridge poti defini reguli sofisticate pe baza structurii JSON din corpul evenimentului (ex: declanseaza Lambda DOAR daca \"order.total\" > 1000 si \"order.country\" === \"RO\").\n\n3. Schema Registry:\n   - EventBridge poate genera scheme automate pentru evenimente si ofera generare de cod tipizat (Java/TypeScript SDK) pentru consumatorii de evenimente.\n\n4. Cand alegi EventBridge vs SNS:\n   - Alege EventBridge: Cand ai nevoie de filtrare complexa pe payload, integrari native cu sute de servicii AWS (ex: \"la fiecare EC2 Terminated\") sau aplicatii SaaS externe.\n   - Alege SNS: Cand ai nevoie de throughput masiv de milioane de mesaje pe secunda cu latenta de sub 10 ms si cost minim.",
+    "codeSnippet": "// Regula EventBridge JSON:\n{\n  \"source\": [\"ecommerce.orders\"],\n  \"detail-type\": [\"OrderPlaced\"],\n  \"detail\": {\n    \"status\": [\"PAID\"],\n    \"amount\": [{ \"numeric\": [ \">=\", 500 ] }]\n  }\n}",
+    "interviewTrap": "EventBridge are o latenta medie de ~50-100 ms, mai mare decat SNS (~10-20 ms). Daca ai cerinte critice de ultra-joasa latenta la scara uriasa, SNS este mai potrivit.",
+    "keyTakeaway": "EventBridge ofera rutare inteligenta bazata pe continutul JSON si integrare nativa cu servicii SaaS si AWS."
+  },
+  {
+    "id": "cloud-75",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Amazon Step Functions: State Machines pentru fluxuri serverless",
+    "question": "De ce este periculos sa construiesti fluxuri complexe cu apeluri Lambda inlantuite (Chained Lambdas) si cum rezolva Step Functions aceasta problema?",
+    "answer": "1. Problema \"Lambda Pinball / Chained Lambdas\":\n   - Daca o functie Lambda apeleaza direct o alta functie Lambda, iar aceea apeleaza alta: platesti dublu sau triplu timpul de executie pentru functiile care stau inactive si asteapta raspunsul (idle wait)!\n   - Daca al treilea pas pica dupa ce primii doi au reusit (ex: plata a fost luata, dar emiterea biletului a picat), este extrem de greu sa gestionezi rollback-ul tranzactional (Saga Pattern) si retry-urile.\n\n2. Solutia: AWS Step Functions:\n   - Un serviciu de orchestrare vizuala bazat pe masini cu stari (State Machines).\n   - Definesti fluxul declarativ (ASL - Amazon States Language) cu pasi clari: Task, Choice (if/else), Parallel, Wait si Catch.\n   - Retry & Error Handling Declarativ: Configureaza retry automat cu exponential backoff la erori specifice fara sa scrii cod boilerplate.\n   - Audit Complet: Vizualizezi grafic starea fiecarei executii pas cu pas, cu inputul si outputul exact al fiecarei etape.",
+    "codeSnippet": "// ASL JSON fragment: Retry automat cu backoff in Step Functions:\n\"Retry\": [\n  {\n    \"ErrorEquals\": [ \"DatabaseConnectionException\" ],\n    \"IntervalSeconds\": 2,\n    \"MaxAttempts\": 3,\n    \"BackoffRate\": 2.0\n  }\n]",
+    "interviewTrap": "Step Functions Standard sunt ideale pentru fluxuri lungi de business (de pana la 1 an!); pentru fluxuri scurte de volum urias foloseste Step Functions Express Workflows (mult mai ieftine per executie).",
+    "keyTakeaway": "Step Functions separa logica de orchestrare de logica de business, oferind retry-uri automate si rollback vizual fiabil."
+  },
+  {
+    "id": "cloud-76",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "AWS Kinesis Data Streams vs Amazon SQS",
+    "question": "Care este diferenta arhitecturala dintre AWS Kinesis Data Streams (Streaming de date) si Amazon SQS (Coada de mesaje)?",
+    "answer": "1. Amazon SQS (Queue / Coada de Mesaje Tranzactionala):\n   - Model bazat pe CONSUMATOR INDIVIDUAL: Fiecare mesaj este destinat sa fie sters din coada dupa ce este procesat de un consumator.\n   - Mesajele nu raman pe disc dupa stergere.\n   - Nu exista conceptul de \"replay\" (rederulare a evenimentelor istorice).\n   - Ideal pentru comenzi, plati, sarcini asincrone izolate (Jobs).\n\n2. AWS Kinesis Data Streams (Real-Time Data Streaming):\n   - Model bazat pe LOG PERSISTENT DISTRIBUIT (similar arhitectural cu Apache Kafka).\n   - Datele sunt organizate pe Shards (partitii paralele de throughput: 1 MB/s write si 2 MB/s read per shard).\n   - Inregistrarile raman stocate in stream pe o perioada configurabila (de la 24 ore pana la 365 de zile), indiferent daca au fost citite sau nu!\n   - MULTI-CONSUMER REPLAY: Zeci de aplicatii diferite pot citi acelasi stream la viteze diferite si pot rederula datele de acum 3 zile pentru reanaliza.\n   - Ideal pentru clickstream analytics in timp real, date IoT de la senzori si telemetrie financiara masiva.",
+    "codeSnippet": "// Comparatie rapida:\n// SQS:     Mesajul este sters dupa procesare (1 consumator proceseaza un mesaj)\n// Kinesis: Mesajele raman in stream ca intr-un jurnal (Multiple aplicatii citesc si rederuleaza)",
+    "interviewTrap": "Scalarea in Kinesis se face manual prin adaugarea sau combinarea de Shards (sau prin modul nou On-Demand), in timp ce SQS scaleaza complet automat fara provisioning de capacitate.",
+    "keyTakeaway": "SQS este pentru sarcini individuale sterse la final; Kinesis este pentru streaming continuu de date cu persistenta si rederulare."
+  },
+  {
+    "id": "cloud-77",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon MQ: Cand il folosesti in loc de SQS sau SNS?",
+    "question": "Ce este Amazon MQ si in ce scenarii este preferat fata de solutiile cloud native SQS si SNS?",
+    "answer": "1. Ce este Amazon MQ:\n   - Un serviciu complet gestionat de \"Message Broker\" pentru motoare traditionale open-source de mesagerie, in special Apache ActiveMQ si RabbitMQ.\n   - AWS preia administrarea nodurilor, disponibilitatea hardware, backup-urile si patching-ul sistemului de operare.\n\n2. Cand alegi Amazon MQ in loc de SQS/SNS:\n   - Migrare rapida din on-premise (Lift and Shift): Daca aplicatia ta Java enterprise existenta foloseste API-ul JMS (Java Message Service) sau protocoale standard din industrie precum AMQP, STOMP, MQTT, WSS sau OpenWire.\n   - Rescrierea aplicatiei pe API-urile proprietare AWS SQS/SNS ar dura luni de zile si ar costa prea mult. Cu Amazon MQ doar schimbi URL-ul conexiunii brokerului catre AWS!\n   - Ai nevoie de functionalitati avansate specifice RabbitMQ (ex: topic exchanges sofisticate, fanout pe routing keys dinamice).\n\n3. Cand ramai la SQS/SNS:\n   - Pentru aplicatii noi construite nativ in cloud (Cloud-Native) care doresc scalare infinita automata fara a administra clustere de brokeri.",
+    "codeSnippet": "// Conectare JMS clasica in Spring Boot cu Amazon MQ:\nspring.activemq.broker-url=ssl://b-12345.mq.eu-central-1.amazonaws.com:61617\nspring.activemq.user=admin\nspring.activemq.password=SecretPass123!",
+    "interviewTrap": "Amazon MQ nu scaleaza automat la infinit ca SQS; el ruleaza pe instante EC2 gestionate sub capota, deci trebuie sa dimensionezi tipul instantei brokerului conform traficului dorit.",
+    "keyTakeaway": "Amazon MQ asigura compatibilitate deplina cu protocoale standard (AMQP, JMS, RabbitMQ) pentru migrarea rapida fara modificari de cod."
+  },
+  {
+    "id": "cloud-78",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon SES (Simple Email Service): Trimiterea tranzactionala de email-uri",
+    "question": "Ce este Amazon SES si cum garanteaza livrabilitatea email-urilor tranzactionale catre casutele de inbox ale clientilor?",
+    "answer": "1. Ce este Amazon SES:\n   - Un serviciu de email rentabil si scalabil la nivel global, conceput pentru trimiterea de email-uri tranzactionale (confirmari de cont, resetari de parola, facturi) si campanii de marketing.\n   - Pret extrem de mic: aproximativ $0.10 pentru fiecare 1.000 de email-uri trimise!\n\n2. Masuri de Securitate si Reputatie (Livrabilitate):\n   - Pentru a preveni ca email-urile sa ajunga direct in dosarul de Spam / Junk, SES cere configurarea inregistrarilor DNS in domeniul tau:\n     * SPF (Sender Policy Framework): Autorizeaza serverele AWS sa trimita email-uri in numele domeniului tau.\n     * DKIM (DomainKeys Identified Mail): Semneaza criptografic fiecare email cu o cheie privata pentru a garanta ca mesajul nu a fost modificat pe traseu.\n     * DMARC: Politica ce specifica providerilor (Gmail, Yahoo) ce actiune sa ia daca SPF sau DKIM pica.\n\n3. Modul Sandbox:\n   - Orice cont nou este plasat initial in SES Sandbox (poti trimite doar catre adrese de email verificate manual) pentru a preveni activitatea de spam.",
+    "codeSnippet": "# Trimitere email rapida prin AWS CLI:\naws ses send-email \\\n  --from \"no-reply@mycompany.com\" \\\n  --destination \"ToAddresses=candidate@example.com\" \\\n  --message \"Subject={Data=Felicitari pentru oferta},Body={Text={Data=Te asteptam in echipa!}}",
+    "interviewTrap": "Daca rata de bounce (email-uri trimise catre adrese inexistente) depaseste 5% sau rata de plangeri de spam (complaints) depaseste 0.1%, AWS va suspenda automat capacitatea contului tau de a trimite email-uri!",
+    "keyTakeaway": "Amazon SES ofera trimitere de email-uri la cost infim; necesita configurare corecta a inregistrarilor DNS SPF/DKIM pentru livrabilitate in Inbox."
+  },
+  {
+    "id": "cloud-79",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon CloudWatch Metrics vs CloudWatch Logs: Diferente fundamentale",
+    "question": "Care este diferenta dintre CloudWatch Metrics si CloudWatch Logs in monitorizarea aplicatiilor cloud?",
+    "answer": "Amazon CloudWatch este platforma principala de telemetrie si observabilitate din AWS:\n\n1. CloudWatch Metrics (Date Numerice in Timp):\n   - Stocheaza variabile numerice asociate cu un timestamp (Time-Series Data).\n   - Masoara performanta hardware si a resurselor: CPUUtilization (%), NetworkIn (Bytes), DiskReadOps, HTTP 5XX Errors, Latency.\n   - Retinute pe perioade lungi (pana la 15 luni) cu agregari automate.\n   - Pe baza metricilor poti defini alarme vizuale sau poti declansa reguli automate de Auto Scaling.\n\n2. CloudWatch Logs (Text si Evenimente Descriptive):\n   - Colecteaza, monitorizeaza si stocheaza fisiere text de loguri generate de aplicatii si sisteme (ex: logurile aplicatiei Spring Boot, logurile din /var/log/nginx, sau iesirile console.log() din Lambda).\n   - Poti folosi CloudWatch Logs Insights pentru a rula interogari complexe asemanatoare cu SQL pe textul logurilor pentru a gasi exceptiile si erorile din productie.",
+    "codeSnippet": "// Exemplu interogare Logs Insights:\n// fields @timestamp, @message\n// | filter @message like /NullPointerException/\n// | sort @timestamp desc\n// | limit 20",
+    "interviewTrap": "Metricile standard EC2 vin gratuit la un interval de 5 minute (Basic Monitoring); daca ai nevoie de metrici la nivel de 1 minut (Detailed Monitoring) sau metrici de memorie RAM, trebuie sa platesti suplimentar si sa instalezi CloudWatch Agent!",
+    "keyTakeaway": "Metrics reprezinta cifre si grafice de performanta; Logs reprezinta textul detaliat al evenimentelor si erorilor generate de aplicatie."
+  },
+  {
+    "id": "cloud-80",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon CloudWatch Alarms: Notificari si actiuni automate",
+    "question": "Cum functioneaza o alarma CloudWatch, care sunt cele 3 stari posibile si ce actiuni poate declansa automat?",
+    "answer": "1. Ce este un CloudWatch Alarm:\n   - Un mecanism de monitorizare automata a unei metrici pe o perioada de timp specificata (ex: calculeaza media CPUUtilization pe intervale de 5 minute).\n\n2. Cele 3 Stari ale unei Alarme:\n   - OK: Valoarea metricii se incadreaza in limitele normale stabilite (ex: CPU < 70%).\n   - ALARM: Valoarea a depasit pragul configurat pentru numarul specificat de perioade consecutive (ex: CPU > 80% timp de 2 evaluari consecutive de 5 minute).\n   - INSUFFICIENT_DATA: Nu exista suficiente date raportate pentru a determina starea (nou creata sau instanta a fost oprita).\n\n3. Actiuni Automate pe care le poate declansa:\n   - Trimite o notificare catre o echipa de ingineri prin Amazon SNS (care trimite mai departe un SMS, email sau alerta pe Slack/PagerDuty).\n   - Declanseaza o politica de Auto Scaling (adauga 2 instante EC2 in ASG).\n   - Efectueaza actiuni EC2: Reboot, Stop, Terminate sau Recover pe instanta afectata.",
+    "codeSnippet": "# Exemplu Terraform Alarma CPU:\nresource \"aws_cloudwatch_metric_alarm\" \"high_cpu\" {\n  alarm_name          = \"high-cpu-alert\"\n  comparison_operator = \"GreaterThanThreshold\"\n  evaluation_periods  = 2\n  metric_name         = \"CPUUtilization\"\n  namespace           = \"AWS/EC2\"\n  period              = 300\n  statistic           = \"Average\"\n  threshold           = 80\n  alarm_actions       = [aws_sns_topic.devops_alerts.arn]\n}",
+    "interviewTrap": "Nu seta perioada de evaluare prea scurta (ex: 10 secunde) pe un prag strans de CPU, altfel orice mic spike temporar normal de pornire a aplicatiei va declansa alarme false (Alert Fatigue).",
+    "keyTakeaway": "Alarmele monitorizeaza metrici, tranzitioneaza intre OK/ALARM/INSUFFICIENT_DATA si pot trimite notificari SNS sau declansa scalare."
+  },
+  {
+    "id": "cloud-81",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon CloudTrail: Auditul tuturor actiunilor API din cont",
+    "question": "Ce este Amazon CloudTrail si ce informatii inregistreaza despre fiecare operatiune efectuata in contul tau AWS?",
+    "answer": "1. Ce este Amazon CloudTrail:\n   - Serviciul dedicat de guvernanta, conformitate si audit de securitate al tuturor operatiunilor din contul AWS.\n   - Inregistreaza fiecare comanda sau apel API efectuat fie din consola web AWS, fie prin AWS CLI, fie prin cod (AWS SDK), fie prin tool-uri de IaC (Terraform).\n\n2. Ce detalii inregistreaza fiecare eveniment (Cine, Ce, Cand, Unde):\n   - Cine a facut actiunea (User Identity / IAM Role ARN).\n   - Cand a avut loc (Timestamp exact UTC).\n   - Ce comanda exacta a rulat (Event Name: ex: TerminateInstances, DeleteBucket, CreateUser).\n   - De unde a venit cererea (Source IP Address si User Agent-ul folosit).\n   - Parametrii trimisi si raspunsul primit (inclusiv codul de eroare daca actiunea a fost refuzata de IAM).\n\n3. Retentie:\n   - Event History din consola pastreaza gratuit evenimentele din ultimele 90 de zile.\n   - Pentru productie se creeaza un \"Trail\" care trimite permanent toate logurile intr-un S3 Bucket criptat dedicat pentru pastrare pe termen lung.",
+    "codeSnippet": "// Exemplu fragment CloudTrail JSON:\n{\n  \"eventTime\": \"2026-10-02T14:32:00Z\",\n  \"eventName\": \"DeleteDBInstance\",\n  \"userIdentity\": { \"type\": \"IAMUser\", \"userName\": \"alex.dev\" },\n  \"sourceIPAddress\": \"194.102.5.34\"\n}",
+    "interviewTrap": "CloudTrail nu este un tool de monitorizare a performantei aplicatiei (cum este CloudWatch)! CloudTrail auditeaza actiunile API administrative din contul AWS.",
+    "keyTakeaway": "CloudTrail este registrul contabil de audit al contului AWS; arata cu precizie cine, cand si ce resurse a creat sau sters."
+  },
+  {
+    "id": "cloud-82",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "CloudWatch vs CloudTrail: Cum raspunzi rapid la investigatii?",
+    "question": "Care este diferenta esentiala dintre CloudWatch si CloudTrail si cum le folosesti in timpul unui incident de securitate?",
+    "answer": "Aceasta este una dintre cele mai frecvente intrebari clasice de triere la interviurile de cloud:\n\n1. Formula Mnemonic rapida:\n   - CloudWatch = \"Cum se simte sistemul?\" (Performanta, Sanatate, Metrici, CPU, RAM, Loguri de aplicatie).\n   - CloudTrail = \"Cine a facut ce actiune?\" (Audit, Securitate, Utilizatori, Modificari de configurare, Apeluri API).\n\n2. Scenariu Real de Incident:\n   - \"Baza de date RDS a disparut la ora 14:00, iar serverele de aplicatie dau erori 500\":\n     * 1. Te uiti in CloudWatch Alarms: vezi ca metrica de conexiuni la DB a cazut la zero la ora 14:01 si logurile backend arata ConnectionRefused.\n     * 2. Deschizi imediat CloudTrail Event History: filtrezi dupa evenimentul \"DeleteDBInstance\" la ora 13:59. CloudTrail iti arata instantaneu adresa IP si utilizatorul IAM exact care a executat comanda de stergere a bazei de date!",
+    "codeSnippet": "// Sinteza de aur:\n// CloudWatch = MONITORIZARE (CPU 99%, out of memory, loguri Spring Boot)\n// CloudTrail = AUDIT (Alex a rulat comanda 'StopInstances' din consola la ora 14:05)",
+    "interviewTrap": "Daca te intreaba \"Unde cauti de ce baza de date a avut CPU 100%?\", raspunsul este CloudWatch. Daca te intreaba \"Unde cauti cine a deschis portul 22 in Security Group?\", raspunsul este CloudTrail.",
+    "keyTakeaway": "CloudWatch monitorizeaza performanta si logurile aplicatiei; CloudTrail identifica utilizatorul si actiunea API responsabila de modificari."
+  },
+  {
+    "id": "cloud-83",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "AWS X-Ray: Distributed Tracing pentru microservicii si serverless",
+    "question": "Ce este AWS X-Ray si cum te ajuta sa descoperi blocajele de performanta intr-o arhitectura distribuita de microservicii?",
+    "answer": "1. Problema in Microservicii:\n   - O cerere a unui utilizator trece printr-un lant complex: API Gateway -> Microserviciu Auth -> Microserviciu Orders -> Baza de date PostgreSQL -> Apel extern la Stripe.\n   - Daca raspunsul dureaza 4 secunde, este imposibil sa stii din loguri izolate unde s-au pierdut cele 4 secunde.\n\n2. Ce face AWS X-Ray (Distributed Tracing):\n   - Ataseaza o eticheta unica de urmarire (Trace Header: X-Amzn-Trace-Id) la cererea de intrare.\n   - Aceasta eticheta se propaga automat la toate apelurile dintre microservicii, tabele DynamoDB si baze SQL.\n\n3. Componente Cheie:\n   - Service Map (Harta Serviciilor): O diagrama vizuala generata automat care arata toate serviciile conectate, cu latenta medie si rata de erori colorata (verde/rosu).\n   - Traces & Segments: Un grafic temporal detaliat (waterfall) care arata exact fiecare milisecunda consumata de fiecare segment (ex: \"SQL query a durat 3.8 secunde din totalul de 4 secunde\").",
+    "codeSnippet": "// Header-ul de propagare propagat automat intre microservicii:\n// X-Amzn-Trace-Id: Root=1-5759e988-bd862e3fe1be46a994272793;Sampled=1",
+    "interviewTrap": "X-Ray nu este gratuit la volume uriase; se foloseste \"Sampling Rules\" (esantionare, ex: inregistreaza doar 5% din cererile normale, dar 100% din cele care dau eroare HTTP 500) pentru a tine costurile sub control.",
+    "keyTakeaway": "X-Ray mapeaza vizual fluxul cererilor intre microservicii si evidentiaza cu precizie milisecundele pierdute pe fiecare componenta."
+  },
+  {
+    "id": "cloud-84",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Amazon EventBridge Scheduler: Inlocuitor modern pentru cron jobs",
+    "question": "De ce rularea cron jobs clasice pe servere EC2 este o practica fragila si cum modernizeaza EventBridge Scheduler sarcinile programate?",
+    "answer": "1. Fragilitatea Cron-ului clasic pe Linux EC2:\n   - Daca instanta pica sau este reciclata de Auto Scaling, cron job-ul nu mai ruleaza niciodata fara sa fii anuntat.\n   - Daca ai 3 servere identice in cluster, cron job-ul va rula de 3 ori in paralel (duplicare nedorita de sarcini).\n   - Serverul trebuie tinut pornit 24/7 doar pentru a rula un script de 30 de secunde o data pe noapte.\n\n2. EventBridge Scheduler (Serverless & Robust):\n   - Un serviciu complet gestionat capabil sa programeze milioane de sarcini la timp fix (cron) sau cu executie unica (One-time schedules).\n   - Suporta expresii clasice Cron (ex: \"cron(0 2 * * ? *)\" = in fiecare noapte la 2:00 AM) sau expresii Rate (ex: \"rate(15 minutes)\").\n   - Suporta Time Zones specifice (ex: ruleaza exact la 09:00 ora Romaniei / Europe/Bucharest, gestionand automat ora de vara/iarna!).\n   - Integreaza nativ mecanisme de Retry automat cu Dead Letter Queue (DLQ) daca serviciul tinta nu raspunde.",
+    "codeSnippet": "# Expresie EventBridge Scheduler:\n# Executa la ora 03:00 dimineata in fusul orar al Romaniei:\ncron(0 3 * * ? *) [Timezone: Europe/Bucharest]\nTarget: Lambda Function / ECS Task / Step Function",
+    "interviewTrap": "Spre deosebire de vechiul CloudWatch Events Rules, noul EventBridge Scheduler suporta fusuri orare locale; in trecut toate cron-urile trebuiau calculate manual exclusiv in UTC.",
+    "keyTakeaway": "EventBridge Scheduler elimina necesitatea serverelor pornite continuu pentru cron-uri, oferind executie serverless precisa cu retry si DLQ."
+  },
+  {
+    "id": "cloud-85",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "AWS Cost Explorer si AWS Budgets: Alerte de cost",
+    "question": "Cum utilizezi AWS Budgets si AWS Cost Explorer pentru a preveni surprizele neplacute pe factura lunara?",
+    "answer": "1. AWS Cost Explorer:\n   - O interfata vizuala si analitica pentru a vizualiza, intelege si analiza costurile si utilizarea resurselor AWS in ultimele 12 luni sau prognoza pe urmatoarele 3 luni.\n   - Permite filtrarea si gruparea costurilor dupa Serviciu (ex: EC2, RDS, S3), Regiune, Cont membru sau Tag-uri de cost (Cost Allocation Tags, ex: Environment=Production vs Environment=Dev).\n\n2. AWS Budgets (Alerte Proactive):\n   - Permite stabilirea de bugete financiare fixe sau dinamice lunare (ex: Buget de $200/luna pentru mediul de dezvoltare).\n   - Poti seta alerte automate trimise prin email sau SNS cand costurile reale DEPASESC un anumit procent (ex: 85% din buget atins inainte de mijlocul lunii).\n   - IMPORTANT: Poti seta alerte pe baza de PROGNOZA (Forecasted Budget Alert): te anunta pe 10 ale lunii daca tiparul curent de consum va depasi bugetul pana la finalul lunii!",
+    "codeSnippet": "// Regula esentiala in companii:\n// Alerta 1: Actual Cost > 80% din Buget (Email catre echipa de dev)\n// Alerta 2: Forecasted Cost > 100% din Buget (Alerta catre Engineering Manager)",
+    "interviewTrap": "AWS Budgets in sine DOAR trimite notificari, nu opreste automat serverele implicit (decat daca configurezi explicit o actiune AWS Budget Action cu un IAM Role asociat).",
+    "keyTakeaway": "Cost Explorer analizeaza istoricul si tendintele de cheltuieli; AWS Budgets trimite alerte proactive la depasirea pragurilor financiare."
+  },
+  {
+    "id": "cloud-86",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "FinOps in Cloud: Strategii practice de reducere a facturii",
+    "question": "Care sunt cele mai eficiente 5 practici de FinOps (Financial Operations) pentru a reduce imediat costurile unei infrastructuri cloud?",
+    "answer": "FinOps combina practicile financiare cu ingineria cloud pentru a maximiza valoarea fiecarui dolar cheltuit:\n\n1. Identificarea si Stergerea Resurselor \"Zombie\":\n   - Volume EBS neatasate (Unattached EBS volumes ramase dupa stergerea serverelor EC2 continua sa fie facturate!).\n   - Elastic IP-uri alocate dar neasociate la nicio instanta pornita (AWS taxeaza IP-urile publice nefolosite!).\n   - EBS Snapshots vechi uitate si Load Balancers fara instante in spate.\n\n2. Programarea Mediilor de Dev/Test (Auto-Stop/Start):\n   - Dezvoltatorii nu lucreaza noaptea si in weekend. Oprirea automata a serverelor de test intre 20:00 si 08:00 si in weekend reduce factura acelor masini cu peste 65%!\n\n3. Right-Sizing:\n   - Analizeaza metricile CloudWatch: daca o instanta t3.xlarge are o medie de 8% CPU si 20% RAM de luni de zile, schimb-o cu un t3.medium.\n\n4. Trecerea la Procesoare ARM (AWS Graviton):\n   - Schimbarea tipului de instanta de la x86 (t3/m5) la Graviton ARM (t4g/m6g) ofera pana la 40% mai bun raport pret/performanta si consum de energie redus.\n\n5. Angajamente pe Termen Lung (Savings Plans / Reserved Instances):\n   - Pentru serverele stabile de productie care ruleaza 24/7, achizitionarea unui Savings Plan pe 1 sau 3 ani aduce discounturi de pana la 60%.",
+    "codeSnippet": "// Checklist saptamanal FinOps:\n// [ ] Verifica volume EBS izolate (State: available)\n// [ ] Verifica Elastic IPs nefolosite\n// [ ] Activeaza reguli S3 Lifecycle pe bucket-urile de loguri\n// [ ] Cumpara Savings Plans pentru baza stabila de productie",
+    "interviewTrap": "Nu reduce dimensiunea masinilor (downsizing) inainte de a analiza traficul la ore de varf (peak hours); o instanta cu consum mediu mic poate avea varfuri critice la ore fixe!",
+    "keyTakeaway": "FinOps reduce risipa eliminand resursele orfane, programand masinile de test si folosind Graviton si Savings Plans."
+  },
+  {
+    "id": "cloud-87",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "AWS Trusted Advisor: Recomandari de securitate si cost",
+    "question": "Ce este AWS Trusted Advisor si care sunt cele 5 categorii majore de bune practici pe care le evalueaza continuu?",
+    "answer": "1. Ce este AWS Trusted Advisor:\n   - Un consultant virtual integrat in AWS care scaneaza continuu contul tau si ofera recomandari personalizate in timp real pentru a respecta cele mai bune practici arhitecturale.\n\n2. Cele 5 Categorii Fundamentale:\n   - 1. Cost Optimization: Identifica instante EC2 inactive, baze RDS cu utilizare zero, volume EBS neasociate sau oportunitati de Reserved Instances.\n   - 2. Performance: Verifica daca atingi limitele de servicii (Service Quotas), daca discurile EBS au atins limita de IOPS sau daca folosesti un CDN eficient.\n   - 3. Security: Semnaleaza porturi vulnerabile deschise catre lume (0.0.0.0/0 pe portul 22 sau 3389), bucket-uri S3 publice, lipsa MFA pe contul Root sau chei IAM nerotite de peste 90 de zile.\n   - 4. Fault Tolerance: Verifica daca bazele RDS au Multi-AZ activat, daca exista backup-uri automate si daca instantele sunt distribuite in mai multe AZ-uri.\n   - 5. Service Quotas: Te avertizeaza cand te apropii de 80% din capacitatea maxima permisa a contului pe anumite resurse.",
+    "codeSnippet": "// Coduri de culori in Trusted Advisor:\n// Verde:   Totul este conform bunelor practici\n// Galben:  Avertisment de optimizare posibila\n// Rosu:    Actiune recomandata urgenta (ex: Bucket S3 public sau Root fara MFA)",
+    "interviewTrap": "Planul de suport Basic gratuit ofera verificari de baza din categoria Security si Service Limits; recomandarile complete din toate cele 5 categorii cer suport Business sau Enterprise.",
+    "keyTakeaway": "Trusted Advisor auditeaza automat contul pe cost, performanta, securitate, toleranta la defectiuni si cote de utilizare."
+  },
+  {
+    "id": "cloud-88",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "AWS Config: Monitorizarea conformitatii configuratiilor",
+    "question": "Ce este AWS Config si cum asigura ca resursele din cloud respecta standardele de securitate ale companiei?",
+    "answer": "1. Ce este AWS Config:\n   - Un serviciu complet gestionat de evaluare, audit si inregistrare a conformitatii configuratiilor resurselor din contul AWS.\n   - Tine un inventar complet si un istoric cronologic al tuturor modificarilor suferite de fiecare resursa de-a lungul vietii ei.\n\n2. Cum functioneaza Regulile (AWS Config Rules):\n   - Poti defini reguli predefinite de AWS sau personalizate prin Lambda (ex: regula \"s3-bucket-ssl-requests-only\" sau \"encrypted-volumes\").\n   - Ori de cate ori cineva modifica o resursa (ex: creeaza un volum EBS necriptat), AWS Config evalueaza resursa:\n     * Daca nu respecta regula, o marcheaza cu starea \"NON_COMPLIANT\".\n\n3. Remediere Automata (Automatic Remediation):\n   - Poti asocia o actiune automata de remediere prin AWS Systems Manager Automation: de exemplu, daca un bucket S3 este creat fara criptare sau devine public, AWS Config declanseaza automat un script care cripteaza bucket-ul si blocheaza accesul public in cateva secunde!",
+    "codeSnippet": "// Istoric de configurare in AWS Config:\n// 14:00 - Volume vol-123 creat (Encrypted: false) -> Status: NON_COMPLIANT\n// 14:01 - Auto-Remediation declansat -> Notificare trimisa echipei de securitate",
+    "interviewTrap": "Nu confunda AWS Config cu CloudTrail! CloudTrail iti spune \"Cine a facut apelul API\" (persoana/identitatea); AWS Config iti spune \"Cum s-a modificat starea resursei\" (configuratia inainte si dupa).",
+    "keyTakeaway": "AWS Config monitorizeaza conformitatea resurselor in timp si poate aplica remedieri automate cand regulile de securitate sunt incalcate."
+  },
+  {
+    "id": "cloud-89",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Ce este Infrastructure as Code (IaC) si care sunt avantajele utilizarii Terraform?",
+    "question": "Ce este conceptul de Infrastructure as Code (IaC) si de ce este de preferat Terraform fata de configurarea manuala in consola web?",
+    "answer": "1. Ce este IaC (Infrastructure as Code):\n   - Practica de a gestiona si proviziona infrastructura cloud (servere, retele, baze de date, permisiuni) prin intermediul fisierelor de cod declarative si citibile, pastrate si versionate intr-un depozit Git.\n\n2. De ce este de preferat fata de configurarea manuala (ClickOps):\n   - Eliminarea Erorii Umane: Configurarea a 20 de parametri intr-o consola web duce inevitabil la greseli sau omisiuni.\n   - Repetabilitate si Viteza: Poti ridica un mediu identic intreg de Staging sau Disaster Recovery in 5 minute cu o singura comanda.\n   - Audit si Code Review: Fiecare modificare de infrastructura trece printr-un Pull Request in Git, unde colegii pot verifica planul inainte de deploy.\n   - Documentatie Vie: Fisierele .tf reprezinta adevarul obiectiv despre cum arata infrastructura companiei.\n\n3. De ce Terraform:\n   - Deschidere Multi-Cloud: Foloseste limbajul HCL (HashiCorp Configuration Language) suportat pe AWS, Azure, GCP, Cloudflare, Kubernetes.\n   - Abordare Declarativa: Tu descrii \"starea dorita\" (ce vrei sa obtii), iar Terraform se ocupa sa atinga acea stare.",
+    "codeSnippet": "# Resursa declarativa simpla:\nresource \"aws_s3_bucket\" \"my_storage\" {\n  bucket = \"company-data-lake-prod\"\n}",
+    "interviewTrap": "IaC nu inseamna doar sa scrii codul; inseamna sa il treci prin CI/CD si sa nu mai lasi NICIODATA inginerii sa modifice manual resursele din consola web peste cod!",
+    "keyTakeaway": "Terraform transforma infrastructura in cod versionabil in Git, aducand repetabilitate, siguranta si audit complet al modificarilor."
+  },
+  {
+    "id": "cloud-90",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Terraform Workflow esential: init, plan, apply, destroy",
+    "question": "Care sunt cele 4 comenzi fundamentale din fluxul de lucru zilnic cu Terraform si ce face fiecare?",
+    "answer": "1. `terraform init` (Initializare):\n   - Prima comanda rulata intr-un director Terraform.\n   - Descarca plugin-urile de provider necesare (ex: providerul AWS, Azure) si configureaza backend-ul pentru salvarea starii (remote state).\n\n2. `terraform plan` (Planificare / Previzualizare):\n   - Compara codul tau local cu starea reala curenta a resurselor din cloud.\n   - Afiseaza un raport clar cu ce intentioneaza sa faca:\n     * `+` adauga resurse noi\n     * `~` modifica resurse existente pe loc\n     * `-` distruge resurse care au fost sterse din cod\n   - Nu modifica NICIODATA nimic in cloud; este o simulare 100% sigura!\n\n3. `terraform apply` (Aplicare):\n   - Executa efectiv schimbarile aprobate apeland API-urile cloud.\n   - Actualizeaza fisierul de stare terraform.tfstate la finalul aplicarii cu noile ID-uri create.\n\n4. `terraform destroy` (Distrugere):\n   - Sterge si curata absolut toate resursele gestionate de acel proiect Terraform. Utilizat pe medii temporare de dev sau test.",
+    "codeSnippet": "// Workflow zilnic in terminal:\nterraform init      // 1. Descarca provideri\nterraform plan      // 2. Vezi schimbarile planificate (Dry Run)\nterraform apply     // 3. Aplica schimbarile dupa confirmare",
+    "interviewTrap": "Nu rula niciodata \"terraform apply -auto-approve\" in medii de productie fara sa fi inspectat cu atentie output-ul comenzii \"terraform plan\" intr-un pipeline!",
+    "keyTakeaway": "Workflow-ul Terraform se bazeaza pe previzualizare inainte de executie: init pregateste, plan arata diferentele, apply executa."
+  },
+  {
+    "id": "cloud-91",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Ce este fisierul `terraform.tfstate` si de ce NU trebuie salvat in Git?",
+    "question": "Ce rol indeplineste fisierul `terraform.tfstate` si de ce comiterea lui intr-un depozit Git reprezinta un risc critic de securitate?",
+    "answer": "1. Ce este fisierul terraform.tfstate:\n   - Un fisier JSON generat si administrat automat de Terraform care actioneaza ca \"sursa de adevar\" a infrastructurii.\n   - Realizeaza maparea dintre resursele declarate in codul tau (ex: aws_instance.web) si ID-urile reale din cloud (ex: i-0abc1234).\n   - Tine evidenta metadatelor, dependentelor si starii curente a resurselor.\n\n2. De ce NU trebuie comis NICIODATA in Git:\n   - Riscuri Majore de Securitate: Fisierul de state contine TOATE atributele resurselor in text clar (plaintext)! Daca creezi o baza de date RDS sau un secret, parola bazei de date, cheile private si token-urile sunt salvate in clar in fisierul .tfstate. Oricine are acces la Git iti poate fura parolele de productie!\n   - Conflicte de Colaborare: Daca doi ingineri fac apply local si dau push in Git, vor genera conflicte de merge insolubile si vor corupe starea infrastructurii.\n\n3. Solutia Corecta: Remote Backend (S3 + DynamoDB Locking).",
+    "codeSnippet": "# Adauga intotdeauna in fisierul .gitignore:\n*.tfstate\n*.tfstate.*\n.terraform/\n.terraform.lock.hcl",
+    "interviewTrap": "Daca cineva a comis din greseala un fisier tfstate in GitHub, rotiti imediat toate parolele si secretele continute in el, deoarece raman in istoricul de commit-uri Git!",
+    "keyTakeaway": "Fisierul tfstate contine date confidentiale in text clar; trebuie exclus din Git si salvat securizat intr-un remote backend."
+  },
+  {
+    "id": "cloud-92",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Terraform Remote State in S3 cu State Locking prin DynamoDB",
+    "question": "Cum configurezi un Remote Backend pentru Terraform folosind un S3 Bucket si un tabel DynamoDB si cum previne State Locking rularea concurenta?",
+    "answer": "1. De ce avem nevoie de Remote State in Echipe:\n   - Intr-o echipa de ingineri, starea infrastructurii trebuie partajata centralizat, criptata si disponibila de oriunde (inclusiv din pipeline-ul de CI/CD).\n\n2. Rolul Amazon S3 (Stocare & Securitate):\n   - Stocheaza fisierul terraform.tfstate intr-un bucket S3 privat, protejat cu criptare AES-256 (KMS) si versionare activata (permite recuperarea starii anterioare daca un deploy esueaza).\n\n3. Rolul DynamoDB (State Locking):\n   - Ce se intampla daca doi ingineri sau doua joburi paralele de CI/CD ruleaza comanda \"terraform apply\" in aceeasi secunda? Se ajunge la State Corruption sau resurse duplicate.\n   - DynamoDB ofera State Locking: cand incepe o comanda plan/apply, Terraform scrie o intrare cu LockID in tabelul DynamoDB.\n   - Oricine altcineva incearca sa ruleze comanda va primi o eroare ca starea este blocata (Locked by user X), pana la finalizarea operatiunii!",
+    "codeSnippet": "# Configurare Backend Remote in Terraform:\nterraform {\n  backend \"s3\" {\n    bucket         = \"my-company-terraform-states\"\n    key            = \"prod/app/terraform.tfstate\"\n    region         = \"eu-central-1\"\n    dynamodb_table = \"terraform-state-locks\"\n    encrypt        = true\n  }\n}",
+    "interviewTrap": "Tabelul DynamoDB folosit pentru state locking trebuie configurat obligatoriu cu o cheie primara (Partition Key) cu numele exact \"LockID\" de tip String, altfel Terraform da eroare la conectare.",
+    "keyTakeaway": "S3 stocheaza si cripteaza starea centralizata; DynamoDB previne aplicari simultane concurente prin mecanismul de State Locking."
+  },
+  {
+    "id": "cloud-93",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Terraform Variables, Outputs si `terraform.tfvars`",
+    "question": "Cum parametrizezi codul de Terraform folosind variabile de intrare (variables.tf), fisiere de valori (.tfvars) si iesiri (outputs.tf)?",
+    "answer": "Pentru a face codul de infrastructura reutilizabil si curat, Terraform foloseste 3 concepte fundamentale:\n\n1. Input Variables (`variables.tf` - Declararea parametrilor):\n   - Definesti tipul de date, descrierea si eventual o valoare implicita (default).\n   - Exemple de tipuri: string, number, bool, list(string), map(string).\n\n2. Fisiere de Valori (`terraform.tfvars` - Furnizarea valorilor reale):\n   - Fisierul unde atribui valori concrete variabilelor pentru un mediu anume (ex: environment = \"production\", instance_count = 3).\n   - Terraform incarca automat variabilele din fisierul numit terraform.tfvars sau *.auto.tfvars.\n\n3. Output Values (`outputs.tf` - Afisarea rezultatelor):\n   - Returneaza date utile generate dupa aplicarea infrastructurii (ex: adresa IP publica a serverului creat, URL-ul Load Balancer-ului sau ID-ul bazei de date).\n   - Pot fi citite si consumate ulterior de alte scripturi automate sau alte module Terraform.",
+    "codeSnippet": "# variables.tf:\nvariable \"instance_type\" {\n  type    = string\n  default = \"t3.micro\"\n}\n\n# terraform.tfvars (suprascrie valoarea default pentru productie):\ninstance_type = \"m5.large\"\n\n# outputs.tf:\noutput \"alb_dns_name\" {\n  value = aws_lb.main.dns_name\n}",
+    "interviewTrap": "Daca ai o variabila sensibila (ex: db_password), seteaza intotdeauna proprietatea \"sensitive = true\" in definitia variabilei; altfel Terraform va afisa parola in clar in logurile comenzii terraform plan/apply!",
+    "keyTakeaway": "variables.tf declara parametrii; terraform.tfvars asigneaza valorile per mediu; outputs.tf expune datele generate."
+  },
+  {
+    "id": "cloud-94",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Terraform Modules: Reutilizarea codului intre medii (dev/staging/prod)",
+    "question": "Ce este un modul Terraform si cum ajuta la respectarea principiului DRY (Don’t Repeat Yourself) intre medii multiple?",
+    "answer": "1. Ce este un Modul Terraform:\n   - Un pachet de fisiere Terraform (.tf) grupate intr-un director dedicat, conceput pentru a proviziona un set coerent de resurse conexe (ex: un modul de VPC, un modul de cluster EKS, sau un modul de baza RDS).\n   - Modulul are: Inputs (variabile), Resources (ce creeaza) si Outputs (ce returneaza).\n\n2. Cum elimina duplicarea de cod (DRY):\n   - Fara module, ai copia si lipi 500 de linii de cod de trei ori pentru medii diferite (dev, staging, prod).\n   - Cu module, scrii arhitectura o singura data in directorul \"modules/web_app\", iar in directorul \"environments/prod\" apelezi modulul cu o instanta mai mare, in timp ce in \"environments/dev\" apelezi exact acelasi modul cu o instanta mica!\n\n3. Sursa Modulelor:\n   - Module locale (directoare din acelasi repozitoriu: source = \"../modules/vpc\").\n   - Module remote (depozite Git versionate cu tag-uri Git: source = \"git::https://github.com/myorg/tf-modules.git?ref=v1.2.0\") sau din Terraform Registry public.",
+    "codeSnippet": "# Apel modul in mediul de productie:\nmodule \"production_cluster\" {\n  source        = \"../modules/ecs_cluster\"\n  environment   = \"production\"\n  instance_type = \"m5.large\"\n  node_count    = 6\n}",
+    "interviewTrap": "In productie, specifica intotdeauna versiunea exacta a modulului folosind un Git tag (ref=v1.2.0); nu folosi branch-ul master/main ca sursa, altfel o modificare neanuntata a unui coleg iti poate strica deploierea.",
+    "keyTakeaway": "Modulele impacheteaza resursele in componente reutilizabile si parametrizabile, asigurand consistenta deplina intre medii."
+  },
+  {
+    "id": "cloud-95",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Terraform count vs for_each: Cand folosesti fiecare?",
+    "question": "Care este diferenta dintre meta-argumentele `count` si `for_each` in Terraform si de ce `count` poate duce la distrugeri accidentale de resurse?",
+    "answer": "Ambele meta-argumente permit crearea mai multor instante ale aceleiasi resurse dintr-un singur bloc de cod:\n\n1. Meta-argumentul `count` (Indexat Numeric):\n   - Foloseste o lista indexata numeric [0, 1, 2...].\n   - LIMITAREA MAJORA (Pericol de distrugere): Daca ai o lista de 3 subneturi [\"subnet-a\", \"subnet-b\", \"subnet-c\"] si stergi \"subnet-a\" din mijlocul listei:\n     * Subnet-b devine noul index 0, iar subnet-c devine noul index 1.\n     * Terraform crede ca ai redenumit si sters resurse! Va incerca sa distruga si sa recreeze resursele existente, cauzand downtime masiv neasteptat!\n\n2. Meta-argumentul `for_each` (Map / Set de Chei Nominale):\n   - Itereaza peste un map sau un set de chei unice (ex: { dev = \"10.0.1.0/24\", prod = \"10.0.2.0/24\" }).\n   - Fiecare resursa este urmarita in starea Terraform dupa cheia ei nominala unica (ex: aws_subnet.subnets[\"prod\"]).\n   - Daca adaugi sau stergi o cheie, Terraform atinge STRICT acea cheie, fara a afecta in niciun fel celelalte resurse existente!",
+    "codeSnippet": "# Best Practice cu for_each:\nresource \"aws_subnet\" \"app_subnets\" {\n  for_each   = var.subnet_map # { \"zone-a\": \"10.0.1.0/24\", \"zone-b\": \"10.0.2.0/24\" }\n  cidr_block = each.value\n  tags       = { Name = each.key }\n}",
+    "interviewTrap": "Foloseste `count` STRICT pentru conditii booleene simple (ex: count = var.enable_monitoring ? 1 : 0); pentru colectii multiple de resurse foloseste intotdeauna `for_each`!",
+    "keyTakeaway": "for_each identifica resursele dupa chei unice si previne distrugerile in cascada provocate de reindexarea lui count."
+  },
+  {
+    "id": "cloud-96",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Terraform Lifecycle Rules: `create_before_destroy` si `prevent_destroy`",
+    "question": "Cum controleaza blocul `lifecycle` ordinea de inlocuire a resurselor si cum previne stergerea accidentala a bazelor de date?",
+    "answer": "In mod normal, cand Terraform trebuie sa inlocuiasca o resursa (care nu poate fi modificata in-place), comportamentul implicit este: DISTRUGE resursa veche si abia apoi CREEAZA resursa noua (ceea ce genereaza downtime!).\n\nPoti suprascrie acest comportament folosind blocul `lifecycle`:\n\n1. `create_before_destroy = true`:\n   - Inverseaza ordinea: CREEAZA intai noua resursa, asteapta sa fie functionala, si abia apoi O DISTRUGE pe cea veche.\n   - Esential pentru: certificate SSL/TLS, Launch Templates pentru Auto Scaling si grupuri de securitate, garantand Zero Downtime!\n\n2. `prevent_destroy = true` (Frana de siguranta):\n   - O protectie capitala: daca cineva ruleaza o comanda care ar duce la stergerea acelei resurse (inclusiv un `terraform destroy` accidental), Terraform va refuza sa ruleze si va arunca o eroare fatala!\n   - Obligatoriu pe baze de date relationale de productie (RDS PostgreSQL) si bucket-uri S3 critice.\n\n3. `ignore_changes`:\n   - Spune lui Terraform sa ignore modificarile la anumite atribute care sunt schimbate dinamic in cloud (ex: numarul de instante schimbat de un AutoScaler extern).",
+    "codeSnippet": "resource \"aws_db_instance\" \"prod_database\" {\n  # ... alte configuratii ...\n\n  lifecycle {\n    prevent_destroy = true # Protejeaza baza de date de stergere accidentala!\n  }\n}",
+    "interviewTrap": "Daca ai nevoie sa stergi legitim o resursa protejata cu prevent_destroy, trebuie mai intai sa elimini acea linie din cod, sa faci commit si apply, si abia apoi sa distrugi resursa.",
+    "keyTakeaway": "create_before_destroy elimina pauzele de downtime la inlocuire; prevent_destroy protejeaza resursele critice de stergere."
+  },
+  {
+    "id": "cloud-97",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Disaster Recovery: RTO (Recovery Time Objective) vs RPO (Recovery Point Objective)",
+    "question": "Ce reprezinta termenii RTO si RPO in planificarea Disaster Recovery si cum dicteaza ei arhitectura solutiei?",
+    "answer": "Sunt cele doua metrici fundamentale stabilite de conducerea companiei (business requirements) care dicteaza costul si arhitectura infrastructurii de backup:\n\n1. RPO (Recovery Point Objective - Cat de multe date iti permiti sa pierzi):\n   - Masoara diferenta de timp dintre dezastru si cel mai recent backup salvat cu succes.\n   - Raspunde la intrebarea: \"Daca sistemul pica acum la ora 14:00, este acceptabil sa pierdem datele adunate in ultimele 4 ore (RPO = 4h), in ultimele 5 minute (RPO = 5 min), sau ZERO date (RPO = 0)?\".\n   - Un RPO mic (secunde) necesita replicare continua sincrona de date (costisitoare).\n\n2. RTO (Recovery Time Objective - Cat de repede trebuie sa fii din nou online):\n   - Masoara timpul scurs din momentul producerii avariei pana cand sistemul redevine complet operational pentru utilizatori.\n   - Raspunde la intrebarea: \"Cat timp isi permite afacerea sa stea pe bara (downtime)? 24 de ore (RTO = 24h), 15 minute (RTO = 15 min), sau failover instant in sub o secunda?\".",
+    "codeSnippet": "// Relatie matematica de cost:\n// RTO -> 0 si RPO -> 0  ====> Costuri URISE (Sisteme Active-Active Multi-Region)\n// RTO = 24h si RPO = 24h ====> Costuri MINIME (Backup zilnic salvat pe S3 Glacier)",
+    "interviewTrap": "Multi canditati inverseaza termenii: RPO este despre PIERDEREA DE DATE (cantitate masurata in timp inapoi); RTO este despre DURATA DE RECUPERARE (timp masurat inainte pana la repornire).",
+    "keyTakeaway": "RPO dicteaza frecventa backup-urilor (toleranta la pierdere de date); RTO dicteaza viteza de restaurare a functionalitatii sistemului."
+  },
+  {
+    "id": "cloud-98",
+    "category": "CLOUD",
+    "difficulty": "MEDIU",
+    "title": "Strategii de Disaster Recovery: Backup & Restore vs Pilot Light vs Warm Standby",
+    "question": "Care sunt cele 4 mari strategii de Disaster Recovery in cloud si cum difera ca raport intre cost si viteza de recuperare?",
+    "answer": "Clasificate in ordinea crescatoare a costului si a vitezei de recuperare:\n\n1. Backup & Restore (Cel mai ieftin / Cel mai lent):\n   - Datele sunt salvate periodic in S3 sau prin AWS Backup.\n   - In caz de dezastru intr-o regiune, pornesti manual infrastructura de la zero folosind Terraform si restaurezi datele din backup.\n   - RTO = ore sau zile; RPO = ore.\n\n2. Pilot Light (Baza minima pornita):\n   - Componentele critice (doar baza de date) sunt pornite si replicate continuu in regiunea secundara.\n   - Serverele de calcul (EC2 / Containere) sunt OPRITE (sau doar sabloane AMI pregatite).\n   - In caz de dezastru, pornesti serverele EC2 din imagini si le atasezi la baza deja calda. RTO = zeci de minute.\n\n3. Warm Standby (Versiune minimala functionala 24/7):\n   - O versiune complet functionala, dar de dimensiuni reduse (ex: un singur server mic in loc de 10) ruleaza continuu in regiunea secundara.\n   - In caz de dezastru, scalezi rapid numarul de servere pentru a prelua traficul complet. RTO = minute.\n\n4. Multi-Region Active-Active (Zero Downtime / Cel mai scump):\n   - Aplicatia ruleaza la capacitate normala in doua sau mai multe regiuni simultan, traficul fiind rutat prin Route 53 bazat pe latenta/geolocatie. RTO = aproape zero; RPO = aproape zero.",
+    "codeSnippet": "// Mnemonic Disaster Recovery (De la Ieftin/Lent la Scump/Instant):\n// Backup & Restore  ->  Pilot Light  ->  Warm Standby  ->  Active-Active\n// ($)                   ($$)             ($$$)             ($$$$)",
+    "interviewTrap": "Nu propune niciodata Active-Active Multi-Region pentru orice aplicatie simpla; complexitatea replicarii bazelor de date relationale multi-master si costul dublu de infrastructura o fac nejustificata pentru 95% din companii.",
+    "keyTakeaway": "Alege Backup & Restore pentru bugete mici, Pilot Light/Warm Standby pentru scenarii medii si Active-Active doar pentru sisteme ultra-critice."
+  },
+  {
+    "id": "cloud-99",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Strategii de Migrare in Cloud: Cele 6/7 R-uri (The 7 Rs of Migration)",
+    "question": "Care sunt cele mai intalnite strategii de migrare a aplicatiilor dintr-un data center clasic in cloud (The 7 Rs)?",
+    "answer": "Cadrul definit de AWS pentru a evalua portofoliul de aplicatii inainte de migrare:\n\n1. Rehost (Lift and Shift):\n   - Muti aplicatia exact asa cum este, fara nicio modificare de cod sau arhitectura (ex: iei o masina virtuala VMware on-premise si o convertesti intr-un EC2).\n   - Cea mai rapida migrare, efort minim, dar nu profiti de beneficiile de optimizare si scalabilitate nativa a cloud-ului.\n\n2. Replatform (Lift, Tinker, and Shift):\n   - Faci mici optimizari de infrastructura la nivel de platforma fara a schimba codul de baza al aplicatiei (ex: in loc sa instalezi MySQL pe EC2, treci pe Amazon RDS gestionat).\n\n3. Refactor / Re-architect (Cloud-Native):\n   - Rescrierea aplicatiei pentru a adopta tehnologii native de cloud: spargerea monolitului in microservicii, serverless (Lambda), baze NoSQL (DynamoDB) si containere.\n   - Cel mai mare efort initial, dar ofera agilitate maxima si costuri minime pe termen lung.\n\n4. Repurchase (Drop and Shop):\n   - Renunti la software-ul intern invechit si adopti o solutie SaaS gata facuta (ex: treci de la un CRM intern la Salesforce).\n\n5. Retain (Pastrare on-premise): Pastrezi anumite aplicatii pe infrastructura existenta din motive de conformitate legala sau dependinte fizice hardware.\n6. Retire (Pensionare): Inchizi sistemele si serverele care nu mai sunt folosite de nimeni in companie.\n7. Relocate (Hypervisor level): Muti masinile virtuale direct pe VMware Cloud on AWS fara conversie de format.",
+    "codeSnippet": "// Traseul tipic al unei companii:\n// Faza 1: Rehost (Migrare rapida pe EC2 pentru a inchide data center-ul fizic)\n// Faza 2: Replatform (Trecere pe RDS si S3)\n// Faza 3: Refactor (Modernizare pe Lambda, Fargate si EventBridge)",
+    "interviewTrap": "Sa crezi ca Rehost (Lift-and-Shift) aduce automat reduceri de costuri in cloud; daca doar muti masini virtuale supradimensionate pe EC2 fara optimizari, factura de cloud poate fi chiar mai mare decat data center-ul propriu!",
+    "keyTakeaway": "Rehost este cea mai rapida cale (fara modificari de cod); Replatform adopta servicii gestionate (RDS); Refactor rescrie aplicatia cloud-native."
+  },
+  {
+    "id": "cloud-100",
+    "category": "CLOUD",
+    "difficulty": "USOR",
+    "title": "Top 5 Reguli de Aur in Interviul de Cloud pentru Junior/Mid Software Engineers",
+    "question": "Care sunt cele 5 principii fundamentale de arhitectura pe care orice candidat Junior sau Mid trebuie sa le demonstreze la un interviu de Cloud?",
+    "answer": "La un interviu tehnic pentru pozitii de Software Engineer sau DevOps, intervievatorii evalueaza gandirea arhitecturala structurata conform acestor 5 reguli de aur:\n\n1. Proiecteaza intotdeauna pentru Esec (Design for Failure / Self-Healing):\n   - Presupune ca orice server fizic, hard disk sau zona de disponibilitate poate pica in orice moment. Pune intotdeauna cel putin 2 instante in spatele unui Load Balancer in Zone de Disponibilitate diferite (Multi-AZ).\n\n2. Mentine Backend-ul Stateless (Stateless Compute):\n   - Nu stoca niciodata sesiuni de utilizator, fisiere uploadate sau cache local in memoria interna a serverului de aplicatie! Salveaza sesiunile in Redis (ElastiCache), fisierele in S3 si datele in baze relationale (RDS), permitand serverelor sa fie create si distruse liber de Auto Scaling.\n\n3. Securitate la Toate Nivelele (Defense in Depth & Least Privilege):\n   - Nu folosi niciodata chei statice (Access Keys) pe servere — foloseste exclusiv IAM Roles.\n   - Izoleaza bazele de date in subneturi private fara IP public.\n   - Cripteaza datele la repaus cu KMS si in tranzit cu TLS/HTTPS.\n\n4. Decuplare Asincrona prin Mesagerie (Loosely Coupled Services):\n   - Inlocuieste apelurile sincrone HTTP blocante intre servicii cu cozi de mesaje SQS, topicuri SNS sau evenimente EventBridge. Daca un serviciu pica temporar, cererile asteapta protejate in coada.\n\n5. Infrastructure as Code (IaC) si Automatizare Continua:\n   - Nu atinge resursele manual in consola de productie (\"No ClickOps\"). Toate modificarile de infrastructura se realizeaza prin cod Terraform declarat, testat si versionat in Git.",
+    "codeSnippet": "// Cele 5 Coloane ale Succesului in Cloud:\n// 1. Multi-AZ (High Availability)\n// 2. Stateless Backend (Scalare fara frica)\n// 3. IAM Roles + Private Subnets (Securitate solida)\n// 4. SQS / SNS Decoupling (Rezilienta la varfuri)\n// 5. Terraform IaC (Zero ClickOps in Productie)",
+    "interviewTrap": "Nu incerca sa arunci solutii ultra-complexe de tip multi-cloud multi-region active-active pentru o problema simpla la nivel Junior/Mid; arata stapanire ferma a fundamentelor: Multi-AZ, subneturi private, IAM Roles si decuplare cu SQS!",
+    "keyTakeaway": "Stapanirea celor 5 fundamente (Multi-AZ, Stateless, IAM Roles, Cozi asincrone, IaC) garanteaza un interviu de succes la orice nivel tehnic."
   }
 ];
