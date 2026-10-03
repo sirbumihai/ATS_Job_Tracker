@@ -236,13 +236,19 @@ export default function SkillRoadmapPage() {
           </div>
         </div>
 
-        {/* TECH TRACKS SELECTOR BAR (ONLY VISIBLE IN TECH_TRACKS MODE) */}
+        {/* TECH TRACKS SELECTOR GRID (ONLY VISIBLE IN TECH_TRACKS MODE) */}
         {viewMode === 'TECH_TRACKS' && (
-          <div className="mt-6 pt-5 border-t border-gray-100 space-y-3">
+          <div className="mt-6 pt-5 border-t border-gray-100 space-y-3.5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <span className="text-xs font-black uppercase text-gray-400 tracking-wider">
-                Alege Specializarea ({JOB_TRACKS.length} Roluri Tehnice):
-              </span>
+              <div className="flex items-center gap-2">
+                <Code2 className="w-4 h-4 text-purple-600" />
+                <span className="text-xs font-black text-gray-900 uppercase tracking-wider">
+                  Alege Specializarea ({JOB_TRACKS.length} Roluri Tehnice):
+                </span>
+                <span className="text-[11px] text-gray-500 font-semibold hidden md:inline">
+                  • Selectat: <strong className="text-gray-950 font-bold">{selectedTrack?.title}</strong>
+                </span>
+              </div>
 
               {/* TRACK SEARCH */}
               <div className="relative w-full sm:w-64">
@@ -252,15 +258,16 @@ export default function SkillRoadmapPage() {
                   placeholder="Cauta rol (ex: Backend, QA, Cloud)..."
                   value={trackSearchQuery}
                   onChange={e => setTrackSearchQuery(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-600 focus:bg-white transition"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-hidden focus:border-purple-600 focus:bg-white transition"
                 />
               </div>
             </div>
 
-            {/* TRACK PILLS */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+            {/* TRACK CARDS GRID (Fara scroll orizontal, 2 randuri curate de cate 5 pe desktop) */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
               {filteredTracks.map((track) => {
                 const isSelected = selectedTrackId === track.id;
+                const resourceTotal = (track.freeLearnResources?.length || 0) + (track.interviewPrepResources?.length || 0);
                 return (
                   <button
                     key={track.id}
@@ -268,31 +275,53 @@ export default function SkillRoadmapPage() {
                       setSelectedTrackId(track.id);
                       setResourceSearchQuery('');
                     }}
-                    className={`px-3.5 py-2.5 rounded-2xl border text-left shrink-0 transition flex items-center gap-2.5 cursor-pointer ${
+                    className={`group p-3 rounded-2xl border text-left transition-all duration-150 cursor-pointer flex flex-col justify-between gap-2.5 ${
                       isSelected
-                        ? 'bg-black text-white border-black shadow-sm ring-2 ring-purple-600/30'
-                        : 'bg-white hover:bg-gray-50 text-gray-800 border-gray-200'
+                        ? 'bg-black text-white border-black shadow-sm ring-2 ring-purple-600/40'
+                        : 'bg-gray-50/70 hover:bg-white text-gray-900 border-gray-200/90 hover:border-gray-300 hover:shadow-2xs'
                     }`}
                   >
-                    <div className={`p-1.5 rounded-xl ${isSelected ? 'bg-white/10 text-white' : 'bg-gray-100'}`}>
-                      {getTrackIcon(track.iconKey, "w-4 h-4")}
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold flex items-center gap-1.5 truncate">
-                        <span>{track.shortTitle}</span>
-                        {track.badge && (
-                          <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${
-                            isSelected ? 'bg-purple-500/30 text-purple-200' : 'bg-purple-100 text-purple-800'
-                          }`}>
-                            {track.badge}
-                          </span>
-                        )}
+                    <div className="flex items-center justify-between w-full">
+                      <div className={`p-1.5 rounded-xl shrink-0 transition-colors ${
+                        isSelected 
+                          ? 'bg-white/15 text-white' 
+                          : 'bg-white text-purple-600 border border-gray-200/70 shadow-2xs group-hover:border-purple-200'
+                      }`}>
+                        {getTrackIcon(track.iconKey, "w-4 h-4")}
                       </div>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        isSelected
+                          ? 'bg-purple-500/30 text-purple-200 border border-purple-400/30 font-black'
+                          : 'bg-gray-200/70 text-gray-600 group-hover:bg-purple-50 group-hover:text-purple-700'
+                      }`}>
+                        {isSelected ? 'Activ' : `${resourceTotal} ghiduri`}
+                      </span>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <div className={`text-xs sm:text-sm font-black tracking-tight leading-snug line-clamp-1 ${
+                        isSelected ? 'text-white' : 'text-gray-950'
+                      }`}>
+                        {track.shortTitle}
+                      </div>
+                      {track.badge && (
+                        <div className={`text-[10px] font-bold leading-tight line-clamp-1 ${
+                          isSelected ? 'text-purple-300' : 'text-purple-700'
+                        }`}>
+                          {track.badge}
+                        </div>
+                      )}
                     </div>
                   </button>
                 );
               })}
             </div>
+
+            {filteredTracks.length === 0 && (
+              <div className="text-center py-6 text-xs text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                Nu am gasit niciun rol tehnic pentru "{trackSearchQuery}". Incearca un alt termen.
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -527,8 +556,8 @@ export default function SkillRoadmapPage() {
             </div>
           </div>
 
-          {/* HR SUB-NAVIGATION TABS */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+          {/* HR SUB-NAVIGATION TABS (fara scroll orizontal) */}
+          <div className="flex flex-wrap items-center gap-2 pb-1">
             {[
               { id: 'ALL', label: 'Ghid Complet 360°', icon: Compass },
               { id: 'TIMELINE', label: 'Structura Apelului (30 min)', icon: Briefcase },
