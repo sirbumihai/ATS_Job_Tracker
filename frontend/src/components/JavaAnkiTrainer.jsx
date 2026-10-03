@@ -23,7 +23,8 @@ import {
   RefreshCw,
   Layout,
   Cloud,
-  ChevronDown
+  ChevronDown,
+  Shapes
 } from 'lucide-react';
 import { TECH_ANKI_CATEGORIES, ALL_TECH_ANKI_CARDS } from '../data/decks/index';
 
@@ -201,6 +202,7 @@ export default function JavaAnkiTrainer() {
       case 'DEVOPS': return <Cpu className={sizeClass} />;
       case 'CLOUD': return <Cloud className={sizeClass} />;
       case 'ML_AI': return <Sparkles className={sizeClass} />;
+      case 'DESIGN_PATTERNS': return <Shapes className={sizeClass} />;
       default: return <Layers className={sizeClass} />;
     }
   };
@@ -222,7 +224,7 @@ export default function JavaAnkiTrainer() {
             {stats.total}
           </div>
           <div className="text-[11px] text-gray-600 font-semibold mt-0.5">
-            9 Domenii & Curicula 2026
+            10 Domenii & Curicula 2026
           </div>
         </div>
 

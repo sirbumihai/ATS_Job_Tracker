@@ -1,5 +1,5 @@
-// Master Registry si Aggregator pentru toate cele 9 Decks de Flashcards Stil Anki
-// Preluat din repozitorii GitHub de top (Baeldung, DopplerHQ, sudheerj, donnemartin, devops-exercises, AIMLInterviews)
+// Master Registry si Aggregator pentru toate cele 10 Decks de Flashcards Stil Anki
+// Preluat din repozitorii GitHub de top (Baeldung, DopplerHQ, sudheerj, donnemartin, devops-exercises, AIMLInterviews, RefactoringGuru)
 // STRICT ZERO DIACRITICE IN TOATE TEXTELE
 
 import { JAVA_DECK } from './javaDeck.js';
@@ -11,6 +11,7 @@ import { REACT_DECK } from './reactDeck.js';
 import { DEVOPS_DECK } from './devopsDeck.js';
 import { CLOUD_DECK } from './cloudDeck.js';
 import { ML_AI_DECK } from './mlAiDeck.js';
+import { DESIGN_PATTERNS_DECK } from './designPatternsDeck.js';
 
 // Categorii oficiale cu metadata, iconite si culori
 export const TECH_ANKI_CATEGORIES = [
@@ -23,7 +24,8 @@ export const TECH_ANKI_CATEGORIES = [
   { id: 'REACT', label: 'React & Frontend', icon: 'Layout', badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
   { id: 'DEVOPS', label: 'DevOps & Docker/K8s', icon: 'Cpu', badgeColor: 'bg-blue-100 text-blue-800 border-blue-200' },
   { id: 'CLOUD', label: 'Cloud (AWS & Terraform)', icon: 'Cloud', badgeColor: 'bg-purple-100 text-purple-800 border-purple-200' },
-  { id: 'ML_AI', label: 'Machine Learning & AI', icon: 'Sparkles', badgeColor: 'bg-rose-100 text-rose-800 border-rose-200' }
+  { id: 'ML_AI', label: 'Machine Learning & AI', icon: 'Sparkles', badgeColor: 'bg-rose-100 text-rose-800 border-rose-200' },
+  { id: 'DESIGN_PATTERNS', label: 'Design Patterns & Clean Code', icon: 'Shapes', badgeColor: 'bg-amber-100 text-amber-900 border-amber-300' }
 ];
 
 // Agregare unificata a tuturor cardurilor
@@ -36,7 +38,8 @@ export const ALL_TECH_ANKI_CARDS = [
   ...REACT_DECK,
   ...DEVOPS_DECK,
   ...CLOUD_DECK,
-  ...ML_AI_DECK
+  ...ML_AI_DECK,
+  ...DESIGN_PATTERNS_DECK
 ];
 
 // Export separat pe pachete daca este nevoie de incarcare selectiva
@@ -49,5 +52,6 @@ export {
   REACT_DECK,
   DEVOPS_DECK,
   CLOUD_DECK,
-  ML_AI_DECK
+  ML_AI_DECK,
+  DESIGN_PATTERNS_DECK
 };
