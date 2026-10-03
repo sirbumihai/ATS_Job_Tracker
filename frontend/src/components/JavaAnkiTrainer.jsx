@@ -273,8 +273,21 @@ export default function JavaAnkiTrainer() {
       {/* 2. CONTROLS: CATEGORIES & VIEW SWITCHER */}
       <div className="bg-white rounded-2xl p-4 border border-gray-200/90 shadow-2xs space-y-4">
         
-        {/* Top line: 9 Categories Bar */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-thin">
+        {/* Header Domenii */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-0.5">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-blue-600" />
+            <span className="text-xs font-black text-gray-900 uppercase tracking-wider">
+              Alege Domeniul de Studiu ({TECH_ANKI_CATEGORIES.length - 1} Specializari):
+            </span>
+          </div>
+          <div className="text-[11px] text-gray-500 font-semibold">
+            Selectat: <span className="font-bold text-gray-950">{TECH_ANKI_CATEGORIES.find(c => c.id === selectedCategory)?.label || 'Toate'}</span> ({categoryCounts[selectedCategory] || 0} carduri)
+          </div>
+        </div>
+
+        {/* Categories Grid (Elimina complet scroll-ul orizontal, incadrare perfecta pe desktop si mobil) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
           {TECH_ANKI_CATEGORIES.map(cat => {
             const isSelected = selectedCategory === cat.id;
             const count = categoryCounts[cat.id] || 0;
@@ -287,29 +300,42 @@ export default function JavaAnkiTrainer() {
                   setIsFlipped(false);
                   setVisibleCatalogLimit(20);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer shrink-0 ${
+                className={`group p-2.5 rounded-xl sm:rounded-2xl transition-all duration-150 cursor-pointer border text-left flex flex-col justify-between gap-2 ${
                   isSelected
-                    ? 'bg-black text-white shadow-xs'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-black'
+                    ? 'bg-black text-white border-black shadow-xs ring-2 ring-black/10'
+                    : 'bg-gray-50/80 text-gray-800 border-gray-200/80 hover:bg-white hover:border-gray-300 hover:shadow-2xs hover:text-black'
                 }`}
               >
-                {renderCategoryIcon(cat.id, "w-3.5 h-3.5")}
-                <span>{cat.label}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                  isSelected ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
-                }`}>
-                  {count}
-                </span>
+                <div className="flex items-center justify-between w-full">
+                  <div className={`p-1.5 rounded-lg shrink-0 transition-colors ${
+                    isSelected
+                      ? 'bg-white/15 text-white'
+                      : 'bg-white text-gray-700 border border-gray-200/70 shadow-2xs group-hover:border-gray-300'
+                  }`}>
+                    {renderCategoryIcon(cat.id, "w-3.5 h-3.5")}
+                  </div>
+                  <span className={`text-[10px] sm:text-[11px] font-black px-2 py-0.5 rounded-full transition-colors ${
+                    isSelected
+                      ? 'bg-white/20 text-white'
+                      : 'bg-gray-200/80 text-gray-700 group-hover:bg-gray-200'
+                  }`}>
+                    {count}
+                  </span>
+                </div>
+
+                <div className="font-bold text-[11px] sm:text-xs leading-snug line-clamp-2 min-h-[28px] flex items-center">
+                  {cat.label}
+                </div>
               </button>
             );
           })}
         </div>
 
         {/* Second line: Filters (Search, Difficulty, Mode, Shuffle, Reset) */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1 border-t border-gray-100">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-2 border-t border-gray-100">
           
-          {/* Difficulty pills */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-1">
+          {/* Difficulty pills (fara scroll orizontal) */}
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mr-1">
               Dificultate:
             </span>
@@ -339,7 +365,7 @@ export default function JavaAnkiTrainer() {
           </div>
 
           {/* View mode toggle (Flashcard vs Catalog) & Actions */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <div className="flex items-center p-0.5 bg-gray-100 rounded-xl border border-gray-200">
               <button
                 onClick={() => setViewStyle('FLASHCARD')}

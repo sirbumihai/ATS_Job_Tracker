@@ -231,7 +231,7 @@ export default function SkillRoadmapPage() {
               }`}
             >
               <Brain className="w-4 h-4 text-blue-600" />
-              <span>Anki Flashcards (9 Domenii)</span>
+              <span>Anki Flashcards (11 Domenii)</span>
             </button>
           </div>
         </div>
