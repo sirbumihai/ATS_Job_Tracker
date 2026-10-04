@@ -29,6 +29,7 @@ import {
   ChevronRight,
   CheckCheck,
   Brain,
+  ArrowRight,
   X
 } from 'lucide-react';
 import { JOB_TRACKS } from '../data/jobTracksRoadmapData';
@@ -291,80 +292,113 @@ export default function SkillRoadmapPage() {
         </div>
       )}
 
-      {/* HEADER SECTION */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-2xs relative overflow-hidden">
+      {/* HEADER SECTION (ASYMMETRIC SPLIT OBSIDIAN HERO) */}
+      <div className="bg-slate-950 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-sm relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2.5 max-w-3xl">
+          <div className="space-y-3 max-w-2xl">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200/90 flex items-center gap-2">
-                <GraduationCap className="w-3.5 h-3.5 text-slate-900" />
+              <span className="text-[11px] font-bold text-slate-300 bg-white/10 px-3 py-1 rounded-lg border border-white/15 flex items-center gap-2">
+                <GraduationCap className="w-3.5 h-3.5 text-white" />
                 <span>Playbook Interviuri & Roadmap IT 2026</span>
               </span>
-              <span className="h-3 w-px bg-slate-300 mx-1 hidden sm:inline" />
-              <span className="text-xs font-bold text-slate-600">Aliniat cu Piata Tech din Romania</span>
+              <span className="h-3 w-px bg-slate-700 mx-1 hidden sm:inline" />
+              <span className="text-xs font-bold text-slate-400">Aliniat cu Piata Tech din Romania</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
               Ghid Tehnic pe Roluri, Interviu HR si Trainer Anki
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-2xl">
+            <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed max-w-xl">
               Curicula practica de interviu pentru piata IT din Romania: screening HR, intrebari tehnice de seniorat si repetitie spatiata pe 11 domenii.
             </p>
+
+            {/* VIEW MODE TOGGLE SWITCHER (TECH vs HR vs ANKI) */}
+            <div className="inline-flex items-center p-1.5 bg-white/10 rounded-2xl border border-white/15 shrink-0 self-start flex-wrap gap-1 shadow-2xs backdrop-blur-xs pt-1">
+              <button
+                onClick={() => setViewMode('TECH_TRACKS')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
+                  viewMode === 'TECH_TRACKS'
+                    ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Code2 className={`w-4 h-4 ${viewMode === 'TECH_TRACKS' ? 'text-purple-600' : 'text-slate-400'}`} />
+                <span>Ghid Tehnic pe Roluri</span>
+              </button>
+
+              <button
+                onClick={() => setViewMode('HR_SCREENING')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
+                  viewMode === 'HR_SCREENING'
+                    ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Users className={`w-4 h-4 ${viewMode === 'HR_SCREENING' ? 'text-amber-600' : 'text-slate-400'}`} />
+                <span>Interviu HR & Screening</span>
+              </button>
+
+              <button
+                onClick={() => setViewMode('ANKI_JAVA')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
+                  viewMode === 'ANKI_JAVA'
+                    ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Brain className={`w-4 h-4 ${viewMode === 'ANKI_JAVA' ? 'text-blue-600' : 'text-slate-400'}`} />
+                <span>Anki Flashcards (11 Domenii)</span>
+              </button>
+            </div>
           </div>
 
-          {/* VIEW MODE TOGGLE SWITCHER (TECH vs HR vs ANKI) */}
-          <div className="inline-flex items-center p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200/80 shrink-0 self-start lg:self-center flex-wrap gap-1 shadow-2xs">
-            <button
-              onClick={() => setViewMode('TECH_TRACKS')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
-                viewMode === 'TECH_TRACKS'
-                  ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
-                  : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
-              }`}
-            >
-              <Code2 className="w-4 h-4 text-purple-600" />
-              <span>Ghid Tehnic pe Roluri</span>
-            </button>
+          {/* ASYMMETRIC TRANSLUCENT BENTO STATS PANEL */}
+          <div className="w-full lg:w-72 bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 shrink-0 backdrop-blur-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="space-y-0.5">
+                <div className="text-xl font-black text-white">10</div>
+                <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Roluri Tehnice</div>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white/10 text-slate-300">
+                <Code2 className="w-4 h-4" />
+              </div>
+            </div>
 
-            <button
-              onClick={() => setViewMode('HR_SCREENING')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
-                viewMode === 'HR_SCREENING'
-                  ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
-                  : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
-              }`}
-            >
-              <Users className="w-4 h-4 text-amber-600" />
-              <span>Interviu HR & Screening</span>
-            </button>
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="space-y-0.5">
+                <div className="text-xl font-black text-white">1380</div>
+                <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Carduri Anki</div>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white/10 text-slate-300">
+                <Brain className="w-4 h-4" />
+              </div>
+            </div>
 
-            <button
-              onClick={() => setViewMode('ANKI_JAVA')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
-                viewMode === 'ANKI_JAVA'
-                  ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
-                  : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
-              }`}
-            >
-              <Brain className="w-4 h-4 text-blue-600" />
-              <span>Anki Flashcards (11 Domenii)</span>
-            </button>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="text-xl font-black text-white">100%</div>
+                <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Gratuit & Open</div>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white/10 text-emerald-400">
+                <Check className="w-4 h-4" />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* TECH TRACKS SELECTOR GRID (ONLY VISIBLE IN TECH_TRACKS MODE) */}
+        {/* TECH TRACKS SELECTOR GRID (MATCHING tech_roles_matrix_1791149714491.jpg) */}
         {viewMode === 'TECH_TRACKS' && (
-          <div className="mt-7 pt-6 border-t border-slate-100 space-y-4">
+          <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Code2 className="w-4 h-4 text-purple-600" />
-                <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                <Code2 className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-black text-white uppercase tracking-wider">
                   Alege Specializarea ({JOB_TRACKS.length} Roluri Tehnice):
                 </span>
-                <span className="text-[11px] text-slate-500 font-semibold hidden md:inline">
-                  <span className="text-slate-300 mx-1.5">/</span>
-                  Selectat: <strong className="text-slate-950 font-bold">{selectedTrack?.title}</strong>
+                <span className="text-[11px] text-slate-400 font-semibold hidden md:inline">
+                  <span className="text-slate-600 mx-1.5">/</span>
+                  Selectat: <strong className="text-white font-bold">{selectedTrack?.title}</strong>
                 </span>
               </div>
 
@@ -376,12 +410,12 @@ export default function SkillRoadmapPage() {
                   placeholder="Cauta rol (ex: Backend, QA, Cloud)..."
                   value={trackSearchQuery}
                   onChange={e => setTrackSearchQuery(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 focus:bg-white transition"
+                  className="w-full bg-white/5 border border-white/15 rounded-xl pl-8 pr-8 py-2 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-purple-400/30 focus:border-purple-400 focus:bg-white/10 transition"
                 />
                 {trackSearchQuery && (
                   <button 
                     onClick={() => setTrackSearchQuery('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer p-0.5"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer p-0.5"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -404,22 +438,22 @@ export default function SkillRoadmapPage() {
                     }}
                     className={`group p-3.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 active:scale-98 ${
                       isSelected
-                        ? `bg-slate-950 text-white shadow-md ring-2 ${theme.ring} -translate-y-0.5`
-                        : `bg-white hover:bg-slate-50/80 text-slate-900 border-slate-200/90 ${theme.cardBorder} hover:shadow-2xs hover:-translate-y-0.5`
+                        ? `bg-white text-slate-950 shadow-lg ring-2 ring-emerald-400 -translate-y-0.5`
+                        : `bg-white/5 hover:bg-white/10 text-white border-white/10 hover:border-white/20 hover:shadow-2xs hover:-translate-y-0.5`
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className={`p-2 rounded-xl shrink-0 transition-colors ${
                         isSelected 
-                          ? 'bg-white/15 text-white shadow-2xs' 
+                          ? 'bg-slate-950 text-white shadow-2xs' 
                           : `${theme.iconBg} shadow-2xs group-hover:scale-105 transition-transform`
                       }`}>
                         {getTrackIcon(track.iconKey, "w-4 h-4")}
                       </div>
                       <span className={`text-[10px] font-black px-2 py-0.5 rounded-full transition-colors ${
                         isSelected
-                          ? `${theme.badge}`
-                          : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                          ? 'bg-slate-950 text-white'
+                          : 'bg-white/10 text-slate-300 group-hover:bg-white/20'
                       }`}>
                         {isSelected ? 'Activ' : `${resourceTotal} ghiduri`}
                       </span>
@@ -427,13 +461,13 @@ export default function SkillRoadmapPage() {
 
                     <div className="space-y-0.5">
                       <div className={`text-xs sm:text-sm font-black tracking-tight leading-snug line-clamp-1 ${
-                        isSelected ? 'text-white' : 'text-slate-950'
+                        isSelected ? 'text-slate-950' : 'text-white'
                       }`}>
                         {track.shortTitle}
                       </div>
                       {track.badge && (
                         <div className={`text-[10px] font-bold leading-tight line-clamp-1 ${
-                          isSelected ? 'text-slate-300' : 'text-slate-500'
+                          isSelected ? 'text-slate-600' : 'text-slate-400'
                         }`}>
                           {track.badge}
                         </div>
@@ -445,7 +479,7 @@ export default function SkillRoadmapPage() {
             </div>
 
             {filteredTracks.length === 0 && (
-              <div className="text-center py-6 text-xs text-slate-500 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <div className="text-center py-6 text-xs text-slate-400 bg-white/5 rounded-2xl border border-dashed border-white/10">
                 Nu am gasit niciun rol tehnic pentru "{trackSearchQuery}". Incearca un alt termen.
               </div>
             )}
@@ -1079,6 +1113,51 @@ export default function SkillRoadmapPage() {
           <JavaAnkiTrainer />
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* SECTION 6: CLOSING CTA & DAILY HABIT (MATCHING roadmap_closing_cta)       */}
+      {/* ========================================================================= */}
+      <div className="bg-slate-950 text-white rounded-3xl p-8 sm:p-12 border border-slate-800 shadow-sm text-center space-y-6 relative overflow-hidden mt-8">
+        <div className="max-w-2xl mx-auto space-y-3">
+          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            Stapaneste Conceptele Tehnice si Treci Orice Interviu
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-sans">
+            15 minute pe zi de repetitie spatiata Anki si pregatire structurata pe roluri iti asigura avantajul competitiv la interviurile de angajare.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => {
+              setViewMode('ANKI_JAVA');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-black bg-white text-slate-950 hover:bg-slate-100 shadow-sm transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span>Incepe Antrenamentul de Astazi</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            onClick={() => {
+              setViewMode('TECH_TRACKS');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/15 text-white border border-white/15 transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span>Exploreaza Curriculum Complet</span>
+          </button>
+        </div>
+
+        <div className="flex items-center justify-center gap-4 sm:gap-6 pt-4 text-[11px] text-slate-500 font-medium flex-wrap border-t border-slate-800/80">
+          <span>Open Source</span>
+          <span className="h-3 w-px bg-slate-800" />
+          <span>Aliniat cu Piata Tech din Romania</span>
+          <span className="h-3 w-px bg-slate-800" />
+          <span>Fara Inregistrare Obligatorie</span>
+        </div>
+      </div>
 
     </div>
   );
