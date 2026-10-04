@@ -25,7 +25,8 @@ import {
   Cloud,
   ChevronDown,
   Shapes,
-  Terminal
+  Terminal,
+  X
 } from 'lucide-react';
 import { TECH_ANKI_CATEGORIES, ALL_TECH_ANKI_CARDS } from '../data/decks/index';
 
@@ -217,25 +218,25 @@ export default function JavaAnkiTrainer() {
       
       {/* 1. TOP STATS BAR */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white rounded-2xl p-4 border border-gray-200/90 shadow-2xs">
-          <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all duration-200">
+          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
             <Brain className="w-3.5 h-3.5 text-blue-600" />
             Total Carduri Tech
           </div>
-          <div className="text-2xl font-black text-gray-950 mt-1">
+          <div className="text-2xl font-black text-slate-950 mt-1.5">
             {stats.total}
           </div>
-          <div className="text-[11px] text-gray-600 font-semibold mt-0.5">
+          <div className="text-[11px] text-slate-600 font-semibold mt-0.5">
             11 Domenii & Curicula 2026
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-emerald-200/80 bg-emerald-50/20 shadow-2xs">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-200/80 bg-gradient-to-b from-emerald-50/30 to-white shadow-2xs hover:shadow-xs transition-all duration-200">
           <div className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
             Stapanite (Easy)
           </div>
-          <div className="text-2xl font-black text-emerald-950 mt-1">
+          <div className="text-2xl font-black text-emerald-950 mt-1.5">
             {stats.mastered}
           </div>
           <div className="text-[11px] text-emerald-800 font-semibold mt-0.5">
@@ -243,12 +244,12 @@ export default function JavaAnkiTrainer() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-amber-200/80 bg-amber-50/20 shadow-2xs">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-amber-200/80 bg-gradient-to-b from-amber-50/30 to-white shadow-2xs hover:shadow-xs transition-all duration-200">
           <div className="text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 text-amber-700" />
             In Invatare
           </div>
-          <div className="text-2xl font-black text-amber-950 mt-1">
+          <div className="text-2xl font-black text-amber-950 mt-1.5">
             {stats.learning + stats.review}
           </div>
           <div className="text-[11px] text-amber-800 font-semibold mt-0.5">
@@ -256,15 +257,15 @@ export default function JavaAnkiTrainer() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-gray-200/90 shadow-2xs">
-          <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all duration-200">
+          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-purple-600" />
             De Explorat
           </div>
-          <div className="text-2xl font-black text-gray-950 mt-1">
+          <div className="text-2xl font-black text-slate-950 mt-1.5">
             {stats.unstudied}
           </div>
-          <div className="text-[11px] text-gray-600 font-semibold mt-0.5">
+          <div className="text-[11px] text-slate-600 font-semibold mt-0.5">
             Carduri noi de parcurs
           </div>
         </div>
@@ -405,7 +406,7 @@ export default function JavaAnkiTrainer() {
 
         {/* Search bar inside cards */}
         <div className="relative">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Cauta in toate intrebarile (ex: HashMap, N+1, Virtual Threads, VPC, Docker, RAG, useMemo, Token Bucket)..."
@@ -415,8 +416,19 @@ export default function JavaAnkiTrainer() {
               setCurrentCardIndex(0);
               setVisibleCatalogLimit(20);
             }}
-            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+            className="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:bg-white transition"
           />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setCurrentCardIndex(0);
+              }}
+              className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 cursor-pointer p-0.5"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -462,7 +474,7 @@ export default function JavaAnkiTrainer() {
             {/* THE INTERACTIVE CARD */}
             <div 
               onClick={() => setIsFlipped(prev => !prev)}
-              className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-gray-200/90 shadow-lg cursor-pointer hover:border-blue-400 transition-all duration-200 select-none min-h-[380px] flex flex-col justify-between relative group"
+              className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all duration-200 select-none min-h-[380px] flex flex-col justify-between relative group"
             >
               {/* Card Meta Badges */}
               <div className="flex items-center justify-between gap-3 mb-4">
@@ -615,41 +627,41 @@ export default function JavaAnkiTrainer() {
 
             {/* ANKI RATING BUTTONS (Shown when card is flipped) */}
             {isFlipped && (
-              <div className="bg-white rounded-2xl p-4 border border-gray-200/90 shadow-md animate-in slide-in-from-bottom-2 duration-150">
-                <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center mb-3">
+              <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-md animate-in slide-in-from-bottom-2 duration-150">
+                <div className="text-[11px] font-black text-slate-500 uppercase tracking-wider text-center mb-3">
                   Cum ai raspuns la aceasta intrebare? (Alege pentru repetitie spatiata):
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   <button
                     onClick={() => handleRateCard('AGAIN')}
-                    className="py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 text-xs font-bold transition flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs"
+                    className="py-3 px-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100/80 border border-rose-200 text-rose-800 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
                   >
-                    <span className="font-black text-rose-900">1. Again</span>
+                    <span className="font-black text-rose-900 text-sm">1. Again</span>
                     <span className="text-[10px] text-rose-600 font-semibold">&lt; 1 zi (Repeta azi)</span>
                   </button>
 
                   <button
                     onClick={() => handleRateCard('HARD')}
-                    className="py-2.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-bold transition flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs"
+                    className="py-3 px-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-800 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
                   >
-                    <span className="font-black text-amber-900">2. Hard</span>
+                    <span className="font-black text-amber-900 text-sm">2. Hard</span>
                     <span className="text-[10px] text-amber-600 font-semibold">in 2-3 zile</span>
                   </button>
 
                   <button
                     onClick={() => handleRateCard('GOOD')}
-                    className="py-2.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-bold transition flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs"
+                    className="py-3 px-3.5 rounded-2xl bg-blue-50 hover:bg-blue-100/80 border border-blue-200 text-blue-800 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
                   >
-                    <span className="font-black text-blue-900">3. Good</span>
+                    <span className="font-black text-blue-900 text-sm">3. Good</span>
                     <span className="text-[10px] text-blue-600 font-semibold">in 5-7 zile</span>
                   </button>
 
                   <button
                     onClick={() => handleRateCard('EASY')}
-                    className="py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold transition flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs"
+                    className="py-3 px-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-800 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
                   >
-                    <span className="font-black text-emerald-900">4. Easy</span>
+                    <span className="font-black text-emerald-900 text-sm">4. Easy</span>
                     <span className="text-[10px] text-emerald-600 font-semibold">Stapanit (14+ zile)</span>
                   </button>
                 </div>
