@@ -145,22 +145,22 @@ export default function Navbar({
                 <button
                   key={item.id}
                   onClick={() => handleSelectTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all duration-150 cursor-pointer group ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer group ${
                     isActive 
-                      ? 'bg-gray-950 text-white shadow-sm' 
-                      : 'text-gray-700 hover:text-black hover:bg-gray-100/90'
+                      ? 'bg-slate-950 text-white shadow-sm ring-1 ring-slate-900' 
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100/80'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className={`p-1.5 rounded-lg shrink-0 transition-colors ${
+                    <div className={`p-1.5 rounded-lg shrink-0 transition-all ${
                       isActive 
-                        ? 'bg-white/10 text-white' 
-                        : 'bg-gray-100 text-gray-700 group-hover:bg-white group-hover:text-black group-hover:shadow-2xs'
+                        ? 'bg-white/15 text-white shadow-2xs' 
+                        : 'bg-slate-100/90 text-slate-600 group-hover:bg-white group-hover:text-slate-950 group-hover:shadow-2xs'
                     }`}>
                       <Icon className={`w-4 h-4 ${isActive ? item.activeColor : item.color}`} />
                     </div>
                     <span className={`text-xs truncate font-bold ${
-                      isActive ? 'text-white' : 'text-gray-900 group-hover:text-black'
+                      isActive ? 'text-white' : 'text-slate-800 group-hover:text-slate-950'
                     }`}>
                       {item.label}
                     </span>

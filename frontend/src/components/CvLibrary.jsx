@@ -13,7 +13,8 @@ import {
   Sparkles, 
   RefreshCw,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  X
 } from 'lucide-react';
 
 export default function CvLibrary({ 
@@ -482,8 +483,8 @@ export default function CvLibrary({
 
       {/* CREATE NEW CV MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-gray-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white border border-gray-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="font-bold text-base text-gray-950 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-black" />
@@ -491,9 +492,9 @@ export default function CvLibrary({
               </h3>
               <button 
                 onClick={() => setShowCreateModal(false)}
-                className="text-gray-400 hover:text-black text-sm font-bold cursor-pointer"
+                className="text-gray-400 hover:text-black p-1 rounded-lg hover:bg-gray-100 transition cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

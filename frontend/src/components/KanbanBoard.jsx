@@ -1102,7 +1102,7 @@ export default function KanbanBoard({
                                   <optgroup label="CV-uri din Studio">
                                     {cvList.map((cv) => (
                                       <option key={cv.id} value={`CV_${cv.id}`}>
-                                        {cv.title} {cv.isPrimary ? '⭐' : ''}
+                                        {cv.title}{cv.isPrimary ? ' [Principal]' : ''}
                                       </option>
                                     ))}
                                   </optgroup>
@@ -1344,7 +1344,7 @@ export default function KanbanBoard({
                                 <optgroup label="CV-uri Create in Studio">
                                   {cvList.map((cv) => (
                                     <option key={cv.id} value={`CV_${cv.id}`}>
-                                      {cv.title} {cv.isPrimary ? '(⭐ Principal)' : ''}
+                                      {cv.title}{cv.isPrimary ? ' [Principal]' : ''}
                                     </option>
                                   ))}
                                 </optgroup>

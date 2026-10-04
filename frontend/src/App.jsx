@@ -432,29 +432,57 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden bg-[#f8fafc]">
         
         {/* DESKTOP TOP BAR CU TITLU PAGINA SI BREADCRUMB */}
-        <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3.5 bg-white border-b border-slate-200/90 sticky top-0 z-20 shadow-2xs">
+        <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3 bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 shadow-2xs">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">
+            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200/80 shadow-2xs">
               {currentTabInfo.category}
             </span>
-            <div className="h-4 w-px bg-gray-200" />
+            <div className="h-4 w-px bg-slate-200" />
             <div>
-              <h2 className="text-base font-black text-gray-950 tracking-tight leading-none">
+              <h2 className="text-base font-black text-slate-950 tracking-tight leading-none">
                 {currentTabInfo.title}
               </h2>
-              <p className="text-[11px] text-gray-500 font-medium mt-0.5">
+              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
                 {currentTabInfo.subtitle}
               </p>
             </div>
           </div>
 
-          {/* User Account / Status Info */}
-          <div className="flex items-center gap-2.5">
+          {/* Quick Actions & User Account Status */}
+          <div className="flex items-center gap-3">
             {currentUser && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100/80 border border-gray-200 text-gray-700">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="max-w-[150px] truncate">{currentUser.fullName || currentUser.email}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowAddJobModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-black text-white transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
+                  title="Adauga o noua aplicatie de urmarit"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Adauga Job</span>
+                </button>
+                <button
+                  onClick={() => setShowUploadResumeModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 transition-all duration-150 shadow-2xs hover:border-slate-300 cursor-pointer active:scale-95"
+                  title="Incarca un CV PDF pentru analiza"
+                >
+                  <Upload className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Incarca CV</span>
+                </button>
               </div>
+            )}
+
+            {currentUser ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 text-slate-800 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="max-w-[160px] truncate">{currentUser.fullName || currentUser.email}</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-black text-white shadow-xs hover:bg-neutral-800 transition cursor-pointer"
+              >
+                <span>Conectare</span>
+              </button>
             )}
           </div>
         </header>
@@ -559,8 +587,16 @@ export default function App() {
         </main>
 
         {/* FOOTER */}
-        <footer className="border-t border-gray-200 bg-white py-4 text-center text-xs text-gray-500">
-          <p>JobFlow AI • Tracker & ATS Studio • Spring Boot 3.3 • React 18 • PostgreSQL pgvector</p>
+        <footer className="border-t border-slate-200/80 bg-white py-4 px-6 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className="font-semibold text-slate-700">JobFlow AI</span>
+            <span>•</span>
+            <span>Tracker & ATS Studio 2026</span>
+          </div>
+          <p className="text-[11px] text-slate-400">
+            Arhitectura: Spring Boot 3.3 • React 18 • PostgreSQL pgvector • Lucide Icons
+          </p>
         </footer>
       </div>
 

@@ -36,7 +36,8 @@ import {
   Sliders,
   CheckCheck,
   Trash2,
-  ChevronDown
+  ChevronDown,
+  Target
 } from 'lucide-react';
 
 export default function LinkedInOptimizerPage({ currentUser }) {
@@ -433,7 +434,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                 {cvList.length > 0 ? (
                   cvList.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.title || 'CV Fara Titlu'} {c.isPrimary ? '★ (Principal)' : ''}
+                      {c.title || 'CV Fara Titlu'}{c.isPrimary ? ' [Principal]' : ''}
                     </option>
                   ))
                 ) : (
@@ -462,8 +463,9 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   {syncMessage.imported && syncMessage.imported.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-1.5">
                       {syncMessage.imported.map((item, idx) => (
-                        <span key={idx} className="bg-white px-2 py-0.5 rounded-md font-semibold text-[11px] border border-emerald-200">
-                          ✓ {item}
+                        <span key={idx} className="bg-white px-2 py-0.5 rounded-md font-semibold text-[11px] border border-emerald-200 inline-flex items-center gap-1 shadow-2xs">
+                          <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                          <span>{item}</span>
                         </span>
                       ))}
                     </div>
@@ -517,7 +519,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                   {loading ? 'Se analizeaza PDF-ul LinkedIn...' : 'Ai descarcat un nou PDF din LinkedIn? Trage fisierul aici'}
                 </p>
                 <p className="text-[11px] text-gray-500">
-                  Foloseste Resources ➔ Save to PDF de pe LinkedIn pentru a compara cu starea ta live.
+                  Foloseste Resources -&gt; Save to PDF de pe LinkedIn pentru a compara cu starea ta live.
                 </p>
               </div>
             </div>
@@ -704,7 +706,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
                       : 'bg-[#0a66c2] hover:bg-[#004182] text-white'
                   }`}
                 >
-                  {profile?.isOpenToWork ? '✓ Open to Work activ' : 'Open to'}
+                  {profile?.isOpenToWork ? 'Open to Work: Activ' : 'Open to'}
                 </button>
 
                 <button 
@@ -1601,8 +1603,11 @@ Reach out directly at: ${userEmail}`
                       <strong>Cum functioneaza:</strong> {q.explanation}
                     </p>
 
-                    <div className="text-[11px] text-emerald-900 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 font-medium">
-                      🎯 <strong>De ce te potrivesti:</strong> {q.whyYouMatch}
+                    <div className="text-[11px] text-emerald-900 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 font-medium flex items-start gap-1.5">
+                      <Target className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
+                      <div>
+                        <strong>De ce te potrivesti:</strong> {q.whyYouMatch}
+                      </div>
                     </div>
                   </div>
                 ))}

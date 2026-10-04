@@ -646,7 +646,8 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                               </p>
                               {detail.emailDate && (
                                 <span className="text-[10px] font-bold text-gray-600 bg-white border border-gray-200 px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
-                                  <span>📅 {detail.emailDate}</span>
+                                  <Calendar className="w-2.5 h-2.5 text-gray-400" />
+                                  <span>{detail.emailDate}</span>
                                 </span>
                               )}
                             </div>

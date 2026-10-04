@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   AlertCircle,
   Users,
+  User,
   FileText,
   Check, 
   ChevronRight, 
@@ -820,17 +821,26 @@ export default function JobDetailModal({
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
                     <div className="bg-white border border-gray-200 p-3.5 rounded-2xl shadow-2xs space-y-1">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">🏢 Companie</span>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                        <span>Companie</span>
+                      </span>
                       <p className="font-extrabold text-gray-950 text-sm truncate">{currentJob.companyName}</p>
                     </div>
                     <div className="bg-white border border-gray-200 p-3.5 rounded-2xl shadow-2xs space-y-1">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">👤 Expeditor (De la)</span>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-gray-400" />
+                        <span>Expeditor (De la)</span>
+                      </span>
                       <p className="font-extrabold text-indigo-700 text-xs sm:text-sm truncate" title={emailData?.sender}>
                         {emailData?.sender || 'Nespecificat'}
                       </p>
                     </div>
                     <div className="bg-white border border-gray-200 p-3.5 rounded-2xl shadow-2xs space-y-1">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">📅 Data Primirii</span>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                        <span>Data Primirii</span>
+                      </span>
                       <p className="font-extrabold text-gray-800 text-xs sm:text-sm">
                         {emailData?.date || 'Nespecificata'}
                       </p>
@@ -1168,8 +1178,9 @@ export default function JobDetailModal({
                     <span className="text-xs text-slate-400 italic">Nu s-a detectat inca o suprapunere directa de cuvinte cheie din CV.</span>
                   )}
                 </div>
-                <p className="text-[11px] text-emerald-300/80 leading-relaxed pt-1">
-                  ✓ Aceste competente sunt deja demonstrate in CV. Vor fi punctele tale forte la interviu!
+                <p className="text-[11px] text-emerald-300/80 leading-relaxed pt-1 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Aceste competente sunt deja demonstrate in CV. Vor fi punctele tale forte la interviu!</span>
                 </p>
               </div>
 
@@ -1202,8 +1213,9 @@ export default function JobDetailModal({
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-amber-300/80 leading-relaxed pt-1">
-                  💡 Sfat: Daca ai lucrat chiar si la proiecte personale cu aceste tehnologii, adauga-le in CV Studio pentru a creste scorul ATS!
+                <p className="text-[11px] text-amber-300/80 leading-relaxed pt-1 flex items-start gap-1.5">
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                  <span>Sfat: Daca ai lucrat chiar si la proiecte personale cu aceste tehnologii, adauga-le in CV Studio pentru a creste scorul ATS!</span>
                 </p>
               </div>
             </div>

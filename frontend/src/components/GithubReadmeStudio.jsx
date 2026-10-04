@@ -28,7 +28,8 @@ import {
   Trash2, 
   ArrowRight,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  X
 } from 'lucide-react';
 
 export default function GithubReadmeStudio({ currentUser }) {
@@ -529,7 +530,7 @@ export default function GithubReadmeStudio({ currentUser }) {
                 >
                   {cvList.map((cv) => (
                     <option key={cv.id} value={cv.id}>
-                      {cv.title || 'CV'} {cv.isPrimary ? '★' : ''} — {cv.fullName}
+                      {cv.title || 'CV'}{cv.isPrimary ? ' [Principal]' : ''} — {cv.fullName}
                     </option>
                   ))}
                 </select>
@@ -943,7 +944,7 @@ export default function GithubReadmeStudio({ currentUser }) {
 
       {/* STEP-BY-STEP MODAL: HOW TO SETUP GITHUB PROFILE README */}
       {showGuideModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-gray-200 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -954,9 +955,9 @@ export default function GithubReadmeStudio({ currentUser }) {
               </div>
               <button
                 onClick={() => setShowGuideModal(false)}
-                className="p-1 rounded-lg text-gray-400 hover:text-black cursor-pointer"
+                className="p-1.5 rounded-xl text-gray-400 hover:text-black hover:bg-gray-100 transition cursor-pointer"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 

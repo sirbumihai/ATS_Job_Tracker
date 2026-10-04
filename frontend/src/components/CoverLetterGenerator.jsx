@@ -384,7 +384,7 @@ export default function CoverLetterGenerator({
                   >
                     {cvList.map((cv) => (
                       <option key={cv.id} value={cv.id}>
-                        {cv.title || 'CV fara titlu'} {cv.isPrimary ? '★ (Principal)' : ''} — {cv.fullName || 'Fara nume'}
+                        {cv.title || 'CV fara titlu'}{cv.isPrimary ? ' [Principal]' : ''} — {cv.fullName || 'Fara nume'}
                       </option>
                     ))}
                   </select>

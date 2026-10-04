@@ -341,46 +341,50 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
               <Globe className="w-3.5 h-3.5 text-emerald-600" />
               2. Filtru Geografic (Locatie):
             </label>
-            <div className="inline-flex p-1 bg-gray-100 rounded-xl border border-gray-200 w-full overflow-x-auto">
+            <div className="flex flex-wrap p-1 bg-gray-100 rounded-xl border border-gray-200 w-full gap-1">
               <button
                 onClick={() => setLocationFilter('RO_ONLY')}
-                className={`flex-1 min-w-[120px] py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1 ${
+                className={`flex-1 min-w-[120px] py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1.5 ${
                   locationFilter === 'RO_ONLY'
                     ? 'bg-blue-600 text-white shadow-xs font-black'
                     : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
                 }`}
               >
-                <span>🇷🇴 Toata Romania</span>
+                <MapPin className="w-3.5 h-3.5" />
+                <span>Toata Romania</span>
               </button>
               <button
                 onClick={() => setLocationFilter('BUCURESTI')}
-                className={`flex-1 min-w-[110px] py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1 ${
+                className={`flex-1 min-w-[110px] py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1.5 ${
                   locationFilter === 'BUCURESTI'
                     ? 'bg-blue-600 text-white shadow-xs font-black'
                     : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
                 }`}
               >
-                <span>🏛️ Bucuresti</span>
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Bucuresti</span>
               </button>
               <button
                 onClick={() => setLocationFilter('RO_AND_REMOTE')}
-                className={`flex-1 min-w-[130px] py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1 ${
+                className={`flex-1 min-w-[130px] py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1.5 ${
                   locationFilter === 'RO_AND_REMOTE'
                     ? 'bg-blue-600 text-white shadow-xs font-black'
                     : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
                 }`}
               >
-                <span>🏠 Romania & Remote</span>
+                <Globe className="w-3.5 h-3.5" />
+                <span>Romania & Remote</span>
               </button>
               <button
                 onClick={() => setLocationFilter('ALL')}
-                className={`flex-1 min-w-[110px] py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1 ${
+                className={`flex-1 min-w-[100px] py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1.5 ${
                   locationFilter === 'ALL'
                     ? 'bg-blue-600 text-white shadow-xs font-black'
                     : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
                 }`}
               >
-                <span>🌍 Toate</span>
+                <Compass className="w-3.5 h-3.5" />
+                <span>Toate</span>
               </button>
             </div>
           </div>
@@ -565,7 +569,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-xl border border-gray-200">
-              {locationFilter === 'BUCURESTI' ? '🏛️ Bucuresti' : locationFilter === 'RO_ONLY' ? '🇷🇴 Toata Romania' : locationFilter === 'RO_AND_REMOTE' ? '🏠 Romania & Remote' : '🌍 Toate'}
+              {locationFilter === 'BUCURESTI' ? 'Bucuresti' : locationFilter === 'RO_ONLY' ? 'Toata Romania' : locationFilter === 'RO_AND_REMOTE' ? 'Romania & Remote' : 'Toate'}
             </span>
             <span className="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-xl border border-gray-200">
               Nivel: {levelFilter}
@@ -677,9 +681,11 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                               }`}
                               title={sk.userHasSkill ? `${sk.skill}: Il ai in profil` : `${sk.skill}: Iti lipseste`}
                             >
-                              <span className={sk.userHasSkill ? 'text-emerald-600 font-black' : 'text-gray-300'}>
-                                {sk.userHasSkill ? '✓' : '•'}
-                              </span>
+                              {sk.userHasSkill ? (
+                                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                              ) : (
+                                <span className="w-1.5 h-1.5 rounded-full bg-gray-300 inline-block shrink-0" />
+                              )}
                               <span>{sk.skill}</span>
                             </span>
                           ))}
@@ -851,9 +857,9 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                             {selectedDomain.userMatchingSkills.map((sk) => (
                               <span 
                                 key={sk} 
-                                className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-emerald-900 border border-emerald-200 shadow-2xs flex items-center gap-1"
+                                className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-emerald-900 border border-emerald-200 shadow-2xs flex items-center gap-1.5"
                               >
-                                <span className="text-emerald-600 font-black">✓</span>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                                 <span>{sk}</span>
                               </span>
                             ))}
@@ -882,9 +888,9 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                             {selectedDomain.userMissingSkills.map((sk) => (
                               <span 
                                 key={sk} 
-                                className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-rose-900 border border-rose-200 shadow-2xs flex items-center gap-1"
+                                className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-rose-900 border border-rose-200 shadow-2xs flex items-center gap-1.5"
                               >
-                                <span className="text-rose-500 font-bold">✕</span>
+                                <X className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                                 <span>{sk}</span>
                               </span>
                             ))}
@@ -969,12 +975,22 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                             <div className="space-y-1">
                               <div className="flex justify-between items-center text-xs font-bold text-gray-900 gap-1">
                                 <span className="truncate" title={sk.skill}>{sk.skill}</span>
-                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md inline-flex items-center gap-1 ${
                                   sk.userHasSkill 
                                     ? 'bg-emerald-100 text-emerald-800' 
                                     : 'bg-gray-200/70 text-gray-600'
                                 }`}>
-                                  {sk.userHasSkill ? '✓ Ai in CV' : '✕ Iti lipseste'}
+                                  {sk.userHasSkill ? (
+                                    <>
+                                      <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                      <span>Ai in CV</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <X className="w-2.5 h-2.5 text-gray-500" />
+                                      <span>Iti lipseste</span>
+                                    </>
+                                  )}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between text-[10px] text-gray-500">

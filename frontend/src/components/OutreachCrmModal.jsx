@@ -9,6 +9,7 @@ import {
   ExternalLink, 
   Copy, 
   Check, 
+  CheckCircle2,
   Sparkles, 
   UserCheck, 
   Search, 
@@ -154,8 +155,9 @@ export default function OutreachCrmModal({
 
         {/* TOAST FEEDBACK */}
         {toastMessage && (
-          <div className="bg-emerald-600 text-white text-xs font-bold px-4 py-2 text-center transition animate-in slide-in-from-top">
-            ✓ {toastMessage}
+          <div className="bg-emerald-600 text-white text-xs font-bold px-4 py-2 text-center transition animate-in slide-in-from-top flex items-center justify-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+            <span>{toastMessage}</span>
           </div>
         )}
 
