@@ -113,6 +113,122 @@ export default function SkillRoadmapPage() {
     }
   };
 
+  // Chromatic Theme System for each specialization track
+  const getTrackTheme = (trackId) => {
+    switch (trackId) {
+      case 'BACKEND':
+        return {
+          accent: 'emerald',
+          ring: 'ring-emerald-500/50 border-emerald-950',
+          badge: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
+          heroGradient: 'from-slate-950 via-slate-900 to-emerald-950/70',
+          heroBorder: 'border-emerald-800/60',
+          iconBg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+          cardBorder: 'hover:border-emerald-300'
+        };
+      case 'FRONTEND':
+        return {
+          accent: 'blue',
+          ring: 'ring-blue-500/50 border-blue-950',
+          badge: 'bg-blue-500/20 text-blue-200 border-blue-400/30',
+          heroGradient: 'from-slate-950 via-slate-900 to-blue-950/70',
+          heroBorder: 'border-blue-800/60',
+          iconBg: 'bg-blue-50 text-blue-700 border-blue-200/80',
+          cardBorder: 'hover:border-blue-300'
+        };
+      case 'FULLSTACK':
+        return {
+          accent: 'indigo',
+          ring: 'ring-indigo-500/50 border-indigo-950',
+          badge: 'bg-indigo-500/20 text-indigo-200 border-indigo-400/30',
+          heroGradient: 'from-slate-950 via-slate-900 to-indigo-950/70',
+          heroBorder: 'border-indigo-800/60',
+          iconBg: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
+          cardBorder: 'hover:border-indigo-300'
+        };
+      case 'QA_AUTOMATION':
+        return {
+          accent: 'rose',
+          ring: 'ring-rose-500/50 border-rose-950',
+          badge: 'bg-rose-500/20 text-rose-200 border-rose-400/30',
+          heroGradient: 'from-slate-950 via-slate-900 to-rose-950/70',
+          heroBorder: 'border-rose-800/60',
+          iconBg: 'bg-rose-50 text-rose-700 border-rose-200/80',
+          cardBorder: 'hover:border-rose-300'
+        };
+      case 'DEVOPS_CLOUD':
+        return {
+          accent: 'sky',
+          ring: 'ring-sky-500/50 border-sky-950',
+          badge: 'bg-sky-500/20 text-sky-200 border-sky-400/30',
+          heroGradient: 'from-slate-950 via-slate-900 to-sky-950/70',
+          heroBorder: 'border-sky-800/60',
+          iconBg: 'bg-sky-50 text-sky-700 border-sky-200/80',
+          cardBorder: 'hover:border-sky-300'
+        };
+      case 'AI_DATA_SCIENCE':
+        return {
+          accent: 'amber',
+          ring: 'ring-amber-500/50 border-amber-950',
+          badge: 'bg-amber-500/20 text-amber-200 border-amber-400/30',
+          heroGradient: 'from-slate-950 via-slate-900 to-amber-950/70',
+          heroBorder: 'border-amber-800/60',
+          iconBg: 'bg-amber-50 text-amber-700 border-amber-200/80',
+          cardBorder: 'hover:border-amber-300'
+        };
+      case 'DATA_ENGINEERING':
+        return {
+          accent: 'teal',
+          ring: 'ring-teal-500/50 border-teal-950',
+          badge: 'bg-teal-500/20 text-teal-200 border-teal-400/30',
+          heroGradient: 'from-slate-950 via-slate-900 to-teal-950/70',
+          heroBorder: 'border-teal-800/60',
+          iconBg: 'bg-teal-50 text-teal-700 border-teal-200/80',
+          cardBorder: 'hover:border-teal-300'
+        };
+      case 'CYBERSECURITY':
+        return {
+          accent: 'red',
+          ring: 'ring-red-500/50 border-red-950',
+          badge: 'bg-red-500/20 text-red-200 border-red-400/30',
+          heroGradient: 'from-slate-950 via-slate-900 to-red-950/70',
+          heroBorder: 'border-red-800/60',
+          iconBg: 'bg-red-50 text-red-700 border-red-200/80',
+          cardBorder: 'hover:border-red-300'
+        };
+      case 'EMBEDDED':
+        return {
+          accent: 'purple',
+          ring: 'ring-purple-500/50 border-purple-950',
+          badge: 'bg-purple-500/20 text-purple-200 border-purple-400/30',
+          heroGradient: 'from-slate-950 via-slate-900 to-purple-950/70',
+          heroBorder: 'border-purple-800/60',
+          iconBg: 'bg-purple-50 text-purple-700 border-purple-200/80',
+          cardBorder: 'hover:border-purple-300'
+        };
+      case 'MOBILE':
+        return {
+          accent: 'fuchsia',
+          ring: 'ring-fuchsia-500/50 border-fuchsia-950',
+          badge: 'bg-fuchsia-500/20 text-fuchsia-200 border-fuchsia-400/30',
+          heroGradient: 'from-slate-950 via-slate-900 to-fuchsia-950/70',
+          heroBorder: 'border-fuchsia-800/60',
+          iconBg: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200/80',
+          cardBorder: 'hover:border-fuchsia-300'
+        };
+      default:
+        return {
+          accent: 'purple',
+          ring: 'ring-purple-500/50 border-purple-950',
+          badge: 'bg-purple-500/20 text-purple-200 border-purple-400/30',
+          heroGradient: 'from-slate-950 via-slate-900 to-indigo-950/70',
+          heroBorder: 'border-slate-800',
+          iconBg: 'bg-slate-50 text-purple-600 border-slate-200/80',
+          cardBorder: 'hover:border-purple-300'
+        };
+    }
+  };
+
   // Badge color helper for resource types
   const getTypeBadgeStyle = (type = '') => {
     const t = type.toUpperCase();
@@ -277,6 +393,7 @@ export default function SkillRoadmapPage() {
               {filteredTracks.map((track) => {
                 const isSelected = selectedTrackId === track.id;
                 const resourceTotal = (track.freeLearnResources?.length || 0) + (track.interviewPrepResources?.length || 0);
+                const theme = getTrackTheme(track.id);
                 return (
                   <button
                     key={track.id}
@@ -286,22 +403,22 @@ export default function SkillRoadmapPage() {
                     }}
                     className={`group p-3.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 active:scale-98 ${
                       isSelected
-                        ? 'bg-slate-950 text-white border-slate-900 shadow-md ring-2 ring-purple-600/50 -translate-y-0.5'
-                        : 'bg-white hover:bg-slate-50/80 text-slate-900 border-slate-200/90 hover:border-slate-300 hover:shadow-2xs hover:-translate-y-0.5'
+                        ? `bg-slate-950 text-white shadow-md ring-2 ${theme.ring} -translate-y-0.5`
+                        : `bg-white hover:bg-slate-50/80 text-slate-900 border-slate-200/90 ${theme.cardBorder} hover:shadow-2xs hover:-translate-y-0.5`
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className={`p-2 rounded-xl shrink-0 transition-colors ${
                         isSelected 
                           ? 'bg-white/15 text-white shadow-2xs' 
-                          : 'bg-slate-50 text-purple-600 border border-slate-200/70 shadow-2xs group-hover:bg-purple-50 group-hover:border-purple-200'
+                          : `${theme.iconBg} shadow-2xs group-hover:scale-105 transition-transform`
                       }`}>
                         {getTrackIcon(track.iconKey, "w-4 h-4")}
                       </div>
                       <span className={`text-[10px] font-black px-2 py-0.5 rounded-full transition-colors ${
                         isSelected
-                          ? 'bg-purple-500/25 text-purple-200 border border-purple-400/30'
-                          : 'bg-slate-100 text-slate-600 group-hover:bg-purple-50 group-hover:text-purple-700'
+                          ? `${theme.badge}`
+                          : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
                       }`}>
                         {isSelected ? 'Activ' : `${resourceTotal} ghiduri`}
                       </span>
@@ -315,7 +432,7 @@ export default function SkillRoadmapPage() {
                       </div>
                       {track.badge && (
                         <div className={`text-[10px] font-bold leading-tight line-clamp-1 ${
-                          isSelected ? 'text-purple-300' : 'text-purple-700'
+                          isSelected ? 'text-slate-300' : 'text-slate-500'
                         }`}>
                           {track.badge}
                         </div>
@@ -342,34 +459,39 @@ export default function SkillRoadmapPage() {
         <div className="space-y-6 animate-in fade-in duration-200">
           
           {/* TRACK HERO BANNER */}
-          <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2.5 max-w-2xl">
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="p-2.5 rounded-2xl bg-white/10 text-white shrink-0 border border-white/10 shadow-2xs">
-                  {getTrackIcon(selectedTrack.iconKey, "w-5 h-5")}
+          {(() => {
+            const activeTheme = getTrackTheme(selectedTrack.id);
+            return (
+              <div className={`bg-gradient-to-br ${activeTheme.heroGradient} text-white p-6 sm:p-8 rounded-3xl shadow-sm border ${activeTheme.heroBorder} flex flex-col md:flex-row md:items-center justify-between gap-6`}>
+                <div className="space-y-2.5 max-w-2xl">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="p-2.5 rounded-2xl bg-white/10 text-white shrink-0 border border-white/10 shadow-2xs">
+                      {getTrackIcon(selectedTrack.iconKey, "w-5 h-5")}
+                    </div>
+                    <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight">
+                      {selectedTrack.title}
+                    </h2>
+                    <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${activeTheme.badge} backdrop-blur-xs`}>
+                      {selectedTrack.badge}
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
+                    {selectedTrack.tagLine}
+                  </p>
+                  <div className="text-xs text-slate-400 flex items-center gap-2 pt-1 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <span className="text-emerald-300 font-bold">{selectedTrack.marketDemand}</span>
+                  </div>
                 </div>
-                <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight">
-                  {selectedTrack.title}
-                </h2>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30 backdrop-blur-xs">
-                  {selectedTrack.badge}
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
-                {selectedTrack.tagLine}
-              </p>
-              <div className="text-xs text-slate-400 flex items-center gap-2 pt-1 font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="text-emerald-300 font-bold">{selectedTrack.marketDemand}</span>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs text-slate-200 bg-white/10 px-4 py-2 rounded-2xl border border-white/15 font-extrabold backdrop-blur-xs shadow-2xs">
-                {totalCount} Resurse Verificate
-              </span>
-            </div>
-          </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-slate-200 bg-white/10 px-4 py-2 rounded-2xl border border-white/15 font-extrabold backdrop-blur-xs shadow-2xs">
+                    {totalCount} Resurse Verificate
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* TABS & SEARCH BAR FOR RESOURCES */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

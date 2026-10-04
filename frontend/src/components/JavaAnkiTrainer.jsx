@@ -192,6 +192,157 @@ export default function JavaAnkiTrainer() {
     setIsFlipped(false);
   };
 
+  // Chromatic Theme System for Anki Categories
+  const getCategoryTheme = (catId) => {
+    switch (catId) {
+      case 'JAVA':
+        return {
+          accent: 'amber',
+          ring: 'ring-amber-500/50 border-amber-950',
+          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/80',
+          iconBg: 'bg-amber-50 text-amber-700 border-amber-200/80',
+          badge: 'bg-amber-500/20 text-amber-200 border-amber-400/30',
+          gradientAccent: 'from-amber-500 via-orange-500 to-amber-600',
+          cardBorder: 'hover:border-amber-300'
+        };
+      case 'SPRING':
+        return {
+          accent: 'emerald',
+          ring: 'ring-emerald-500/50 border-emerald-950',
+          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/80',
+          iconBg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+          badge: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
+          gradientAccent: 'from-emerald-500 via-teal-500 to-emerald-600',
+          cardBorder: 'hover:border-emerald-300'
+        };
+      case 'SQL':
+        return {
+          accent: 'cyan',
+          ring: 'ring-cyan-500/50 border-cyan-950',
+          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/80',
+          iconBg: 'bg-cyan-50 text-cyan-700 border-cyan-200/80',
+          badge: 'bg-cyan-500/20 text-cyan-200 border-cyan-400/30',
+          gradientAccent: 'from-cyan-500 via-sky-500 to-cyan-600',
+          cardBorder: 'hover:border-cyan-300'
+        };
+      case 'SYSTEM_DESIGN':
+        return {
+          accent: 'indigo',
+          ring: 'ring-indigo-500/50 border-indigo-950',
+          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/80',
+          iconBg: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
+          badge: 'bg-indigo-500/20 text-indigo-200 border-indigo-400/30',
+          gradientAccent: 'from-indigo-500 via-purple-500 to-indigo-600',
+          cardBorder: 'hover:border-indigo-300'
+        };
+      case 'TESTING':
+        return {
+          accent: 'teal',
+          ring: 'ring-teal-500/50 border-teal-950',
+          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950/80',
+          iconBg: 'bg-teal-50 text-teal-700 border-teal-200/80',
+          badge: 'bg-teal-500/20 text-teal-200 border-teal-400/30',
+          gradientAccent: 'from-teal-500 via-emerald-500 to-teal-600',
+          cardBorder: 'hover:border-teal-300'
+        };
+      case 'REACT':
+        return {
+          accent: 'blue',
+          ring: 'ring-blue-500/50 border-blue-950',
+          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/80',
+          iconBg: 'bg-blue-50 text-blue-700 border-blue-200/80',
+          badge: 'bg-blue-500/20 text-blue-200 border-blue-400/30',
+          gradientAccent: 'from-blue-500 via-indigo-500 to-blue-600',
+          cardBorder: 'hover:border-blue-300'
+        };
+      case 'DEVOPS':
+        return {
+          accent: 'sky',
+          ring: 'ring-sky-500/50 border-sky-950',
+          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/80',
+          iconBg: 'bg-sky-50 text-sky-700 border-sky-200/80',
+          badge: 'bg-sky-500/20 text-sky-200 border-sky-400/30',
+          gradientAccent: 'from-sky-500 via-blue-500 to-sky-600',
+          cardBorder: 'hover:border-sky-300'
+        };
+      case 'CLOUD':
+        return {
+          accent: 'purple',
+          ring: 'ring-purple-500/50 border-purple-950',
+          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950/80',
+          iconBg: 'bg-purple-50 text-purple-700 border-purple-200/80',
+          badge: 'bg-purple-500/20 text-purple-200 border-purple-400/30',
+          gradientAccent: 'from-purple-500 via-violet-500 to-purple-600',
+          cardBorder: 'hover:border-purple-300'
+        };
+      case 'ML_AI':
+        return {
+          accent: 'rose',
+          ring: 'ring-rose-500/50 border-rose-950',
+          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950/80',
+          iconBg: 'bg-rose-50 text-rose-700 border-rose-200/80',
+          badge: 'bg-rose-500/20 text-rose-200 border-rose-400/30',
+          gradientAccent: 'from-rose-500 via-pink-500 to-rose-600',
+          cardBorder: 'hover:border-rose-300'
+        };
+      case 'DESIGN_PATTERNS':
+        return {
+          accent: 'violet',
+          ring: 'ring-violet-500/50 border-violet-950',
+          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/80',
+          iconBg: 'bg-violet-50 text-violet-700 border-violet-200/80',
+          badge: 'bg-violet-500/20 text-violet-200 border-violet-400/30',
+          gradientAccent: 'from-violet-500 via-fuchsia-500 to-violet-600',
+          cardBorder: 'hover:border-violet-300'
+        };
+      case 'PYTHON':
+        return {
+          accent: 'amber',
+          ring: 'ring-amber-500/50 border-amber-950',
+          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/80',
+          iconBg: 'bg-amber-50 text-amber-700 border-amber-200/80',
+          badge: 'bg-amber-500/20 text-amber-200 border-amber-400/30',
+          gradientAccent: 'from-amber-500 via-yellow-500 to-orange-500',
+          cardBorder: 'hover:border-amber-300'
+        };
+      default:
+        return {
+          accent: 'blue',
+          ring: 'ring-blue-500/50 border-slate-950',
+          activeBg: 'bg-slate-950',
+          iconBg: 'bg-slate-50 text-slate-700 border-slate-200/80',
+          badge: 'bg-white/20 text-white border-white/20',
+          gradientAccent: 'from-blue-600 via-indigo-600 to-purple-600',
+          cardBorder: 'hover:border-slate-300'
+        };
+    }
+  };
+
+  const getDifficultyBadgeStyle = (difficulty) => {
+    switch (difficulty) {
+      case 'DIFICIL':
+        return 'bg-rose-100 text-rose-800 border-rose-200';
+      case 'MEDIU':
+        return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'USOR':
+      default:
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    }
+  };
+
+  const getStatusBadgeStyle = (status) => {
+    switch (status) {
+      case 'mastered':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'learning':
+        return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'review':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
   // Helper for Category Icons
   const renderCategoryIcon = (catId, sizeClass = "w-4 h-4") => {
     switch (catId) {
@@ -212,6 +363,7 @@ export default function JavaAnkiTrainer() {
 
   const cardStatus = currentCard ? progress[currentCard.id]?.status || 'new' : 'new';
   const visibleCatalogCards = filteredCards.slice(0, visibleCatalogLimit);
+  const currentCategoryTheme = getCategoryTheme(currentCard?.category || 'ALL');
 
   return (
     <div className="space-y-6 font-sans text-gray-900">
@@ -257,41 +409,42 @@ export default function JavaAnkiTrainer() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all duration-200">
-          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-purple-200/80 bg-gradient-to-b from-purple-50/30 to-white shadow-2xs hover:shadow-xs transition-all duration-200">
+          <div className="text-[11px] font-bold text-purple-800 uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-purple-700" />
             De Explorat
           </div>
-          <div className="text-2xl font-black text-slate-950 mt-1.5">
+          <div className="text-2xl font-black text-purple-950 mt-1.5">
             {stats.unstudied}
           </div>
-          <div className="text-[11px] text-slate-600 font-semibold mt-0.5">
+          <div className="text-[11px] text-purple-800 font-semibold mt-0.5">
             Carduri noi de parcurs
           </div>
         </div>
       </div>
 
       {/* 2. CONTROLS: CATEGORIES & VIEW SWITCHER */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-200/90 shadow-2xs space-y-4">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-2xs space-y-4">
         
         {/* Header Domenii */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-0.5">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-blue-600" />
-            <span className="text-xs font-black text-gray-900 uppercase tracking-wider">
+            <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
               Alege Domeniul de Studiu ({TECH_ANKI_CATEGORIES.length - 1} Specializari):
             </span>
           </div>
-          <div className="text-[11px] text-gray-500 font-semibold">
-            Selectat: <span className="font-bold text-gray-950">{TECH_ANKI_CATEGORIES.find(c => c.id === selectedCategory)?.label || 'Toate'}</span> ({categoryCounts[selectedCategory] || 0} carduri)
+          <div className="text-[11px] text-slate-500 font-semibold">
+            Selectat: <span className="font-bold text-slate-950">{TECH_ANKI_CATEGORIES.find(c => c.id === selectedCategory)?.label || 'Toate'}</span> ({categoryCounts[selectedCategory] || 0} carduri)
           </div>
         </div>
 
         {/* Categories Grid (Elimina complet scroll-ul orizontal, incadrare perfecta pe desktop si mobil) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-2.5">
           {TECH_ANKI_CATEGORIES.map(cat => {
             const isSelected = selectedCategory === cat.id;
             const count = categoryCounts[cat.id] || 0;
+            const theme = getCategoryTheme(cat.id);
             return (
               <button
                 key={cat.id}
@@ -301,30 +454,32 @@ export default function JavaAnkiTrainer() {
                   setIsFlipped(false);
                   setVisibleCatalogLimit(20);
                 }}
-                className={`group p-2.5 rounded-xl sm:rounded-2xl transition-all duration-150 cursor-pointer border text-left flex flex-col justify-between gap-2 ${
+                className={`group p-3 rounded-2xl transition-all duration-200 cursor-pointer border text-left flex flex-col justify-between gap-2.5 active:scale-95 ${
                   isSelected
-                    ? 'bg-black text-white border-black shadow-xs ring-2 ring-black/10'
-                    : 'bg-gray-50/80 text-gray-800 border-gray-200/80 hover:bg-white hover:border-gray-300 hover:shadow-2xs hover:text-black'
+                    ? `${theme.activeBg} text-white shadow-md ring-2 ${theme.ring} -translate-y-0.5`
+                    : `bg-white hover:bg-slate-50/80 text-slate-900 border-slate-200/90 ${theme.cardBorder} hover:shadow-2xs hover:-translate-y-0.5`
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
-                  <div className={`p-1.5 rounded-lg shrink-0 transition-colors ${
+                  <div className={`p-1.5 rounded-xl shrink-0 transition-colors ${
                     isSelected
-                      ? 'bg-white/15 text-white'
-                      : 'bg-white text-gray-700 border border-gray-200/70 shadow-2xs group-hover:border-gray-300'
+                      ? 'bg-white/15 text-white shadow-2xs'
+                      : `${theme.iconBg} shadow-2xs group-hover:scale-105 transition-transform`
                   }`}>
                     {renderCategoryIcon(cat.id, "w-3.5 h-3.5")}
                   </div>
                   <span className={`text-[10px] sm:text-[11px] font-black px-2 py-0.5 rounded-full transition-colors ${
                     isSelected
-                      ? 'bg-white/20 text-white'
-                      : 'bg-gray-200/80 text-gray-700 group-hover:bg-gray-200'
+                      ? `${theme.badge}`
+                      : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
                   }`}>
                     {count}
                   </span>
                 </div>
 
-                <div className="font-bold text-[11px] sm:text-xs leading-snug line-clamp-2 min-h-[28px] flex items-center">
+                <div className={`font-black text-xs leading-snug line-clamp-2 min-h-[30px] flex items-center ${
+                  isSelected ? 'text-white' : 'text-slate-950'
+                }`}>
                   {cat.label}
                 </div>
               </button>
@@ -333,18 +488,18 @@ export default function JavaAnkiTrainer() {
         </div>
 
         {/* Second line: Filters (Search, Difficulty, Mode, Shuffle, Reset) */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-2 border-t border-gray-100">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-3 border-t border-slate-100">
           
-          {/* Difficulty pills (fara scroll orizontal) */}
+          {/* Difficulty pills */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mr-1">
+            <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider mr-1">
               Dificultate:
             </span>
             {[
-              { id: 'ALL', label: 'Toate' },
-              { id: 'USOR', label: 'Usor' },
-              { id: 'MEDIU', label: 'Mediu' },
-              { id: 'DIFICIL', label: 'Dificil' }
+              { id: 'ALL', label: 'Toate', activeColor: 'bg-slate-950 text-white' },
+              { id: 'USOR', label: 'Usor', activeColor: 'bg-emerald-600 text-white' },
+              { id: 'MEDIU', label: 'Mediu', activeColor: 'bg-amber-600 text-white' },
+              { id: 'DIFICIL', label: 'Dificil', activeColor: 'bg-rose-600 text-white' }
             ].map(diff => (
               <button
                 key={diff.id}
@@ -354,10 +509,10 @@ export default function JavaAnkiTrainer() {
                   setIsFlipped(false);
                   setVisibleCatalogLimit(20);
                 }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95 ${
                   difficultyFilter === diff.id
-                    ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-black'
+                    ? `${diff.activeColor} shadow-2xs font-black`
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-950'
                 }`}
               >
                 {diff.label}
@@ -367,19 +522,19 @@ export default function JavaAnkiTrainer() {
 
           {/* View mode toggle (Flashcard vs Catalog) & Actions */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <div className="flex items-center p-0.5 bg-gray-100 rounded-xl border border-gray-200">
+            <div className="inline-flex items-center p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 shadow-2xs">
               <button
                 onClick={() => setViewStyle('FLASHCARD')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  viewStyle === 'FLASHCARD' ? 'bg-white text-black shadow-xs' : 'text-gray-600 hover:text-black'
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95 ${
+                  viewStyle === 'FLASHCARD' ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5' : 'text-slate-600 hover:text-slate-950'
                 }`}
               >
                 Mod Card (Anki)
               </button>
               <button
                 onClick={() => setViewStyle('CATALOG')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  viewStyle === 'CATALOG' ? 'bg-white text-black shadow-xs' : 'text-gray-600 hover:text-black'
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95 ${
+                  viewStyle === 'CATALOG' ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5' : 'text-slate-600 hover:text-slate-950'
                 }`}
               >
                 Catalog ({filteredCards.length})
@@ -389,7 +544,7 @@ export default function JavaAnkiTrainer() {
             <button
               onClick={handleShuffle}
               title="Amesteca cardurile"
-              className="p-1.5 rounded-xl border border-gray-200 text-gray-600 hover:text-black hover:bg-gray-100 transition cursor-pointer"
+              className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-950 hover:bg-slate-100 transition-all duration-150 cursor-pointer active:scale-95 shadow-2xs"
             >
               <Shuffle className="w-4 h-4" />
             </button>
@@ -397,7 +552,7 @@ export default function JavaAnkiTrainer() {
             <button
               onClick={handleResetProgress}
               title="Reseteaza progresul"
-              className="p-1.5 rounded-xl border border-gray-200 text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+              className="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all duration-150 cursor-pointer active:scale-95 shadow-2xs"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
@@ -435,10 +590,10 @@ export default function JavaAnkiTrainer() {
       {/* 3. MAIN INTERACTIVE FLASHCARD COMPONENT */}
       {viewStyle === 'FLASHCARD' ? (
         filteredCards.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center border border-gray-200 shadow-2xs space-y-3">
-            <HelpCircle className="w-10 h-10 text-gray-400 mx-auto" />
-            <h3 className="text-base font-bold text-gray-900">Nu am gasit carduri pentru filtrele selectate</h3>
-            <p className="text-xs text-gray-500 max-w-md mx-auto">
+          <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-2xs space-y-3">
+            <HelpCircle className="w-10 h-10 text-slate-400 mx-auto" />
+            <h3 className="text-base font-bold text-slate-900">Nu am gasit carduri pentru filtrele selectate</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
               Incearca sa schimbi categoria, sa setezi dificultatea pe "Toate" sau sa cureti termenii de cautare.
             </p>
           </div>
@@ -446,16 +601,11 @@ export default function JavaAnkiTrainer() {
           <div className="space-y-4 max-w-4xl mx-auto">
             
             {/* Card Progress Header */}
-            <div className="flex items-center justify-between text-xs font-bold text-gray-500 px-2">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-500 px-2">
               <div className="flex items-center gap-2">
                 <span>Card {currentCardIndex + 1} din {filteredCards.length}</span>
-                <span className="text-gray-300">•</span>
-                <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
-                  cardStatus === 'mastered' ? 'bg-emerald-100 text-emerald-800' :
-                  cardStatus === 'learning' ? 'bg-amber-100 text-amber-800' :
-                  cardStatus === 'review' ? 'bg-blue-100 text-blue-800' :
-                  'bg-gray-100 text-gray-600'
-                }`}>
+                <span className="text-slate-300">•</span>
+                <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-2xs ${getStatusBadgeStyle(cardStatus)}`}>
                   {cardStatus === 'mastered' ? 'Stapanit' :
                    cardStatus === 'learning' ? 'In Invatare' :
                    cardStatus === 'review' ? 'De Revizuit' : 'Card Nou'}
@@ -463,7 +613,7 @@ export default function JavaAnkiTrainer() {
               </div>
 
               {/* Progress bar */}
-              <div className="w-32 bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div className="w-32 bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/80">
                 <div 
                   className="bg-blue-600 h-full rounded-full transition-all duration-300"
                   style={{ width: `${Math.round(((currentCardIndex + 1) / filteredCards.length) * 100)}%` }}
@@ -474,28 +624,28 @@ export default function JavaAnkiTrainer() {
             {/* THE INTERACTIVE CARD */}
             <div 
               onClick={() => setIsFlipped(prev => !prev)}
-              className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all duration-200 select-none min-h-[380px] flex flex-col justify-between relative group"
+              className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm cursor-pointer hover:border-slate-300 hover:shadow-md transition-all duration-200 select-none min-h-[380px] flex flex-col justify-between relative group overflow-hidden"
             >
+              {/* TOP ACCENT LINE WITH CATEGORY GRADIENT */}
+              <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${currentCategoryTheme.gradientAccent}`} />
+
               {/* Card Meta Badges */}
-              <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center justify-between gap-3 mb-4 pt-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-gray-100 text-gray-800 border border-gray-200 flex items-center gap-1.5">
-                    {renderCategoryIcon(currentCard.category, "w-3 h-3 text-blue-600")}
+                  <span className="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-200/80 flex items-center gap-1.5 shadow-2xs">
+                    {renderCategoryIcon(currentCard.category, "w-3 h-3 text-slate-700")}
                     {TECH_ANKI_CATEGORIES.find(c => c.id === currentCard.category)?.label || currentCard.category}
                   </span>
 
-                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
-                    currentCard.difficulty === 'DIFICIL' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
-                    currentCard.difficulty === 'MEDIU' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                    'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                  }`}>
+                  <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-2xs ${getDifficultyBadgeStyle(currentCard.difficulty)}`}>
                     {currentCard.difficulty}
                   </span>
                 </div>
 
-                <div className="text-[11px] font-bold text-gray-600 group-hover:text-blue-600 flex items-center gap-1 transition">
+                <div className="text-[11px] font-bold text-slate-500 group-hover:text-slate-900 flex items-center gap-1.5 transition">
                   <RotateCw className="w-3.5 h-3.5" />
-                  <span>{isFlipped ? 'Apasa pentru intrebare' : 'Apasa SPACE sau click pentru raspuns'}</span>
+                  <span className="hidden sm:inline">{isFlipped ? 'Apasa pentru intrebare' : 'Apasa pentru raspuns'}</span>
+                  <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-200">SPACE</span>
                 </div>
               </div>
 
@@ -507,15 +657,15 @@ export default function JavaAnkiTrainer() {
                     <div className="text-[11px] font-black uppercase tracking-wider text-blue-600">
                       Intrebare de Interviu Tehnic:
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight leading-snug">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight leading-snug">
                       {currentCard.title}
                     </h2>
-                    <p className="text-sm sm:text-base text-gray-700 leading-relaxed font-medium">
+                    <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-medium">
                       {currentCard.question}
                     </p>
 
                     <div className="pt-6">
-                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200 group-hover:bg-blue-600 group-hover:text-white transition">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200 group-hover:bg-blue-600 group-hover:text-white transition shadow-2xs">
                         <span>Vezi raspunsul complet & explicatia</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </div>
@@ -529,24 +679,24 @@ export default function JavaAnkiTrainer() {
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         Raspuns Canonic Senior:
                       </div>
-                      <span className="text-[10px] font-bold text-gray-400">
+                      <span className="text-[10px] font-bold text-slate-400">
                         {currentCard.title}
                       </span>
                     </div>
 
                     {/* Formatted Answer */}
-                    <div className="text-xs sm:text-sm text-gray-800 leading-relaxed whitespace-pre-line font-medium bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
+                    <div className="text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-line font-medium bg-slate-50/90 p-4.5 rounded-2xl border border-slate-100">
                       {currentCard.answer}
                     </div>
 
                     {/* Code Snippet Box */}
                     {currentCard.codeSnippet && (
-                      <div className="relative rounded-2xl overflow-hidden bg-gray-950 text-gray-200 border border-gray-800 text-xs font-mono shadow-xs">
-                        <div className="flex items-center justify-between px-3 py-1.5 bg-gray-900 border-b border-gray-800 text-[11px] text-gray-400">
-                          <span className="font-semibold text-gray-300">Solutie / Cod / Configurare</span>
+                      <div className="relative rounded-2xl overflow-hidden bg-slate-950 text-slate-200 border border-slate-800 text-xs font-mono shadow-xs">
+                        <div className="flex items-center justify-between px-3.5 py-2 bg-slate-900 border-b border-slate-800 text-[11px] text-slate-400">
+                          <span className="font-semibold text-slate-300">Solutie / Cod / Configurare</span>
                           <button
                             onClick={() => handleCopyCode(currentCard.codeSnippet, currentCard.id)}
-                            className="flex items-center gap-1 text-[10px] text-gray-300 hover:text-white transition cursor-pointer"
+                            className="flex items-center gap-1 text-[10px] text-slate-300 hover:text-white transition cursor-pointer px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700"
                           >
                             {copiedCodeId === currentCard.id ? (
                               <>
@@ -561,7 +711,7 @@ export default function JavaAnkiTrainer() {
                             )}
                           </button>
                         </div>
-                        <pre className="p-3.5 overflow-x-auto text-[11.5px] leading-relaxed">
+                        <pre className="p-4 overflow-x-auto text-[11.5px] leading-relaxed">
                           <code>{currentCard.codeSnippet}</code>
                         </pre>
                       </div>
@@ -570,24 +720,24 @@ export default function JavaAnkiTrainer() {
                     {/* Interview Trap & Key Takeaway */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
                       {currentCard.interviewTrap && (
-                        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs">
+                        <div className="p-3.5 rounded-2xl bg-rose-50/80 border border-rose-200/90 text-rose-900 text-xs shadow-2xs">
                           <div className="font-bold flex items-center gap-1.5 text-rose-800 mb-0.5">
                             <ShieldAlert className="w-3.5 h-3.5" />
                             Capcana la Interviu
                           </div>
-                          <p className="text-[11px] leading-relaxed text-rose-800/90">
+                          <p className="text-[11px] leading-relaxed text-rose-800/90 font-sans">
                             {currentCard.interviewTrap}
                           </p>
                         </div>
                       )}
 
                       {currentCard.keyTakeaway && (
-                        <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs">
+                        <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200/90 text-blue-900 text-xs shadow-2xs">
                           <div className="font-bold flex items-center gap-1.5 text-blue-800 mb-0.5">
                             <Zap className="w-3.5 h-3.5" />
                             Concluzie Cheie
                           </div>
-                          <p className="text-[11px] leading-relaxed text-blue-800/90">
+                          <p className="text-[11px] leading-relaxed text-blue-800/90 font-sans">
                             {currentCard.keyTakeaway}
                           </p>
                         </div>
@@ -598,8 +748,12 @@ export default function JavaAnkiTrainer() {
               </div>
 
               {/* Card Footer Hint */}
-              <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-600 font-semibold">
-                <div>Shortcuts: Space (intoarce), 1-4 (evalueaza)</div>
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-semibold">
+                <div className="flex items-center gap-2">
+                  <span>Shortcuts:</span>
+                  <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-200">Space (intoarce)</span>
+                  <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-200">1-4 (evalueaza)</span>
+                </div>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={(e) => {
@@ -607,7 +761,7 @@ export default function JavaAnkiTrainer() {
                       setIsFlipped(false);
                       setCurrentCardIndex(prev => (prev - 1 + filteredCards.length) % filteredCards.length);
                     }}
-                    className="p-1 hover:text-black hover:bg-gray-100 rounded-md transition cursor-pointer"
+                    className="p-1 hover:text-slate-950 hover:bg-slate-100 rounded-lg transition cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -617,7 +771,7 @@ export default function JavaAnkiTrainer() {
                       setIsFlipped(false);
                       setCurrentCardIndex(prev => (prev + 1) % filteredCards.length);
                     }}
-                    className="p-1 hover:text-black hover:bg-gray-100 rounded-md transition cursor-pointer"
+                    className="p-1 hover:text-slate-950 hover:bg-slate-100 rounded-lg transition cursor-pointer"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -627,42 +781,59 @@ export default function JavaAnkiTrainer() {
 
             {/* ANKI RATING BUTTONS (Shown when card is flipped) */}
             {isFlipped && (
-              <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-md animate-in slide-in-from-bottom-2 duration-150">
-                <div className="text-[11px] font-black text-slate-500 uppercase tracking-wider text-center mb-3">
-                  Cum ai raspuns la aceasta intrebare? (Alege pentru repetitie spatiata):
+              <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-sm animate-in slide-in-from-bottom-2 duration-150 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                    Evalueaza Intelegerea (Repetitie Spatiata):
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-semibold hidden sm:inline">
+                    Poti folosi tastele numerice 1, 2, 3, 4
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   <button
                     onClick={() => handleRateCard('AGAIN')}
-                    className="py-3 px-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100/80 border border-rose-200 text-rose-800 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
+                    className="py-3 px-3.5 rounded-2xl bg-rose-50/70 hover:bg-rose-100/80 border border-rose-200/90 text-rose-900 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-1 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
                   >
-                    <span className="font-black text-rose-900 text-sm">1. Again</span>
-                    <span className="text-[10px] text-rose-600 font-semibold">&lt; 1 zi (Repeta azi)</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-rose-200 text-rose-800 text-[10px] font-black flex items-center justify-center">1</span>
+                      <span className="font-black text-rose-950 text-sm">Again</span>
+                    </div>
+                    <span className="text-[10px] text-rose-700 font-semibold">&lt; 1 zi (Repeta azi)</span>
                   </button>
 
                   <button
                     onClick={() => handleRateCard('HARD')}
-                    className="py-3 px-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-800 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
+                    className="py-3 px-3.5 rounded-2xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/90 text-amber-900 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-1 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
                   >
-                    <span className="font-black text-amber-900 text-sm">2. Hard</span>
-                    <span className="text-[10px] text-amber-600 font-semibold">in 2-3 zile</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-amber-200 text-amber-800 text-[10px] font-black flex items-center justify-center">2</span>
+                      <span className="font-black text-amber-950 text-sm">Hard</span>
+                    </div>
+                    <span className="text-[10px] text-amber-700 font-semibold">in 2-3 zile</span>
                   </button>
 
                   <button
                     onClick={() => handleRateCard('GOOD')}
-                    className="py-3 px-3.5 rounded-2xl bg-blue-50 hover:bg-blue-100/80 border border-blue-200 text-blue-800 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
+                    className="py-3 px-3.5 rounded-2xl bg-blue-50/70 hover:bg-blue-100/80 border border-blue-200/90 text-blue-900 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-1 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
                   >
-                    <span className="font-black text-blue-900 text-sm">3. Good</span>
-                    <span className="text-[10px] text-blue-600 font-semibold">in 5-7 zile</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-blue-200 text-blue-800 text-[10px] font-black flex items-center justify-center">3</span>
+                      <span className="font-black text-blue-950 text-sm">Good</span>
+                    </div>
+                    <span className="text-[10px] text-blue-700 font-semibold">in 5-7 zile</span>
                   </button>
 
                   <button
                     onClick={() => handleRateCard('EASY')}
-                    className="py-3 px-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-800 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-0.5 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
+                    className="py-3 px-3.5 rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200/90 text-emerald-900 text-xs font-bold transition-all duration-150 flex flex-col items-center gap-1 cursor-pointer shadow-2xs active:scale-95 hover:-translate-y-0.5"
                   >
-                    <span className="font-black text-emerald-900 text-sm">4. Easy</span>
-                    <span className="text-[10px] text-emerald-600 font-semibold">Stapanit (14+ zile)</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-800 text-[10px] font-black flex items-center justify-center">4</span>
+                      <span className="font-black text-emerald-950 text-sm">Easy</span>
+                    </div>
+                    <span className="text-[10px] text-emerald-700 font-semibold">Stapanit (14+ zile)</span>
                   </button>
                 </div>
               </div>
@@ -672,7 +843,7 @@ export default function JavaAnkiTrainer() {
       ) : (
         /* 4. CATALOG / CHEATSHEET VIEW (BROWSE ALL QUESTIONS) */
         <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
             <span>Intrebari afisate: {visibleCatalogCards.length} din {filteredCards.length}</span>
             <span>Deck: {TECH_ANKI_CATEGORIES.find(c => c.id === selectedCategory)?.label || 'Toate'}</span>
           </div>
@@ -683,29 +854,21 @@ export default function JavaAnkiTrainer() {
               return (
                 <div 
                   key={card.id}
-                  className="bg-white rounded-2xl p-5 border border-gray-200/90 shadow-2xs hover:shadow-xs transition space-y-3"
+                  className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all duration-150 space-y-3"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-black text-gray-400">#{idx + 1}</span>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-gray-100 text-gray-700 flex items-center gap-1">
-                        {renderCategoryIcon(card.category, "w-3 h-3 text-blue-600")}
+                      <span className="text-xs font-black text-slate-400">#{idx + 1}</span>
+                      <span className="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 flex items-center gap-1.5 border border-slate-200/80 shadow-2xs">
+                        {renderCategoryIcon(card.category, "w-3 h-3 text-slate-600")}
                         {TECH_ANKI_CATEGORIES.find(c => c.id === card.category)?.label || card.category}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
-                        card.difficulty === 'DIFICIL' ? 'bg-rose-100 text-rose-800' :
-                        card.difficulty === 'MEDIU' ? 'bg-amber-100 text-amber-800' :
-                        'bg-emerald-100 text-emerald-800'
-                      }`}>
+                      <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-2xs ${getDifficultyBadgeStyle(card.difficulty)}`}>
                         {card.difficulty}
                       </span>
                     </div>
 
-                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md self-start sm:self-auto ${
-                      status === 'mastered' ? 'bg-emerald-100 text-emerald-800' :
-                      status === 'learning' ? 'bg-amber-100 text-amber-800' :
-                      status === 'review' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
-                    }`}>
+                    <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-lg self-start sm:self-auto border shadow-2xs ${getStatusBadgeStyle(status)}`}>
                       {status === 'mastered' ? 'Stapanit' :
                        status === 'learning' ? 'In Invatare' :
                        status === 'review' ? 'De Revizuit' : 'Card Nou'}
@@ -713,28 +876,28 @@ export default function JavaAnkiTrainer() {
                   </div>
 
                   <div>
-                    <h3 className="text-base font-black text-gray-950">
+                    <h3 className="text-base font-black text-slate-950">
                       {card.title}
                     </h3>
-                    <p className="text-xs text-gray-600 font-medium mt-0.5">
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">
                       {card.question}
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 text-xs text-gray-800 leading-relaxed font-medium whitespace-pre-line">
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs text-slate-800 leading-relaxed font-medium whitespace-pre-line">
                     {card.answer}
                   </div>
 
                   {card.codeSnippet && (
-                    <div className="rounded-xl overflow-hidden bg-gray-950 text-gray-200 border border-gray-800 text-xs font-mono">
-                      <pre className="p-3 overflow-x-auto text-[11px] leading-relaxed">
+                    <div className="rounded-2xl overflow-hidden bg-slate-950 text-slate-200 border border-slate-800 text-xs font-mono shadow-xs">
+                      <pre className="p-3.5 overflow-x-auto text-[11px] leading-relaxed">
                         <code>{card.codeSnippet}</code>
                       </pre>
                     </div>
                   )}
 
                   {card.interviewTrap && (
-                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-medium">
+                    <div className="p-3 rounded-xl bg-rose-50/80 border border-rose-200 text-rose-900 text-xs font-medium">
                       <span className="font-bold text-rose-800">Capcana: </span>
                       {card.interviewTrap}
                     </div>
@@ -749,7 +912,7 @@ export default function JavaAnkiTrainer() {
             <div className="text-center pt-2">
               <button
                 onClick={() => setVisibleCatalogLimit(prev => prev + 20)}
-                className="px-5 py-2.5 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-bold transition inline-flex items-center gap-2 shadow-xs cursor-pointer"
+                className="px-6 py-3 rounded-2xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold transition-all duration-150 inline-flex items-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
               >
                 <span>Incarca inca 20 de intrebari (Ramase: {filteredCards.length - visibleCatalogLimit})</span>
                 <ChevronDown className="w-4 h-4" />
