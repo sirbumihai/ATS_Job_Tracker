@@ -296,20 +296,20 @@ export default function SkillRoadmapPage() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2.5 max-w-3xl">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200/80 flex items-center gap-1.5 shadow-2xs">
-                <GraduationCap className="w-3.5 h-3.5" />
-                Playbook Interviuri & Roadmap IT 2026
+              <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200/90 flex items-center gap-2">
+                <GraduationCap className="w-3.5 h-3.5 text-slate-900" />
+                <span>Playbook Interviuri & Roadmap IT 2026</span>
               </span>
-              <span className="text-xs text-slate-300 font-semibold">•</span>
+              <span className="h-3 w-px bg-slate-300 mx-1 hidden sm:inline" />
               <span className="text-xs font-bold text-slate-600">Aliniat cu Piata Tech din Romania</span>
             </div>
 
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-950 tracking-tight leading-tight">
-              Cum Treci Interviul <span className="text-purple-600 underline decoration-purple-200 decoration-wavy">HR</span>, Cel <span className="text-indigo-600 underline decoration-indigo-200 decoration-wavy">Tehnic</span> si <span className="text-blue-600 underline decoration-blue-200 decoration-wavy">Anki Trainer</span>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 tracking-tight leading-tight">
+              Ghid Tehnic pe Roluri, Interviu HR si Trainer Anki
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
-              Pregatire 360 de grade pentru intregul proces de selectie: screening HR (pitch de 90s, STAR, verificarea de engleza), ghid tehnic pe roluri si antrenament interactiv cu flashcards stil Anki pentru Java.
+            <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-2xl">
+              Curicula practica de interviu pentru piata IT din Romania: screening HR, intrebari tehnice de seniorat si repetitie spatiata pe 11 domenii.
             </p>
           </div>
 
@@ -319,7 +319,7 @@ export default function SkillRoadmapPage() {
               onClick={() => setViewMode('TECH_TRACKS')}
               className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
                 viewMode === 'TECH_TRACKS'
-                  ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
+                  ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
                   : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
               }`}
             >
@@ -331,7 +331,7 @@ export default function SkillRoadmapPage() {
               onClick={() => setViewMode('HR_SCREENING')}
               className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
                 viewMode === 'HR_SCREENING'
-                  ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
+                  ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
                   : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
               }`}
             >
@@ -343,7 +343,7 @@ export default function SkillRoadmapPage() {
               onClick={() => setViewMode('ANKI_JAVA')}
               className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
                 viewMode === 'ANKI_JAVA'
-                  ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
+                  ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
                   : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
               }`}
             >
@@ -363,7 +363,8 @@ export default function SkillRoadmapPage() {
                   Alege Specializarea ({JOB_TRACKS.length} Roluri Tehnice):
                 </span>
                 <span className="text-[11px] text-slate-500 font-semibold hidden md:inline">
-                  • Selectat: <strong className="text-slate-950 font-bold">{selectedTrack?.title}</strong>
+                  <span className="text-slate-300 mx-1.5">/</span>
+                  Selectat: <strong className="text-slate-950 font-bold">{selectedTrack?.title}</strong>
                 </span>
               </div>
 
@@ -458,36 +459,46 @@ export default function SkillRoadmapPage() {
       {viewMode === 'TECH_TRACKS' && selectedTrack && (
         <div className="space-y-6 animate-in fade-in duration-200">
           
-          {/* TRACK HERO BANNER */}
+          {/* TRACK HERO BANNER (ASYMMETRIC SPLIT) */}
           {(() => {
             const activeTheme = getTrackTheme(selectedTrack.id);
             return (
-              <div className={`bg-gradient-to-br ${activeTheme.heroGradient} text-white p-6 sm:p-8 rounded-3xl shadow-sm border ${activeTheme.heroBorder} flex flex-col md:flex-row md:items-center justify-between gap-6`}>
-                <div className="space-y-2.5 max-w-2xl">
+              <div className={`bg-gradient-to-br ${activeTheme.heroGradient} text-white p-6 sm:p-8 rounded-3xl shadow-sm border ${activeTheme.heroBorder} flex flex-col lg:flex-row lg:items-center justify-between gap-6`}>
+                <div className="space-y-3 max-w-2xl">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <div className="p-2.5 rounded-2xl bg-white/10 text-white shrink-0 border border-white/10 shadow-2xs">
+                    <div className="p-2.5 rounded-xl bg-white/10 text-white shrink-0 border border-white/10 shadow-2xs">
                       {getTrackIcon(selectedTrack.iconKey, "w-5 h-5")}
                     </div>
-                    <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight">
+                    <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                       {selectedTrack.title}
                     </h2>
-                    <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${activeTheme.badge} backdrop-blur-xs`}>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${activeTheme.badge} backdrop-blur-xs`}>
                       {selectedTrack.badge}
                     </span>
                   </div>
                   <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
                     {selectedTrack.tagLine}
                   </p>
-                  <div className="text-xs text-slate-400 flex items-center gap-2 pt-1 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                    <span className="text-emerald-300 font-bold">{selectedTrack.marketDemand}</span>
+                  <div className="text-xs text-slate-400 flex items-center gap-2 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                    <span className="text-emerald-300 font-semibold">{selectedTrack.marketDemand}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-slate-200 bg-white/10 px-4 py-2 rounded-2xl border border-white/15 font-extrabold backdrop-blur-xs shadow-2xs">
-                    {totalCount} Resurse Verificate
-                  </span>
+                {/* ASYMMETRIC BENTO STATS */}
+                <div className="grid grid-cols-3 gap-2.5 sm:gap-3 shrink-0">
+                  <div className="bg-white/5 border border-white/10 px-3.5 py-2.5 rounded-2xl text-center">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total</div>
+                    <div className="text-lg font-black text-white mt-0.5">{totalCount}</div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 px-3.5 py-2.5 rounded-2xl text-center">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Interviu</div>
+                    <div className="text-lg font-black text-white mt-0.5">{interviewCount}</div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 px-3.5 py-2.5 rounded-2xl text-center">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cursuri</div>
+                    <div className="text-lg font-black text-white mt-0.5">{learnCount}</div>
+                  </div>
                 </div>
               </div>
             );
@@ -502,7 +513,7 @@ export default function SkillRoadmapPage() {
                 onClick={() => setActiveTab('ALL')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                   activeTab === 'ALL'
-                    ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
+                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
@@ -514,7 +525,7 @@ export default function SkillRoadmapPage() {
                 onClick={() => setActiveTab('INTERVIEW')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                   activeTab === 'INTERVIEW'
-                    ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
+                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
@@ -526,7 +537,7 @@ export default function SkillRoadmapPage() {
                 onClick={() => setActiveTab('LEARN')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                   activeTab === 'LEARN'
-                    ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
+                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
@@ -543,7 +554,7 @@ export default function SkillRoadmapPage() {
                 placeholder="Filtreaza resurse (ex: GitHub, Q&A, LeetCode)..."
                 value={resourceSearchQuery}
                 onChange={e => setResourceSearchQuery(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 shadow-2xs transition"
+                className="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 shadow-2xs transition"
               />
               {resourceSearchQuery && (
                 <button
@@ -556,37 +567,47 @@ export default function SkillRoadmapPage() {
             </div>
           </div>
 
-          {/* STRATEGY PRO-TIP BANNER */}
-          <div className="bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-7 shadow-sm border border-purple-800/80 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                <Sparkles className="w-4 h-4" />
+          {/* METHODOLOGY ROADMAP (ASYMMETRIC 3-PHASE PROGRESSION STRIP) */}
+          <div className="bg-slate-950 text-white rounded-3xl p-6 sm:p-7 border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <h3 className="text-xs font-black tracking-wider uppercase text-white">
+                  Metodologie de Pregatire pentru Interviu
+                </h3>
               </div>
-              <h3 className="text-sm font-black tracking-tight text-white uppercase">
-                Metodologie Recomandata de Pregatire pentru Interviu
-              </h3>
+              <span className="text-[11px] text-slate-400 font-semibold hidden sm:inline">Trei Pasi Structurati</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs text-slate-200 leading-relaxed font-sans">
-              <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-1.5 backdrop-blur-xs">
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs text-slate-300">
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-black flex items-center justify-center">1</span>
-                  <span className="font-black text-amber-300">Fixeaza Conceptele Cheie</span>
+                  <span className="w-5 h-5 rounded-md bg-amber-400/20 text-amber-300 text-[11px] font-black flex items-center justify-center">1</span>
+                  <span className="font-bold text-white text-xs">Fundamente & Concepte</span>
                 </div>
-                <p className="text-slate-300 text-[11.5px]">Urmareste documentatiile oficiale si cursurile gratuite pentru a intelege fundamentele fara a ramane blocat in tutoriale pasive.</p>
+                <p className="text-slate-300 text-[11.5px] leading-relaxed">
+                  Documentatii oficiale si cursuri open-source pentru a intelege mecanismele interne ale tehnologiilor, fara tutorial hell.
+                </p>
               </div>
-              <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-1.5 backdrop-blur-xs">
+
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black flex items-center justify-center">2</span>
-                  <span className="font-black text-emerald-300">Repeta Intrebarile cu Voce Tare</span>
+                  <span className="w-5 h-5 rounded-md bg-emerald-400/20 text-emerald-300 text-[11px] font-black flex items-center justify-center">2</span>
+                  <span className="font-bold text-white text-xs">Argumentare Orala (60-90s)</span>
                 </div>
-                <p className="text-slate-300 text-[11.5px]">Ia intrebarile de pe GitHub si formuleaza raspunsul tehnic oral in 60-90 de secunde, explicand argumentat si cu exemple de cod.</p>
+                <p className="text-slate-300 text-[11.5px] leading-relaxed">
+                  Formuleaza raspunsul tehnic cu voce tare, structurat pe definitie, mecanism intern, trade-off-uri si exemple din productie.
+                </p>
               </div>
-              <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-1.5 backdrop-blur-xs">
+
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-sky-400/20 text-sky-300 border border-sky-400/30 text-[10px] font-black flex items-center justify-center">3</span>
-                  <span className="font-black text-sky-300">Simuleaza Live Coding</span>
+                  <span className="w-5 h-5 rounded-md bg-sky-400/20 text-sky-300 text-[11px] font-black flex items-center justify-center">3</span>
+                  <span className="font-bold text-white text-xs">Simulari Practice & Coding</span>
                 </div>
-                <p className="text-slate-300 text-[11.5px]">Rezolva problemele pe NeetCode sau LeetCode explicand pasii inainte de a scrie primul rand de cod, exact ca la un interviu real.</p>
+                <p className="text-slate-300 text-[11.5px] leading-relaxed">
+                  Rezolva probleme pe NeetCode si repozitorii GitHub explicand deciziile inainte de a scrie codul, intocmai ca la interviu.
+                </p>
               </div>
             </div>
           </div>
@@ -675,34 +696,34 @@ export default function SkillRoadmapPage() {
       {viewMode === 'HR_SCREENING' && (
         <div className="space-y-6 animate-in fade-in duration-200">
           
-          {/* HR HERO BANNER */}
-          <div className="bg-gradient-to-br from-slate-950 via-neutral-900 to-amber-950 text-white p-6 sm:p-8 rounded-3xl shadow-sm border border-neutral-800 space-y-4">
+          {/* HR HERO BANNER (ASYMMETRIC SPLIT) */}
+          <div className="bg-slate-950 text-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-800 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-400 shrink-0 border border-amber-500/30 shadow-2xs">
+              <div className="p-2.5 rounded-xl bg-white/10 text-amber-400 shrink-0 border border-white/10 shadow-2xs">
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                   {HR_INTERVIEW_DATA.title}
                 </h2>
-                <p className="text-xs sm:text-sm text-amber-200/80 font-medium">
+                <p className="text-xs sm:text-sm text-slate-300 font-medium mt-0.5">
                   {HR_INTERVIEW_DATA.subtitle}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2 text-xs text-slate-300 font-sans">
-              <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1.5 backdrop-blur-xs">
-                <span className="text-[10px] font-black uppercase text-amber-400 block tracking-wider">Obiectivul HR-ului</span>
-                <p className="text-slate-300 leading-relaxed text-[11.5px]">Nu iti testeaza codul linie cu linie; evalueaza daca esti comunicativ, pasionat, serios si adaptabil echipei.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs text-slate-300 font-sans">
+              <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1.5">
+                <span className="text-[10px] font-bold uppercase text-amber-400 block tracking-wider">Obiectivul Recruiterului</span>
+                <p className="text-slate-300 leading-relaxed text-[11.5px]">Evalueaza compatibilitatea cu echipa, capacitatea de comunicare si motivatia reala pentru rol.</p>
               </div>
-              <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1.5 backdrop-blur-xs">
-                <span className="text-[10px] font-black uppercase text-emerald-400 block tracking-wider">Rata de Trecere</span>
-                <p className="text-slate-300 leading-relaxed text-[11.5px]">Peste 65% din candidati sunt eliminati in runda de HR din cauza lipsei de pregatire si raspunsurilor vagi.</p>
+              <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1.5">
+                <span className="text-[10px] font-bold uppercase text-emerald-400 block tracking-wider">Rata de Trecere</span>
+                <p className="text-slate-300 leading-relaxed text-[11.5px]">Peste 65% din candidati sunt descalificati la HR din cauza raspunsurilor vagi sau nepregatite.</p>
               </div>
-              <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1.5 backdrop-blur-xs">
-                <span className="text-[10px] font-black uppercase text-sky-400 block tracking-wider">Cheia Succesului</span>
-                <p className="text-slate-300 leading-relaxed text-[11.5px]">Un pitch clar de 90 secunde, povesti structurate cu metoda STAR si naturalete la verificarea de limba engleza.</p>
+              <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1.5">
+                <span className="text-[10px] font-bold uppercase text-sky-400 block tracking-wider">Cheia Succesului</span>
+                <p className="text-slate-300 leading-relaxed text-[11.5px]">Pitch concis de 90 de secunde, exemple structurate STAR si fluenta la conversatia in engleza.</p>
               </div>
             </div>
           </div>
@@ -725,11 +746,11 @@ export default function SkillRoadmapPage() {
                   onClick={() => setHrSubTab(tab.id)}
                   className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 shrink-0 cursor-pointer active:scale-95 ${
                     isActive
-                      ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
+                      ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
                       : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-amber-500' : 'text-slate-500'}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-amber-400' : 'text-slate-500'}`} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -742,10 +763,10 @@ export default function SkillRoadmapPage() {
               <div className="border-b border-slate-100 pb-3.5">
                 <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
                   <Briefcase className="w-4 h-4 text-amber-600" />
-                  Structura Cronologica a Apelului de HR (Cum Sunt Impartite cele 30 de Minute)
+                  Structura Cronologica a Apelului de HR (30 de Minute)
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Fiecare minut conteaza. Iata pasii exacti prin care te va trece recruiterul:
+                  Fiecare interval are un obiectiv clar de evaluare:
                 </p>
               </div>
 
@@ -754,10 +775,10 @@ export default function SkillRoadmapPage() {
                   <div key={idx} className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-slate-300 hover:shadow-2xs transition-all duration-150 flex flex-col justify-between space-y-3">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md">
                           {phase.time}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-400">Etapa {idx + 1}</span>
+                        <span className="text-[11px] font-bold text-slate-400">Pas {idx + 1}</span>
                       </div>
                       <h4 className="text-xs sm:text-sm font-black text-slate-950">
                         {phase.title}
@@ -768,7 +789,7 @@ export default function SkillRoadmapPage() {
                     </div>
 
                     <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-950 font-sans space-y-0.5">
-                      <strong className="text-amber-800 font-bold block">Pro-Tip:</strong>
+                      <strong className="text-amber-800 font-bold block">Recomandare:</strong>
                       <span>{phase.proTip}</span>
                     </div>
                   </div>
@@ -798,7 +819,7 @@ export default function SkillRoadmapPage() {
                 <div className="space-y-2.5">
                   {HR_INTERVIEW_DATA.pitchFormula.steps.map((st, idx) => (
                     <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-                      <span className="text-[11px] font-extrabold text-purple-900 block">
+                      <span className="text-[11px] font-extrabold text-slate-900 block">
                         {st.step}
                       </span>
                       <p className="text-xs text-slate-700 leading-relaxed font-sans">
@@ -809,20 +830,20 @@ export default function SkillRoadmapPage() {
                 </div>
 
                 {/* SCRIPT GATA DE ADAPTAT */}
-                <div className="bg-purple-50/80 border border-purple-200/90 rounded-2xl p-4 sm:p-5 space-y-2.5 shadow-2xs">
+                <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2.5 shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-900">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
                       Model de Script Personalizabil:
                     </span>
                     <button
                       onClick={() => handleCopyText(HR_INTERVIEW_DATA.pitchFormula.sampleScript, 'Script Pitch 90s')}
-                      className="text-xs font-bold text-purple-700 hover:text-purple-950 flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-purple-200 shadow-2xs active:scale-95 transition"
+                      className="text-xs font-bold text-slate-700 hover:text-slate-950 flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs active:scale-95 transition"
                     >
                       <Copy className="w-3.5 h-3.5" />
                       <span>Copiaza Script</span>
                     </button>
                   </div>
-                  <p className="text-xs text-purple-950 leading-relaxed font-sans italic select-text">
+                  <p className="text-xs text-slate-800 leading-relaxed font-sans italic select-text">
                     "{HR_INTERVIEW_DATA.pitchFormula.sampleScript}"
                   </p>
                 </div>
@@ -857,16 +878,16 @@ export default function SkillRoadmapPage() {
                 </div>
 
                 {/* REAL CODE PROJECT EXAMPLE */}
-                <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-4 sm:p-5 space-y-2 shadow-2xs">
+                <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2 shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-900">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
                       Exemplu Practic din Proiect Personal:
                     </span>
                   </div>
-                  <div className="text-[11.5px] text-emerald-950 font-bold">
+                  <div className="text-[11.5px] text-slate-950 font-bold">
                     Intrebare: "{HR_INTERVIEW_DATA.starMethod.example.question}"
                   </div>
-                  <p className="text-xs text-emerald-900 leading-relaxed font-sans select-text">
+                  <p className="text-xs text-slate-800 leading-relaxed font-sans select-text">
                     {HR_INTERVIEW_DATA.starMethod.example.answer}
                   </p>
                 </div>
@@ -882,7 +903,7 @@ export default function SkillRoadmapPage() {
               <div className="border-b border-slate-100 pb-3.5">
                 <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-indigo-600" />
-                  Top Intrebari Clasice de HR: Raspuns Recomandat vs. Red Flags (Capcane)
+                  Top Intrebari Clasice de HR: Raspuns Recomandat vs. Red Flags
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Intrebarile adresate la aproape orice interviu de debut. Invata ce urmareste recruiterul si ce sa nu spui niciodata.
