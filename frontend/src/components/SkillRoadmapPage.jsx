@@ -114,118 +114,107 @@ export default function SkillRoadmapPage() {
     }
   };
 
-  // Chromatic Theme System for each specialization track
+  // Chromatic Theme System for each specialization track (Calibrated for Light Theme)
   const getTrackTheme = (trackId) => {
     switch (trackId) {
       case 'BACKEND':
         return {
           accent: 'emerald',
-          ring: 'ring-emerald-500/50 border-emerald-950',
-          badge: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
-          heroGradient: 'from-slate-950 via-slate-900 to-emerald-950/70',
-          heroBorder: 'border-emerald-800/60',
+          ring: 'ring-emerald-500/20 border-emerald-600',
+          badge: 'bg-emerald-50 text-emerald-800 border-emerald-200/90',
+          accentBorder: 'border-l-4 border-l-emerald-500',
           iconBg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
           cardBorder: 'hover:border-emerald-300'
         };
       case 'FRONTEND':
         return {
           accent: 'blue',
-          ring: 'ring-blue-500/50 border-blue-950',
-          badge: 'bg-blue-500/20 text-blue-200 border-blue-400/30',
-          heroGradient: 'from-slate-950 via-slate-900 to-blue-950/70',
-          heroBorder: 'border-blue-800/60',
+          ring: 'ring-blue-500/20 border-blue-600',
+          badge: 'bg-blue-50 text-blue-800 border-blue-200/90',
+          accentBorder: 'border-l-4 border-l-blue-500',
           iconBg: 'bg-blue-50 text-blue-700 border-blue-200/80',
           cardBorder: 'hover:border-blue-300'
         };
       case 'FULLSTACK':
         return {
           accent: 'indigo',
-          ring: 'ring-indigo-500/50 border-indigo-950',
-          badge: 'bg-indigo-500/20 text-indigo-200 border-indigo-400/30',
-          heroGradient: 'from-slate-950 via-slate-900 to-indigo-950/70',
-          heroBorder: 'border-indigo-800/60',
+          ring: 'ring-indigo-500/20 border-indigo-600',
+          badge: 'bg-indigo-50 text-indigo-800 border-indigo-200/90',
+          accentBorder: 'border-l-4 border-l-indigo-500',
           iconBg: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
           cardBorder: 'hover:border-indigo-300'
         };
       case 'QA_AUTOMATION':
         return {
           accent: 'rose',
-          ring: 'ring-rose-500/50 border-rose-950',
-          badge: 'bg-rose-500/20 text-rose-200 border-rose-400/30',
-          heroGradient: 'from-slate-950 via-slate-900 to-rose-950/70',
-          heroBorder: 'border-rose-800/60',
+          ring: 'ring-rose-500/20 border-rose-600',
+          badge: 'bg-rose-50 text-rose-800 border-rose-200/90',
+          accentBorder: 'border-l-4 border-l-rose-500',
           iconBg: 'bg-rose-50 text-rose-700 border-rose-200/80',
           cardBorder: 'hover:border-rose-300'
         };
       case 'DEVOPS_CLOUD':
         return {
           accent: 'sky',
-          ring: 'ring-sky-500/50 border-sky-950',
-          badge: 'bg-sky-500/20 text-sky-200 border-sky-400/30',
-          heroGradient: 'from-slate-950 via-slate-900 to-sky-950/70',
-          heroBorder: 'border-sky-800/60',
+          ring: 'ring-sky-500/20 border-sky-600',
+          badge: 'bg-sky-50 text-sky-800 border-sky-200/90',
+          accentBorder: 'border-l-4 border-l-sky-500',
           iconBg: 'bg-sky-50 text-sky-700 border-sky-200/80',
           cardBorder: 'hover:border-sky-300'
         };
       case 'AI_DATA_SCIENCE':
         return {
           accent: 'amber',
-          ring: 'ring-amber-500/50 border-amber-950',
-          badge: 'bg-amber-500/20 text-amber-200 border-amber-400/30',
-          heroGradient: 'from-slate-950 via-slate-900 to-amber-950/70',
-          heroBorder: 'border-amber-800/60',
+          ring: 'ring-amber-500/20 border-amber-600',
+          badge: 'bg-amber-50 text-amber-800 border-amber-200/90',
+          accentBorder: 'border-l-4 border-l-amber-500',
           iconBg: 'bg-amber-50 text-amber-700 border-amber-200/80',
           cardBorder: 'hover:border-amber-300'
         };
       case 'DATA_ENGINEERING':
         return {
           accent: 'teal',
-          ring: 'ring-teal-500/50 border-teal-950',
-          badge: 'bg-teal-500/20 text-teal-200 border-teal-400/30',
-          heroGradient: 'from-slate-950 via-slate-900 to-teal-950/70',
-          heroBorder: 'border-teal-800/60',
+          ring: 'ring-teal-500/20 border-teal-600',
+          badge: 'bg-teal-50 text-teal-800 border-teal-200/90',
+          accentBorder: 'border-l-4 border-l-teal-500',
           iconBg: 'bg-teal-50 text-teal-700 border-teal-200/80',
           cardBorder: 'hover:border-teal-300'
         };
       case 'CYBERSECURITY':
         return {
           accent: 'red',
-          ring: 'ring-red-500/50 border-red-950',
-          badge: 'bg-red-500/20 text-red-200 border-red-400/30',
-          heroGradient: 'from-slate-950 via-slate-900 to-red-950/70',
-          heroBorder: 'border-red-800/60',
+          ring: 'ring-red-500/20 border-red-600',
+          badge: 'bg-red-50 text-red-800 border-red-200/90',
+          accentBorder: 'border-l-4 border-l-red-500',
           iconBg: 'bg-red-50 text-red-700 border-red-200/80',
           cardBorder: 'hover:border-red-300'
         };
       case 'EMBEDDED':
         return {
           accent: 'purple',
-          ring: 'ring-purple-500/50 border-purple-950',
-          badge: 'bg-purple-500/20 text-purple-200 border-purple-400/30',
-          heroGradient: 'from-slate-950 via-slate-900 to-purple-950/70',
-          heroBorder: 'border-purple-800/60',
+          ring: 'ring-purple-500/20 border-purple-600',
+          badge: 'bg-purple-50 text-purple-800 border-purple-200/90',
+          accentBorder: 'border-l-4 border-l-purple-500',
           iconBg: 'bg-purple-50 text-purple-700 border-purple-200/80',
           cardBorder: 'hover:border-purple-300'
         };
       case 'MOBILE':
         return {
           accent: 'fuchsia',
-          ring: 'ring-fuchsia-500/50 border-fuchsia-950',
-          badge: 'bg-fuchsia-500/20 text-fuchsia-200 border-fuchsia-400/30',
-          heroGradient: 'from-slate-950 via-slate-900 to-fuchsia-950/70',
-          heroBorder: 'border-fuchsia-800/60',
+          ring: 'ring-fuchsia-500/20 border-fuchsia-600',
+          badge: 'bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200/90',
+          accentBorder: 'border-l-4 border-l-fuchsia-500',
           iconBg: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200/80',
           cardBorder: 'hover:border-fuchsia-300'
         };
       default:
         return {
-          accent: 'purple',
-          ring: 'ring-purple-500/50 border-purple-950',
-          badge: 'bg-purple-500/20 text-purple-200 border-purple-400/30',
-          heroGradient: 'from-slate-950 via-slate-900 to-indigo-950/70',
-          heroBorder: 'border-slate-800',
-          iconBg: 'bg-slate-50 text-purple-600 border-slate-200/80',
-          cardBorder: 'hover:border-purple-300'
+          accent: 'indigo',
+          ring: 'ring-indigo-500/20 border-indigo-600',
+          badge: 'bg-indigo-50 text-indigo-800 border-indigo-200/90',
+          accentBorder: 'border-l-4 border-l-indigo-500',
+          iconBg: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
+          cardBorder: 'hover:border-indigo-300'
         };
     }
   };
@@ -292,38 +281,38 @@ export default function SkillRoadmapPage() {
         </div>
       )}
 
-      {/* HEADER SECTION (ASYMMETRIC SPLIT OBSIDIAN HERO) */}
-      <div className="bg-slate-950 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-sm relative overflow-hidden">
+      {/* HEADER SECTION (ASYMMETRIC SPLIT LIGHT THEME) */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-2xs relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-bold text-slate-300 bg-white/10 px-3 py-1 rounded-lg border border-white/15 flex items-center gap-2">
-                <GraduationCap className="w-3.5 h-3.5 text-white" />
+              <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200/90 flex items-center gap-2">
+                <GraduationCap className="w-3.5 h-3.5 text-slate-900" />
                 <span>Playbook Interviuri & Roadmap IT 2026</span>
               </span>
-              <span className="h-3 w-px bg-slate-700 mx-1 hidden sm:inline" />
-              <span className="text-xs font-bold text-slate-400">Aliniat cu Piata Tech din Romania</span>
+              <span className="h-3 w-px bg-slate-300 mx-1 hidden sm:inline" />
+              <span className="text-xs font-bold text-slate-600">Aliniat cu Piata Tech din Romania</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 tracking-tight leading-tight">
               Ghid Tehnic pe Roluri, Interviu HR si Trainer Anki
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed max-w-xl">
+            <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-xl">
               Curicula practica de interviu pentru piata IT din Romania: screening HR, intrebari tehnice de seniorat si repetitie spatiata pe 11 domenii.
             </p>
 
             {/* VIEW MODE TOGGLE SWITCHER (TECH vs HR vs ANKI) */}
-            <div className="inline-flex items-center p-1.5 bg-white/10 rounded-2xl border border-white/15 shrink-0 self-start flex-wrap gap-1 shadow-2xs backdrop-blur-xs pt-1">
+            <div className="inline-flex items-center p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200/80 shrink-0 self-start flex-wrap gap-1 shadow-2xs pt-1">
               <button
                 onClick={() => setViewMode('TECH_TRACKS')}
                 className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
                   viewMode === 'TECH_TRACKS'
-                    ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
-                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
-                <Code2 className={`w-4 h-4 ${viewMode === 'TECH_TRACKS' ? 'text-purple-600' : 'text-slate-400'}`} />
+                <Code2 className={`w-4 h-4 ${viewMode === 'TECH_TRACKS' ? 'text-purple-400' : 'text-slate-500'}`} />
                 <span>Ghid Tehnic pe Roluri</span>
               </button>
 
@@ -331,11 +320,11 @@ export default function SkillRoadmapPage() {
                 onClick={() => setViewMode('HR_SCREENING')}
                 className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
                   viewMode === 'HR_SCREENING'
-                    ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
-                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
-                <Users className={`w-4 h-4 ${viewMode === 'HR_SCREENING' ? 'text-amber-600' : 'text-slate-400'}`} />
+                <Users className={`w-4 h-4 ${viewMode === 'HR_SCREENING' ? 'text-amber-400' : 'text-slate-500'}`} />
                 <span>Interviu HR & Screening</span>
               </button>
 
@@ -343,62 +332,62 @@ export default function SkillRoadmapPage() {
                 onClick={() => setViewMode('ANKI_JAVA')}
                 className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
                   viewMode === 'ANKI_JAVA'
-                    ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5'
-                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
-                <Brain className={`w-4 h-4 ${viewMode === 'ANKI_JAVA' ? 'text-blue-600' : 'text-slate-400'}`} />
+                <Brain className={`w-4 h-4 ${viewMode === 'ANKI_JAVA' ? 'text-blue-400' : 'text-slate-500'}`} />
                 <span>Anki Flashcards (11 Domenii)</span>
               </button>
             </div>
           </div>
 
-          {/* ASYMMETRIC TRANSLUCENT BENTO STATS PANEL */}
-          <div className="w-full lg:w-72 bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 shrink-0 backdrop-blur-xs">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+          {/* ASYMMETRIC BENTO STATS PANEL (LIGHT THEME) */}
+          <div className="w-full lg:w-72 bg-slate-50/90 border border-slate-200/80 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 shrink-0">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
               <div className="space-y-0.5">
-                <div className="text-xl font-black text-white">10</div>
-                <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Roluri Tehnice</div>
+                <div className="text-xl font-black text-slate-950">10</div>
+                <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Roluri Tehnice</div>
               </div>
-              <div className="p-2.5 rounded-xl bg-white/10 text-slate-300">
+              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-purple-600 shadow-2xs">
                 <Code2 className="w-4 h-4" />
               </div>
             </div>
 
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
               <div className="space-y-0.5">
-                <div className="text-xl font-black text-white">1380</div>
-                <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Carduri Anki</div>
+                <div className="text-xl font-black text-slate-950">1380</div>
+                <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Carduri Anki</div>
               </div>
-              <div className="p-2.5 rounded-xl bg-white/10 text-slate-300">
+              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-blue-600 shadow-2xs">
                 <Brain className="w-4 h-4" />
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <div className="text-xl font-black text-white">100%</div>
-                <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Gratuit & Open</div>
+                <div className="text-xl font-black text-slate-950">100%</div>
+                <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Gratuit & Open</div>
               </div>
-              <div className="p-2.5 rounded-xl bg-white/10 text-emerald-400">
+              <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-2xs">
                 <Check className="w-4 h-4" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* TECH TRACKS SELECTOR GRID (MATCHING tech_roles_matrix_1791149714491.jpg) */}
+        {/* TECH TRACKS SELECTOR GRID (LIGHT THEME) */}
         {viewMode === 'TECH_TRACKS' && (
-          <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
+          <div className="mt-8 pt-6 border-t border-slate-100 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Code2 className="w-4 h-4 text-purple-400" />
-                <span className="text-xs font-black text-white uppercase tracking-wider">
+                <Code2 className="w-4 h-4 text-purple-600" />
+                <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
                   Alege Specializarea ({JOB_TRACKS.length} Roluri Tehnice):
                 </span>
-                <span className="text-[11px] text-slate-400 font-semibold hidden md:inline">
-                  <span className="text-slate-600 mx-1.5">/</span>
-                  Selectat: <strong className="text-white font-bold">{selectedTrack?.title}</strong>
+                <span className="text-[11px] text-slate-500 font-semibold hidden md:inline">
+                  <span className="text-slate-300 mx-1.5">/</span>
+                  Selectat: <strong className="text-slate-950 font-bold">{selectedTrack?.title}</strong>
                 </span>
               </div>
 
@@ -410,12 +399,12 @@ export default function SkillRoadmapPage() {
                   placeholder="Cauta rol (ex: Backend, QA, Cloud)..."
                   value={trackSearchQuery}
                   onChange={e => setTrackSearchQuery(e.target.value)}
-                  className="w-full bg-white/5 border border-white/15 rounded-xl pl-8 pr-8 py-2 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-purple-400/30 focus:border-purple-400 focus:bg-white/10 transition"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 focus:bg-white transition"
                 />
                 {trackSearchQuery && (
                   <button 
                     onClick={() => setTrackSearchQuery('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer p-0.5"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer p-0.5"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -438,22 +427,22 @@ export default function SkillRoadmapPage() {
                     }}
                     className={`group p-3.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 active:scale-98 ${
                       isSelected
-                        ? `bg-white text-slate-950 shadow-lg ring-2 ring-emerald-400 -translate-y-0.5`
-                        : `bg-white/5 hover:bg-white/10 text-white border-white/10 hover:border-white/20 hover:shadow-2xs hover:-translate-y-0.5`
+                        ? `bg-slate-950 text-white shadow-md ring-2 ring-slate-900/10 -translate-y-0.5`
+                        : `bg-white hover:bg-slate-50/90 text-slate-900 border-slate-200/90 ${theme.cardBorder} hover:shadow-2xs hover:-translate-y-0.5`
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className={`p-2 rounded-xl shrink-0 transition-colors ${
                         isSelected 
-                          ? 'bg-slate-950 text-white shadow-2xs' 
+                          ? 'bg-white/15 text-white shadow-2xs' 
                           : `${theme.iconBg} shadow-2xs group-hover:scale-105 transition-transform`
                       }`}>
                         {getTrackIcon(track.iconKey, "w-4 h-4")}
                       </div>
                       <span className={`text-[10px] font-black px-2 py-0.5 rounded-full transition-colors ${
                         isSelected
-                          ? 'bg-slate-950 text-white'
-                          : 'bg-white/10 text-slate-300 group-hover:bg-white/20'
+                          ? 'bg-white/20 text-white'
+                          : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
                       }`}>
                         {isSelected ? 'Activ' : `${resourceTotal} ghiduri`}
                       </span>
@@ -461,13 +450,13 @@ export default function SkillRoadmapPage() {
 
                     <div className="space-y-0.5">
                       <div className={`text-xs sm:text-sm font-black tracking-tight leading-snug line-clamp-1 ${
-                        isSelected ? 'text-slate-950' : 'text-white'
+                        isSelected ? 'text-white' : 'text-slate-950'
                       }`}>
                         {track.shortTitle}
                       </div>
                       {track.badge && (
                         <div className={`text-[10px] font-bold leading-tight line-clamp-1 ${
-                          isSelected ? 'text-slate-600' : 'text-slate-400'
+                          isSelected ? 'text-slate-300' : 'text-slate-500'
                         }`}>
                           {track.badge}
                         </div>
@@ -479,7 +468,7 @@ export default function SkillRoadmapPage() {
             </div>
 
             {filteredTracks.length === 0 && (
-              <div className="text-center py-6 text-xs text-slate-400 bg-white/5 rounded-2xl border border-dashed border-white/10">
+              <div className="text-center py-6 text-xs text-slate-500 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                 Nu am gasit niciun rol tehnic pentru "{trackSearchQuery}". Incearca un alt termen.
               </div>
             )}
@@ -493,45 +482,45 @@ export default function SkillRoadmapPage() {
       {viewMode === 'TECH_TRACKS' && selectedTrack && (
         <div className="space-y-6 animate-in fade-in duration-200">
           
-          {/* TRACK HERO BANNER (ASYMMETRIC SPLIT) */}
+          {/* TRACK HERO BANNER (ASYMMETRIC SPLIT - LIGHT THEME) */}
           {(() => {
             const activeTheme = getTrackTheme(selectedTrack.id);
             return (
-              <div className={`bg-gradient-to-br ${activeTheme.heroGradient} text-white p-6 sm:p-8 rounded-3xl shadow-sm border ${activeTheme.heroBorder} flex flex-col lg:flex-row lg:items-center justify-between gap-6`}>
+              <div className={`bg-white text-slate-950 p-6 sm:p-8 rounded-3xl shadow-2xs border border-slate-200/90 ${activeTheme.accentBorder} flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden`}>
                 <div className="space-y-3 max-w-2xl">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <div className="p-2.5 rounded-xl bg-white/10 text-white shrink-0 border border-white/10 shadow-2xs">
+                    <div className="p-2.5 rounded-xl bg-slate-100 text-slate-900 shrink-0 border border-slate-200 shadow-2xs">
                       {getTrackIcon(selectedTrack.iconKey, "w-5 h-5")}
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
                       {selectedTrack.title}
                     </h2>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${activeTheme.badge} backdrop-blur-xs`}>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${activeTheme.badge}`}>
                       {selectedTrack.badge}
                     </span>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans">
                     {selectedTrack.tagLine}
                   </p>
-                  <div className="text-xs text-slate-400 flex items-center gap-2 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-                    <span className="text-emerald-300 font-semibold">{selectedTrack.marketDemand}</span>
+                  <div className="text-xs text-slate-500 flex items-center gap-2 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="text-emerald-700 font-semibold">{selectedTrack.marketDemand}</span>
                   </div>
                 </div>
 
-                {/* ASYMMETRIC BENTO STATS */}
+                {/* ASYMMETRIC BENTO STATS (LIGHT THEME) */}
                 <div className="grid grid-cols-3 gap-2.5 sm:gap-3 shrink-0">
-                  <div className="bg-white/5 border border-white/10 px-3.5 py-2.5 rounded-2xl text-center">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total</div>
-                    <div className="text-lg font-black text-white mt-0.5">{totalCount}</div>
+                  <div className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-center">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total</div>
+                    <div className="text-lg font-black text-slate-950 mt-0.5">{totalCount}</div>
                   </div>
-                  <div className="bg-white/5 border border-white/10 px-3.5 py-2.5 rounded-2xl text-center">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Interviu</div>
-                    <div className="text-lg font-black text-white mt-0.5">{interviewCount}</div>
+                  <div className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-center">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Interviu</div>
+                    <div className="text-lg font-black text-slate-950 mt-0.5">{interviewCount}</div>
                   </div>
-                  <div className="bg-white/5 border border-white/10 px-3.5 py-2.5 rounded-2xl text-center">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cursuri</div>
-                    <div className="text-lg font-black text-white mt-0.5">{learnCount}</div>
+                  <div className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-center">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cursuri</div>
+                    <div className="text-lg font-black text-slate-950 mt-0.5">{learnCount}</div>
                   </div>
                 </div>
               </div>
@@ -601,45 +590,45 @@ export default function SkillRoadmapPage() {
             </div>
           </div>
 
-          {/* METHODOLOGY ROADMAP (ASYMMETRIC 3-PHASE PROGRESSION STRIP) */}
-          <div className="bg-slate-950 text-white rounded-3xl p-6 sm:p-7 border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+          {/* METHODOLOGY ROADMAP (ASYMMETRIC 3-PHASE PROGRESSION STRIP - LIGHT THEME) */}
+          <div className="bg-white text-slate-950 rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <h3 className="text-xs font-black tracking-wider uppercase text-white">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                <h3 className="text-xs font-black tracking-wider uppercase text-slate-950">
                   Metodologie de Pregatire pentru Interviu
                 </h3>
               </div>
               <span className="text-[11px] text-slate-400 font-semibold hidden sm:inline">Trei Pasi Structurati</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs text-slate-300">
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs text-slate-600">
+              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-amber-400/20 text-amber-300 text-[11px] font-black flex items-center justify-center">1</span>
-                  <span className="font-bold text-white text-xs">Fundamente & Concepte</span>
+                  <span className="w-5 h-5 rounded-md bg-amber-200/80 text-amber-900 text-[11px] font-black flex items-center justify-center">1</span>
+                  <span className="font-bold text-slate-950 text-xs">Fundamente & Concepte</span>
                 </div>
-                <p className="text-slate-300 text-[11.5px] leading-relaxed">
+                <p className="text-slate-700 text-[11.5px] leading-relaxed font-sans">
                   Documentatii oficiale si cursuri open-source pentru a intelege mecanismele interne ale tehnologiilor, fara tutorial hell.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+              <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-emerald-400/20 text-emerald-300 text-[11px] font-black flex items-center justify-center">2</span>
-                  <span className="font-bold text-white text-xs">Argumentare Orala (60-90s)</span>
+                  <span className="w-5 h-5 rounded-md bg-emerald-200/80 text-emerald-900 text-[11px] font-black flex items-center justify-center">2</span>
+                  <span className="font-bold text-slate-950 text-xs">Argumentare Orala (60-90s)</span>
                 </div>
-                <p className="text-slate-300 text-[11.5px] leading-relaxed">
+                <p className="text-slate-700 text-[11.5px] leading-relaxed font-sans">
                   Formuleaza raspunsul tehnic cu voce tare, structurat pe definitie, mecanism intern, trade-off-uri si exemple din productie.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+              <div className="p-4 rounded-2xl bg-sky-50/60 border border-sky-200/80 space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-sky-400/20 text-sky-300 text-[11px] font-black flex items-center justify-center">3</span>
-                  <span className="font-bold text-white text-xs">Simulari Practice & Coding</span>
+                  <span className="w-5 h-5 rounded-md bg-sky-200/80 text-sky-900 text-[11px] font-black flex items-center justify-center">3</span>
+                  <span className="font-bold text-slate-950 text-xs">Simulari Practice & Coding</span>
                 </div>
-                <p className="text-slate-300 text-[11.5px] leading-relaxed">
+                <p className="text-slate-700 text-[11.5px] leading-relaxed font-sans">
                   Rezolva probleme pe NeetCode si repozitorii GitHub explicand deciziile inainte de a scrie codul, intocmai ca la interviu.
                 </p>
               </div>
@@ -730,34 +719,34 @@ export default function SkillRoadmapPage() {
       {viewMode === 'HR_SCREENING' && (
         <div className="space-y-6 animate-in fade-in duration-200">
           
-          {/* HR HERO BANNER (ASYMMETRIC SPLIT) */}
-          <div className="bg-slate-950 text-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-800 space-y-4">
+          {/* HR HERO BANNER (ASYMMETRIC SPLIT - LIGHT THEME) */}
+          <div className="bg-white text-slate-950 p-6 sm:p-8 rounded-3xl shadow-2xs border border-slate-200/90 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-white/10 text-amber-400 shrink-0 border border-white/10 shadow-2xs">
+              <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 shrink-0 shadow-2xs">
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
                   {HR_INTERVIEW_DATA.title}
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-300 font-medium mt-0.5">
+                <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
                   {HR_INTERVIEW_DATA.subtitle}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs text-slate-300 font-sans">
-              <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1.5">
-                <span className="text-[10px] font-bold uppercase text-amber-400 block tracking-wider">Obiectivul Recruiterului</span>
-                <p className="text-slate-300 leading-relaxed text-[11.5px]">Evalueaza compatibilitatea cu echipa, capacitatea de comunicare si motivatia reala pentru rol.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs text-slate-700 font-sans">
+              <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5">
+                <span className="text-[10px] font-bold uppercase text-amber-700 block tracking-wider">Obiectivul Recruiterului</span>
+                <p className="text-slate-600 leading-relaxed text-[11.5px]">Evalueaza compatibilitatea cu echipa, capacitatea de comunicare si motivatia reala pentru rol.</p>
               </div>
-              <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1.5">
-                <span className="text-[10px] font-bold uppercase text-emerald-400 block tracking-wider">Rata de Trecere</span>
-                <p className="text-slate-300 leading-relaxed text-[11.5px]">Peste 65% din candidati sunt descalificati la HR din cauza raspunsurilor vagi sau nepregatite.</p>
+              <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5">
+                <span className="text-[10px] font-bold uppercase text-emerald-700 block tracking-wider">Rata de Trecere</span>
+                <p className="text-slate-600 leading-relaxed text-[11.5px]">Peste 65% din candidati sunt descalificati la HR din cauza raspunsurilor vagi sau nepregatite.</p>
               </div>
-              <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1.5">
-                <span className="text-[10px] font-bold uppercase text-sky-400 block tracking-wider">Cheia Succesului</span>
-                <p className="text-slate-300 leading-relaxed text-[11.5px]">Pitch concis de 90 de secunde, exemple structurate STAR si fluenta la conversatia in engleza.</p>
+              <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5">
+                <span className="text-[10px] font-bold uppercase text-sky-700 block tracking-wider">Cheia Succesului</span>
+                <p className="text-slate-600 leading-relaxed text-[11.5px]">Pitch concis de 90 de secunde, exemple structurate STAR si fluenta la conversatia in engleza.</p>
               </div>
             </div>
           </div>
@@ -1115,49 +1104,55 @@ export default function SkillRoadmapPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* SECTION 6: CLOSING CTA & DAILY HABIT (MATCHING roadmap_closing_cta)       */}
+      {/* SECTION 6: CLOSING CTA & DAILY HABIT (COHESIVE LIGHT THEME)               */}
       {/* ========================================================================= */}
-      <div className="bg-slate-950 text-white rounded-3xl p-8 sm:p-12 border border-slate-800 shadow-sm text-center space-y-6 relative overflow-hidden mt-8">
-        <div className="max-w-2xl mx-auto space-y-3">
-          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Stapaneste Conceptele Tehnice si Treci Orice Interviu
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-sans">
-            15 minute pe zi de repetitie spatiata Anki si pregatire structurata pe roluri iti asigura avantajul competitiv la interviurile de angajare.
-          </p>
-        </div>
+      {viewMode !== 'ANKI_JAVA' && (
+        <div className="bg-white text-slate-950 rounded-3xl p-8 sm:p-10 border border-slate-200/90 shadow-2xs text-center space-y-5 relative overflow-hidden mt-8">
+          <div className="max-w-2xl mx-auto space-y-2.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200/80">
+              <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+              <span>Pregatire Zilnica Structurata</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
+              Stapaneste Conceptele Tehnice si Treci Orice Interviu
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans max-w-xl mx-auto">
+              15 minute pe zi de repetitie spatiata Anki si pregatire structurata pe roluri iti asigura avantajul competitiv la interviurile de angajare.
+            </p>
+          </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <button
-            onClick={() => {
-              setViewMode('ANKI_JAVA');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-black bg-white text-slate-950 hover:bg-slate-100 shadow-sm transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
-          >
-            <span>Incepe Antrenamentul de Astazi</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => {
+                setViewMode('ANKI_JAVA');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-black bg-slate-950 text-white hover:bg-slate-800 shadow-xs transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Incepe Antrenamentul de Astazi</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
 
-          <button
-            onClick={() => {
-              setViewMode('TECH_TRACKS');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/15 text-white border border-white/15 transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
-          >
-            <span>Exploreaza Curriculum Complet</span>
-          </button>
-        </div>
+            <button
+              onClick={() => {
+                setViewMode('TECH_TRACKS');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Exploreaza Curriculum Complet</span>
+            </button>
+          </div>
 
-        <div className="flex items-center justify-center gap-4 sm:gap-6 pt-4 text-[11px] text-slate-500 font-medium flex-wrap border-t border-slate-800/80">
-          <span>Open Source</span>
-          <span className="h-3 w-px bg-slate-800" />
-          <span>Aliniat cu Piata Tech din Romania</span>
-          <span className="h-3 w-px bg-slate-800" />
-          <span>Fara Inregistrare Obligatorie</span>
+          <div className="flex items-center justify-center gap-4 sm:gap-6 pt-4 text-[11px] text-slate-500 font-medium flex-wrap border-t border-slate-100">
+            <span>Open Source</span>
+            <span className="h-3 w-px bg-slate-200" />
+            <span>Aliniat cu Piata Tech din Romania</span>
+            <span className="h-3 w-px bg-slate-200" />
+            <span>Fara Inregistrare Obligatorie</span>
+          </div>
         </div>
-      </div>
+      )}
 
     </div>
   );
