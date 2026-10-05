@@ -179,100 +179,101 @@ export default function SkillRoadmapPage() {
         </div>
       )}
 
-      {/* HEADER SECTION (ASYMMETRIC SPLIT LIGHT THEME) */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-2xs relative overflow-hidden">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200/90 flex items-center gap-2">
-                <GraduationCap className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Playbook Interviuri & Roadmap IT 2026</span>
-              </span>
-              <span className="h-3 w-px bg-slate-300 mx-1 hidden sm:inline" />
-              <span className="text-xs font-bold text-slate-600">Aliniat cu Piata Tech din Romania</span>
+      {/* HEADER SECTION (DOUBLE-BEZEL ASYMMETRIC HERO ARCHITECTURE) */}
+      <div className="p-1.5 sm:p-2 rounded-[2.25rem] bg-gradient-to-b from-slate-200/70 via-slate-100/50 to-slate-200/40 border border-slate-200/90 shadow-2xs">
+        <div className="bg-white rounded-[calc(2.25rem-0.5rem)] p-6 sm:p-8 lg:p-9 shadow-xs border border-white/80 relative overflow-hidden">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-3.5 max-w-2xl">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="rounded-full px-3.5 py-1 text-[10px] uppercase tracking-[0.2em] font-extrabold text-indigo-700 bg-indigo-50/90 border border-indigo-200/90 flex items-center gap-2 shadow-2xs">
+                  <GraduationCap className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Playbook Interviuri & Roadmap IT 2026</span>
+                </span>
+                <span className="h-3 w-px bg-slate-300 mx-1 hidden sm:inline" />
+                <span className="text-xs font-bold text-slate-600">Aliniat cu Piata Tech din Romania</span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 tracking-tight leading-tight">
+                Ghid Tehnic pe Roluri, Interviu HR si Trainer Anki
+              </h1>
+
+              <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-xl">
+                Curicula practica de interviu pentru piata IT din Romania: screening HR, intrebari tehnice de seniorat si repetitie spatiata pe 11 domenii.
+              </p>
+
+              {/* VIEW MODE TOGGLE SWITCHER (SEGMENTED FLUID ISLAND) */}
+              <div className="inline-flex items-center p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200/80 shrink-0 self-start flex-wrap gap-1 shadow-2xs pt-1">
+                <button
+                  onClick={() => setViewMode('TECH_TRACKS')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center gap-2 cursor-pointer active:scale-[0.98] ${
+                    viewMode === 'TECH_TRACKS'
+                      ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-white/70'
+                  }`}
+                >
+                  <Code2 className={`w-4 h-4 ${viewMode === 'TECH_TRACKS' ? 'text-white' : 'text-slate-500'}`} />
+                  <span>Ghid Tehnic pe Roluri</span>
+                </button>
+
+                <button
+                  onClick={() => setViewMode('HR_SCREENING')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center gap-2 cursor-pointer active:scale-[0.98] ${
+                    viewMode === 'HR_SCREENING'
+                      ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-white/70'
+                  }`}
+                >
+                  <Users className={`w-4 h-4 ${viewMode === 'HR_SCREENING' ? 'text-white' : 'text-slate-500'}`} />
+                  <span>Interviu HR & Screening</span>
+                </button>
+
+                <button
+                  onClick={() => setViewMode('ANKI_JAVA')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center gap-2 cursor-pointer active:scale-[0.98] ${
+                    viewMode === 'ANKI_JAVA'
+                      ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-white/70'
+                  }`}
+                >
+                  <Brain className={`w-4 h-4 ${viewMode === 'ANKI_JAVA' ? 'text-white' : 'text-slate-500'}`} />
+                  <span>Anki Flashcards (11 Domenii)</span>
+                </button>
+              </div>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 tracking-tight leading-tight">
-              Ghid Tehnic pe Roluri, Interviu HR si Trainer Anki
-            </h1>
+            {/* ASYMMETRIC BENTO STATS PANEL (LIGHT HARDWARE SHELL) */}
+            <div className="w-full lg:w-72 bg-gradient-to-b from-slate-50 via-slate-50/80 to-slate-100/60 border border-slate-200/90 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 shrink-0 shadow-2xs">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
+                <div className="space-y-0.5">
+                  <div className="text-xl font-black text-slate-950">10</div>
+                  <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Roluri Tehnice</div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-indigo-600 shadow-2xs">
+                  <Code2 className="w-4 h-4" />
+                </div>
+              </div>
 
-            <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-xl">
-              Curicula practica de interviu pentru piata IT din Romania: screening HR, intrebari tehnice de seniorat si repetitie spatiata pe 11 domenii.
-            </p>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
+                <div className="space-y-0.5">
+                  <div className="text-xl font-black text-slate-950">1380</div>
+                  <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Carduri Anki</div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-indigo-600 shadow-2xs">
+                  <Brain className="w-4 h-4" />
+                </div>
+              </div>
 
-            {/* VIEW MODE TOGGLE SWITCHER (TECH vs HR vs ANKI) */}
-            <div className="inline-flex items-center p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200/80 shrink-0 self-start flex-wrap gap-1 shadow-2xs pt-1">
-              <button
-                onClick={() => setViewMode('TECH_TRACKS')}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
-                  viewMode === 'TECH_TRACKS'
-                    ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
-                    : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
-                }`}
-              >
-                <Code2 className={`w-4 h-4 ${viewMode === 'TECH_TRACKS' ? 'text-white' : 'text-slate-500'}`} />
-                <span>Ghid Tehnic pe Roluri</span>
-              </button>
-
-              <button
-                onClick={() => setViewMode('HR_SCREENING')}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
-                  viewMode === 'HR_SCREENING'
-                    ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
-                    : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
-                }`}
-              >
-                <Users className={`w-4 h-4 ${viewMode === 'HR_SCREENING' ? 'text-white' : 'text-slate-500'}`} />
-                <span>Interviu HR & Screening</span>
-              </button>
-
-              <button
-                onClick={() => setViewMode('ANKI_JAVA')}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
-                  viewMode === 'ANKI_JAVA'
-                    ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
-                    : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
-                }`}
-              >
-                <Brain className={`w-4 h-4 ${viewMode === 'ANKI_JAVA' ? 'text-white' : 'text-slate-500'}`} />
-                <span>Anki Flashcards (11 Domenii)</span>
-              </button>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="text-xl font-black text-slate-950">100%</div>
+                  <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Gratuit & Open</div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200/80 text-indigo-600 shadow-2xs">
+                  <Check className="w-4 h-4" />
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* ASYMMETRIC BENTO STATS PANEL (LIGHT THEME) */}
-          <div className="w-full lg:w-72 bg-slate-50/90 border border-slate-200/80 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 shrink-0">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
-              <div className="space-y-0.5">
-                <div className="text-xl font-black text-slate-950">10</div>
-                <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Roluri Tehnice</div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-indigo-600 shadow-2xs">
-                <Code2 className="w-4 h-4" />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
-              <div className="space-y-0.5">
-                <div className="text-xl font-black text-slate-950">1380</div>
-                <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Carduri Anki</div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-indigo-600 shadow-2xs">
-                <Brain className="w-4 h-4" />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="text-xl font-black text-slate-950">100%</div>
-                <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Gratuit & Open</div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200/80 text-indigo-600 shadow-2xs">
-                <Check className="w-4 h-4" />
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* TECH TRACKS SELECTOR GRID (LIGHT THEME) */}
         {viewMode === 'TECH_TRACKS' && (
@@ -322,7 +323,7 @@ export default function SkillRoadmapPage() {
                       setSelectedTrackId(track.id);
                       setResourceSearchQuery('');
                     }}
-                    className={`group p-3.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 active:scale-98 ${
+                    className={`group p-3.5 rounded-2xl border text-left transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.98] ${
                       isSelected
                         ? `bg-indigo-50/80 border-indigo-600 text-slate-950 shadow-xs ring-2 ring-indigo-500/20 -translate-y-0.5`
                         : `bg-white hover:bg-slate-50/90 text-slate-900 border-slate-200/90 hover:border-indigo-300 hover:shadow-2xs hover:-translate-y-0.5`
@@ -371,6 +372,7 @@ export default function SkillRoadmapPage() {
             )}
           </div>
         )}
+        </div>
       </div>
 
       {/* ========================================================================= */}
@@ -379,45 +381,47 @@ export default function SkillRoadmapPage() {
       {viewMode === 'TECH_TRACKS' && selectedTrack && (
         <div className="space-y-6 animate-in fade-in duration-200">
           
-          {/* TRACK HERO BANNER (ASYMMETRIC SPLIT - LIGHT THEME) */}
+          {/* TRACK HERO BANNER (DOUBLE-BEZEL HARDWARE SHELL - LIGHT THEME) */}
           {(() => {
             const activeTheme = getTrackTheme();
             return (
-              <div className={`bg-white text-slate-950 p-6 sm:p-8 rounded-3xl shadow-2xs border border-slate-200/90 ${activeTheme.accentBorder} flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden`}>
-                <div className="space-y-3 max-w-2xl">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-700 shrink-0 border border-indigo-200/80 shadow-2xs">
-                      {getTrackIcon(selectedTrack.iconKey, "w-5 h-5")}
+              <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
+                <div className={`bg-white text-slate-950 p-6 sm:p-8 rounded-[calc(2rem-0.375rem)] shadow-xs border border-white/80 ${activeTheme.accentBorder} flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden`}>
+                  <div className="space-y-3 max-w-2xl">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-700 shrink-0 border border-indigo-200/80 shadow-2xs">
+                        {getTrackIcon(selectedTrack.iconKey, "w-5 h-5")}
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
+                        {selectedTrack.title}
+                      </h2>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${activeTheme.badge}`}>
+                        {selectedTrack.badge}
+                      </span>
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
-                      {selectedTrack.title}
-                    </h2>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${activeTheme.badge}`}>
-                      {selectedTrack.badge}
-                    </span>
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans">
+                      {selectedTrack.tagLine}
+                    </p>
+                    <div className="text-xs text-slate-500 flex items-center gap-2 font-medium">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="text-slate-700 font-semibold">{selectedTrack.marketDemand}</span>
+                    </div>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans">
-                    {selectedTrack.tagLine}
-                  </p>
-                  <div className="text-xs text-slate-500 flex items-center gap-2 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="text-slate-700 font-semibold">{selectedTrack.marketDemand}</span>
-                  </div>
-                </div>
 
-                {/* ASYMMETRIC BENTO STATS (LIGHT THEME) */}
-                <div className="grid grid-cols-3 gap-2.5 sm:gap-3 shrink-0">
-                  <div className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-center">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total</div>
-                    <div className="text-lg font-black text-slate-950 mt-0.5">{totalCount}</div>
-                  </div>
-                  <div className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-center">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Interviu</div>
-                    <div className="text-lg font-black text-slate-950 mt-0.5">{interviewCount}</div>
-                  </div>
-                  <div className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-center">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cursuri</div>
-                    <div className="text-lg font-black text-slate-950 mt-0.5">{learnCount}</div>
+                  {/* ASYMMETRIC BENTO STATS (LIGHT HARDWARE SHELL) */}
+                  <div className="grid grid-cols-3 gap-2.5 sm:gap-3 shrink-0">
+                    <div className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-center shadow-2xs">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total</div>
+                      <div className="text-lg font-black text-slate-950 mt-0.5">{totalCount}</div>
+                    </div>
+                    <div className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-center shadow-2xs">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Interviu</div>
+                      <div className="text-lg font-black text-slate-950 mt-0.5">{interviewCount}</div>
+                    </div>
+                    <div className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-center shadow-2xs">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cursuri</div>
+                      <div className="text-lg font-black text-slate-950 mt-0.5">{learnCount}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -431,7 +435,7 @@ export default function SkillRoadmapPage() {
             <div className="inline-flex items-center p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200/80 shrink-0 self-start sm:self-auto gap-1 shadow-2xs">
               <button
                 onClick={() => setActiveTab('ALL')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center gap-1.5 cursor-pointer active:scale-[0.98] ${
                   activeTab === 'ALL'
                     ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
@@ -443,7 +447,7 @@ export default function SkillRoadmapPage() {
 
               <button
                 onClick={() => setActiveTab('INTERVIEW')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center gap-1.5 cursor-pointer active:scale-[0.98] ${
                   activeTab === 'INTERVIEW'
                     ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
@@ -455,7 +459,7 @@ export default function SkillRoadmapPage() {
 
               <button
                 onClick={() => setActiveTab('LEARN')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center gap-1.5 cursor-pointer active:scale-[0.98] ${
                   activeTab === 'LEARN'
                     ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
@@ -487,117 +491,135 @@ export default function SkillRoadmapPage() {
             </div>
           </div>
 
-          {/* METHODOLOGY ROADMAP (ASYMMETRIC 3-PHASE PROGRESSION STRIP - LIGHT THEME) */}
-          <div className="bg-white text-slate-950 rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-600" />
-                <h3 className="text-xs font-black tracking-wider uppercase text-slate-950">
-                  Metodologie de Pregatire pentru Interviu
-                </h3>
-              </div>
-              <span className="text-[11px] text-slate-400 font-semibold hidden sm:inline">Trei Pasi Structurati</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs text-slate-600">
-              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2 hover:border-slate-300 transition-colors">
+          {/* METHODOLOGY ROADMAP (DOUBLE-BEZEL ASYMMETRIC 3-PHASE PROGRESSION STRIP) */}
+          <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
+            <div className="bg-white text-slate-950 rounded-[calc(2rem-0.375rem)] p-6 sm:p-7 border border-white/80 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 text-[11px] font-black flex items-center justify-center">1</span>
-                  <span className="font-bold text-slate-950 text-xs">Fundamente & Concepte</span>
+                  <span className="p-1.5 rounded-lg bg-indigo-50 border border-indigo-200/80 text-indigo-600 shadow-2xs">
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </span>
+                  <h3 className="text-xs font-black tracking-wider uppercase text-slate-950">
+                    Metodologie de Pregatire pentru Interviu
+                  </h3>
                 </div>
-                <p className="text-slate-600 text-[11.5px] leading-relaxed font-sans">
-                  Documentatii oficiale si cursuri open-source pentru a intelege mecanismele interne ale tehnologiilor, fara tutorial hell.
-                </p>
+                <span className="text-[11px] text-slate-400 font-semibold hidden sm:inline">Trei Pasi Structurati</span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2 hover:border-slate-300 transition-colors">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 text-[11px] font-black flex items-center justify-center">2</span>
-                  <span className="font-bold text-slate-950 text-xs">Argumentare Orala (60-90s)</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs text-slate-600">
+                <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2 hover:border-slate-300 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-md bg-indigo-600 text-white text-[11px] font-black flex items-center justify-center shadow-2xs">1</span>
+                    <span className="font-bold text-slate-950 text-xs">Fundamente & Concepte</span>
+                  </div>
+                  <p className="text-slate-600 text-[11.5px] leading-relaxed font-sans">
+                    Documentatii oficiale si cursuri open-source pentru a intelege mecanismele interne ale tehnologiilor, fara tutorial hell.
+                  </p>
                 </div>
-                <p className="text-slate-600 text-[11.5px] leading-relaxed font-sans">
-                  Formuleaza raspunsul tehnic cu voce tare, structurat pe definitie, mecanism intern, trade-off-uri si exemple din productie.
-                </p>
-              </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2 hover:border-slate-300 transition-colors">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 text-[11px] font-black flex items-center justify-center">3</span>
-                  <span className="font-bold text-slate-950 text-xs">Simulari Practice & Coding</span>
+                <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2 hover:border-slate-300 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-md bg-indigo-600 text-white text-[11px] font-black flex items-center justify-center shadow-2xs">2</span>
+                    <span className="font-bold text-slate-950 text-xs">Argumentare Orala (60-90s)</span>
+                  </div>
+                  <p className="text-slate-600 text-[11.5px] leading-relaxed font-sans">
+                    Formuleaza raspunsul tehnic cu voce tare, structurat pe definitie, mecanism intern, trade-off-uri si exemple din productie.
+                  </p>
                 </div>
-                <p className="text-slate-600 text-[11.5px] leading-relaxed font-sans">
-                  Rezolva probleme pe NeetCode si repozitorii GitHub explicand deciziile inainte de a scrie codul, intocmai ca la interviu.
-                </p>
+
+                <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2 hover:border-slate-300 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-md bg-indigo-600 text-white text-[11px] font-black flex items-center justify-center shadow-2xs">3</span>
+                    <span className="font-bold text-slate-950 text-xs">Simulari Practice & Coding</span>
+                  </div>
+                  <p className="text-slate-600 text-[11.5px] leading-relaxed font-sans">
+                    Rezolva probleme pe NeetCode si repozitorii GitHub explicand deciziile inainte de a scrie codul, intocmai ca la interviu.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* RESOURCES GRID */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredResources.map((res, idx) => (
-              <div 
-                key={idx} 
-                className={`p-5 sm:p-6 rounded-3xl border transition-all duration-200 flex flex-col justify-between space-y-4 group ${
-                  res.isTopPick 
-                    ? 'border-indigo-200/90 bg-gradient-to-b from-indigo-50/30 via-white to-white hover:border-indigo-300 hover:shadow-md' 
-                    : 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/40 shadow-2xs hover:shadow-sm'
-                }`}
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/80">
-                        {res.platform}
-                      </span>
-                      <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border ${getTypeBadgeStyle(res.type)}`}>
-                        {res.type}
-                      </span>
+            {filteredResources.map((res, idx) => {
+              const cardContent = (
+                <div 
+                  className={`p-5 sm:p-6 rounded-[calc(2rem-0.375rem)] border transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col justify-between space-y-4 group h-full ${
+                    res.isTopPick 
+                      ? 'border-indigo-200/90 bg-gradient-to-b from-indigo-50/40 via-white to-white hover:border-indigo-300 shadow-2xs hover:shadow-xs' 
+                      : 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/40 shadow-2xs hover:shadow-xs'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/80">
+                          {res.platform}
+                        </span>
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border ${getTypeBadgeStyle(res.type)}`}>
+                          {res.type}
+                        </span>
+                      </div>
+
+                      {res.isTopPick && (
+                        <span className="text-[9px] font-black uppercase tracking-wider bg-indigo-600 text-white px-2.5 py-0.5 rounded-full shadow-2xs flex items-center gap-1">
+                          <Sparkles className="w-2.5 h-2.5" />
+                          Recomandat
+                        </span>
+                      )}
                     </div>
 
-                    {res.isTopPick && (
-                      <span className="text-[9px] font-black uppercase tracking-wider bg-indigo-600 text-white px-2.5 py-0.5 rounded-full shadow-2xs flex items-center gap-1">
-                        <Sparkles className="w-2.5 h-2.5" />
-                        Recomandat
-                      </span>
-                    )}
+                    <h3 className="text-sm sm:text-base font-black text-slate-950 group-hover:text-indigo-600 transition-colors leading-snug">
+                      {res.title}
+                    </h3>
+
+                    <p className="text-xs text-slate-600 leading-relaxed font-sans">
+                      {res.description}
+                    </p>
                   </div>
 
-                  <h3 className="text-sm sm:text-base font-black text-slate-950 group-hover:text-indigo-600 transition-colors leading-snug">
-                    {res.title}
-                  </h3>
+                  <div className="pt-3 flex items-center gap-2 border-t border-slate-100">
+                    {/* BUTTON-IN-BUTTON PRIMARY INTERACTIVE CTA */}
+                    <a
+                      href={res.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group/btn flex-1 py-2 pl-4 pr-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center justify-between shadow-2xs active:scale-[0.98] cursor-pointer"
+                    >
+                      <span>Acceseaza Gratuit</span>
+                      <span className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5">
+                        <ExternalLink className="w-3.5 h-3.5 text-white" />
+                      </span>
+                    </a>
 
-                  <p className="text-xs text-slate-600 leading-relaxed font-sans">
-                    {res.description}
-                  </p>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink(res.url, res.title)}
+                      className="py-2 px-3.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
+                      title="Copiaza link-ul direct"
+                    >
+                      {copiedUrl === res.url ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                      <span className="hidden sm:inline">{copiedUrl === res.url ? 'Copiat' : 'Copiaza'}</span>
+                    </button>
+                  </div>
                 </div>
+              );
 
-                <div className="pt-3 flex items-center gap-2 border-t border-slate-100">
-                  <a
-                    href={res.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
-                  >
-                    <span>Acceseaza Gratuit</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={() => handleCopyLink(res.url, res.title)}
-                    className="py-2.5 px-3.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-                    title="Copiaza link-ul direct"
-                  >
-                    {copiedUrl === res.url ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                    <span className="hidden sm:inline">{copiedUrl === res.url ? 'Copiat' : 'Copiaza'}</span>
-                  </button>
+              return res.isTopPick ? (
+                <div key={idx} className="p-1 rounded-[2rem] bg-gradient-to-b from-indigo-200/60 via-slate-100/50 to-indigo-100/30 border border-indigo-200/70 shadow-2xs">
+                  {cardContent}
                 </div>
-              </div>
-            ))}
+              ) : (
+                <div key={idx} className="p-0.5 rounded-[2rem]">
+                  {cardContent}
+                </div>
+              );
+            })}
           </div>
 
           {filteredResources.length === 0 && (
@@ -616,39 +638,41 @@ export default function SkillRoadmapPage() {
       {viewMode === 'HR_SCREENING' && (
         <div className="space-y-6 animate-in fade-in duration-200">
           
-          {/* HR HERO BANNER (ASYMMETRIC SPLIT - LIGHT THEME) */}
-          <div className="bg-white text-slate-950 p-6 sm:p-8 rounded-3xl shadow-2xs border border-slate-200/90 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 shrink-0 shadow-2xs">
-                <Users className="w-5 h-5 text-indigo-600" />
+          {/* HR HERO BANNER (DOUBLE-BEZEL ASYMMETRIC SHELL - LIGHT THEME) */}
+          <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
+            <div className="bg-white text-slate-950 p-6 sm:p-8 rounded-[calc(2rem-0.375rem)] shadow-xs border border-white/80 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 shrink-0 shadow-2xs">
+                  <Users className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
+                    {HR_INTERVIEW_DATA.title}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
+                    {HR_INTERVIEW_DATA.subtitle}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
-                  {HR_INTERVIEW_DATA.title}
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
-                  {HR_INTERVIEW_DATA.subtitle}
-                </p>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs text-slate-700 font-sans">
-              <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5">
-                <span className="text-[10px] font-bold uppercase text-indigo-700 block tracking-wider">Obiectivul Recruiterului</span>
-                <p className="text-slate-600 leading-relaxed text-[11.5px]">Evalueaza compatibilitatea cu echipa, capacitatea de comunicare si motivatia reala pentru rol.</p>
-              </div>
-              <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5">
-                <span className="text-[10px] font-bold uppercase text-indigo-700 block tracking-wider">Rata de Trecere</span>
-                <p className="text-slate-600 leading-relaxed text-[11.5px]">Peste 65% din candidati sunt descalificati la HR din cauza raspunsurilor vagi sau nepregatite.</p>
-              </div>
-              <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5">
-                <span className="text-[10px] font-bold uppercase text-indigo-700 block tracking-wider">Cheia Succesului</span>
-                <p className="text-slate-600 leading-relaxed text-[11.5px]">Pitch concis de 90 de secunde, exemple structurate STAR si fluenta la conversatia in engleza.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs text-slate-700 font-sans">
+                <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5 shadow-2xs">
+                  <span className="text-[10px] font-bold uppercase text-indigo-700 block tracking-wider">Obiectivul Recruiterului</span>
+                  <p className="text-slate-600 leading-relaxed text-[11.5px]">Evalueaza compatibilitatea cu echipa, capacitatea de comunicare si motivatia reala pentru rol.</p>
+                </div>
+                <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5 shadow-2xs">
+                  <span className="text-[10px] font-bold uppercase text-indigo-700 block tracking-wider">Rata de Trecere</span>
+                  <p className="text-slate-600 leading-relaxed text-[11.5px]">Peste 65% din candidati sunt descalificati la HR din cauza raspunsurilor vagi sau nepregatite.</p>
+                </div>
+                <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5 shadow-2xs">
+                  <span className="text-[10px] font-bold uppercase text-indigo-700 block tracking-wider">Cheia Succesului</span>
+                  <p className="text-slate-600 leading-relaxed text-[11.5px]">Pitch concis de 90 de secunde, exemple structurate STAR si fluenta la conversatia in engleza.</p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* HR SUB-NAVIGATION TABS (fara scroll orizontal) */}
+          {/* HR SUB-NAVIGATION TABS (SEGMENTED FLUID ISLAND) */}
           <div className="inline-flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200/80 shadow-2xs">
             {[
               { id: 'ALL', label: 'Ghid Complet 360°', icon: Compass },
@@ -664,7 +688,7 @@ export default function SkillRoadmapPage() {
                 <button
                   key={tab.id}
                   onClick={() => setHrSubTab(tab.id)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 shrink-0 cursor-pointer active:scale-95 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center gap-1.5 shrink-0 cursor-pointer active:scale-[0.98] ${
                     isActive
                       ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
                       : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
@@ -677,43 +701,45 @@ export default function SkillRoadmapPage() {
             })}
           </div>
 
-          {/* SECTION 1: TYPICAL 30-MIN CALL STRUCTURE */}
+          {/* SECTION 1: TYPICAL 30-MIN CALL STRUCTURE (DOUBLE-BEZEL) */}
           {(hrSubTab === 'ALL' || hrSubTab === 'TIMELINE') && (
-            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-5">
-              <div className="border-b border-slate-100 pb-3.5">
-                <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-indigo-600" />
-                  Structura Cronologica a Apelului de HR (30 de Minute)
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Fiecare interval are un obiectiv clar de evaluare:
-                </p>
-              </div>
+            <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
+              <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 sm:p-7 border border-white/80 shadow-xs space-y-5">
+                <div className="border-b border-slate-100 pb-3.5">
+                  <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-indigo-600" />
+                    Structura Cronologica a Apelului de HR (30 de Minute)
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Fiecare interval are un obiectiv clar de evaluare:
+                  </p>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {HR_INTERVIEW_DATA.interviewPhases.map((phase, idx) => (
-                  <div key={idx} className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-slate-300 hover:shadow-2xs transition-all duration-150 flex flex-col justify-between space-y-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md">
-                          {phase.time}
-                        </span>
-                        <span className="text-[11px] font-bold text-slate-400">Pas {idx + 1}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  {HR_INTERVIEW_DATA.interviewPhases.map((phase, idx) => (
+                    <div key={idx} className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-slate-300 hover:shadow-2xs transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col justify-between space-y-3">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md">
+                            {phase.time}
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-400">Pas {idx + 1}</span>
+                        </div>
+                        <h4 className="text-xs sm:text-sm font-black text-slate-950">
+                          {phase.title}
+                        </h4>
+                        <p className="text-[11.5px] text-slate-600 leading-relaxed font-sans">
+                          {phase.focus}
+                        </p>
                       </div>
-                      <h4 className="text-xs sm:text-sm font-black text-slate-950">
-                        {phase.title}
-                      </h4>
-                      <p className="text-[11.5px] text-slate-600 leading-relaxed font-sans">
-                        {phase.focus}
-                      </p>
-                    </div>
 
-                    <div className="p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-700 font-sans space-y-0.5">
-                      <strong className="text-indigo-700 font-bold block">Recomandare:</strong>
-                      <span>{phase.proTip}</span>
+                      <div className="p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-700 font-sans space-y-0.5">
+                        <strong className="text-indigo-700 font-bold block">Recomandare:</strong>
+                        <span>{phase.proTip}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -722,166 +748,175 @@ export default function SkillRoadmapPage() {
           {(hrSubTab === 'ALL' || hrSubTab === 'PITCH_STAR') && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
-              {/* PITCH 90S CARD */}
-              <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-indigo-600" />
-                      {HR_INTERVIEW_DATA.pitchFormula.title}
-                    </h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      {HR_INTERVIEW_DATA.pitchFormula.subtitle}
+              {/* PITCH 90S CARD (DOUBLE-BEZEL) */}
+              <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
+                <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 sm:p-7 border border-white/80 shadow-xs space-y-4 h-full flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
+                      <div>
+                        <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-indigo-600" />
+                          {HR_INTERVIEW_DATA.pitchFormula.title}
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          {HR_INTERVIEW_DATA.pitchFormula.subtitle}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {HR_INTERVIEW_DATA.pitchFormula.steps.map((st, idx) => (
+                        <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                          <span className="text-[11px] font-extrabold text-slate-900 block">
+                            {st.step}
+                          </span>
+                          <p className="text-xs text-slate-700 leading-relaxed font-sans">
+                            {st.description}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* SCRIPT GATA DE ADAPTAT */}
+                  <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2.5 shadow-2xs mt-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
+                        Model de Script Personalizabil:
+                      </span>
+                      <button
+                        onClick={() => handleCopyText(HR_INTERVIEW_DATA.pitchFormula.sampleScript, 'Script Pitch 90s')}
+                        className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs active:scale-[0.98] transition-all duration-200"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copiaza Script</span>
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-800 leading-relaxed font-sans italic select-text">
+                      "{HR_INTERVIEW_DATA.pitchFormula.sampleScript}"
                     </p>
                   </div>
                 </div>
-
-                <div className="space-y-2.5">
-                  {HR_INTERVIEW_DATA.pitchFormula.steps.map((st, idx) => (
-                    <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-                      <span className="text-[11px] font-extrabold text-slate-900 block">
-                        {st.step}
-                      </span>
-                      <p className="text-xs text-slate-700 leading-relaxed font-sans">
-                        {st.description}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* SCRIPT GATA DE ADAPTAT */}
-                <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2.5 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
-                      Model de Script Personalizabil:
-                    </span>
-                    <button
-                      onClick={() => handleCopyText(HR_INTERVIEW_DATA.pitchFormula.sampleScript, 'Script Pitch 90s')}
-                      className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs active:scale-95 transition"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copiaza Script</span>
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-800 leading-relaxed font-sans italic select-text">
-                    "{HR_INTERVIEW_DATA.pitchFormula.sampleScript}"
-                  </p>
-                </div>
               </div>
 
-              {/* STAR METHOD CARD */}
-              <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-4">
-                <div className="border-b border-slate-100 pb-3.5">
-                  <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                    <CheckCheck className="w-4 h-4 text-indigo-600" />
-                    {HR_INTERVIEW_DATA.starMethod.title}
-                  </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    {HR_INTERVIEW_DATA.starMethod.description}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2.5">
-                  {HR_INTERVIEW_DATA.starMethod.components.map((c, idx) => (
-                    <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-md bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                          {c.letter}
-                        </span>
-                        <span className="text-xs font-bold text-slate-900">{c.name}</span>
-                      </div>
-                      <p className="text-[10.5px] text-slate-600 leading-relaxed font-sans pt-0.5">
-                        {c.explanation}
+              {/* STAR METHOD CARD (DOUBLE-BEZEL) */}
+              <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
+                <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 sm:p-7 border border-white/80 shadow-xs space-y-4 h-full flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="border-b border-slate-100 pb-3.5">
+                      <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
+                        <CheckCheck className="w-4 h-4 text-indigo-600" />
+                        {HR_INTERVIEW_DATA.starMethod.title}
+                      </h3>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {HR_INTERVIEW_DATA.starMethod.description}
                       </p>
                     </div>
-                  ))}
-                </div>
 
-                {/* REAL CODE PROJECT EXAMPLE */}
-                <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
-                      Exemplu Practic din Proiect Personal:
-                    </span>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {HR_INTERVIEW_DATA.starMethod.components.map((c, idx) => (
+                        <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-md bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                              {c.letter}
+                            </span>
+                            <span className="text-xs font-bold text-slate-900">{c.name}</span>
+                          </div>
+                          <p className="text-[10.5px] text-slate-600 leading-relaxed font-sans pt-0.5">
+                            {c.explanation}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="text-[11.5px] text-slate-950 font-bold">
-                    Intrebare: "{HR_INTERVIEW_DATA.starMethod.example.question}"
-                  </div>
-                  <p className="text-xs text-slate-800 leading-relaxed font-sans select-text">
-                    {HR_INTERVIEW_DATA.starMethod.example.answer}
-                  </p>
-                </div>
 
+                  {/* REAL CODE PROJECT EXAMPLE */}
+                  <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2 shadow-2xs mt-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
+                        Exemplu Practic din Proiect Personal:
+                      </span>
+                    </div>
+                    <div className="text-[11.5px] text-slate-950 font-bold">
+                      Intrebare: "{HR_INTERVIEW_DATA.starMethod.example.question}"
+                    </div>
+                    <p className="text-xs text-slate-800 leading-relaxed font-sans select-text">
+                      {HR_INTERVIEW_DATA.starMethod.example.answer}
+                    </p>
+                  </div>
+                </div>
               </div>
 
             </div>
           )}
 
-          {/* SECTION 3: TOP 8 HR QUESTIONS & TRAPS */}
+          {/* SECTION 3: TOP 8 HR QUESTIONS & TRAPS (DOUBLE-BEZEL) */}
           {(hrSubTab === 'ALL' || hrSubTab === 'QUESTIONS') && (
-            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-4">
-              <div className="border-b border-slate-100 pb-3.5">
-                <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-indigo-600" />
-                  Top Intrebari Clasice de HR: Raspuns Recomandat vs. Red Flags
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Intrebarile adresate la aproape orice interviu de debut. Invata ce urmareste recruiterul si ce sa nu spui niciodata.
-                </p>
-              </div>
+            <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
+              <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 sm:p-7 border border-white/80 shadow-xs space-y-4">
+                <div className="border-b border-slate-100 pb-3.5">
+                  <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-indigo-600" />
+                    Top Intrebari Clasice de HR: Raspuns Recomandat vs. Red Flags
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Intrebarile adresate la aproape orice interviu de debut. Invata ce urmareste recruiterul si ce sa nu spui niciodata.
+                  </p>
+                </div>
 
-              <div className="space-y-3">
-                {HR_INTERVIEW_DATA.topQuestions.map((item, idx) => {
-                  const isExpanded = !!expandedHrQuestions[idx];
+                <div className="space-y-3">
+                  {HR_INTERVIEW_DATA.topQuestions.map((item, idx) => {
+                    const isExpanded = !!expandedHrQuestions[idx];
 
-                  return (
-                    <div 
-                      key={idx} 
-                      className="rounded-2xl border border-slate-200/90 overflow-hidden transition-all duration-150 hover:border-slate-300 shadow-2xs"
-                    >
-                      <button
-                        onClick={() => toggleHrQuestion(idx)}
-                        className="w-full text-left p-4 sm:p-4.5 bg-slate-50/70 hover:bg-slate-100/70 flex items-center justify-between gap-3 cursor-pointer transition-colors duration-150"
+                    return (
+                      <div 
+                        key={idx} 
+                        className="rounded-2xl border border-slate-200/90 overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-slate-300 shadow-2xs"
                       >
-                        <div className="space-y-0.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md inline-block">
-                            {item.category}
-                          </span>
-                          <h4 className="text-xs sm:text-sm font-extrabold text-slate-950">
-                            {item.q}
-                          </h4>
-                        </div>
-                        <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${isExpanded ? 'rotate-90 text-slate-950' : ''}`} />
-                      </button>
-
-                      {isExpanded && (
-                        <div className="p-4 sm:p-5 bg-white border-t border-slate-100 space-y-3.5 text-xs leading-relaxed font-sans">
-                          <div className="text-slate-600 italic bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <strong>Ce urmareste recruiterul:</strong> {item.intent}
+                        <button
+                          onClick={() => toggleHrQuestion(idx)}
+                          className="w-full text-left p-4 sm:p-4.5 bg-slate-50/70 hover:bg-slate-100/70 flex items-center justify-between gap-3 cursor-pointer transition-colors duration-200"
+                        >
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md inline-block">
+                              {item.category}
+                            </span>
+                            <h4 className="text-xs sm:text-sm font-extrabold text-slate-950">
+                              {item.q}
+                            </h4>
                           </div>
+                          <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] shrink-0 ${isExpanded ? 'rotate-90 text-slate-950' : ''}`} />
+                        </button>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                            <div className="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/90 space-y-1.5 shadow-2xs">
-                              <span className="text-[10px] font-black uppercase text-emerald-800 flex items-center gap-1.5">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                Cum Sa Raspunzi (Exemplu Recomandat):
-                              </span>
-                              <p className="text-emerald-950 font-sans leading-relaxed">{item.goodAnswer}</p>
+                        {isExpanded && (
+                          <div className="p-4 sm:p-5 bg-white border-t border-slate-100 space-y-3.5 text-xs leading-relaxed font-sans">
+                            <div className="text-slate-600 italic bg-slate-50 p-3 rounded-xl border border-slate-100">
+                              <strong>Ce urmareste recruiterul:</strong> {item.intent}
                             </div>
 
-                            <div className="p-4 rounded-xl bg-rose-50/80 border border-rose-200/90 space-y-1.5 shadow-2xs">
-                              <span className="text-[10px] font-black uppercase text-rose-800 flex items-center gap-1.5">
-                                <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-                                De Evitat Absolut (Red Flag):
-                              </span>
-                              <p className="text-rose-950 font-sans leading-relaxed">{item.redFlag}</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                              <div className="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/90 space-y-1.5 shadow-2xs">
+                                <span className="text-[10px] font-black uppercase text-emerald-800 flex items-center gap-1.5">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  Cum Sa Raspunzi (Exemplu Recomandat):
+                                </span>
+                                <p className="text-emerald-950 font-sans leading-relaxed">{item.goodAnswer}</p>
+                              </div>
+
+                              <div className="p-4 rounded-xl bg-rose-50/80 border border-rose-200/90 space-y-1.5 shadow-2xs">
+                                <span className="text-[10px] font-black uppercase text-rose-800 flex items-center gap-1.5">
+                                  <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                                  De Evitat Absolut (Red Flag):
+                                </span>
+                                <p className="text-rose-950 font-sans leading-relaxed">{item.redFlag}</p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
@@ -890,100 +925,109 @@ export default function SkillRoadmapPage() {
           {(hrSubTab === 'ALL' || hrSubTab === 'ENGLISH') && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
-              {/* ENGLISH CHECK */}
-              <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-4">
-                <div className="border-b border-slate-100 pb-3.5">
-                  <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-indigo-600" />
-                    {HR_INTERVIEW_DATA.englishCheck.title}
-                  </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    {HR_INTERVIEW_DATA.englishCheck.description}
-                  </p>
-                </div>
+              {/* ENGLISH CHECK (DOUBLE-BEZEL) */}
+              <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
+                <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 sm:p-7 border border-white/80 shadow-xs space-y-4 h-full">
+                  <div className="border-b border-slate-100 pb-3.5">
+                    <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-indigo-600" />
+                      {HR_INTERVIEW_DATA.englishCheck.title}
+                    </h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {HR_INTERVIEW_DATA.englishCheck.description}
+                    </p>
+                  </div>
 
-                <div className="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200/80 text-xs text-indigo-950 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-indigo-800 block">Fraza tipica a recruiterului:</span>
-                  <p className="italic font-sans">{HR_INTERVIEW_DATA.englishCheck.triggerPhrase}</p>
-                </div>
+                  <div className="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200/80 text-xs text-indigo-950 space-y-1">
+                    <span className="text-[10px] font-black uppercase text-indigo-800 block">Fraza tipica a recruiterului:</span>
+                    <p className="italic font-sans">{HR_INTERVIEW_DATA.englishCheck.triggerPhrase}</p>
+                  </div>
 
-                <div className="space-y-2">
-                  {HR_INTERVIEW_DATA.englishCheck.goldenRules.map((r, idx) => (
-                    <div key={idx} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-0.5">
-                      <span className="font-extrabold text-slate-950 block">{r.title}</span>
-                      <p className="text-slate-600 font-sans">{r.tip}</p>
-                    </div>
-                  ))}
+                  <div className="space-y-2">
+                    {HR_INTERVIEW_DATA.englishCheck.goldenRules.map((r, idx) => (
+                      <div key={idx} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-0.5">
+                        <span className="font-extrabold text-slate-950 block">{r.title}</span>
+                        <p className="text-slate-600 font-sans">{r.tip}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* REVERSE QUESTIONS (CE INTREBI TU LA FINAL) */}
-              <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-4">
-                <div className="border-b border-slate-100 pb-3.5">
-                  <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4 text-indigo-600" />
-                    Intrebari Inteligente pe care sa le Pui TU la Final
-                  </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Cand recruiterul te intreaba "Ai vreo intrebare pentru noi?", nu spune niciodata "Nu". Pune una dintre aceste intrebari:
-                  </p>
-                </div>
+              {/* REVERSE QUESTIONS (DOUBLE-BEZEL) */}
+              <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
+                <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 sm:p-7 border border-white/80 shadow-xs space-y-4 h-full">
+                  <div className="border-b border-slate-100 pb-3.5">
+                    <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4 text-indigo-600" />
+                      Intrebari Inteligente pe care sa le Pui TU la Final
+                    </h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Cand recruiterul te intreaba "Ai vreo intrebare pentru noi?", nu spune niciodata "Nu". Pune una dintre aceste intrebari:
+                    </p>
+                  </div>
 
-                <div className="space-y-2.5">
-                  {HR_INTERVIEW_DATA.reverseQuestions.map((rq, idx) => (
-                    <div key={idx} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1 hover:border-slate-300 transition-colors">
-                      <span className="font-bold text-xs text-slate-950 block">"{rq.q}"</span>
-                      <p className="text-[11px] text-slate-600 italic font-sans">
-                        <strong>De ce impresioneaza:</strong> {rq.why}
-                      </p>
-                    </div>
-                  ))}
+                  <div className="space-y-2.5">
+                    {HR_INTERVIEW_DATA.reverseQuestions.map((rq, idx) => (
+                      <div key={idx} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1 hover:border-slate-300 transition-colors">
+                        <span className="font-bold text-xs text-slate-950 block">"{rq.q}"</span>
+                        <p className="text-[11px] text-slate-600 italic font-sans">
+                          <strong>De ce impresioneaza:</strong> {rq.why}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
             </div>
           )}
 
-          {/* SECTION 5: CURATED FREE HR & BEHAVIORAL RESOURCES */}
+          {/* SECTION 5: CURATED FREE HR & BEHAVIORAL RESOURCES (DOUBLE-BEZEL) */}
           {(hrSubTab === 'ALL' || hrSubTab === 'RESOURCES') && (
-            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-5">
-              <div className="border-b border-slate-100 pb-3.5">
-                <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-indigo-600" />
-                  Resurse & Ghiduri Gratuite pentru Interviul Comportamental
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Materiale de referinta oferite de universitati si platforme de cariera de renume.
-                </p>
-              </div>
+            <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
+              <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 sm:p-7 border border-white/80 shadow-xs space-y-5">
+                <div className="border-b border-slate-100 pb-3.5">
+                  <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-indigo-600" />
+                    Resurse & Ghiduri Gratuite pentru Interviul Comportamental
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Materiale de referinta oferite de universitati si platforme de cariera de renume.
+                  </p>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {HR_INTERVIEW_DATA.freeHrResources.map((res, idx) => (
-                  <div key={idx} className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-xs transition-all duration-150 flex flex-col justify-between space-y-3.5">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-black uppercase text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-md">
-                          {res.platform}
-                        </span>
-                        <span className="text-[9px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-md">
-                          {res.type}
-                        </span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {HR_INTERVIEW_DATA.freeHrResources.map((res, idx) => (
+                    <div key={idx} className="p-5 sm:p-6 rounded-2xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-2xs transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col justify-between space-y-3.5">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-black uppercase text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-md">
+                            {res.platform}
+                          </span>
+                          <span className="text-[9px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-md">
+                            {res.type}
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-black text-slate-950">{res.title}</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed font-sans">{res.description}</p>
                       </div>
-                      <h4 className="text-sm font-black text-slate-950">{res.title}</h4>
-                      <p className="text-xs text-slate-600 leading-relaxed font-sans">{res.description}</p>
-                    </div>
 
-                    <a
-                      href={res.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="py-2.5 px-4 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
-                    >
-                      <span>Deschide Resursa</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                ))}
+                      {/* BUTTON-IN-BUTTON CTA */}
+                      <a
+                        href={res.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group/btn py-2 pl-4 pr-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center justify-between shadow-2xs active:scale-[0.98] cursor-pointer"
+                      >
+                        <span>Deschide Resursa</span>
+                        <span className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5">
+                          <ExternalLink className="w-3.5 h-3.5 text-white" />
+                        </span>
+                      </a>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -1001,52 +1045,57 @@ export default function SkillRoadmapPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* SECTION 6: CLOSING CTA & DAILY HABIT (COHESIVE LIGHT THEME)               */}
+      {/* SECTION 6: CLOSING CTA & DAILY HABIT (DOUBLE-BEZEL ARCHITECTURE)          */}
       {/* ========================================================================= */}
       {viewMode !== 'ANKI_JAVA' && (
-        <div className="bg-white text-slate-950 rounded-3xl p-8 sm:p-10 border border-slate-200/90 shadow-2xs text-center space-y-5 relative overflow-hidden mt-8">
-          <div className="max-w-2xl mx-auto space-y-2.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-bold border border-indigo-200/80">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Pregatire Zilnica Structurata</span>
+        <div className="p-1.5 sm:p-2 rounded-[2.5rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs mt-8">
+          <div className="bg-white text-slate-950 rounded-[calc(2.5rem-0.5rem)] p-8 sm:p-12 border border-white/80 shadow-xs text-center space-y-6 relative overflow-hidden">
+            <div className="max-w-2xl mx-auto space-y-3">
+              <div className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] uppercase tracking-[0.2em] font-extrabold text-indigo-700 bg-indigo-50/90 border border-indigo-200/90 shadow-2xs">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Pregatire Zilnica Structurata</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 tracking-tight leading-tight">
+                Stapaneste Conceptele Tehnice si Treci Orice Interviu
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans max-w-xl mx-auto">
+                15 minute pe zi de repetitie spatiata Anki si pregatire structurata pe roluri iti asigura avantajul competitiv la interviurile de angajare.
+              </p>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
-              Stapaneste Conceptele Tehnice si Treci Orice Interviu
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans max-w-xl mx-auto">
-              15 minute pe zi de repetitie spatiata Anki si pregatire structurata pe roluri iti asigura avantajul competitiv la interviurile de angajare.
-            </p>
-          </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <button
-              onClick={() => {
-                setViewMode('ANKI_JAVA');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>Incepe Antrenamentul de Astazi</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
+              {/* BUTTON-IN-BUTTON PRIMARY CTA */}
+              <button
+                onClick={() => {
+                  setViewMode('ANKI_JAVA');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="group/cta w-full sm:w-auto py-2.5 pl-6 pr-2.5 rounded-full text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer flex items-center justify-between gap-3"
+              >
+                <span>Incepe Antrenamentul de Astazi</span>
+                <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/cta:translate-x-1 group-hover/cta:-translate-y-0.5">
+                  <ArrowRight className="w-3.5 h-3.5 text-white" />
+                </span>
+              </button>
 
-            <button
-              onClick={() => {
-                setViewMode('TECH_TRACKS');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>Exploreaza Curriculum Complet</span>
-            </button>
-          </div>
+              <button
+                onClick={() => {
+                  setViewMode('TECH_TRACKS');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="w-full sm:w-auto px-6 py-3 rounded-full text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Exploreaza Curriculum Complet</span>
+              </button>
+            </div>
 
-          <div className="flex items-center justify-center gap-4 sm:gap-6 pt-4 text-[11px] text-slate-500 font-medium flex-wrap border-t border-slate-100">
-            <span>Open Source</span>
-            <span className="h-3 w-px bg-slate-200" />
-            <span>Aliniat cu Piata Tech din Romania</span>
-            <span className="h-3 w-px bg-slate-200" />
-            <span>Fara Inregistrare Obligatorie</span>
+            <div className="flex items-center justify-center gap-4 sm:gap-6 pt-4 text-[11px] text-slate-500 font-medium flex-wrap border-t border-slate-100">
+              <span>Open Source</span>
+              <span className="h-3 w-px bg-slate-200" />
+              <span>Aliniat cu Piata Tech din Romania</span>
+              <span className="h-3 w-px bg-slate-200" />
+              <span>Fara Inregistrare Obligatorie</span>
+            </div>
           </div>
         </div>
       )}
