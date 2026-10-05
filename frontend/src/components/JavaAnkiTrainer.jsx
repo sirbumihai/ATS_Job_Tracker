@@ -32,6 +32,255 @@ import { TECH_ANKI_CATEGORIES, ALL_TECH_ANKI_CARDS } from '../data/decks/index';
 
 const STORAGE_KEY = 'tech_anki_flashcards_progress_v2';
 
+// 1. Text Normalizer - Safe replacement of escaped backslash-n, backslash-t, and backslash-r
+function normalizeCardText(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw
+    .replace(/\\+r/g, '')
+    .replace(/\\+n/g, '\n')
+    .replace(/\\+t/g, '  ')
+    .trim();
+}
+
+// 2. Inline Formatter for technical keywords, code terms, and method invocations
+function renderInlineFormatted(text) {
+  if (!text) return null;
+  const parts = text.split(/(`[^`]+`)/g);
+  return parts.map((part, pIdx) => {
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code key={pIdx} className="font-mono text-[11px] font-semibold text-indigo-700 bg-indigo-50/90 px-1.5 py-0.5 rounded-md border border-indigo-200/60 shadow-2xs">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    const subParts = part.split(/(\b(?:this|super|new|void|int|String|boolean|class|SELECT|FROM|WHERE|JOIN|INDEX)\b(?:\([^)]*\))?|[a-zA-Z0-9_$]+\([^)]*\))/g);
+    return subParts.map((sub, sIdx) => {
+      if (/^(\b(?:this|super|new|void|int|String|boolean|class|SELECT|FROM|WHERE|JOIN|INDEX)\b(?:\([^)]*\))?|[a-zA-Z0-9_$]+\([^)]*\))$/.test(sub)) {
+        return (
+          <code key={`${pIdx}-${sIdx}`} className="font-mono text-[11px] font-semibold text-indigo-700 bg-indigo-50/90 px-1.5 py-0.5 rounded-md border border-indigo-200/60 shadow-2xs">
+            {sub}
+          </code>
+        );
+      }
+      return sub;
+    });
+  });
+}
+
+// 3. Structured Answer Component - Transforms plain text into clean paragraphs, headers, and numbered steps
+function FormattedAnswer({ text }) {
+  if (!text) return null;
+  const clean = normalizeCardText(text);
+  const rawLines = clean.split('\n');
+
+  const lines = [];
+  for (let i = 0; i < rawLines.length; i++) {
+    const l = rawLines[i].trim();
+    if (l === '' && lines.length > 0 && lines[lines.length - 1].trim() === '') {
+      continue;
+    }
+    lines.push(rawLines[i]);
+  }
+
+  return (
+    <div className="space-y-2 text-xs sm:text-sm text-slate-800 leading-relaxed font-normal">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={idx} className="h-1" />;
+        }
+
+        // 1. Numbered item: e.g. "1. ..." or "1) ..."
+        const numberedMatch = trimmed.match(/^(\d+)[\.\)]\s*(.+)$/);
+        if (numberedMatch) {
+          const num = numberedMatch[1];
+          const content = numberedMatch[2];
+          return (
+            <div key={idx} className="flex items-start gap-2.5 py-1 group">
+              <span className="w-5 h-5 rounded-lg bg-indigo-50 text-indigo-700 font-bold font-mono text-[10px] flex items-center justify-center shrink-0 border border-indigo-200/70 mt-0.5 shadow-2xs group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                {num}
+              </span>
+              <div className="flex-1 text-slate-700 leading-relaxed font-sans">
+                {renderInlineFormatted(content)}
+              </div>
+            </div>
+          );
+        }
+
+        // 2. Bullet item: e.g. "- ..." or "* ..." or "• ..."
+        const bulletMatch = trimmed.match(/^[-*•]\s*(.+)$/);
+        if (bulletMatch) {
+          const content = bulletMatch[1];
+          return (
+            <div key={idx} className="flex items-start gap-2.5 pl-3 py-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0" />
+              <div className="flex-1 text-slate-700 leading-relaxed font-sans">
+                {renderInlineFormatted(content)}
+              </div>
+            </div>
+          );
+        }
+
+        // 3. Section Heading: e.g. ends with ":" and is relatively short (<= 65 chars)
+        if (trimmed.endsWith(':') && trimmed.length <= 65 && !trimmed.startsWith('http')) {
+          return (
+            <div key={idx} className="pt-2 pb-1 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-100">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <span>{trimmed}</span>
+            </div>
+          );
+        }
+
+        // 4. Regular paragraph
+        return (
+          <p key={idx} className="text-slate-700 leading-relaxed font-sans">
+            {renderInlineFormatted(trimmed)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+// 4. Modern Developer Code Snippet Box with Syntax Highlighting and Line Numbers
+function CodeSnippetBox({ code, cardId, copiedCodeId, onCopy }) {
+  if (!code) return null;
+  const cleanCode = normalizeCardText(code);
+  const codeLines = cleanCode.split('\n');
+
+  const highlightLine = (line) => {
+    const commentMatch = line.match(/^(\s*)((\/\/|#|--).*)$/);
+    if (commentMatch) {
+      return (
+        <>
+          <span>{commentMatch[1]}</span>
+          <span className="text-slate-400 italic font-mono">{commentMatch[2]}</span>
+        </>
+      );
+    }
+
+    const inlineCommentIndex = line.search(/(\/\/|#|--)/);
+    let codePart = line;
+    let commentPart = null;
+    if (inlineCommentIndex !== -1) {
+      codePart = line.substring(0, inlineCommentIndex);
+      commentPart = line.substring(inlineCommentIndex);
+    }
+
+    const tokenRegex = /(".*?"|'.*?'|`.*?`|@\w+|\b(?:public|private|protected|class|interface|extends|implements|void|int|long|double|float|boolean|char|byte|short|String|var|val|let|const|function|return|this|super|new|if|else|for|while|do|switch|case|default|break|continue|try|catch|finally|throw|throws|import|package|static|final|abstract|synchronized|volatile|transient|native|strictfp|instanceof|assert|enum|def|self|from|as|with|pass|lambda|yield|async|await|SELECT|FROM|WHERE|JOIN|INNER|LEFT|RIGHT|FULL|OUTER|ON|GROUP|BY|ORDER|HAVING|LIMIT|OFFSET|CREATE|TABLE|INDEX|INSERT|INTO|VALUES|UPDATE|SET|DELETE|AND|OR|NOT|IN|EXISTS|IS|NULL|null|true|false|None|True|False)\b|\b\d+(\.\d+)?\b|[a-zA-Z_$][a-zA-Z0-9_$]*(?=\s*\())/g;
+
+    const tokens = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = tokenRegex.exec(codePart)) !== null) {
+      if (match.index > lastIndex) {
+        tokens.push({ text: codePart.substring(lastIndex, match.index), type: 'plain' });
+      }
+      const val = match[0];
+      if (val.startsWith('"') || val.startsWith("'") || val.startsWith('`')) {
+        tokens.push({ text: val, type: 'string' });
+      } else if (val.startsWith('@')) {
+        tokens.push({ text: val, type: 'annotation' });
+      } else if (/^\d/.test(val)) {
+        tokens.push({ text: val, type: 'number' });
+      } else if (/^(public|private|protected|class|interface|extends|implements|void|int|long|double|float|boolean|char|byte|short|String|var|val|let|const|function|return|this|super|new|if|else|for|while|do|switch|case|default|break|continue|try|catch|finally|throw|throws|import|package|static|final|abstract|synchronized|volatile|transient|native|strictfp|instanceof|assert|enum|def|self|from|as|with|pass|lambda|yield|async|await|SELECT|FROM|WHERE|JOIN|INNER|LEFT|RIGHT|FULL|OUTER|ON|GROUP|BY|ORDER|HAVING|LIMIT|OFFSET|CREATE|TABLE|INDEX|INSERT|INTO|VALUES|UPDATE|SET|DELETE|AND|OR|NOT|IN|EXISTS|IS|NULL|null|true|false|None|True|False)$/.test(val)) {
+        tokens.push({ text: val, type: 'keyword' });
+      } else {
+        tokens.push({ text: val, type: 'function' });
+      }
+      lastIndex = tokenRegex.lastIndex;
+    }
+
+    if (lastIndex < codePart.length) {
+      tokens.push({ text: codePart.substring(lastIndex), type: 'plain' });
+    }
+
+    return (
+      <>
+        {tokens.map((tok, i) => {
+          if (tok.type === 'keyword') {
+            return <span key={i} className="text-indigo-600 font-bold">{tok.text}</span>;
+          }
+          if (tok.type === 'string') {
+            return <span key={i} className="text-emerald-600 font-medium">{tok.text}</span>;
+          }
+          if (tok.type === 'annotation') {
+            return <span key={i} className="text-purple-600 font-semibold">{tok.text}</span>;
+          }
+          if (tok.type === 'number') {
+            return <span key={i} className="text-amber-600 font-mono font-medium">{tok.text}</span>;
+          }
+          if (tok.type === 'function') {
+            return <span key={i} className="text-blue-700 font-medium">{tok.text}</span>;
+          }
+          return <span key={i} className="text-slate-800">{tok.text}</span>;
+        })}
+        {commentPart && (
+          <span className="text-slate-400 italic font-mono">{commentPart}</span>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <div className="rounded-2xl overflow-hidden bg-slate-50/90 border border-slate-200/90 text-xs font-mono shadow-2xs">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-100/90 border-b border-slate-200/80 text-[11px] text-slate-600">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+          </div>
+          <div className="h-3 w-px bg-slate-300 mx-1" />
+          <span className="font-bold text-slate-700 flex items-center gap-1.5">
+            <Terminal className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Solutie / Cod / Configurare</span>
+          </span>
+          <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+            ({codeLines.length} linii)
+          </span>
+        </div>
+        <button
+          onClick={() => onCopy(cleanCode, cardId)}
+          className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 hover:text-indigo-600 bg-white hover:bg-indigo-50 border border-slate-200/90 hover:border-indigo-200 px-2.5 py-1 rounded-lg transition shadow-2xs cursor-pointer active:scale-95"
+          title="Copiaza codul in clipboard"
+        >
+          {copiedCodeId === cardId ? (
+            <>
+              <Check className="w-3 h-3 text-emerald-600" />
+              <span className="text-emerald-700 font-bold">Copiat in clipboard</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3 h-3 text-slate-500" />
+              <span>Copiaza cod</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      <div className="p-3 sm:p-4 overflow-x-auto text-[12px] leading-relaxed font-mono bg-[#f8fafc] border-t-0 selection:bg-indigo-100 selection:text-indigo-900">
+        <table className="w-full border-collapse">
+          <tbody>
+            {codeLines.map((line, idx) => (
+              <tr key={idx} className="hover:bg-indigo-50/30 transition-colors">
+                <td className="w-8 select-none text-right pr-3.5 text-[11px] text-slate-400/80 font-mono align-top py-0.5 border-r border-slate-200/60">
+                  {idx + 1}
+                </td>
+                <td className="pl-3.5 py-0.5 whitespace-pre font-mono text-slate-900 align-top">
+                  {highlightLine(line)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export default function JavaAnkiTrainer() {
   // Navigation & Category Filter
   const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -545,10 +794,10 @@ export default function JavaAnkiTrainer() {
                       <span>Intrebare de Interviu Tehnic:</span>
                     </div>
                     <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight leading-snug">
-                      {currentCard.title}
+                      {normalizeCardText(currentCard.title)}
                     </h2>
                     <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 text-sm sm:text-base text-slate-700 leading-relaxed font-normal shadow-2xs">
-                      {currentCard.question}
+                      {normalizeCardText(currentCard.question)}
                     </div>
 
                     <div className="pt-4">
@@ -567,52 +816,23 @@ export default function JavaAnkiTrainer() {
                         <span>Raspuns Canonic Senior:</span>
                       </div>
                       <span className="text-[11px] font-bold text-slate-400 truncate max-w-[280px] sm:max-w-md hidden sm:inline">
-                        {currentCard.title}
+                        {normalizeCardText(currentCard.title)}
                       </span>
                     </div>
 
-                    {/* Formatted Answer */}
-                    <div className="p-4.5 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-line font-normal shadow-2xs">
-                      {currentCard.answer}
+                    {/* Formatted Answer with Section Parsing and Badges */}
+                    <div className="p-4.5 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 shadow-2xs">
+                      <FormattedAnswer text={currentCard.answer} />
                     </div>
 
-                    {/* Light Developer Code Snippet Box */}
+                    {/* Syntax-Highlighted Light Developer Code Snippet Box */}
                     {currentCard.codeSnippet && (
-                      <div className="rounded-2xl overflow-hidden bg-slate-50/90 border border-slate-200/90 text-xs font-mono shadow-2xs">
-                        <div className="flex items-center justify-between px-4 py-2.5 bg-slate-100/90 border-b border-slate-200/80 text-[11px] text-slate-600">
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-                              <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-                              <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-                            </div>
-                            <div className="h-3 w-px bg-slate-300 mx-1" />
-                            <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                              <Terminal className="w-3.5 h-3.5 text-indigo-600" />
-                              <span>Solutie / Cod / Configurare</span>
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => handleCopyCode(currentCard.codeSnippet, currentCard.id)}
-                            className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 hover:text-indigo-600 bg-white hover:bg-indigo-50 border border-slate-200/90 hover:border-indigo-200 px-2.5 py-1 rounded-lg transition shadow-2xs cursor-pointer active:scale-95"
-                          >
-                            {copiedCodeId === currentCard.id ? (
-                              <>
-                                <Check className="w-3 h-3 text-emerald-600" />
-                                <span className="text-emerald-700 font-bold">Copiat in clipboard</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3 h-3 text-slate-500" />
-                                <span>Copiaza cod</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                        <pre className="p-4 sm:p-5 overflow-x-auto text-[12px] leading-relaxed font-mono text-slate-900 bg-[#f8fafc] border border-t-0 border-slate-200/80 rounded-b-2xl selection:bg-indigo-100 selection:text-indigo-900">
-                          <code>{currentCard.codeSnippet}</code>
-                        </pre>
-                      </div>
+                      <CodeSnippetBox
+                        code={currentCard.codeSnippet}
+                        cardId={currentCard.id}
+                        copiedCodeId={copiedCodeId}
+                        onCopy={handleCopyCode}
+                      />
                     )}
 
                     {/* Interview Trap & Key Takeaway */}
@@ -627,7 +847,7 @@ export default function JavaAnkiTrainer() {
                               <span>Capcana la Interviu</span>
                             </div>
                             <p className="text-xs leading-relaxed text-slate-700 font-normal">
-                              {currentCard.interviewTrap}
+                              {normalizeCardText(currentCard.interviewTrap)}
                             </p>
                           </div>
                         </div>
@@ -643,7 +863,7 @@ export default function JavaAnkiTrainer() {
                               <span>Concluzie Cheie</span>
                             </div>
                             <p className="text-xs leading-relaxed text-slate-700 font-normal">
-                              {currentCard.keyTakeaway}
+                              {normalizeCardText(currentCard.keyTakeaway)}
                             </p>
                           </div>
                         </div>
@@ -857,51 +1077,30 @@ export default function JavaAnkiTrainer() {
 
                   <div>
                     <h3 className="text-base font-black text-slate-950">
-                      {card.title}
+                      {normalizeCardText(card.title)}
                     </h3>
                     <p className="text-xs text-slate-600 font-medium mt-0.5">
-                      {card.question}
+                      {normalizeCardText(card.question)}
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs text-slate-800 leading-relaxed font-medium whitespace-pre-line">
-                    {card.answer}
+                  <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 shadow-2xs">
+                    <FormattedAnswer text={card.answer} />
                   </div>
 
                   {card.codeSnippet && (
-                    <div className="rounded-2xl overflow-hidden bg-slate-50/90 border border-slate-200/90 text-xs font-mono shadow-2xs">
-                      <div className="flex items-center justify-between px-3.5 py-2 bg-slate-100/90 border-b border-slate-200/80 text-[11px] text-slate-600">
-                        <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                          <Terminal className="w-3.5 h-3.5 text-indigo-600" />
-                          <span>Exemplu Cod</span>
-                        </span>
-                        <button
-                          onClick={() => handleCopyCode(card.codeSnippet, card.id)}
-                          className="flex items-center gap-1 text-[10px] text-slate-700 hover:text-indigo-600 bg-white hover:bg-indigo-50 border border-slate-200/80 px-2 py-0.5 rounded-lg transition cursor-pointer"
-                        >
-                          {copiedCodeId === card.id ? (
-                            <>
-                              <Check className="w-3 h-3 text-emerald-600" />
-                              <span className="text-emerald-700 font-bold">Copiat</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3 text-slate-500" />
-                              <span>Copiaza</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                      <pre className="p-3.5 sm:p-4 overflow-x-auto text-[11.5px] leading-relaxed font-mono text-slate-900 bg-[#f8fafc] selection:bg-indigo-100 selection:text-indigo-900">
-                        <code>{card.codeSnippet}</code>
-                      </pre>
-                    </div>
+                    <CodeSnippetBox
+                      code={card.codeSnippet}
+                      cardId={card.id}
+                      copiedCodeId={copiedCodeId}
+                      onCopy={handleCopyCode}
+                    />
                   )}
 
                   {card.interviewTrap && (
                     <div className="p-3.5 rounded-xl bg-amber-50/50 border border-amber-200/80 text-slate-800 text-xs font-normal">
                       <span className="font-black text-amber-900 uppercase tracking-wider text-[10px] mr-1">Capcana la Interviu: </span>
-                      {card.interviewTrap}
+                      {normalizeCardText(card.interviewTrap)}
                     </div>
                   )}
                 </div>
