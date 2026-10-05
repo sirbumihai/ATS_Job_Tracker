@@ -417,7 +417,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col lg:flex-row font-sans selection:bg-black selection:text-white">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col lg:flex-row font-sans selection:bg-indigo-600 selection:text-white">
       
       {/* SIDEBAR NAVIGATION (Desktop Sidebar + Mobile Header/Drawer) */}
       <Navbar 
@@ -434,7 +434,7 @@ export default function App() {
         {/* DESKTOP TOP BAR CU TITLU PAGINA SI BREADCRUMB */}
         <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3 bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 shadow-2xs">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200/80 shadow-2xs">
+            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs">
               {currentTabInfo.category}
             </span>
             <div className="h-4 w-px bg-slate-200" />
@@ -452,22 +452,26 @@ export default function App() {
           <div className="flex items-center gap-3">
             {currentUser && (
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowAddJobModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-black text-white transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
-                  title="Adauga o noua aplicatie de urmarit"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Adauga Job</span>
-                </button>
-                <button
-                  onClick={() => setShowUploadResumeModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 transition-all duration-150 shadow-2xs hover:border-slate-300 cursor-pointer active:scale-95"
-                  title="Incarca un CV PDF pentru analiza"
-                >
-                  <Upload className="w-3.5 h-3.5 text-slate-600" />
-                  <span>Incarca CV</span>
-                </button>
+                {activeTab === 'tracker' && (
+                  <button
+                    onClick={() => setShowAddJobModal(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
+                    title="Adauga o noua aplicatie de urmarit"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Adauga Job</span>
+                  </button>
+                )}
+                {activeTab === 'cv_library' && (
+                  <button
+                    onClick={() => setShowUploadResumeModal(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
+                    title="Incarca un CV PDF pentru analiza"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Incarca CV</span>
+                  </button>
+                )}
               </div>
             )}
 
@@ -479,7 +483,7 @@ export default function App() {
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-black text-white shadow-xs hover:bg-neutral-800 transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs hover:bg-indigo-700 transition cursor-pointer active:scale-95"
               >
                 <span>Conectare</span>
               </button>
