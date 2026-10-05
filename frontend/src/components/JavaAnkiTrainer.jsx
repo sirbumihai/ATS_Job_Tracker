@@ -192,130 +192,17 @@ export default function JavaAnkiTrainer() {
     setIsFlipped(false);
   };
 
-  // Chromatic Theme System for Anki Categories
-  const getCategoryTheme = (catId) => {
-    switch (catId) {
-      case 'JAVA':
-        return {
-          accent: 'amber',
-          ring: 'ring-amber-500/50 border-amber-950',
-          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/80',
-          iconBg: 'bg-amber-50 text-amber-700 border-amber-200/80',
-          badge: 'bg-amber-500/20 text-amber-200 border-amber-400/30',
-          gradientAccent: 'from-amber-500 via-orange-500 to-amber-600',
-          cardBorder: 'hover:border-amber-300'
-        };
-      case 'SPRING':
-        return {
-          accent: 'emerald',
-          ring: 'ring-emerald-500/50 border-emerald-950',
-          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/80',
-          iconBg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-          badge: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
-          gradientAccent: 'from-emerald-500 via-teal-500 to-emerald-600',
-          cardBorder: 'hover:border-emerald-300'
-        };
-      case 'SQL':
-        return {
-          accent: 'cyan',
-          ring: 'ring-cyan-500/50 border-cyan-950',
-          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/80',
-          iconBg: 'bg-cyan-50 text-cyan-700 border-cyan-200/80',
-          badge: 'bg-cyan-500/20 text-cyan-200 border-cyan-400/30',
-          gradientAccent: 'from-cyan-500 via-sky-500 to-cyan-600',
-          cardBorder: 'hover:border-cyan-300'
-        };
-      case 'SYSTEM_DESIGN':
-        return {
-          accent: 'indigo',
-          ring: 'ring-indigo-500/50 border-indigo-950',
-          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/80',
-          iconBg: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
-          badge: 'bg-indigo-500/20 text-indigo-200 border-indigo-400/30',
-          gradientAccent: 'from-indigo-500 via-purple-500 to-indigo-600',
-          cardBorder: 'hover:border-indigo-300'
-        };
-      case 'TESTING':
-        return {
-          accent: 'teal',
-          ring: 'ring-teal-500/50 border-teal-950',
-          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950/80',
-          iconBg: 'bg-teal-50 text-teal-700 border-teal-200/80',
-          badge: 'bg-teal-500/20 text-teal-200 border-teal-400/30',
-          gradientAccent: 'from-teal-500 via-emerald-500 to-teal-600',
-          cardBorder: 'hover:border-teal-300'
-        };
-      case 'REACT':
-        return {
-          accent: 'blue',
-          ring: 'ring-blue-500/50 border-blue-950',
-          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/80',
-          iconBg: 'bg-blue-50 text-blue-700 border-blue-200/80',
-          badge: 'bg-blue-500/20 text-blue-200 border-blue-400/30',
-          gradientAccent: 'from-blue-500 via-indigo-500 to-blue-600',
-          cardBorder: 'hover:border-blue-300'
-        };
-      case 'DEVOPS':
-        return {
-          accent: 'sky',
-          ring: 'ring-sky-500/50 border-sky-950',
-          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/80',
-          iconBg: 'bg-sky-50 text-sky-700 border-sky-200/80',
-          badge: 'bg-sky-500/20 text-sky-200 border-sky-400/30',
-          gradientAccent: 'from-sky-500 via-blue-500 to-sky-600',
-          cardBorder: 'hover:border-sky-300'
-        };
-      case 'CLOUD':
-        return {
-          accent: 'purple',
-          ring: 'ring-purple-500/50 border-purple-950',
-          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950/80',
-          iconBg: 'bg-purple-50 text-purple-700 border-purple-200/80',
-          badge: 'bg-purple-500/20 text-purple-200 border-purple-400/30',
-          gradientAccent: 'from-purple-500 via-violet-500 to-purple-600',
-          cardBorder: 'hover:border-purple-300'
-        };
-      case 'ML_AI':
-        return {
-          accent: 'rose',
-          ring: 'ring-rose-500/50 border-rose-950',
-          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950/80',
-          iconBg: 'bg-rose-50 text-rose-700 border-rose-200/80',
-          badge: 'bg-rose-500/20 text-rose-200 border-rose-400/30',
-          gradientAccent: 'from-rose-500 via-pink-500 to-rose-600',
-          cardBorder: 'hover:border-rose-300'
-        };
-      case 'DESIGN_PATTERNS':
-        return {
-          accent: 'violet',
-          ring: 'ring-violet-500/50 border-violet-950',
-          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/80',
-          iconBg: 'bg-violet-50 text-violet-700 border-violet-200/80',
-          badge: 'bg-violet-500/20 text-violet-200 border-violet-400/30',
-          gradientAccent: 'from-violet-500 via-fuchsia-500 to-violet-600',
-          cardBorder: 'hover:border-violet-300'
-        };
-      case 'PYTHON':
-        return {
-          accent: 'amber',
-          ring: 'ring-amber-500/50 border-amber-950',
-          activeBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/80',
-          iconBg: 'bg-amber-50 text-amber-700 border-amber-200/80',
-          badge: 'bg-amber-500/20 text-amber-200 border-amber-400/30',
-          gradientAccent: 'from-amber-500 via-yellow-500 to-orange-500',
-          cardBorder: 'hover:border-amber-300'
-        };
-      default:
-        return {
-          accent: 'blue',
-          ring: 'ring-blue-500/50 border-slate-950',
-          activeBg: 'bg-slate-950',
-          iconBg: 'bg-slate-50 text-slate-700 border-slate-200/80',
-          badge: 'bg-white/20 text-white border-white/20',
-          gradientAccent: 'from-blue-600 via-indigo-600 to-purple-600',
-          cardBorder: 'hover:border-slate-300'
-        };
-    }
+  // Chromatic Theme System for Anki Categories (Unified Indigo & Slate Light Palette)
+  const getCategoryTheme = () => {
+    return {
+      accent: 'indigo',
+      ring: 'ring-indigo-500/20 border-indigo-600',
+      activeBg: 'bg-indigo-50/90 border-indigo-600 text-slate-950 ring-2 ring-indigo-500/20 shadow-xs',
+      iconBg: 'bg-slate-100 text-slate-700 border-slate-200/80',
+      badge: 'bg-indigo-600 text-white font-bold',
+      gradientAccent: 'from-indigo-500 to-indigo-600',
+      cardBorder: 'hover:border-indigo-300'
+    };
   };
 
   const getDifficultyBadgeStyle = (difficulty) => {
@@ -372,7 +259,7 @@ export default function JavaAnkiTrainer() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all duration-200">
           <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <Brain className="w-3.5 h-3.5 text-blue-600" />
+            <Brain className="w-3.5 h-3.5 text-indigo-600" />
             Total Carduri Tech
           </div>
           <div className="text-2xl font-black text-slate-950 mt-1.5">
@@ -409,15 +296,15 @@ export default function JavaAnkiTrainer() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-purple-200/80 bg-gradient-to-b from-purple-50/30 to-white shadow-2xs hover:shadow-xs transition-all duration-200">
-          <div className="text-[11px] font-bold text-purple-800 uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-purple-700" />
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 bg-gradient-to-b from-slate-50/50 to-white shadow-2xs hover:shadow-xs transition-all duration-200">
+          <div className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
             De Explorat
           </div>
-          <div className="text-2xl font-black text-purple-950 mt-1.5">
+          <div className="text-2xl font-black text-slate-950 mt-1.5">
             {stats.unstudied}
           </div>
-          <div className="text-[11px] text-purple-800 font-semibold mt-0.5">
+          <div className="text-[11px] text-slate-600 font-semibold mt-0.5">
             Carduri noi de parcurs
           </div>
         </div>
@@ -429,7 +316,7 @@ export default function JavaAnkiTrainer() {
         {/* Header Domenii */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-0.5">
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-blue-600" />
+            <Layers className="w-4 h-4 text-indigo-600" />
             <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
               Alege Domeniul de Studiu ({TECH_ANKI_CATEGORIES.length - 1} Specializari):
             </span>
@@ -444,7 +331,6 @@ export default function JavaAnkiTrainer() {
           {TECH_ANKI_CATEGORIES.map(cat => {
             const isSelected = selectedCategory === cat.id;
             const count = categoryCounts[cat.id] || 0;
-            const theme = getCategoryTheme(cat.id);
             return (
               <button
                 key={cat.id}
@@ -456,21 +342,21 @@ export default function JavaAnkiTrainer() {
                 }}
                 className={`group p-3 rounded-2xl transition-all duration-200 cursor-pointer border text-left flex flex-col justify-between gap-2.5 active:scale-95 ${
                   isSelected
-                    ? `${theme.activeBg} text-white shadow-md ring-2 ${theme.ring} -translate-y-0.5`
-                    : `bg-white hover:bg-slate-50/80 text-slate-900 border-slate-200/90 ${theme.cardBorder} hover:shadow-2xs hover:-translate-y-0.5`
+                    ? 'bg-indigo-50/80 border-indigo-600 text-slate-950 shadow-xs ring-2 ring-indigo-500/20 -translate-y-0.5'
+                    : 'bg-white hover:bg-slate-50/80 text-slate-900 border-slate-200/90 hover:border-indigo-300 hover:shadow-2xs hover:-translate-y-0.5'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
                   <div className={`p-1.5 rounded-xl shrink-0 transition-colors ${
                     isSelected
-                      ? 'bg-white/15 text-white shadow-2xs'
-                      : `${theme.iconBg} shadow-2xs group-hover:scale-105 transition-transform`
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 border border-slate-200/70 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-200/80 shadow-2xs group-hover:scale-105 transition-all'
                   }`}>
                     {renderCategoryIcon(cat.id, "w-3.5 h-3.5")}
                   </div>
                   <span className={`text-[10px] sm:text-[11px] font-black px-2 py-0.5 rounded-full transition-colors ${
                     isSelected
-                      ? `${theme.badge}`
+                      ? 'bg-indigo-600 text-white font-bold'
                       : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
                   }`}>
                     {count}
@@ -478,7 +364,7 @@ export default function JavaAnkiTrainer() {
                 </div>
 
                 <div className={`font-black text-xs leading-snug line-clamp-2 min-h-[30px] flex items-center ${
-                  isSelected ? 'text-white' : 'text-slate-950'
+                  isSelected ? 'text-indigo-950 font-black' : 'text-slate-950 group-hover:text-indigo-950'
                 }`}>
                   {cat.label}
                 </div>
@@ -496,7 +382,7 @@ export default function JavaAnkiTrainer() {
               Dificultate:
             </span>
             {[
-              { id: 'ALL', label: 'Toate', activeColor: 'bg-slate-950 text-white' },
+              { id: 'ALL', label: 'Toate', activeColor: 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20' },
               { id: 'USOR', label: 'Usor', activeColor: 'bg-emerald-600 text-white' },
               { id: 'MEDIU', label: 'Mediu', activeColor: 'bg-amber-600 text-white' },
               { id: 'DIFICIL', label: 'Dificil', activeColor: 'bg-rose-600 text-white' }
@@ -526,7 +412,7 @@ export default function JavaAnkiTrainer() {
               <button
                 onClick={() => setViewStyle('FLASHCARD')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95 ${
-                  viewStyle === 'FLASHCARD' ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5' : 'text-slate-600 hover:text-slate-950'
+                  viewStyle === 'FLASHCARD' ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20' : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
                 Mod Card (Anki)
@@ -534,7 +420,7 @@ export default function JavaAnkiTrainer() {
               <button
                 onClick={() => setViewStyle('CATALOG')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95 ${
-                  viewStyle === 'CATALOG' ? 'bg-white text-slate-950 shadow-xs font-black ring-1 ring-slate-900/5' : 'text-slate-600 hover:text-slate-950'
+                  viewStyle === 'CATALOG' ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20' : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
                 Catalog ({filteredCards.length})
@@ -615,7 +501,7 @@ export default function JavaAnkiTrainer() {
               {/* Progress bar */}
               <div className="w-32 bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/80">
                 <div 
-                  className="bg-blue-600 h-full rounded-full transition-all duration-300"
+                  className="bg-indigo-600 h-full rounded-full transition-all duration-300"
                   style={{ width: `${Math.round(((currentCardIndex + 1) / filteredCards.length) * 100)}%` }}
                 />
               </div>
@@ -912,7 +798,7 @@ export default function JavaAnkiTrainer() {
             <div className="text-center pt-2">
               <button
                 onClick={() => setVisibleCatalogLimit(prev => prev + 20)}
-                className="px-6 py-3 rounded-2xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold transition-all duration-150 inline-flex items-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
+                className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all duration-150 inline-flex items-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
               >
                 <span>Incarca inca 20 de intrebari (Ramase: {filteredCards.length - visibleCatalogLimit})</span>
                 <ChevronDown className="w-4 h-4" />

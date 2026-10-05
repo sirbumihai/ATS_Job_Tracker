@@ -100,147 +100,45 @@ export default function SkillRoadmapPage() {
   // Track icons helper
   const getTrackIcon = (iconKey, sizeClass = "w-4 h-4") => {
     switch (iconKey) {
-      case 'Server': return <Server className={`${sizeClass} text-emerald-600`} />;
-      case 'Layout': return <Layout className={`${sizeClass} text-blue-600`} />;
-      case 'Layers': return <Layers className={`${sizeClass} text-indigo-600`} />;
-      case 'Bug': return <Bug className={`${sizeClass} text-rose-600`} />;
-      case 'Cloud': return <Cloud className={`${sizeClass} text-sky-600`} />;
-      case 'Sparkles': return <Sparkles className={`${sizeClass} text-amber-600`} />;
-      case 'ShieldCheck': return <ShieldCheck className={`${sizeClass} text-red-600`} />;
-      case 'Database': return <Database className={`${sizeClass} text-teal-600`} />;
-      case 'Cpu': return <Cpu className={`${sizeClass} text-purple-600`} />;
-      case 'Smartphone': return <Smartphone className={`${sizeClass} text-pink-600`} />;
-      default: return <Code2 className={`${sizeClass} text-gray-600`} />;
+      case 'Server': return <Server className={sizeClass} />;
+      case 'Layout': return <Layout className={sizeClass} />;
+      case 'Layers': return <Layers className={sizeClass} />;
+      case 'Bug': return <Bug className={sizeClass} />;
+      case 'Cloud': return <Cloud className={sizeClass} />;
+      case 'Sparkles': return <Sparkles className={sizeClass} />;
+      case 'ShieldCheck': return <ShieldCheck className={sizeClass} />;
+      case 'Database': return <Database className={sizeClass} />;
+      case 'Cpu': return <Cpu className={sizeClass} />;
+      case 'Smartphone': return <Smartphone className={sizeClass} />;
+      default: return <Code2 className={sizeClass} />;
     }
   };
 
-  // Chromatic Theme System for each specialization track (Calibrated for Light Theme)
-  const getTrackTheme = (trackId) => {
-    switch (trackId) {
-      case 'BACKEND':
-        return {
-          accent: 'emerald',
-          ring: 'ring-emerald-500/20 border-emerald-600',
-          badge: 'bg-emerald-50 text-emerald-800 border-emerald-200/90',
-          accentBorder: 'border-l-4 border-l-emerald-500',
-          iconBg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-          cardBorder: 'hover:border-emerald-300'
-        };
-      case 'FRONTEND':
-        return {
-          accent: 'blue',
-          ring: 'ring-blue-500/20 border-blue-600',
-          badge: 'bg-blue-50 text-blue-800 border-blue-200/90',
-          accentBorder: 'border-l-4 border-l-blue-500',
-          iconBg: 'bg-blue-50 text-blue-700 border-blue-200/80',
-          cardBorder: 'hover:border-blue-300'
-        };
-      case 'FULLSTACK':
-        return {
-          accent: 'indigo',
-          ring: 'ring-indigo-500/20 border-indigo-600',
-          badge: 'bg-indigo-50 text-indigo-800 border-indigo-200/90',
-          accentBorder: 'border-l-4 border-l-indigo-500',
-          iconBg: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
-          cardBorder: 'hover:border-indigo-300'
-        };
-      case 'QA_AUTOMATION':
-        return {
-          accent: 'rose',
-          ring: 'ring-rose-500/20 border-rose-600',
-          badge: 'bg-rose-50 text-rose-800 border-rose-200/90',
-          accentBorder: 'border-l-4 border-l-rose-500',
-          iconBg: 'bg-rose-50 text-rose-700 border-rose-200/80',
-          cardBorder: 'hover:border-rose-300'
-        };
-      case 'DEVOPS_CLOUD':
-        return {
-          accent: 'sky',
-          ring: 'ring-sky-500/20 border-sky-600',
-          badge: 'bg-sky-50 text-sky-800 border-sky-200/90',
-          accentBorder: 'border-l-4 border-l-sky-500',
-          iconBg: 'bg-sky-50 text-sky-700 border-sky-200/80',
-          cardBorder: 'hover:border-sky-300'
-        };
-      case 'AI_DATA_SCIENCE':
-        return {
-          accent: 'amber',
-          ring: 'ring-amber-500/20 border-amber-600',
-          badge: 'bg-amber-50 text-amber-800 border-amber-200/90',
-          accentBorder: 'border-l-4 border-l-amber-500',
-          iconBg: 'bg-amber-50 text-amber-700 border-amber-200/80',
-          cardBorder: 'hover:border-amber-300'
-        };
-      case 'DATA_ENGINEERING':
-        return {
-          accent: 'teal',
-          ring: 'ring-teal-500/20 border-teal-600',
-          badge: 'bg-teal-50 text-teal-800 border-teal-200/90',
-          accentBorder: 'border-l-4 border-l-teal-500',
-          iconBg: 'bg-teal-50 text-teal-700 border-teal-200/80',
-          cardBorder: 'hover:border-teal-300'
-        };
-      case 'CYBERSECURITY':
-        return {
-          accent: 'red',
-          ring: 'ring-red-500/20 border-red-600',
-          badge: 'bg-red-50 text-red-800 border-red-200/90',
-          accentBorder: 'border-l-4 border-l-red-500',
-          iconBg: 'bg-red-50 text-red-700 border-red-200/80',
-          cardBorder: 'hover:border-red-300'
-        };
-      case 'EMBEDDED':
-        return {
-          accent: 'purple',
-          ring: 'ring-purple-500/20 border-purple-600',
-          badge: 'bg-purple-50 text-purple-800 border-purple-200/90',
-          accentBorder: 'border-l-4 border-l-purple-500',
-          iconBg: 'bg-purple-50 text-purple-700 border-purple-200/80',
-          cardBorder: 'hover:border-purple-300'
-        };
-      case 'MOBILE':
-        return {
-          accent: 'fuchsia',
-          ring: 'ring-fuchsia-500/20 border-fuchsia-600',
-          badge: 'bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200/90',
-          accentBorder: 'border-l-4 border-l-fuchsia-500',
-          iconBg: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200/80',
-          cardBorder: 'hover:border-fuchsia-300'
-        };
-      default:
-        return {
-          accent: 'indigo',
-          ring: 'ring-indigo-500/20 border-indigo-600',
-          badge: 'bg-indigo-50 text-indigo-800 border-indigo-200/90',
-          accentBorder: 'border-l-4 border-l-indigo-500',
-          iconBg: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
-          cardBorder: 'hover:border-indigo-300'
-        };
-    }
+  // Unified Theme System for specialization tracks (Calibrated Light Indigo & Slate)
+  const getTrackTheme = () => {
+    return {
+      accent: 'indigo',
+      ring: 'ring-indigo-500/20 border-indigo-600',
+      badge: 'bg-indigo-50 text-indigo-700 border-indigo-200/90',
+      accentBorder: 'border-l-4 border-l-indigo-600',
+      iconBg: 'bg-slate-100 text-slate-700 border-slate-200/80',
+      cardBorder: 'hover:border-indigo-300'
+    };
   };
 
-  // Badge color helper for resource types
+  // Badge color helper for resource types (Refined Indigo & Slate Palette)
   const getTypeBadgeStyle = (type = '') => {
     const t = type.toUpperCase();
     if (t.includes('BANCA') || t.includes('INTREBARI')) {
-      return 'bg-purple-100 text-purple-800 border-purple-200';
-    }
-    if (t.includes('CURS')) {
-      return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-    }
-    if (t.includes('ALGORITMI') || t.includes('CODING')) {
-      return 'bg-amber-100 text-amber-900 border-amber-200';
-    }
-    if (t.includes('REPO') || t.includes('GITHUB')) {
-      return 'bg-sky-100 text-sky-800 border-sky-200';
+      return 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
     }
     if (t.includes('SYSTEM DESIGN') || t.includes('ARHITECTURA')) {
-      return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+      return 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
     }
-    if (t.includes('MOCK') || t.includes('PRACTICA')) {
-      return 'bg-rose-100 text-rose-800 border-rose-200';
+    if (t.includes('ALGORITMI') || t.includes('CODING') || t.includes('REPO') || t.includes('GITHUB')) {
+      return 'bg-slate-100 text-slate-800 border-slate-200/80 font-mono';
     }
-    return 'bg-gray-100 text-gray-800 border-gray-200';
+    return 'bg-slate-100 text-slate-700 border-slate-200/80';
   };
 
   // Compile combined resources for current track
@@ -275,7 +173,7 @@ export default function SkillRoadmapPage() {
       
       {/* TOAST NOTIFICATION */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-black text-white px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-top-2">
+        <div className="fixed top-20 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl border border-slate-700/60 flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-top-2">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
@@ -286,8 +184,8 @@ export default function SkillRoadmapPage() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200/90 flex items-center gap-2">
-                <GraduationCap className="w-3.5 h-3.5 text-slate-900" />
+              <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200/90 flex items-center gap-2">
+                <GraduationCap className="w-3.5 h-3.5 text-indigo-600" />
                 <span>Playbook Interviuri & Roadmap IT 2026</span>
               </span>
               <span className="h-3 w-px bg-slate-300 mx-1 hidden sm:inline" />
@@ -308,11 +206,11 @@ export default function SkillRoadmapPage() {
                 onClick={() => setViewMode('TECH_TRACKS')}
                 className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
                   viewMode === 'TECH_TRACKS'
-                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
+                    ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
-                <Code2 className={`w-4 h-4 ${viewMode === 'TECH_TRACKS' ? 'text-purple-400' : 'text-slate-500'}`} />
+                <Code2 className={`w-4 h-4 ${viewMode === 'TECH_TRACKS' ? 'text-white' : 'text-slate-500'}`} />
                 <span>Ghid Tehnic pe Roluri</span>
               </button>
 
@@ -320,11 +218,11 @@ export default function SkillRoadmapPage() {
                 onClick={() => setViewMode('HR_SCREENING')}
                 className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
                   viewMode === 'HR_SCREENING'
-                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
+                    ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
-                <Users className={`w-4 h-4 ${viewMode === 'HR_SCREENING' ? 'text-amber-400' : 'text-slate-500'}`} />
+                <Users className={`w-4 h-4 ${viewMode === 'HR_SCREENING' ? 'text-white' : 'text-slate-500'}`} />
                 <span>Interviu HR & Screening</span>
               </button>
 
@@ -332,11 +230,11 @@ export default function SkillRoadmapPage() {
                 onClick={() => setViewMode('ANKI_JAVA')}
                 className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-95 ${
                   viewMode === 'ANKI_JAVA'
-                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
+                    ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
-                <Brain className={`w-4 h-4 ${viewMode === 'ANKI_JAVA' ? 'text-blue-400' : 'text-slate-500'}`} />
+                <Brain className={`w-4 h-4 ${viewMode === 'ANKI_JAVA' ? 'text-white' : 'text-slate-500'}`} />
                 <span>Anki Flashcards (11 Domenii)</span>
               </button>
             </div>
@@ -349,7 +247,7 @@ export default function SkillRoadmapPage() {
                 <div className="text-xl font-black text-slate-950">10</div>
                 <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Roluri Tehnice</div>
               </div>
-              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-purple-600 shadow-2xs">
+              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-indigo-600 shadow-2xs">
                 <Code2 className="w-4 h-4" />
               </div>
             </div>
@@ -359,7 +257,7 @@ export default function SkillRoadmapPage() {
                 <div className="text-xl font-black text-slate-950">1380</div>
                 <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Carduri Anki</div>
               </div>
-              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-blue-600 shadow-2xs">
+              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-indigo-600 shadow-2xs">
                 <Brain className="w-4 h-4" />
               </div>
             </div>
@@ -369,7 +267,7 @@ export default function SkillRoadmapPage() {
                 <div className="text-xl font-black text-slate-950">100%</div>
                 <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Gratuit & Open</div>
               </div>
-              <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-2xs">
+              <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200/80 text-indigo-600 shadow-2xs">
                 <Check className="w-4 h-4" />
               </div>
             </div>
@@ -381,7 +279,7 @@ export default function SkillRoadmapPage() {
           <div className="mt-8 pt-6 border-t border-slate-100 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Code2 className="w-4 h-4 text-purple-600" />
+                <Code2 className="w-4 h-4 text-indigo-600" />
                 <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
                   Alege Specializarea ({JOB_TRACKS.length} Roluri Tehnice):
                 </span>
@@ -399,7 +297,7 @@ export default function SkillRoadmapPage() {
                   placeholder="Cauta rol (ex: Backend, QA, Cloud)..."
                   value={trackSearchQuery}
                   onChange={e => setTrackSearchQuery(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 focus:bg-white transition"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 focus:bg-white transition"
                 />
                 {trackSearchQuery && (
                   <button 
@@ -417,7 +315,6 @@ export default function SkillRoadmapPage() {
               {filteredTracks.map((track) => {
                 const isSelected = selectedTrackId === track.id;
                 const resourceTotal = (track.freeLearnResources?.length || 0) + (track.interviewPrepResources?.length || 0);
-                const theme = getTrackTheme(track.id);
                 return (
                   <button
                     key={track.id}
@@ -427,21 +324,21 @@ export default function SkillRoadmapPage() {
                     }}
                     className={`group p-3.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 active:scale-98 ${
                       isSelected
-                        ? `bg-slate-950 text-white shadow-md ring-2 ring-slate-900/10 -translate-y-0.5`
-                        : `bg-white hover:bg-slate-50/90 text-slate-900 border-slate-200/90 ${theme.cardBorder} hover:shadow-2xs hover:-translate-y-0.5`
+                        ? `bg-indigo-50/80 border-indigo-600 text-slate-950 shadow-xs ring-2 ring-indigo-500/20 -translate-y-0.5`
+                        : `bg-white hover:bg-slate-50/90 text-slate-900 border-slate-200/90 hover:border-indigo-300 hover:shadow-2xs hover:-translate-y-0.5`
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className={`p-2 rounded-xl shrink-0 transition-colors ${
                         isSelected 
-                          ? 'bg-white/15 text-white shadow-2xs' 
-                          : `${theme.iconBg} shadow-2xs group-hover:scale-105 transition-transform`
+                          ? 'bg-indigo-600 text-white shadow-xs' 
+                          : 'bg-slate-100 text-slate-700 border border-slate-200/70 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-200/80 shadow-2xs group-hover:scale-105 transition-all'
                       }`}>
                         {getTrackIcon(track.iconKey, "w-4 h-4")}
                       </div>
                       <span className={`text-[10px] font-black px-2 py-0.5 rounded-full transition-colors ${
                         isSelected
-                          ? 'bg-white/20 text-white'
+                          ? 'bg-indigo-600 text-white font-bold'
                           : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
                       }`}>
                         {isSelected ? 'Activ' : `${resourceTotal} ghiduri`}
@@ -450,13 +347,13 @@ export default function SkillRoadmapPage() {
 
                     <div className="space-y-0.5">
                       <div className={`text-xs sm:text-sm font-black tracking-tight leading-snug line-clamp-1 ${
-                        isSelected ? 'text-white' : 'text-slate-950'
+                        isSelected ? 'text-indigo-950 font-black' : 'text-slate-950 group-hover:text-indigo-950'
                       }`}>
                         {track.shortTitle}
                       </div>
                       {track.badge && (
                         <div className={`text-[10px] font-bold leading-tight line-clamp-1 ${
-                          isSelected ? 'text-slate-300' : 'text-slate-500'
+                          isSelected ? 'text-indigo-700' : 'text-slate-500'
                         }`}>
                           {track.badge}
                         </div>
@@ -484,12 +381,12 @@ export default function SkillRoadmapPage() {
           
           {/* TRACK HERO BANNER (ASYMMETRIC SPLIT - LIGHT THEME) */}
           {(() => {
-            const activeTheme = getTrackTheme(selectedTrack.id);
+            const activeTheme = getTrackTheme();
             return (
               <div className={`bg-white text-slate-950 p-6 sm:p-8 rounded-3xl shadow-2xs border border-slate-200/90 ${activeTheme.accentBorder} flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden`}>
                 <div className="space-y-3 max-w-2xl">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <div className="p-2.5 rounded-xl bg-slate-100 text-slate-900 shrink-0 border border-slate-200 shadow-2xs">
+                    <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-700 shrink-0 border border-indigo-200/80 shadow-2xs">
                       {getTrackIcon(selectedTrack.iconKey, "w-5 h-5")}
                     </div>
                     <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
@@ -504,7 +401,7 @@ export default function SkillRoadmapPage() {
                   </p>
                   <div className="text-xs text-slate-500 flex items-center gap-2 font-medium">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="text-emerald-700 font-semibold">{selectedTrack.marketDemand}</span>
+                    <span className="text-slate-700 font-semibold">{selectedTrack.marketDemand}</span>
                   </div>
                 </div>
 
@@ -536,11 +433,11 @@ export default function SkillRoadmapPage() {
                 onClick={() => setActiveTab('ALL')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                   activeTab === 'ALL'
-                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
+                    ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
-                <Compass className="w-3.5 h-3.5 text-purple-600" />
+                <Compass className={`w-3.5 h-3.5 ${activeTab === 'ALL' ? 'text-white' : 'text-slate-500'}`} />
                 <span>Toate Resursele ({totalCount})</span>
               </button>
 
@@ -548,11 +445,11 @@ export default function SkillRoadmapPage() {
                 onClick={() => setActiveTab('INTERVIEW')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                   activeTab === 'INTERVIEW'
-                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
+                    ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
-                <Briefcase className="w-3.5 h-3.5 text-emerald-600" />
+                <Briefcase className={`w-3.5 h-3.5 ${activeTab === 'INTERVIEW' ? 'text-white' : 'text-slate-500'}`} />
                 <span>Pregatire Interviu ({interviewCount})</span>
               </button>
 
@@ -560,11 +457,11 @@ export default function SkillRoadmapPage() {
                 onClick={() => setActiveTab('LEARN')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                   activeTab === 'LEARN'
-                    ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
+                    ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                 }`}
               >
-                <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+                <BookOpen className={`w-3.5 h-3.5 ${activeTab === 'LEARN' ? 'text-white' : 'text-slate-500'}`} />
                 <span>Unde Inveti Gratuit ({learnCount})</span>
               </button>
             </div>
@@ -577,7 +474,7 @@ export default function SkillRoadmapPage() {
                 placeholder="Filtreaza resurse (ex: GitHub, Q&A, LeetCode)..."
                 value={resourceSearchQuery}
                 onChange={e => setResourceSearchQuery(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 shadow-2xs transition"
+                className="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 shadow-2xs transition"
               />
               {resourceSearchQuery && (
                 <button
@@ -594,7 +491,7 @@ export default function SkillRoadmapPage() {
           <div className="bg-white text-slate-950 rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-500" />
+                <Sparkles className="w-4 h-4 text-indigo-600" />
                 <h3 className="text-xs font-black tracking-wider uppercase text-slate-950">
                   Metodologie de Pregatire pentru Interviu
                 </h3>
@@ -603,32 +500,32 @@ export default function SkillRoadmapPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs text-slate-600">
-              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-2">
+              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2 hover:border-slate-300 transition-colors">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-amber-200/80 text-amber-900 text-[11px] font-black flex items-center justify-center">1</span>
+                  <span className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 text-[11px] font-black flex items-center justify-center">1</span>
                   <span className="font-bold text-slate-950 text-xs">Fundamente & Concepte</span>
                 </div>
-                <p className="text-slate-700 text-[11.5px] leading-relaxed font-sans">
+                <p className="text-slate-600 text-[11.5px] leading-relaxed font-sans">
                   Documentatii oficiale si cursuri open-source pentru a intelege mecanismele interne ale tehnologiilor, fara tutorial hell.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-2">
+              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2 hover:border-slate-300 transition-colors">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-emerald-200/80 text-emerald-900 text-[11px] font-black flex items-center justify-center">2</span>
+                  <span className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 text-[11px] font-black flex items-center justify-center">2</span>
                   <span className="font-bold text-slate-950 text-xs">Argumentare Orala (60-90s)</span>
                 </div>
-                <p className="text-slate-700 text-[11.5px] leading-relaxed font-sans">
+                <p className="text-slate-600 text-[11.5px] leading-relaxed font-sans">
                   Formuleaza raspunsul tehnic cu voce tare, structurat pe definitie, mecanism intern, trade-off-uri si exemple din productie.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-sky-50/60 border border-sky-200/80 space-y-2">
+              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2 hover:border-slate-300 transition-colors">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-sky-200/80 text-sky-900 text-[11px] font-black flex items-center justify-center">3</span>
+                  <span className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 text-[11px] font-black flex items-center justify-center">3</span>
                   <span className="font-bold text-slate-950 text-xs">Simulari Practice & Coding</span>
                 </div>
-                <p className="text-slate-700 text-[11.5px] leading-relaxed font-sans">
+                <p className="text-slate-600 text-[11.5px] leading-relaxed font-sans">
                   Rezolva probleme pe NeetCode si repozitorii GitHub explicand deciziile inainte de a scrie codul, intocmai ca la interviu.
                 </p>
               </div>
@@ -642,7 +539,7 @@ export default function SkillRoadmapPage() {
                 key={idx} 
                 className={`p-5 sm:p-6 rounded-3xl border transition-all duration-200 flex flex-col justify-between space-y-4 group ${
                   res.isTopPick 
-                    ? 'border-purple-200/90 bg-gradient-to-b from-purple-50/40 via-white to-white hover:border-purple-300 hover:shadow-md' 
+                    ? 'border-indigo-200/90 bg-gradient-to-b from-indigo-50/30 via-white to-white hover:border-indigo-300 hover:shadow-md' 
                     : 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/40 shadow-2xs hover:shadow-sm'
                 }`}
               >
@@ -658,14 +555,14 @@ export default function SkillRoadmapPage() {
                     </div>
 
                     {res.isTopPick && (
-                      <span className="text-[9px] font-black uppercase tracking-wider bg-purple-600 text-white px-2.5 py-0.5 rounded-full shadow-2xs flex items-center gap-1">
+                      <span className="text-[9px] font-black uppercase tracking-wider bg-indigo-600 text-white px-2.5 py-0.5 rounded-full shadow-2xs flex items-center gap-1">
                         <Sparkles className="w-2.5 h-2.5" />
                         Recomandat
                       </span>
                     )}
                   </div>
 
-                  <h3 className="text-sm sm:text-base font-black text-slate-950 group-hover:text-purple-600 transition-colors leading-snug">
+                  <h3 className="text-sm sm:text-base font-black text-slate-950 group-hover:text-indigo-600 transition-colors leading-snug">
                     {res.title}
                   </h3>
 
@@ -679,7 +576,7 @@ export default function SkillRoadmapPage() {
                     href={res.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-950 hover:bg-slate-800 text-white transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
+                    className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
                   >
                     <span>Acceseaza Gratuit</span>
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -722,8 +619,8 @@ export default function SkillRoadmapPage() {
           {/* HR HERO BANNER (ASYMMETRIC SPLIT - LIGHT THEME) */}
           <div className="bg-white text-slate-950 p-6 sm:p-8 rounded-3xl shadow-2xs border border-slate-200/90 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 shrink-0 shadow-2xs">
-                <Users className="w-5 h-5" />
+              <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 shrink-0 shadow-2xs">
+                <Users className="w-5 h-5 text-indigo-600" />
               </div>
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
@@ -737,15 +634,15 @@ export default function SkillRoadmapPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs text-slate-700 font-sans">
               <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5">
-                <span className="text-[10px] font-bold uppercase text-amber-700 block tracking-wider">Obiectivul Recruiterului</span>
+                <span className="text-[10px] font-bold uppercase text-indigo-700 block tracking-wider">Obiectivul Recruiterului</span>
                 <p className="text-slate-600 leading-relaxed text-[11.5px]">Evalueaza compatibilitatea cu echipa, capacitatea de comunicare si motivatia reala pentru rol.</p>
               </div>
               <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5">
-                <span className="text-[10px] font-bold uppercase text-emerald-700 block tracking-wider">Rata de Trecere</span>
+                <span className="text-[10px] font-bold uppercase text-indigo-700 block tracking-wider">Rata de Trecere</span>
                 <p className="text-slate-600 leading-relaxed text-[11.5px]">Peste 65% din candidati sunt descalificati la HR din cauza raspunsurilor vagi sau nepregatite.</p>
               </div>
               <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl space-y-1.5">
-                <span className="text-[10px] font-bold uppercase text-sky-700 block tracking-wider">Cheia Succesului</span>
+                <span className="text-[10px] font-bold uppercase text-indigo-700 block tracking-wider">Cheia Succesului</span>
                 <p className="text-slate-600 leading-relaxed text-[11.5px]">Pitch concis de 90 de secunde, exemple structurate STAR si fluenta la conversatia in engleza.</p>
               </div>
             </div>
@@ -769,11 +666,11 @@ export default function SkillRoadmapPage() {
                   onClick={() => setHrSubTab(tab.id)}
                   className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 shrink-0 cursor-pointer active:scale-95 ${
                     isActive
-                      ? 'bg-slate-950 text-white shadow-xs font-black ring-1 ring-slate-900/5'
+                      ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
                       : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-amber-400' : 'text-slate-500'}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-500'}`} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -785,7 +682,7 @@ export default function SkillRoadmapPage() {
             <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-5">
               <div className="border-b border-slate-100 pb-3.5">
                 <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-amber-600" />
+                  <Briefcase className="w-4 h-4 text-indigo-600" />
                   Structura Cronologica a Apelului de HR (30 de Minute)
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -798,7 +695,7 @@ export default function SkillRoadmapPage() {
                   <div key={idx} className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-slate-300 hover:shadow-2xs transition-all duration-150 flex flex-col justify-between space-y-3">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md">
                           {phase.time}
                         </span>
                         <span className="text-[11px] font-bold text-slate-400">Pas {idx + 1}</span>
@@ -811,8 +708,8 @@ export default function SkillRoadmapPage() {
                       </p>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-950 font-sans space-y-0.5">
-                      <strong className="text-amber-800 font-bold block">Recomandare:</strong>
+                    <div className="p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-700 font-sans space-y-0.5">
+                      <strong className="text-indigo-700 font-bold block">Recomandare:</strong>
                       <span>{phase.proTip}</span>
                     </div>
                   </div>
@@ -830,7 +727,7 @@ export default function SkillRoadmapPage() {
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
                   <div>
                     <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-purple-600" />
+                      <Sparkles className="w-4 h-4 text-indigo-600" />
                       {HR_INTERVIEW_DATA.pitchFormula.title}
                     </h3>
                     <p className="text-[11px] text-slate-500 mt-0.5">
@@ -860,7 +757,7 @@ export default function SkillRoadmapPage() {
                     </span>
                     <button
                       onClick={() => handleCopyText(HR_INTERVIEW_DATA.pitchFormula.sampleScript, 'Script Pitch 90s')}
-                      className="text-xs font-bold text-slate-700 hover:text-slate-950 flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs active:scale-95 transition"
+                      className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs active:scale-95 transition"
                     >
                       <Copy className="w-3.5 h-3.5" />
                       <span>Copiaza Script</span>
@@ -876,7 +773,7 @@ export default function SkillRoadmapPage() {
               <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-4">
                 <div className="border-b border-slate-100 pb-3.5">
                   <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                    <CheckCheck className="w-4 h-4 text-emerald-600" />
+                    <CheckCheck className="w-4 h-4 text-indigo-600" />
                     {HR_INTERVIEW_DATA.starMethod.title}
                   </h3>
                   <p className="text-[11px] text-slate-500 mt-0.5">
@@ -888,7 +785,7 @@ export default function SkillRoadmapPage() {
                   {HR_INTERVIEW_DATA.starMethod.components.map((c, idx) => (
                     <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-md bg-emerald-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                        <span className="w-5 h-5 rounded-md bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
                           {c.letter}
                         </span>
                         <span className="text-xs font-bold text-slate-900">{c.name}</span>
@@ -947,7 +844,7 @@ export default function SkillRoadmapPage() {
                         className="w-full text-left p-4 sm:p-4.5 bg-slate-50/70 hover:bg-slate-100/70 flex items-center justify-between gap-3 cursor-pointer transition-colors duration-150"
                       >
                         <div className="space-y-0.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md inline-block">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md inline-block">
                             {item.category}
                           </span>
                           <h4 className="text-xs sm:text-sm font-extrabold text-slate-950">
@@ -997,7 +894,7 @@ export default function SkillRoadmapPage() {
               <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-4">
                 <div className="border-b border-slate-100 pb-3.5">
                   <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-sky-600" />
+                    <Globe className="w-4 h-4 text-indigo-600" />
                     {HR_INTERVIEW_DATA.englishCheck.title}
                   </h3>
                   <p className="text-[11px] text-slate-500 mt-0.5">
@@ -1005,8 +902,8 @@ export default function SkillRoadmapPage() {
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-sky-50 border border-sky-200/90 text-xs text-sky-950 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-sky-800 block">Fraza tipica a recruiterului:</span>
+                <div className="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200/80 text-xs text-indigo-950 space-y-1">
+                  <span className="text-[10px] font-black uppercase text-indigo-800 block">Fraza tipica a recruiterului:</span>
                   <p className="italic font-sans">{HR_INTERVIEW_DATA.englishCheck.triggerPhrase}</p>
                 </div>
 
@@ -1024,7 +921,7 @@ export default function SkillRoadmapPage() {
               <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-4">
                 <div className="border-b border-slate-100 pb-3.5">
                   <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4 text-amber-600" />
+                    <Lightbulb className="w-4 h-4 text-indigo-600" />
                     Intrebari Inteligente pe care sa le Pui TU la Final
                   </h3>
                   <p className="text-[11px] text-slate-500 mt-0.5">
@@ -1052,7 +949,7 @@ export default function SkillRoadmapPage() {
             <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs space-y-5">
               <div className="border-b border-slate-100 pb-3.5">
                 <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-purple-600" />
+                  <BookOpen className="w-4 h-4 text-indigo-600" />
                   Resurse & Ghiduri Gratuite pentru Interviul Comportamental
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -1068,7 +965,7 @@ export default function SkillRoadmapPage() {
                         <span className="text-[10px] font-black uppercase text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-md">
                           {res.platform}
                         </span>
-                        <span className="text-[9px] font-black uppercase text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-md">
+                        <span className="text-[9px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-md">
                           {res.type}
                         </span>
                       </div>
@@ -1080,7 +977,7 @@ export default function SkillRoadmapPage() {
                       href={res.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-950 hover:bg-slate-800 text-white transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
+                      className="py-2.5 px-4 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
                     >
                       <span>Deschide Resursa</span>
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -1109,8 +1006,8 @@ export default function SkillRoadmapPage() {
       {viewMode !== 'ANKI_JAVA' && (
         <div className="bg-white text-slate-950 rounded-3xl p-8 sm:p-10 border border-slate-200/90 shadow-2xs text-center space-y-5 relative overflow-hidden mt-8">
           <div className="max-w-2xl mx-auto space-y-2.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200/80">
-              <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-bold border border-indigo-200/80">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
               <span>Pregatire Zilnica Structurata</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
@@ -1127,7 +1024,7 @@ export default function SkillRoadmapPage() {
                 setViewMode('ANKI_JAVA');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-black bg-slate-950 text-white hover:bg-slate-800 shadow-xs transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
               <span>Incepe Antrenamentul de Astazi</span>
               <ArrowRight className="w-3.5 h-3.5" />
