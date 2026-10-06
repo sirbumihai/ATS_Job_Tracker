@@ -10,6 +10,7 @@ import GithubReadmeStudio from './components/GithubReadmeStudio';
 import MarketInsightsPage from './components/MarketInsightsPage';
 import LinkedInOptimizerPage from './components/LinkedInOptimizerPage';
 import SkillRoadmapPage from './components/SkillRoadmapPage';
+import HeroShowcaseStudio from './components/HeroShowcaseStudio';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
 import { Plus, Upload } from 'lucide-react';
 
@@ -58,6 +59,11 @@ const TAB_METADATA = {
     title: 'Roadmap & Pregatire Interviuri',
     subtitle: 'Resurse Gratuite & Banci de Intrebari Tehnice',
     category: 'Educatie'
+  },
+  hero_showcase: {
+    title: 'Hero Design Studio',
+    subtitle: '10 Concepte Interactive (/design-taste-frontend vs /impeccable)',
+    category: 'Design System'
   }
 };
 
@@ -65,6 +71,7 @@ export default function App() {
   const getInitialTab = () => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
+      if (path.startsWith('/hero') || path.startsWith('/hero-studio') || path.startsWith('/hero-showcase')) return 'hero_showcase';
       if (path.startsWith('/roadmap') || path.startsWith('/skill-roadmap')) return 'skill_roadmap';
       if (path.startsWith('/linkedin') || path.startsWith('/linkedin-optimizer')) return 'linkedin_optimizer';
       if (path.startsWith('/job-search') || path.startsWith('/jobs')) return 'job_search';
@@ -75,6 +82,7 @@ export default function App() {
       if (path.startsWith('/github-readme') || path.startsWith('/github_readme') || path.startsWith('/readme')) return 'github_readme';
       if (path.startsWith('/tracker') || path.startsWith('/kanban')) return 'tracker';
       const hash = window.location.hash.toLowerCase();
+      if (hash.includes('hero')) return 'hero_showcase';
       if (hash.includes('roadmap')) return 'skill_roadmap';
       if (hash.includes('linkedin')) return 'linkedin_optimizer';
       if (hash.includes('job-search') || hash.includes('jobs')) return 'job_search';
@@ -85,7 +93,7 @@ export default function App() {
       if (hash.includes('github-readme') || hash.includes('github_readme') || hash.includes('readme')) return 'github_readme';
       if (hash.includes('tracker') || hash.includes('kanban')) return 'tracker';
       const stored = localStorage.getItem('ats_active_tab');
-      if (stored === 'skill_roadmap' || stored === 'linkedin_optimizer' || stored === 'job_search' || stored === 'market_insights' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
+      if (stored === 'hero_showcase' || stored === 'skill_roadmap' || stored === 'linkedin_optimizer' || stored === 'job_search' || stored === 'market_insights' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
       if (stored === 'kanban') return 'tracker';
     }
     return 'tracker';
@@ -104,6 +112,7 @@ export default function App() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('ats_active_tab', tab);
       let targetPath = '/tracker';
+      if (tab === 'hero_showcase') targetPath = '/hero-studio';
       if (tab === 'skill_roadmap') targetPath = '/roadmap';
       if (tab === 'linkedin_optimizer') targetPath = '/linkedin-optimizer';
       if (tab === 'job_search') targetPath = '/job-search';
@@ -585,6 +594,15 @@ export default function App() {
           <SkillRoadmapPage 
             currentUser={currentUser}
             onNavigateToCvLibrary={() => handleTabChange('cv_library')}
+          />
+        )}
+
+        {/* TAB 9: HERO DESIGN STUDIO (10 STILURI INTERACTIVE) */}
+        {activeTab === 'hero_showcase' && (
+          <HeroShowcaseStudio 
+            onNavigateTab={handleTabChange}
+            onOpenUpload={() => setShowUploadResumeModal(true)}
+            onOpenAddJob={() => setShowAddJobModal(true)}
           />
         )}
 

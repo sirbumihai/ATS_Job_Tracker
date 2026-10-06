@@ -84,6 +84,16 @@ const NAV_SECTIONS = [
         icon: GraduationCap
       }
     ]
+  },
+  {
+    title: 'DESIGN & HERO STUDIO',
+    items: [
+      {
+        id: 'hero_showcase',
+        label: 'Hero Studio (10)',
+        icon: Sparkles
+      }
+    ]
   }
 ];
 
