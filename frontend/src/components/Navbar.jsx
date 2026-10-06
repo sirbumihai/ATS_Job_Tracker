@@ -21,7 +21,8 @@ import {
   ChevronRight,
   Sparkles,
   Zap,
-  ExternalLink
+  ExternalLink,
+  MessageSquare
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -82,6 +83,11 @@ const NAV_SECTIONS = [
         id: 'skill_roadmap',
         label: 'Skill Roadmaps',
         icon: GraduationCap
+      },
+      {
+        id: 'feedback',
+        label: 'Feedback & Sugestii',
+        icon: MessageSquare
       }
     ]
   }

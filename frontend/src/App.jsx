@@ -11,6 +11,7 @@ import MarketInsightsPage from './components/MarketInsightsPage';
 import LinkedInOptimizerPage from './components/LinkedInOptimizerPage';
 import SkillRoadmapPage from './components/SkillRoadmapPage';
 import LandingPage from './components/LandingPage';
+import FeedbackPage from './components/FeedbackPage';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
 import { Plus, Upload } from 'lucide-react';
 
@@ -64,6 +65,11 @@ const TAB_METADATA = {
     title: 'Prezentare Platforma',
     subtitle: 'Sistem de Accelerare in Cariera & Pregatire Interviuri',
     category: 'JobFlow AI'
+  },
+  feedback: {
+    title: 'Feedback & Roadmap',
+    subtitle: 'Vocea Candidatilor & Sugestii de Imbunatatire',
+    category: 'Comunitate'
   }
 };
 
@@ -83,6 +89,7 @@ export default function App() {
       if (path.startsWith('/cv-studio') || path.startsWith('/cv_studio')) return 'cv_studio';
       if (path.startsWith('/cover-letter') || path.startsWith('/cover_letter')) return 'cover_letter';
       if (path.startsWith('/github-readme') || path.startsWith('/github_readme') || path.startsWith('/readme')) return 'github_readme';
+      if (path.startsWith('/feedback') || path.startsWith('/sugestii')) return 'feedback';
 
       const hash = window.location.hash.toLowerCase();
       if (hash.includes('tracker') || hash.includes('kanban')) return 'tracker';
@@ -94,10 +101,11 @@ export default function App() {
       if (hash.includes('cv-studio') || hash.includes('cv_studio')) return 'cv_studio';
       if (hash.includes('cover-letter') || hash.includes('cover_letter')) return 'cover_letter';
       if (hash.includes('github-readme') || hash.includes('github_readme') || hash.includes('readme')) return 'github_readme';
+      if (hash.includes('feedback')) return 'feedback';
 
       const stored = localStorage.getItem('ats_active_tab');
       if (stored === 'hero_showcase') return 'landing';
-      if (stored === 'landing' || stored === 'skill_roadmap' || stored === 'linkedin_optimizer' || stored === 'job_search' || stored === 'market_insights' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
+      if (stored === 'landing' || stored === 'feedback' || stored === 'skill_roadmap' || stored === 'linkedin_optimizer' || stored === 'job_search' || stored === 'market_insights' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
       if (stored === 'kanban') return 'tracker';
     }
     return 'landing';
@@ -126,6 +134,7 @@ export default function App() {
       else if (tab === 'cv_studio') targetPath = '/cv-studio';
       else if (tab === 'cover_letter') targetPath = '/cover-letter';
       else if (tab === 'github_readme') targetPath = '/github-readme';
+      else if (tab === 'feedback') targetPath = '/feedback';
       
       if (window.location.pathname !== targetPath) {
         window.history.pushState({ tab }, '', targetPath);
@@ -188,6 +197,9 @@ export default function App() {
       } else if (path.startsWith('/github-readme') || path.startsWith('/github_readme') || path.startsWith('/readme')) {
         setActiveTab('github_readme');
         localStorage.setItem('ats_active_tab', 'github_readme');
+      } else if (path.startsWith('/feedback') || path.startsWith('/sugestii')) {
+        setActiveTab('feedback');
+        localStorage.setItem('ats_active_tab', 'feedback');
       } else {
         setActiveTab('landing');
         localStorage.setItem('ats_active_tab', 'landing');
@@ -442,11 +454,11 @@ export default function App() {
 
   return (
     <div className={`min-h-screen text-slate-900 font-sans selection:bg-indigo-600 selection:text-white ${
-      activeTab === 'landing' ? 'bg-white' : 'bg-[#f8fafc] flex flex-col lg:flex-row'
+      (activeTab === 'landing' || activeTab === 'feedback') ? 'bg-white' : 'bg-[#f8fafc] flex flex-col lg:flex-row'
     }`}>
       
       {/* SIDEBAR NAVIGATION (Desktop Sidebar + Mobile Header/Drawer) */}
-      {activeTab !== 'landing' && (
+      {activeTab !== 'landing' && activeTab !== 'feedback' && (
         <Navbar 
           activeTab={activeTab}
           setActiveTab={handleTabChange}
@@ -457,10 +469,10 @@ export default function App() {
       )}
 
       {/* CONTINUT PRINCIPAL */}
-      <div className={`flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden ${activeTab === 'landing' ? 'bg-white w-full' : 'bg-[#f8fafc]'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden ${(activeTab === 'landing' || activeTab === 'feedback') ? 'bg-white w-full' : 'bg-[#f8fafc]'}`}>
         
         {/* DESKTOP TOP BAR CU TITLU PAGINA SI BREADCRUMB */}
-        {activeTab !== 'landing' && (
+        {activeTab !== 'landing' && activeTab !== 'feedback' && (
           <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3 bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 shadow-2xs">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs">
@@ -629,10 +641,18 @@ export default function App() {
           />
         )}
 
+        {/* TAB 10: FEEDBACK & COMMUNITY ROADMAP */}
+        {activeTab === 'feedback' && (
+          <FeedbackPage 
+            onNavigateTab={handleTabChange}
+            currentUser={currentUser}
+          />
+        )}
+
         </main>
 
         {/* FOOTER */}
-        {activeTab !== 'landing' && (
+        {activeTab !== 'landing' && activeTab !== 'feedback' && (
           <footer className="border-t border-slate-200/80 bg-white py-4 px-6 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
