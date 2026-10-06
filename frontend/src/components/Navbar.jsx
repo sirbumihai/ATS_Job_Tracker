@@ -90,7 +90,7 @@ const NAV_SECTIONS = [
     items: [
       {
         id: 'hero_showcase',
-        label: 'Hero Studio (10)',
+        label: 'Hero Studio (8)',
         icon: Sparkles
       }
     ]
