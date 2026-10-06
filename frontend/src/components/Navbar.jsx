@@ -84,16 +84,6 @@ const NAV_SECTIONS = [
         icon: GraduationCap
       }
     ]
-  },
-  {
-    title: 'PREZENTARE & ACASA',
-    items: [
-      {
-        id: 'landing',
-        label: 'Prezentare Platforma',
-        icon: Sparkles
-      }
-    ]
   }
 ];
 

@@ -71,7 +71,10 @@ export default function App() {
   const getInitialTab = () => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
-      if (path.startsWith('/landing') || path.startsWith('/hero') || path.startsWith('/prezentare') || path.startsWith('/acasa')) return 'landing';
+      // Root "/" or empty or "/landing" is the default landing page
+      if (path === '/' || path === '' || path === '/landing' || path === '/home' || path === '/index.html') return 'landing';
+
+      if (path.startsWith('/tracker') || path.startsWith('/kanban')) return 'tracker';
       if (path.startsWith('/roadmap') || path.startsWith('/skill-roadmap')) return 'skill_roadmap';
       if (path.startsWith('/linkedin') || path.startsWith('/linkedin-optimizer')) return 'linkedin_optimizer';
       if (path.startsWith('/job-search') || path.startsWith('/jobs')) return 'job_search';
@@ -80,9 +83,9 @@ export default function App() {
       if (path.startsWith('/cv-studio') || path.startsWith('/cv_studio')) return 'cv_studio';
       if (path.startsWith('/cover-letter') || path.startsWith('/cover_letter')) return 'cover_letter';
       if (path.startsWith('/github-readme') || path.startsWith('/github_readme') || path.startsWith('/readme')) return 'github_readme';
-      if (path.startsWith('/tracker') || path.startsWith('/kanban')) return 'tracker';
+
       const hash = window.location.hash.toLowerCase();
-      if (hash.includes('landing') || hash.includes('hero') || hash.includes('prezentare')) return 'landing';
+      if (hash.includes('tracker') || hash.includes('kanban')) return 'tracker';
       if (hash.includes('roadmap')) return 'skill_roadmap';
       if (hash.includes('linkedin')) return 'linkedin_optimizer';
       if (hash.includes('job-search') || hash.includes('jobs')) return 'job_search';
@@ -91,13 +94,13 @@ export default function App() {
       if (hash.includes('cv-studio') || hash.includes('cv_studio')) return 'cv_studio';
       if (hash.includes('cover-letter') || hash.includes('cover_letter')) return 'cover_letter';
       if (hash.includes('github-readme') || hash.includes('github_readme') || hash.includes('readme')) return 'github_readme';
-      if (hash.includes('tracker') || hash.includes('kanban')) return 'tracker';
+
       const stored = localStorage.getItem('ats_active_tab');
       if (stored === 'hero_showcase') return 'landing';
       if (stored === 'landing' || stored === 'skill_roadmap' || stored === 'linkedin_optimizer' || stored === 'job_search' || stored === 'market_insights' || stored === 'cv_library' || stored === 'cv_studio' || stored === 'cover_letter' || stored === 'github_readme' || stored === 'tracker') return stored;
       if (stored === 'kanban') return 'tracker';
     }
-    return 'tracker';
+    return 'landing';
   };
 
   const [activeTab, setActiveTab] = useState(getInitialTab);
@@ -112,16 +115,17 @@ export default function App() {
     }
     if (typeof window !== 'undefined') {
       localStorage.setItem('ats_active_tab', tab);
-      let targetPath = '/tracker';
-      if (tab === 'landing') targetPath = '/landing';
-      if (tab === 'skill_roadmap') targetPath = '/roadmap';
-      if (tab === 'linkedin_optimizer') targetPath = '/linkedin-optimizer';
-      if (tab === 'job_search') targetPath = '/job-search';
-      if (tab === 'market_insights') targetPath = '/market-insights';
-      if (tab === 'cv_library') targetPath = '/cv-library';
-      if (tab === 'cv_studio') targetPath = '/cv-studio';
-      if (tab === 'cover_letter') targetPath = '/cover-letter';
-      if (tab === 'github_readme') targetPath = '/github-readme';
+      let targetPath = '/';
+      if (tab === 'landing') targetPath = '/';
+      else if (tab === 'tracker') targetPath = '/tracker';
+      else if (tab === 'skill_roadmap') targetPath = '/roadmap';
+      else if (tab === 'linkedin_optimizer') targetPath = '/linkedin-optimizer';
+      else if (tab === 'job_search') targetPath = '/job-search';
+      else if (tab === 'market_insights') targetPath = '/market-insights';
+      else if (tab === 'cv_library') targetPath = '/cv-library';
+      else if (tab === 'cv_studio') targetPath = '/cv-studio';
+      else if (tab === 'cover_letter') targetPath = '/cover-letter';
+      else if (tab === 'github_readme') targetPath = '/github-readme';
       
       if (window.location.pathname !== targetPath) {
         window.history.pushState({ tab }, '', targetPath);
@@ -143,6 +147,10 @@ export default function App() {
     if (typeof document !== 'undefined') {
       document.body.style.overflow = '';
     }
+    // Redirect /landing to / if visited directly
+    if (typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/landing')) {
+      window.history.replaceState({ tab: 'landing' }, '', '/');
+    }
     // Redirect /kanban to /tracker if visited directly
     if (typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/kanban')) {
       window.history.replaceState({ tab: 'tracker' }, '', '/tracker');
@@ -150,9 +158,12 @@ export default function App() {
 
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
-      if (path.startsWith('/landing') || path.startsWith('/hero') || path.startsWith('/prezentare') || path.startsWith('/acasa')) {
+      if (path === '/' || path === '' || path === '/landing' || path === '/home' || path === '/index.html') {
         setActiveTab('landing');
         localStorage.setItem('ats_active_tab', 'landing');
+      } else if (path.startsWith('/tracker') || path.startsWith('/kanban')) {
+        setActiveTab('tracker');
+        localStorage.setItem('ats_active_tab', 'tracker');
       } else if (path.startsWith('/roadmap') || path.startsWith('/skill-roadmap')) {
         setActiveTab('skill_roadmap');
         localStorage.setItem('ats_active_tab', 'skill_roadmap');
@@ -178,8 +189,8 @@ export default function App() {
         setActiveTab('github_readme');
         localStorage.setItem('ats_active_tab', 'github_readme');
       } else {
-        setActiveTab('tracker');
-        localStorage.setItem('ats_active_tab', 'tracker');
+        setActiveTab('landing');
+        localStorage.setItem('ats_active_tab', 'landing');
       }
     };
     window.addEventListener('popstate', handlePopState);
@@ -442,70 +453,72 @@ export default function App() {
       />
 
       {/* CONTINUT PRINCIPAL (Coloana Dreapta pe Desktop) */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden bg-[#f8fafc]">
+      <div className={`flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden ${activeTab === 'landing' ? 'bg-white' : 'bg-[#f8fafc]'}`}>
         
         {/* DESKTOP TOP BAR CU TITLU PAGINA SI BREADCRUMB */}
-        <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3 bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 shadow-2xs">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs">
-              {currentTabInfo.category}
-            </span>
-            <div className="h-4 w-px bg-slate-200" />
-            <div>
-              <h2 className="text-base font-black text-slate-950 tracking-tight leading-none">
-                {currentTabInfo.title}
-              </h2>
-              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                {currentTabInfo.subtitle}
-              </p>
+        {activeTab !== 'landing' && (
+          <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3 bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs">
+                {currentTabInfo.category}
+              </span>
+              <div className="h-4 w-px bg-slate-200" />
+              <div>
+                <h2 className="text-base font-black text-slate-950 tracking-tight leading-none">
+                  {currentTabInfo.title}
+                </h2>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                  {currentTabInfo.subtitle}
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Quick Actions & User Account Status */}
-          <div className="flex items-center gap-3">
-            {currentUser && (
-              <div className="flex items-center gap-2">
-                {activeTab === 'tracker' && (
-                  <button
-                    onClick={() => setShowAddJobModal(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
-                    title="Adauga o noua aplicatie de urmarit"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Adauga Job</span>
-                  </button>
-                )}
-                {activeTab === 'cv_library' && (
-                  <button
-                    onClick={() => setShowUploadResumeModal(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
-                    title="Incarca un CV PDF pentru analiza"
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Incarca CV</span>
-                  </button>
-                )}
-              </div>
-            )}
+            {/* Quick Actions & User Account Status */}
+            <div className="flex items-center gap-3">
+              {currentUser && (
+                <div className="flex items-center gap-2">
+                  {activeTab === 'tracker' && (
+                    <button
+                      onClick={() => setShowAddJobModal(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
+                      title="Adauga o noua aplicatie de urmarit"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Adauga Job</span>
+                    </button>
+                  )}
+                  {activeTab === 'cv_library' && (
+                    <button
+                      onClick={() => setShowUploadResumeModal(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
+                      title="Incarca un CV PDF pentru analiza"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Incarca CV</span>
+                    </button>
+                  )}
+                </div>
+              )}
 
-            {currentUser ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 text-slate-800 shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="max-w-[160px] truncate">{currentUser.fullName || currentUser.email}</span>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs hover:bg-indigo-700 transition cursor-pointer active:scale-95"
-              >
-                <span>Conectare</span>
-              </button>
-            )}
-          </div>
-        </header>
+              {currentUser ? (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 text-slate-800 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="max-w-[160px] truncate">{currentUser.fullName || currentUser.email}</span>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs hover:bg-indigo-700 transition cursor-pointer active:scale-95"
+                >
+                  <span>Conectare</span>
+                </button>
+              )}
+            </div>
+          </header>
+        )}
 
         {/* CONTINUT PRINCIPAL */}
-        <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <main className={activeTab === 'landing' ? "flex-1 w-full bg-white" : "flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6"}>
         
         {/* TAB 1: TRACKER BOARD & LIST (WITH STATS) */}
         {activeTab === 'tracker' && (
@@ -614,17 +627,19 @@ export default function App() {
         </main>
 
         {/* FOOTER */}
-        <footer className="border-t border-slate-200/80 bg-white py-4 px-6 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span className="font-semibold text-slate-700">JobFlow AI</span>
-            <span>•</span>
-            <span>Tracker & ATS Studio 2026</span>
-          </div>
-          <p className="text-[11px] text-slate-400">
-            Arhitectura: Spring Boot 3.3 • React 18 • PostgreSQL pgvector • Lucide Icons
-          </p>
-        </footer>
+        {activeTab !== 'landing' && (
+          <footer className="border-t border-slate-200/80 bg-white py-4 px-6 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="font-semibold text-slate-700">JobFlow AI</span>
+              <span>•</span>
+              <span>Tracker & ATS Studio 2026</span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Arhitectura: Spring Boot 3.3 • React 18 • PostgreSQL pgvector • Lucide Icons
+            </p>
+          </footer>
+        )}
       </div>
 
       {/* MODALE POPUP */}
