@@ -441,19 +441,23 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col lg:flex-row font-sans selection:bg-indigo-600 selection:text-white">
+    <div className={`min-h-screen text-slate-900 font-sans selection:bg-indigo-600 selection:text-white ${
+      activeTab === 'landing' ? 'bg-white' : 'bg-[#f8fafc] flex flex-col lg:flex-row'
+    }`}>
       
       {/* SIDEBAR NAVIGATION (Desktop Sidebar + Mobile Header/Drawer) */}
-      <Navbar 
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-        currentUser={currentUser}
-        onLogout={handleLogout}
-        onOpenAuth={() => setShowAuthModal(true)}
-      />
+      {activeTab !== 'landing' && (
+        <Navbar 
+          activeTab={activeTab}
+          setActiveTab={handleTabChange}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+          onOpenAuth={() => setShowAuthModal(true)}
+        />
+      )}
 
-      {/* CONTINUT PRINCIPAL (Coloana Dreapta pe Desktop) */}
-      <div className={`flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden ${activeTab === 'landing' ? 'bg-white' : 'bg-[#f8fafc]'}`}>
+      {/* CONTINUT PRINCIPAL */}
+      <div className={`flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden ${activeTab === 'landing' ? 'bg-white w-full' : 'bg-[#f8fafc]'}`}>
         
         {/* DESKTOP TOP BAR CU TITLU PAGINA SI BREADCRUMB */}
         {activeTab !== 'landing' && (
@@ -618,6 +622,7 @@ export default function App() {
         {activeTab === 'landing' && (
           <LandingPage 
             onNavigateTab={handleTabChange}
+            currentUser={currentUser}
             onOpenAuth={() => setShowAuthModal(true)}
             onOpenUpload={() => setShowUploadResumeModal(true)}
             onOpenAddJob={() => setShowAddJobModal(true)}

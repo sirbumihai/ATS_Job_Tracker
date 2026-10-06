@@ -28,6 +28,7 @@ import {
 
 export default function LandingPage({ 
   onNavigateTab, 
+  currentUser,
   onOpenAuth, 
   onOpenUpload, 
   onOpenAddJob 
@@ -42,6 +43,67 @@ export default function LandingPage({
 
   return (
     <div className="w-full bg-white text-black font-sans selection:bg-black selection:text-white pb-20">
+
+      {/* ========================================================================= */}
+      {/* 0. ARCHITECTURAL TOP BAR (STICKY, MONOCHROME DISTILL)                     */}
+      {/* ========================================================================= */}
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-200/90 transition-all">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          
+          {/* Brand Logo */}
+          <div 
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="flex items-center gap-2.5 cursor-pointer group select-none"
+          >
+            <div className="w-8 h-8 rounded-xl bg-black text-white flex items-center justify-center font-bold text-xs shadow-xs group-hover:scale-105 transition-transform">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <span className="font-bold text-base tracking-tight text-black">JobFlow AI</span>
+              <span className="hidden sm:inline-block text-[10px] font-mono text-neutral-400 ml-2 border-l border-neutral-200 pl-2">
+                ATS & Interview Studio
+              </span>
+            </div>
+          </div>
+
+          {/* Quick Anchor Links */}
+          <nav className="hidden md:flex items-center gap-8 text-xs font-mono text-neutral-600">
+            <a href="#functionalitati" className="hover:text-black transition">Functionalitati</a>
+            <a href="#metodologie" className="hover:text-black transition">Metodologie</a>
+            <a href="#intrebari" className="hover:text-black transition">Intrebari Frecvente</a>
+          </nav>
+
+          {/* Top Actions */}
+          <div className="flex items-center gap-3">
+            {currentUser ? (
+              <button
+                onClick={() => onNavigateTab ? onNavigateTab('tracker') : null}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-black text-white text-xs font-semibold hover:bg-neutral-800 transition cursor-pointer shadow-xs active:scale-95"
+              >
+                <span>Deschide Tracker</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={onOpenAuth}
+                  className="text-xs font-medium text-neutral-700 hover:text-black px-3 py-1.5 transition cursor-pointer"
+                >
+                  Conectare
+                </button>
+                <button
+                  onClick={() => onNavigateTab ? onNavigateTab('tracker') : null}
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-black text-white text-xs font-semibold hover:bg-neutral-800 transition cursor-pointer shadow-xs active:scale-95"
+                >
+                  <span>Lanseaza Aplicatia</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+          </div>
+
+        </div>
+      </header>
 
       {/* ========================================================================= */}
       {/* 1. HERO SECTION: MONOLITHIC ARCHITECTURAL DISTILL                         */}
@@ -367,7 +429,7 @@ export default function LandingPage({
       {/* ========================================================================= */}
       {/* 4. CELE 4 MODULE CHEIE ALE PLATFORMEI (DIRECT ACTIONABLE)                  */}
       {/* ========================================================================= */}
-      <section className="py-16 sm:py-24 border-b border-neutral-200/90 bg-neutral-50/40">
+      <section id="functionalitati" className="py-16 sm:py-24 border-b border-neutral-200/90 bg-neutral-50/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
           
           <div className="text-center max-w-2xl mx-auto space-y-3">
@@ -746,7 +808,7 @@ export default function LandingPage({
       {/* ========================================================================= */}
       {/* 6. METODOLOGIA IN 4 PASI: DE LA APLICATIE LA OFERTA                       */}
       {/* ========================================================================= */}
-      <section className="py-16 sm:py-24 border-b border-neutral-200/90 bg-neutral-50/30">
+      <section id="metodologie" className="py-16 sm:py-24 border-b border-neutral-200/90 bg-neutral-50/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
           
           <div className="max-w-2xl space-y-3">
@@ -803,7 +865,7 @@ export default function LandingPage({
       {/* ========================================================================= */}
       {/* 7. FREQUENTLY ASKED QUESTIONS (FAQ)                                       */}
       {/* ========================================================================= */}
-      <section className="py-16 sm:py-24 border-b border-neutral-200/90">
+      <section id="intrebari" className="py-16 sm:py-24 border-b border-neutral-200/90">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
           <div className="text-center space-y-3">
