@@ -26,6 +26,7 @@ import {
   BookOpen,
   MessageSquare
 } from 'lucide-react';
+import Footer from './Footer';
 
 export default function LandingPage({ 
   onNavigateTab, 
@@ -46,43 +47,66 @@ export default function LandingPage({
     <div className="w-full bg-white text-black font-sans selection:bg-black selection:text-white pb-20">
 
       {/* ========================================================================= */}
-      {/* 0. ARCHITECTURAL TOP BAR (STICKY, MONOCHROME DISTILL)                     */}
+      {/* 0. ARCHITECTURAL TOP BAR (SPACIOUS, MONOCHROME DISTILL)                   */}
       {/* ========================================================================= */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
           
-          {/* Brand Logo */}
+          {/* Brand Logo & Version Pill */}
           <div 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex items-center gap-3 cursor-pointer group select-none"
+            className="flex items-center gap-3.5 cursor-pointer group select-none shrink-0"
           >
-            <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center font-bold text-sm shadow-xs group-hover:scale-105 transition-transform">
-              <Sparkles className="w-4.5 h-4.5 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center font-bold text-sm shadow-xs group-hover:scale-105 transition-transform">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <span className="font-bold text-lg tracking-tight text-black">JobFlow AI</span>
-              <span className="hidden sm:inline-block text-xs font-mono text-neutral-400 ml-2.5 border-l border-neutral-200 pl-2.5">
-                ATS & Interview Studio
+            <div className="flex items-center gap-2.5">
+              <span className="font-bold text-xl tracking-tight text-neutral-950">JobFlow AI</span>
+              <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full border border-neutral-200 bg-neutral-50 text-[11px] font-medium text-neutral-500">
+                v2.4 Engine
               </span>
             </div>
           </div>
 
-          {/* Quick Anchor Links & Feedback */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-600">
-            <a href="#functionalitati" className="hover:text-black transition">Functionalitati</a>
-            <a href="#metodologie" className="hover:text-black transition">Metodologie</a>
-            <a href="#intrebari" className="hover:text-black transition">Intrebari Frecvente</a>
+          {/* Centered Spacious Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-2 text-sm font-medium text-neutral-600">
+            <a 
+              href="#functionalitati" 
+              className="px-4 py-2 rounded-xl hover:text-black hover:bg-neutral-100/80 transition-all"
+            >
+              Functionalitati
+            </a>
+            <a 
+              href="#metodologie" 
+              className="px-4 py-2 rounded-xl hover:text-black hover:bg-neutral-100/80 transition-all"
+            >
+              Metodologie
+            </a>
+            <a 
+              href="#intrebari" 
+              className="px-4 py-2 rounded-xl hover:text-black hover:bg-neutral-100/80 transition-all"
+            >
+              Intrebari Frecvente
+            </a>
             <button 
               onClick={() => onNavigateTab ? onNavigateTab('feedback') : null}
-              className="hover:text-black transition flex items-center gap-1.5 text-neutral-900 font-semibold cursor-pointer"
+              className="px-4 py-2 rounded-xl text-neutral-900 font-semibold hover:bg-neutral-100/80 transition-all flex items-center gap-2 cursor-pointer"
             >
-              <MessageSquare className="w-4 h-4" />
+              <MessageSquare className="w-4 h-4 text-neutral-700" />
               <span>Feedback & Idei</span>
             </button>
           </nav>
 
-          {/* Top Actions */}
-          <div className="flex items-center gap-3.5">
+          {/* Right Action Buttons */}
+          <div className="flex items-center gap-3 shrink-0">
+            <button 
+              onClick={() => onNavigateTab ? onNavigateTab('feedback') : null}
+              className="lg:hidden p-2 rounded-xl border border-neutral-200 text-neutral-700 hover:text-black hover:bg-neutral-100 transition cursor-pointer"
+              title="Feedback & Idei"
+            >
+              <MessageSquare className="w-5 h-5" />
+            </button>
+
             {currentUser ? (
               <button
                 onClick={() => onNavigateTab ? onNavigateTab('tracker') : null}
@@ -95,7 +119,7 @@ export default function LandingPage({
               <>
                 <button
                   onClick={onOpenAuth}
-                  className="text-sm font-semibold text-neutral-700 hover:text-black px-3.5 py-2 transition cursor-pointer"
+                  className="hidden sm:inline-block text-sm font-semibold text-neutral-700 hover:text-black px-4 py-2 rounded-xl hover:bg-neutral-100 transition cursor-pointer"
                 >
                   Conectare
                 </button>
@@ -399,7 +423,7 @@ export default function LandingPage({
             <div className="p-8 sm:p-9 rounded-2xl border border-neutral-300 bg-white shadow-2xs space-y-6 relative overflow-hidden">
               <div className="flex items-center gap-3.5">
                 <div className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center font-mono text-sm font-bold">
-                  ✓
+                  <Check className="w-4.5 h-4.5 text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-black">Metodologia Calculata JobFlow AI</h3>
@@ -660,8 +684,9 @@ export default function LandingPage({
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {['Java 21', 'Spring Boot 3', 'PostgreSQL', 'Docker', 'REST API', 'Unit Testing', 'Git'].map(skill => (
-                        <span key={skill} className="px-2.5 py-1 rounded bg-white border border-neutral-200 text-xs font-mono text-neutral-800 font-medium">
-                          ✓ {skill}
+                        <span key={skill} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white border border-neutral-200 text-xs font-mono text-neutral-800 font-medium">
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>{skill}</span>
                         </span>
                       ))}
                     </div>
@@ -971,33 +996,9 @@ export default function LandingPage({
       </section>
 
       {/* ========================================================================= */}
-      {/* 9. ARCHITECTURAL CLEAN FOOTER (WITH FEEDBACK LINK)                        */}
+      {/* 9. ARCHITECTURAL SHARED FOOTER                                            */}
       {/* ========================================================================= */}
-      <footer className="border-t border-neutral-200 bg-white py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-black text-white flex items-center justify-center font-bold text-xs">
-              JF
-            </div>
-            <div className="text-sm font-bold text-black">JobFlow AI</div>
-            <span className="text-neutral-300">•</span>
-            <span className="text-xs text-neutral-500 font-mono">Arhitectura 2026</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-6 text-xs sm:text-sm text-neutral-600 font-mono">
-            <a href="#functionalitati" className="hover:text-black transition">Functionalitati</a>
-            <a href="#metodologie" className="hover:text-black transition">Metodologie</a>
-            <a href="#intrebari" className="hover:text-black transition">FAQ</a>
-            <button
-              onClick={() => onNavigateTab ? onNavigateTab('feedback') : null}
-              className="text-black font-semibold hover:underline transition cursor-pointer flex items-center gap-1.5"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>Feedback & Sugestii</span>
-            </button>
-          </div>
-        </div>
-      </footer>
+      <Footer onNavigateTab={onNavigateTab} />
 
     </div>
   );
