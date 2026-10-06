@@ -86,11 +86,11 @@ const NAV_SECTIONS = [
     ]
   },
   {
-    title: 'DESIGN & HERO STUDIO',
+    title: 'PREZENTARE & ACASA',
     items: [
       {
-        id: 'hero_showcase',
-        label: 'Hero Studio (8)',
+        id: 'landing',
+        label: 'Prezentare Platforma',
         icon: Sparkles
       }
     ]
@@ -176,7 +176,7 @@ export default function Navbar({
         <div className="p-5 border-b border-slate-100">
           <div 
             className="flex items-center gap-2.5 cursor-pointer group"
-            onClick={() => handleSelectTab('tracker')}
+            onClick={() => handleSelectTab('landing')}
           >
             <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs ring-1 ring-indigo-500/30 group-hover:bg-indigo-700 transition-all">
               <Sparkles className="w-5 h-5 text-white" />
@@ -247,7 +247,7 @@ export default function Navbar({
         {/* Mobile Brand */}
         <div 
           className="flex items-center gap-2 cursor-pointer"
-          onClick={() => handleSelectTab('tracker')}
+          onClick={() => handleSelectTab('landing')}
         >
           <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
             <Sparkles className="w-4 h-4 text-white" />
