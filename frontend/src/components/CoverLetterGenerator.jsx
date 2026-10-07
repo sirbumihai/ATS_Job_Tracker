@@ -325,31 +325,31 @@ export default function CoverLetterGenerator({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-300 text-neutral-900 font-sans">
       
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-neutral-200">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+            <span className="p-2 rounded-xl bg-black text-white">
               <FileSignature className="w-5 h-5" />
             </span>
-            <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
-              Generator Cover Letter <span className="text-blue-600">AI</span>
+            <h2 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
+              Generator Cover Letter AI
             </h2>
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-              Export PDF Instant
+            <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded border border-neutral-300 bg-neutral-100 text-neutral-800">
+              PDF EXPORT
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Creeaza o scrisoare de intentie curata, simpla si orientata pe rezultate, adaptata perfect profilului tau din CV si cerintelor jobului.
+          <p className="text-xs sm:text-sm text-neutral-500 mt-1">
+            Creeaza o scrisoare de intentie curata, simpla si orientata pe rezultate, adaptata profilului tau din CV si cerintelor jobului.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {cvList.length > 0 && (
-            <div className="text-xs text-gray-600 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200 flex items-center gap-1.5 font-medium">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            <div className="font-mono text-xs text-neutral-600 bg-neutral-100 px-3 py-1.5 rounded-lg border border-neutral-200 flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-neutral-900" />
               <span>{cvList.length} CV-uri detectate</span>
             </div>
           )}
@@ -362,25 +362,25 @@ export default function CoverLetterGenerator({
         {/* LEFT PANEL: CONFIGURATION & INPUTS (5 COLS) */}
         <div className="lg:col-span-5 space-y-5">
           
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-2xs space-y-4">
+          <div className="bg-white rounded-xl border border-neutral-200 p-5 space-y-4">
             
             {/* 1. SELECT CV PROFILE */}
             <div>
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                <User className="w-3.5 h-3.5 text-blue-600" />
+              <label className="text-xs font-mono font-bold text-neutral-700 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <User className="w-3.5 h-3.5 text-neutral-900" />
                 1. Alege CV-ul Sursa
               </label>
               
               {loadingCvList ? (
-                <div className="text-xs text-gray-400 py-2 flex items-center gap-2">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Se incarca CV-urile...
+                <div className="text-xs text-neutral-400 py-2 flex items-center gap-2 font-mono">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-neutral-900" /> Se incarca CV-urile...
                 </div>
               ) : cvList.length > 0 ? (
                 <div className="space-y-1.5">
                   <select
                     value={selectedCvId}
                     onChange={(e) => handleCvChange(e.target.value)}
-                    className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition outline-none cursor-pointer"
+                    className="w-full text-xs font-medium px-3 py-2.5 rounded-xl border border-neutral-300 bg-white text-neutral-900 focus:border-black transition outline-none cursor-pointer"
                   >
                     {cvList.map((cv) => (
                       <option key={cv.id} value={cv.id}>
@@ -388,34 +388,34 @@ export default function CoverLetterGenerator({
                       </option>
                     ))}
                   </select>
-                  <p className="text-[11px] text-gray-500 flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-emerald-600" /> Datele de contact si experienta sunt extrase automat din acest profil.
+                  <p className="text-[11px] text-neutral-500 flex items-center gap-1 font-mono">
+                    <ShieldCheck className="w-3 h-3 text-neutral-900" /> Datele de contact si experienta sunt extrase automat din acest profil.
                   </p>
                 </div>
               ) : (
-                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800">
+                <div className="p-3 bg-neutral-100 rounded-xl border border-neutral-200 text-xs text-neutral-800">
                   Nu ai niciun profil CV salvat inca. Se vor folosi datele prestabilite. Poti configura unul in sectiunea <strong>CV-urile Mele</strong>.
                 </div>
               )}
             </div>
 
-            <hr className="border-gray-100" />
+            <hr className="border-neutral-100" />
 
             {/* 2. TARGET JOB SELECTION */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <Briefcase className="w-3.5 h-3.5 text-amber-600" />
+                <label className="text-xs font-mono font-bold text-neutral-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Briefcase className="w-3.5 h-3.5 text-neutral-900" />
                   2. Jobul Tinta
                 </label>
                 
                 {/* MODE TOGGLE */}
-                <div className="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200">
+                <div className="flex bg-neutral-100 p-0.5 rounded-lg border border-neutral-200 font-mono">
                   <button
                     type="button"
                     onClick={() => setJobMode('saved')}
-                    className={`px-2 py-1 text-[11px] font-bold rounded-md transition ${
-                      jobMode === 'saved' ? 'bg-white text-gray-900 shadow-2xs' : 'text-gray-500 hover:text-gray-900'
+                    className={`px-2 py-1 text-[11px] font-medium rounded-md transition ${
+                      jobMode === 'saved' ? 'bg-white text-neutral-900 font-bold shadow-xs' : 'text-neutral-500 hover:text-neutral-900'
                     }`}
                   >
                     Din Tracker
@@ -423,11 +423,11 @@ export default function CoverLetterGenerator({
                   <button
                     type="button"
                     onClick={() => setJobMode('manual')}
-                    className={`px-2 py-1 text-[11px] font-bold rounded-md transition ${
-                      jobMode === 'manual' ? 'bg-white text-gray-900 shadow-2xs' : 'text-gray-500 hover:text-gray-900'
+                    className={`px-2 py-1 text-[11px] font-medium rounded-md transition ${
+                      jobMode === 'manual' ? 'bg-white text-neutral-900 font-bold shadow-xs' : 'text-neutral-500 hover:text-neutral-900'
                     }`}
                   >
-                    Job Personalizat
+                    Personalizat
                   </button>
                 </div>
               </div>
@@ -437,7 +437,7 @@ export default function CoverLetterGenerator({
                   <select
                     value={selectedAppId}
                     onChange={(e) => handleSelectApplication(e.target.value)}
-                    className="w-full text-xs font-medium px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition outline-none cursor-pointer"
+                    className="w-full text-xs font-medium px-3 py-2 rounded-xl border border-neutral-300 bg-white text-neutral-900 focus:border-black transition outline-none cursor-pointer"
                   >
                     <option value="">-- Alege o candidatura salvata ({applications.length}) --</option>
                     {applications.map((app) => (
@@ -451,36 +451,36 @@ export default function CoverLetterGenerator({
 
               <div className="grid grid-cols-2 gap-2.5 mb-2.5">
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-600 mb-1 block">Companie</label>
+                  <label className="text-[11px] font-medium text-neutral-600 mb-1 block">Companie</label>
                   <input
                     type="text"
                     placeholder="ex: Google, Endava, Bitdefender..."
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full text-xs px-3 py-2 rounded-xl border border-gray-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition outline-none font-medium"
+                    className="w-full text-xs px-3 py-2 rounded-xl border border-neutral-300 bg-white focus:border-black transition outline-none font-medium text-neutral-900"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-600 mb-1 block">Titlu Job</label>
+                  <label className="text-[11px] font-medium text-neutral-600 mb-1 block">Titlu Job</label>
                   <input
                     type="text"
                     placeholder="ex: Junior Java Developer..."
                     value={jobTitle}
                     onChange={(e) => setJobTitle(e.target.value)}
-                    className="w-full text-xs px-3 py-2 rounded-xl border border-gray-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition outline-none font-medium"
+                    className="w-full text-xs px-3 py-2 rounded-xl border border-neutral-300 bg-white focus:border-black transition outline-none font-medium text-neutral-900"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-semibold text-gray-600">Descriere Job (sau Cerinte)</label>
+                  <label className="text-[11px] font-medium text-neutral-600">Descriere Job (sau Cerinte)</label>
                   <button
                     type="button"
                     onClick={handlePasteDescription}
-                    className="text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 cursor-pointer"
+                    className="text-[10px] font-mono text-neutral-800 hover:text-black font-semibold flex items-center gap-1 cursor-pointer"
                   >
-                    <ClipboardPaste className="w-3 h-3" /> Lipeste din Clipboard
+                    <ClipboardPaste className="w-3 h-3" /> Lipeste
                   </button>
                 </div>
                 <textarea
@@ -488,28 +488,28 @@ export default function CoverLetterGenerator({
                   placeholder="Lipeste aici cerintele cheie ale jobului pentru a sincroniza abilitatile din CV cu nevoile angajatorului..."
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
-                  className="w-full text-xs p-3 rounded-xl border border-gray-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition outline-none resize-none text-gray-800 leading-relaxed font-sans"
+                  className="w-full text-xs p-3 rounded-xl border border-neutral-300 bg-white focus:border-black transition outline-none resize-none text-neutral-800 leading-relaxed font-sans"
                 />
               </div>
             </div>
 
-            <hr className="border-gray-100" />
+            <hr className="border-neutral-100" />
 
             {/* 3. GENERATION PREFERENCES */}
             <div>
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
-                <Sliders className="w-3.5 h-3.5 text-purple-600" />
+              <label className="text-xs font-mono font-bold text-neutral-700 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
+                <Sliders className="w-3.5 h-3.5 text-neutral-900" />
                 3. Stil & Optiuni
               </label>
 
               <div className="grid grid-cols-2 gap-3">
                 {/* TONE SELECTION */}
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-600 mb-1 block">Ton Scrisoare</label>
+                  <label className="text-[11px] font-medium text-neutral-600 mb-1 block">Ton Scrisoare</label>
                   <select
                     value={tone}
                     onChange={(e) => setTone(e.target.value)}
-                    className="w-full text-xs font-semibold px-2.5 py-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition outline-none cursor-pointer"
+                    className="w-full text-xs font-medium px-2.5 py-2 rounded-xl border border-neutral-300 bg-white focus:border-black transition outline-none cursor-pointer text-neutral-900"
                   >
                     <option value="SIMPLE_DIRECT">Simplu & Direct (Recomandat)</option>
                     <option value="PROFESSIONAL">Clasic & Profesional</option>
@@ -519,13 +519,13 @@ export default function CoverLetterGenerator({
 
                 {/* LANGUAGE SELECTION */}
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-600 mb-1 block flex items-center gap-1">
-                    <Languages className="w-3 h-3 text-gray-500" /> Limba
+                  <label className="text-[11px] font-medium text-neutral-600 mb-1 block flex items-center gap-1">
+                    <Languages className="w-3 h-3 text-neutral-500" /> Limba
                   </label>
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full text-xs font-semibold px-2.5 py-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition outline-none cursor-pointer"
+                    className="w-full text-xs font-medium px-2.5 py-2 rounded-xl border border-neutral-300 bg-white focus:border-black transition outline-none cursor-pointer text-neutral-900"
                   >
                     <option value="RO">Romana (RO)</option>
                     <option value="EN">English (EN)</option>
@@ -536,8 +536,8 @@ export default function CoverLetterGenerator({
 
             {/* ERROR MESSAGE IF ANY */}
             {errorMessage && (
-              <div className="p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs flex items-center gap-2">
-                <Info className="w-4 h-4 shrink-0 text-rose-500" />
+              <div className="p-3 bg-neutral-100 text-neutral-900 border border-neutral-300 rounded-xl text-xs flex items-center gap-2">
+                <Info className="w-4 h-4 shrink-0 text-neutral-900" />
                 <span>{errorMessage}</span>
               </div>
             )}
@@ -546,20 +546,20 @@ export default function CoverLetterGenerator({
             <button
               onClick={handleGenerate}
               disabled={generating}
-              className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-md ${
+              className={`w-full py-3 px-4 rounded-xl font-medium text-xs flex items-center justify-center gap-2 transition cursor-pointer ${
                 generating 
-                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
-                  : 'bg-black hover:bg-neutral-800 text-white hover:shadow-lg'
+                  ? 'bg-neutral-200 text-neutral-500 cursor-not-allowed' 
+                  : 'bg-black hover:bg-neutral-800 text-white'
               }`}
             >
               {generating ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-blue-400" />
+                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
                   <span>Se genereaza scrisoarea cu AI...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <Sparkles className="w-4 h-4 text-white" />
                   <span>Genereaza Scrisoare de Intentie</span>
                 </>
               )}
@@ -568,12 +568,12 @@ export default function CoverLetterGenerator({
           </div>
 
           {/* TIPS CARD */}
-          <div className="bg-blue-50/60 rounded-2xl border border-blue-100 p-4 text-xs text-blue-900 space-y-2">
-            <h4 className="font-bold flex items-center gap-1.5 text-blue-950">
-              <ShieldCheck className="w-4 h-4 text-blue-600" /> De ce o scrisoare de intentie simpla?
+          <div className="bg-neutral-50 rounded-xl border border-neutral-200 p-4 text-xs text-neutral-800 space-y-2">
+            <h4 className="font-bold flex items-center gap-1.5 text-neutral-950 font-mono text-xs">
+              <ShieldCheck className="w-4 h-4 text-neutral-900" /> De ce o scrisoare de intentie simpla?
             </h4>
-            <p className="text-[11px] leading-relaxed text-blue-800">
-              Recruiterii aloca mai putin de <strong>30 de secunde</strong> unei scrisori. O scrisoare simpla, concisa (sub 250 de cuvinte), axata direct pe tehnologiile cerute si valoarea adusa, are o rata de citire si succes cu pana la <strong>40% mai mare</strong> decat textele lungi si stufoase.
+            <p className="text-[11px] leading-relaxed text-neutral-600">
+              Recruiterii aloca mai putin de <strong>30 de secunde</strong> unei scrisori. O scrisoare simpla, concisa (sub 250 de cuvinte), axata direct pe tehnologiile cerute si valoarea adusa, are o rata de succes mult mai mare decat textele stufoase.
             </p>
           </div>
 
@@ -583,15 +583,15 @@ export default function CoverLetterGenerator({
         <div className="lg:col-span-7 space-y-4">
           
           {/* TOOLBAR */}
-          <div className="bg-white p-3 rounded-2xl border border-gray-200 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
+          <div className="bg-white p-3 rounded-xl border border-neutral-200 flex flex-wrap items-center justify-between gap-2.5">
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setIsEditing(!isEditing)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition border cursor-pointer ${
                   isEditing 
-                    ? 'bg-amber-500 text-white border-amber-600' 
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200'
+                    ? 'bg-black text-white border-black' 
+                    : 'bg-white hover:bg-neutral-100 text-neutral-800 border-neutral-300'
                 }`}
               >
                 {isEditing ? <Eye className="w-3.5 h-3.5" /> : <Edit3 className="w-3.5 h-3.5" />}
@@ -601,10 +601,10 @@ export default function CoverLetterGenerator({
               <button
                 type="button"
                 onClick={handleCopyText}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 flex items-center gap-1.5 transition cursor-pointer"
+                className="px-3 py-1.5 rounded-xl text-xs font-medium bg-white hover:bg-neutral-100 text-neutral-800 border border-neutral-300 flex items-center gap-1.5 transition cursor-pointer"
                 title="Copiaza textul scrisorii"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-neutral-900" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? 'Copiat!' : 'Copiaza Text'}</span>
               </button>
             </div>
@@ -614,7 +614,7 @@ export default function CoverLetterGenerator({
                 type="button"
                 onClick={handleDownloadPdf}
                 disabled={isDownloadingPdf}
-                className="px-4 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 transition cursor-pointer shadow-sm hover:shadow"
+                className="px-4 py-1.5 rounded-xl text-xs font-medium bg-black hover:bg-neutral-800 text-white flex items-center gap-1.5 transition cursor-pointer"
               >
                 {isDownloadingPdf ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -880,15 +880,15 @@ export default function CoverLetterGenerator({
 
           {/* HIGHLIGHTED SKILLS TAGS */}
           {letterData.matchedSkills && letterData.matchedSkills.length > 0 && (
-            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1 mr-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                Competente corelate din CV:
+            <div className="bg-white p-4 rounded-xl border border-neutral-200 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-mono font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1 mr-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-neutral-900" />
+                Competente din CV:
               </span>
               {letterData.matchedSkills.map((skill, index) => (
                 <span
                   key={index}
-                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100"
+                  className="px-2.5 py-1 rounded-md text-xs font-mono font-medium bg-neutral-100 text-neutral-800 border border-neutral-200"
                 >
                   {skill}
                 </span>

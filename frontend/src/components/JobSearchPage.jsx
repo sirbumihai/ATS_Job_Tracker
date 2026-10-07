@@ -712,52 +712,46 @@ export default function JobSearchPage({
   };
 
   const getPlatformBadge = (platform) => {
-    switch (platform) {
-      case 'DEVJOB_RO':
-        return { label: 'DevJob.ro', bg: 'bg-emerald-50 text-emerald-950 border-emerald-300', dot: 'bg-emerald-600' };
-      case 'BESTJOBS':
-        return { label: 'BestJobs.eu', bg: 'bg-teal-50 text-teal-950 border-teal-300', dot: 'bg-teal-600' };
-      case 'HIPO':
-        return { label: 'Hipo.ro Trainee', bg: 'bg-amber-50 text-amber-950 border-amber-300', dot: 'bg-amber-600' };
-      case 'LINKEDIN':
-        return { label: 'LinkedIn Jobs', bg: 'bg-blue-50 text-blue-900 border-blue-300', dot: 'bg-blue-600' };
-      case 'GITHUB_COMMUNITY':
-        return { label: 'GitHub Early Careers', bg: 'bg-purple-50 text-purple-950 border-purple-300', dot: 'bg-purple-600' };
-      case 'STAGIIPEBUNE':
-        return { label: 'StagiiPeBune.ro', bg: 'bg-teal-50 text-teal-900 border-teal-300', dot: 'bg-teal-500' };
-      case 'JUNIORS_RO':
-        return { label: 'Juniors.ro', bg: 'bg-indigo-50 text-indigo-900 border-indigo-300', dot: 'bg-indigo-500' };
-      case 'EJOBS':
-        return { label: 'eJobs.ro', bg: 'bg-orange-50 text-orange-900 border-orange-300', dot: 'bg-orange-600' };
-      case 'UNDELUCRAM':
-        return { label: 'UndeLucram.ro', bg: 'bg-cyan-50 text-cyan-900 border-cyan-300', dot: 'bg-cyan-600' };
-      default:
-        return { label: platform, bg: 'bg-gray-100 text-gray-800 border-gray-300', dot: 'bg-gray-500' };
-    }
+    const labelMap = {
+      'DEVJOB_RO': 'DevJob.ro',
+      'BESTJOBS': 'BestJobs.eu',
+      'HIPO': 'Hipo.ro Trainee',
+      'LINKEDIN': 'LinkedIn Jobs',
+      'GITHUB_COMMUNITY': 'GitHub Early Careers',
+      'STAGIIPEBUNE': 'StagiiPeBune.ro',
+      'JUNIORS_RO': 'Juniors.ro',
+      'EJOBS': 'eJobs.ro',
+      'UNDELUCRAM': 'UndeLucram.ro'
+    };
+    return {
+      label: labelMap[platform] || platform,
+      bg: 'bg-neutral-100 text-neutral-900 border-neutral-300 font-mono font-semibold',
+      dot: 'bg-neutral-950'
+    };
   };
 
-  // INDICATOR PROFESIONAL DE COMPETITIVITATE (FARA EMOTICOANE, PARANTEZE SAU DIACRITICE)
+  // INDICATOR PROFESIONAL DE COMPETITIVITATE (MONOLITHIC ARCHITECTURAL DISTILL)
   const renderCompetitivenessBadge = (job) => {
     const comp = job.competitiveness || 'MEDIUM';
     if (comp === 'LOW') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 shadow-2xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
           <span>Competitie Redusa</span>
         </span>
       );
     }
     if (comp === 'HIGH') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-rose-50 text-rose-900 border border-rose-300 shadow-2xs">
-          <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 shadow-2xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-neutral-950"></span>
           <span>Competitie Ridicata</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-950 border border-amber-300 shadow-2xs">
-        <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 shadow-2xs">
+        <span className="w-1.5 h-1.5 rounded-full bg-neutral-400"></span>
         <span>Competitie Medie</span>
       </span>
     );
@@ -839,17 +833,17 @@ export default function JobSearchPage({
   }, [roleSearchQuery]);
 
   return (
-    <div className="space-y-6 w-full max-w-7xl mx-auto pb-16 font-sans text-gray-900">
+    <div className="space-y-5 w-full max-w-[1920px] mx-auto pb-16 font-sans text-neutral-900">
       
       {/* TOAST NOTIFICATION */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-black text-white px-4 py-3 rounded-2xl shadow-2xl border border-gray-700 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
+        <div className="fixed bottom-6 right-6 z-50 bg-neutral-950 text-white px-4 py-3 rounded-xl shadow-2xl border border-neutral-800 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
           <span className="text-xs sm:text-sm font-bold">{toastMessage}</span>
           {onNavigateToKanban && (
             <button 
               onClick={onNavigateToKanban}
-              className="ml-2 px-2.5 py-1 bg-white text-black text-xs font-extrabold rounded-lg hover:bg-gray-200 transition cursor-pointer"
+              className="ml-2 px-2.5 py-1 bg-white text-black text-xs font-bold rounded-lg hover:bg-neutral-200 transition cursor-pointer"
             >
               Vezi in Tracker →
             </button>
@@ -857,30 +851,30 @@ export default function JobSearchPage({
         </div>
       )}
 
-      {/* HERO HEADER SLIM & MODERN */}
-      <div className="bg-white border border-gray-200/90 shadow-sm p-5 sm:p-6 rounded-3xl">
+      {/* HERO HEADER SLIM & MODERN - MONOLITHIC ARCHITECTURAL DISTILL */}
+      <div className="bg-white border border-neutral-200/90 shadow-2xs p-5 sm:p-6 rounded-2xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h2 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
                 Cautare & Agregator Job-uri IT
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold uppercase bg-neutral-100 text-neutral-800 border border-neutral-300 flex items-center gap-1.5 shadow-2xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 Live Feed
               </span>
             </div>
-            <p className="text-xs text-gray-500 font-semibold mt-0.5">
-              Oportunitati agregate in timp real din Romania & Europa, cu calcul automat de compatibilitate ATS.
+            <p className="text-xs sm:text-sm text-neutral-600 font-medium mt-1">
+              Oportunitati agregate in timp real din Romania si Europa, cu calcul automat de compatibilitate ATS.
             </p>
           </div>
 
           {/* CONTROALE RAPIDE: TIMER & SINCRONIZARE */}
           <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-auto">
-            <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-semibold text-gray-700" title="Auto-refresh din ora in ora la ora fixa (ex: 20:00, 21:00). Nu se reseteaza la refresh pagina.">
-              <Clock className="w-3.5 h-3.5 text-indigo-600" />
-              <span className="text-[11px] font-bold">Auto-refresh:</span>
-              <span className="font-mono font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200 text-xs">
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono text-neutral-700" title="Auto-refresh din ora in ora la ora fixa (ex: 20:00, 21:00). Nu se reseteaza la refresh pagina.">
+              <Clock className="w-4 h-4 text-neutral-700" />
+              <span className="font-semibold">Auto-refresh:</span>
+              <span className="font-mono font-bold text-neutral-950 bg-neutral-100 px-2 py-0.5 rounded-lg border border-neutral-200">
                 {formatCountdown(secondsUntilSync)}
               </span>
             </div>
@@ -888,7 +882,7 @@ export default function JobSearchPage({
             <button 
               onClick={handleSyncLive}
               disabled={loading}
-              className="px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-md disabled:opacity-50"
+              className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition cursor-pointer shadow-xs disabled:opacity-50 active:scale-95"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               <span>Sincronizeaza Acum</span>
@@ -898,14 +892,14 @@ export default function JobSearchPage({
       </div>
 
       {/* CAUTARE & FILTRE MULTI-SELECT CU AUTOCOMPLETE */}
-      <div className="bg-white border border-gray-200/90 shadow-sm p-6 rounded-3xl space-y-5">
+      <div className="bg-white border border-neutral-200/90 shadow-2xs p-5 sm:p-6 rounded-2xl space-y-4">
         
         {/* BARA PRINCIPALA DE CAUTARE CU AUTOCOMPLETE */}
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-3">
           
           {/* CAMP CAUTARE KEYWORD CU RECOMANDARI */}
           <div className="relative md:col-span-6" ref={keywordInputRef}>
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-neutral-400" />
             <input 
               type="text"
               value={keyword}
@@ -915,13 +909,13 @@ export default function JobSearchPage({
               }}
               onFocus={() => setShowKeywordSuggestions(true)}
               placeholder="Titlu rol, tehnologii (Java, Spring Boot, React, Python, C++, QA, DevOps)..."
-              className="w-full pl-11 pr-9 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition"
+              className="w-full pl-11 pr-9 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:border-neutral-900 transition"
             />
             {keyword && (
               <button
                 type="button"
                 onClick={() => { setKeyword(''); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -929,12 +923,12 @@ export default function JobSearchPage({
 
             {/* POPUP SUGESTII INTERACTIVE KEYWORD */}
             {showKeywordSuggestions && filteredKeywordSuggestions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-2xl shadow-xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                <div className="px-3.5 py-2 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-gray-500">
+              <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-neutral-200 rounded-xl shadow-xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                <div className="px-3.5 py-2 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between text-xs font-mono font-bold uppercase tracking-wider text-neutral-500">
                   <span>Recomandari Cautare IT</span>
-                  <span className="text-[10px] font-normal lowercase text-gray-400">apasa pentru selectare</span>
+                  <span className="text-[11px] font-normal lowercase text-neutral-400">selecteaza</span>
                 </div>
-                <div className="max-h-64 overflow-y-auto p-1.5 divide-y divide-gray-50">
+                <div className="max-h-64 overflow-y-auto p-1.5 divide-y divide-neutral-100">
                   {filteredKeywordSuggestions.map((item, idx) => (
                     <button
                       key={idx}
@@ -943,15 +937,15 @@ export default function JobSearchPage({
                         setKeyword(item.title);
                         setShowKeywordSuggestions(false);
                       }}
-                      className="w-full px-3 py-2 text-left rounded-xl hover:bg-indigo-50/70 transition flex items-center justify-between group cursor-pointer"
+                      className="w-full px-3 py-2 text-left rounded-lg hover:bg-neutral-100 transition flex items-center justify-between group cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
-                        <Search className="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-600" />
-                        <span className="text-xs font-bold text-gray-900 group-hover:text-indigo-950">
+                        <Search className="w-3.5 h-3.5 text-neutral-400 group-hover:text-black" />
+                        <span className="text-xs sm:text-sm font-bold text-neutral-900 group-hover:text-black">
                           {item.title}
                         </span>
                       </div>
-                      <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 group-hover:bg-indigo-100 group-hover:text-indigo-900 px-2 py-0.5 rounded-md">
+                      <span className="text-xs font-mono text-neutral-500 bg-neutral-100 group-hover:bg-neutral-200 px-2 py-0.5 rounded-md">
                         {item.category}
                       </span>
                     </button>
@@ -963,7 +957,7 @@ export default function JobSearchPage({
 
           {/* CAMP CAUTARE LOCATIE CU RECOMANDARI */}
           <div className="relative md:col-span-4" ref={locationInputRef}>
-            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-neutral-400" />
             <input 
               type="text"
               value={location}
@@ -973,13 +967,13 @@ export default function JobSearchPage({
               }}
               onFocus={() => setShowLocationSuggestions(true)}
               placeholder="Locatie (Bucuresti, Cluj, Timisoara, Remote, Europa)..."
-              className="w-full pl-11 pr-9 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition"
+              className="w-full pl-11 pr-9 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:border-neutral-900 transition"
             />
             {location && (
               <button
                 type="button"
                 onClick={() => { setLocation(''); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -987,12 +981,12 @@ export default function JobSearchPage({
 
             {/* POPUP SUGESTII INTERACTIVE LOCATIE */}
             {showLocationSuggestions && filteredLocationSuggestions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-2xl shadow-xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                <div className="px-3.5 py-2 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-gray-500">
+              <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-neutral-200 rounded-xl shadow-xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                <div className="px-3.5 py-2 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between text-xs font-mono font-bold uppercase tracking-wider text-neutral-500">
                   <span>Hub-uri & Regiuni IT</span>
-                  <span className="text-[10px] font-normal lowercase text-gray-400">apasa pentru selectare</span>
+                  <span className="text-[11px] font-normal lowercase text-neutral-400">selecteaza</span>
                 </div>
-                <div className="max-h-64 overflow-y-auto p-1.5 divide-y divide-gray-50">
+                <div className="max-h-64 overflow-y-auto p-1.5 divide-y divide-neutral-100">
                   {filteredLocationSuggestions.map((item, idx) => (
                     <button
                       key={idx}
@@ -1001,15 +995,15 @@ export default function JobSearchPage({
                         setLocation(item.name);
                         setShowLocationSuggestions(false);
                       }}
-                      className="w-full px-3 py-2 text-left rounded-xl hover:bg-indigo-50/70 transition flex items-center justify-between group cursor-pointer"
+                      className="w-full px-3 py-2 text-left rounded-lg hover:bg-neutral-100 transition flex items-center justify-between group cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-600" />
-                        <span className="text-xs font-bold text-gray-900 group-hover:text-indigo-950">
+                        <MapPin className="w-3.5 h-3.5 text-neutral-400 group-hover:text-black" />
+                        <span className="text-xs sm:text-sm font-bold text-neutral-900 group-hover:text-black">
                           {item.name}
                         </span>
                       </div>
-                      <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 group-hover:bg-indigo-100 group-hover:text-indigo-900 px-2 py-0.5 rounded-md truncate max-w-[180px]">
+                      <span className="text-xs font-mono text-neutral-500 bg-neutral-100 group-hover:bg-neutral-200 px-2 py-0.5 rounded-md truncate max-w-[180px]">
                         {item.region}
                       </span>
                     </button>
@@ -1024,7 +1018,7 @@ export default function JobSearchPage({
             <button 
               type="submit"
               disabled={loading}
-              className="w-full h-full py-3 bg-black hover:bg-gray-800 text-white rounded-2xl text-sm font-extrabold flex items-center justify-center gap-2 transition cursor-pointer shadow-md disabled:opacity-50"
+              className="w-full h-full py-3 bg-black hover:bg-neutral-800 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-xs disabled:opacity-50 active:scale-95"
             >
               <Search className="w-4 h-4" />
               <span>Cauta</span>
@@ -1033,12 +1027,12 @@ export default function JobSearchPage({
         </form>
 
         {/* GRID FILTRE AVANSATE: MULTI-SELECT DROPDOWNS & SELECTOARE PROFESIONALE */}
-        <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
+        <div className="pt-2 border-t border-neutral-200/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
           
           {/* 1. DROPDOWN MULTI-SELECT PENTRU PLATFORME */}
           <div className="relative" ref={platformDropdownRef}>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-black shrink-0" />
               <span>Platforme</span>
             </label>
             <button
@@ -1049,49 +1043,49 @@ export default function JobSearchPage({
               }}
               className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-between transition cursor-pointer ${
                 selectedPlatforms.length > 0
-                  ? 'bg-indigo-50 border-indigo-300 text-indigo-950 shadow-2xs'
-                  : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100'
+                  ? 'bg-black border-black text-white shadow-xs'
+                  : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100 hover:border-neutral-300'
               }`}
             >
               <div className="flex items-center gap-1.5 truncate">
-                <Globe className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <Globe className={`w-3.5 h-3.5 shrink-0 ${selectedPlatforms.length > 0 ? 'text-white' : 'text-neutral-500'}`} />
                 <span className="truncate">
                   {selectedPlatforms.length === 0
                     ? 'Toate Platformele'
                     : selectedPlatforms.length === 1
                     ? platformsConfig.find(p => p.id === selectedPlatforms[0])?.label || '1 platforma'
-                    : `${selectedPlatforms.length} platforme selectate`}
+                    : `${selectedPlatforms.length} platforme`}
                 </span>
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-500 shrink-0 transition-transform duration-200 ${isPlatformDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${selectedPlatforms.length > 0 ? 'text-white' : 'text-neutral-500'} ${isPlatformDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* MENIU DROPDOWN PLATFORME */}
             {isPlatformDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                <div className="p-2.5 border-b border-gray-100 space-y-2 bg-gray-50/80">
+              <div className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 bg-white border border-neutral-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                <div className="p-2.5 border-b border-neutral-100 space-y-2 bg-neutral-50">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
                     <input
                       type="text"
                       value={platformSearchQuery}
                       onChange={(e) => setPlatformSearchQuery(e.target.value)}
                       placeholder="Filtreaza platforma..."
-                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:border-black"
+                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:border-black"
                     />
                   </div>
-                  <div className="flex items-center justify-between text-[11px] font-extrabold px-1">
+                  <div className="flex items-center justify-between text-[11px] font-bold px-1 font-mono">
                     <button
                       type="button"
                       onClick={selectAllPlatforms}
-                      className="text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                      className="text-black hover:underline cursor-pointer"
                     >
                       Selecteaza Toate
                     </button>
                     <button
                       type="button"
                       onClick={clearAllPlatforms}
-                      className="text-gray-500 hover:text-rose-600 cursor-pointer"
+                      className="text-neutral-500 hover:text-black cursor-pointer"
                     >
                       Deselecteaza Toate
                     </button>
@@ -1111,22 +1105,24 @@ export default function JobSearchPage({
                         onClick={() => togglePlatform(plat.id)}
                         className={`w-full px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition cursor-pointer ${
                           isChecked 
-                            ? 'bg-indigo-50/90 text-indigo-950 font-black' 
-                            : 'hover:bg-gray-100 text-gray-700'
+                            ? 'bg-black text-white font-bold' 
+                            : 'hover:bg-neutral-100 text-neutral-800'
                         }`}
                       >
                         <div className="flex items-center gap-2.5 truncate">
                           <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition shrink-0 ${
                             isChecked 
-                              ? 'bg-indigo-600 border-indigo-600 text-white' 
-                              : 'border-gray-300 bg-white'
+                              ? 'bg-white border-white text-black' 
+                              : 'border-neutral-300 bg-white'
                           }`}>
                             {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
                           </div>
-                          <Icon className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                          <Icon className={`w-3.5 h-3.5 shrink-0 ${isChecked ? 'text-white' : 'text-neutral-500'}`} />
                           <span className="truncate">{plat.label}</span>
                         </div>
-                        <span className="text-[10px] font-extrabold bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full shrink-0">
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md shrink-0 ${
+                          isChecked ? 'bg-neutral-800 text-white' : 'bg-neutral-100 text-neutral-700'
+                        }`}>
                           {count}
                         </span>
                       </button>
@@ -1139,8 +1135,8 @@ export default function JobSearchPage({
 
           {/* 2. DROPDOWN MULTI-SELECT PENTRU SPECIALIZARI & ROLURI IT */}
           <div className="relative" ref={roleDropdownRef}>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-black shrink-0" />
               <span>Specializare IT</span>
             </label>
             <button
@@ -1151,49 +1147,49 @@ export default function JobSearchPage({
               }}
               className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-between transition cursor-pointer ${
                 selectedRoleCategories.length > 0
-                  ? 'bg-indigo-50 border-indigo-300 text-indigo-950 shadow-2xs'
-                  : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100'
+                  ? 'bg-black border-black text-white shadow-xs'
+                  : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100 hover:border-neutral-300'
               }`}
             >
               <div className="flex items-center gap-1.5 truncate">
-                <Layers className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <Layers className={`w-3.5 h-3.5 shrink-0 ${selectedRoleCategories.length > 0 ? 'text-white' : 'text-neutral-500'}`} />
                 <span className="truncate">
                   {selectedRoleCategories.length === 0
                     ? 'Toate Specializarile'
                     : selectedRoleCategories.length === 1
                     ? roleCategories.find(r => r.id === selectedRoleCategories[0])?.label || '1 rol'
-                    : `${selectedRoleCategories.length} roluri selectate`}
+                    : `${selectedRoleCategories.length} roluri`}
                 </span>
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-500 shrink-0 transition-transform duration-200 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${selectedRoleCategories.length > 0 ? 'text-white' : 'text-neutral-500'} ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* MENIU DROPDOWN SPECIALIZARI */}
             {isRoleDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                <div className="p-2.5 border-b border-gray-100 space-y-2 bg-gray-50/80">
+              <div className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 bg-white border border-neutral-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                <div className="p-2.5 border-b border-neutral-100 space-y-2 bg-neutral-50">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
                     <input
                       type="text"
                       value={roleSearchQuery}
                       onChange={(e) => setRoleSearchQuery(e.target.value)}
                       placeholder="Filtreaza rol (Java, DevOps, etc.)..."
-                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:border-black"
+                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:border-black"
                     />
                   </div>
-                  <div className="flex items-center justify-between text-[11px] font-extrabold px-1">
+                  <div className="flex items-center justify-between text-[11px] font-bold px-1 font-mono">
                     <button
                       type="button"
                       onClick={selectAllRoles}
-                      className="text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                      className="text-black hover:underline cursor-pointer"
                     >
                       Selecteaza Toate
                     </button>
                     <button
                       type="button"
                       onClick={clearAllRoles}
-                      className="text-gray-500 hover:text-rose-600 cursor-pointer"
+                      className="text-neutral-500 hover:text-black cursor-pointer"
                     >
                       Deselecteaza Toate
                     </button>
@@ -1212,19 +1208,19 @@ export default function JobSearchPage({
                         onClick={() => toggleRoleCategory(cat.id)}
                         className={`w-full px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition cursor-pointer ${
                           isChecked 
-                            ? 'bg-indigo-50/90 text-indigo-950 font-black' 
-                            : 'hover:bg-gray-100 text-gray-700'
+                            ? 'bg-black text-white font-bold' 
+                            : 'hover:bg-neutral-100 text-neutral-800'
                         }`}
                       >
                         <div className="flex items-center gap-2.5 truncate">
                           <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition shrink-0 ${
                             isChecked 
-                              ? 'bg-indigo-600 border-indigo-600 text-white' 
-                              : 'border-gray-300 bg-white'
+                              ? 'bg-white border-white text-black' 
+                              : 'border-neutral-300 bg-white'
                           }`}>
                             {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
                           </div>
-                          <Icon className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                          <Icon className={`w-3.5 h-3.5 shrink-0 ${isChecked ? 'text-white' : 'text-neutral-500'}`} />
                           <span className="truncate">{cat.label}</span>
                         </div>
                       </button>
@@ -1237,28 +1233,32 @@ export default function JobSearchPage({
 
           {/* 3. FILTRU UNIFICAT: DATA POSTARII */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-black shrink-0" />
               <span>Data Postarii</span>
             </label>
             <select
               value={selectedDatePosted}
               onChange={(e) => { setSelectedDatePosted(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-600 cursor-pointer"
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer focus:outline-none focus:border-black ${
+                selectedDatePosted !== 'ALL'
+                  ? 'bg-black border-black text-white'
+                  : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
+              }`}
             >
-              <option value="ALL">Toate joburile (Oricand)</option>
-              <option value="NEWLY_DISCOVERED">⭐ Doar NOU GASIT (Ultima Sincronizare)</option>
-              <option value="24H">Ultimele 24 de ore (Noi)</option>
-              <option value="48H">Ultimele 48 de ore</option>
-              <option value="7D">Ultima saptamana (7 zile)</option>
-              <option value="30D">Ultima luna (30 de zile)</option>
+              <option value="ALL" className="bg-white text-black">Toate joburile (Oricand)</option>
+              <option value="NEWLY_DISCOVERED" className="bg-white text-black">Doar NOU GASIT (Ultima Sincronizare)</option>
+              <option value="24H" className="bg-white text-black">Ultimele 24 de ore (Noi)</option>
+              <option value="48H" className="bg-white text-black">Ultimele 48 de ore</option>
+              <option value="7D" className="bg-white text-black">Ultima saptamana (7 zile)</option>
+              <option value="30D" className="bg-white text-black">Ultima luna (30 de zile)</option>
             </select>
           </div>
 
           {/* 4. DROPDOWN MULTI-SELECT PENTRU NIVEL EXPERIENTA */}
           <div className="relative" ref={levelDropdownRef}>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
-              <GraduationCap className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <GraduationCap className="w-3.5 h-3.5 text-black shrink-0" />
               <span>Nivel Experienta</span>
             </label>
             <button
@@ -1270,38 +1270,38 @@ export default function JobSearchPage({
               }}
               className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-between transition cursor-pointer ${
                 selectedLevels.length > 0
-                  ? 'bg-indigo-50 border-indigo-300 text-indigo-950 shadow-2xs'
-                  : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100'
+                  ? 'bg-black border-black text-white shadow-xs'
+                  : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100 hover:border-neutral-300'
               }`}
             >
               <div className="flex items-center gap-1.5 truncate">
-                <GraduationCap className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <GraduationCap className={`w-3.5 h-3.5 shrink-0 ${selectedLevels.length > 0 ? 'text-white' : 'text-neutral-500'}`} />
                 <span className="truncate">
                   {selectedLevels.length === 0
                     ? 'Toate Nivelurile'
                     : selectedLevels.length === 1
                     ? levelsConfig.find(l => l.id === selectedLevels[0])?.label || '1 nivel'
-                    : `${selectedLevels.length} niveluri selectate`}
+                    : `${selectedLevels.length} niveluri`}
                 </span>
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-500 shrink-0 transition-transform duration-200 ${isLevelDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${selectedLevels.length > 0 ? 'text-white' : 'text-neutral-500'} ${isLevelDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* MENIU DROPDOWN NIVELURI */}
             {isLevelDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1.5 w-64 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                <div className="p-2.5 border-b border-gray-100 flex items-center justify-between text-[11px] font-extrabold bg-gray-50/80">
+              <div className="absolute left-0 top-full mt-1.5 w-64 bg-white border border-neutral-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                <div className="p-2.5 border-b border-neutral-100 flex items-center justify-between text-[11px] font-bold bg-neutral-50 font-mono">
                   <button
                     type="button"
                     onClick={selectAllLevels}
-                    className="text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                    className="text-black hover:underline cursor-pointer"
                   >
                     Selecteaza Toate
                   </button>
                   <button
                     type="button"
                     onClick={clearAllLevels}
-                    className="text-gray-500 hover:text-rose-600 cursor-pointer"
+                    className="text-neutral-500 hover:text-black cursor-pointer"
                   >
                     Deselecteaza Toate
                   </button>
@@ -1317,15 +1317,15 @@ export default function JobSearchPage({
                         onClick={() => toggleLevel(lvl.id)}
                         className={`w-full px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition cursor-pointer ${
                           isChecked 
-                            ? 'bg-indigo-50/90 text-indigo-950 font-black' 
-                            : 'hover:bg-gray-100 text-gray-700'
+                            ? 'bg-black text-white font-bold' 
+                            : 'hover:bg-neutral-100 text-neutral-800'
                         }`}
                       >
                         <div className="flex items-center gap-2.5 truncate">
                           <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition shrink-0 ${
                             isChecked 
-                              ? 'bg-indigo-600 border-indigo-600 text-white' 
-                              : 'border-gray-300 bg-white'
+                              ? 'bg-white border-white text-black' 
+                              : 'border-neutral-300 bg-white'
                           }`}>
                             {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
                           </div>
@@ -1341,73 +1341,89 @@ export default function JobSearchPage({
 
           {/* 5. MOD DE LUCRU (FARA EMOTICOANE) */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
-              <Briefcase className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Briefcase className="w-3.5 h-3.5 text-black shrink-0" />
               <span>Mod de Lucru</span>
             </label>
             <select
               value={selectedWorkModel}
               onChange={(e) => { setSelectedWorkModel(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer focus:outline-none focus:border-black ${
+                selectedWorkModel !== 'ALL'
+                  ? 'bg-black border-black text-white'
+                  : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
+              }`}
             >
-              <option value="ALL">Toate Modurile</option>
-              <option value="REMOTE">Remote</option>
-              <option value="HYBRID">Hibrid</option>
-              <option value="ONSITE">On-Site</option>
+              <option value="ALL" className="bg-white text-black">Toate Modurile</option>
+              <option value="REMOTE" className="bg-white text-black">Remote</option>
+              <option value="HYBRID" className="bg-white text-black">Hibrid</option>
+              <option value="ONSITE" className="bg-white text-black">On-Site</option>
             </select>
           </div>
 
           {/* 6. COMPETITIVITATE & SANSE (FARA EMOTICOANE) */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-black shrink-0" />
               <span>Competitie</span>
             </label>
             <select
               value={selectedCompetitiveness}
               onChange={(e) => { setSelectedCompetitiveness(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer focus:outline-none focus:border-black ${
+                selectedCompetitiveness !== 'ALL'
+                  ? 'bg-black border-black text-white'
+                  : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
+              }`}
             >
-              <option value="ALL">Toate Tipurile</option>
-              <option value="LOW">Competitie Redusa</option>
-              <option value="MEDIUM">Competitie Medie</option>
-              <option value="HIGH">Competitie Ridicata</option>
+              <option value="ALL" className="bg-white text-black">Toate Tipurile</option>
+              <option value="LOW" className="bg-white text-black">Competitie Redusa</option>
+              <option value="MEDIUM" className="bg-white text-black">Competitie Medie</option>
+              <option value="HIGH" className="bg-white text-black">Competitie Ridicata</option>
             </select>
           </div>
 
           {/* 7. STATUS JOB & LIFECYCLE (ACTIVE / EXPIRED / TOATE) */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-black shrink-0" />
               <span>Status Job</span>
             </label>
             <select
               value={selectedStatus}
               onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer focus:outline-none focus:border-black ${
+                selectedStatus !== 'ACTIVE'
+                  ? 'bg-black border-black text-white'
+                  : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
+              }`}
             >
-              <option value="ACTIVE">Doar Active (Recente)</option>
-              <option value="EXPIRED">Expirate / Inactive</option>
-              <option value="ALL">Toate Statusurile</option>
+              <option value="ACTIVE" className="bg-white text-black">Doar Active (Recente)</option>
+              <option value="EXPIRED" className="bg-white text-black">Expirate / Inactive</option>
+              <option value="ALL" className="bg-white text-black">Toate Statusurile</option>
             </select>
           </div>
 
           {/* 8. FILTRU SCOR ATS */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-black shrink-0" />
               <span>Scor ATS</span>
             </label>
             <select
               value={selectedAtsScore}
               onChange={(e) => { setSelectedAtsScore(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-600 cursor-pointer"
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer focus:outline-none focus:border-black ${
+                selectedAtsScore !== 'ALL'
+                  ? 'bg-black border-black text-white'
+                  : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
+              }`}
             >
-              <option value="ALL">Toate Scorurile ATS</option>
-              <option value="TOP_80">Excelent (80%+ Match)</option>
-              <option value="TOP_60">Bun (60%+ Match)</option>
-              <option value="TOP_40">Mediu (40%+ Match)</option>
-              <option value="UNDER_40">Sub 40% Match</option>
+              <option value="ALL" className="bg-white text-black">Toate Scorurile ATS</option>
+              <option value="TOP_80" className="bg-white text-black">Excelent (80%+ Match)</option>
+              <option value="TOP_60" className="bg-white text-black">Bun (60%+ Match)</option>
+              <option value="TOP_40" className="bg-white text-black">Mediu (40%+ Match)</option>
+              <option value="UNDER_40" className="bg-white text-black">Sub 40% Match</option>
             </select>
           </div>
 
@@ -1417,15 +1433,15 @@ export default function JobSearchPage({
 
       {/* BARA DE FILTRE ACTIVE CU RESET RAPID */}
       {activeFiltersCount > 0 && (
-        <div className="bg-indigo-50/70 border border-indigo-100 p-4 rounded-3xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
+        <div className="bg-neutral-50 border border-neutral-200/90 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center gap-1.5 mr-1">
-              <Filter className="w-3.5 h-3.5 text-indigo-600" />
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-black flex items-center gap-1.5 mr-1">
+              <Filter className="w-3.5 h-3.5 text-black" />
               Filtre Active ({activeFiltersCount}):
             </span>
 
             {keyword && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
                 <span>Cuvant: <strong>"{keyword}"</strong></span>
                 <button onClick={() => setKeyword('')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
@@ -1434,7 +1450,7 @@ export default function JobSearchPage({
             )}
 
             {location && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
                 <span>Locatie: <strong>"{location}"</strong></span>
                 <button onClick={() => setLocation('')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
@@ -1445,7 +1461,7 @@ export default function JobSearchPage({
             {selectedPlatforms.map(platId => {
               const p = platformsConfig.find(item => item.id === platId);
               return (
-                <span key={platId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                <span key={platId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
                   <span>Platforma: <strong>{p?.label || platId}</strong></span>
                   <button onClick={() => togglePlatform(platId)} className="hover:text-rose-600 cursor-pointer p-0.5">
                     <X className="w-3 h-3" />
@@ -1457,7 +1473,7 @@ export default function JobSearchPage({
             {selectedRoleCategories.map(roleId => {
               const r = roleCategories.find(item => item.id === roleId);
               return (
-                <span key={roleId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                <span key={roleId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
                   <span>Rol: <strong>{r?.label || roleId}</strong></span>
                   <button onClick={() => toggleRoleCategory(roleId)} className="hover:text-rose-600 cursor-pointer p-0.5">
                     <X className="w-3 h-3" />
@@ -1467,15 +1483,15 @@ export default function JobSearchPage({
             })}
 
             {selectedDatePosted !== 'ALL' && (
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-extrabold shadow-2xs ${
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold shadow-2xs border ${
                 selectedDatePosted === 'NEWLY_DISCOVERED'
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
-                  : 'bg-indigo-50 text-indigo-950 border border-indigo-200'
+                  ? 'bg-black text-white border-black font-mono'
+                  : 'bg-white text-neutral-900 border-neutral-200'
               }`}>
                 {selectedDatePosted === 'NEWLY_DISCOVERED' ? (
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 ) : (
-                  <Calendar className="w-3 h-3 text-indigo-600" />
+                  <Calendar className="w-3 h-3 text-black" />
                 )}
                 <span>{
                   selectedDatePosted === 'NEWLY_DISCOVERED' ? (
@@ -1491,7 +1507,7 @@ export default function JobSearchPage({
                 }</span>
                 <button 
                   onClick={() => { setSelectedDatePosted('ALL'); setCurrentPage(1); }} 
-                  className={`cursor-pointer p-0.5 ml-0.5 ${selectedDatePosted === 'NEWLY_DISCOVERED' ? 'hover:text-amber-200 text-white/80' : 'hover:text-rose-600 text-gray-500'}`}
+                  className={`cursor-pointer p-0.5 ml-0.5 ${selectedDatePosted === 'NEWLY_DISCOVERED' ? 'hover:text-amber-200 text-white/80' : 'hover:text-rose-600 text-neutral-500'}`}
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -1501,7 +1517,7 @@ export default function JobSearchPage({
             {selectedLevels.map(lvlId => {
               const lvl = levelsConfig.find(item => item.id === lvlId);
               return (
-                <span key={lvlId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+                <span key={lvlId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
                   <span>Nivel: <strong>{lvl?.label || lvlId}</strong></span>
                   <button onClick={() => toggleLevel(lvlId)} className="hover:text-rose-600 cursor-pointer p-0.5">
                     <X className="w-3 h-3" />
@@ -1511,22 +1527,22 @@ export default function JobSearchPage({
             })}
 
             {selectedAtsScore !== 'ALL' && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-indigo-50 text-indigo-950 border border-indigo-200 shadow-2xs">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-neutral-100 text-neutral-900 border border-neutral-300 shadow-2xs font-mono">
+                <Sparkles className="w-3.5 h-3.5 text-black" />
                 <span>Scor ATS: <strong>{
                   selectedAtsScore === 'TOP_80' ? '80%+ Match' :
                   selectedAtsScore === 'TOP_60' ? '60%+ Match' :
                   selectedAtsScore === 'TOP_40' ? '40%+ Match' :
                   selectedAtsScore === 'UNDER_40' ? 'Sub 40%' : selectedAtsScore
                 }</strong></span>
-                <button onClick={() => { setSelectedAtsScore('ALL'); setCurrentPage(1); }} className="hover:text-rose-600 cursor-pointer p-0.5 text-gray-500">
+                <button onClick={() => { setSelectedAtsScore('ALL'); setCurrentPage(1); }} className="hover:text-rose-600 cursor-pointer p-0.5 text-neutral-500">
                   <X className="w-3 h-3" />
                 </button>
               </span>
             )}
 
             {selectedWorkModel !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
                 <span>Mod: <strong>{selectedWorkModel}</strong></span>
                 <button onClick={() => setSelectedWorkModel('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
@@ -1535,7 +1551,7 @@ export default function JobSearchPage({
             )}
 
             {selectedCompetitiveness !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
                 <span>Competitie: <strong>{selectedCompetitiveness}</strong></span>
                 <button onClick={() => setSelectedCompetitiveness('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
@@ -1544,7 +1560,7 @@ export default function JobSearchPage({
             )}
 
             {selectedStatus !== 'ACTIVE' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-white text-gray-800 border border-gray-200 shadow-2xs">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
                 <span>Status: <strong>{selectedStatus === 'EXPIRED' ? 'Expirate / Inactive' : 'Toate Statusurile'}</strong></span>
                 <button onClick={() => setSelectedStatus('ACTIVE')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
@@ -1555,7 +1571,7 @@ export default function JobSearchPage({
 
           <button
             onClick={handleResetFilters}
-            className="text-xs font-extrabold text-indigo-700 hover:text-indigo-900 bg-white hover:bg-indigo-50 border border-indigo-200 px-3.5 py-2 rounded-xl transition cursor-pointer shadow-2xs flex items-center gap-1.5"
+            className="text-xs font-bold text-neutral-900 hover:text-black bg-white hover:bg-neutral-100 border border-neutral-300 px-3.5 py-2 rounded-xl transition cursor-pointer shadow-2xs flex items-center gap-1.5"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Reseteaza Toate Filtrele</span>
@@ -1565,12 +1581,12 @@ export default function JobSearchPage({
 
       {/* HEADER REZULTATE CU STATISTICI & CONTROALE DE PAGINARE */}
       <div ref={jobsListRef} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-black text-gray-900">
+        <div className="flex items-center gap-2.5">
+          <span className="text-xl sm:text-2xl font-bold tracking-tight text-black">
             {loading ? 'Se cauta...' : `${totalJobs} Oportunitati Gasite`}
           </span>
-          <span className="text-xs font-semibold text-gray-500">
-            • Afisare {totalJobs > 0 ? startIndex + 1 : 0} - {endIndex} din {totalJobs}
+          <span className="text-xs font-mono font-medium text-neutral-500">
+            • {totalJobs > 0 ? startIndex + 1 : 0} - {endIndex} din {totalJobs}
           </span>
         </div>
 
@@ -1581,16 +1597,16 @@ export default function JobSearchPage({
             type="button"
             onClick={handleExportJobsCsv}
             disabled={loading || totalJobs === 0}
-            className="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 text-gray-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-3.5 py-2 bg-white hover:bg-neutral-100 border border-neutral-300 hover:border-black text-neutral-900 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
             title="Exporta joburile afisate in format CSV compatibil Excel"
           >
-            <Download className="w-3.5 h-3.5 text-gray-600" />
+            <Download className="w-3.5 h-3.5 text-black" />
             <span>Exporta CSV</span>
           </button>
 
           {/* DIMENSIUNE PAGINA */}
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold bg-gray-50 p-1 rounded-xl border border-gray-200">
-            <span className="px-1.5">Pe pagina:</span>
+          <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-mono bg-neutral-50 p-1 rounded-xl border border-neutral-200">
+            <span className="px-1.5 font-bold">Pe pagina:</span>
             {[12, 24, 48].map((size) => (
               <button
                 key={size}
@@ -1612,34 +1628,34 @@ export default function JobSearchPage({
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[1, 2, 3, 4, 5, 6].map(n => (
-            <div key={n} className="bg-white border border-gray-200 p-6 rounded-3xl animate-pulse space-y-4 shadow-sm">
+            <div key={n} className="bg-white border border-neutral-200 p-6 rounded-2xl animate-pulse space-y-4 shadow-2xs">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gray-200 rounded-2xl"></div>
+                <div className="w-12 h-12 bg-neutral-200 rounded-xl"></div>
                 <div className="space-y-2 flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-neutral-100 rounded w-1/2"></div>
                 </div>
               </div>
-              <div className="h-16 bg-gray-50 rounded-xl"></div>
-              <div className="h-8 bg-gray-100 rounded-xl"></div>
+              <div className="h-16 bg-neutral-50 rounded-xl"></div>
+              <div className="h-8 bg-neutral-100 rounded-xl"></div>
             </div>
           ))}
         </div>
       ) : totalJobs === 0 ? (
-        <div className="bg-white border border-dashed border-gray-300 p-12 rounded-3xl text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-400 mx-auto flex items-center justify-center">
+        <div className="bg-white border border-dashed border-neutral-300 p-12 rounded-2xl text-center space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-neutral-100 text-neutral-400 mx-auto flex items-center justify-center">
             {selectedDatePosted === 'NEWLY_DISCOVERED' ? (
-              <Sparkles className="w-6 h-6 text-indigo-600" />
+              <Sparkles className="w-6 h-6 text-black" />
             ) : (
               <Search className="w-6 h-6" />
             )}
           </div>
-          <h3 className="text-base font-bold text-gray-800">
+          <h3 className="text-base font-bold text-neutral-900">
             {selectedDatePosted === 'NEWLY_DISCOVERED' 
               ? 'Nu au fost identificate joburi noi la cea mai recenta sincronizare'
               : 'Nu am gasit joburi care sa corespunda filtrelor selectate'}
           </h3>
-          <p className="text-xs text-gray-500 max-w-md mx-auto">
+          <p className="text-xs text-neutral-500 max-w-md mx-auto">
             {selectedDatePosted === 'NEWLY_DISCOVERED'
               ? 'Toate joburile scanate erau deja inregistrate in baza de date. Apasa pe «Sincronizeaza Acum» pentru a relua cautarea live sau comuta pe «Toate joburile».'
               : 'Incearca sa relaxezi selectia de platforme sau sa schimbi termenul de cautare.'}
@@ -1649,14 +1665,14 @@ export default function JobSearchPage({
               <button
                 type="button"
                 onClick={() => { setSelectedDatePosted('ALL'); setCurrentPage(1); }}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                className="px-4 py-2 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-xl transition cursor-pointer"
               >
                 Vezi Toate Joburile
               </button>
             )}
             <button
               onClick={handleResetFilters}
-              className="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-xl hover:bg-black transition cursor-pointer"
+              className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-black text-xs font-bold rounded-xl border border-neutral-200 transition cursor-pointer"
             >
               Reseteaza Filtrele
             </button>
@@ -1672,39 +1688,39 @@ export default function JobSearchPage({
             return (
               <div 
                 key={job.id} 
-                className="bg-white border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200 rounded-3xl p-5 flex flex-col justify-between group"
+                className="bg-white border border-neutral-200 hover:border-black shadow-2xs hover:shadow-md transition-all duration-200 rounded-2xl p-5 flex flex-col justify-between group"
               >
                 {/* PARTEA SUPERIOARA: HEADER, LOGO, TITLU, METADATE */}
-                <div className="space-y-3 flex-1 flex flex-col justify-start">
+                <div className="space-y-3.5 flex-1 flex flex-col justify-start">
                   
                   {/* TOP HEADER: PLATFORMA, STATUS & SCOR MATCH DINAMIC */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 ${platformBadge.bg}`}>
+                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border flex items-center gap-1.5 ${platformBadge.bg}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${platformBadge.dot}`}></span>
                         {platformBadge.label}
                       </span>
                       {isJobTrulyNew(job) && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-2xs">
-                          <Sparkles className="w-2.5 h-2.5" />
-                          NOU GASIT
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-black text-white shadow-2xs">
+                          <Sparkles className="w-2.5 h-2.5 text-amber-300" />
+                          NOU
                         </span>
                       )}
                       {job.status === 'EXPIRED' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-800 border border-rose-200">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-neutral-100 text-neutral-600 border border-neutral-300">
                           Expirat
                         </span>
                       )}
                     </div>
 
-                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black border ${
+                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono font-bold border ${
                       job.atsMatchScore >= 75 
-                        ? 'bg-emerald-50 text-emerald-900 border-emerald-300' 
+                        ? 'bg-black text-white border-black' 
                         : job.atsMatchScore >= 45 
-                        ? 'bg-amber-50 text-amber-900 border-amber-300' 
-                        : 'bg-rose-50 text-rose-900 border-rose-300'
+                        ? 'bg-neutral-100 text-neutral-900 border-neutral-300' 
+                        : 'bg-neutral-50 text-neutral-500 border-neutral-200'
                     }`}>
-                      <Sparkles className={`w-3 h-3 ${job.atsMatchScore >= 75 ? 'text-emerald-600' : job.atsMatchScore >= 45 ? 'text-amber-600' : 'text-rose-600'}`} />
+                      <Sparkles className={`w-3 h-3 ${job.atsMatchScore >= 75 ? 'text-amber-400' : job.atsMatchScore >= 45 ? 'text-amber-500' : 'text-neutral-400'}`} />
                       <span>{job.atsMatchScore.toFixed(1)}% Match</span>
                     </div>
                   </div>
@@ -1718,39 +1734,34 @@ export default function JobSearchPage({
                     <img 
                       src={job.companyLogoUrl} 
                       alt={job.companyName}
-                      className="w-12 h-12 rounded-2xl object-cover bg-gray-50 border border-gray-200/70 shrink-0 shadow-2xs group-hover/title:scale-105 transition"
+                      className="w-12 h-12 rounded-xl object-cover bg-neutral-50 border border-neutral-200 shrink-0 shadow-2xs group-hover/title:scale-105 transition"
                       onError={(e) => {
                         e.target.src = 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80';
                       }}
                     />
                     <div className="space-y-0.5 flex-1 min-w-0">
-                      <h3 className="text-sm sm:text-base font-extrabold text-gray-950 leading-snug line-clamp-2 group-hover/title:text-indigo-600 transition">
+                      <h3 className="text-base font-bold text-neutral-950 leading-snug line-clamp-2 group-hover/title:text-neutral-700 transition tracking-tight">
                         {job.jobTitle}
                       </h3>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold truncate">
-                        <Building2 className="w-3.5 h-3.5 shrink-0 text-gray-400" />
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-600 font-mono truncate">
+                        <Building2 className="w-3.5 h-3.5 shrink-0 text-neutral-400" />
                         <span className="truncate">{job.companyName}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* BADGE-URI DE META-DATE: LOCATIE, MOD, NIVEL */}
-                  <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-gray-600">
-                    <span className="px-2 py-0.5 bg-gray-100 rounded-lg flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-gray-400" />
+                  <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-neutral-700">
+                    <span className="px-2 py-0.5 bg-neutral-100 border border-neutral-200 rounded-md flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-neutral-500" />
                       {removeDiacritics(job.location)}
                     </span>
-                    <span className="px-2 py-0.5 bg-gray-100 rounded-lg">
+                    <span className="px-2 py-0.5 bg-neutral-100 border border-neutral-200 rounded-md">
                       {job.workModel === 'REMOTE' ? 'Remote' : job.workModel === 'HYBRID' ? 'Hibrid' : 'On-Site'}
                     </span>
-                    <span className={`px-2 py-0.5 rounded-lg ${
-                      job.experienceLevel === 'INTERNSHIP' ? 'bg-emerald-100 text-emerald-950 font-extrabold' :
-                      job.experienceLevel === 'JUNIOR' ? 'bg-indigo-100 text-indigo-950 font-extrabold' :
-                      job.experienceLevel === 'SENIOR' ? 'bg-purple-100 text-purple-950 font-extrabold' :
-                      'bg-gray-100 text-gray-900'
-                    }`}>
-                      {job.experienceLevel === 'INTERNSHIP' ? 'Internship / Stagiu' :
-                       job.experienceLevel === 'JUNIOR' ? 'Junior (0-2 ani)' :
+                    <span className="px-2 py-0.5 bg-neutral-100 border border-neutral-200 rounded-md font-bold text-black">
+                      {job.experienceLevel === 'INTERNSHIP' ? 'Internship' :
+                       job.experienceLevel === 'JUNIOR' ? 'Junior' :
                        job.experienceLevel === 'SENIOR' ? 'Senior' : 'Mid-Level'}
                     </span>
                   </div>
@@ -1760,8 +1771,8 @@ export default function JobSearchPage({
                     {renderCompetitivenessBadge(job)}
 
                     {job.applicantCountText && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-gray-50 text-gray-700 border border-gray-200">
-                        <Users className="w-3 h-3 text-gray-500" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-neutral-50 text-neutral-700 border border-neutral-200">
+                        <Users className="w-3 h-3 text-neutral-500" />
                         <span>{removeDiacritics(job.applicantCountText)}</span>
                       </span>
                     )}
@@ -1770,19 +1781,19 @@ export default function JobSearchPage({
                 </div>
 
                 {/* PARTEA INFERIOARA: DATA POSTARII & TOATE BUTOANELE DE ACTIUNE FIXATE LA BAZA */}
-                <div className="mt-auto pt-3.5 space-y-2">
+                <div className="mt-auto pt-4 space-y-2.5">
                   
                   {/* DATA EXACTA A POSTARII */}
-                  <div className="flex items-center justify-end text-xs pb-1 border-b border-gray-100 text-gray-600 font-medium">
+                  <div className="flex items-center justify-end text-xs pb-1 border-b border-neutral-100 text-neutral-500 font-mono">
                     <span 
                       className={`flex items-center gap-1 text-[11px] ${
                         formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo) === 'Data nespecificata'
-                          ? 'text-gray-400 italic'
-                          : 'text-gray-500'
+                          ? 'text-neutral-400 italic'
+                          : 'text-neutral-600'
                       }`}
                       title={job.postedAt ? `Publicat la: ${new Date(job.postedAt).toLocaleString('ro-RO')}` : 'Data exacta de publicare nu a fost furnizata de angajator'}
                     >
-                      <Calendar className="w-3 h-3 text-gray-400" />
+                      <Calendar className="w-3 h-3 text-neutral-400" />
                       {removeDiacritics(formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo))}
                     </span>
                   </div>
@@ -1791,14 +1802,14 @@ export default function JobSearchPage({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedJobForDetails(job)}
-                      className="flex-1 py-2.5 px-3 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border border-indigo-200/80 shadow-2xs"
+                      className="flex-1 py-2 px-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border border-neutral-200 shadow-2xs"
                     >
-                      <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                      <FileText className="w-3.5 h-3.5 text-black" />
                       <span>Vezi Fisa Completa</span>
                     </button>
                     <button
                       onClick={() => handleOpenAuditModal(job)}
-                      className="py-2.5 px-2.5 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-indigo-600 rounded-2xl text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer border border-gray-200 shadow-2xs"
+                      className="py-2 px-2.5 bg-white hover:bg-neutral-100 text-neutral-700 hover:text-black rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer border border-neutral-200 shadow-2xs"
                       title="Istoric modificari & audit pipeline"
                     >
                       <History className="w-3.5 h-3.5" />
@@ -1811,20 +1822,20 @@ export default function JobSearchPage({
                     <button
                       onClick={() => handleSaveToKanban(job)}
                       disabled={isSaved || isSaving}
-                      className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border ${
+                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border ${
                         isSaved 
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
-                          : 'bg-white hover:bg-gray-50 text-gray-900 border-gray-300 shadow-2xs'
+                          ? 'bg-neutral-900 text-white border-neutral-900' 
+                          : 'bg-white hover:bg-neutral-50 text-neutral-900 border-neutral-300 shadow-2xs'
                       }`}
                     >
                       {isSaved ? (
                         <>
-                          <BookmarkCheck className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Salvat in Tracker</span>
+                          <BookmarkCheck className="w-3.5 h-3.5 text-white" />
+                          <span>Salvat</span>
                         </>
                       ) : (
                         <>
-                          <Bookmark className="w-3.5 h-3.5 text-gray-500" />
+                          <Bookmark className="w-3.5 h-3.5 text-neutral-500" />
                           <span>{isSaving ? 'Se salveaza...' : 'Salveaza'}</span>
                         </>
                       )}
@@ -1832,10 +1843,10 @@ export default function JobSearchPage({
 
                     <button
                       onClick={() => setOutreachSearchJob(job)}
-                      className="py-2.5 px-3 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 rounded-xl text-xs font-black flex items-center justify-center gap-1 transition cursor-pointer shadow-2xs"
+                      className="py-2 px-3 bg-white hover:bg-neutral-100 text-neutral-900 border border-neutral-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer shadow-2xs"
                       title="Outreach Recruiter: Nota LinkedIn (<300 caractere), Cold Email"
                     >
-                      <Send className="w-3.5 h-3.5 text-purple-600" />
+                      <Send className="w-3.5 h-3.5 text-neutral-700" />
                       <span>Outreach</span>
                     </button>
 
@@ -1843,9 +1854,9 @@ export default function JobSearchPage({
                       href={job.directApplyUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 py-2.5 px-3 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer shadow-sm shadow-black/10"
+                      className="flex-1 py-2 px-3 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
                     >
-                      <span>Aplica pe Site</span>
+                      <span>Aplica</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </a>
                   </div>
@@ -1860,16 +1871,16 @@ export default function JobSearchPage({
 
       {/* PAGINARE IN PARTEA DE JOS */}
       {!loading && totalPages > 1 && (
-        <div className="bg-white border border-gray-200 p-4 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs font-bold text-gray-500">
-            Pagina <span className="text-gray-950 font-black">{currentPage}</span> din <span className="text-gray-950 font-black">{totalPages}</span> ({totalJobs} joburi in total)
+        <div className="bg-white border border-neutral-200/90 p-4 rounded-2xl shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-xs font-mono font-medium text-neutral-500">
+            Pagina <span className="text-black font-bold">{currentPage}</span> din <span className="text-black font-bold">{totalPages}</span> ({totalJobs} joburi in total)
           </div>
 
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-xl border border-gray-200 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-gray-700"
+              className="p-2 rounded-xl border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-neutral-700"
               title="Prima pagina"
             >
               <ChevronsLeft className="w-4 h-4" />
@@ -1878,7 +1889,7 @@ export default function JobSearchPage({
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded-xl border border-gray-200 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-xs font-bold flex items-center gap-1 text-gray-700"
+              className="px-3 py-1.5 rounded-xl border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-xs font-mono font-bold flex items-center gap-1 text-neutral-800"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               <span>Anterior</span>
@@ -1903,10 +1914,10 @@ export default function JobSearchPage({
                   <button
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
-                    className={`w-8 h-8 rounded-xl text-xs font-black transition cursor-pointer ${
+                    className={`w-8 h-8 rounded-xl text-xs font-mono font-bold transition cursor-pointer ${
                       isActive 
                         ? 'bg-black text-white shadow-xs' 
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-200 border border-gray-200'
+                        : 'bg-white text-neutral-800 hover:bg-neutral-100 border border-neutral-200'
                     }`}
                   >
                     {pageNum}
@@ -1918,7 +1929,7 @@ export default function JobSearchPage({
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded-xl border border-gray-200 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-xs font-bold flex items-center gap-1 text-gray-700"
+              className="px-3 py-1.5 rounded-xl border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-xs font-mono font-bold flex items-center gap-1 text-neutral-800"
             >
               <span>Urmator</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -1927,7 +1938,7 @@ export default function JobSearchPage({
             <button
               onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-xl border border-gray-200 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-gray-700"
+              className="p-2 rounded-xl border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-neutral-700"
               title="Ultima pagina"
             >
               <ChevronsRight className="w-4 h-4" />
@@ -1982,31 +1993,31 @@ export default function JobSearchPage({
       {/* MODAL AUDIT LIFECYCLE & ISTORIC MODIFICARI */}
       {auditJobForChanges && typeof document !== 'undefined' && createPortal(
         <div 
-          className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 md:p-6 animate-in fade-in duration-200"
           onClick={() => setAuditJobForChanges(null)}
         >
           <div 
-            className="relative bg-white border border-gray-200 rounded-3xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-200"
+            className="relative bg-white border border-neutral-200 rounded-2xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
+            <div className="p-5 border-b border-neutral-200 flex items-center justify-between bg-neutral-50">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
+                <div className="w-9 h-9 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-black">
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-gray-950">
+                  <h3 className="text-base font-bold text-neutral-950">
                     Istoric & Audit Pipeline
                   </h3>
-                  <p className="text-xs text-gray-500 font-medium">
-                    Monitorizare modificari de continut & ciclu de viata
+                  <p className="text-xs text-neutral-500 font-mono">
+                    Monitorizare modificari continut & ciclu de viata
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setAuditJobForChanges(null)}
-                className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 flex items-center justify-center transition cursor-pointer"
+                className="w-8 h-8 rounded-xl bg-white hover:bg-neutral-100 text-neutral-600 hover:text-black border border-neutral-200 flex items-center justify-center transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2015,47 +2026,47 @@ export default function JobSearchPage({
             {/* Modal Content */}
             <div className="p-5 overflow-y-auto space-y-4 flex-1 text-xs">
               {/* Job Info Summary */}
-              <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-200 space-y-2">
+              <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="font-extrabold text-sm text-gray-950">
+                    <div className="font-bold text-sm text-neutral-950">
                       {auditJobForChanges.jobTitle}
                     </div>
-                    <div className="text-xs font-semibold text-gray-600 flex items-center gap-1.5 mt-0.5">
-                      <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                    <div className="text-xs font-mono text-neutral-600 flex items-center gap-1.5 mt-0.5">
+                      <Building2 className="w-3.5 h-3.5 text-neutral-400" />
                       <span>{auditJobForChanges.companyName}</span>
                       <span>•</span>
                       <span>{auditJobForChanges.sourcePlatform}</span>
                     </div>
                   </div>
-                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold border shrink-0 ${
+                  <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border shrink-0 ${
                     auditJobForChanges.status === 'ACTIVE'
-                      ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
-                      : 'bg-rose-50 text-rose-900 border-rose-300'
+                      ? 'bg-black text-white border-black'
+                      : 'bg-neutral-100 text-neutral-600 border-neutral-300'
                   }`}>
                     {auditJobForChanges.status === 'ACTIVE' ? 'Activ' : 'Expirat / Inactiv'}
                   </span>
                 </div>
 
                 {/* Content Hash & Timestamps */}
-                <div className="pt-2 border-t border-gray-200/80 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <div className="pt-2 border-t border-neutral-200 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
                   <div>
-                    <span className="text-gray-500 font-semibold block">Data Reala Publicare:</span>
-                    <span className="font-bold text-gray-900 flex items-center gap-1 mt-0.5">
-                      <Calendar className="w-3 h-3 text-gray-400" />
+                    <span className="text-neutral-500 block">Data Reala Publicare:</span>
+                    <span className="font-bold text-neutral-900 flex items-center gap-1 mt-0.5">
+                      <Calendar className="w-3 h-3 text-neutral-400" />
                       {formatDateTime(auditJobForChanges.postedAt)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500 font-semibold block">Ultima Verificare (Crawl):</span>
-                    <span className="font-bold text-gray-900 flex items-center gap-1 mt-0.5">
-                      <Clock className="w-3 h-3 text-gray-400" />
+                    <span className="text-neutral-500 block">Ultima Verificare (Crawl):</span>
+                    <span className="font-bold text-neutral-900 flex items-center gap-1 mt-0.5">
+                      <Clock className="w-3 h-3 text-neutral-400" />
                       {formatDateTime(auditJobForChanges.lastSeenAt || auditJobForChanges.firstSeenAt)}
                     </span>
                   </div>
                   <div className="sm:col-span-2">
-                    <span className="text-gray-500 font-semibold block">Content Hash (SHA-256):</span>
-                    <code className="font-mono text-[10px] bg-white px-2 py-1 rounded-lg border border-gray-200 block truncate mt-0.5 text-gray-800 select-all">
+                    <span className="text-neutral-500 block">Content Hash (SHA-256):</span>
+                    <code className="font-mono text-[10px] bg-white px-2 py-1 rounded-lg border border-neutral-200 block truncate mt-0.5 text-neutral-800 select-all">
                       {auditJobForChanges.contentHash || 'Neindexat'}
                     </code>
                   </div>
@@ -2064,53 +2075,53 @@ export default function JobSearchPage({
 
               {/* Timeline of Changes */}
               <div className="space-y-2">
-                <div className="font-bold text-xs uppercase tracking-wider text-gray-600 flex items-center gap-1.5">
-                  <GitCommit className="w-3.5 h-3.5 text-indigo-600" />
+                <div className="font-mono font-bold text-xs uppercase tracking-wider text-neutral-700 flex items-center gap-1.5">
+                  <GitCommit className="w-3.5 h-3.5 text-black" />
                   <span>Jurnal Modificari Inregistrate ({jobChangesList.length})</span>
                 </div>
 
                 {loadingChanges ? (
-                  <div className="py-8 text-center text-gray-500 space-y-2">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto text-indigo-600" />
+                  <div className="py-8 text-center text-neutral-500 space-y-2">
+                    <RefreshCw className="w-5 h-5 animate-spin mx-auto text-black" />
                     <p className="font-medium">Se incarca jurnalul de modificari...</p>
                   </div>
                 ) : jobChangesList.length === 0 ? (
-                  <div className="p-4 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-center text-gray-500 space-y-1">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
-                    <p className="font-bold text-gray-800">Nicio modificare ulterioara</p>
+                  <div className="p-4 rounded-xl bg-neutral-50 border border-dashed border-neutral-200 text-center text-neutral-500 space-y-1">
+                    <CheckCircle2 className="w-5 h-5 text-black mx-auto" />
+                    <p className="font-bold text-neutral-800">Nicio modificare ulterioara</p>
                     <p className="text-[11px]">
                       Jobul a fost indexat initial si continutul nu a suferit modificari intre crawl-uri.
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+                  <div className="space-y-2 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-neutral-200">
                     {jobChangesList.map((ch, idx) => {
                       const typeConfig = {
-                        CREATED: { label: 'Descoperit & Indexat', bg: 'bg-emerald-50 text-emerald-900 border-emerald-300', dot: 'bg-emerald-500' },
-                        CONTENT_UPDATED: { label: 'Continut Modificat', bg: 'bg-blue-50 text-blue-900 border-blue-300', dot: 'bg-blue-500' },
-                        EXPIRED: { label: 'Marcat ca Expirat', bg: 'bg-rose-50 text-rose-900 border-rose-300', dot: 'bg-rose-500' },
-                        REACTIVATED: { label: 'Reactivat la Recrawling', bg: 'bg-amber-50 text-amber-900 border-amber-300', dot: 'bg-amber-500' }
-                      }[ch.changeType] || { label: ch.changeType, bg: 'bg-gray-100 text-gray-800 border-gray-200', dot: 'bg-gray-400' };
+                        CREATED: { label: 'Descoperit & Indexat', bg: 'bg-black text-white border-black', dot: 'bg-black' },
+                        CONTENT_UPDATED: { label: 'Continut Modificat', bg: 'bg-neutral-100 text-neutral-900 border-neutral-300', dot: 'bg-neutral-700' },
+                        EXPIRED: { label: 'Marcat ca Expirat', bg: 'bg-neutral-100 text-neutral-600 border-neutral-200', dot: 'bg-neutral-400' },
+                        REACTIVATED: { label: 'Reactivat la Recrawling', bg: 'bg-black text-white border-black', dot: 'bg-black' }
+                      }[ch.changeType] || { label: ch.changeType, bg: 'bg-neutral-100 text-neutral-800 border-neutral-200', dot: 'bg-neutral-500' };
 
                       return (
                         <div key={ch.id || idx} className="relative pl-7 flex items-start justify-between gap-3 group">
-                          <div className={`absolute left-2.5 top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white ring-1 ring-gray-300 ${typeConfig.dot}`}></div>
-                          <div className="flex-1 bg-white p-2.5 rounded-xl border border-gray-200/80 shadow-2xs space-y-1">
+                          <div className={`absolute left-2.5 top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white ring-1 ring-neutral-300 ${typeConfig.dot}`}></div>
+                          <div className="flex-1 bg-white p-2.5 rounded-xl border border-neutral-200 shadow-2xs space-y-1">
                             <div className="flex items-center justify-between gap-2">
-                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${typeConfig.bg}`}>
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border ${typeConfig.bg}`}>
                                 {typeConfig.label}
                               </span>
-                              <span className="text-[10px] text-gray-500 font-medium">
+                              <span className="text-[10px] text-neutral-500 font-mono">
                                 {formatDateTime(ch.changedAt)}
                               </span>
                             </div>
                             {ch.details && (
-                              <div className="text-[11px] font-semibold text-gray-800 leading-snug">
+                              <div className="text-[11px] font-semibold text-neutral-800 leading-snug">
                                 {ch.details}
                               </div>
                             )}
                             {ch.newHash && (
-                              <div className="font-mono text-[9px] text-gray-500 truncate" title={`Hash nou: ${ch.newHash}`}>
+                              <div className="font-mono text-[9px] text-neutral-500 truncate" title={`Hash nou: ${ch.newHash}`}>
                                 Hash: {ch.newHash.substring(0, 16)}...
                               </div>
                             )}
@@ -2124,10 +2135,10 @@ export default function JobSearchPage({
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex justify-end">
+            <div className="p-4 border-t border-neutral-200 bg-neutral-50 flex justify-end">
               <button
                 onClick={() => setAuditJobForChanges(null)}
-                className="px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold transition cursor-pointer"
               >
                 Inchide
               </button>

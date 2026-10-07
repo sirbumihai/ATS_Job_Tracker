@@ -5,6 +5,10 @@
 
 ### AI Agent Configs ###
 .agents/
+.codex/
+.github/agents/
+.github/hooks/
+.github/skills/
 
 ### Node / Frontend ###
 node_modules/

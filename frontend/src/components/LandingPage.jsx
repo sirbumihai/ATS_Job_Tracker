@@ -974,17 +974,18 @@ export default function LandingPage({
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() => onNavigateTab ? onNavigateTab('tracker') : null}
-              className="w-full sm:w-auto px-10 py-4.5 rounded-full bg-white hover:bg-neutral-100 text-black font-semibold text-base transition cursor-pointer shadow-sm active:scale-95 inline-flex items-center justify-center gap-2.5"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white hover:bg-neutral-100 text-black font-bold text-base transition-all duration-150 cursor-pointer shadow-md hover:shadow-lg active:scale-98 inline-flex items-center justify-center gap-2.5"
             >
               <span>Deschide JobFlow AI</span>
-              <ArrowRight className="w-4.5 h-4.5" />
+              <ArrowRight className="w-5 h-5 text-black" />
             </button>
 
             <button
               onClick={() => onNavigateTab ? onNavigateTab('skill_roadmap') : null}
-              className="w-full sm:w-auto px-9 py-4.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white border border-neutral-700 font-semibold text-base transition cursor-pointer"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-700/80 font-bold text-base transition-all duration-150 cursor-pointer hover:border-neutral-500 active:scale-98 inline-flex items-center justify-center gap-2.5"
             >
-              Consulta Roadmaps Gratuite
+              <span>Consulta Roadmaps Gratuite</span>
+              <ChevronRight className="w-4.5 h-4.5 text-neutral-400" />
             </button>
           </div>
 

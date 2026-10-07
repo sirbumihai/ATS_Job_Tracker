@@ -22,7 +22,9 @@ import {
   Sparkles,
   Zap,
   ExternalLink,
-  MessageSquare
+  MessageSquare,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -103,17 +105,35 @@ export default function Navbar({
   onOpenAddJob
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('jobflow_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleCollapsed = () => {
+    setIsCollapsed(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('jobflow_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId);
     setMobileMenuOpen(false);
   };
 
-  const renderNavList = () => (
+  // Render expanded navigation list
+  const renderNavListExpanded = () => (
     <div className="space-y-6">
       {NAV_SECTIONS.map((section, idx) => (
         <div key={idx} className="space-y-1.5">
-          <div className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 select-none">
+          <div className="px-3 text-[11px] font-mono uppercase tracking-wider text-neutral-400 font-bold select-none">
             {section.title}
           </div>
           <div className="space-y-1">
@@ -126,29 +146,29 @@ export default function Navbar({
                   onClick={() => handleSelectTab(item.id)}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer group ${
                     isActive 
-                      ? 'bg-indigo-50/90 text-slate-950 border border-indigo-200/90 ring-1 ring-indigo-500/20 shadow-xs' 
-                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100/80 border border-transparent'
+                      ? 'bg-black text-white shadow-xs' 
+                      : 'text-neutral-700 hover:text-black hover:bg-neutral-100/90 border border-transparent'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className={`p-1.5 rounded-lg shrink-0 transition-all ${
                       isActive 
-                        ? 'bg-indigo-600 text-white shadow-xs' 
-                        : 'bg-slate-100 text-slate-700 group-hover:bg-indigo-50 group-hover:text-indigo-600 border border-slate-200/60 group-hover:border-indigo-200/80'
+                        ? 'bg-neutral-800 text-white' 
+                        : 'bg-neutral-100 text-neutral-700 group-hover:bg-neutral-200 group-hover:text-black'
                     }`}>
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-4.5 h-4.5" />
                     </div>
-                    <span className={`text-xs truncate ${
-                      isActive ? 'text-indigo-950 font-black' : 'text-slate-800 font-bold group-hover:text-slate-950'
+                    <span className={`text-[13px] sm:text-sm truncate ${
+                      isActive ? 'text-white font-bold' : 'text-neutral-800 font-medium group-hover:text-black'
                     }`}>
                       {item.label}
                     </span>
                   </div>
 
                   {isActive ? (
-                    <ChevronRight className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
                   ) : item.badge ? (
-                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 bg-slate-100 text-slate-600 border border-slate-200/80 group-hover:bg-indigo-50 group-hover:text-indigo-700">
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 bg-neutral-100 text-neutral-600 border border-neutral-200">
                       {item.badge}
                     </span>
                   ) : null}
@@ -161,75 +181,157 @@ export default function Navbar({
     </div>
   );
 
+  // Render compact collapsed icon rail
+  const renderNavListCollapsed = () => (
+    <div className="space-y-3 py-1 w-full">
+      {NAV_SECTIONS.map((section, sIdx) => (
+        <div key={sIdx} className="space-y-1.5 w-full">
+          {sIdx > 0 && <div className="w-8 h-px bg-neutral-200 mx-auto my-2" />}
+          {section.items.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <div key={item.id} className="flex justify-center w-full">
+                <button
+                  onClick={() => handleSelectTab(item.id)}
+                  title={item.label}
+                  className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-150 cursor-pointer ${
+                    isActive 
+                      ? 'bg-black text-white shadow-xs' 
+                      : 'text-neutral-700 hover:text-black hover:bg-neutral-100'
+                  }`}
+                  aria-label={item.label}
+                >
+                  <Icon className="w-5 h-5" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <>
       {/* ======================================================== */}
-      {/* 1. DESKTOP VERTICAL SIDEBAR (Shown on lg: screens and up) */}
+      {/* 1. DESKTOP VERTICAL SIDEBAR (COLLAPSIBLE FOR SPACE SAVING) */}
       {/* ======================================================== */}
-      <aside className="hidden lg:flex w-64 xl:w-72 h-screen sticky top-0 bg-white border-r border-slate-200/90 flex-col justify-between shrink-0 z-30 select-none shadow-xs">
+      <aside 
+        className={`hidden lg:flex h-screen sticky top-0 bg-white border-r border-neutral-200/90 flex-col justify-between shrink-0 z-30 select-none shadow-2xs transition-all duration-200 overflow-x-hidden ${
+          isCollapsed ? 'w-[72px]' : 'w-64'
+        }`}
+      >
         
         {/* LOGO & BRAND HEADER */}
-        <div className="p-5 border-b border-slate-100">
+        <div className={`border-b border-neutral-100 ${isCollapsed ? 'p-3 flex flex-col items-center gap-2' : 'p-4 flex items-center justify-between'}`}>
           <div 
-            className="flex items-center gap-2.5 cursor-pointer group"
+            className="flex items-center gap-3 cursor-pointer group"
             onClick={() => handleSelectTab('landing')}
+            title="Mergi la pagina principala JobFlow AI"
           >
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs ring-1 ring-indigo-500/30 group-hover:bg-indigo-700 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-all shrink-0">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h1 className="font-black text-xl text-slate-950 flex items-center gap-1 tracking-tight leading-tight">
-                JobFlow <span className="text-indigo-600">AI</span>
-              </h1>
-              <p className="text-[10px] text-slate-500 font-semibold flex items-center gap-1 mt-0.5">
-                <ShieldCheck className="w-3 h-3 text-indigo-600" />
-                <span>Tracker & ATS Studio</span>
-              </p>
-            </div>
+            {!isCollapsed && (
+              <div>
+                <h1 className="font-bold text-lg text-neutral-950 flex items-center gap-1 tracking-tight leading-tight">
+                  JobFlow <span className="text-neutral-950">AI</span>
+                </h1>
+                <p className="text-[10px] text-neutral-400 font-mono flex items-center gap-1 mt-0.5">
+                  <ShieldCheck className="w-3 h-3 text-neutral-600" />
+                  <span>Tracker & ATS Studio</span>
+                </p>
+              </div>
+            )}
           </div>
+
+          {/* TOGGLE COLLAPSE BUTTON */}
+          <button
+            onClick={toggleCollapsed}
+            title={isCollapsed ? "Extinde meniul lateral" : "Restrange meniul lateral (Castiga spatiu pentru tabele si Kanban)"}
+            className={`p-2 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition cursor-pointer ${
+              isCollapsed ? 'mt-1' : ''
+            }`}
+          >
+            {isCollapsed ? (
+              <PanelLeftOpen className="w-4.5 h-4.5" />
+            ) : (
+              <PanelLeftClose className="w-4.5 h-4.5" />
+            )}
+          </button>
         </div>
 
         {/* SCROLLABLE VERTICAL NAVIGATION */}
-        <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-6">
-          {renderNavList()}
+        <div className={`flex-1 overflow-y-auto overflow-x-hidden ${isCollapsed ? 'px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden' : 'px-3.5'} py-3 space-y-4`}>
+          {isCollapsed ? renderNavListCollapsed() : renderNavListExpanded()}
         </div>
 
         {/* BOTTOM SECTION: USER FOOTER */}
-        <div className="p-3 border-t border-slate-100 bg-slate-50/70 space-y-2.5">
+        <div className={`border-t border-neutral-100 bg-neutral-50/70 ${isCollapsed ? 'p-2.5 flex flex-col items-center gap-2' : 'p-3.5 space-y-2.5'}`}>
 
           {/* USER PROFILE & LOGOUT */}
           {currentUser ? (
-            <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
+            isCollapsed ? (
+              <div className="flex flex-col items-center gap-2 w-full py-1">
+                <div 
+                  className="w-10 h-10 rounded-xl bg-black text-white font-bold text-xs flex items-center justify-center shadow-xs relative"
+                  title={currentUser.fullName || currentUser.email}
+                >
                   {(currentUser.fullName || currentUser.email || 'U').charAt(0).toUpperCase()}
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white absolute -top-0.5 -right-0.5 animate-pulse"></span>
                 </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-slate-900 truncate">
-                    {currentUser.fullName || currentUser.email}
-                  </div>
-                  <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Online
-                  </div>
-                </div>
+                <button
+                  onClick={onLogout}
+                  title="Deconectare cont"
+                  className="p-2 rounded-xl text-neutral-400 hover:text-rose-600 hover:bg-neutral-200/60 transition cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
-              <button
-                onClick={onLogout}
-                title="Deconectare din cont"
-                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+            ) : (
+              <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-neutral-200/90 shadow-2xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-black text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                    {(currentUser.fullName || currentUser.email || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-neutral-900 truncate">
+                      {currentUser.fullName || currentUser.email}
+                    </div>
+                    <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Online
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={onLogout}
+                  title="Deconectare din cont"
+                  className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            )
           ) : (
-            <button
-              onClick={onOpenAuth}
-              className="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer active:scale-95"
-            >
-              <Lock className="w-3.5 h-3.5" />
-              <span>Conectare in Cont</span>
-            </button>
+            isCollapsed ? (
+              <button
+                onClick={onOpenAuth}
+                title="Conectare in cont"
+                className="w-10 h-10 rounded-xl bg-black hover:bg-neutral-800 text-white flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
+              >
+                <Lock className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={onOpenAuth}
+                className="w-full py-2.5 px-3 rounded-xl bg-black hover:bg-neutral-800 text-white font-semibold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer active:scale-95"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Conectare in Cont</span>
+              </button>
+            )
           )}
 
         </div>
@@ -245,14 +347,14 @@ export default function Navbar({
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => handleSelectTab('landing')}
         >
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+          <div className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center shadow-xs">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h1 className="font-black text-lg text-slate-950 flex items-center gap-1 tracking-tight leading-tight">
-              JobFlow <span className="text-indigo-600">AI</span>
+            <h1 className="font-bold text-lg text-neutral-950 flex items-center gap-1 tracking-tight leading-tight">
+              JobFlow <span className="text-neutral-950">AI</span>
             </h1>
-            <span className="text-[9px] font-bold text-slate-500 block -mt-0.5">
+            <span className="text-[9px] font-mono text-neutral-400 block -mt-0.5">
               ATS Studio
             </span>
           </div>
@@ -262,13 +364,13 @@ export default function Navbar({
         <div className="flex items-center gap-2">
 
           {currentUser ? (
-            <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+            <div className="w-7 h-7 rounded-lg bg-black text-white font-bold text-xs flex items-center justify-center shadow-xs">
               {(currentUser.fullName || currentUser.email || 'U').charAt(0).toUpperCase()}
             </div>
           ) : (
             <button
               onClick={onOpenAuth}
-              className="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-600 text-white font-bold"
+              className="text-xs px-2.5 py-1.5 rounded-lg bg-black text-white font-semibold"
             >
               Login
             </button>
@@ -276,7 +378,7 @@ export default function Navbar({
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-xl border bg-slate-100 border-slate-200 text-slate-900 cursor-pointer"
+            className="p-2 rounded-xl border bg-neutral-100 border-neutral-200 text-neutral-900 cursor-pointer"
             aria-label="Meniu Navigare"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -285,57 +387,80 @@ export default function Navbar({
       </header>
 
       {/* ======================================================== */}
-      {/* 3. MOBILE OFF-CANVAS SLIDE-OUT DRAWER                     */}
+      {/* 3. FULL-SCREEN ARCHITECTURAL MOBILE MENU OVERLAY          */}
       {/* ======================================================== */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-
-          {/* Drawer content */}
-          <div className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col z-50">
-            {/* Drawer Header */}
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
-                <h2 className="font-black text-lg text-slate-950">
-                  JobFlow <span className="text-indigo-600">AI</span>
-                </h2>
+        <div className="lg:hidden fixed inset-0 z-[9999] bg-white flex flex-col justify-between p-6 sm:p-8 animate-in fade-in duration-200 select-none overflow-y-auto">
+          {/* Top Bar: Minimalist Logo + Close Button */}
+          <div className="flex items-center justify-between w-full shrink-0">
+            <div 
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => handleSelectTab('landing')}
+            >
+              <div className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center shadow-xs">
+                <Sparkles className="w-4.5 h-4.5 text-white" />
               </div>
-              <button 
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-950 hover:bg-slate-100 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <span className="font-bold text-lg text-black tracking-tight">JobFlow</span>
             </div>
 
-            {/* Drawer Nav Items */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              {renderNavList()}
-            </div>
+            <button 
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2 -mr-2 text-black hover:opacity-60 transition cursor-pointer"
+              aria-label="Inchide meniul"
+            >
+              <X className="w-6 h-6 stroke-[2.2]" />
+            </button>
+          </div>
 
-            {/* Drawer Footer */}
-            <div className="p-4 border-t border-gray-100 bg-gray-50/70 space-y-3">
-
-              {currentUser && (
+          {/* Center Links: Large Centered Typography (Matching Reference) */}
+          <nav className="my-auto py-8 flex flex-col items-center justify-center space-y-5 sm:space-y-6 text-center">
+            {NAV_SECTIONS.flatMap(s => s.items).map((item) => {
+              const isActive = activeTab === item.id;
+              return (
                 <button
-                  onClick={() => {
-                    onLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full py-2 px-3 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center justify-center gap-2 transition"
+                  key={item.id}
+                  onClick={() => handleSelectTab(item.id)}
+                  className={`text-2xl sm:text-3xl font-medium tracking-tight transition cursor-pointer ${
+                    isActive 
+                      ? 'font-bold text-black border-b-2 border-black pb-0.5' 
+                      : 'text-neutral-900 hover:text-neutral-500'
+                  }`}
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span>Deconectare ({currentUser.fullName || currentUser.email})</span>
+                  {item.label}
                 </button>
-              )}
+              );
+            })}
+          </nav>
+
+          {/* Bottom Bar: Subtle Footer Links & User Action */}
+          <div className="pt-6 border-t border-neutral-100 flex items-center justify-between text-xs sm:text-sm text-neutral-400 font-medium shrink-0">
+            <div className="flex items-center gap-5 sm:gap-6">
+              <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-black transition">GitHub</a>
+              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-black transition">LinkedIn</a>
+              <button onClick={() => handleSelectTab('feedback')} className="hover:text-black transition cursor-pointer">Feedback</button>
             </div>
+            {currentUser ? (
+              <button
+                onClick={() => {
+                  onLogout();
+                  setMobileMenuOpen(false);
+                }}
+                className="text-neutral-900 hover:text-rose-600 font-semibold transition cursor-pointer flex items-center gap-1.5"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Deconectare</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  onOpenAuth();
+                  setMobileMenuOpen(false);
+                }}
+                className="text-black font-bold hover:underline transition cursor-pointer"
+              >
+                Conectare
+              </button>
+            )}
           </div>
         </div>
       )}

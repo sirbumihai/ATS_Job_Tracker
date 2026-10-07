@@ -347,193 +347,181 @@ export default function LinkedInOptimizerPage({ currentUser }) {
   };
 
   return (
-    <div className="space-y-8 pb-16 font-sans">
+    <div className="space-y-6 pb-16 font-sans text-neutral-900">
       
-      {/* HERO BANNER & CV SYNC TOOLBAR (DOUBLE-BEZEL ASYMMETRIC ARCHITECTURE) */}
-      <div className="p-1.5 sm:p-2 rounded-[2.25rem] bg-gradient-to-b from-slate-200/70 via-slate-100/50 to-slate-200/40 border border-slate-200/90 shadow-2xs">
-        <div className="bg-white rounded-[calc(2.25rem-0.5rem)] p-6 sm:p-8 lg:p-9 shadow-xs border border-white/80 relative overflow-hidden space-y-6">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-gradient-to-bl from-indigo-100/50 via-sky-50/30 to-transparent rounded-full pointer-events-none blur-2xl"></div>
+      {/* HERO BANNER & CV SYNC TOOLBAR */}
+      <div className="bg-white rounded-xl p-5 sm:p-6 border border-neutral-200 space-y-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider font-bold text-neutral-800 bg-neutral-100 border border-neutral-300">
+              <Linkedin className="w-3.5 h-3.5 fill-black text-black" />
+              <span>Optimizator Profil LinkedIn & Sincronizare CV Studio</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-950 tracking-tight leading-tight">
+              Profil LinkedIn Magnet pentru Recruiteri
+            </h1>
+            <p className="text-xs sm:text-sm text-neutral-500 font-normal leading-relaxed">
+              Combina datele oficiale din CV-ul tau cu algoritmul LinkedIn Recruiter pentru a genera un profil de autoritate maxima (100/100 All-Star).
+            </p>
+          </div>
 
-          <div className="relative z-10 space-y-6">
+          {/* QUICK ACTIONS & VIEW MODE SWITCHER */}
+          <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-2.5">
             
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="space-y-3 max-w-3xl">
-                <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-[10px] uppercase tracking-[0.2em] font-extrabold text-indigo-700 bg-indigo-50/90 border border-indigo-200/90 shadow-2xs">
-                  <Linkedin className="w-3.5 h-3.5 fill-indigo-600 text-indigo-600" />
-                  <span>Optimizator Profil LinkedIn & Sincronizare CV Studio</span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 tracking-tight leading-tight">
-                  Profil LinkedIn <span className="text-indigo-600 underline decoration-indigo-200 decoration-wavy">Magnet pentru Recruiteri</span> & Cross-Sync CV
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
-                  Combina datele oficiale din CV-ul tau (SIMAVI, ATS Job Tracker, 3D Medical Image Segmentation) cu algoritmul LinkedIn Recruiter 2026 pentru a genera un profil de autoritate maxima (100/100 All-Star).
-                </p>
-              </div>
-
-              {/* QUICK ACTIONS & VIEW MODE SWITCHER (SEGMENTED FLUID ISLAND) */}
-              <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-2.5">
-                
-                <div className="bg-slate-100/90 p-1.5 rounded-2xl flex gap-1 border border-slate-200/80 shadow-2xs">
-                  <button
-                    onClick={loadAllStarProfile}
-                    className={`flex-1 py-2 px-3.5 rounded-xl text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
-                      profileMode === 'all_star'
-                        ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
-                        : 'text-slate-600 hover:text-slate-950 hover:bg-white/70'
-                    }`}
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
-                    Profil All-Star (100/100)
-                  </button>
-                  <button
-                    onClick={loadDemoProfile}
-                    className={`flex-1 py-2 px-3.5 rounded-xl text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
-                      profileMode === 'current'
-                        ? 'bg-indigo-600 text-white shadow-xs font-black ring-1 ring-indigo-500/20'
-                        : 'text-slate-600 hover:text-slate-950 hover:bg-white/70'
-                    }`}
-                  >
-                    <Eye className="w-3.5 h-3.5 text-slate-500" />
-                    Profilul Curent
-                  </button>
-                </div>
-
-                {/* BUTTON-IN-BUTTON RE-EVALUATE BUTTON */}
-                <button
-                  onClick={() => triggerOptimization()}
-                  disabled={optimizing}
-                  className="group/btn inline-flex items-center justify-between gap-3 py-2 pl-4 pr-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] shadow-2xs cursor-pointer disabled:opacity-50 active:scale-[0.98]"
-                >
-                  <span>Re-evalueaza Scorul ATS</span>
-                  <span className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/btn:rotate-90">
-                    <RefreshCw className={`w-3.5 h-3.5 text-white ${optimizing ? 'animate-spin' : ''}`} />
-                  </span>
-                </button>
-
-              </div>
+            <div className="bg-neutral-100 p-1 rounded-xl flex gap-1 border border-neutral-200 font-mono text-xs">
+              <button
+                onClick={loadAllStarProfile}
+                className={`flex-1 py-2 px-3.5 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  profileMode === 'all_star'
+                    ? 'bg-black text-white font-bold'
+                    : 'text-neutral-600 hover:text-black'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-white" />
+                All-Star (100/100)
+              </button>
+              <button
+                onClick={loadDemoProfile}
+                className={`flex-1 py-2 px-3.5 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  profileMode === 'current'
+                    ? 'bg-black text-white font-bold'
+                    : 'text-neutral-600 hover:text-black'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5 text-neutral-500" />
+                Profilul Curent
+              </button>
             </div>
 
-            {/* CV SELECTOR & DEEP SYNC BAR (DOUBLE-BEZEL / REFINED HARDWARE) */}
-            <div className="bg-gradient-to-r from-indigo-50/70 via-slate-50 to-indigo-50/50 border border-indigo-200/80 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black uppercase text-indigo-950 tracking-wider">
-                    Sincronizeaza Profilul cu un CV din Biblioteca
-                  </h4>
-                  <p className="text-xs text-indigo-900/80 mt-0.5">
-                    Importa automat proiectele STAR, experienta de internship si competentele tehnice fara a le tasta manual.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                <select
-                  value={selectedCvId}
-                  onChange={(e) => setSelectedCvId(e.target.value)}
-                  className="px-3.5 py-2 text-xs font-bold bg-white text-slate-900 border border-indigo-200/90 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 cursor-pointer shadow-2xs"
-                >
-                  {cvList.length > 0 ? (
-                    cvList.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.title || 'CV Fara Titlu'}{c.isPrimary ? ' [Principal]' : ''}
-                      </option>
-                    ))
-                  ) : (
-                    <option value="">Sirbu Mihai-Alexandru (CV Principal Tehnic)</option>
-                  )}
-                </select>
-
-                {/* BUTTON-IN-BUTTON SYNC ACTION */}
-                <button
-                  onClick={handleSyncWithSelectedCv}
-                  disabled={syncingCv}
-                  className="group/sync py-2 pl-4 pr-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center justify-between gap-2 shadow-2xs cursor-pointer whitespace-nowrap disabled:opacity-50 active:scale-[0.98]"
-                >
-                  <span>{syncingCv ? 'Se fuzioneaza...' : 'Sincronizeaza cu CV-ul'}</span>
-                  <span className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/sync:translate-x-0.5 group-hover/sync:-translate-y-0.5">
-                    <Sparkles className={`w-3.5 h-3.5 text-white ${syncingCv ? 'animate-spin' : ''}`} />
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* SYNC NOTIFICATION BANNER */}
-            {syncMessage && (
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs flex items-start justify-between gap-3 animate-in fade-in shadow-2xs">
-                <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-bold">{syncMessage.text}</p>
-                    {syncMessage.imported && syncMessage.imported.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-1.5">
-                        {syncMessage.imported.map((item, idx) => (
-                          <span key={idx} className="bg-white px-2 py-0.5 rounded-md font-semibold text-[11px] border border-emerald-200 inline-flex items-center gap-1 shadow-2xs">
-                            <Check className="w-3 h-3 text-emerald-600 shrink-0" />
-                            <span>{item}</span>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setSyncMessage(null)}
-                  className="text-emerald-700 hover:text-emerald-950 p-1 cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-
-            {/* DRAG & DROP UPLOAD BOX */}
-            <div 
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                  handleFileUpload(e.dataTransfer.files[0]);
-                }
-              }}
-              className={`p-6 border-2 border-dashed rounded-2xl text-center transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col items-center justify-center gap-2 cursor-pointer ${
-                dragOver 
-                  ? 'border-indigo-600 bg-indigo-50/70 scale-[1.005]' 
-                  : 'border-slate-300 hover:border-indigo-400 bg-slate-50/60'
-              }`}
-              onClick={() => document.getElementById('linkedin-pdf-input')?.click()}
+            {/* RE-EVALUATE BUTTON */}
+            <button
+              onClick={() => triggerOptimization()}
+              disabled={optimizing}
+              className="inline-flex items-center justify-between gap-3 py-2 px-4 rounded-xl text-xs font-medium bg-black hover:bg-neutral-800 text-white transition cursor-pointer disabled:opacity-50"
             >
-              <input 
-                type="file" 
-                id="linkedin-pdf-input" 
-                accept=".pdf" 
-                className="hidden" 
-                onChange={(e) => {
-                  if (e.target.files && e.target.files.length > 0) {
-                    handleFileUpload(e.target.files[0]);
-                  }
-                }} 
-              />
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 flex items-center justify-center shadow-2xs">
-                  <Upload className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <p className="text-xs font-bold text-slate-900">
-                    {loading ? 'Se analizeaza PDF-ul LinkedIn...' : 'Ai descarcat un nou PDF din LinkedIn? Trage fisierul aici'}
-                  </p>
-                  <p className="text-[11px] text-slate-500">
-                    Foloseste More -&gt; Save to PDF de pe profilul LinkedIn pentru a compara cu starea ta live.
-                  </p>
-                </div>
-              </div>
-            </div>
+              <span>Re-evalueaza Scorul ATS</span>
+              <RefreshCw className={`w-3.5 h-3.5 text-white ${optimizing ? 'animate-spin' : ''}`} />
+            </button>
 
           </div>
         </div>
+
+        {/* CV SELECTOR & DEEP SYNC BAR */}
+        <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center shrink-0">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-xs font-mono font-bold uppercase text-neutral-900 tracking-wider">
+                Sincronizeaza Profilul cu un CV din Biblioteca
+              </h4>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Importa automat proiectele STAR, experienta de internship si competentele tehnice fara a le tasta manual.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <select
+              value={selectedCvId}
+              onChange={(e) => setSelectedCvId(e.target.value)}
+              className="px-3.5 py-2 text-xs font-medium bg-white text-neutral-900 border border-neutral-300 rounded-xl focus:border-black cursor-pointer outline-none"
+            >
+              {cvList.length > 0 ? (
+                cvList.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title || 'CV Fara Titlu'}{c.isPrimary ? ' [Principal]' : ''}
+                  </option>
+                ))
+              ) : (
+                <option value="">Sirbu Mihai-Alexandru (CV Principal Tehnic)</option>
+              )}
+            </select>
+
+            <button
+              onClick={handleSyncWithSelectedCv}
+              disabled={syncingCv}
+              className="py-2 px-4 rounded-xl text-xs font-medium bg-black hover:bg-neutral-800 text-white transition flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-50"
+            >
+              <span>{syncingCv ? 'Se fuzioneaza...' : 'Sincronizeaza cu CV-ul'}</span>
+              <Sparkles className={`w-3.5 h-3.5 text-white ${syncingCv ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* SYNC NOTIFICATION BANNER */}
+        {syncMessage && (
+          <div className="p-4 rounded-xl bg-neutral-100 border border-neutral-300 text-neutral-900 text-xs flex items-start justify-between gap-3 animate-in fade-in">
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="w-5 h-5 text-neutral-900 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">{syncMessage.text}</p>
+                {syncMessage.imported && syncMessage.imported.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-1.5 font-mono">
+                    {syncMessage.imported.map((item, idx) => (
+                      <span key={idx} className="bg-white px-2 py-0.5 rounded text-[11px] border border-neutral-200 inline-flex items-center gap-1">
+                        <Check className="w-3 h-3 text-neutral-900 shrink-0" />
+                        <span>{item}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <button 
+              onClick={() => setSyncMessage(null)}
+              className="text-neutral-500 hover:text-black p-1 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* DRAG & DROP UPLOAD BOX */}
+        <div 
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              handleFileUpload(e.dataTransfer.files[0]);
+            }
+          }}
+          className={`p-6 border-2 border-dashed rounded-xl text-center transition flex flex-col items-center justify-center gap-2 cursor-pointer ${
+            dragOver 
+              ? 'border-black bg-neutral-100' 
+              : 'border-neutral-300 hover:border-black bg-white'
+          }`}
+          onClick={() => document.getElementById('linkedin-pdf-input')?.click()}
+        >
+          <input 
+            type="file" 
+            id="linkedin-pdf-input" 
+            accept=".pdf" 
+            className="hidden" 
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+              }
+            }} 
+          />
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-neutral-100 text-neutral-900 border border-neutral-200 flex items-center justify-center">
+              <Upload className="w-4 h-4" />
+            </div>
+            <div className="text-left">
+              <p className="text-xs font-bold text-neutral-900">
+                {loading ? 'Se analizeaza PDF-ul LinkedIn...' : 'Ai descarcat un nou PDF din LinkedIn? Trage fisierul aici'}
+              </p>
+              <p className="text-[11px] text-neutral-500">
+                Foloseste More -&gt; Save to PDF de pe profilul LinkedIn pentru a compara cu starea ta live.
+              </p>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* MAIN TWO-COLUMN SPLIT: INTERACTIVE LINKEDIN UI REPLICA (LEFT) & AI ADVISOR (RIGHT) */}
@@ -1118,143 +1106,139 @@ export default function LinkedInOptimizerPage({ currentUser }) {
         {/* RIGHT COLUMN: AI AUDIT & OPTIMIZATION ADVISOR (5/12) */}
         <div className="lg:col-span-5 space-y-5">
           
-          {/* PROFILE STRENGTH SCORE CARD - DOUBLE-BEZEL HARDWARE CONTAINER */}
-          <div className="bg-slate-100/80 p-1.5 rounded-[2rem] border border-slate-200/80 shadow-xs relative overflow-hidden">
-            <div className="bg-white p-6 rounded-[calc(2rem-0.375rem)] border border-slate-200/60 shadow-xs space-y-5 relative overflow-hidden">
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                  Scor Vizibilitate Recruiteri
-                </span>
-                <span className="text-xs font-bold text-slate-400 font-mono">Algoritm 2026 Audit</span>
-              </div>
-
-              <div className="flex items-center gap-5">
-                <div className="relative w-20 h-20 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col items-center justify-center shrink-0 shadow-2xs">
-                  <span className="text-2xl font-black text-slate-950 font-mono tracking-tight">
-                    {optimizationResult?.overallScore || 85}
-                  </span>
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">din 100</span>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-black text-slate-950 leading-tight tracking-tight">
-                    {optimizationResult?.scoreGrade || 'All-Star Profile (Optimizat Recruiteri)'}
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Profilurile cu scor peste 85 obtin cu pana la <strong className="text-indigo-600 font-black">3.5x mai multe mesaje directe</strong> de la recruiteri din Romania.
-                  </p>
-                </div>
-              </div>
-
-              {/* SCORE BREAKDOWN BARS */}
-              {optimizationResult?.scoreBreakdown && (
-                <div className="space-y-2.5 pt-3 border-t border-slate-100">
-                  {Object.entries(optimizationResult.scoreBreakdown).map(([label, val]) => (
-                    <div key={label} className="space-y-1">
-                      <div className="flex justify-between text-[11px] font-bold text-slate-600">
-                        <span>{label}</span>
-                        <span className="font-mono text-slate-900 font-black">{val} pts</span>
-                      </div>
-                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden p-0.5 border border-slate-200/60">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            val >= 18 ? 'bg-emerald-500' : val >= 12 ? 'bg-indigo-600' : 'bg-amber-500'
-                          }`} 
-                          style={{ width: `${Math.min(100, (val / 20) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* CRITICAL GAPS */}
-              {optimizationResult?.criticalGaps && optimizationResult.criticalGaps.length > 0 && (
-                <div className="space-y-2 pt-3 border-t border-slate-100">
-                  <span className="text-xs font-black uppercase text-amber-700 tracking-wider flex items-center gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                    Lipsuri Critice Identificate ({optimizationResult.criticalGaps.length})
-                  </span>
-                  <ul className="space-y-1.5">
-                    {optimizationResult.criticalGaps.map((gap, i) => (
-                      <li key={i} className="text-xs text-slate-700 font-medium flex items-start gap-2 leading-relaxed bg-amber-50/60 border border-amber-200/60 p-2.5 rounded-xl">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5"></span>
-                        <span>{gap}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+          {/* PROFILE STRENGTH SCORE CARD */}
+          <div className="bg-white p-5 rounded-xl border border-neutral-200 space-y-5">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider bg-neutral-100 text-neutral-800 border border-neutral-300">
+                <Sparkles className="w-3.5 h-3.5 text-neutral-900" />
+                Scor Vizibilitate Recruiteri
+              </span>
+              <span className="text-xs font-medium text-neutral-400 font-mono">Algoritm 2026 Audit</span>
             </div>
+
+            <div className="flex items-center gap-5">
+              <div className="relative w-20 h-20 rounded-xl bg-neutral-50 border border-neutral-200 flex flex-col items-center justify-center shrink-0">
+                <span className="text-2xl font-bold text-neutral-950 font-mono tracking-tight">
+                  {optimizationResult?.overallScore || 85}
+                </span>
+                <span className="text-[10px] text-neutral-500 font-mono uppercase">din 100</span>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-neutral-950 leading-tight tracking-tight">
+                  {optimizationResult?.scoreGrade || 'All-Star Profile (Optimizat Recruiteri)'}
+                </h3>
+                <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
+                  Profilurile cu scor peste 85 obtin cu pana la <strong className="text-neutral-950 font-bold">3.5x mai multe mesaje directe</strong> de la recruiteri din Romania.
+                </p>
+              </div>
+            </div>
+
+            {/* SCORE BREAKDOWN BARS */}
+            {optimizationResult?.scoreBreakdown && (
+              <div className="space-y-2.5 pt-3 border-t border-neutral-100">
+                {Object.entries(optimizationResult.scoreBreakdown).map(([label, val]) => (
+                  <div key={label} className="space-y-1">
+                    <div className="flex justify-between text-[11px] font-medium text-neutral-600 font-mono">
+                      <span>{label}</span>
+                      <span className="font-mono text-neutral-900 font-bold">{val} pts</span>
+                    </div>
+                    <div className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full bg-black transition-all duration-500" 
+                        style={{ width: `${Math.min(100, (val / 20) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* CRITICAL GAPS */}
+            {optimizationResult?.criticalGaps && optimizationResult.criticalGaps.length > 0 && (
+              <div className="space-y-2 pt-3 border-t border-neutral-100">
+                <span className="text-xs font-mono font-bold uppercase text-neutral-800 tracking-wider flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-neutral-700" />
+                  Lipsuri Critice Identificate ({optimizationResult.criticalGaps.length})
+                </span>
+                <ul className="space-y-1.5">
+                  {optimizationResult.criticalGaps.map((gap, i) => (
+                    <li key={i} className="text-xs text-neutral-800 font-medium flex items-start gap-2 leading-relaxed bg-neutral-50 border border-neutral-200 p-2.5 rounded-xl">
+                      <span className="w-1.5 h-1.5 rounded-full bg-neutral-900 shrink-0 mt-1.5"></span>
+                      <span>{gap}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
-          {/* TABS NAVIGATION FOR SUGGESTIONS - SEGMENTED FLUID ISLAND */}
-          <div className="bg-slate-100/90 border border-slate-200/80 rounded-2xl p-1.5 flex flex-wrap gap-1.5 shadow-2xs">
+          {/* TABS NAVIGATION FOR SUGGESTIONS */}
+          <div className="bg-neutral-100 border border-neutral-200 rounded-xl p-1 flex flex-wrap gap-1 font-mono text-xs">
             <button
               onClick={() => setActiveTab('action_plan')}
-              className={`py-2 px-3 rounded-xl text-xs font-black transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer flex items-center gap-1.5 ${
+              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'action_plan'
-                  ? 'bg-indigo-600 text-white shadow-xs ring-1 ring-indigo-500/20'
-                  : 'bg-transparent text-slate-600 hover:text-slate-950 hover:bg-white/80 border border-transparent hover:border-slate-200/60'
+                  ? 'bg-black text-white font-bold'
+                  : 'bg-transparent text-neutral-600 hover:text-black'
               }`}
             >
-              <CheckSquare className={`w-3.5 h-3.5 ${activeTab === 'action_plan' ? 'text-white' : 'text-emerald-500'}`} />
+              <CheckSquare className="w-3.5 h-3.5" />
               Plan Pas-cu-Pas
             </button>
             <button
               onClick={() => setActiveTab('headlines')}
-              className={`py-2 px-3 rounded-xl text-xs font-black transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer flex items-center gap-1.5 ${
+              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'headlines'
-                  ? 'bg-indigo-600 text-white shadow-xs ring-1 ring-indigo-500/20'
-                  : 'bg-transparent text-slate-600 hover:text-slate-950 hover:bg-white/80 border border-transparent hover:border-slate-200/60'
+                  ? 'bg-black text-white font-bold'
+                  : 'bg-transparent text-neutral-600 hover:text-black'
               }`}
             >
-              <Lightbulb className={`w-3.5 h-3.5 ${activeTab === 'headlines' ? 'text-white' : 'text-amber-500'}`} />
+              <Lightbulb className="w-3.5 h-3.5" />
               Headline
             </button>
             <button
               onClick={() => setActiveTab('about')}
-              className={`py-2 px-3 rounded-xl text-xs font-black transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer flex items-center gap-1.5 ${
+              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'about'
-                  ? 'bg-indigo-600 text-white shadow-xs ring-1 ring-indigo-500/20'
-                  : 'bg-transparent text-slate-600 hover:text-slate-950 hover:bg-white/80 border border-transparent hover:border-slate-200/60'
+                  ? 'bg-black text-white font-bold'
+                  : 'bg-transparent text-neutral-600 hover:text-black'
               }`}
             >
-              <Edit3 className={`w-3.5 h-3.5 ${activeTab === 'about' ? 'text-white' : 'text-indigo-500'}`} />
+              <Edit3 className="w-3.5 h-3.5" />
               Despre
             </button>
             <button
               onClick={() => setActiveTab('star_projects')}
-              className={`py-2 px-3 rounded-xl text-xs font-black transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer flex items-center gap-1.5 ${
+              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'star_projects'
-                  ? 'bg-indigo-600 text-white shadow-xs ring-1 ring-indigo-500/20'
-                  : 'bg-transparent text-slate-600 hover:text-slate-950 hover:bg-white/80 border border-transparent hover:border-slate-200/60'
+                  ? 'bg-black text-white font-bold'
+                  : 'bg-transparent text-neutral-600 hover:text-black'
               }`}
             >
-              <FolderGit2 className={`w-3.5 h-3.5 ${activeTab === 'star_projects' ? 'text-white' : 'text-purple-500'}`} />
+              <FolderGit2 className="w-3.5 h-3.5" />
               Proiecte STAR
             </button>
             <button
               onClick={() => setActiveTab('boolean_search')}
-              className={`py-2 px-3 rounded-xl text-xs font-black transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer flex items-center gap-1.5 ${
+              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'boolean_search'
-                  ? 'bg-indigo-600 text-white shadow-xs ring-1 ring-indigo-500/20'
-                  : 'bg-transparent text-slate-600 hover:text-slate-950 hover:bg-white/80 border border-transparent hover:border-slate-200/60'
+                  ? 'bg-black text-white font-bold'
+                  : 'bg-transparent text-neutral-600 hover:text-black'
               }`}
             >
-              <Terminal className={`w-3.5 h-3.5 ${activeTab === 'boolean_search' ? 'text-white' : 'text-sky-500'}`} />
+              <Terminal className="w-3.5 h-3.5" />
               Cautare Recruiter
             </button>
             <button
               onClick={() => setActiveTab('skills')}
-              className={`py-2 px-3 rounded-xl text-xs font-black transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer flex items-center gap-1.5 ${
+              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'skills'
-                  ? 'bg-indigo-600 text-white shadow-xs ring-1 ring-indigo-500/20'
-                  : 'bg-transparent text-slate-600 hover:text-slate-950 hover:bg-white/80 border border-transparent hover:border-slate-200/60'
+                  ? 'bg-black text-white font-bold'
+                  : 'bg-transparent text-neutral-600 hover:text-black'
               }`}
             >
-              <Flame className={`w-3.5 h-3.5 ${activeTab === 'skills' ? 'text-white' : 'text-rose-500'}`} />
+              <Flame className="w-3.5 h-3.5" />
               Skills Piata
             </button>
             <button

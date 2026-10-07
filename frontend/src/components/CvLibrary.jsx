@@ -273,36 +273,36 @@ export default function CvLibrary({
   );
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16 font-sans text-gray-900">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16 font-sans text-neutral-900">
       
       {/* ACTION NOTIFICATION PILL */}
       {actionMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-black text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-top-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="fixed top-20 right-6 z-50 bg-black text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 text-xs font-medium animate-in fade-in slide-in-from-top-2">
+          <CheckCircle2 className="w-4 h-4 text-white" />
           <span>{actionMessage}</span>
         </div>
       )}
 
       {/* HEADER & CONTROLS TOOLBAR */}
-      <div className="bg-white border border-gray-200/90 shadow-sm p-4 sm:p-5 rounded-2xl space-y-4">
+      <div className="bg-white border border-neutral-200 p-5 rounded-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-black text-white rounded-xl shrink-0 shadow-sm">
+            <div className="p-2.5 bg-black text-white rounded-xl shrink-0">
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-gray-950 tracking-tight flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-bold text-neutral-950 tracking-tight flex items-center gap-2">
                 CV-urile Mele (CV Library)
               </h2>
-              <p className="text-xs text-gray-500 font-medium">
+              <p className="text-xs text-neutral-500 font-normal">
                 Gestioneaza si personalizeaza multiple versiuni de CV adaptate pentru fiecare domeniu si rol.
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5">
-            <label className="px-3.5 py-2 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200/90 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer">
-              {importingPdf ? <RefreshCw className="w-4 h-4 animate-spin text-gray-600" /> : <Upload className="w-4 h-4 text-gray-600" />}
+            <label className="px-3.5 py-2 bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-300 rounded-xl font-medium text-xs flex items-center gap-1.5 transition cursor-pointer">
+              {importingPdf ? <RefreshCw className="w-4 h-4 animate-spin text-neutral-600" /> : <Upload className="w-4 h-4 text-neutral-700" />}
               <span>{importingPdf ? 'Se importa...' : 'Importa CV (PDF / Word)'}</span>
               <input 
                 type="file" 
@@ -315,7 +315,7 @@ export default function CvLibrary({
 
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+              className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl font-medium text-xs flex items-center gap-1.5 transition cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               Creeaza CV Nou
@@ -324,29 +324,29 @@ export default function CvLibrary({
         </div>
 
         {/* SEARCH BAR & COUNTER */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-gray-100">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-100">
           <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input 
               type="text"
               placeholder="Cauta in CV-urile tale..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-500 focus:bg-white transition"
+              className="w-full bg-white border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-black transition"
             />
           </div>
 
-          <div className="text-xs text-gray-500 font-medium flex items-center gap-2">
-            <span>Total: <strong>{cvList.length}</strong> {cvList.length === 1 ? 'CV' : 'CV-uri'} salvate</span>
+          <div className="text-xs text-neutral-500 font-mono flex items-center gap-2">
+            <span>Total: <strong className="text-neutral-900">{cvList.length}</strong> {cvList.length === 1 ? 'CV' : 'CV-uri'} salvate</span>
           </div>
         </div>
       </div>
 
       {/* CV CARDS GRID */}
       {loading ? (
-        <div className="py-16 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
-          <RefreshCw className="w-6 h-6 animate-spin text-gray-900" />
-          <span className="text-xs font-semibold">Se incarca CV-urile...</span>
+        <div className="py-16 text-center text-neutral-400 flex flex-col items-center justify-center gap-2">
+          <RefreshCw className="w-6 h-6 animate-spin text-neutral-900" />
+          <span className="text-xs font-mono">Se incarca CV-urile...</span>
         </div>
       ) : filteredList.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
@@ -354,7 +354,7 @@ export default function CvLibrary({
             <div 
               key={cv.id}
               onClick={() => onEditCvInStudio && onEditCvInStudio(cv.id)}
-              className="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:border-gray-300 transition-all cursor-pointer flex flex-col justify-between group relative"
+              className="bg-white border border-neutral-200 rounded-xl p-5 hover:border-black transition-all cursor-pointer flex flex-col justify-between group relative"
             >
               
               {/* CARD TOP INFO */}
@@ -362,16 +362,16 @@ export default function CvLibrary({
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-sm sm:text-base text-gray-950 group-hover:text-black transition">
+                      <h3 className="font-bold text-sm sm:text-base text-neutral-950 group-hover:text-black transition">
                         {cv.title || "CV Fara Titlu"}
                       </h3>
                       {cv.isPrimary && (
-                        <span className="px-2 py-0.5 bg-black text-white text-[10px] font-bold rounded-md flex items-center gap-1 shadow-2xs">
+                        <span className="font-mono px-2 py-0.5 bg-black text-white text-[10px] font-bold rounded flex items-center gap-1">
                           <Star className="w-2.5 h-2.5 fill-current" /> Principal
                         </span>
                       )}
                     </div>
-                    <p className="text-xs font-semibold text-gray-700">
+                    <p className="text-xs font-medium text-neutral-600">
                       {cv.fullName || "Fara Nume"}
                     </p>
                   </div>
@@ -382,7 +382,7 @@ export default function CvLibrary({
                       <button
                         onClick={(e) => handleSetPrimary(cv.id, e)}
                         title="Seteaza ca principal"
-                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-amber-500 transition cursor-pointer"
+                        className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-black transition cursor-pointer"
                       >
                         <Star className="w-3.5 h-3.5" />
                       </button>
@@ -390,14 +390,14 @@ export default function CvLibrary({
                     <button
                       onClick={(e) => handleDuplicateCv(cv.id, e)}
                       title="Duplica acest CV"
-                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition cursor-pointer"
+                      className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-black transition cursor-pointer"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={(e) => handleDeleteCv(cv.id, cv.title, e)}
                       title="Sterge CV-ul"
-                      className="p-1.5 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition cursor-pointer"
+                      className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-black transition cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -406,21 +406,21 @@ export default function CvLibrary({
 
                 {/* SUMMARY SNIPPET */}
                 {cv.summary && (
-                  <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-neutral-600 line-clamp-2 leading-relaxed">
                     {cv.summary}
                   </p>
                 )}
 
                 {/* SKILLS PILLS */}
                 {cv.skillsLanguages && (
-                  <div className="flex flex-wrap gap-1 pt-1">
+                  <div className="flex flex-wrap gap-1 pt-1 font-mono">
                     {cv.skillsLanguages.split(',').slice(0, 4).map((skill, sIdx) => (
-                      <span key={sIdx} className="px-2 py-0.5 bg-gray-100 text-gray-700 text-[10px] font-medium rounded-md">
+                      <span key={sIdx} className="px-2 py-0.5 bg-neutral-100 border border-neutral-200 text-neutral-800 text-[10px] rounded">
                         {skill.trim()}
                       </span>
                     ))}
                     {cv.skillsLanguages.split(',').length > 4 && (
-                      <span className="text-[10px] text-gray-400 font-medium self-center">
+                      <span className="text-[10px] text-neutral-400 font-mono self-center">
                         +{cv.skillsLanguages.split(',').length - 4}
                       </span>
                     )}
@@ -429,15 +429,15 @@ export default function CvLibrary({
               </div>
 
               {/* CARD FOOTER WITH TIMESTAMP & EDIT BUTTON */}
-              <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1 text-[11px] text-gray-400 font-medium">
+              <div className="pt-4 mt-4 border-t border-neutral-100 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1 text-[11px] text-neutral-400 font-mono">
                   <Clock className="w-3 h-3" />
                   <span>{cv.updatedAt ? new Date(cv.updatedAt).toLocaleDateString('ro-RO') : 'Recent'}</span>
                 </div>
 
                 <button
                   onClick={() => onEditCvInStudio && onEditCvInStudio(cv.id)}
-                  className="px-3 py-1.5 bg-gray-100 group-hover:bg-black text-gray-800 group-hover:text-white rounded-lg text-xs font-bold flex items-center gap-1 transition shadow-2xs cursor-pointer"
+                  className="px-3 py-1.5 bg-neutral-100 group-hover:bg-black text-neutral-800 group-hover:text-white rounded-lg text-xs font-medium flex items-center gap-1 transition cursor-pointer"
                 >
                   <Edit3 className="w-3 h-3" />
                   <span>Editeaza in Studio</span>
@@ -449,17 +449,17 @@ export default function CvLibrary({
           ))}
         </div>
       ) : (
-        <div className="bg-white border border-gray-200/90 rounded-2xl p-12 text-center space-y-4">
-          <FileText className="w-12 h-12 text-gray-300 mx-auto" />
+        <div className="bg-white border border-neutral-200 rounded-xl p-12 text-center space-y-4">
+          <FileText className="w-12 h-12 text-neutral-300 mx-auto" />
           <div>
-            <h3 className="text-base font-bold text-gray-900">Nu ai niciun CV salvat inca</h3>
-            <p className="text-xs text-gray-500 mt-1">
+            <h3 className="text-base font-bold text-neutral-900">Nu ai niciun CV salvat inca</h3>
+            <p className="text-xs text-neutral-500 mt-1">
               Creeaza primul tau CV sau importa un fisier existent pentru a incepe sa personalizezi aplicarile.
             </p>
           </div>
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <label className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer">
-              {importingPdf ? <RefreshCw className="w-4 h-4 animate-spin text-gray-600" /> : <Upload className="w-4 h-4 text-gray-600" />}
+            <label className="px-4 py-2 bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-300 rounded-xl font-medium text-xs inline-flex items-center gap-1.5 transition cursor-pointer">
+              {importingPdf ? <RefreshCw className="w-4 h-4 animate-spin text-neutral-600" /> : <Upload className="w-4 h-4 text-neutral-700" />}
               <span>{importingPdf ? 'Se importa...' : 'Importa CV (PDF / Word)'}</span>
               <input 
                 type="file" 
@@ -472,7 +472,7 @@ export default function CvLibrary({
 
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+              className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl font-medium text-xs inline-flex items-center gap-1.5 transition cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               Creeaza Primul CV
@@ -483,16 +483,16 @@ export default function CvLibrary({
 
       {/* CREATE NEW CV MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white border border-gray-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="font-bold text-base text-gray-950 flex items-center gap-2">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-neutral-300 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+              <h3 className="font-bold text-base text-neutral-950 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-black" />
                 Creeaza o Versiune Noua de CV
               </h3>
               <button 
                 onClick={() => setShowCreateModal(false)}
-                className="text-gray-400 hover:text-black p-1 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                className="text-neutral-400 hover:text-black p-1 rounded-lg hover:bg-neutral-100 transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -500,7 +500,7 @@ export default function CvLibrary({
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-neutral-800 mb-1">
                   Denumire Versiune CV *
                 </label>
                 <input 
@@ -509,21 +509,21 @@ export default function CvLibrary({
                   value={newCvTitle}
                   onChange={e => setNewCvTitle(e.target.value)}
                   autoFocus
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-black focus:bg-white transition"
+                  className="w-full bg-white border border-neutral-300 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-black transition"
                 />
-                <p className="text-[11px] text-gray-400 mt-1">
+                <p className="text-[11px] text-neutral-500 mt-1">
                   Poti crea versiuni specifice pentru diferite domenii, companii sau tehnologii.
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-gray-100">
+              <div className="pt-3 border-t border-neutral-100">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <span className="text-xs font-semibold text-gray-700 block">Sau porneste de la un CV existent</span>
-                    <span className="text-[11px] text-gray-400">Incarca un fisier PDF sau Word pentru extragere automata</span>
+                    <span className="text-xs font-medium text-neutral-800 block">Sau porneste de la un CV existent</span>
+                    <span className="text-[11px] text-neutral-500">Incarca un fisier PDF sau Word pentru extragere automata</span>
                   </div>
-                  <label className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition shrink-0">
-                    <Upload className="w-3.5 h-3.5 text-gray-600" />
+                  <label className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl text-xs font-medium flex items-center gap-1.5 cursor-pointer transition shrink-0 border border-neutral-200">
+                    <Upload className="w-3.5 h-3.5 text-neutral-700" />
                     <span>Importa fisier</span>
                     <input 
                       type="file" 
@@ -539,17 +539,17 @@ export default function CvLibrary({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-100">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                className="px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-xs font-medium transition cursor-pointer border border-neutral-200"
               >
                 Anuleaza
               </button>
               <button
                 onClick={handleCreateCv}
                 disabled={creatingNew || !newCvTitle.trim()}
-                className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-medium flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
               >
                 {creatingNew ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                 <span>{creatingNew ? 'Se creeaza...' : 'Creeaza si Editeaza'}</span>

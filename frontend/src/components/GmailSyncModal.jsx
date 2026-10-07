@@ -243,17 +243,17 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
     >
       {/* CONTAINER MODAL / SHEET (STIL JOB DETAIL MODAL) */}
       <div 
-        className="relative bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-gray-200 overflow-hidden my-auto animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
+        className="relative bg-white w-full max-w-3xl rounded-xl shadow-2xl border border-neutral-200 overflow-hidden my-auto animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER BAR FIX CU CLOSE & AJUTOR */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white/95 sticky top-0 z-20 backdrop-blur-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-white/95 sticky top-0 z-20 backdrop-blur-md">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-red-600 text-white flex items-center gap-1.5 shadow-xs">
+            <span className="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-black text-white flex items-center gap-1.5">
               <Mail className="w-3.5 h-3.5" />
               <span>GMAIL ATS SYNC</span>
             </span>
-            <span className="text-xs font-bold text-gray-500 truncate max-w-[200px] sm:max-w-md">
+            <span className="text-xs font-medium text-neutral-500 truncate max-w-[200px] sm:max-w-md">
               Sincronizare Automata & Clasificare AI
             </span>
           </div>
@@ -261,16 +261,16 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowHelp(!showHelp)}
-              className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-200/70 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+              className="p-2 rounded-xl text-neutral-600 hover:text-black hover:bg-neutral-100 transition cursor-pointer flex items-center gap-1.5 text-xs font-medium"
               title="Instructiuni Parola Aplicatie"
             >
-              <HelpCircle className="w-4 h-4 text-indigo-600" />
+              <HelpCircle className="w-4 h-4 text-black" />
               <span className="hidden sm:inline">Ghid Parola</span>
             </button>
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-200/70 transition cursor-pointer"
+              className="p-2 rounded-xl text-neutral-500 hover:text-black hover:bg-neutral-100 transition cursor-pointer"
               title="Inchide fereastra (Esc)"
             >
               <X className="w-5 h-5" />
@@ -283,44 +283,44 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
           
           {/* BANNER HEADER TITLU & DESCRIERE */}
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-red-200">
-              <Mail className="w-7 h-7" />
+            <div className="w-12 h-12 rounded-xl bg-neutral-900 text-white flex items-center justify-center shrink-0">
+              <Mail className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight leading-snug flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight leading-snug flex items-center gap-2">
                 <span>Scanare Candidaturi din Gmail</span>
-                <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                  <Bot className="w-3 h-3 text-indigo-600" />
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-neutral-100 text-neutral-800 border border-neutral-300 px-2 py-0.5 rounded flex items-center gap-1">
+                  <Bot className="w-3 h-3 text-black" />
                   AI Powered
                 </span>
               </h2>
-              <p className="text-xs text-gray-600 font-medium leading-relaxed">
+              <p className="text-xs text-neutral-600 font-medium leading-relaxed">
                 Detecteaza automat confirmarile de aplicare, invitatiile la interviu si ofertele de angajare de pe toate platformele ATS (LinkedIn, Greenhouse, Workday, Lever, eJobs, BestJobs, Hipo etc.).
               </p>
             </div>
           </div>
 
           {/* BANNER SECURITATE */}
-          <div className="bg-red-50/50 border border-red-200/80 rounded-2xl p-4 flex items-start gap-3">
-            <ShieldCheck className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-            <div className="text-xs text-red-950 space-y-1">
-              <p className="font-extrabold">Conexiune Securizata IMAP SSL & Filtrare Inteligenta AI</p>
-              <p className="text-red-900/80 leading-relaxed text-[11px]">
+          <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-neutral-900 shrink-0 mt-0.5" />
+            <div className="text-xs text-neutral-900 space-y-1">
+              <p className="font-bold">Conexiune Securizata IMAP SSL & Filtrare Inteligenta AI</p>
+              <p className="text-neutral-600 leading-relaxed text-[11px]">
                 Conexiunea este criptata direct cu <strong>imap.gmail.com (Port 993)</strong> folosind o <strong>Parola de Aplicatie Google</strong> unica. Modelul AI analizeaza doar anteturile de recrutare pentru a elimina falsele alerte si promotiile comerciale.
               </p>
             </div>
           </div>
 
           {/* FORMULAR DATE DE CONECTARE */}
-          <form onSubmit={(e) => { e.preventDefault(); handleRunSync(); }} className="bg-gray-50/70 border border-gray-200 rounded-3xl p-5 sm:p-6 space-y-4">
-            <h3 className="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Key className="w-3.5 h-3.5 text-red-600" />
+          <form onSubmit={(e) => { e.preventDefault(); handleRunSync(); }} className="bg-white border border-neutral-200 rounded-xl p-5 sm:p-6 space-y-4">
+            <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+              <Key className="w-3.5 h-3.5 text-black" />
               <span>Date de Autentificare Gmail</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                <label className="block text-xs font-bold text-neutral-700 mb-1.5">
                   Adresa de Gmail
                 </label>
                 <input 
@@ -328,19 +328,19 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                   placeholder="exemplu@gmail.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full bg-white border border-gray-300 rounded-2xl px-4 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 transition shadow-2xs"
+                  className="w-full bg-white border border-neutral-300 rounded-xl px-4 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-black transition"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-bold text-gray-700">
+                  <label className="block text-xs font-bold text-neutral-700">
                     Parola Aplicatie (16 caractere)
                   </label>
                   <button 
                     type="button"
                     onClick={() => setShowHelp(!showHelp)}
-                    className="text-[11px] text-red-600 hover:text-red-700 font-bold flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] text-neutral-600 hover:text-black font-bold flex items-center gap-1 cursor-pointer"
                   >
                     <span>Cum o obtii?</span>
                   </button>
@@ -351,12 +351,12 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                     placeholder="ex: abcd efgh ijkl mnop"
                     value={appPassword}
                     onChange={e => setAppPassword(e.target.value)}
-                    className="w-full bg-white border border-gray-300 rounded-2xl pl-4 pr-10 py-2.5 text-xs font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 transition shadow-2xs"
+                    className="w-full bg-white border border-neutral-300 rounded-xl pl-4 pr-10 py-2.5 text-xs font-mono text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-black transition"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 p-1 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -397,7 +397,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                 <select 
                   value={daysToLookBack}
                   onChange={e => setDaysToLookBack(Number(e.target.value))}
-                  className="w-full bg-white border border-gray-300 rounded-2xl px-3 py-2 text-xs text-gray-900 outline-none focus:border-red-500 cursor-pointer shadow-2xs font-semibold"
+                  className="w-full bg-white border border-neutral-300 rounded-xl px-3 py-2 text-xs text-neutral-900 outline-none focus:border-black cursor-pointer font-medium"
                 >
                   <option value={7}>Ultimele 7 zile</option>
                   <option value={14}>Ultimele 14 zile</option>
@@ -408,22 +408,22 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
               </div>
 
               <div className="space-y-2 pt-1">
-                <label className="flex items-center gap-2.5 cursor-pointer select-none text-xs font-bold text-gray-800">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none text-xs font-medium text-neutral-800">
                   <input 
                     type="checkbox"
                     checked={autoCreateMissing}
                     onChange={e => setAutoCreateMissing(e.target.checked)}
-                    className="w-4 h-4 rounded text-red-600 focus:ring-red-500 accent-red-600 cursor-pointer"
+                    className="w-4 h-4 rounded text-black focus:ring-black accent-black cursor-pointer"
                   />
                   <span>Creeaza automat carduri pentru aplicari noi</span>
                 </label>
 
-                <label className="flex items-center gap-2.5 cursor-pointer select-none text-xs font-semibold text-gray-600">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none text-xs font-medium text-neutral-600">
                   <input 
                     type="checkbox"
                     checked={rememberCredentials}
                     onChange={e => setRememberCredentials(e.target.checked)}
-                    className="w-4 h-4 rounded text-red-600 focus:ring-red-500 accent-red-600 cursor-pointer"
+                    className="w-4 h-4 rounded text-black focus:ring-black accent-black cursor-pointer"
                   />
                   <span>Pastreaza datele pe acest browser</span>
                 </label>
@@ -432,14 +432,14 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
           </form>
 
           {/* BANNER REPARARE RAPIDA A CANDIDATURILOR EXISTENTE */}
-          <div className="bg-indigo-50/70 border border-indigo-200/90 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0 text-indigo-700">
+              <div className="w-8 h-8 rounded-lg bg-neutral-200 flex items-center justify-center shrink-0 text-neutral-900">
                 <Wrench className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <p className="font-extrabold text-indigo-950">Curatare & Auto-Reparare Erori Gmail</p>
-                <p className="text-[11px] text-indigo-800/80 truncate">
+                <p className="font-bold text-neutral-950">Curatare & Auto-Reparare Erori Gmail</p>
+                <p className="text-[11px] text-neutral-600 truncate">
                   Corecteaza automat numele eronate ("REQ", "care ai aplicat") si falsele interviuri.
                 </p>
               </div>
@@ -448,7 +448,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
               type="button"
               onClick={handleRepairCorrupted}
               disabled={isRepairing || isSyncing}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shrink-0 transition cursor-pointer shadow-xs disabled:opacity-50 flex items-center justify-center gap-1.5"
+              className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold shrink-0 transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {isRepairing && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
               <span>{isRepairing ? 'Se curata...' : 'Repara Datele'}</span>
@@ -456,38 +456,39 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
           </div>
 
           {repairResult && (
-            <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-center gap-3 text-xs text-indigo-900 font-bold animate-in fade-in duration-200">
-              <CheckCircle2 className="w-5 h-5 shrink-0 text-indigo-600" />
+            <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl flex items-center gap-3 text-xs text-neutral-900 font-bold animate-in fade-in duration-200">
+              <CheckCircle2 className="w-5 h-5 shrink-0 text-neutral-900" />
               <span>{repairResult.message || `Au fost verificate si reparate ${repairResult.repaired || 0} candidaturi.`}</span>
             </div>
           )}
 
           {/* CARD DE PROGRES REAL-TIME & FEEDBACK LIVE IN TIMPUL SINCRONIZARII */}
           {isSyncing && (
-            <div className="p-5 sm:p-6 bg-gradient-to-br from-indigo-50/80 via-white to-red-50/50 border-2 border-indigo-300 rounded-3xl space-y-4 shadow-sm animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-5 sm:p-6 bg-white border border-neutral-200 rounded-xl space-y-4 animate-in fade-in duration-200">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                  <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center">
                     <RefreshCw className="w-5 h-5 animate-spin" />
                   </div>
                   <div>
-                    <h4 className="font-black text-sm text-gray-950">
+                    <h4 className="font-bold text-sm text-neutral-950">
                       Sincronizare in Desfasurare...
                     </h4>
-                    <p className="text-[11px] text-gray-500 font-medium">
+                    <p className="text-[11px] text-neutral-500 font-medium">
                       Procesare automata a emailurilor de recrutare
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold bg-white px-3 py-1 rounded-full border border-indigo-200 text-indigo-700 shadow-2xs">
-                    ⏱️ {elapsedSeconds}s
+                  <span className="text-xs font-mono font-bold bg-neutral-100 px-3 py-1 rounded-lg border border-neutral-200 text-neutral-800 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-black" />
+                    <span>{elapsedSeconds}s</span>
                   </span>
                   <button
                     type="button"
                     onClick={handleCancelSync}
-                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                    className="px-3 py-1.5 bg-neutral-900 hover:bg-black text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
                     title="Opreste imediat procesul"
                   >
                     <XCircle className="w-3.5 h-3.5" />
@@ -498,13 +499,13 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
 
               {/* BARA DE PROGRES VIZUALA */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-[11px] font-bold text-gray-600 px-0.5">
+                <div className="flex items-center justify-between text-[11px] font-mono font-bold text-neutral-600 px-0.5">
                   <span>Pasul {syncStep} din 5</span>
                   <span>{Math.min(95, syncStep * 20)}%</span>
                 </div>
-                <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-200 shadow-inner">
+                <div className="w-full bg-neutral-100 h-2 rounded-full overflow-hidden border border-neutral-200">
                   <div 
-                    className="h-full bg-indigo-600 rounded-full transition-all duration-700 ease-out"
+                    className="h-full bg-black rounded-full transition-all duration-700 ease-out"
                     style={{ width: `${Math.min(95, Math.max(15, syncStep * 20))}%` }}
                   />
                 </div>
@@ -685,14 +686,14 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
         </div>
 
         {/* FOOTER FIX CU ACTIUNI RAPIDE */}
-        <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
+        <div className="p-4 sm:p-5 bg-white border-t border-neutral-200 flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
           <button
             type="button"
             onClick={handleTestConnection}
             disabled={isTesting || isSyncing}
-            className="w-full sm:w-auto px-5 py-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition cursor-pointer border bg-white hover:bg-gray-100 text-gray-900 border-gray-300 shadow-2xs disabled:opacity-50"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer border bg-neutral-100 hover:bg-neutral-200 text-neutral-900 border-neutral-200 disabled:opacity-50"
           >
-            {isTesting && <RefreshCw className="w-4 h-4 animate-spin text-gray-600" />}
+            {isTesting && <RefreshCw className="w-4 h-4 animate-spin text-neutral-600" />}
             <span>Testeaza Conexiunea</span>
           </button>
 
@@ -700,7 +701,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 sm:flex-none px-4 py-3 text-xs font-bold text-gray-600 hover:text-gray-900 rounded-2xl hover:bg-gray-200/60 transition cursor-pointer"
+              className="flex-1 sm:flex-none px-4 py-2.5 text-xs font-medium text-neutral-600 hover:text-black rounded-xl hover:bg-neutral-100 transition cursor-pointer"
             >
               Inchide
             </button>
@@ -709,7 +710,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
               <button
                 type="button"
                 onClick={handleCancelSync}
-                className="flex-1 sm:flex-none px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md active:scale-95"
+                className="flex-1 sm:flex-none px-6 py-2.5 bg-neutral-900 hover:bg-black text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
               >
                 <XCircle className="w-4 h-4" />
                 <span>Opreste Sincronizarea</span>
@@ -719,7 +720,7 @@ export default function GmailSyncModal({ isOpen, onClose, onSyncComplete, active
                 type="button"
                 onClick={handleRunSync}
                 disabled={isTesting || isSyncing}
-                className="flex-1 sm:flex-none px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md disabled:opacity-50 active:scale-95"
+                className="flex-1 sm:flex-none px-6 py-2.5 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
               >
                 <Mail className="w-4 h-4" />
                 <span>Sincronizeaza Acum</span>

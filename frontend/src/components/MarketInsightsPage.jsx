@@ -202,27 +202,25 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
     <div className="space-y-6 pb-16 font-sans">
       
       {/* HERO HEADER */}
-      <section className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-7 shadow-xs relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-gradient-to-bl from-blue-50 via-indigo-50/40 to-transparent rounded-full pointer-events-none blur-2xl"></div>
-
+      <section className="bg-white border border-neutral-200 rounded-xl p-6 sm:p-7 shadow-xs relative overflow-hidden">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2.5 max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-blue-50 text-blue-700 border border-blue-200">
-              <Compass className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-mono font-bold tracking-wide uppercase bg-neutral-100 text-neutral-900 border border-neutral-200">
+              <Compass className="w-3.5 h-3.5 text-black" />
               Market Insights 2026
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight leading-tight">
-              Ce Se Cere pe Piata IT & <span className="text-blue-600 underline decoration-blue-200 decoration-wavy">Skill Match Junior</span>
+            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-950 tracking-tight leading-tight">
+              Ce Se Cere pe Piata IT & Skill Match Junior
             </h1>
-            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Analiza bazata pe <span className="font-bold text-gray-950">{data?.totalJobsAnalyzed ? data.totalJobsAnalyzed.toLocaleString() : '8.800+'} pozitii reale</span>. Compara cerintele oficiale de la joburile de Junior cu profilul tau pentru a vedea exact ce competente ai si ce iti lipseste.
+            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed">
+              Analiza bazata pe <span className="font-bold text-neutral-950">{data?.totalJobsAnalyzed ? data.totalJobsAnalyzed.toLocaleString() : '8.800+'} pozitii reale</span>. Compara cerintele oficiale de la joburile de Junior cu profilul tau pentru a vedea exact ce competente ai si ce iti lipseste.
             </p>
           </div>
 
           <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-2.5">
             <button
               onClick={() => fetchInsights()}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-800 transition border border-gray-200 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 text-neutral-800 transition border border-neutral-200 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               Actualizeaza Datele
@@ -230,74 +228,74 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
             {onNavigateToJobSearch && (
               <button
                 onClick={onNavigateToJobSearch}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-black hover:bg-neutral-800 text-white transition shadow-2xs cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-black hover:bg-neutral-800 text-white transition shadow-xs cursor-pointer"
               >
-                <Search className="w-3.5 h-3.5 text-blue-400" />
+                <Search className="w-3.5 h-3.5 text-white" />
                 Vezi Joburile Live in Cautare
               </button>
             )}
           </div>
         </div>
+      </section>
 
-        {/* METRICS STRIP */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-gray-100">
-          <div className="bg-gray-50/80 border border-gray-200/70 p-3.5 rounded-2xl">
-            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Pozitii Analizate</p>
-            <p className="text-xl sm:text-2xl font-black text-gray-950 mt-0.5">
-              {data ? data.totalJobsAnalyzed?.toLocaleString() : '...'}
-            </p>
-            <p className="text-[11px] text-gray-500 mt-0.5">
-              {locationFilter === 'BUCURESTI' ? 'Doar Bucuresti' : locationFilter === 'RO_ONLY' ? 'Toata Romania' : locationFilter === 'RO_AND_REMOTE' ? 'Romania & Remote' : 'Toate'}
-            </p>
-          </div>
+      {/* STATS BANNER */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-white border border-neutral-200/90 p-4 rounded-xl shadow-2xs">
+          <p className="text-[11px] font-mono font-bold text-neutral-500 uppercase tracking-wider">Total Joburi Analizate</p>
+          <p className="text-2xl sm:text-3xl font-extrabold text-neutral-950 mt-1 tabular-nums">
+            {data ? data.totalJobsAnalyzed?.toLocaleString() : '...'}
+          </p>
+          <p className="text-xs text-neutral-500 mt-0.5 font-mono">
+            {locationFilter === 'BUCURESTI' ? 'Doar Bucuresti' : locationFilter === 'RO_ONLY' ? 'Toata Romania' : locationFilter === 'RO_AND_REMOTE' ? 'Romania & Remote' : 'Toate'}
+          </p>
+        </div>
 
-          <div className="bg-emerald-50/60 border border-emerald-200/70 p-3.5 rounded-2xl">
-            <p className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider">Pozitii Junior & Intern</p>
-            <p className="text-xl sm:text-2xl font-black text-emerald-950 mt-0.5">
-              {data ? data.totalJuniorJobs?.toLocaleString() : '...'}
-            </p>
-            <p className="text-[11px] text-emerald-700 mt-0.5">
-              {data && data.totalJobsAnalyzed > 0 ? `${Math.round((data.totalJuniorJobs * 100) / data.totalJobsAnalyzed)}% din piata` : 'Oportunitati debut'}
-            </p>
-          </div>
+        <div className="bg-white border border-neutral-200/90 p-4 rounded-xl shadow-2xs">
+          <p className="text-[11px] font-mono font-bold text-neutral-500 uppercase tracking-wider">Pozitii Junior & Intern</p>
+          <p className="text-2xl sm:text-3xl font-extrabold text-neutral-950 mt-1 tabular-nums">
+            {data ? data.totalJuniorJobs?.toLocaleString() : '...'}
+          </p>
+          <p className="text-xs text-neutral-500 mt-0.5 font-mono">
+            {data && data.totalJobsAnalyzed > 0 ? `${Math.round((data.totalJuniorJobs * 100) / data.totalJobsAnalyzed)}% din piata` : 'Oportunitati debut'}
+          </p>
+        </div>
 
-          <div className="bg-blue-50/60 border border-blue-200/70 p-3.5 rounded-2xl">
-            <p className="text-[11px] font-semibold text-blue-800 uppercase tracking-wider">Competitie Redusa</p>
-            <p className="text-xl sm:text-2xl font-black text-blue-950 mt-0.5">
-              {data ? `${data.overallLowCompetitionPct}%` : '...'}
-            </p>
-            <p className="text-[11px] text-blue-700 mt-0.5">Sub 10-25 aplicanti / early apply</p>
-          </div>
+        <div className="bg-white border border-neutral-200/90 p-4 rounded-xl shadow-2xs">
+          <p className="text-[11px] font-mono font-bold text-neutral-500 uppercase tracking-wider">Competitie Redusa</p>
+          <p className="text-2xl sm:text-3xl font-extrabold text-neutral-950 mt-1 tabular-nums">
+            {data ? `${data.overallLowCompetitionPct}%` : '...'}
+          </p>
+          <p className="text-xs text-neutral-500 mt-0.5 font-mono">Sub 10-25 aplicanti / early apply</p>
+        </div>
 
-          <div className="bg-purple-50/60 border border-purple-200/70 p-3.5 rounded-2xl">
-            <p className="text-[11px] font-semibold text-purple-800 uppercase tracking-wider">Specializari IT</p>
-            <p className="text-xl sm:text-2xl font-black text-purple-950 mt-0.5">
-              {data?.domains ? data.domains.length : '13'}
-            </p>
-            <p className="text-[11px] text-purple-700 mt-0.5">Domenii tehnice distincte</p>
-          </div>
+        <div className="bg-white border border-neutral-200/90 p-4 rounded-xl shadow-2xs">
+          <p className="text-[11px] font-mono font-bold text-neutral-500 uppercase tracking-wider">Specializari IT</p>
+          <p className="text-2xl sm:text-3xl font-extrabold text-neutral-950 mt-1 tabular-nums">
+            {data?.domains ? data.domains.length : '13'}
+          </p>
+          <p className="text-xs text-neutral-500 mt-0.5 font-mono">Domenii tehnice distincte</p>
         </div>
       </section>
 
       {/* DUAL SELECTOR BAR: SENIORITY + LOCATION (BUCURESTI FILTER) */}
-      <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xs space-y-4">
+      <section className="bg-white border border-neutral-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4">
         
         {/* ROW 1: SENIORITY & LOCATION PILLS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-2 border-b border-gray-100">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-2 border-b border-neutral-100">
           
           {/* SENIORITY CONTROL */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black uppercase text-gray-500 tracking-wider flex items-center gap-1.5">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
+            <label className="text-xs font-mono font-bold uppercase text-neutral-500 tracking-wider flex items-center gap-1.5">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-black" />
               1. Nivel de Experienta:
             </label>
-            <div className="inline-flex p-1 bg-gray-100 rounded-xl border border-gray-200 w-full overflow-x-auto">
+            <div className="inline-flex p-1 bg-neutral-100 rounded-xl border border-neutral-200 w-full overflow-x-auto">
               <button
                 onClick={() => setLevelFilter('JUNIOR')}
                 className={`flex-1 min-w-[120px] py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center ${
                   levelFilter === 'JUNIOR'
                     ? 'bg-black text-white shadow-xs'
-                    : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
+                    : 'text-neutral-700 hover:text-black hover:bg-neutral-200/60'
                 }`}
               >
                 Junior & Intern
@@ -307,7 +305,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                 className={`flex-1 min-w-[110px] py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center ${
                   levelFilter === 'MID'
                     ? 'bg-black text-white shadow-xs'
-                    : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
+                    : 'text-neutral-700 hover:text-black hover:bg-neutral-200/60'
                 }`}
               >
                 Mid-Level (2-4 ani)
@@ -317,7 +315,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                 className={`flex-1 min-w-[120px] py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center ${
                   levelFilter === 'SENIOR'
                     ? 'bg-black text-white shadow-xs'
-                    : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
+                    : 'text-neutral-700 hover:text-black hover:bg-neutral-200/60'
                 }`}
               >
                 Senior & Lead (5+)
@@ -327,7 +325,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                 className={`flex-1 min-w-[90px] py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center ${
                   levelFilter === 'ALL'
                     ? 'bg-black text-white shadow-xs'
-                    : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
+                    : 'text-neutral-700 hover:text-black hover:bg-neutral-200/60'
                 }`}
               >
                 Toate
@@ -337,17 +335,17 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
 
           {/* LOCATION FILTER (INCLUDING BUCURESTI) */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black uppercase text-gray-500 tracking-wider flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-emerald-600" />
+            <label className="text-xs font-mono font-bold uppercase text-neutral-500 tracking-wider flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-black" />
               2. Filtru Geografic (Locatie):
             </label>
-            <div className="flex flex-wrap p-1 bg-gray-100 rounded-xl border border-gray-200 w-full gap-1">
+            <div className="flex flex-wrap p-1 bg-neutral-100 rounded-xl border border-neutral-200 w-full gap-1">
               <button
                 onClick={() => setLocationFilter('RO_ONLY')}
                 className={`flex-1 min-w-[120px] py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1.5 ${
                   locationFilter === 'RO_ONLY'
-                    ? 'bg-blue-600 text-white shadow-xs font-black'
-                    : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
+                    ? 'bg-black text-white shadow-xs font-bold'
+                    : 'text-neutral-700 hover:text-black hover:bg-neutral-200/60'
                 }`}
               >
                 <MapPin className="w-3.5 h-3.5" />
@@ -357,8 +355,8 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                 onClick={() => setLocationFilter('BUCURESTI')}
                 className={`flex-1 min-w-[110px] py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1.5 ${
                   locationFilter === 'BUCURESTI'
-                    ? 'bg-blue-600 text-white shadow-xs font-black'
-                    : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
+                    ? 'bg-black text-white shadow-xs font-bold'
+                    : 'text-neutral-700 hover:text-black hover:bg-neutral-200/60'
                 }`}
               >
                 <Building2 className="w-3.5 h-3.5" />
@@ -368,8 +366,8 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                 onClick={() => setLocationFilter('RO_AND_REMOTE')}
                 className={`flex-1 min-w-[130px] py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1.5 ${
                   locationFilter === 'RO_AND_REMOTE'
-                    ? 'bg-blue-600 text-white shadow-xs font-black'
-                    : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
+                    ? 'bg-black text-white shadow-xs font-bold'
+                    : 'text-neutral-700 hover:text-black hover:bg-neutral-200/60'
                 }`}
               >
                 <Globe className="w-3.5 h-3.5" />
@@ -379,8 +377,8 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                 onClick={() => setLocationFilter('ALL')}
                 className={`flex-1 min-w-[100px] py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center flex items-center justify-center gap-1.5 ${
                   locationFilter === 'ALL'
-                    ? 'bg-blue-600 text-white shadow-xs font-black'
-                    : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
+                    ? 'bg-black text-white shadow-xs font-bold'
+                    : 'text-neutral-700 hover:text-black hover:bg-neutral-200/60'
                 }`}
               >
                 <Compass className="w-3.5 h-3.5" />
@@ -445,33 +443,33 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
           {/* BOX 1: SWEET SPOTS */}
-          <div className="bg-gradient-to-br from-emerald-500/10 via-white to-white border border-emerald-200 rounded-2xl p-4 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-2">
+          <div className="bg-white border border-neutral-200/90 hover:border-black rounded-2xl p-5 shadow-2xs transition-all flex flex-col justify-between">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  <Target className="w-3 h-3 text-emerald-600" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-neutral-100 text-neutral-900 border border-neutral-200">
+                  <Target className="w-3 h-3 text-black" />
                   Top Oportunitate
                 </span>
-                <span className="text-[11px] text-emerald-700 font-bold">Cel mai bun raport</span>
+                <span className="text-xs text-neutral-500 font-mono font-bold">Cel mai bun raport</span>
               </div>
-              <h3 className="font-bold text-gray-950 text-sm">Cerere mare & competitie redusa</h3>
+              <h3 className="font-bold text-neutral-950 text-sm tracking-tight">Cerere mare & competitie redusa</h3>
 
-              <div className="space-y-1.5 pt-1">
+              <div className="space-y-2 pt-1">
                 {data.topSweetSpots?.slice(0, 3).map((spot, i) => (
                   <div 
                     key={spot.id}
                     onClick={() => { setSelectedDomain(spot); setModalTab('requirements'); }}
-                    className="flex items-center justify-between p-2 rounded-xl bg-white border border-emerald-100 hover:border-emerald-300 transition cursor-pointer group shadow-2xs"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/80 hover:bg-neutral-100 border border-neutral-200 transition cursor-pointer group shadow-2xs"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-md bg-emerald-50 text-emerald-700 font-black text-xs flex items-center justify-center">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 h-5 rounded-md bg-black text-white font-mono font-bold text-xs flex items-center justify-center">
                         #{i + 1}
                       </span>
-                      <p className="text-xs font-bold text-gray-900 group-hover:text-emerald-700 transition truncate">
+                      <p className="text-xs font-bold text-neutral-900 group-hover:text-black transition truncate">
                         {spot.title}
                       </p>
                     </div>
-                    <span className="text-xs font-black text-emerald-700 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-100">
+                    <span className="text-xs font-mono font-bold text-black px-2 py-0.5 rounded-md bg-white border border-neutral-200">
                       {spot.opportunityScore}/100
                     </span>
                   </div>
@@ -481,33 +479,33 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
           </div>
 
           {/* BOX 2: LOWEST COMPETITION */}
-          <div className="bg-gradient-to-br from-blue-500/10 via-white to-white border border-blue-200 rounded-2xl p-4 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-2">
+          <div className="bg-white border border-neutral-200/90 hover:border-black rounded-2xl p-5 shadow-2xs transition-all flex flex-col justify-between">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
-                  <ShieldCheck className="w-3 h-3 text-blue-600" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-neutral-100 text-neutral-900 border border-neutral-200">
+                  <ShieldCheck className="w-3 h-3 text-black" />
                   Competitie Redusa
                 </span>
-                <span className="text-[11px] text-blue-700 font-bold">Putini candidati</span>
+                <span className="text-xs text-neutral-500 font-mono font-bold">Putini candidati</span>
               </div>
-              <h3 className="font-bold text-gray-950 text-sm">Sanse mari de selectie rapida</h3>
+              <h3 className="font-bold text-neutral-950 text-sm tracking-tight">Sanse mari de selectie rapida</h3>
 
-              <div className="space-y-1.5 pt-1">
+              <div className="space-y-2 pt-1">
                 {data.lowestCompetition?.slice(0, 3).map((spot, i) => (
                   <div 
                     key={spot.id}
                     onClick={() => { setSelectedDomain(spot); setModalTab('requirements'); }}
-                    className="flex items-center justify-between p-2 rounded-xl bg-white border border-blue-100 hover:border-blue-300 transition cursor-pointer group shadow-2xs"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/80 hover:bg-neutral-100 border border-neutral-200 transition cursor-pointer group shadow-2xs"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-md bg-blue-50 text-blue-700 font-black text-xs flex items-center justify-center">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 h-5 rounded-md bg-black text-white font-mono font-bold text-xs flex items-center justify-center">
                         #{i + 1}
                       </span>
-                      <p className="text-xs font-bold text-gray-900 group-hover:text-blue-700 transition truncate">
+                      <p className="text-xs font-bold text-neutral-900 group-hover:text-black transition truncate">
                         {spot.title}
                       </p>
                     </div>
-                    <span className="text-xs font-black text-blue-700 px-2 py-0.5 rounded-md bg-blue-50 border border-blue-100">
+                    <span className="text-xs font-mono font-bold text-black px-2 py-0.5 rounded-md bg-white border border-neutral-200">
                       {spot.lowCompetitionRate}%
                     </span>
                   </div>
@@ -517,33 +515,33 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
           </div>
 
           {/* BOX 3: MOST IN-DEMAND */}
-          <div className="bg-gradient-to-br from-amber-500/10 via-white to-white border border-amber-200 rounded-2xl p-4 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-2">
+          <div className="bg-white border border-neutral-200/90 hover:border-black rounded-2xl p-5 shadow-2xs transition-all flex flex-col justify-between">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
-                  <Flame className="w-3 h-3 text-amber-600" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-neutral-100 text-neutral-900 border border-neutral-200">
+                  <Flame className="w-3 h-3 text-black" />
                   Cele Mai Cautate
                 </span>
-                <span className="text-[11px] text-amber-700 font-bold">Volum maxim</span>
+                <span className="text-xs text-neutral-500 font-mono font-bold">Volum maxim</span>
               </div>
-              <h3 className="font-bold text-gray-950 text-sm">Cele mai multe anunturi active</h3>
+              <h3 className="font-bold text-neutral-950 text-sm tracking-tight">Cele mai multe anunturi active</h3>
 
-              <div className="space-y-1.5 pt-1">
+              <div className="space-y-2 pt-1">
                 {data.mostInDemand?.slice(0, 3).map((spot, i) => (
                   <div 
                     key={spot.id}
                     onClick={() => { setSelectedDomain(spot); setModalTab('requirements'); }}
-                    className="flex items-center justify-between p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 transition cursor-pointer group shadow-2xs"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/80 hover:bg-neutral-100 border border-neutral-200 transition cursor-pointer group shadow-2xs"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-md bg-amber-50 text-amber-700 font-black text-xs flex items-center justify-center">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 h-5 rounded-md bg-black text-white font-mono font-bold text-xs flex items-center justify-center">
                         #{i + 1}
                       </span>
-                      <p className="text-xs font-bold text-gray-900 group-hover:text-amber-700 transition truncate">
+                      <p className="text-xs font-bold text-neutral-900 group-hover:text-black transition truncate">
                         {spot.title}
                       </p>
                     </div>
-                    <span className="text-xs font-black text-amber-700 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-100">
+                    <span className="text-xs font-mono font-bold text-black px-2 py-0.5 rounded-md bg-white border border-neutral-200">
                       {spot.levelJobCount} joburi
                     </span>
                   </div>
@@ -559,34 +557,34 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base sm:text-lg font-black text-gray-950 flex items-center gap-2">
-              <Code className="w-4 h-4 text-blue-600" />
+            <h2 className="text-base sm:text-lg font-bold text-neutral-950 flex items-center gap-2 tracking-tight">
+              <Code className="w-4 h-4 text-black" />
               Specializari Tehnice & Cerinte Reale ({filteredDomains.length})
             </h2>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-neutral-500">
               Apasa pe orice domeniu pentru a vedea cerintele junior complete, analiza competentelor tale si joburile deschise.
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-xl border border-gray-200">
+            <span className="text-xs font-mono font-bold text-neutral-800 bg-neutral-100 px-2.5 py-1 rounded-xl border border-neutral-200">
               {locationFilter === 'BUCURESTI' ? 'Bucuresti' : locationFilter === 'RO_ONLY' ? 'Toata Romania' : locationFilter === 'RO_AND_REMOTE' ? 'Romania & Remote' : 'Toate'}
             </span>
-            <span className="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-xl border border-gray-200">
+            <span className="text-xs font-mono font-bold text-neutral-800 bg-neutral-100 px-2.5 py-1 rounded-xl border border-neutral-200">
               Nivel: {levelFilter}
             </span>
           </div>
         </div>
 
         {loading ? (
-          <div className="py-20 text-center bg-white border border-gray-200 rounded-3xl">
-            <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
-            <p className="text-sm font-bold text-gray-800">Se analizeaza piata IT si cerintele de joburi...</p>
-            <p className="text-xs text-gray-500 mt-1">Calculare statistici de competitie, cerere si potrivire cerinte.</p>
+          <div className="py-20 text-center bg-white border border-neutral-200 rounded-2xl">
+            <RefreshCw className="w-8 h-8 text-black animate-spin mx-auto mb-3" />
+            <p className="text-sm font-bold text-neutral-900">Se analizeaza piata IT si cerintele de joburi...</p>
+            <p className="text-xs text-neutral-500 mt-1">Calculare statistici de competitie, cerere si potrivire cerinte.</p>
           </div>
         ) : filteredDomains.length === 0 ? (
-          <div className="py-16 text-center bg-white border border-gray-200 rounded-3xl p-6">
-            <Info className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm font-bold text-gray-800">Nu a fost gasit niciun domeniu conform filtrelor selectate.</p>
+          <div className="py-16 text-center bg-white border border-neutral-200 rounded-2xl p-6">
+            <Info className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+            <p className="text-sm font-bold text-neutral-900">Nu a fost gasit niciun domeniu conform filtrelor selectate.</p>
             <button
               onClick={() => { setSearchQuery(''); setLevelFilter('JUNIOR'); setLocationFilter('RO_ONLY'); setActiveOnly(false); }}
               className="mt-3 px-4 py-2 bg-black text-white text-xs font-bold rounded-xl cursor-pointer"
@@ -604,20 +602,20 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                 <div
                   key={domain.id}
                   onClick={() => { setSelectedDomain(domain); setModalTab('requirements'); }}
-                  className="bg-white border border-gray-200/90 hover:border-indigo-300 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group"
+                  className="bg-white border border-neutral-200/90 hover:border-black rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group"
                 >
                   <div className="space-y-3.5">
                     {/* TOP LINE: ICON + BADGES */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-800 group-hover:bg-gray-900 group-hover:text-white transition shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-800 group-hover:bg-black group-hover:text-white transition shrink-0">
                           <IconComp className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="font-black text-gray-950 text-sm sm:text-base leading-tight group-hover:text-indigo-600 transition truncate">
+                          <h3 className="font-bold text-neutral-950 text-base leading-tight group-hover:text-neutral-700 transition truncate tracking-tight">
                             {domain.title}
                           </h3>
-                          <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">
+                          <p className="text-[11px] text-neutral-500 mt-0.5 line-clamp-1 font-mono">
                             {domain.tagLine}
                           </p>
                         </div>
@@ -723,12 +721,12 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                   </div>
 
                   {/* BOTTOM CTA BUTTON */}
-                  <div className="mt-3.5 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-gray-900 group-hover:text-indigo-600 transition">
+                  <div className="mt-3.5 pt-3 border-t border-neutral-200 flex items-center justify-between text-xs font-bold text-neutral-900 group-hover:text-black transition">
                     <span className="flex items-center gap-1.5">
-                      <BookOpen className="w-4 h-4 text-indigo-600" />
+                      <BookOpen className="w-4 h-4 text-neutral-900" />
                       Verifica Cerinte Junior
                     </span>
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition text-gray-400 group-hover:text-indigo-600" />
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition text-neutral-400 group-hover:text-black" />
                   </div>
                 </div>
               );
@@ -741,31 +739,31 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
       {selectedDomain && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setSelectedDomain(null)}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
         >
           <div 
-            className="bg-white rounded-3xl border border-gray-200 w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            className="bg-white rounded-2xl border border-neutral-300 w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* MODAL HEADER */}
-            <div className="p-5 sm:p-6 border-b border-gray-200 flex items-start justify-between bg-white shrink-0">
+            <div className="p-5 sm:p-6 border-b border-neutral-200 flex items-start justify-between bg-white shrink-0">
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-2xl bg-gray-900 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center shrink-0">
                   {(() => {
                     const IconComp = DOMAIN_ICONS[selectedDomain.id] || Code;
-                    return <IconComp className="w-5 h-5 text-indigo-400" />;
+                    return <IconComp className="w-5 h-5 text-white" />;
                   })()}
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg sm:text-xl font-black text-gray-950 tracking-tight">
+                    <h2 className="text-lg sm:text-xl font-bold text-neutral-900 tracking-tight">
                       {selectedDomain.title}
                     </h2>
-                    <span className={`text-xs font-black px-2.5 py-0.5 rounded-full border ${getOpportunityColor(selectedDomain.opportunityScore)}`}>
+                    <span className="font-mono text-xs uppercase px-2.5 py-0.5 rounded-md border border-neutral-300 bg-neutral-100 text-neutral-800">
                       {selectedDomain.opportunityBadge}
                     </span>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-2xl">
+                  <p className="text-xs sm:text-sm text-neutral-500 mt-1 max-w-2xl">
                     {selectedDomain.tagLine}
                   </p>
                 </div>
@@ -773,7 +771,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
 
               <button
                 onClick={() => setSelectedDomain(null)}
-                className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
+                className="p-2 rounded-xl text-neutral-500 hover:text-black hover:bg-neutral-100 transition cursor-pointer"
                 title="Inchide fereastra (Esc)"
               >
                 <X className="w-5 h-5" />
@@ -781,58 +779,54 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
             </div>
 
             {/* MODAL TABS */}
-            <div className="px-6 border-b border-gray-200 bg-gray-50/70 flex gap-1.5 shrink-0 overflow-x-auto">
+            <div className="px-6 border-b border-neutral-200 bg-neutral-50 flex gap-2 shrink-0 overflow-x-auto">
               <button
                 onClick={() => setModalTab('requirements')}
-                className={`py-3 px-3 text-xs font-bold border-b-2 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`py-3 px-3.5 text-xs font-semibold border-b-2 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   modalTab === 'requirements'
-                    ? 'border-indigo-600 text-indigo-700 bg-white font-black'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                    ? 'border-black text-black bg-white font-bold'
+                    : 'border-transparent text-neutral-500 hover:text-black'
                 }`}
               >
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <CheckCircle2 className="w-4 h-4 text-neutral-900" />
                 Cerinte Junior & Potrivire CV
               </button>
               <button
                 onClick={() => setModalTab('sample_jobs')}
-                className={`py-3 px-3 text-xs font-bold border-b-2 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`py-3 px-3.5 text-xs font-semibold border-b-2 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   modalTab === 'sample_jobs'
-                    ? 'border-indigo-600 text-indigo-700 bg-white font-black'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                    ? 'border-black text-black bg-white font-bold'
+                    : 'border-transparent text-neutral-500 hover:text-black'
                 }`}
               >
-                <Briefcase className="w-4 h-4 text-amber-600" />
+                <Briefcase className="w-4 h-4 text-neutral-700" />
                 Joburi Reale Deschise ({selectedDomain.sampleJobs?.length || 0})
               </button>
             </div>
 
             {/* MODAL CONTENT BODY */}
-            <div className="p-6 overflow-y-auto space-y-6 flex-1 bg-gray-50/50">
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 bg-white">
               
               {/* TAB 1: REQUIREMENTS & CV MATCH */}
               {modalTab === 'requirements' && (
                 <div className="space-y-5">
                   
                   {/* CV MATCH BREAKDOWN: WHAT YOU HAVE VS WHAT YOU ARE MISSING */}
-                  <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
+                  <div className="bg-white border border-neutral-200 p-5 rounded-xl space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-neutral-100">
                       <div>
-                        <h3 className="text-sm font-black text-gray-950 flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-neutral-900" />
                           Analiza Competentelor Tale pentru {selectedDomain.title}
                         </h3>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-neutral-500 mt-0.5">
                           Comparatie intre cerintele anunturilor reale de Junior si profilul/CV-ul tau.
                         </p>
                       </div>
                       {selectedDomain.userMatchScore > 0 ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500 font-semibold">Grad Potrivire:</span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-black border ${
-                            selectedDomain.userMatchScore >= 70 ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
-                            selectedDomain.userMatchScore >= 40 ? 'bg-blue-50 text-blue-800 border-blue-300' :
-                            'bg-amber-50 text-amber-800 border-amber-300'
-                          }`}>
+                          <span className="text-xs text-neutral-500 font-medium">Grad Potrivire:</span>
+                          <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-md border border-neutral-300 bg-neutral-100 text-neutral-900">
                             {selectedDomain.userMatchScore}% Match
                           </span>
                         </div>
@@ -841,14 +835,14 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* COLUMN 1: WHAT YOU HAVE */}
-                      <div className="bg-emerald-50/50 border border-emerald-200/80 p-4 rounded-xl space-y-2.5">
+                      <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            Competente Identificate in CV ({selectedDomain.userMatchingSkills?.length || 0})
+                          <span className="text-xs font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-neutral-900" />
+                            Competente Identificate ({selectedDomain.userMatchingSkills?.length || 0})
                           </span>
-                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
-                            Le ai deja
+                          <span className="text-[10px] font-mono font-medium text-neutral-700 bg-neutral-200 px-2 py-0.5 rounded">
+                            In CV
                           </span>
                         </div>
 
@@ -857,29 +851,29 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                             {selectedDomain.userMatchingSkills.map((sk) => (
                               <span 
                                 key={sk} 
-                                className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-emerald-900 border border-emerald-200 shadow-2xs flex items-center gap-1.5"
+                                className="px-2.5 py-1 rounded-md text-xs font-medium bg-white text-neutral-900 border border-neutral-200 flex items-center gap-1.5 font-mono"
                               >
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                <CheckCircle2 className="w-3 h-3 text-neutral-900 shrink-0" />
                                 <span>{sk}</span>
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <p className="text-xs text-emerald-800 italic pt-1">
+                          <p className="text-xs text-neutral-500 italic pt-1">
                             Nicio competenta specifica pentru acest domeniu nu a fost detectata inca in CV.
                           </p>
                         )}
                       </div>
 
                       {/* COLUMN 2: WHAT IS MISSING */}
-                      <div className="bg-rose-50/40 border border-rose-200/80 p-4 rounded-xl space-y-2.5">
+                      <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-black text-rose-950 uppercase tracking-wider flex items-center gap-1.5">
-                            <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
-                            Ce Iti Lipseste din Cerinte ({selectedDomain.userMissingSkills?.length || 0})
+                          <span className="text-xs font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                            <AlertCircle className="w-3.5 h-3.5 text-neutral-700" />
+                            Ce Iti Lipseste ({selectedDomain.userMissingSkills?.length || 0})
                           </span>
-                          <span className="text-[10px] font-bold text-rose-800 bg-rose-100 px-2 py-0.5 rounded-full">
-                            De invatat / adaugat
+                          <span className="text-[10px] font-mono font-medium text-neutral-700 bg-neutral-200 px-2 py-0.5 rounded">
+                            De adaugat
                           </span>
                         </div>
 
@@ -888,15 +882,15 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                             {selectedDomain.userMissingSkills.map((sk) => (
                               <span 
                                 key={sk} 
-                                className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-rose-900 border border-rose-200 shadow-2xs flex items-center gap-1.5"
+                                className="px-2.5 py-1 rounded-md text-xs font-medium bg-white text-neutral-800 border border-neutral-200 flex items-center gap-1.5 font-mono"
                               >
-                                <X className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                <X className="w-3 h-3 text-neutral-400 shrink-0" />
                                 <span>{sk}</span>
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <p className="text-xs text-rose-800 font-bold pt-1">
+                          <p className="text-xs text-neutral-900 font-medium pt-1">
                             Excelent! Ai toate cerintele principale detectate in descrierile de junior.
                           </p>
                         )}
@@ -906,13 +900,13 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
 
                   {/* INTERVIEW FORMAT BANNER */}
                   {selectedDomain.interviewFormat && (
-                    <div className="bg-indigo-50/70 border border-indigo-200/80 p-4 rounded-2xl flex items-start gap-3">
-                      <Zap className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                    <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl flex items-start gap-3">
+                      <Zap className="w-4 h-4 text-neutral-900 shrink-0 mt-0.5" />
                       <div>
-                        <span className="font-black uppercase tracking-wider text-[11px] text-indigo-800 block">
+                        <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-700 block">
                           Formatul Tipic al Interviului Tehnic in Romania
                         </span>
-                        <p className="text-xs text-indigo-950 mt-1 leading-relaxed">
+                        <p className="text-xs text-neutral-800 mt-1 leading-relaxed">
                           {selectedDomain.interviewFormat}
                         </p>
                       </div>
@@ -920,20 +914,20 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                   )}
 
                   {/* COMPLETE SKILLS FREQUENCY GRID FOR THIS DOMAIN */}
-                  <div className="bg-white p-5 rounded-2xl border border-gray-200 space-y-3">
+                  <div className="bg-white p-5 rounded-xl border border-neutral-200 space-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <h4 className="text-xs font-black uppercase text-gray-500 tracking-wider flex items-center gap-2">
-                        <BarChart3 className="w-4 h-4 text-blue-600" />
-                        Cerinte Tehnice din Anunturile Reale de {selectedDomain.title} ({levelFilter})
+                      <h4 className="text-xs font-bold uppercase text-neutral-500 tracking-wider flex items-center gap-2 font-mono">
+                        <BarChart3 className="w-4 h-4 text-neutral-900" />
+                        Cerinte Tehnice din Anunturile Reale ({levelFilter})
                       </h4>
-                      <span className="text-[11px] text-gray-400 font-semibold">
-                        {selectedDomain.topSkills?.length || 0} tehnologii cerute de companii
+                      <span className="text-[11px] text-neutral-500 font-mono">
+                        {selectedDomain.topSkills?.length || 0} tehnologii cerute
                       </span>
                     </div>
 
                     {/* CATEGORY PILLS FOR MODAL */}
                     {selectedDomain.topSkills && selectedDomain.topSkills.length > 0 && (
-                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 border-b border-gray-100">
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 border-b border-neutral-100">
                         {SKILL_CATEGORIES.map((cat) => {
                           const countInCat = cat.id === 'ALL'
                             ? selectedDomain.topSkills.length
@@ -944,14 +938,14 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                             <button
                               key={cat.id}
                               onClick={() => setModalSkillCategory(cat.id)}
-                              className={`px-2.5 py-1 rounded-full text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+                              className={`px-2.5 py-1 rounded-md text-xs font-mono font-medium transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 border ${
                                 active
-                                  ? 'bg-black text-white'
-                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                                  ? 'bg-black text-white border-black'
+                                  : 'bg-white hover:bg-neutral-100 text-neutral-600 border-neutral-200'
                               }`}
                             >
                               <span>{cat.label}</span>
-                              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${active ? 'bg-neutral-700 text-gray-200' : 'bg-gray-200 text-gray-600'}`}>
+                              <span className={`text-[10px] px-1 py-0.2 rounded ${active ? 'bg-neutral-800 text-neutral-300' : 'bg-neutral-100 text-neutral-600'}`}>
                                 {countInCat}
                               </span>
                             </button>
@@ -968,43 +962,43 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                             key={sk.skill} 
                             className={`p-3 rounded-xl border flex flex-col justify-between transition ${
                               sk.userHasSkill 
-                                ? 'bg-emerald-50/50 border-emerald-200/90' 
-                                : 'bg-gray-50/80 border-gray-200'
+                                ? 'bg-neutral-50/80 border-neutral-300' 
+                                : 'bg-white border-neutral-200'
                             }`}
                           >
                             <div className="space-y-1">
-                              <div className="flex justify-between items-center text-xs font-bold text-gray-900 gap-1">
+                              <div className="flex justify-between items-center text-xs font-medium text-neutral-900 gap-1 font-mono">
                                 <span className="truncate" title={sk.skill}>{sk.skill}</span>
-                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md inline-flex items-center gap-1 ${
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded inline-flex items-center gap-1 ${
                                   sk.userHasSkill 
-                                    ? 'bg-emerald-100 text-emerald-800' 
-                                    : 'bg-gray-200/70 text-gray-600'
+                                    ? 'bg-neutral-900 text-white' 
+                                    : 'bg-neutral-100 text-neutral-600 border border-neutral-200'
                                 }`}>
                                   {sk.userHasSkill ? (
                                     <>
-                                      <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
-                                      <span>Ai in CV</span>
+                                      <CheckCircle2 className="w-2.5 h-2.5 text-white" />
+                                      <span>In CV</span>
                                     </>
                                   ) : (
                                     <>
-                                      <X className="w-2.5 h-2.5 text-gray-500" />
-                                      <span>Iti lipseste</span>
+                                      <X className="w-2.5 h-2.5 text-neutral-400" />
+                                      <span>Lipsa</span>
                                     </>
                                   )}
                                 </span>
                               </div>
-                              <div className="flex items-center justify-between text-[10px] text-gray-500">
+                              <div className="flex items-center justify-between text-[10px] text-neutral-500 font-mono">
                                 <span>{sk.category || 'General'}</span>
-                                <span className="font-bold text-blue-600">{sk.percentage}% din joburi</span>
+                                <span className="font-bold text-neutral-900">{sk.percentage}% din joburi</span>
                               </div>
                             </div>
-                            <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden mt-2">
+                            <div className="w-full bg-neutral-100 h-1 rounded-full overflow-hidden mt-2">
                               <div 
-                                className={`h-full rounded-full ${sk.userHasSkill ? 'bg-emerald-600' : 'bg-blue-600'}`} 
+                                className="h-full rounded-full bg-black" 
                                 style={{ width: `${Math.min(100, sk.percentage * 2)}%` }} 
                               />
                             </div>
-                            <span className="text-[10px] text-gray-400 mt-1">{sk.count} anunturi analizate</span>
+                            <span className="text-[10px] text-neutral-400 mt-1 font-mono">{sk.count} anunturi</span>
                           </div>
                       ))}
                     </div>
@@ -1013,15 +1007,15 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                   {/* STRUCTURED REQUIREMENTS CATEGORIES */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {selectedDomain.requirementsChecklist?.map((cat, idx) => (
-                      <div key={idx} className="bg-white p-5 rounded-2xl border border-gray-200 space-y-3">
-                        <div className="flex items-center gap-2 text-sm font-black text-gray-950">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <div key={idx} className="bg-white p-5 rounded-xl border border-neutral-200 space-y-3">
+                        <div className="flex items-center gap-2 text-sm font-bold text-neutral-900">
+                          <CheckCircle2 className="w-4 h-4 text-neutral-900" />
                           <h4>{cat.categoryName}</h4>
                         </div>
                         <ul className="space-y-2">
                           {cat.items?.map((item, itemIdx) => (
-                            <li key={itemIdx} className="text-xs text-gray-700 flex items-start gap-2 leading-relaxed">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 mt-1.5"></span>
+                            <li key={itemIdx} className="text-xs text-neutral-700 flex items-start gap-2 leading-relaxed">
+                              <span className="w-1.5 h-1.5 rounded-full bg-neutral-900 shrink-0 mt-1.5"></span>
                               <span>{item}</span>
                             </li>
                           ))}
@@ -1037,13 +1031,13 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                 <div className="space-y-4">
                   
                   {/* SEARCH REDIRECT BANNER */}
-                  <div className="bg-white p-4 rounded-2xl border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                  <div className="bg-white p-4 rounded-xl border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <h4 className="text-xs font-black text-gray-950 uppercase tracking-wider flex items-center gap-2">
-                        <Building2 className="w-4 h-4 text-blue-600" />
+                      <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-2 font-mono">
+                        <Building2 className="w-4 h-4 text-neutral-900" />
                         Companii Reale Verificate ({locationFilter === 'BUCURESTI' ? 'Bucuresti' : locationFilter === 'RO_ONLY' ? 'Romania' : locationFilter === 'RO_AND_REMOTE' ? 'Romania & Remote' : 'Toate'})
                       </h4>
-                      <p className="text-[11px] text-gray-500 mt-0.5">
+                      <p className="text-[11px] text-neutral-500 mt-0.5">
                         Fiecare pozitie provine de la o companie diferita pentru varietate.
                       </p>
                     </div>
@@ -1054,9 +1048,9 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                           setSelectedDomain(null);
                           onNavigateToJobSearch();
                         }}
-                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-bold transition shadow-xs shrink-0 cursor-pointer"
+                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-medium transition cursor-pointer"
                       >
-                        <Search className="w-3.5 h-3.5 text-blue-400" />
+                        <Search className="w-3.5 h-3.5 text-white" />
                         <span>Cauta in toate joburile deschise</span>
                       </button>
                     )}
@@ -1067,48 +1061,44 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                       {selectedDomain.sampleJobs.map((job) => (
                         <div 
                           key={job.id} 
-                          className="bg-white p-4 rounded-xl border border-gray-200/90 space-y-2.5 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-indigo-200 transition text-gray-900"
+                          className="bg-white p-4 rounded-xl border border-neutral-200 hover:border-black transition flex flex-col justify-between text-neutral-900"
                         >
                           <div className="space-y-1.5">
                             <div className="flex items-center justify-between gap-1.5">
-                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 truncate">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 truncate font-mono">
                                 {job.companyName}
                               </span>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                                job.sourcePlatform === 'LINKEDIN' ? 'bg-[#0077b5]/10 text-[#0077b5] border border-[#0077b5]/20' :
-                                job.sourcePlatform === 'BESTJOBS' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
-                                'bg-gray-100 text-gray-700 border border-gray-200'
-                              }`}>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-neutral-200 bg-neutral-100 text-neutral-700">
                                 {job.sourcePlatform}
                               </span>
                             </div>
-                            <h4 className="font-bold text-xs sm:text-[13px] text-gray-950 leading-snug line-clamp-2" title={job.jobTitle}>
+                            <h4 className="font-bold text-xs sm:text-[13px] text-neutral-950 leading-snug line-clamp-2" title={job.jobTitle}>
                               {job.jobTitle}
                             </h4>
-                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500 flex-wrap pt-0.5">
-                              <span className="inline-flex items-center gap-1 font-medium bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded-md">
-                                <MapPin className="w-2.5 h-2.5 text-gray-400" />
+                            <div className="flex items-center gap-1.5 text-[10px] text-neutral-500 flex-wrap pt-0.5 font-mono">
+                              <span className="inline-flex items-center gap-1 bg-neutral-100 border border-neutral-200 px-1.5 py-0.5 rounded">
+                                <MapPin className="w-2.5 h-2.5 text-neutral-400" />
                                 {job.location || 'Romania'}
                               </span>
-                              <span className="inline-flex items-center gap-1 font-medium bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded-md">
-                                <Briefcase className="w-2.5 h-2.5 text-gray-400" />
+                              <span className="inline-flex items-center gap-1 bg-neutral-100 border border-neutral-200 px-1.5 py-0.5 rounded">
+                                <Briefcase className="w-2.5 h-2.5 text-neutral-400" />
                                 {job.workModel || 'On-site'}
                               </span>
-                              <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                              <span className="inline-flex items-center gap-1 font-bold text-neutral-900 bg-neutral-100 border border-neutral-300 px-1.5 py-0.5 rounded">
                                 {job.experienceLevel || 'JUNIOR'}
                               </span>
                             </div>
                           </div>
 
                           {job.directApplyUrl && (
-                            <div className="pt-2 border-t border-gray-100">
+                            <div className="pt-2 border-t border-neutral-100 mt-2">
                               <a
                                 href={job.directApplyUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-gray-900 hover:bg-black text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+                                className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-medium transition cursor-pointer"
                               >
-                                <ExternalLink className="w-3.5 h-3.5 text-indigo-300" />
+                                <ExternalLink className="w-3.5 h-3.5 text-white" />
                                 <span>Vezi Anuntul / Aplica</span>
                               </a>
                             </div>
@@ -1117,13 +1107,13 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
                       ))}
                     </div>
                   ) : (
-                    <div className="p-8 text-center bg-white border border-gray-200 rounded-2xl space-y-3">
-                      <p className="text-xs text-gray-600">
+                    <div className="p-8 text-center bg-white border border-neutral-200 rounded-xl space-y-3">
+                      <p className="text-xs text-neutral-600">
                         Nu au fost identificate exemple directe pentru filtrul selectat.
                       </p>
                       <button
                         onClick={() => setLocationFilter('RO_AND_REMOTE')}
-                        className="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition cursor-pointer"
+                        className="px-4 py-2 bg-black text-white text-xs font-medium rounded-xl hover:bg-neutral-800 transition cursor-pointer"
                       >
                         Comuta pe Romania & Remote
                       </button>
@@ -1136,13 +1126,13 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
             </div>
 
             {/* MODAL FOOTER */}
-            <div className="p-4 border-t border-gray-200 bg-white flex items-center justify-between shrink-0">
-              <span className="text-xs text-gray-500">
-                Piata: <strong className="text-gray-900">{selectedDomain.totalJobs} joburi</strong> ({selectedDomain.juniorJobs} Junior, {selectedDomain.midJobs} Mid, {selectedDomain.seniorJobs} Senior)
+            <div className="p-4 border-t border-neutral-200 bg-white flex items-center justify-between shrink-0">
+              <span className="text-xs text-neutral-500 font-mono">
+                Piata: <strong className="text-neutral-900">{selectedDomain.totalJobs} joburi</strong> ({selectedDomain.juniorJobs} Junior, {selectedDomain.midJobs} Mid, {selectedDomain.seniorJobs} Senior)
               </span>
               <button
                 onClick={() => setSelectedDomain(null)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition cursor-pointer"
+                className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 text-xs font-medium rounded-xl transition cursor-pointer border border-neutral-200"
               >
                 Inchide
               </button>

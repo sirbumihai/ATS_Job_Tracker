@@ -27,7 +27,7 @@ export default function Footer({ onNavigateTab }) {
     <footer className="w-full border-t border-neutral-200/90 bg-neutral-50/50 text-neutral-900 transition-colors">
       
       {/* Main Multi-Column Centered Architectural Grid */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 sm:py-20">
+      <div className="max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 py-16 sm:py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8">
           
           {/* Column 1: Brand & Operational Status (5 cols on lg) */}
@@ -211,7 +211,7 @@ export default function Footer({ onNavigateTab }) {
 
       {/* Centered Bottom Bar */}
       <div className="border-t border-neutral-200/80 bg-white">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500 font-medium">
+        <div className="max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500 font-medium">
           
           <div className="flex items-center gap-2">
             <span>© 2026 JobFlow AI. Construit de Mihai Sarbu.</span>

@@ -6,8 +6,8 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #ffffff;
+  color: #000000;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -97,26 +97,188 @@ h1, h2, h3, h4, h5, h6 {
   animation: pulseGlow 3s infinite ease-in-out;
 }
 
-/* Sleek modern 8px scrollbars (Clean & Non-intrusive) */
+/* Swift Kanban Physics - Card Drop Settle (Natural downward impact, zero upward jumping) */
+@keyframes cardSettle {
+  0% {
+    transform: scale(1.02) translateY(0);
+  }
+  40% {
+    transform: scale(0.995) translateY(2px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-card-settle {
+  animation: cardSettle 240ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* ========================================================================= */
+/* Anki CardMotion - Realistic 3D Perspective Flip & Deck Motion Physics      */
+/* Reference: https://anki.ikkz.fun/extension/card-motion                    */
+/* ========================================================================= */
+.anki-motion-container {
+  perspective: 1200px;
+  -webkit-perspective: 1200px;
+  perspective-origin: 50% 50%;
+  position: relative;
+  width: 100%;
+}
+
+.anki-motion-card {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d !important;
+  -webkit-transform-style: preserve-3d !important;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  transform: rotateY(0deg);
+  background: transparent !important;
+  border: none !important;
+}
+
+.anki-motion-card.is-flipped {
+  transform: rotateY(180deg) !important;
+}
+
+.anki-motion-face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  transform-style: flat !important;
+  -webkit-transform-style: flat !important;
+  border-radius: 1rem;
+  background-color: #ffffff;
+  border: 1px solid rgba(229, 231, 235, 1);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  -webkit-font-smoothing: subpixel-antialiased !important;
+  -moz-osx-font-smoothing: auto !important;
+  text-rendering: optimizeLegibility;
+}
+
+.anki-motion-face:hover {
+  border-color: rgba(0, 0, 0, 0.85);
+  box-shadow: 0 18px 36px -6px rgba(0, 0, 0, 0.12), 0 8px 16px -3px rgba(0, 0, 0, 0.06);
+}
+
+.anki-motion-face-front {
+  transform: rotateY(0deg);
+}
+
+.anki-motion-face-back {
+  transform: rotateY(180deg);
+}
+
+.anki-motion-face * {
+  -webkit-font-smoothing: subpixel-antialiased !important;
+  -moz-osx-font-smoothing: auto !important;
+}
+
+/* Deck Slide Motions */
+.anki-slide-out-left {
+  animation: ankiSlideOutLeft 240ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+}
+
+.anki-slide-out-right {
+  animation: ankiSlideOutRight 240ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+}
+
+.anki-slide-out-left-flipped {
+  animation: ankiSlideOutLeftFlipped 240ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+}
+
+.anki-slide-out-right-flipped {
+  animation: ankiSlideOutRightFlipped 240ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+}
+
+.anki-slide-in-top {
+  animation: ankiSlideInTop 280ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+}
+
+@keyframes ankiSlideOutLeft {
+  0% {
+    transform: translateX(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-120%) rotate(-6deg) scale(0.94);
+    opacity: 0;
+  }
+}
+
+@keyframes ankiSlideOutRight {
+  0% {
+    transform: translateX(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(120%) rotate(6deg) scale(0.94);
+    opacity: 0;
+  }
+}
+
+@keyframes ankiSlideOutLeftFlipped {
+  0% {
+    transform: rotateY(180deg) translateX(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(180deg) translateX(-120%) rotate(-6deg) scale(0.94);
+    opacity: 0;
+  }
+}
+
+@keyframes ankiSlideOutRightFlipped {
+  0% {
+    transform: rotateY(180deg) translateX(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(180deg) translateX(120%) rotate(6deg) scale(0.94);
+    opacity: 0;
+  }
+}
+
+@keyframes ankiSlideInTop {
+  0% {
+    transform: translateY(-45px) scale(0.96);
+    opacity: 0;
+  }
+  75% {
+    transform: translateY(2px) scale(1.008);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Sleek modern minimalist scrollbars (Transparent track, no arrows, pure contrast) */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 9999px;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgba(0, 0, 0, 0.18);
   border-radius: 9999px;
-  border: 2px solid #f1f5f9;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(0, 0, 0, 0.45);
 }
 * {
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f1f5f9;
+  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
 }
 
 /* ATS Vector Print Styling */

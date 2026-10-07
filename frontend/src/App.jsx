@@ -453,8 +453,8 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen text-slate-900 font-sans selection:bg-indigo-600 selection:text-white ${
-      (activeTab === 'landing' || activeTab === 'feedback') ? 'bg-white' : 'bg-[#f8fafc] flex flex-col lg:flex-row'
+    <div className={`min-h-screen text-neutral-900 font-sans selection:bg-black selection:text-white ${
+      (activeTab === 'landing' || activeTab === 'feedback') ? 'bg-white' : 'bg-neutral-50/40 flex flex-col lg:flex-row'
     }`}>
       
       {/* SIDEBAR NAVIGATION (Desktop Sidebar + Mobile Header/Drawer) */}
@@ -469,21 +469,21 @@ export default function App() {
       )}
 
       {/* CONTINUT PRINCIPAL */}
-      <div className={`flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden ${(activeTab === 'landing' || activeTab === 'feedback') ? 'bg-white w-full' : 'bg-[#f8fafc]'}`}>
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden bg-white w-full">
         
         {/* DESKTOP TOP BAR CU TITLU PAGINA SI BREADCRUMB */}
         {activeTab !== 'landing' && activeTab !== 'feedback' && (
-          <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3 bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 shadow-2xs">
+          <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3.5 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 sticky top-0 z-20 shadow-2xs">
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs">
+              <span className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 font-semibold shadow-2xs">
                 {currentTabInfo.category}
               </span>
-              <div className="h-4 w-px bg-slate-200" />
+              <div className="h-4 w-px bg-neutral-200" />
               <div>
-                <h2 className="text-base font-black text-slate-950 tracking-tight leading-none">
+                <h2 className="text-base font-bold text-neutral-950 tracking-tight leading-none">
                   {currentTabInfo.title}
                 </h2>
-                <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                <p className="text-xs text-neutral-500 font-medium mt-0.5">
                   {currentTabInfo.subtitle}
                 </p>
               </div>
@@ -496,7 +496,7 @@ export default function App() {
                   {activeTab === 'tracker' && (
                     <button
                       onClick={() => setShowAddJobModal(true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-black hover:bg-neutral-800 text-white transition-all duration-150 shadow-2xs cursor-pointer active:scale-95"
                       title="Adauga o noua aplicatie de urmarit"
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -506,7 +506,7 @@ export default function App() {
                   {activeTab === 'cv_library' && (
                     <button
                       onClick={() => setShowUploadResumeModal(true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-black hover:bg-neutral-800 text-white transition-all duration-150 shadow-2xs cursor-pointer active:scale-95"
                       title="Incarca un CV PDF pentru analiza"
                     >
                       <Upload className="w-3.5 h-3.5" />
@@ -517,14 +517,14 @@ export default function App() {
               )}
 
               {currentUser ? (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 text-slate-800 shadow-2xs">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-neutral-200 text-neutral-800 shadow-2xs">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   <span className="max-w-[160px] truncate">{currentUser.fullName || currentUser.email}</span>
                 </div>
               ) : (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs hover:bg-indigo-700 transition cursor-pointer active:scale-95"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-black text-white shadow-xs hover:bg-neutral-800 transition cursor-pointer active:scale-95"
                 >
                   <span>Conectare</span>
                 </button>
@@ -534,7 +534,7 @@ export default function App() {
         )}
 
         {/* CONTINUT PRINCIPAL */}
-        <main className={activeTab === 'landing' ? "flex-1 w-full bg-white" : "flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6"}>
+        <main className={(activeTab === 'landing' || activeTab === 'feedback') ? "flex-1 w-full bg-white p-0" : "flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6"}>
         
         {/* TAB 1: TRACKER BOARD & LIST (WITH STATS) */}
         {activeTab === 'tracker' && (
@@ -653,16 +653,30 @@ export default function App() {
 
         {/* FOOTER */}
         {activeTab !== 'landing' && activeTab !== 'feedback' && (
-          <footer className="border-t border-slate-200/80 bg-white py-4 px-6 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span className="font-semibold text-slate-700">JobFlow AI</span>
-              <span>•</span>
-              <span>Tracker & ATS Studio 2026</span>
+          <footer className="border-t border-neutral-200/90 bg-white py-4 px-6 sm:px-8 text-xs text-neutral-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="font-bold text-neutral-900 tracking-tight">JobFlow AI</span>
+              <span className="text-neutral-300">•</span>
+              <span className="font-mono text-[11px] text-neutral-500">Tracker & ATS Studio 2026</span>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Arhitectura: Spring Boot 3.3 • React 18 • PostgreSQL pgvector • Lucide Icons
-            </p>
+            <div className="flex items-center gap-4 text-[11px] font-mono text-neutral-500">
+              <button 
+                onClick={() => handleTabChange('landing')}
+                className="hover:text-black transition-colors cursor-pointer"
+              >
+                Landing Page
+              </button>
+              <span>•</span>
+              <button 
+                onClick={() => handleTabChange('feedback')}
+                className="hover:text-black transition-colors cursor-pointer"
+              >
+                Feedback & Idei
+              </button>
+              <span>•</span>
+              <span>Spring Boot 3.3 • React 18</span>
+            </div>
           </footer>
         )}
       </div>

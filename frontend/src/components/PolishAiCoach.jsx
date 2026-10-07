@@ -69,12 +69,12 @@ export default function PolishAiCoach({
 
   const getCategoryBadge = (cat) => {
     switch (cat) {
-      case 'IMPACT': return { label: 'Impact Masurabil', bg: 'bg-purple-100 text-purple-800 border-purple-200' };
-      case 'TECH_DEPTH': return { label: 'Adancime Tehnica', bg: 'bg-blue-100 text-blue-800 border-blue-200' };
-      case 'STACK': return { label: 'Tech Stack & Cloud', bg: 'bg-emerald-100 text-emerald-800 border-emerald-200' };
-      case 'PRODUCTION': return { label: 'Productie & Arhitectura', bg: 'bg-amber-100 text-amber-800 border-amber-200' };
-      case 'ROLE': return { label: 'Aliniere Rol', bg: 'bg-indigo-100 text-indigo-800 border-indigo-200' };
-      default: return { label: 'Recomandare AI', bg: 'bg-gray-100 text-gray-800 border-gray-200' };
+      case 'IMPACT': return { label: 'Impact Masurabil', bg: 'bg-neutral-100 text-neutral-900 border-neutral-200 font-mono' };
+      case 'TECH_DEPTH': return { label: 'Adancime Tehnica', bg: 'bg-neutral-100 text-neutral-900 border-neutral-200 font-mono' };
+      case 'STACK': return { label: 'Tech Stack & Cloud', bg: 'bg-neutral-100 text-neutral-900 border-neutral-200 font-mono' };
+      case 'PRODUCTION': return { label: 'Productie & Arhitectura', bg: 'bg-neutral-100 text-neutral-900 border-neutral-200 font-mono' };
+      case 'ROLE': return { label: 'Aliniere Rol', bg: 'bg-neutral-100 text-neutral-900 border-neutral-200 font-mono' };
+      default: return { label: 'Recomandare AI', bg: 'bg-neutral-100 text-neutral-900 border-neutral-200 font-mono' };
     }
   };
 
@@ -90,24 +90,24 @@ export default function PolishAiCoach({
   const currentScore = diagnosis?.totalScore ? (appliedFixIds.size > 0 ? Math.min(98.5, diagnosis.totalScore + (appliedFixIds.size * 2.0)) : diagnosis.totalScore) : 88.0;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200/90 shadow-xl p-4 sm:p-5 space-y-5 text-gray-900 font-sans">
+    <div className="bg-white rounded-xl border border-neutral-200 shadow-xl p-4 sm:p-5 space-y-5 text-neutral-900 font-sans">
       
       {/* HEADER WITH SCORE & CLOSE */}
-      <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-4">
+      <div className="flex items-start justify-between gap-3 border-b border-neutral-100 pb-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center shadow-sm">
-            <Sparkles className="w-5 h-5 text-amber-300" />
+          <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center shadow-xs">
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-extrabold text-sm sm:text-base text-gray-950 tracking-tight">
+              <h3 className="font-bold text-sm sm:text-base text-neutral-950 tracking-tight">
                 AI Review • Diagnostic & Evaluare CV
               </h3>
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+              <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-900 border border-neutral-200">
                 Audit Calitate
               </span>
             </div>
-            <p className="text-xs text-gray-500 font-medium mt-0.5">
+            <p className="text-xs text-neutral-500 font-medium mt-0.5">
               Recomandari de optimizare a impactului si competentelor tehnice
             </p>
           </div>
@@ -118,14 +118,14 @@ export default function PolishAiCoach({
             onClick={fetchDiagnosis}
             disabled={loading}
             title="Recalculeaza diagnoza"
-            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition cursor-pointer"
+            className="p-1.5 rounded-xl hover:bg-neutral-100 text-neutral-400 hover:text-black transition cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           {onClose && (
             <button 
-              onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition cursor-pointer"
+              onClick={onClose} 
+              className="p-1.5 rounded-xl hover:bg-neutral-100 text-neutral-400 hover:text-black transition cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -134,7 +134,7 @@ export default function PolishAiCoach({
       </div>
 
       {/* OVERALL SCORE DIAL CARD */}
-      <div className="bg-gradient-to-br from-gray-900 via-neutral-900 to-black text-white p-4 sm:p-5 rounded-2xl shadow-md space-y-3">
+      <div className="bg-black text-white p-4 sm:p-5 rounded-xl border border-neutral-800 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-[11px] uppercase tracking-wider text-gray-400 font-extrabold block">
@@ -222,9 +222,9 @@ export default function PolishAiCoach({
           {diagnosis?.suggestions && diagnosis.suggestions.length > 0 && appliedFixIds.size < diagnosis.suggestions.length && (
             <button
               onClick={handleApplyAll}
-              className="text-[11px] font-extrabold text-black hover:text-neutral-700 flex items-center gap-1 cursor-pointer bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg transition"
+              className="text-[11px] font-bold text-black hover:text-neutral-700 flex items-center gap-1 cursor-pointer bg-neutral-100 hover:bg-neutral-200 px-3 py-1 rounded-xl transition"
             >
-              <Sparkles className="w-3 h-3 text-amber-500" /> Aplica Toate
+              <Sparkles className="w-3 h-3 text-black" /> Aplica Toate
             </button>
           )}
         </div>
@@ -240,8 +240,8 @@ export default function PolishAiCoach({
                 key={sug.id || idx}
                 className={`rounded-xl border transition-all duration-200 overflow-hidden ${
                   isApplied 
-                    ? 'border-emerald-300 bg-emerald-50/40' 
-                    : 'border-gray-200 hover:border-gray-300 bg-white shadow-2xs'
+                    ? 'border-neutral-300 bg-neutral-50/60' 
+                    : 'border-neutral-200 hover:border-neutral-300 bg-white shadow-2xs'
                 }`}
               >
                 {/* SUGGESTION CARD HEADER */}
@@ -251,16 +251,16 @@ export default function PolishAiCoach({
                 >
                   <div className="space-y-1 pr-2">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border ${badge.bg}`}>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge.bg}`}>
                         {badge.label}
                       </span>
                       {isApplied && (
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <span className="text-[10px] font-mono font-bold text-black bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md flex items-center gap-1">
                           <Check className="w-3 h-3" /> Aplicat
                         </span>
                       )}
                     </div>
-                    <h5 className="text-xs font-bold text-gray-950 leading-tight">
+                    <h5 className="text-xs font-bold text-neutral-950 leading-tight">
                       {sug.title}
                     </h5>
                   </div>
@@ -272,9 +272,9 @@ export default function PolishAiCoach({
                         handleApplySingle(sug);
                       }}
                       disabled={isApplied}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition cursor-pointer shadow-2xs ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition cursor-pointer shadow-xs ${
                         isApplied 
-                          ? 'bg-emerald-600 text-white opacity-90 cursor-default' 
+                          ? 'bg-neutral-200 text-neutral-600 opacity-90 cursor-default' 
                           : 'bg-black hover:bg-neutral-800 text-white'
                       }`}
                     >

@@ -106,6 +106,23 @@ export default function FeedbackPage({
     }
   }, [voterToken]);
 
+  // Lock body scroll and support Escape key when modal is open
+  useEffect(() => {
+    if (showNewIdeaModal) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') setShowNewIdeaModal(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = 'unset';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [showNewIdeaModal]);
+
   // Handle standard feedback submission
   const handleSubmitFeedback = async (e) => {
     e.preventDefault();
@@ -287,7 +304,7 @@ export default function FeedbackPage({
       {/* 0. ARCHITECTURAL TOP BAR (SPACIOUS, MONOCHROME DISTILL)                   */}
       {/* ========================================================================= */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 transition-all">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
           {/* Brand Logo & Context Pill */}
           <div 
@@ -344,7 +361,7 @@ export default function FeedbackPage({
             </button>
             <button
               onClick={() => onNavigateTab ? onNavigateTab('tracker') : null}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-black text-white text-sm font-semibold hover:bg-neutral-800 transition cursor-pointer shadow-xs active:scale-95"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-black text-white text-sm font-semibold hover:bg-neutral-800 transition cursor-pointer shadow-xs active:scale-95"
             >
               <span>Deschide Tracker</span>
               <ArrowRight className="w-4 h-4" />
@@ -358,9 +375,9 @@ export default function FeedbackPage({
       {/* 1. HERO SECTION: MONOLITHIC TITLE & CONTEXT                               */}
       {/* ========================================================================= */}
       <section className="relative pt-16 sm:pt-20 pb-16 sm:pb-20 border-b border-neutral-200/90 overflow-hidden bg-neutral-50/30">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="max-w-3xl space-y-6">
+          <div className="max-w-5xl space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-neutral-200 bg-white text-xs font-mono text-neutral-600 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span>Canal Direct sarbumihai0@gmail.com • Voturi Comunitate Live</span>
@@ -400,12 +417,12 @@ export default function FeedbackPage({
       {/* 2. MAIN SPLIT: FEEDBACK FORM + COMMUNITY VOTED ROADMAP                    */}
       {/* ========================================================================= */}
       <section className="py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-14 items-start">
             
-            {/* LEFT COLUMN: THE FEEDBACK FORM (5 cols) */}
-            <div id="formular" className="lg:col-span-5 space-y-8">
+            {/* LEFT COLUMN: THE FEEDBACK FORM (4 cols on xl) */}
+            <div id="formular" className="lg:col-span-5 xl:col-span-4 space-y-8">
               
               <div className="space-y-2">
                 <span className="text-xs font-mono uppercase tracking-wider text-neutral-400 font-semibold">
@@ -622,8 +639,8 @@ export default function FeedbackPage({
 
             </div>
 
-            {/* RIGHT COLUMN: REAL COMMUNITY ROADMAP & VOTING (7 cols) */}
-            <div id="comunitate" className="lg:col-span-7 space-y-8">
+            {/* RIGHT COLUMN: REAL COMMUNITY ROADMAP & VOTING (8 cols on xl) */}
+            <div id="comunitate" className="lg:col-span-7 xl:col-span-8 space-y-8">
               
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
@@ -796,8 +813,14 @@ export default function FeedbackPage({
       {/* 3. PROPOSE COMMUNITY IDEA MODAL                                           */}
       {/* ========================================================================= */}
       {showNewIdeaModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-2xl bg-white border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-2xl relative animate-in fade-in zoom-in-95">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto"
+          onClick={() => setShowNewIdeaModal(false)}
+        >
+          <div 
+            className="w-full max-w-lg rounded-2xl bg-white border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-2xl relative animate-in fade-in zoom-in-95 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -928,13 +951,13 @@ export default function FeedbackPage({
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <button
               onClick={() => onNavigateTab ? onNavigateTab('tracker') : null}
-              className="px-8 py-3.5 rounded-full bg-black text-white text-sm font-semibold hover:bg-neutral-800 transition cursor-pointer shadow-xs active:scale-95"
+              className="px-8 py-3.5 rounded-xl bg-black text-white text-sm font-semibold hover:bg-neutral-800 transition cursor-pointer shadow-xs active:scale-95"
             >
               Deschide Tracker Aplicatii
             </button>
             <button
               onClick={() => onNavigateTab ? onNavigateTab('skill_roadmap') : null}
-              className="px-7 py-3.5 rounded-full bg-white text-black border border-neutral-300 text-sm font-semibold hover:border-black transition cursor-pointer shadow-2xs"
+              className="px-7 py-3.5 rounded-xl bg-white text-black border border-neutral-300 text-sm font-semibold hover:border-black transition cursor-pointer shadow-2xs"
             >
               Vezi Intrebari Interviu
             </button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Building2, 
   Sparkles, 
@@ -43,7 +43,7 @@ export const isAppGmail = (app) => {
   const platform = (app.sourcePlatform || '').toUpperCase();
   if (platform === 'GMAIL') return true;
   const desc = app.rawDescription || '';
-  if (desc.includes('GMAIL') || desc.includes('EMAIL DE RECRUTARE') || desc.includes('CONTINUT COMPLET EMAIL') || desc.includes('CONȚINUT COMPLET EMAIL')) return true;
+  if (desc.includes('GMAIL') || desc.includes('EMAIL DE RECRUTARE') || desc.includes('CONTINUT COMPLET EMAIL') || desc.includes('CON\u021bINUT COMPLET EMAIL')) return true;
   const notes = app.notes || '';
   if (notes.toLowerCase().includes('gmail sync')) return true;
   return false;
@@ -76,10 +76,32 @@ export default function KanbanBoard({
   const [filterGmailOnly, setFilterGmailOnly] = useState(false);
   const [mobileSelectedColumn, setMobileSelectedColumn] = useState('SAVED');
   
-  // DRAG & DROP STATE (ROBUST, FLICKER-FREE)
-  const [draggedAppId, setDraggedAppId] = useState(null);
-  const [dragOverTarget, setDragOverTarget] = useState(null); // { cardId: string | null, columnKey: string, position: 'top' | 'bottom' }
-  const [dragOverColumnKey, setDragOverColumnKey] = useState(null);
+  // SWIFT KANBAN MOTION STATE (POINTER EVENTS BASED)
+  const [activeDrag, setActiveDrag] = useState(null); // { app, sourceColKey, sourceIndex, cardWidth, cardHeight, x, y }
+  const [dropTargetSlot, setDropTargetSlot] = useState(null); // { columnKey: string, slotIndex: number }
+  const [justDroppedCardId, setJustDroppedCardId] = useState(null);
+
+  const dragStartRef = useRef(null);
+  const floatingCardRef = useRef(null);
+  const dropTargetSlotRef = useRef(null);
+
+  useEffect(() => {
+    dropTargetSlotRef.current = dropTargetSlot;
+  }, [dropTargetSlot]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && activeDrag) {
+        setActiveDrag(null);
+        setDropTargetSlot(null);
+        dragStartRef.current = null;
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeDrag]);
 
   const [cvList, setCvList] = useState([]);
   const [uploadedResumes, setUploadedResumes] = useState([]);
@@ -232,78 +254,78 @@ export default function KanbanBoard({
       key: 'SAVED', 
       title: 'Salvate', 
       label: 'Salvat',
-      headerBg: 'bg-slate-100/90 text-slate-800 border-b border-slate-200',
-      columnBg: 'bg-slate-50/70 border-slate-200/90',
-      accentBorder: 'border-t-4 border-t-slate-500',
-      badgeBg: 'bg-white text-slate-800 border border-slate-200 shadow-2xs',
-      iconColor: 'text-slate-600',
-      tabActive: 'bg-slate-800 text-white',
+      headerBg: 'bg-white text-neutral-950 border-b border-neutral-200/90',
+      columnBg: 'bg-[#fafafa] border-neutral-200/90',
+      accentBorder: 'border-t-2 border-t-neutral-400',
+      badgeBg: 'bg-white text-neutral-900 border border-neutral-200 shadow-2xs font-mono',
+      iconColor: 'text-neutral-500',
+      tabActive: 'bg-black text-white shadow-xs',
       icon: Bookmark
     },
     { 
       key: 'APPLIED', 
       title: 'Aplicat', 
       label: 'Aplicat',
-      headerBg: 'bg-blue-50 text-blue-900 border-b border-blue-200',
-      columnBg: 'bg-blue-50/40 border-blue-200/80',
-      accentBorder: 'border-t-4 border-t-blue-500',
-      badgeBg: 'bg-white text-blue-900 border border-blue-200 shadow-2xs',
-      iconColor: 'text-blue-600',
-      tabActive: 'bg-blue-600 text-white',
+      headerBg: 'bg-white text-neutral-950 border-b border-neutral-200/90',
+      columnBg: 'bg-[#fafafa] border-neutral-200/90',
+      accentBorder: 'border-t-2 border-t-neutral-800',
+      badgeBg: 'bg-white text-neutral-900 border border-neutral-200 shadow-2xs font-mono',
+      iconColor: 'text-neutral-800',
+      tabActive: 'bg-black text-white shadow-xs',
       icon: Send
     },
     { 
       key: 'INTERVIEWING', 
       title: 'Interviu', 
       label: 'Interviu',
-      headerBg: 'bg-amber-50 text-amber-950 border-b border-amber-200',
-      columnBg: 'bg-amber-50/40 border-amber-200/80',
-      accentBorder: 'border-t-4 border-t-amber-500',
-      badgeBg: 'bg-white text-amber-950 border border-amber-200 shadow-2xs',
-      iconColor: 'text-amber-600',
-      tabActive: 'bg-amber-600 text-white',
+      headerBg: 'bg-white text-neutral-950 border-b border-neutral-200/90',
+      columnBg: 'bg-[#fafafa] border-neutral-200/90',
+      accentBorder: 'border-t-2 border-t-neutral-950',
+      badgeBg: 'bg-white text-neutral-900 border border-neutral-200 shadow-2xs font-mono',
+      iconColor: 'text-neutral-950',
+      tabActive: 'bg-black text-white shadow-xs',
       icon: Calendar
     },
     { 
       key: 'OFFER_RECEIVED', 
       title: 'Oferta', 
       label: 'Oferta',
-      headerBg: 'bg-emerald-50 text-emerald-950 border-b border-emerald-200',
-      columnBg: 'bg-emerald-50/40 border-emerald-200/80',
-      accentBorder: 'border-t-4 border-t-emerald-500',
-      badgeBg: 'bg-white text-emerald-950 border border-emerald-200 shadow-2xs',
-      iconColor: 'text-emerald-600',
-      tabActive: 'bg-emerald-600 text-white',
+      headerBg: 'bg-white text-neutral-950 border-b border-neutral-200/90',
+      columnBg: 'bg-[#fafafa] border-neutral-200/90',
+      accentBorder: 'border-t-2 border-t-emerald-600',
+      badgeBg: 'bg-white text-emerald-900 border border-emerald-200 shadow-2xs font-mono',
+      iconColor: 'text-emerald-700',
+      tabActive: 'bg-black text-white shadow-xs',
       icon: Award
     },
     { 
       key: 'REJECTED', 
       title: 'Respins', 
       label: 'Respins',
-      headerBg: 'bg-rose-50 text-rose-950 border-b border-rose-200',
-      columnBg: 'bg-rose-50/40 border-rose-200/80',
-      accentBorder: 'border-t-4 border-t-rose-400',
-      badgeBg: 'bg-white text-rose-950 border border-rose-200 shadow-2xs',
-      iconColor: 'text-rose-600',
-      tabActive: 'bg-rose-600 text-white',
+      headerBg: 'bg-white text-neutral-950 border-b border-neutral-200/90',
+      columnBg: 'bg-[#fafafa] border-neutral-200/90',
+      accentBorder: 'border-t-2 border-t-neutral-300',
+      badgeBg: 'bg-white text-neutral-600 border border-neutral-200 shadow-2xs font-mono',
+      iconColor: 'text-neutral-400',
+      tabActive: 'bg-black text-white shadow-xs',
       icon: XCircle
     },
   ];
 
   const statusColorMap = {
-    SAVED: 'bg-slate-50 text-slate-700 border-slate-200',
-    APPLIED: 'bg-blue-50 text-blue-700 border-blue-200',
-    INTERVIEWING: 'bg-amber-50 text-amber-800 border-amber-200',
-    OFFER_RECEIVED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    REJECTED: 'bg-rose-50 text-rose-700 border-rose-200',
+    SAVED: 'bg-neutral-100 text-neutral-700 border-neutral-200',
+    APPLIED: 'bg-neutral-100 text-neutral-800 border-neutral-300',
+    INTERVIEWING: 'bg-neutral-900 text-white border-neutral-900',
+    OFFER_RECEIVED: 'bg-emerald-50 text-emerald-800 border-emerald-300',
+    REJECTED: 'bg-neutral-100 text-neutral-500 border-neutral-200',
   };
 
   const statusDotMap = {
-    SAVED: 'bg-slate-500',
-    APPLIED: 'bg-blue-600',
-    INTERVIEWING: 'bg-amber-500',
-    OFFER_RECEIVED: 'bg-emerald-600',
-    REJECTED: 'bg-rose-500',
+    SAVED: 'bg-neutral-400',
+    APPLIED: 'bg-neutral-600',
+    INTERVIEWING: 'bg-neutral-950',
+    OFFER_RECEIVED: 'bg-emerald-500',
+    REJECTED: 'bg-neutral-300',
   };
 
   // FILTER & SORT APPLICATIONS
@@ -394,78 +416,175 @@ export default function KanbanBoard({
     setSortBy('CUSTOM');
   };
 
-  // DRAG AND DROP HANDLERS (SMOOTH & STABLE WITH INLINE CARD PREVIEW)
-  const handleDragStart = (e, appId) => {
-    e.dataTransfer.setData('text/plain', appId);
-    e.dataTransfer.effectAllowed = 'move';
-    setDraggedAppId(appId);
+  // SWIFT KANBAN MOTION ENGINE (POINTER EVENTS BASED - BUTTERY 60-120FPS GPU PHYSICS)
+  const handlePointerDown = (e, app, sourceColKey, sourceIndex) => {
+    // Left click or single touch only
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    // Don't drag if clicking buttons, selects, inputs, or links
+    if (e.target.closest('button, select, input, a, textarea')) return;
+
+    const cardEl = e.currentTarget;
+    const rect = cardEl.getBoundingClientRect();
+
+    dragStartRef.current = {
+      app,
+      sourceColKey,
+      sourceIndex,
+      cardEl,
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      cardWidth: Math.round(rect.width),
+      cardHeight: Math.round(rect.height),
+      hasStarted: false,
+    };
+
+    const handlePointerMove = (moveEvent) => {
+      if (!dragStartRef.current) return;
+
+      const dx = moveEvent.clientX - dragStartRef.current.startX;
+      const dy = moveEvent.clientY - dragStartRef.current.startY;
+
+      if (!dragStartRef.current.hasStarted) {
+        if (Math.hypot(dx, dy) < 6) return; // Allow normal clicks without starting drag
+        dragStartRef.current.hasStarted = true;
+
+        // Prevent native selection while dragging
+        window.getSelection()?.removeAllRanges();
+
+        setActiveDrag({
+          app: dragStartRef.current.app,
+          sourceColKey: dragStartRef.current.sourceColKey,
+          sourceIndex: dragStartRef.current.sourceIndex,
+          cardWidth: dragStartRef.current.cardWidth,
+          cardHeight: dragStartRef.current.cardHeight,
+          x: moveEvent.clientX - dragStartRef.current.offsetX,
+          y: moveEvent.clientY - dragStartRef.current.offsetY,
+        });
+
+        // Do not open slot initially in source column so source gap can cleanly collapse
+        setDropTargetSlot(null);
+
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'grabbing';
+      }
+
+      // Direct GPU transform update on floating card with signature Swift Kanban Lift & Tilt
+      if (floatingCardRef.current) {
+        const posX = moveEvent.clientX - dragStartRef.current.offsetX;
+        const posY = moveEvent.clientY - dragStartRef.current.offsetY;
+        floatingCardRef.current.style.transform = `translate3d(${posX}px, ${posY}px, 0) scale(1.04) rotate(4deg)`;
+      }
+
+      // Column and slot hit-testing
+      const columnEls = Array.from(document.querySelectorAll('[data-kanban-col]'));
+      let targetColKey = null;
+      let targetColEl = null;
+
+      for (const colEl of columnEls) {
+        const colRect = colEl.getBoundingClientRect();
+        if (
+          moveEvent.clientX >= colRect.left && 
+          moveEvent.clientX <= colRect.right &&
+          moveEvent.clientY >= colRect.top - 60 &&
+          moveEvent.clientY <= colRect.bottom + 80
+        ) {
+          targetColKey = colEl.getAttribute('data-kanban-col');
+          targetColEl = colEl;
+          break;
+        }
+      }
+
+      if (!targetColEl) {
+        setDropTargetSlot(null);
+        return;
+      }
+
+      // Auto-scroll column if cursor is near top/bottom
+      const scrollContainer = targetColEl.querySelector('[data-scroll-container]');
+      if (scrollContainer) {
+        const scRect = scrollContainer.getBoundingClientRect();
+        if (moveEvent.clientY < scRect.top + 55 && moveEvent.clientY > scRect.top) {
+          scrollContainer.scrollTop -= 8;
+        } else if (moveEvent.clientY > scRect.bottom - 55 && moveEvent.clientY < scRect.bottom) {
+          scrollContainer.scrollTop += 8;
+        }
+      }
+
+      // Query visible cards inside target column, excluding the dragged card
+      const cardWrappers = Array.from(targetColEl.querySelectorAll('[data-card-wrapper="true"]'));
+      const otherCards = cardWrappers.filter(el => el.getAttribute('data-card-id') !== dragStartRef.current?.app?.id);
+
+      let targetSlotIdx = 0;
+      if (otherCards.length === 0) {
+        targetSlotIdx = 0;
+      } else {
+        // Hysteresis deadband: If cursor is currently inside the active open drop slot in this column, KEEP IT!
+        const currentSlot = dropTargetSlotRef.current;
+        let keepCurrentSlot = false;
+
+        if (currentSlot && currentSlot.columnKey === targetColKey) {
+          const activeSlotEl = targetColEl.querySelector('[data-active-slot="true"]');
+          if (activeSlotEl) {
+            const slotRect = activeSlotEl.getBoundingClientRect();
+            if (
+              moveEvent.clientY >= slotRect.top - 20 && 
+              moveEvent.clientY <= slotRect.bottom + 20
+            ) {
+              keepCurrentSlot = true;
+              targetSlotIdx = currentSlot.slotIndex;
+            }
+          }
+        }
+
+        if (!keepCurrentSlot) {
+          let found = otherCards.length;
+          for (let i = 0; i < otherCards.length; i++) {
+            const cRect = otherCards[i].getBoundingClientRect();
+            const midY = cRect.top + cRect.height / 2;
+            if (moveEvent.clientY < midY) {
+              found = i;
+              break;
+            }
+          }
+          targetSlotIdx = found;
+        }
+      }
+
+      setDropTargetSlot(prev => {
+        if (prev?.columnKey === targetColKey && prev?.slotIndex === targetSlotIdx) return prev;
+        return { columnKey: targetColKey, slotIndex: targetSlotIdx };
+      });
+    };
+
+    const handlePointerUp = () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+
+      if (dragStartRef.current?.hasStarted) {
+        const movingApp = dragStartRef.current.app;
+        const finalSlot = dropTargetSlotRef.current;
+        if (finalSlot && finalSlot.columnKey) {
+          executeMoveToSlot(movingApp.id, finalSlot.columnKey, finalSlot.slotIndex);
+        }
+      }
+
+      setActiveDrag(null);
+      setDropTargetSlot(null);
+      dragStartRef.current = null;
+    };
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
   };
 
-  const handleDragEnd = () => {
-    setDraggedAppId(null);
-    setDragOverTarget(null);
-    setDragOverColumnKey(null);
-  };
-
-  const handleCardDragOver = (e, targetCardId, columnKey) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!draggedAppId || draggedAppId === targetCardId) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const midY = rect.top + rect.height / 2;
-    const position = e.clientY < midY ? 'top' : 'bottom';
-
-    if (!dragOverTarget || dragOverTarget.cardId !== targetCardId || dragOverTarget.position !== position || dragOverColumnKey !== columnKey) {
-      setDragOverTarget({ cardId: targetCardId, columnKey, position });
-      setDragOverColumnKey(columnKey);
-    }
-  };
-
-  const handleColumnDragOver = (e, columnKey) => {
-    e.preventDefault();
-    if (!draggedAppId) return;
-
-    setDragOverColumnKey(columnKey);
-    if (!dragOverTarget || dragOverTarget.columnKey !== columnKey) {
-      setDragOverTarget({ cardId: null, columnKey, position: 'bottom' });
-    }
-  };
-
-  const handleCardDrop = (e, targetCardId, targetColumnKey) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const movingAppId = e.dataTransfer.getData('text/plain') || draggedAppId;
-    if (!movingAppId) {
-      handleDragEnd();
-      return;
-    }
-
-    const position = dragOverTarget?.position || 'bottom';
-    executeMove(movingAppId, targetCardId, targetColumnKey, position);
-    handleDragEnd();
-  };
-
-  const handleColumnDrop = (e, targetColumnKey) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const movingAppId = e.dataTransfer.getData('text/plain') || draggedAppId;
-    if (!movingAppId) {
-      handleDragEnd();
-      return;
-    }
-
-    executeMove(movingAppId, null, targetColumnKey, 'bottom');
-    handleDragEnd();
-  };
-
-  const executeMove = (movingAppId, targetCardId, targetColumnKey, position = 'bottom') => {
+  const executeMoveToSlot = (movingAppId, targetColumnKey, slotIndex) => {
     if (!movingAppId) return;
-
-    // Daca am dat drop pe acelasi card: nu facem nicio mutare
-    if (targetCardId && targetCardId === movingAppId) {
-      return;
-    }
 
     const currentApps = [...applications];
     const movingIndex = currentApps.findIndex(a => a.id === movingAppId);
@@ -476,45 +595,36 @@ export default function KanbanBoard({
 
     if (statusChanged) {
       movingApp.status = targetColumnKey;
-    } else if (!targetCardId) {
-      // Daca nu s-a schimbat statusul si nu avem targetCardId specific (eliberat pe aceeasi coloana):
-      return; // Ramane exact unde era!
     }
 
-    // Calculam pozitia exacta de inserare
-    if (targetCardId) {
-      const targetIndex = currentApps.findIndex(a => a.id === targetCardId);
-      if (targetIndex !== -1) {
-        if (!statusChanged) {
-          if (targetCardId === movingAppId) return;
-          if (position === 'top' && (targetIndex === movingIndex || targetIndex === movingIndex + 1)) return;
-          if (position === 'bottom' && (targetIndex === movingIndex || targetIndex === movingIndex - 1)) return;
-        }
-        currentApps.splice(movingIndex, 1);
-        const newTargetIndex = currentApps.findIndex(a => a.id === targetCardId);
-        const finalInsertIndex = position === 'top' ? newTargetIndex : newTargetIndex + 1;
-        currentApps.splice(finalInsertIndex, 0, movingApp);
-      } else {
-        currentApps.splice(movingIndex, 1);
-        currentApps.push(movingApp);
-      }
+    // Eliminam aplicatia din pozitia initiala
+    currentApps.splice(movingIndex, 1);
+
+    // Identificam aplicatiile din coloana tinta (fara movingApp)
+    const targetColApps = currentApps.filter(a => a.status === targetColumnKey);
+
+    if (targetColApps.length === 0) {
+      currentApps.push(movingApp);
+    } else if (slotIndex <= 0) {
+      const firstTargetIndex = currentApps.findIndex(a => a.id === targetColApps[0].id);
+      currentApps.splice(firstTargetIndex, 0, movingApp);
+    } else if (slotIndex >= targetColApps.length) {
+      const lastTarget = targetColApps[targetColApps.length - 1];
+      const lastTargetIndex = currentApps.findIndex(a => a.id === lastTarget.id);
+      currentApps.splice(lastTargetIndex + 1, 0, movingApp);
     } else {
-      currentApps.splice(movingIndex, 1);
-      let lastColumnCardIndex = -1;
-      for (let i = currentApps.length - 1; i >= 0; i--) {
-        if (currentApps[i].status === targetColumnKey) {
-          lastColumnCardIndex = i;
-          break;
-        }
-      }
-      if (lastColumnCardIndex !== -1) {
-        currentApps.splice(lastColumnCardIndex + 1, 0, movingApp);
-      } else {
-        currentApps.push(movingApp);
-      }
+      const slotTarget = targetColApps[slotIndex];
+      const slotTargetIndex = currentApps.findIndex(a => a.id === slotTarget.id);
+      currentApps.splice(slotTargetIndex, 0, movingApp);
     }
 
-    // Trecem la CUSTOM pentru a retine ordinea manuala
+    // Efect de arc spring recoil pe cardul plasat
+    setJustDroppedCardId(movingAppId);
+    setTimeout(() => {
+      setJustDroppedCardId(null);
+    }, 600);
+
+    // Retinem ordinea manuala
     if (sortBy !== 'CUSTOM') {
       setSortBy('CUSTOM');
     }
@@ -576,105 +686,274 @@ export default function KanbanBoard({
     }
   };
 
-  // RENDER CARD PLACEHOLDER (CHENAR CU DIMENSIUNEA SI STRUCTURA REALA A UNUI JOB)
-  const renderCardPlaceholder = (targetCardId, position) => {
-    const draggedApp = applications.find(a => a.id === draggedAppId);
-    const score = draggedApp?.semanticMatchScore ? Number(draggedApp.semanticMatchScore) : 0;
+  // RENDER PURE MINIMAL DROP SLOT (ZERO TEXT, ZERO LABELS, EXACT CARD HEIGHT)
+  const renderDropSlot = (columnKey, slotIndex) => {
+    const isActive = Boolean(
+      activeDrag && 
+      dropTargetSlot?.columnKey === columnKey && 
+      dropTargetSlot?.slotIndex === slotIndex
+    );
+    const targetH = Math.max(activeDrag?.cardHeight || 185, 175);
 
     return (
       <div 
-        onDragOver={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
+        key={`drop-slot-${columnKey}-${slotIndex}`}
+        data-active-slot={isActive ? 'true' : 'false'}
+        data-slot-col={columnKey}
+        data-slot-idx={slotIndex}
+        style={{
+          display: 'grid',
+          gridTemplateRows: isActive ? '1fr' : '0fr',
+          opacity: isActive ? 1 : 0,
+          marginBottom: isActive ? '12px' : '0px',
+          transition: activeDrag 
+            ? 'grid-template-rows 280ms cubic-bezier(0.25, 1, 0.5, 1), margin-bottom 280ms cubic-bezier(0.25, 1, 0.5, 1), opacity 200ms ease-out'
+            : 'none',
         }}
-        onDrop={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const movingAppId = e.dataTransfer.getData('text/plain') || draggedAppId;
-          if (movingAppId) {
-            executeMove(movingAppId, targetCardId, dragOverColumnKey, position);
-          }
-          handleDragEnd();
-        }}
-        className="rounded-xl border-2 border-dashed border-indigo-500 bg-indigo-50/80 p-3 space-y-2.5 select-none shadow-xs pointer-events-auto transition-all"
+        className="w-full min-w-0"
       >
-        {/* 1. HEADER: COMPANIE, TITLU SI BADGE PLASEAZA AICI */}
-        <div className="flex items-start justify-between gap-1.5">
-          <div className="flex-1 min-w-0">
-            <span className="text-[10px] font-black tracking-wider uppercase text-indigo-600 block truncate">
-              {draggedApp?.companyName || 'Companie'}
-            </span>
-            <h4 className="font-bold text-xs sm:text-[13px] text-indigo-950 leading-snug mt-0.5 line-clamp-2">
-              {draggedApp?.jobTitle || 'Pozitie Job'}
-            </h4>
-          </div>
-          <span className="text-[10px] font-black px-2 py-0.5 bg-indigo-200 text-indigo-900 rounded-full shrink-0 whitespace-nowrap">
-            Plaseaza aici
-          </span>
-        </div>
-
-        {/* 2. MATCH SCORE PILL + SLIM PROGRESS (IDENTIC CU CARDUL REAL) */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="inline-flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md text-[10px] bg-indigo-100 text-indigo-800 border border-indigo-200 shrink-0">
-              <Sparkles className="w-2.5 h-2.5 shrink-0 text-indigo-600" />
-              {score > 0 ? `${score.toFixed(0)}% Match ATS` : 'ATS Match'}
-            </span>
-            {draggedApp?.jobLocation && (
-              <span className="text-[10px] text-indigo-700/80 truncate max-w-[100px]" title={draggedApp.jobLocation}>
-                {draggedApp.jobLocation}
-              </span>
-            )}
-          </div>
-          <div className="w-full bg-indigo-100 h-1 rounded-full overflow-hidden border border-indigo-200/60">
-            <div 
-              className="h-full bg-indigo-500 rounded-full transition-all duration-500" 
-              style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
-            ></div>
-          </div>
-        </div>
-
-        {/* 3. CV ROW PLACEHOLDER (IDENTIC CA INALTIME CU SELECTORUL REAL) */}
-        <div className="flex items-center gap-1.5 bg-white/70 px-2 py-1 rounded-lg border border-dashed border-indigo-200 text-xs">
-          <FileText className="w-3 h-3 text-indigo-400 shrink-0" />
-          <span className="text-[11px] font-semibold text-indigo-800 truncate">
-            {draggedApp?.cvProfileId ? 'CV din Studio' : (draggedApp?.resumeId ? 'Fisier CV' : 'CV Neselectat')}
-          </span>
-        </div>
-
-        {/* 4. ACTION BUTTON PLACEHOLDER (IDENTIC CU BUTONUL REAL) */}
-        <div className="w-full py-1.5 px-2.5 rounded-lg border border-dashed border-indigo-300 bg-indigo-100/60 text-indigo-950 text-[11px] font-extrabold flex items-center justify-center gap-1.5 shadow-2xs">
-          <Sparkles className="w-3 h-3 text-indigo-600 shrink-0" />
-          <span className="truncate">Pozitie Noua in Coloana</span>
+        <div style={{ overflow: 'hidden', minHeight: 0 }} className="w-full min-w-0">
+          <div 
+            style={{ height: `${targetH}px` }} 
+            className="w-full rounded-xl border-2 border-dashed border-neutral-300/90 bg-neutral-100/60 shadow-inner flex items-center justify-center pointer-events-none select-none transition-colors"
+          />
         </div>
       </div>
     );
   };
 
+  // RENDER CARD INNER (SHARED BETWEEN COLUMN CARDS AND FLOATING PREVIEW)
+  const renderCardInner = (app, isFloating = false) => {
+    const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
+    const isGmail = isAppGmail(app);
+    const emailSender = isGmail ? getEmailSender(app) : null;
+
+    return (
+      <>
+        {/* CARD HEADER: COMPANY, TITLE, DELETE & DRAG */}
+        <div className="flex items-start justify-between gap-1.5 w-full min-w-0">
+          <div 
+            onClick={() => {
+              if (!isFloating) handleOpenJobModal(app);
+            }}
+            className="cursor-pointer group/title flex-1 min-w-0"
+            title="Apasa pentru a deschide fisa completa a jobului"
+          >
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs sm:text-[13px] font-mono uppercase tracking-wider text-neutral-500 font-semibold truncate block group-hover/title:text-black transition">
+                {app.companyName}
+              </span>
+              {isGmail && (
+                <span className="inline-flex items-center gap-1 font-bold text-[10px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full shrink-0" title="Detectat automat prin sincronizare Gmail">
+                  <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
+                  <span>Gmail</span>
+                </span>
+              )}
+            </div>
+            <h4 className="font-bold text-sm sm:text-[15px] text-neutral-950 leading-snug mt-1 line-clamp-2 group-hover/title:text-neutral-700 transition">
+              {app.jobTitle}
+            </h4>
+          </div>
+          <div className="flex items-center gap-0.5 shrink-0">
+            {!isFloating && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm(`Sigur doresti sa stergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
+                    onDeleteApplication && onDeleteApplication(app.id);
+                  }
+                }}
+                title="Sterge din Tracker"
+                className="p-1.5 rounded-lg hover:bg-rose-50 text-neutral-300 hover:text-rose-600 transition cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+            <GripVertical className="w-4 h-4 text-neutral-300 group-hover:text-neutral-600 shrink-0 cursor-grab" />
+          </div>
+        </div>
+
+        {/* ROW BADGES: EXPEDITOR GMAIL / MATCH SCORE + DATA APLICARII */}
+        {isGmail ? (
+          <div className="flex items-center justify-between gap-1.5 w-full min-w-0">
+            <span 
+              className="inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-md text-xs bg-red-50 text-red-700 border border-red-200 min-w-0 flex-1 truncate" 
+              title={emailSender ? `Expeditor: ${emailSender}` : 'Email Recrutare Gmail'}
+            >
+              <Mail className="w-3 h-3 shrink-0 text-red-600" />
+              <span className="truncate min-w-0">{emailSender ? `De la: ${emailSender}` : 'Email Recrutare'}</span>
+            </span>
+
+            {app.appliedDate && (
+              <span 
+                className="inline-flex items-center gap-1 font-mono text-xs text-neutral-500 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md shrink-0 ml-auto" 
+                title={`Data: ${app.appliedDate}`}
+              >
+                <Calendar className="w-3 h-3 text-neutral-400 shrink-0" />
+                <span className="whitespace-nowrap">{app.appliedDate}</span>
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-1.5 w-full min-w-0">
+              <span className={`inline-flex items-center gap-1 font-mono font-bold text-xs px-2.5 py-0.5 rounded-md shrink-0 ${
+                score >= 75 
+                  ? 'bg-neutral-100 text-neutral-900 border border-neutral-300'
+                  : score >= 50
+                  ? 'bg-neutral-100 text-neutral-800 border border-neutral-200'
+                  : 'bg-neutral-50 text-neutral-600 border border-neutral-200'
+              }`}>
+                <Sparkles className="w-3.5 h-3.5 shrink-0 text-neutral-600" />
+                <span>{score > 0 ? `${score.toFixed(0)}% Match` : 'ATS Match'}</span>
+              </span>
+
+              {app.appliedDate && (
+                <span className="inline-flex items-center gap-1 font-mono text-xs text-neutral-500 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md shrink-0 ml-auto" title={`Data adaugarii/aplicarii: ${app.appliedDate}`}>
+                  <Calendar className="w-3 h-3 text-neutral-400 shrink-0" />
+                  <span className="whitespace-nowrap">{app.appliedDate}</span>
+                </span>
+              )}
+            </div>
+
+            {score > 0 && (
+              <div className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden border border-neutral-200/60">
+                <div 
+                  className="h-full bg-neutral-900 rounded-full transition-all duration-500" 
+                  style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
+                ></div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CV SELECTOR (COMPACT & CLEAN) */}
+        <div className="flex items-center gap-1.5 bg-neutral-50/80 hover:bg-neutral-100/80 px-2.5 py-1.5 rounded-lg border border-neutral-200/90 text-xs">
+          <FileText className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+          <select
+            value={app.cvProfileId ? `CV_${app.cvProfileId}` : (app.resumeId ? `RESUME_${app.resumeId}` : '')}
+            onChange={(e) => {
+              if (isFloating) return;
+              const val = e.target.value;
+              if (!val) return;
+              if (val.startsWith('CV_')) {
+                handleAttachCvProfile(app.id, val.replace('CV_', ''));
+              } else if (val.startsWith('RESUME_')) {
+                handleAttachResume(app.id, val.replace('RESUME_', ''));
+              }
+            }}
+            disabled={isFloating || attachingCvAppId === app.id}
+            className="bg-transparent text-neutral-800 font-medium outline-none cursor-pointer w-full text-xs truncate"
+            title="Alege CV-ul asociat pentru aceasta aplicatie"
+          >
+            <option value="">CV Neselectat</option>
+            {cvList.length > 0 && (
+              <optgroup label="CV-uri din Studio">
+                {cvList.map((cv) => (
+                  <option key={cv.id} value={`CV_${cv.id}`}>
+                    {cv.title}{cv.isPrimary ? ' [Principal]' : ''}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {uploadedResumes.length > 0 && (
+              <optgroup label="Fisiere CV Incarcate">
+                {uploadedResumes.map((r) => (
+                  <option key={r.id} value={`RESUME_${r.id}`}>
+                    {r.fileName}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+          {app.cvProfileId && onEditCvInStudio && !isFloating && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditCvInStudio(app.cvProfileId);
+              }}
+              className="text-neutral-400 hover:text-black p-0.5 cursor-pointer shrink-0"
+              title="Editeaza acest CV in Studio"
+            >
+              <Edit3 className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+
+        {/* ACTION BUTTONS: CARD AERISIT CU FISA JOB + ACTIUNI RAPIDE ICON-ONLY */}
+        <div className="flex items-center gap-2 pt-2 border-t border-neutral-100">
+          <button
+            type="button"
+            onClick={(e) => {
+              if (isFloating) return;
+              e.stopPropagation();
+              handleOpenJobModal(app);
+            }}
+            className="flex-1 py-2 px-3 rounded-xl border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer group active:scale-95"
+            title="Deschide fisa completa si cerintele jobului"
+          >
+            <Eye className="w-4 h-4 text-neutral-700 group-hover:scale-110 transition-transform shrink-0" />
+            <span>Fisa Job</span>
+          </button>
+
+          {onOpenCoverLetter && (
+            <button
+              type="button"
+              onClick={(e) => {
+                if (isFloating) return;
+                e.stopPropagation();
+                onOpenCoverLetter(app.id);
+              }}
+              className="p-2 rounded-xl border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 hover:text-black transition shadow-2xs cursor-pointer group shrink-0 active:scale-95"
+              title="Genereaza Scrisoare de Intentie AI pentru acest rol"
+            >
+              <FileSignature className="w-4 h-4 text-neutral-700 group-hover:scale-110 transition-transform" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={(e) => {
+              if (isFloating) return;
+              e.stopPropagation();
+              setOutreachApp(app);
+            }}
+            className="p-1.5 rounded-xl border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 hover:text-black transition shadow-2xs cursor-pointer group shrink-0 active:scale-95"
+            title="Outreach Recruiter: Mesaj LinkedIn & Cold Email"
+          >
+            <Send className="w-3.5 h-3.5 text-neutral-700 group-hover:scale-110 transition-transform" />
+          </button>
+        </div>
+      </>
+    );
+  };
+
   return (
-    <div className="space-y-4 font-sans text-gray-900">
+    <div className="space-y-4 font-sans text-neutral-900">
       
       {/* SEARCH, FILTER & VIEW MODE TOOLBAR */}
       {currentUser && (
-        <div className="bg-white border border-gray-200/90 shadow-sm p-3.5 sm:p-4 rounded-2xl space-y-3">
+        <div className="bg-white border border-neutral-200/90 shadow-2xs p-4 sm:p-5 rounded-2xl space-y-3.5">
           
           {/* TOP ROW: SEARCH + SORT + VIEW MODE */}
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             
             {/* SEARCH INPUT */}
             <div className="relative flex-1 max-w-lg">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4.5 h-4.5 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input 
-                type="text"
+                type="text" 
                 placeholder="Cauta dupa companie, titlu sau locatie..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-8 py-2 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-500 focus:bg-white transition"
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-10 pr-9 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:bg-white transition"
               />
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold p-1 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black text-sm font-bold p-1 cursor-pointer"
                   title="Sterge textul cautat"
                 >
                   &#x2715;
@@ -683,16 +962,16 @@ export default function KanbanBoard({
             </div>
 
             {/* SORT BY DROPDOWN & VIEW MODE */}
-            <div className="flex items-center gap-2.5 flex-wrap justify-between lg:justify-end">
+            <div className="flex items-center gap-3 flex-wrap justify-between lg:justify-end">
               
               {/* SORT BY SELECT */}
-              <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl border border-gray-200 text-xs">
-                <ArrowUpDown className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                <span className="text-[11px] font-bold text-gray-500 shrink-0">Ordoneaza:</span>
+              <div className="flex items-center gap-2 bg-neutral-50 px-3 py-2 rounded-xl border border-neutral-200 text-sm">
+                <ArrowUpDown className="w-4 h-4 text-neutral-500 shrink-0" />
+                <span className="text-xs font-mono font-bold text-neutral-500 shrink-0 uppercase">Ordoneaza:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-transparent text-gray-900 font-bold text-xs outline-none cursor-pointer"
+                  className="bg-transparent text-neutral-900 font-bold text-xs sm:text-sm outline-none cursor-pointer"
                 >
                   <option value="CUSTOM">Ordine Manuala (Drag & Drop)</option>
                   <option value="SCORE_DESC">Scor ATS (Mare la Mic)</option>
@@ -704,41 +983,41 @@ export default function KanbanBoard({
               </div>
 
               {/* VIEW MODE TOGGLE (KANBAN VS LIST VS CALENDAR) */}
-              <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 shrink-0">
+              <div className="flex items-center bg-neutral-100 p-1 rounded-xl border border-neutral-200 shrink-0">
                 <button
                   onClick={() => setViewMode('kanban')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer ${
                     viewMode === 'kanban' 
-                      ? 'bg-black text-white shadow-sm' 
-                      : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+                      ? 'bg-black text-white shadow-2xs' 
+                      : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
                   }`}
                   title="Vizualizare Kanban Board"
                 >
-                  <Columns className="w-3.5 h-3.5" />
+                  <Columns className="w-4 h-4" />
                   Kanban
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer ${
                     viewMode === 'list' 
-                      ? 'bg-black text-white shadow-sm' 
-                      : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+                      ? 'bg-black text-white shadow-2xs' 
+                      : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
                   }`}
                   title="Vizualizare Lista Tabelara"
                 >
-                  <List className="w-3.5 h-3.5" />
+                  <List className="w-4 h-4" />
                   Lista
                 </button>
                 <button
                   onClick={() => setViewMode('calendar')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer ${
                     viewMode === 'calendar' 
-                      ? 'bg-black text-white shadow-sm' 
-                      : 'text-gray-600 hover:text-black hover:bg-gray-200/60'
+                      ? 'bg-black text-white shadow-2xs' 
+                      : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
                   }`}
                   title="Vizualizare Calendar & Agenda Aplicari"
                 >
-                  <Calendar className="w-3.5 h-3.5" />
+                  <Calendar className="w-4 h-4" />
                   Calendar
                 </button>
               </div>
@@ -746,40 +1025,40 @@ export default function KanbanBoard({
               {/* EXPORT CSV BUTTON */}
               <button
                 onClick={handleExportCsv}
-                className="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 text-gray-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95"
+                className="px-3.5 py-2 bg-white hover:bg-neutral-50 border border-neutral-200 hover:border-neutral-300 text-neutral-800 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95"
                 title="Descarca lista aplicatiilor in format CSV compatibil Excel"
               >
-                <Download className="w-3.5 h-3.5 text-gray-600" />
+                <Download className="w-4 h-4 text-neutral-600" />
                 <span>Exporta CSV</span>
               </button>
 
               {/* GMAIL SYNC BUTTON */}
               <button
                 onClick={() => setIsGmailModalOpen(true)}
-                className="px-3 py-1.5 bg-red-50 hover:bg-red-100/80 border border-red-200 hover:border-red-300 text-red-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95"
+                className="px-3.5 py-2 bg-neutral-900 hover:bg-neutral-800 text-white border border-neutral-800 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95"
                 title="Sincronizeaza automat statusul aplicatiilor din emailurile Gmail"
               >
-                <Mail className="w-3.5 h-3.5 text-red-600" />
+                <Mail className="w-4 h-4 text-neutral-300" />
                 <span>Sincronizeaza Gmail</span>
               </button>
             </div>
           </div>
 
           {/* BOTTOM ROW: FILTER PILLS & RESET */}
-          <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-gray-100 text-xs">
-            <div className="flex items-center gap-1 text-gray-500 font-bold text-[11px] shrink-0">
-              <Filter className="w-3.5 h-3.5 text-gray-500" />
+          <div className="flex items-center gap-2.5 flex-wrap pt-2.5 border-t border-neutral-100 text-xs sm:text-sm">
+            <div className="flex items-center gap-1.5 text-neutral-500 font-bold text-xs shrink-0 font-mono">
+              <Filter className="w-4 h-4 text-neutral-500" />
               <span>Filtre:</span>
             </div>
 
             {/* FILTER SCOR ATS */}
-            <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
-              <Sparkles className="w-3 h-3 text-emerald-600 shrink-0" />
-              <span className="text-[11px] text-gray-500 font-semibold">Scor:</span>
+            <div className="flex items-center gap-1.5 bg-neutral-50 px-2.5 py-1.5 rounded-lg border border-neutral-200">
+              <Sparkles className="w-3.5 h-3.5 text-neutral-700 shrink-0" />
+              <span className="text-xs text-neutral-500 font-semibold font-mono">Scor:</span>
               <select
                 value={filterScore}
                 onChange={(e) => setFilterScore(e.target.value)}
-                className="bg-transparent text-gray-900 font-bold text-[11px] outline-none cursor-pointer"
+                className="bg-transparent text-neutral-900 font-bold text-xs sm:text-sm outline-none cursor-pointer"
               >
                 <option value="ALL">Toate scorurile</option>
                 <option value="HIGH">&gt; 80% Match</option>
@@ -789,13 +1068,13 @@ export default function KanbanBoard({
             </div>
 
             {/* FILTER MOD DE LUCRU */}
-            <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
-              <Briefcase className="w-3 h-3 text-blue-600 shrink-0" />
-              <span className="text-[11px] text-gray-500 font-semibold">Mod:</span>
+            <div className="flex items-center gap-1.5 bg-neutral-50 px-2.5 py-1.5 rounded-lg border border-neutral-200">
+              <Briefcase className="w-3.5 h-3.5 text-neutral-700 shrink-0" />
+              <span className="text-xs text-neutral-500 font-semibold font-mono">Mod:</span>
               <select
                 value={filterWorkModel}
                 onChange={(e) => setFilterWorkModel(e.target.value)}
-                className="bg-transparent text-gray-900 font-bold text-[11px] outline-none cursor-pointer"
+                className="bg-transparent text-neutral-900 font-bold text-xs sm:text-sm outline-none cursor-pointer"
               >
                 <option value="ALL">Toate modurile</option>
                 <option value="REMOTE">Remote</option>
@@ -805,13 +1084,13 @@ export default function KanbanBoard({
             </div>
 
             {/* FILTER CV ASOCIAT */}
-            <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
-              <FileText className="w-3 h-3 text-indigo-600 shrink-0" />
-              <span className="text-[11px] text-gray-500 font-semibold">CV:</span>
+            <div className="flex items-center gap-1.5 bg-neutral-50 px-2.5 py-1.5 rounded-lg border border-neutral-200">
+              <FileText className="w-3.5 h-3.5 text-neutral-700 shrink-0" />
+              <span className="text-xs text-neutral-500 font-semibold font-mono">CV:</span>
               <select
                 value={filterCv}
                 onChange={(e) => setFilterCv(e.target.value)}
-                className="bg-transparent text-gray-900 font-bold text-[11px] outline-none cursor-pointer"
+                className="bg-transparent text-neutral-900 font-bold text-xs sm:text-sm outline-none cursor-pointer"
               >
                 <option value="ALL">Toate aplicatiile</option>
                 <option value="ATTACHED">Cu CV asociat</option>
@@ -823,35 +1102,35 @@ export default function KanbanBoard({
             <button
               type="button"
               onClick={() => setFilterGmailOnly(prev => !prev)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-bold transition cursor-pointer select-none ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition cursor-pointer select-none ${
                 filterGmailOnly 
-                  ? 'bg-red-50 text-red-700 border-red-300 ring-2 ring-red-400/20 shadow-2xs' 
-                  : 'bg-gray-50 hover:bg-gray-100 text-gray-600 border-gray-200'
+                  ? 'bg-neutral-900 text-white border-neutral-900 shadow-2xs' 
+                  : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-200'
               }`}
               title="Filtreaza si afiseaza doar joburile extrase prin sincronizarea Gmail"
             >
-              <Mail className={`w-3.5 h-3.5 ${filterGmailOnly ? 'text-red-600' : 'text-gray-400'}`} />
+              <Mail className={`w-3.5 h-3.5 ${filterGmailOnly ? 'text-white' : 'text-neutral-500'}`} />
               <span>Doar din Gmail</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                filterGmailOnly ? 'bg-red-200 text-red-900' : 'bg-gray-200 text-gray-700'
+              <span className={`px-1.5 py-0.5 rounded-md text-[11px] font-mono font-bold ${
+                filterGmailOnly ? 'bg-neutral-800 text-white' : 'bg-neutral-200 text-neutral-800'
               }`}>
                 {gmailJobsCount}
               </span>
             </button>
 
             {/* COUNT OF RESULTS */}
-            <span className="text-[11px] text-gray-400 font-semibold ml-auto">
-              Afisare: <strong className="text-gray-800">{filteredApplications.length}</strong> din {applications.length}
+            <span className="text-xs text-neutral-400 font-mono ml-auto">
+              Afisare: <strong className="text-neutral-900">{filteredApplications.length}</strong> din {applications.length}
             </span>
 
             {/* RESET FILTERS BUTTON */}
             {isAnyFilterActive && (
               <button
                 onClick={handleResetFilters}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-black text-[11px] font-bold transition cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 hover:text-black text-xs font-bold transition cursor-pointer"
                 title="Reseteaza toate filtrele si ordonarea"
               >
-                <RotateCcw className="w-3 h-3 text-gray-500" />
+                <RotateCcw className="w-3.5 h-3.5 text-neutral-500" />
                 <span>Reseteaza</span>
               </button>
             )}
@@ -862,17 +1141,17 @@ export default function KanbanBoard({
       )}
 
       {/* HEADER WITH INSTRUCTION & ACTIONS */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-gray-200/80 shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4.5 sm:p-5 rounded-2xl border border-neutral-200/90 shadow-2xs">
         <div>
-          <h2 className="text-base sm:text-lg font-bold text-gray-950 flex items-center gap-2 tracking-tight">
-            <FolderKanban className="w-5 h-5 text-gray-900" />
+          <h2 className="text-lg sm:text-xl font-bold text-neutral-950 flex items-center gap-2.5 tracking-tight">
+            <FolderKanban className="w-5 h-5 text-neutral-950" />
             {viewMode === 'kanban' 
               ? 'Tracker & Pipeline Aplicatii' 
               : viewMode === 'list' 
               ? 'Lista Centralizata Aplicatii' 
               : 'Calendar & Agenda Aplicari'}
           </h2>
-          <p className="text-xs text-gray-500 font-medium mt-0.5">
+          <p className="text-xs sm:text-sm text-neutral-600 font-medium mt-1">
             {viewMode === 'kanban' 
               ? 'Trage orice card de job in alta coloana sau reordoneaza-le direct pentru a-ti organiza procesul.'
               : viewMode === 'list'
@@ -884,7 +1163,7 @@ export default function KanbanBoard({
         {onOpenAddJob && (
           <button
             onClick={onOpenAddJob}
-            className="self-start sm:self-auto px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95 shrink-0"
+            className="self-start sm:self-auto px-4.5 py-2.5 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition cursor-pointer shadow-sm active:scale-95 shrink-0"
             title="Adauga un job nou manual in tracker"
           >
             <Plus className="w-4 h-4" />
@@ -899,7 +1178,7 @@ export default function KanbanBoard({
       {viewMode === 'kanban' && (
         <>
           {/* MOBILE COLUMN TAB SELECTOR */}
-          <div className="flex md:hidden overflow-x-auto gap-1.5 p-1.5 bg-gray-100 rounded-2xl border border-gray-200">
+          <div className="flex md:hidden overflow-x-auto gap-1.5 p-1.5 bg-neutral-100 rounded-2xl border border-neutral-200">
             {kanbanColumns.map((col) => {
               const count = filteredApplications.filter(a => a.status === col.key).length;
               const ColIcon = col.icon;
@@ -911,13 +1190,13 @@ export default function KanbanBoard({
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 transition cursor-pointer ${
                     isSelected 
                       ? `${col.tabActive} shadow-sm font-black` 
-                      : 'text-gray-700 hover:text-black bg-white/70'
+                      : 'text-neutral-700 hover:text-black bg-white/70'
                   }`}
                 >
                   <ColIcon className="w-3.5 h-3.5" />
                   <span>{col.title}</span>
                   <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-800'
+                    isSelected ? 'bg-white/20 text-white' : 'bg-neutral-200 text-neutral-800'
                   }`}>{count}</span>
                 </button>
               );
@@ -929,287 +1208,113 @@ export default function KanbanBoard({
             {kanbanColumns.map((col) => {
               const colApps = filteredApplications.filter(app => app.status === col.key);
               const isMobileVisible = mobileSelectedColumn === col.key;
-              const isDragOverCol = dragOverColumnKey === col.key && Boolean(draggedAppId);
+              const isDragOverCol = (dropTargetSlot?.columnKey === col.key) && Boolean(activeDrag);
               const ColIcon = col.icon;
 
               return (
                 <div 
                   key={col.key} 
-                  onDragOver={(e) => handleColumnDragOver(e, col.key)}
-                  onDrop={(e) => handleColumnDrop(e, col.key)}
+                  data-kanban-col={col.key}
                   className={`rounded-2xl border ${col.columnBg} ${col.accentBorder} transition-all duration-200 flex flex-col h-[calc(100vh-230px)] min-h-[500px] max-h-[760px] shadow-xs overflow-hidden ${
-                    isDragOverCol ? 'ring-2 ring-indigo-600 scale-[1.01] shadow-md' : ''
+                    isDragOverCol ? 'ring-2 ring-neutral-900/60 shadow-md' : ''
                   } ${isMobileVisible ? 'flex' : 'hidden md:flex'}`}
                 >
                   {/* FIXED COLUMN HEADER */}
-                  <div className={`flex items-center justify-between px-3.5 py-2.5 ${col.headerBg} font-extrabold text-xs shrink-0`}>
-                    <div className="flex items-center gap-1.5">
-                      <ColIcon className={`w-3.5 h-3.5 ${col.iconColor} shrink-0`} />
+                  <div className={`flex items-center justify-between px-4 py-3 ${col.headerBg} font-bold text-sm sm:text-base shrink-0`}>
+                    <div className="flex items-center gap-2">
+                      <ColIcon className={`w-4 h-4 ${col.iconColor} shrink-0`} />
                       <span className="truncate">{col.title}</span>
                     </div>
-                    <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${col.badgeBg}`}>
+                    <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-md ${col.badgeBg}`}>
                       {colApps.length}
                     </span>
                   </div>
 
                   {/* SCROLLABLE CARDS CONTAINER */}
                   <div 
-                    onDragOver={(e) => handleColumnDragOver(e, col.key)}
-                    onDrop={(e) => handleColumnDrop(e, col.key)}
-                    className="flex-1 overflow-y-auto p-2.5 sm:p-3 space-y-2.5 min-h-0"
+                    data-scroll-container="true"
+                    className="flex-1 overflow-y-auto p-2.5 sm:p-3 min-h-0 flex flex-col"
                   >
-                    {colApps.map((app) => {
-                      const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
-                      const isGmail = isAppGmail(app);
-                      const emailSender = isGmail ? getEmailSender(app) : null;
-                      const isBeingDragged = draggedAppId === app.id;
-                      const isDropTargetTop = dragOverTarget?.cardId === app.id && dragOverTarget?.position === 'top' && draggedAppId !== app.id;
-                      const isDropTargetBottom = dragOverTarget?.cardId === app.id && dragOverTarget?.position === 'bottom' && draggedAppId !== app.id;
+                    {/* TOP DROP SLOT (SLOT 0) */}
+                    {renderDropSlot(col.key, 0)}
+
+                    {colApps.map((app, index) => {
+                      const isBeingDragged = activeDrag && activeDrag.app.id === app.id;
+                      const otherCardsInCol = colApps.filter(a => !(activeDrag && a.id === activeDrag.app.id));
+                      const visibleIdx = otherCardsInCol.findIndex(a => a.id === app.id);
+                      const slotAfterIdx = visibleIdx !== -1 ? visibleIdx + 1 : index + 1;
 
                       return (
                         <React.Fragment key={app.id}>
-                          {/* PREVIEW PLACEHOLDER ABOVE CARD */}
-                          {isDropTargetTop && renderCardPlaceholder(app.id, 'top')}
-
-                          {/* JOB CARD */}
-                          <div 
-                            draggable={true}
-                            onDragStart={(e) => handleDragStart(e, app.id)}
-                            onDragEnd={handleDragEnd}
-                            onDragOver={(e) => handleCardDragOver(e, app.id, col.key)}
-                            onDrop={(e) => handleCardDrop(e, app.id, col.key)}
-                            className={`bg-white border rounded-xl p-3 space-y-2.5 relative group shadow-2xs hover:shadow-md transition-all text-gray-900 cursor-grab active:cursor-grabbing w-full min-w-0 ${
-                              isBeingDragged 
-                                ? 'opacity-40 border-2 border-dashed border-indigo-400 bg-indigo-50/30 shadow-none' 
-                                : 'border-gray-200/90 hover:border-indigo-200'
-                            }`}
+                          {/* COLLAPSIBLE CARD WRAPPER (PERMANENT GRID FOR SMOOTH 340MS FLUID COLLAPSE) */}
+                          <div
+                            data-card-wrapper="true"
+                            data-card-id={app.id}
+                            style={{
+                              display: 'grid',
+                              gridTemplateRows: isBeingDragged ? '0fr' : '1fr',
+                              opacity: isBeingDragged ? 0 : 1,
+                              marginBottom: isBeingDragged ? '0px' : '12px',
+                              transition: isBeingDragged
+                                ? 'grid-template-rows 340ms cubic-bezier(0.25, 1, 0.5, 1), margin-bottom 340ms cubic-bezier(0.25, 1, 0.5, 1), opacity 220ms ease-out'
+                                : 'none',
+                            }}
+                            className="w-full min-w-0"
                           >
-                            {/* CARD HEADER: COMPANY, TITLE, DELETE & DRAG */}
-                            <div className="flex items-start justify-between gap-1.5 w-full min-w-0">
-                              <div 
-                                onClick={() => handleOpenJobModal(app)}
-                                className="cursor-pointer group/title flex-1 min-w-0"
-                                title="Apasa pentru a deschide fisa completa a jobului"
+                            <div style={{ overflow: 'hidden', minHeight: 0 }} className="w-full min-w-0">
+                              <div
+                                draggable={false}
+                                onDragStart={(e) => { e.preventDefault(); return false; }}
+                                onPointerDown={(e) => handlePointerDown(e, app, col.key, visibleIdx)}
+                                style={{ touchAction: 'none', userSelect: 'none' }}
+                                className={`bg-white border rounded-xl p-3.5 space-y-3 relative group shadow-2xs hover:shadow-md transition-shadow text-neutral-900 cursor-grab active:cursor-grabbing w-full min-w-0 border-neutral-200/90 hover:border-neutral-400 select-none ${
+                                  justDroppedCardId === app.id ? 'animate-card-settle' : ''
+                                }`}
                               >
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[10px] font-extrabold tracking-wider uppercase text-gray-400 truncate block group-hover/title:text-indigo-600 transition">
-                                    {app.companyName}
-                                  </span>
-                                  {isGmail && (
-                                    <span className="inline-flex items-center gap-1 font-bold text-[9px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded-full shrink-0" title="Detectat automat prin sincronizare Gmail">
-                                      <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
-                                      <span>Gmail</span>
-                                    </span>
-                                  )}
-                                </div>
-                                <h4 className="font-bold text-xs sm:text-[13px] text-gray-950 leading-snug mt-0.5 line-clamp-2 group-hover/title:text-indigo-600 transition">
-                                  {app.jobTitle}
-                                </h4>
+                                {renderCardInner(app)}
                               </div>
-                              <div className="flex items-center gap-0.5 shrink-0">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (window.confirm(`Sigur doresti sa stergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
-                                      onDeleteApplication && onDeleteApplication(app.id);
-                                    }
-                                  }}
-                                  title="Sterge din Tracker"
-                                  className="p-1 rounded-lg hover:bg-rose-50 text-gray-300 hover:text-rose-600 transition cursor-pointer"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                                <GripVertical className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 shrink-0" />
-                              </div>
-                            </div>
-
-                            {/* ROW BADGES: EXPEDITOR GMAIL / MATCH SCORE + DATA APLICARII */}
-                            {isGmail ? (
-                              <div className="flex items-center justify-between gap-1.5 w-full min-w-0">
-                                <span 
-                                  className="inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded-md text-[10px] bg-red-50 text-red-700 border border-red-200 min-w-0 flex-1 truncate" 
-                                  title={emailSender ? `Expeditor: ${emailSender}` : 'Email Recrutare Gmail'}
-                                >
-                                  <Mail className="w-2.5 h-2.5 shrink-0 text-red-600" />
-                                  <span className="truncate min-w-0">{emailSender ? `De la: ${emailSender}` : 'Email Recrutare'}</span>
-                                </span>
-
-                                {app.appliedDate && (
-                                  <span 
-                                    className="inline-flex items-center gap-1 font-medium text-[10px] text-gray-500 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded-md shrink-0 ml-auto" 
-                                    title={`Data: ${app.appliedDate}`}
-                                  >
-                                    <Calendar className="w-2.5 h-2.5 text-gray-400 shrink-0" />
-                                    <span className="whitespace-nowrap">{app.appliedDate}</span>
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between gap-1.5 w-full min-w-0">
-                                  <span className={`inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full shrink-0 ${
-                                    score >= 75 
-                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                      : score >= 50
-                                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                      : 'bg-slate-50 text-slate-700 border border-slate-200'
-                                  }`}>
-                                    <Sparkles className="w-3 h-3 shrink-0" />
-                                    <span>{score > 0 ? `${score.toFixed(0)}% Match` : 'ATS Match'}</span>
-                                  </span>
-
-                                  {app.appliedDate && (
-                                    <span className="inline-flex items-center gap-1 font-medium text-[10px] text-gray-500 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded-md shrink-0 ml-auto" title={`Data adaugarii/aplicarii: ${app.appliedDate}`}>
-                                      <Calendar className="w-2.5 h-2.5 text-gray-400 shrink-0" />
-                                      <span className="whitespace-nowrap">{app.appliedDate}</span>
-                                    </span>
-                                  )}
-                                </div>
-
-                                {score > 0 && (
-                                  <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden border border-gray-200/60">
-                                    <div 
-                                      className={`h-full rounded-full transition-all duration-500 ${
-                                        score >= 75 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-500' : 'bg-slate-400'
-                                      }`} 
-                                      style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
-                                    ></div>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {/* CV SELECTOR (COMPACT & CLEAN) */}
-                            <div className="flex items-center gap-1 bg-gray-50/80 hover:bg-gray-100/80 px-2 py-1 rounded-lg border border-gray-200/90 text-xs">
-                              <FileText className="w-3 h-3 text-gray-400 shrink-0" />
-                              <select
-                                value={app.cvProfileId ? `CV_${app.cvProfileId}` : (app.resumeId ? `RESUME_${app.resumeId}` : '')}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  if (!val) return;
-                                  if (val.startsWith('CV_')) {
-                                    handleAttachCvProfile(app.id, val.replace('CV_', ''));
-                                  } else if (val.startsWith('RESUME_')) {
-                                    handleAttachResume(app.id, val.replace('RESUME_', ''));
-                                  }
-                                }}
-                                disabled={attachingCvAppId === app.id}
-                                className="bg-transparent text-gray-800 font-semibold outline-none cursor-pointer w-full text-[11px] truncate"
-                                title="Alege CV-ul asociat pentru aceasta aplicatie"
-                              >
-                                <option value="">CV Neselectat</option>
-                                {cvList.length > 0 && (
-                                  <optgroup label="CV-uri din Studio">
-                                    {cvList.map((cv) => (
-                                      <option key={cv.id} value={`CV_${cv.id}`}>
-                                        {cv.title}{cv.isPrimary ? ' [Principal]' : ''}
-                                      </option>
-                                    ))}
-                                  </optgroup>
-                                )}
-                                {uploadedResumes.length > 0 && (
-                                  <optgroup label="Fisiere CV Incarcate">
-                                    {uploadedResumes.map((r) => (
-                                      <option key={r.id} value={`RESUME_${r.id}`}>
-                                        {r.fileName}
-                                      </option>
-                                    ))}
-                                  </optgroup>
-                                )}
-                              </select>
-                              {app.cvProfileId && onEditCvInStudio && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEditCvInStudio(app.cvProfileId);
-                                  }}
-                                  className="text-gray-400 hover:text-indigo-600 p-0.5 cursor-pointer shrink-0"
-                                  title="Editeaza acest CV in Studio"
-                                >
-                                  <Edit3 className="w-2.5 h-2.5" />
-                                </button>
-                              )}
-                            </div>
-
-                            {/* ACTION BUTTONS: CARD AERISIT CU FISA JOB + ACTIUNI RAPIDE ICON-ONLY */}
-                            <div className="flex items-center gap-1.5 pt-1.5 border-t border-gray-100">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenJobModal(app);
-                                }}
-                                className="flex-1 py-1.5 px-2.5 rounded-xl border border-indigo-200/90 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer group"
-                                title="Deschide fisa completa si cerintele jobului"
-                              >
-                                <Eye className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform shrink-0" />
-                                <span>Fisa Job</span>
-                              </button>
-
-                              {onOpenCoverLetter && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onOpenCoverLetter(app.id);
-                                  }}
-                                  className="p-1.5 rounded-xl border border-blue-200/90 bg-blue-50/80 hover:bg-blue-100 text-blue-900 transition shadow-2xs cursor-pointer group shrink-0"
-                                  title="Genereaza Scrisoare de Intentie AI pentru acest rol"
-                                >
-                                  <FileSignature className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform" />
-                                </button>
-                              )}
-
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOutreachApp(app);
-                                }}
-                                className="p-1.5 rounded-xl border border-purple-200/90 bg-purple-50/80 hover:bg-purple-100 text-purple-900 transition shadow-2xs cursor-pointer group shrink-0"
-                                title="Outreach Recruiter: Mesaj LinkedIn & Cold Email"
-                              >
-                                <Send className="w-3.5 h-3.5 text-purple-600 group-hover:scale-110 transition-transform" />
-                              </button>
                             </div>
                           </div>
 
-                          {/* PREVIEW PLACEHOLDER BELOW CARD */}
-                          {isDropTargetBottom && renderCardPlaceholder(app.id, 'bottom')}
+                          {/* DROP SLOT AFTER THIS CARD (RENDER ONLY IF THIS CARD IS NOT BEING DRAGGED) */}
+                          {!isBeingDragged && renderDropSlot(col.key, slotAfterIdx)}
                         </React.Fragment>
                       );
                     })}
 
-                    {/* PREVIEW PLACEHOLDER LA FINALUL COLOANEI */}
-                    {dragOverColumnKey === col.key && dragOverTarget?.cardId === null && draggedAppId && (
-                      renderCardPlaceholder(null, 'bottom')
+                    {/* EMPTY COLUMN PLACEHOLDER WHEN NOT DRAGGING */}
+                    {colApps.length === 0 && !activeDrag && (
+                      <div className="h-28 w-full flex items-center justify-center text-xs text-neutral-400 font-medium italic border border-dashed border-neutral-300/80 rounded-xl p-3 text-center select-none">
+                        {currentUser ? 'Niciun job in aceasta etapa' : 'Autentifica-te'}
+                      </div>
                     )}
-
-                    {/* ZONA DE CAPTURA DRAG IN PARTEA DE JOS A COLOANEI */}
-                    <div 
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (dragOverColumnKey !== col.key || dragOverTarget?.cardId !== null) {
-                          setDragOverColumnKey(col.key);
-                          setDragOverTarget({ cardId: null, columnKey: col.key, position: 'bottom' });
-                        }
-                      }}
-                      onDrop={(e) => handleColumnDrop(e, col.key)}
-                      className="min-h-[40px] flex-1 flex items-center justify-center"
-                    >
-                      {colApps.length === 0 && (!dragOverColumnKey || dragOverColumnKey !== col.key || !draggedAppId) && (
-                        <div className="h-32 w-full flex items-center justify-center text-[11px] text-gray-400 italic border border-dashed border-gray-300/80 rounded-xl p-3 text-center">
-                          {currentUser ? 'Plaseaza un job aici' : 'Autentifica-te'}
-                        </div>
-                      )}
-                    </div>
-
                   </div>
                 </div>
               );
             })}
           </div>
+
+          {/* FLOATING CARD PORTAL (FOLLOWS CURSOR WITH SWIFT KANBAN LIFT & TILT) */}
+          {activeDrag && (
+            <div
+              ref={floatingCardRef}
+              style={{
+                position: 'fixed',
+                left: 0,
+                top: 0,
+                width: `${activeDrag.cardWidth}px`,
+                pointerEvents: 'none',
+                zIndex: 99999,
+                transform: `translate3d(${activeDrag.x}px, ${activeDrag.y}px, 0) scale(1.04) rotate(4deg)`,
+                willChange: 'transform',
+                boxShadow: '0 25px 45px -8px rgba(0, 0, 0, 0.3), 0 12px 22px -6px rgba(0, 0, 0, 0.15)',
+                opacity: 1,
+              }}
+              className="bg-white border border-neutral-300/90 rounded-xl p-3.5 space-y-3 select-none cursor-grabbing"
+            >
+              {renderCardInner(activeDrag.app, true)}
+            </div>
+          )}
         </>
       )}
 
@@ -1223,15 +1328,15 @@ export default function KanbanBoard({
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50/80 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 sm:px-6">Companie & Job</th>
-                    <th className="py-3.5 px-4">Status Curent</th>
-                    <th className="py-3.5 px-4">Scor Match AI</th>
-                    <th className="py-3.5 px-4">CV Asociat</th>
-                    <th className="py-3.5 px-4 sm:px-6 text-right">Actiuni</th>
+                  <tr className="border-b border-neutral-200 bg-neutral-50/80 text-xs font-mono font-bold text-neutral-500 uppercase tracking-wider">
+                    <th className="py-4 px-4 sm:px-6">Companie & Job</th>
+                    <th className="py-4 px-4">Status Curent</th>
+                    <th className="py-4 px-4">Scor Match AI</th>
+                    <th className="py-4 px-4">CV Asociat</th>
+                    <th className="py-4 px-4 sm:px-6 text-right">Actiuni</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 text-xs">
+                <tbody className="divide-y divide-neutral-100 text-sm">
                   {filteredApplications.map((app) => {
                     const score = app.semanticMatchScore ? Number(app.semanticMatchScore) : 0.0;
                     const isGmail = app.sourcePlatform === 'GMAIL' 
@@ -1239,37 +1344,37 @@ export default function KanbanBoard({
                       || (app.notes && app.notes.includes('[Gmail Sync'));
                     const emailSender = isGmail ? getEmailSender(app) : null;
                     return (
-                      <tr key={app.id} className="hover:bg-gray-50/70 transition-colors group">
+                      <tr key={app.id} className="hover:bg-neutral-50/70 transition-colors group">
                         
                         {/* 1. COMPANIE & JOB */}
                         <td className="py-4 px-4 sm:px-6">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
+                              <span className="text-xs sm:text-[13px] font-mono font-bold uppercase tracking-wider text-neutral-500">
                                 {app.companyName}
                               </span>
                               {isGmail && (
-                                <span className="inline-flex items-center gap-1 font-black text-[9px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full" title="Detectat automat prin sincronizare Gmail">
-                                  <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
+                                <span className="inline-flex items-center gap-1 font-bold text-[10px] text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full" title="Detectat automat prin sincronizare Gmail">
+                                  <Mail className="w-3 h-3 text-red-600 shrink-0" />
                                   <span>Gmail</span>
                                 </span>
                               )}
                               {app.appliedDate && (
-                                <span className="inline-flex items-center gap-1 font-semibold text-[10px] text-gray-500 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md" title={`Data aplicarii: ${app.appliedDate}`}>
-                                  <Calendar className="w-2.5 h-2.5 text-gray-400 shrink-0" />
+                                <span className="inline-flex items-center gap-1 font-mono text-xs text-neutral-500 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md" title={`Data aplicarii: ${app.appliedDate}`}>
+                                  <Calendar className="w-3 h-3 text-neutral-400 shrink-0" />
                                   <span>{app.appliedDate}</span>
                                 </span>
                               )}
                             </div>
                             <span 
                               onClick={() => handleOpenJobModal(app)}
-                              className="font-bold text-sm text-gray-950 block hover:text-indigo-600 transition cursor-pointer"
+                              className="font-bold text-sm sm:text-base text-neutral-950 block hover:text-neutral-700 transition cursor-pointer"
                               title="Deschide fisa completa a jobului"
                             >
                               {app.jobTitle}
                             </span>
                             {app.jobLocation && (
-                              <span className="text-[11px] text-gray-400 block mt-0.5">
+                              <span className="text-xs text-neutral-500 block mt-0.5">
                                 {app.jobLocation}
                               </span>
                             )}
@@ -1279,11 +1384,11 @@ export default function KanbanBoard({
                         {/* 2. STATUS DROPDOWN */}
                         <td className="py-4 px-4">
                           <div className="inline-flex items-center gap-1.5 relative">
-                            <span className={`w-2 h-2 rounded-full shrink-0 ${statusDotMap[app.status] || 'bg-gray-400'}`}></span>
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${statusDotMap[app.status] || 'bg-neutral-400'}`}></span>
                             <select
                               value={app.status}
                               onChange={(e) => handleStatusSelectChange(app.id, e.target.value)}
-                              className={`text-xs font-bold px-2.5 py-1 rounded-lg border outline-none cursor-pointer transition ${statusColorMap[app.status] || 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                              className={`text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl border outline-none cursor-pointer transition ${statusColorMap[app.status] || 'bg-neutral-50 text-neutral-700 border-neutral-200'}`}
                             >
                               <option value="SAVED">Salvate</option>
                               <option value="APPLIED">Aplicat</option>
@@ -1297,22 +1402,22 @@ export default function KanbanBoard({
                         {/* 3. SCOR MATCH AI */}
                         <td className="py-4 px-4">
                           {isGmail ? (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 text-red-800 border border-red-200 text-xs font-bold max-w-[160px] truncate" title={emailSender ? `Expeditor: ${emailSender}` : 'Email Recrutare Gmail'}>
-                              <Mail className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 text-red-800 border border-red-200 text-xs font-bold max-w-[180px] truncate" title={emailSender ? `Expeditor: ${emailSender}` : 'Email Recrutare Gmail'}>
+                              <Mail className="w-4 h-4 text-red-600 shrink-0" />
                               <span className="truncate">{emailSender ? emailSender : 'Email Recrutare'}</span>
                             </div>
                           ) : (
-                            <div className="w-36 space-y-1">
+                            <div className="w-40 space-y-1.5">
                               <div className="flex items-center justify-between">
-                                <span className="flex items-center gap-1 font-bold text-emerald-700 text-xs">
-                                  <Sparkles className="w-3 h-3 text-emerald-600" />
+                                <span className="flex items-center gap-1 font-mono font-bold text-neutral-900 text-xs sm:text-sm">
+                                  <Sparkles className="w-3.5 h-3.5 text-neutral-600" />
                                   {score.toFixed(1)}%
                                 </span>
-                                <span className="text-[10px] text-gray-400 font-medium">ATS Match</span>
+                                <span className="text-xs text-neutral-500 font-mono">ATS Match</span>
                               </div>
-                              <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden border border-gray-200">
+                              <div className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden border border-neutral-200">
                                 <div 
-                                  className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
+                                  className="h-full bg-neutral-900 rounded-full transition-all duration-500" 
                                   style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
                                 ></div>
                               </div>
@@ -1322,8 +1427,8 @@ export default function KanbanBoard({
 
                         {/* 4. CV ASOCIAT DROPDOWN */}
                         <td className="py-4 px-4">
-                          <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-200 max-w-[220px]">
-                            <FileText className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                          <div className="flex items-center gap-1.5 bg-neutral-50 px-3 py-2 rounded-xl border border-neutral-200 max-w-[240px]">
+                            <FileText className="w-4 h-4 text-neutral-500 shrink-0" />
                             <select
                               value={app.cvProfileId ? `CV_${app.cvProfileId}` : (app.resumeId ? `RESUME_${app.resumeId}` : '')}
                               onChange={(e) => {
@@ -1336,7 +1441,7 @@ export default function KanbanBoard({
                                 }
                               }}
                               disabled={attachingCvAppId === app.id}
-                              className="bg-transparent text-gray-900 font-semibold outline-none cursor-pointer w-full text-xs truncate"
+                              className="bg-transparent text-neutral-900 font-medium outline-none cursor-pointer w-full text-xs sm:text-sm truncate"
                               title="Alege CV-ul sau fisierul asociat pentru aceasta aplicatie"
                             >
                               <option value="">-- Alege CV sau Fisier --</option>
@@ -1362,10 +1467,10 @@ export default function KanbanBoard({
                             {app.cvProfileId && onEditCvInStudio && (
                               <button
                                 onClick={() => onEditCvInStudio(app.cvProfileId)}
-                                className="text-gray-400 hover:text-black p-0.5 cursor-pointer shrink-0"
+                                className="text-neutral-400 hover:text-black p-0.5 cursor-pointer shrink-0"
                                 title="Editeaza in Studio"
                               >
-                                <Edit3 className="w-3 h-3" />
+                                <Edit3 className="w-3.5 h-3.5" />
                               </button>
                             )}
                           </div>
@@ -1373,32 +1478,32 @@ export default function KanbanBoard({
 
                         {/* 5. ACTIUNI (TOATE FUNCTIONALITATILE ACCESIBILE IN MODUL LISTA) */}
                         <td className="py-4 px-4 sm:px-6 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                          <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => handleOpenJobModal(app)}
-                              className="px-2.5 py-1.5 rounded-xl border border-indigo-200/90 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs group"
+                              className="px-3.5 py-2 rounded-xl border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer shadow-2xs group active:scale-95"
                               title="Vezi fisa completa a jobului"
                             >
-                              <Eye className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform shrink-0" />
+                              <Eye className="w-4 h-4 text-neutral-700 group-hover:scale-110 transition-transform shrink-0" />
                               <span>Fisa Job</span>
                             </button>
 
                             {onOpenCoverLetter && (
                               <button
                                 onClick={() => onOpenCoverLetter(app.id)}
-                                className="p-1.5 rounded-xl border border-blue-200/90 bg-blue-50/80 hover:bg-blue-100 text-blue-900 transition shadow-2xs cursor-pointer group"
+                                className="p-2 rounded-xl border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 hover:text-black transition shadow-2xs cursor-pointer group active:scale-95"
                                 title="Genereaza Scrisoare de Intentie AI"
                               >
-                                <FileSignature className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
+                                <FileSignature className="w-4 h-4 text-neutral-700 group-hover:scale-110 transition-transform" />
                               </button>
                             )}
 
                             <button
                               onClick={() => setOutreachApp(app)}
-                              className="p-1.5 rounded-xl border border-purple-200/90 bg-purple-50/80 hover:bg-purple-100 text-purple-900 transition shadow-2xs cursor-pointer group"
+                              className="p-2 rounded-xl border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 hover:text-black transition shadow-2xs cursor-pointer group active:scale-95"
                               title="Outreach Recruiter: Mesaj LinkedIn & Cold Email"
                             >
-                              <Send className="w-4 h-4 text-purple-600 group-hover:scale-110 transition-transform" />
+                              <Send className="w-4 h-4 text-neutral-700 group-hover:scale-110 transition-transform" />
                             </button>
 
                             <button
@@ -1408,7 +1513,7 @@ export default function KanbanBoard({
                                 }
                               }}
                               title="Sterge aplicatia"
-                              className="p-1.5 rounded-xl hover:bg-rose-50 text-gray-400 hover:text-rose-600 border border-transparent hover:border-rose-200 transition cursor-pointer ml-1"
+                              className="p-2 rounded-xl hover:bg-rose-50 text-neutral-300 hover:text-rose-600 border border-transparent hover:border-rose-200 transition cursor-pointer ml-1"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>

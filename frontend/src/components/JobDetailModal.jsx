@@ -302,7 +302,7 @@ export default function JobDetailModal({
         targetJob.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || 
         targetJob.rawDescription.includes('GMAIL (Sincronizat Automat)') ||
         targetJob.rawDescription.includes('CONTINUT COMPLET EMAIL') ||
-        targetJob.rawDescription.includes('CONȚINUT COMPLET EMAIL')
+        targetJob.rawDescription.includes('CON\u021bINUT COMPLET EMAIL')
       ))
       || (typeof targetJob.notes === 'string' && targetJob.notes.includes('[Gmail Sync'));
     if (isTargetGmail) return;
@@ -425,7 +425,7 @@ export default function JobDetailModal({
         job.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || 
         job.rawDescription.includes('GMAIL (Sincronizat Automat)') ||
         job.rawDescription.includes('CONTINUT COMPLET EMAIL') ||
-        job.rawDescription.includes('CONȚINUT COMPLET EMAIL')
+        job.rawDescription.includes('CON\u021bINUT COMPLET EMAIL')
       ))
       || (typeof job.notes === 'string' && job.notes.includes('[Gmail Sync'));
 
@@ -533,7 +533,7 @@ export default function JobDetailModal({
         currentJob.rawDescription.includes('EMAIL DE RECRUTARE GMAIL') || 
         currentJob.rawDescription.includes('GMAIL (Sincronizat Automat)') ||
         currentJob.rawDescription.includes('CONTINUT COMPLET EMAIL') ||
-        currentJob.rawDescription.includes('CONȚINUT COMPLET EMAIL')
+        currentJob.rawDescription.includes('CON\u021bINUT COMPLET EMAIL')
       ))
       || (typeof currentJob.notes === 'string' && currentJob.notes.includes('[Gmail Sync'));
   }, [currentJob]);
@@ -561,8 +561,8 @@ export default function JobDetailModal({
     const statusMatch = raw.match(/🏷️\s*Status Detectat:\s*([^\n\r]+)/i);
     if (statusMatch) status = statusMatch[1].trim();
 
-    if (/CON[TȚ]INUT COMPLET EMAIL:/i.test(raw)) {
-      const parts = raw.split(/CON[TȚ]INUT COMPLET EMAIL:[\s\S]*?-{10,}/i);
+    if (/CON[T\u021B\u0163]INUT COMPLET EMAIL:/i.test(raw)) {
+      const parts = raw.split(/CON[T\u021B\u0163]INUT COMPLET EMAIL:[\s\S]*?-{10,}/i);
       if (parts.length > 1) {
         body = parts[1].trim();
       }
@@ -747,7 +747,7 @@ export default function JobDetailModal({
       
       {/* CONTAINER MODAL / SHEET */}
       <div 
-        className="relative bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-gray-200 overflow-hidden my-auto animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
+        className="relative bg-white w-full max-w-4xl rounded-xl shadow-2xl border border-neutral-200 overflow-hidden my-auto animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         
@@ -1520,10 +1520,10 @@ export default function JobDetailModal({
                   onOpenCoverLetter(currentJob.id);
                   onClose();
                 }}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border border-blue-200/90 bg-blue-50/80 hover:bg-blue-100 text-blue-950 shadow-2xs"
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border border-neutral-200 bg-neutral-100 hover:bg-neutral-200 text-neutral-900"
                 title="Genereaza Scrisoare de Intentie AI pentru acest rol"
               >
-                <FileSignature className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <FileSignature className="w-3.5 h-3.5 text-neutral-800 shrink-0" />
                 <span>Scrisoare AI</span>
               </button>
             )}
@@ -1535,10 +1535,10 @@ export default function JobDetailModal({
                   onOpenOutreach(currentJob);
                   onClose();
                 }}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer border border-purple-200/90 bg-purple-50/80 hover:bg-purple-100 text-purple-950 shadow-2xs"
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border border-neutral-200 bg-neutral-100 hover:bg-neutral-200 text-neutral-900"
                 title="Outreach Recruiter: Mesaj LinkedIn & Cold Email"
               >
-                <Send className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                <Send className="w-3.5 h-3.5 text-neutral-800 shrink-0" />
                 <span>Outreach CRM</span>
               </button>
             )}
@@ -1547,20 +1547,20 @@ export default function JobDetailModal({
               <button
                 onClick={() => onSaveToKanban(currentJob)}
                 disabled={isSaved || isSaving}
-                className={`flex-1 sm:flex-none px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition cursor-pointer border ${
+                className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer border ${
                   isSaved 
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
-                    : 'bg-white hover:bg-gray-100 text-gray-900 border-gray-300 shadow-2xs'
+                    ? 'bg-neutral-100 text-neutral-900 border-neutral-300' 
+                    : 'bg-white hover:bg-neutral-100 text-neutral-900 border-neutral-300'
                 }`}
               >
                 {isSaved ? (
                   <>
-                    <BookmarkCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <BookmarkCheck className="w-4 h-4 text-black shrink-0" />
                     <span>Salvat in Tracker</span>
                   </>
                 ) : (
                   <>
-                    <Bookmark className="w-4 h-4 text-gray-500 shrink-0" />
+                    <Bookmark className="w-4 h-4 text-neutral-500 shrink-0" />
                     <span>{isSaving ? 'Se salveaza...' : 'Salveaza'}</span>
                   </>
                 )}
@@ -1572,7 +1572,7 @@ export default function JobDetailModal({
                 href={currentJob.directApplyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 sm:flex-none px-5 py-2.5 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md"
+                className="flex-1 sm:flex-none px-5 py-2.5 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
               >
                 <span>Aplica Oficial</span>
                 <ArrowUpRight className="w-4 h-4 shrink-0" />

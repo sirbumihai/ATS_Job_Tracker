@@ -2167,13 +2167,13 @@ export default function CvStudio({
     <div className="space-y-6 w-full max-w-[210mm] mx-auto pb-16 font-sans">
       
       {/* ================= MODERN WORKSPACE TOOLBAR ================= */}
-      <div className="w-full bg-white border border-gray-200/90 shadow-xs p-3.5 sm:p-4 rounded-2xl space-y-3.5 text-gray-900">
+      <div className="w-full bg-white border border-neutral-200 p-4 rounded-xl space-y-3.5 text-neutral-900">
         
         {/* ROW 1: TITLE, STATUS & A4 PAGE CONTROLLER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <div className="p-1.5 bg-black text-white rounded-lg shrink-0 shadow-2xs">
+              <div className="p-1.5 bg-black text-white rounded-lg shrink-0">
                 <FileText className="w-4 h-4" />
               </div>
               <input 
@@ -2181,30 +2181,30 @@ export default function CvStudio({
                 value={cvTitle} 
                 onChange={e => setCvTitle(e.target.value)} 
                 placeholder="Denumire CV..." 
-                className="font-bold text-base sm:text-lg text-gray-950 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-black outline-none transition px-0.5"
+                className="font-bold text-base sm:text-lg text-neutral-950 bg-transparent border-b border-transparent hover:border-neutral-300 focus:border-black outline-none transition px-0.5"
                 title="Apasa pentru a redenumi aceasta versiune de CV"
               />
               
               {/* REAL-TIME AUTO-SAVE STATUS PILL */}
               {isAutoSaving ? (
-                <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full font-medium">
-                  <RefreshCw className="w-3 h-3 animate-spin text-gray-400" /> Se salveaza...
+                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-neutral-500 bg-neutral-100 px-2.5 py-0.5 rounded-md">
+                  <RefreshCw className="w-3 h-3 animate-spin text-neutral-400" /> Se salveaza...
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full font-medium">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Salvat
+                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-neutral-800 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-md">
+                  <CheckCircle2 className="w-3 h-3 text-neutral-900" /> Salvat
                 </span>
               )}
             </div>
           </div>
 
           {/* RIGHT: REAL-TIME A4 PAGE CONTROLLER (COMPACT SEGMENTED PILL) */}
-          <div className="flex items-center gap-1.5 self-start sm:self-auto bg-gray-100/90 p-1 rounded-xl border border-gray-200/80 shadow-2xs">
+          <div className="flex items-center gap-1.5 self-start sm:self-auto bg-neutral-100 p-1 rounded-xl border border-neutral-200">
             <div 
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 transition ${
                 isMultiPage
-                  ? 'bg-amber-100 text-amber-900 border border-amber-300/80' 
-                  : 'bg-emerald-100 text-emerald-900 border border-emerald-300/80'
+                  ? 'bg-neutral-900 text-white border border-black' 
+                  : 'bg-white text-neutral-900 border border-neutral-300'
               }`}
               title={
                 isMultiPage
@@ -2214,23 +2214,23 @@ export default function CvStudio({
             >
               {isMultiPage ? (
                 <>
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-neutral-200 shrink-0" />
                   <span>2 Pagini ({pageStats.percent}%)</span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-neutral-900 shrink-0" />
                   <span>1 Pagina ({pageStats.percent}%)</span>
                 </>
               )}
             </div>
 
             {/* SEGMENTED TOGGLE BUTTONS */}
-            <div className="flex items-center bg-gray-200/70 p-0.5 rounded-lg text-xs font-bold">
+            <div className="flex items-center bg-neutral-200/60 p-0.5 rounded-lg text-xs font-medium font-mono">
               <button
                 onClick={() => setPageLayoutMode('auto')}
                 className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
-                  pageLayoutMode === 'auto' ? 'bg-white text-black shadow-xs' : 'text-gray-500 hover:text-black'
+                  pageLayoutMode === 'auto' ? 'bg-white text-black font-semibold' : 'text-neutral-500 hover:text-black'
                 }`}
                 title="Detecteaza automat: adauga a doua pagina doar cand continutul depaseste prima pagina"
               >
@@ -2239,7 +2239,7 @@ export default function CvStudio({
               <button
                 onClick={() => setPageLayoutMode('1')}
                 className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
-                  pageLayoutMode === '1' ? 'bg-white text-black shadow-xs' : 'text-gray-500 hover:text-black'
+                  pageLayoutMode === '1' ? 'bg-white text-black font-semibold' : 'text-neutral-500 hover:text-black'
                 }`}
                 title="Forteaza vizualizarea stricta pe 1 pagina A4"
               >
@@ -2248,7 +2248,7 @@ export default function CvStudio({
               <button
                 onClick={() => setPageLayoutMode('2')}
                 className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
-                  pageLayoutMode === '2' ? 'bg-white text-black shadow-xs' : 'text-gray-500 hover:text-black'
+                  pageLayoutMode === '2' ? 'bg-white text-black font-semibold' : 'text-neutral-500 hover:text-black'
                 }`}
                 title="Adauga Pagina 2 si separa continutul pe 2 foi fizice A4"
               >
@@ -2259,7 +2259,7 @@ export default function CvStudio({
         </div>
 
         {/* SUBTLE ROW DIVIDER */}
-        <div className="h-px bg-gray-100" />
+        <div className="h-px bg-neutral-100" />
 
         {/* ROW 2: ACTION TOOLBAR (AI REVIEW + TOOLS + EXPORT) */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -2270,14 +2270,14 @@ export default function CvStudio({
             {/* AI REVIEW BUTTON */}
             <button
               onClick={() => setShowPolishCoach(!showPolishCoach)}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 border shadow-2xs transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl font-medium text-xs flex items-center gap-1.5 border transition cursor-pointer ${
                 showPolishCoach 
-                  ? 'bg-black text-white border-black shadow-xs' 
-                  : 'bg-white hover:bg-gray-50 text-gray-800 border-gray-200'
+                  ? 'bg-black text-white border-black' 
+                  : 'bg-white hover:bg-neutral-50 text-neutral-800 border-neutral-300'
               }`}
               title="Deschide panoul AI Review pentru diagnostic si sugestii de optimizare"
             >
-              <Sparkles className={`w-3.5 h-3.5 ${showPolishCoach ? 'text-amber-300' : 'text-amber-600'}`} />
+              <Sparkles className="w-3.5 h-3.5 text-neutral-500" />
               <span>AI Review</span>
             </button>
 
@@ -2286,17 +2286,17 @@ export default function CvStudio({
                 <div className="relative">
                   <button
                     onClick={() => setShowAddSectionDropdown(!showAddSectionDropdown)}
-                    className="px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-black border border-gray-200 rounded-xl font-bold text-xs flex items-center gap-1 transition cursor-pointer shadow-2xs"
+                    className="px-2.5 py-1.5 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-black border border-neutral-300 rounded-xl font-medium text-xs flex items-center gap-1 transition cursor-pointer"
                     title="Adauga inapoi sectiunile eliminate"
                   >
-                    <Plus className="w-3.5 h-3.5 text-gray-600" />
+                    <Plus className="w-3.5 h-3.5 text-neutral-600" />
                     <span>Sectiuni ({missingSections.length})</span>
-                    <ChevronDown className="w-3 h-3 text-gray-500" />
+                    <ChevronDown className="w-3 h-3 text-neutral-500" />
                   </button>
 
                   {showAddSectionDropdown && (
-                    <div className="absolute left-0 mt-1.5 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-30 py-1 font-sans text-xs">
-                      <div className="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                    <div className="absolute left-0 mt-1.5 w-44 bg-white border border-neutral-200 rounded-xl shadow-lg z-30 py-1 font-sans text-xs">
+                      <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-neutral-400">
                         Restaureaza sectiune
                       </div>
                       {missingSections.map(key => (
@@ -2306,10 +2306,10 @@ export default function CvStudio({
                             restoreSection(key);
                             setShowAddSectionDropdown(false);
                           }}
-                          className="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-gray-800 font-medium flex items-center justify-between cursor-pointer"
+                          className="w-full text-left px-3 py-1.5 hover:bg-neutral-100 text-neutral-800 font-medium flex items-center justify-between cursor-pointer"
                         >
                           <span>{sectionLabels[key] || key}</span>
-                          <Plus className="w-3 h-3 text-emerald-600" />
+                          <Plus className="w-3 h-3 text-neutral-700" />
                         </button>
                       ))}
                     </div>
@@ -2321,24 +2321,24 @@ export default function CvStudio({
           {/* RIGHT CLUSTER: EXPORT & PDF DOWNLOAD */}
           <div className="flex items-center gap-1.5 flex-wrap">
             {/* COMPACT FILENAME INPUT */}
-            <div className="hidden sm:flex items-center bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1 text-xs text-gray-700 focus-within:border-gray-400 focus-within:bg-white transition shadow-2xs">
-              <FileText className="w-3.5 h-3.5 text-gray-400 mr-1.5 shrink-0" />
+            <div className="hidden sm:flex items-center bg-white border border-neutral-300 rounded-xl px-2.5 py-1 text-xs text-neutral-700 focus-within:border-black transition">
+              <FileText className="w-3.5 h-3.5 text-neutral-400 mr-1.5 shrink-0" />
               <input 
                 type="text" 
                 value={pdfCustomName} 
                 onChange={e => setPdfCustomName(e.target.value)} 
                 title="Editeaza numele fisierului PDF descarcat"
                 placeholder="Nume fisier..." 
-                className="bg-transparent text-xs text-gray-900 outline-none w-28 sm:w-36 font-medium placeholder-gray-400" 
+                className="bg-transparent text-xs text-neutral-900 outline-none w-28 sm:w-36 font-medium placeholder-neutral-400" 
               />
-              <span className="text-gray-400 text-xs font-mono select-none">.pdf</span>
+              <span className="text-neutral-400 text-xs font-mono select-none">.pdf</span>
             </div>
 
             {/* DIRECT DOWNLOAD */}
             <button
               onClick={handleDownloadDirectPdf}
               disabled={isDownloadingPdf}
-              className="px-4 py-1.5 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition disabled:opacity-60 cursor-pointer"
+              className="px-4 py-1.5 bg-black hover:bg-neutral-800 text-white rounded-xl font-medium text-xs flex items-center gap-1.5 transition disabled:opacity-60 cursor-pointer"
               title="Descarca direct fisierul PDF"
             >
               {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
