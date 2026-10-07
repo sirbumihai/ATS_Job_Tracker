@@ -739,10 +739,10 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
       {selectedDomain && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setSelectedDomain(null)}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/70 backdrop-blur-md animate-morphing-backdrop"
         >
           <div 
-            className="bg-white rounded-2xl border border-neutral-300 w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            className="bg-white rounded-2xl border border-neutral-300 w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-morphing-dialog"
             onClick={(e) => e.stopPropagation()}
           >
             {/* MODAL HEADER */}
@@ -771,7 +771,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch 
 
               <button
                 onClick={() => setSelectedDomain(null)}
-                className="p-2 rounded-xl text-neutral-500 hover:text-black hover:bg-neutral-100 transition cursor-pointer"
+                className="p-2 rounded-xl text-neutral-500 hover:text-black hover:bg-neutral-100 transition cursor-pointer animate-morphing-close"
                 title="Inchide fereastra (Esc)"
               >
                 <X className="w-5 h-5" />

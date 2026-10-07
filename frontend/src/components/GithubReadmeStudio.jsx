@@ -947,8 +947,8 @@ export default function GithubReadmeStudio({ currentUser }) {
 
       {/* STEP-BY-STEP MODAL: HOW TO SETUP GITHUB PROFILE README */}
       {showGuideModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl border border-neutral-300 p-6 max-w-xl w-full space-y-5 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-morphing-backdrop">
+          <div className="bg-white rounded-2xl border border-neutral-300 p-6 max-w-xl w-full space-y-5 shadow-2xl animate-morphing-dialog">
             <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
               <div className="flex items-center gap-2.5">
                 <span className="p-2 rounded-xl bg-black text-white">
@@ -958,7 +958,7 @@ export default function GithubReadmeStudio({ currentUser }) {
               </div>
               <button
                 onClick={() => setShowGuideModal(false)}
-                className="p-1.5 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition-colors cursor-pointer animate-morphing-close"
               >
                 <X className="w-5 h-5" />
               </button>

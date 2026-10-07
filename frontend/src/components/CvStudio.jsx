@@ -2652,11 +2652,11 @@ export default function CvStudio({
       {showEditContactModal && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setShowEditContactModal(false)}
-          className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto animate-morphing-backdrop"
         >
           <div 
             onClick={e => e.stopPropagation()}
-            className="max-w-xl w-full my-6 animate-in fade-in zoom-in-95 font-sans"
+            className="max-w-xl w-full my-6 animate-morphing-dialog font-sans"
           >
             <div className="text-center mb-3">
               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wide" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
@@ -2668,7 +2668,7 @@ export default function CvStudio({
               <button 
                 type="button"
                 onClick={() => setShowEditContactModal(false)}
-                className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition cursor-pointer animate-morphing-close"
                 title="Inchide"
               >
                 <X className="w-5 h-5" />

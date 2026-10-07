@@ -1993,11 +1993,11 @@ export default function JobSearchPage({
       {/* MODAL AUDIT LIFECYCLE & ISTORIC MODIFICARI */}
       {auditJobForChanges && typeof document !== 'undefined' && createPortal(
         <div 
-          className="fixed inset-0 z-[9999] overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 md:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] overflow-y-auto bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-morphing-backdrop"
           onClick={() => setAuditJobForChanges(null)}
         >
           <div 
-            className="relative bg-white border border-neutral-200 rounded-2xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-200"
+            className="relative bg-white border border-neutral-200 rounded-2xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-morphing-dialog"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -2017,7 +2017,7 @@ export default function JobSearchPage({
               </div>
               <button
                 onClick={() => setAuditJobForChanges(null)}
-                className="w-8 h-8 rounded-xl bg-white hover:bg-neutral-100 text-neutral-600 hover:text-black border border-neutral-200 flex items-center justify-center transition cursor-pointer"
+                className="w-8 h-8 rounded-xl bg-white hover:bg-neutral-100 text-neutral-600 hover:text-black border border-neutral-200 flex items-center justify-center transition cursor-pointer animate-morphing-close"
               >
                 <X className="w-4 h-4" />
               </button>

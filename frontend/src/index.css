@@ -115,6 +115,87 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ========================================================================= */
+/* 21st.dev / Patrick-Xin Morphing Dialog Physics System                     */
+/* Reference: https://21st.dev/@patrick-xin/components/morphing-dialog       */
+/* Spring curve: bounce: 0.05, duration: 0.25s (stiffness: 350, damping: 25) */
+/* ========================================================================= */
+@keyframes morphingBackdropFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes morphingDialogSpring {
+  0% {
+    opacity: 0;
+    transform: scale3d(0.88, 0.88, 1) translateY(14px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale3d(1.012, 1.012, 1) translateY(-1px);
+  }
+  85% {
+    transform: scale3d(0.998, 0.998, 1) translateY(0.3px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale3d(1, 1, 1) translateY(0);
+  }
+}
+
+@keyframes morphingCloseEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.72) rotate(-8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes morphingContentStagger {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-morphing-backdrop,
+.morphing-dialog-backdrop {
+  animation: morphingBackdropFade 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  will-change: opacity;
+}
+
+.animate-morphing-dialog,
+.morphing-dialog-content {
+  animation: morphingDialogSpring 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  transform-origin: center center;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.animate-morphing-close,
+.morphing-dialog-close {
+  animation: morphingCloseEnter 240ms cubic-bezier(0.16, 1, 0.3, 1) 90ms backwards !important;
+  will-change: transform, opacity;
+}
+
+.animate-morphing-content {
+  animation: morphingContentStagger 220ms cubic-bezier(0.16, 1, 0.3, 1) 60ms backwards !important;
+  will-change: transform, opacity;
+}
+
+
+/* ========================================================================= */
 /* Anki CardMotion - Realistic 3D Perspective Flip & Deck Motion Physics      */
 /* Reference: https://anki.ikkz.fun/extension/card-motion                    */
 /* ========================================================================= */

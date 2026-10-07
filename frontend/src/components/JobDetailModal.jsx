@@ -743,11 +743,11 @@ export default function JobDetailModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-in fade-in duration-200" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-morphing-backdrop" onClick={onClose}>
       
       {/* CONTAINER MODAL / SHEET */}
       <div 
-        className="relative bg-white w-full max-w-4xl rounded-xl shadow-2xl border border-neutral-200 overflow-hidden my-auto animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
+        className="relative bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden my-auto animate-morphing-dialog flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         
@@ -781,7 +781,7 @@ export default function JobDetailModal({
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-200/70 transition cursor-pointer"
+              className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-200/70 transition cursor-pointer animate-morphing-close"
               title="Inchide fereastra (Esc)"
             >
               <X className="w-5 h-5" />

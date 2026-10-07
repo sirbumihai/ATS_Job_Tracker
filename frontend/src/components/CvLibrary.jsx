@@ -483,8 +483,8 @@ export default function CvLibrary({
 
       {/* CREATE NEW CV MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-neutral-300 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-morphing-backdrop">
+          <div className="bg-white border border-neutral-300 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-morphing-dialog">
             <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
               <h3 className="font-bold text-base text-neutral-950 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-black" />
@@ -492,7 +492,7 @@ export default function CvLibrary({
               </h3>
               <button 
                 onClick={() => setShowCreateModal(false)}
-                className="text-neutral-400 hover:text-black p-1 rounded-lg hover:bg-neutral-100 transition cursor-pointer"
+                className="text-neutral-400 hover:text-black p-1 rounded-lg hover:bg-neutral-100 transition cursor-pointer animate-morphing-close"
               >
                 <X className="w-4 h-4" />
               </button>

@@ -33,16 +33,16 @@ export function AuthModal({ isOpen, onClose, authMode, setAuthMode, authForm, se
   if (!isOpen) return null;
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-morphing-backdrop"
       onClick={onClose}
     >
       <div 
-        className="bg-white text-neutral-900 w-full max-w-md rounded-xl p-6 sm:p-7 space-y-4 relative border border-neutral-200 shadow-2xl my-auto animate-in zoom-in-95 duration-200"
+        className="bg-white text-neutral-900 w-full max-w-md rounded-2xl p-6 sm:p-7 space-y-4 relative border border-neutral-200 shadow-2xl my-auto animate-morphing-dialog"
         onClick={e => e.stopPropagation()}
       >
         <button 
           onClick={onClose} 
-          className="absolute top-4 right-4 p-1.5 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition cursor-pointer"
+          className="absolute top-4 right-4 p-1.5 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition cursor-pointer animate-morphing-close"
         >
           <X className="w-5 h-5" />
         </button>
@@ -159,16 +159,16 @@ export function AddJobModal({ isOpen, onClose, newJob, setNewJob, onSubmit }) {
 
   return createPortal(
     <div 
-      className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-morphing-backdrop"
       onClick={onClose}
     >
       <div 
-        className="bg-white text-gray-900 w-full max-w-lg rounded-xl p-6 sm:p-7 space-y-4 relative border border-gray-200 shadow-2xl my-auto animate-in zoom-in-95 duration-200"
+        className="bg-white text-gray-900 w-full max-w-lg rounded-2xl p-6 sm:p-7 space-y-4 relative border border-gray-200 shadow-2xl my-auto animate-morphing-dialog"
         onClick={e => e.stopPropagation()}
       >
         <button 
           onClick={onClose} 
-          className="absolute top-4 right-4 p-1.5 rounded-xl text-gray-400 hover:text-black hover:bg-gray-100 transition cursor-pointer"
+          className="absolute top-4 right-4 p-1.5 rounded-xl text-gray-400 hover:text-black hover:bg-gray-100 transition cursor-pointer animate-morphing-close"
         >
           <X className="w-5 h-5" />
         </button>
@@ -265,16 +265,16 @@ export function UploadResumeModal({ isOpen, onClose, selectedFile, setSelectedFi
   if (!isOpen) return null;
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-morphing-backdrop"
       onClick={onClose}
     >
       <div 
-        className="bg-white text-neutral-900 w-full max-w-md rounded-xl p-6 sm:p-7 space-y-4 relative border border-neutral-200 shadow-2xl my-auto animate-in zoom-in-95 duration-200"
+        className="bg-white text-neutral-900 w-full max-w-md rounded-2xl p-6 sm:p-7 space-y-4 relative border border-neutral-200 shadow-2xl my-auto animate-morphing-dialog"
         onClick={e => e.stopPropagation()}
       >
         <button 
           onClick={onClose} 
-          className="absolute top-4 right-4 p-1.5 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition cursor-pointer"
+          className="absolute top-4 right-4 p-1.5 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition cursor-pointer animate-morphing-close"
         >
           <X className="w-5 h-5" />
         </button>
@@ -359,16 +359,16 @@ export function AiReportModal({ isOpen, onClose, analysis }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-morphing-backdrop"
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-xl p-6 sm:p-7 space-y-4 relative border border-neutral-200 shadow-2xl max-w-2xl w-full max-h-[88vh] flex flex-col text-neutral-900 my-auto animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl p-6 sm:p-7 space-y-4 relative border border-neutral-200 shadow-2xl max-w-2xl w-full max-h-[88vh] flex flex-col text-neutral-900 my-auto animate-morphing-dialog"
         onClick={e => e.stopPropagation()}
       >
         <button 
           onClick={onClose} 
-          className="absolute top-4 right-4 p-1.5 rounded-xl hover:bg-neutral-100 text-neutral-400 hover:text-neutral-900 transition cursor-pointer"
+          className="absolute top-4 right-4 p-1.5 rounded-xl hover:bg-neutral-100 text-neutral-400 hover:text-neutral-900 transition cursor-pointer animate-morphing-close"
         >
           <X className="w-5 h-5" />
         </button>

@@ -1737,8 +1737,8 @@ Reach out directly at: ${userEmail}`
 
       {/* EDIT HEADLINE MODAL - DOUBLE-BEZEL DIALOG */}
       {editHeadlineModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-morphing-backdrop">
+          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-lg animate-morphing-dialog">
             <div className="bg-white rounded-[calc(2.25rem-0.375rem)] border border-slate-200/60 p-6 space-y-4 shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
@@ -1747,7 +1747,7 @@ Reach out directly at: ${userEmail}`
                 </h3>
                 <button 
                   onClick={() => setEditHeadlineModalOpen(false)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer animate-morphing-close"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1796,8 +1796,8 @@ Reach out directly at: ${userEmail}`
 
       {/* EDIT ABOUT MODAL - DOUBLE-BEZEL DIALOG */}
       {editAboutModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-morphing-backdrop">
+          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-xl animate-morphing-dialog">
             <div className="bg-white rounded-[calc(2.25rem-0.375rem)] border border-slate-200/60 p-6 space-y-4 shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
@@ -1806,7 +1806,7 @@ Reach out directly at: ${userEmail}`
                 </h3>
                 <button 
                   onClick={() => setEditAboutModalOpen(false)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer animate-morphing-close"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1847,8 +1847,8 @@ Reach out directly at: ${userEmail}`
 
       {/* CONTACT INFO MODAL - DOUBLE-BEZEL DIALOG */}
       {contactModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-morphing-backdrop">
+          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-md animate-morphing-dialog">
             <div className="bg-white rounded-[calc(2.25rem-0.375rem)] border border-slate-200/60 p-6 space-y-5 shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
@@ -1857,7 +1857,7 @@ Reach out directly at: ${userEmail}`
                 </h3>
                 <button 
                   onClick={() => setContactModalOpen(false)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer animate-morphing-close"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1920,8 +1920,8 @@ Reach out directly at: ${userEmail}`
 
       {/* ADD CUSTOM SKILL MODAL - DOUBLE-BEZEL DIALOG */}
       {addSkillModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-morphing-backdrop">
+          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-md animate-morphing-dialog">
             <div className="bg-white rounded-[calc(2.25rem-0.375rem)] border border-slate-200/60 p-6 space-y-4 shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
@@ -1930,7 +1930,7 @@ Reach out directly at: ${userEmail}`
                 </h3>
                 <button 
                   onClick={() => setAddSkillModalOpen(false)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer animate-morphing-close"
                 >
                   <X className="w-5 h-5" />
                 </button>

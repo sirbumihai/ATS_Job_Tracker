@@ -814,11 +814,11 @@ export default function FeedbackPage({
       {/* ========================================================================= */}
       {showNewIdeaModal && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto animate-morphing-backdrop"
           onClick={() => setShowNewIdeaModal(false)}
         >
           <div 
-            className="w-full max-w-lg rounded-2xl bg-white border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-2xl relative animate-in fade-in zoom-in-95 my-8"
+            className="w-full max-w-lg rounded-2xl bg-white border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-2xl relative animate-morphing-dialog my-8"
             onClick={(e) => e.stopPropagation()}
           >
             
@@ -833,7 +833,7 @@ export default function FeedbackPage({
               </div>
               <button
                 onClick={() => setShowNewIdeaModal(false)}
-                className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-black cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-black cursor-pointer animate-morphing-close"
               >
                 <X className="w-5 h-5" />
               </button>
