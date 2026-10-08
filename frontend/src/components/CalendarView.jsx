@@ -280,8 +280,6 @@ export default function CalendarView({
               <option value="ALL">Toate statusurile</option>
               <option value="APPLIED">Aplicat</option>
               <option value="INTERVIEWING">Interviu</option>
-              <option value="OFFER_RECEIVED">Oferta</option>
-              <option value="SAVED">Salvate</option>
               <option value="REJECTED">Respinse</option>
             </select>
           </div>
@@ -335,7 +333,6 @@ export default function CalendarView({
             {calendarCells.map((cell, idx) => {
               const appCount = cell.apps.length;
               const hasInterviews = cell.apps.some(a => a.status === 'INTERVIEWING');
-              const hasOffers = cell.apps.some(a => a.status === 'OFFER_RECEIVED');
 
               return (
                 <div
@@ -365,10 +362,8 @@ export default function CalendarView({
 
                     {appCount > 0 && (
                       <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full border ${
-                        hasOffers
-                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                          : hasInterviews
-                          ? 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse'
+                        hasInterviews
+                          ? 'bg-neutral-950 text-white border-neutral-900 shadow-xs'
                           : 'bg-gray-100 text-gray-700 border-gray-200'
                       }`}>
                         {appCount}
@@ -475,10 +470,8 @@ export default function CalendarView({
                             statusColorMap[app.status] || 'bg-white border-neutral-200'
                           }`}
                         >
-                          <option value="SAVED">Salvat</option>
                           <option value="APPLIED">Aplicat</option>
                           <option value="INTERVIEWING">Interviu</option>
-                          <option value="OFFER_RECEIVED">Oferta</option>
                           <option value="REJECTED">Respins</option>
                         </select>
                       </div>

@@ -625,7 +625,7 @@ export default function JobSearchPage({
           console.warn('Nu s-a putut salva in localStorage:', e);
         }
 
-        setToastMessage(`Jobul „${job.jobTitle}” la ${job.companyName} a fost salvat in Tracker!`);
+        setToastMessage(`Jobul "${job.jobTitle}" la ${job.companyName} a fost adaugat direct la Aplicat in Tracker!`);
         setTimeout(() => setToastMessage(null), 4000);
         if (onSaveToKanbanSuccess) onSaveToKanbanSuccess();
       }
@@ -1830,13 +1830,13 @@ export default function JobSearchPage({
                     >
                       {isSaved ? (
                         <>
-                          <BookmarkCheck className="w-3.5 h-3.5 text-white" />
-                          <span>Salvat</span>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                          <span>Aplicat</span>
                         </>
                       ) : (
                         <>
-                          <Bookmark className="w-3.5 h-3.5 text-neutral-500" />
-                          <span>{isSaving ? 'Se salveaza...' : 'Salveaza'}</span>
+                          <Send className="w-3.5 h-3.5 text-neutral-600" />
+                          <span>{isSaving ? 'Se adauga...' : 'Adauga la Aplicat'}</span>
                         </>
                       )}
                     </button>

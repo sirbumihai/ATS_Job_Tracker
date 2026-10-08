@@ -596,9 +596,9 @@ public class JobSearchService {
                 .user(user)
                 .jobPosting(savedJob)
                 .cvProfile(primaryCv.orElse(null))
-                .status(ApplicationStatus.SAVED)
+                .status(ApplicationStatus.APPLIED)
                 .semanticMatchScore(score)
-                .notes("Salvat din motorul de cautare Job Discovery (Sursa: " + jobDto.sourcePlatform() + ")")
+                .notes("Aplicat direct din motorul de cautare Job Discovery (Sursa: " + jobDto.sourcePlatform() + ")")
                 .appliedDate(LocalDate.now())
                 .build();
 

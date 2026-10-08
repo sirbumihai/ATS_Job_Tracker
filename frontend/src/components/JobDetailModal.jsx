@@ -1555,13 +1555,13 @@ export default function JobDetailModal({
               >
                 {isSaved ? (
                   <>
-                    <BookmarkCheck className="w-4 h-4 text-black shrink-0" />
-                    <span>Salvat in Tracker</span>
+                    <CheckCircle2 className="w-4 h-4 text-black shrink-0" />
+                    <span>Aplicat in Tracker</span>
                   </>
                 ) : (
                   <>
-                    <Bookmark className="w-4 h-4 text-neutral-500 shrink-0" />
-                    <span>{isSaving ? 'Se salveaza...' : 'Salveaza'}</span>
+                    <Send className="w-4 h-4 text-neutral-600 shrink-0" />
+                    <span>{isSaving ? 'Se adauga...' : 'Adauga la Aplicat'}</span>
                   </>
                 )}
               </button>

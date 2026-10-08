@@ -493,16 +493,6 @@ export default function App() {
             <div className="flex items-center gap-3">
               {currentUser && (
                 <div className="flex items-center gap-2">
-                  {activeTab === 'tracker' && (
-                    <button
-                      onClick={() => setShowAddJobModal(true)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-black hover:bg-neutral-800 text-white transition-all duration-150 shadow-2xs cursor-pointer active:scale-95"
-                      title="Adauga o noua aplicatie de urmarit"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Adauga Job</span>
-                    </button>
-                  )}
                   {activeTab === 'cv_library' && (
                     <button
                       onClick={() => setShowUploadResumeModal(true)}
@@ -536,14 +526,10 @@ export default function App() {
         {/* CONTINUT PRINCIPAL */}
         <main className={(activeTab === 'landing' || activeTab === 'feedback') ? "flex-1 w-full bg-white p-0" : "flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6"}>
         
-        {/* TAB 1: TRACKER BOARD & LIST (WITH STATS) */}
+        {/* TAB 1: TRACKER BOARD & LIST */}
         {activeTab === 'tracker' && (
-          <>
-            <StatsDashboard 
-              applications={applications} 
-            />
-            <KanbanBoard 
-              applications={applications}
+          <KanbanBoard 
+            applications={applications}
               onStatusChange={handleStatusChange}
               onReorderApplications={handleReorderApplications}
               onOpenAnalysis={handleOpenAiAnalysis}
@@ -556,7 +542,6 @@ export default function App() {
               currentUser={currentUser}
               onRefreshApplications={fetchApplications}
             />
-          </>
         )}
 
         {/* TAB 2: JOB SEARCH & MULTI-PLATFORM AGGREGATOR */}

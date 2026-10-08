@@ -16,17 +16,14 @@ import {
   Clock,
   ExternalLink,
   Eye,
-  Bookmark,
   Send,
   Calendar,
-  Award,
   XCircle,
   Plus,
   FolderKanban,
   ArrowUpDown,
   RotateCcw,
   Briefcase,
-  Download,
   StickyNote,
   X,
   Save,
@@ -47,6 +44,12 @@ export const isAppGmail = (app) => {
   const notes = app.notes || '';
   if (notes.toLowerCase().includes('gmail sync')) return true;
   return false;
+};
+
+export const normalizeStatus = (status) => {
+  if (status === 'SAVED') return 'APPLIED';
+  if (status === 'OFFER_RECEIVED') return 'INTERVIEWING';
+  return status || 'APPLIED';
 };
 
 export default function KanbanBoard({ 
@@ -74,7 +77,7 @@ export default function KanbanBoard({
   const [filterWorkModel, setFilterWorkModel] = useState('ALL'); // 'ALL' | 'REMOTE' | 'HYBRID' | 'ONSITE'
   const [filterCv, setFilterCv] = useState('ALL'); // 'ALL' | 'ATTACHED' | 'UNATTACHED'
   const [filterGmailOnly, setFilterGmailOnly] = useState(false);
-  const [mobileSelectedColumn, setMobileSelectedColumn] = useState('SAVED');
+  const [mobileSelectedColumn, setMobileSelectedColumn] = useState('APPLIED');
   
   // SWIFT KANBAN MOTION STATE (POINTER EVENTS BASED)
   const [activeDrag, setActiveDrag] = useState(null); // { app, sourceColKey, sourceIndex, cardWidth, cardHeight, x, y }
@@ -125,78 +128,6 @@ export default function KanbanBoard({
   };
 
   const [trackerToast, setTrackerToast] = useState(null);
-
-  // EXPORT CANDIDATURI IN FORMAT CSV COMPATIBIL EXCEL (UTF-8 BOM)
-  const handleExportCsv = () => {
-    const appsToExport = filteredApplications.length > 0 ? filteredApplications : applications;
-    if (!appsToExport || appsToExport.length === 0) {
-      setTrackerToast('Nu exista aplicatii de exportat.');
-      setTimeout(() => setTrackerToast(null), 3000);
-      return;
-    }
-
-    const statusLabels = {
-      SAVED: 'Salvat',
-      APPLIED: 'Aplicat',
-      INTERVIEWING: 'Interviu',
-      OFFER_RECEIVED: 'Oferta Primita',
-      REJECTED: 'Respins',
-      WITHDRAWN: 'Retras'
-    };
-
-    const headers = [
-      'Companie',
-      'Titlu Job',
-      'Status',
-      'Scor Match ATS (%)',
-      'Mod Lucru',
-      'Locatie',
-      'Salariu',
-      'Data Aplicarii',
-      'CV Utilizat',
-      'Notite',
-      'Link Job'
-    ];
-
-    const escapeCsv = (str) => {
-      if (str === null || str === undefined) return '""';
-      const s = String(str).replace(/"/g, '""');
-      return `"${s}"`;
-    };
-
-    const rows = appsToExport.map(a => {
-      const score = a.semanticMatchScore ? Number(a.semanticMatchScore).toFixed(1) : 'N/A';
-      const cvName = a.cvProfileTitle || a.resumeFileName || (a.cvProfileId ? 'CV Studio' : (a.resumeId ? 'Fisier CV' : 'Nespecificat'));
-      return [
-        escapeCsv(a.companyName || ''),
-        escapeCsv(a.jobTitle || ''),
-        escapeCsv(statusLabels[a.status] || a.status || ''),
-        escapeCsv(score),
-        escapeCsv(a.workModel || ''),
-        escapeCsv(a.jobLocation || a.location || ''),
-        escapeCsv(a.salaryRange || ''),
-        escapeCsv(a.appliedDate || (a.createdAt ? new Date(a.createdAt).toLocaleDateString('ro-RO') : '')),
-        escapeCsv(cvName),
-        escapeCsv(a.notes || ''),
-        escapeCsv(a.jobUrl || '')
-      ].join(',');
-    });
-
-    const csvContent = '\uFEFF' + [headers.map(h => `"${h}"`).join(','), ...rows].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const today = new Date().toISOString().split('T')[0];
-    link.setAttribute('href', url);
-    link.setAttribute('download', `jobflow_aplicatii_${today}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    setTrackerToast(`${appsToExport.length} aplicatii au fost exportate cu succes in CSV!`);
-    setTimeout(() => setTrackerToast(null), 4000);
-  };
 
   const handleOpenJobModal = (app) => {
     const isGmail = isAppGmail(app);
@@ -251,18 +182,6 @@ export default function KanbanBoard({
 
   const kanbanColumns = [
     { 
-      key: 'SAVED', 
-      title: 'Salvate', 
-      label: 'Salvat',
-      headerBg: 'bg-white text-neutral-950 border-b border-neutral-200/90',
-      columnBg: 'bg-[#fafafa] border-neutral-200/90',
-      accentBorder: 'border-t-2 border-t-neutral-400',
-      badgeBg: 'bg-white text-neutral-900 border border-neutral-200 shadow-2xs font-mono',
-      iconColor: 'text-neutral-500',
-      tabActive: 'bg-black text-white shadow-xs',
-      icon: Bookmark
-    },
-    { 
       key: 'APPLIED', 
       title: 'Aplicat', 
       label: 'Aplicat',
@@ -287,18 +206,6 @@ export default function KanbanBoard({
       icon: Calendar
     },
     { 
-      key: 'OFFER_RECEIVED', 
-      title: 'Oferta', 
-      label: 'Oferta',
-      headerBg: 'bg-white text-neutral-950 border-b border-neutral-200/90',
-      columnBg: 'bg-[#fafafa] border-neutral-200/90',
-      accentBorder: 'border-t-2 border-t-emerald-600',
-      badgeBg: 'bg-white text-emerald-900 border border-emerald-200 shadow-2xs font-mono',
-      iconColor: 'text-emerald-700',
-      tabActive: 'bg-black text-white shadow-xs',
-      icon: Award
-    },
-    { 
       key: 'REJECTED', 
       title: 'Respins', 
       label: 'Respins',
@@ -313,19 +220,19 @@ export default function KanbanBoard({
   ];
 
   const statusColorMap = {
-    SAVED: 'bg-neutral-100 text-neutral-700 border-neutral-200',
     APPLIED: 'bg-neutral-100 text-neutral-800 border-neutral-300',
     INTERVIEWING: 'bg-neutral-900 text-white border-neutral-900',
-    OFFER_RECEIVED: 'bg-emerald-50 text-emerald-800 border-emerald-300',
     REJECTED: 'bg-neutral-100 text-neutral-500 border-neutral-200',
+    SAVED: 'bg-neutral-100 text-neutral-800 border-neutral-300',
+    OFFER_RECEIVED: 'bg-neutral-900 text-white border-neutral-900',
   };
 
   const statusDotMap = {
-    SAVED: 'bg-neutral-400',
     APPLIED: 'bg-neutral-600',
     INTERVIEWING: 'bg-neutral-950',
-    OFFER_RECEIVED: 'bg-emerald-500',
     REJECTED: 'bg-neutral-300',
+    SAVED: 'bg-neutral-600',
+    OFFER_RECEIVED: 'bg-neutral-950',
   };
 
   // FILTER & SORT APPLICATIONS
@@ -601,7 +508,7 @@ export default function KanbanBoard({
     currentApps.splice(movingIndex, 1);
 
     // Identificam aplicatiile din coloana tinta (fara movingApp)
-    const targetColApps = currentApps.filter(a => a.status === targetColumnKey);
+    const targetColApps = currentApps.filter(a => normalizeStatus(a.status) === targetColumnKey);
 
     if (targetColApps.length === 0) {
       currentApps.push(movingApp);
@@ -1022,16 +929,6 @@ export default function KanbanBoard({
                 </button>
               </div>
 
-              {/* EXPORT CSV BUTTON */}
-              <button
-                onClick={handleExportCsv}
-                className="px-3.5 py-2 bg-white hover:bg-neutral-50 border border-neutral-200 hover:border-neutral-300 text-neutral-800 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95"
-                title="Descarca lista aplicatiilor in format CSV compatibil Excel"
-              >
-                <Download className="w-4 h-4 text-neutral-600" />
-                <span>Exporta CSV</span>
-              </button>
-
               {/* GMAIL SYNC BUTTON */}
               <button
                 onClick={() => setIsGmailModalOpen(true)}
@@ -1141,32 +1038,41 @@ export default function KanbanBoard({
       )}
 
       {/* HEADER WITH INSTRUCTION & ACTIONS */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4.5 sm:p-5 rounded-2xl border border-neutral-200/90 shadow-2xs">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold text-neutral-950 flex items-center gap-2.5 tracking-tight">
-            <FolderKanban className="w-5 h-5 text-neutral-950" />
-            {viewMode === 'kanban' 
-              ? 'Tracker & Pipeline Aplicatii' 
-              : viewMode === 'list' 
-              ? 'Lista Centralizata Aplicatii' 
-              : 'Calendar & Agenda Aplicari'}
-          </h2>
-          <p className="text-xs sm:text-sm text-neutral-600 font-medium mt-1">
-            {viewMode === 'kanban' 
-              ? 'Trage orice card de job in alta coloana sau reordoneaza-le direct pentru a-ti organiza procesul.'
-              : viewMode === 'list'
-              ? 'Gestioneaza statusul, CV-ul asociat fiecarui job si rapoartele AI intr-un format compact.'
-              : 'Vizualizeaza cronologic aplicarile pe zile, monitorizeaza interviurile si programeaza activitati.'}
-          </p>
+      <div className="bg-white border border-neutral-200/90 shadow-2xs p-5 sm:p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-neutral-950 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <FolderKanban className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h2 className="text-lg sm:text-xl font-extrabold text-neutral-950 tracking-tight">
+                {viewMode === 'kanban' 
+                  ? 'Tracker & Pipeline Aplicatii' 
+                  : viewMode === 'list' 
+                  ? 'Lista Centralizata Aplicatii' 
+                  : 'Calendar & Agenda Aplicari'}
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-neutral-100 text-neutral-700 border border-neutral-200">
+                {filteredApplications.length} {filteredApplications.length === 1 ? 'job' : 'joburi'}
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-neutral-600 font-medium mt-1 leading-relaxed max-w-2xl">
+              {viewMode === 'kanban' 
+                ? 'Organizeaza candidaturile prin glisare intre etape, gestioneaza CV-ul asociat si urmareste progresul fiecarei oportunitati.'
+                : viewMode === 'list' 
+                ? 'Gestioneaza statusul, CV-ul asociat fiecarui job si rapoartele AI intr-un format tabelar compact.' 
+                : 'Vizualizeaza cronologic aplicarile pe zile, monitorizeaza interviurile si programeaza activitati.'}
+            </p>
+          </div>
         </div>
 
         {onOpenAddJob && (
           <button
             onClick={onOpenAddJob}
-            className="self-start sm:self-auto px-4.5 py-2.5 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition cursor-pointer shadow-sm active:scale-95 shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-neutral-950 hover:bg-neutral-800 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm cursor-pointer shrink-0 active:scale-95 border border-neutral-900 group"
             title="Adauga un job nou manual in tracker"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
             <span>Adauga Job</span>
           </button>
         )}
@@ -1180,7 +1086,7 @@ export default function KanbanBoard({
           {/* MOBILE COLUMN TAB SELECTOR */}
           <div className="flex md:hidden overflow-x-auto gap-1.5 p-1.5 bg-neutral-100 rounded-2xl border border-neutral-200">
             {kanbanColumns.map((col) => {
-              const count = filteredApplications.filter(a => a.status === col.key).length;
+              const count = filteredApplications.filter(a => normalizeStatus(a.status) === col.key).length;
               const ColIcon = col.icon;
               const isSelected = mobileSelectedColumn === col.key;
               return (
@@ -1204,9 +1110,9 @@ export default function KanbanBoard({
           </div>
 
           {/* KANBAN GRID WITH INTERNAL SCROLLING & FIXED TOTAL HEIGHT */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 sm:gap-4 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 items-start">
             {kanbanColumns.map((col) => {
-              const colApps = filteredApplications.filter(app => app.status === col.key);
+              const colApps = filteredApplications.filter(app => normalizeStatus(app.status) === col.key);
               const isMobileVisible = mobileSelectedColumn === col.key;
               const isDragOverCol = (dropTargetSlot?.columnKey === col.key) && Boolean(activeDrag);
               const ColIcon = col.icon;
@@ -1233,7 +1139,7 @@ export default function KanbanBoard({
                   {/* SCROLLABLE CARDS CONTAINER */}
                   <div 
                     data-scroll-container="true"
-                    className="flex-1 overflow-y-auto p-2.5 sm:p-3 min-h-0 flex flex-col"
+                    className="flex-1 overflow-y-auto p-2.5 sm:p-3 pr-2 sm:pr-2.5 min-h-0 flex flex-col kanban-column-scroll"
                   >
                     {/* TOP DROP SLOT (SLOT 0) */}
                     {renderDropSlot(col.key, 0)}
@@ -1384,16 +1290,14 @@ export default function KanbanBoard({
                         {/* 2. STATUS DROPDOWN */}
                         <td className="py-4 px-4">
                           <div className="inline-flex items-center gap-1.5 relative">
-                            <span className={`w-2 h-2 rounded-full shrink-0 ${statusDotMap[app.status] || 'bg-neutral-400'}`}></span>
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${statusDotMap[normalizeStatus(app.status)] || 'bg-neutral-400'}`}></span>
                             <select
-                              value={app.status}
+                              value={normalizeStatus(app.status)}
                               onChange={(e) => handleStatusSelectChange(app.id, e.target.value)}
-                              className={`text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl border outline-none cursor-pointer transition ${statusColorMap[app.status] || 'bg-neutral-50 text-neutral-700 border-neutral-200'}`}
+                              className={`text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl border outline-none cursor-pointer transition ${statusColorMap[normalizeStatus(app.status)] || 'bg-neutral-50 text-neutral-700 border-neutral-200'}`}
                             >
-                              <option value="SAVED">Salvate</option>
                               <option value="APPLIED">Aplicat</option>
                               <option value="INTERVIEWING">Interviu</option>
-                              <option value="OFFER_RECEIVED">Oferta</option>
                               <option value="REJECTED">Respins</option>
                             </select>
                           </div>
