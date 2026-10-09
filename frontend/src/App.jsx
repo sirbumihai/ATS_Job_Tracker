@@ -114,6 +114,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState(getInitialTab);
   const [selectedStudioCvId, setSelectedStudioCvId] = useState(null);
   const [selectedCoverLetterAppId, setSelectedCoverLetterAppId] = useState(null);
+  const [selectedCoverLetterJobData, setSelectedCoverLetterJobData] = useState(null);
 
   // Sync tab with clean URL pathname and localStorage
   const handleTabChange = (tab) => {
@@ -147,8 +148,19 @@ export default function App() {
     handleTabChange('cv_studio');
   };
 
-  const handleOpenCoverLetterForApp = (appId) => {
-    setSelectedCoverLetterAppId(appId);
+  const handleOpenCoverLetterForApp = (appOrJob) => {
+    if (typeof appOrJob === 'string') {
+      setSelectedCoverLetterAppId(appOrJob);
+      setSelectedCoverLetterJobData(null);
+    } else if (appOrJob && typeof appOrJob === 'object') {
+      if (appOrJob.id && applications.some(a => a.id === appOrJob.id)) {
+        setSelectedCoverLetterAppId(appOrJob.id);
+        setSelectedCoverLetterJobData(null);
+      } else {
+        setSelectedCoverLetterJobData(appOrJob);
+        setSelectedCoverLetterAppId(null);
+      }
+    }
     handleTabChange('cover_letter');
   };
 
@@ -469,11 +481,13 @@ export default function App() {
       )}
 
       {/* CONTINUT PRINCIPAL */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden bg-white w-full">
+      <div className={`flex-1 flex flex-col min-w-0 bg-white w-full ${
+        activeTab === 'tracker' ? 'lg:h-screen lg:overflow-hidden' : 'min-h-screen overflow-x-hidden'
+      }`}>
         
         {/* DESKTOP TOP BAR CU TITLU PAGINA SI BREADCRUMB */}
         {activeTab !== 'landing' && activeTab !== 'feedback' && (
-          <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3.5 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 sticky top-0 z-20 shadow-2xs">
+          <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 shrink-0 sticky top-0 z-20 shadow-2xs">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 font-semibold shadow-2xs">
                 {currentTabInfo.category}
@@ -524,7 +538,13 @@ export default function App() {
         )}
 
         {/* CONTINUT PRINCIPAL */}
-        <main className={(activeTab === 'landing' || activeTab === 'feedback') ? "flex-1 w-full bg-white p-0" : "flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6"}>
+        <main className={
+          (activeTab === 'landing' || activeTab === 'feedback') 
+            ? "flex-1 w-full bg-white p-0" 
+            : (activeTab === 'tracker')
+              ? "flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3 overflow-hidden flex flex-col min-h-0"
+              : "flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6"
+        }>
         
         {/* TAB 1: TRACKER BOARD & LIST */}
         {activeTab === 'tracker' && (
@@ -551,6 +571,7 @@ export default function App() {
             onSaveToKanbanSuccess={fetchApplications}
             onNavigateToStudio={() => handleTabChange('cv_studio')}
             onNavigateToKanban={() => handleTabChange('tracker')}
+            onOpenCoverLetter={handleOpenCoverLetterForApp}
           />
         )}
 
@@ -588,6 +609,7 @@ export default function App() {
             applications={applications}
             currentUser={currentUser}
             initialApplicationId={selectedCoverLetterAppId}
+            initialJobData={selectedCoverLetterJobData}
             onNavigateToStudio={() => handleTabChange('cv_studio')}
             onNavigateToKanban={() => handleTabChange('tracker')}
           />
@@ -637,7 +659,7 @@ export default function App() {
         </main>
 
         {/* FOOTER */}
-        {activeTab !== 'landing' && activeTab !== 'feedback' && (
+        {activeTab !== 'landing' && activeTab !== 'feedback' && activeTab !== 'tracker' && (
           <footer className="border-t border-neutral-200/90 bg-white py-4 px-6 sm:px-8 text-xs text-neutral-500 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>

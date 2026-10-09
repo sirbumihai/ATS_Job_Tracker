@@ -54,10 +54,10 @@ import {
   GitCommit,
   Download,
   Send,
-  Bell
+  Bell,
+  FileSignature
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
-import OutreachCrmModal from './OutreachCrmModal';
 
 // Helper eliminare diacritice
 const removeDiacritics = (str) => {
@@ -125,12 +125,11 @@ export default function JobSearchPage({
   currentUser, 
   onSaveToKanbanSuccess, 
   onNavigateToStudio,
-  onNavigateToKanban
+  onNavigateToKanban,
+  onOpenCoverLetter
 }) {
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
-
-  const [outreachSearchJob, setOutreachSearchJob] = useState(null);
 
   // Search & Filter state
   const [keyword, setKeyword] = useState('');
@@ -1841,14 +1840,16 @@ export default function JobSearchPage({
                       )}
                     </button>
 
-                    <button
-                      onClick={() => setOutreachSearchJob(job)}
-                      className="py-2 px-3 bg-white hover:bg-neutral-100 text-neutral-900 border border-neutral-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer shadow-2xs"
-                      title="Outreach Recruiter: Nota LinkedIn (<300 caractere), Cold Email"
-                    >
-                      <Send className="w-3.5 h-3.5 text-neutral-700" />
-                      <span>Outreach</span>
-                    </button>
+                    {onOpenCoverLetter && (
+                      <button
+                        onClick={() => onOpenCoverLetter(job)}
+                        className="py-2 px-3 bg-white hover:bg-neutral-100 text-neutral-900 border border-neutral-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
+                        title="Genereaza Scrisoare de Intentie AI pentru acest job"
+                      >
+                        <FileSignature className="w-3.5 h-3.5 text-neutral-700" />
+                        <span>Scrisoare AI</span>
+                      </button>
+                    )}
 
                     <a 
                       href={job.directApplyUrl}
@@ -1956,6 +1957,7 @@ export default function JobSearchPage({
           isSaved={savedJobIds.has(selectedJobForDetails.id)}
           isSaving={savingJobId === selectedJobForDetails.id}
           activeUserId={activeUserId}
+          onOpenCoverLetter={onOpenCoverLetter}
           onUpdateJobScore={(jobId, newScore, aiData) => {
             setJobs(prevJobs => prevJobs.map(j => {
               if (j.id === jobId) {
@@ -2146,15 +2148,6 @@ export default function JobSearchPage({
           </div>
         </div>,
         document.body
-      )}
-
-      {/* OUTREACH CRM MODAL PENTRU JOB DIN SEARCH */}
-      {outreachSearchJob && (
-        <OutreachCrmModal
-          isOpen={!!outreachSearchJob}
-          onClose={() => setOutreachSearchJob(null)}
-          initialJobData={outreachSearchJob}
-        />
       )}
 
     </div>

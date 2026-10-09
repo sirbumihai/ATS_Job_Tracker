@@ -236,8 +236,7 @@ export default function JobDetailModal({
   isSaving,
   activeUserId,
   onUpdateJobScore,
-  onOpenCoverLetter,
-  onOpenOutreach
+  onOpenCoverLetter
 }) {
   const [detailedJob, setDetailedJob] = useState(job);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -1517,7 +1516,7 @@ export default function JobDetailModal({
               <button
                 type="button"
                 onClick={() => {
-                  onOpenCoverLetter(currentJob.id);
+                  onOpenCoverLetter(currentJob);
                   onClose();
                 }}
                 className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border border-neutral-200 bg-neutral-100 hover:bg-neutral-200 text-neutral-900"
@@ -1525,21 +1524,6 @@ export default function JobDetailModal({
               >
                 <FileSignature className="w-3.5 h-3.5 text-neutral-800 shrink-0" />
                 <span>Scrisoare AI</span>
-              </button>
-            )}
-
-            {onOpenOutreach && (
-              <button
-                type="button"
-                onClick={() => {
-                  onOpenOutreach(currentJob);
-                  onClose();
-                }}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border border-neutral-200 bg-neutral-100 hover:bg-neutral-200 text-neutral-900"
-                title="Outreach Recruiter: Mesaj LinkedIn & Cold Email"
-              >
-                <Send className="w-3.5 h-3.5 text-neutral-800 shrink-0" />
-                <span>Outreach CRM</span>
               </button>
             )}
 

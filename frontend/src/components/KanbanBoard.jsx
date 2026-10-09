@@ -20,9 +20,6 @@ import {
   XCircle,
   Plus,
   FolderKanban,
-  ArrowUpDown,
-  RotateCcw,
-  Briefcase,
   StickyNote,
   X,
   Save,
@@ -31,7 +28,6 @@ import {
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 import GmailSyncModal from './GmailSyncModal';
-import OutreachCrmModal from './OutreachCrmModal';
 import CalendarView from './CalendarView';
 
 export const isAppGmail = (app) => {
@@ -71,11 +67,6 @@ export default function KanbanBoard({
   const [isGmailModalOpen, setIsGmailModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list' | 'calendar'
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('CUSTOM'); // 'CUSTOM' | 'SCORE_DESC' | 'SCORE_ASC' | 'DATE_DESC' | 'COMPANY_ASC' | 'TITLE_ASC'
-  const [filterScore, setFilterScore] = useState('ALL'); // 'ALL' | 'HIGH' | 'MID' | 'LOW'
-  const [filterWorkModel, setFilterWorkModel] = useState('ALL'); // 'ALL' | 'REMOTE' | 'HYBRID' | 'ONSITE'
-  const [filterCv, setFilterCv] = useState('ALL'); // 'ALL' | 'ATTACHED' | 'UNATTACHED'
-  const [filterGmailOnly, setFilterGmailOnly] = useState(false);
   const [mobileSelectedColumn, setMobileSelectedColumn] = useState('APPLIED');
   
   // SWIFT KANBAN MOTION STATE (POINTER EVENTS BASED)
@@ -109,7 +100,6 @@ export default function KanbanBoard({
   const [uploadedResumes, setUploadedResumes] = useState([]);
   const [attachingCvAppId, setAttachingCvAppId] = useState(null);
   const [selectedJobForModal, setSelectedJobForModal] = useState(null);
-  const [outreachApp, setOutreachApp] = useState(null);
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
   const activeUserId = currentUser?.userId || currentUser?.id || DEFAULT_USER_ID;
 
@@ -234,93 +224,17 @@ export default function KanbanBoard({
     OFFER_RECEIVED: 'bg-neutral-950',
   };
 
-  // FILTER & SORT APPLICATIONS
+  // FILTER APPLICATIONS (BY SEARCH QUERY ONLY)
   const filteredApplications = useMemo(() => {
-    const list = applications.filter(app => {
-      // 1. Search query (company, title, location)
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const comp = (app.companyName || '').toLowerCase();
-        const title = (app.jobTitle || '').toLowerCase();
-        const loc = (app.jobLocation || app.location || '').toLowerCase();
-        if (!comp.includes(q) && !title.includes(q) && !loc.includes(q)) {
-          return false;
-        }
-      }
-
-      // 2. Score filter
-      const score = Number(app.semanticMatchScore || 0);
-      if (filterScore === 'HIGH' && score < 80) return false;
-      if (filterScore === 'MID' && (score < 50 || score >= 80)) return false;
-      if (filterScore === 'LOW' && score >= 50) return false;
-
-      // 3. Work model filter
-      if (filterWorkModel !== 'ALL') {
-        const wm = (app.workModel || '').toUpperCase();
-        if (filterWorkModel === 'REMOTE' && !wm.includes('REMOTE')) return false;
-        if (filterWorkModel === 'HYBRID' && (!wm.includes('HYBRID') && !wm.includes('HIBRID'))) return false;
-        if (filterWorkModel === 'ONSITE' && (!wm.includes('SITE') && !wm.includes('BIROU') && !wm.includes('ONSITE'))) return false;
-      }
-
-      // 4. CV filter
-      if (filterCv === 'ATTACHED') {
-        if (!app.cvProfileId && !app.resumeId) return false;
-      } else if (filterCv === 'UNATTACHED') {
-        if (app.cvProfileId || app.resumeId) return false;
-      }
-
-      // 5. Gmail Only filter
-      if (filterGmailOnly) {
-        if (!isAppGmail(app)) return false;
-      }
-
-      return true;
+    if (!searchQuery.trim()) return applications;
+    const q = searchQuery.toLowerCase().trim();
+    return applications.filter(app => {
+      const comp = (app.companyName || '').toLowerCase();
+      const title = (app.jobTitle || '').toLowerCase();
+      const loc = (app.jobLocation || app.location || '').toLowerCase();
+      return comp.includes(q) || title.includes(q) || loc.includes(q);
     });
-
-    // 6. Sort
-    if (sortBy === 'CUSTOM') {
-      return list; // Retine ordinea manuala din array
-    }
-
-    const sorted = [...list];
-    if (sortBy === 'SCORE_DESC') {
-      sorted.sort((a, b) => Number(b.semanticMatchScore || 0) - Number(a.semanticMatchScore || 0));
-    } else if (sortBy === 'SCORE_ASC') {
-      sorted.sort((a, b) => Number(a.semanticMatchScore || 0) - Number(b.semanticMatchScore || 0));
-    } else if (sortBy === 'COMPANY_ASC') {
-      sorted.sort((a, b) => (a.companyName || '').localeCompare(b.companyName || ''));
-    } else if (sortBy === 'TITLE_ASC') {
-      sorted.sort((a, b) => (a.jobTitle || '').localeCompare(b.jobTitle || ''));
-    } else if (sortBy === 'DATE_DESC') {
-      sorted.sort((a, b) => {
-        const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return tB - tA;
-      });
-    }
-
-    return sorted;
-  }, [applications, searchQuery, filterScore, filterWorkModel, filterCv, filterGmailOnly, sortBy]);
-
-  const gmailJobsCount = useMemo(() => {
-    return applications.filter(isAppGmail).length;
-  }, [applications]);
-
-  const isAnyFilterActive = searchQuery.trim() !== '' || 
-    filterScore !== 'ALL' || 
-    filterWorkModel !== 'ALL' || 
-    filterCv !== 'ALL' || 
-    filterGmailOnly ||
-    sortBy !== 'CUSTOM';
-
-  const handleResetFilters = () => {
-    setSearchQuery('');
-    setFilterScore('ALL');
-    setFilterWorkModel('ALL');
-    setFilterCv('ALL');
-    setFilterGmailOnly(false);
-    setSortBy('CUSTOM');
-  };
+  }, [applications, searchQuery]);
 
   // SWIFT KANBAN MOTION ENGINE (POINTER EVENTS BASED - BUTTERY 60-120FPS GPU PHYSICS)
   const handlePointerDown = (e, app, sourceColKey, sourceIndex) => {
@@ -530,11 +444,6 @@ export default function KanbanBoard({
       setJustDroppedCardId(null);
     }, 600);
 
-    // Retinem ordinea manuala
-    if (sortBy !== 'CUSTOM') {
-      setSortBy('CUSTOM');
-    }
-
     if (onReorderApplications) {
       onReorderApplications(currentApps);
     }
@@ -718,7 +627,7 @@ export default function KanbanBoard({
                 handleOpenJobModal(app);
               }}
               className="p-1 rounded-md text-neutral-400 hover:text-black hover:bg-neutral-100 transition cursor-pointer"
-              title="Deschide fisa detaliata a jobului (procent match, CV, outreach)"
+              title="Deschide fisa detaliata a jobului (procent match, CV, detalii)"
             >
               <Eye className="w-3.5 h-3.5" />
             </button>
@@ -729,227 +638,115 @@ export default function KanbanBoard({
   };
 
   return (
-    <div className="space-y-3 font-sans text-neutral-900">
+    <div className="flex-1 min-h-0 flex flex-col space-y-2.5 font-sans text-neutral-900 select-none">
       
-      {/* UNIFIED SINGLE HEADER & TOOLBAR */}
-      <div className="bg-white border border-neutral-200/90 shadow-2xs p-3 sm:p-4 rounded-2xl space-y-2.5">
+      {/* UNIFIED COMPACT SINGLE-ROW HEADER & TOOLBAR */}
+      <div className="bg-white border border-neutral-200/90 shadow-2xs px-3.5 py-2 rounded-2xl flex items-center justify-between gap-3 shrink-0 flex-wrap">
         
-        {/* ROW 1: BRAND TITLE + SEARCH + VIEW MODE + ACTION BUTTONS */}
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
-          
-          {/* TITLE & TOTAL COUNT */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-neutral-950 text-white flex items-center justify-center shrink-0 shadow-2xs">
-              <FolderKanban className="w-4.5 h-4.5" />
+        {/* LEFT: TITLE, COUNT & SEARCH BAR DIRECTLY NEXT TO IT */}
+        <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-[280px]">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-neutral-950 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <FolderKanban className="w-4 h-4" />
             </div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-extrabold text-neutral-950 tracking-tight leading-none">
-                {viewMode === 'kanban' 
-                  ? 'Tracker & Pipeline' 
-                  : viewMode === 'list' 
-                  ? 'Lista Centralizata' 
-                  : 'Calendar & Agenda'}
-              </h2>
-              <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-neutral-100 text-neutral-700 border border-neutral-200">
-                {filteredApplications.length}
-              </span>
-            </div>
+            <h2 className="text-sm sm:text-base font-extrabold text-neutral-950 tracking-tight leading-none">
+              {viewMode === 'kanban' 
+                ? 'Tracker & Pipeline' 
+                : viewMode === 'list' 
+                ? 'Lista Centralizata' 
+                : 'Calendar & Agenda'}
+            </h2>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 border border-neutral-200">
+              {filteredApplications.length}
+            </span>
           </div>
 
-          {/* SEARCH INPUT */}
-          <div className="relative flex-1 max-w-sm">
-            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          {/* SEARCH BAR IMMEDIATELY NEXT TO TRACKER NAME */}
+          <div className="relative flex-1 max-w-xs sm:max-w-sm">
+            <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input 
               type="text" 
               placeholder="Cauta companie, titlu, locatie..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl pl-9 pr-8 py-2 text-xs sm:text-sm text-neutral-900 placeholder-neutral-400 outline-none transition"
+              className="w-full bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl pl-8 pr-7 py-1.5 text-xs text-neutral-900 placeholder-neutral-400 outline-none transition"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black text-xs font-bold p-1 cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black text-xs font-bold p-1 cursor-pointer"
                 title="Sterge textul cautat"
               >
                 ✕
               </button>
             )}
           </div>
-
-          {/* CONTROLS & ACTIONS GROUP */}
-          <div className="flex items-center gap-2 flex-wrap justify-between lg:justify-end">
-            
-            {/* VIEW MODE TOGGLE */}
-            <div className="flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200 shrink-0">
-              <button
-                onClick={() => setViewMode('kanban')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                  viewMode === 'kanban' 
-                    ? 'bg-black text-white shadow-2xs' 
-                    : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
-                }`}
-                title="Vizualizare Kanban Board"
-              >
-                <Columns className="w-3.5 h-3.5" />
-                <span>Kanban</span>
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                  viewMode === 'list' 
-                    ? 'bg-black text-white shadow-2xs' 
-                    : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
-                }`}
-                title="Vizualizare Lista Tabelara"
-              >
-                <List className="w-3.5 h-3.5" />
-                <span>Lista</span>
-              </button>
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                  viewMode === 'calendar' 
-                    ? 'bg-black text-white shadow-2xs' 
-                    : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
-                }`}
-                title="Vizualizare Calendar & Agenda Aplicari"
-              >
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Calendar</span>
-              </button>
-            </div>
-
-            {/* GMAIL SYNC BUTTON */}
-            <button
-              onClick={() => setIsGmailModalOpen(true)}
-              className="px-3 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border border-neutral-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95"
-              title="Sincronizeaza statusul aplicatiilor din emailurile Gmail"
-            >
-              <Mail className="w-3.5 h-3.5 text-neutral-600" />
-              <span>Gmail Sync</span>
-            </button>
-
-            {/* ADAUGA JOB BUTTON */}
-            {onOpenAddJob && (
-              <button
-                onClick={onOpenAddJob}
-                className="px-3.5 py-2 bg-neutral-950 hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer shrink-0 active:scale-95 border border-neutral-900 group"
-                title="Adauga un job nou manual in tracker"
-              >
-                <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
-                <span>Adauga Job</span>
-              </button>
-            )}
-
-          </div>
-
         </div>
 
-        {/* ROW 2: FILTERS & SORTING INLINE */}
-        <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-neutral-100 text-xs">
+        {/* RIGHT: CONTROLS & ACTIONS GROUP */}
+        <div className="flex items-center gap-2 shrink-0">
           
-          {/* SORT BY */}
-          <div className="flex items-center gap-1.5 bg-neutral-50 px-2.5 py-1 rounded-lg border border-neutral-200">
-            <ArrowUpDown className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-            <span className="text-[11px] font-mono font-bold text-neutral-500 uppercase shrink-0">Sort:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-transparent text-neutral-900 font-bold text-xs outline-none cursor-pointer"
+          {/* VIEW MODE TOGGLE */}
+          <div className="flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200 shrink-0">
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === 'kanban' 
+                  ? 'bg-black text-white shadow-2xs' 
+                  : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
+              }`}
+              title="Vizualizare Kanban Board"
             >
-              <option value="CUSTOM">Manual (Drag & Drop)</option>
-              <option value="SCORE_DESC">Scor ATS (Descrescator)</option>
-              <option value="SCORE_ASC">Scor ATS (Crescator)</option>
-              <option value="DATE_DESC">Cele mai recente</option>
-              <option value="COMPANY_ASC">Companie (A - Z)</option>
-              <option value="TITLE_ASC">Titlu Job (A - Z)</option>
-            </select>
+              <Columns className="w-3.5 h-3.5" />
+              <span>Kanban</span>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === 'list' 
+                  ? 'bg-black text-white shadow-2xs' 
+                  : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
+              }`}
+              title="Vizualizare Lista Tabelara"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>Lista</span>
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === 'calendar' 
+                  ? 'bg-black text-white shadow-2xs' 
+                  : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
+              }`}
+              title="Vizualizare Calendar & Agenda Aplicari"
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Calendar</span>
+            </button>
           </div>
 
-          {/* FILTER MOD DE LUCRU */}
-          <div className="flex items-center gap-1.5 bg-neutral-50 px-2.5 py-1 rounded-lg border border-neutral-200">
-            <Briefcase className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-            <span className="text-[11px] font-mono text-neutral-500 font-semibold">Mod:</span>
-            <select
-              value={filterWorkModel}
-              onChange={(e) => setFilterWorkModel(e.target.value)}
-              className="bg-transparent text-neutral-900 font-bold text-xs outline-none cursor-pointer"
-            >
-              <option value="ALL">Toate modurile</option>
-              <option value="REMOTE">Remote</option>
-              <option value="HYBRID">Hibrid</option>
-              <option value="ONSITE">On-site</option>
-            </select>
-          </div>
-
-          {/* FILTER SCOR ATS */}
-          <div className="flex items-center gap-1.5 bg-neutral-50 px-2.5 py-1 rounded-lg border border-neutral-200">
-            <Sparkles className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-            <span className="text-[11px] font-mono text-neutral-500 font-semibold">Scor:</span>
-            <select
-              value={filterScore}
-              onChange={(e) => setFilterScore(e.target.value)}
-              className="bg-transparent text-neutral-900 font-bold text-xs outline-none cursor-pointer"
-            >
-              <option value="ALL">Toate scorurile</option>
-              <option value="HIGH">&gt; 80% Match</option>
-              <option value="MID">50% - 80% Match</option>
-              <option value="LOW">&lt; 50% Match</option>
-            </select>
-          </div>
-
-          {/* FILTER CV ASOCIAT */}
-          <div className="flex items-center gap-1.5 bg-neutral-50 px-2.5 py-1 rounded-lg border border-neutral-200">
-            <FileText className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-            <span className="text-[11px] font-mono text-neutral-500 font-semibold">CV:</span>
-            <select
-              value={filterCv}
-              onChange={(e) => setFilterCv(e.target.value)}
-              className="bg-transparent text-neutral-900 font-bold text-xs outline-none cursor-pointer"
-            >
-              <option value="ALL">Toate aplicatiile</option>
-              <option value="ATTACHED">Cu CV asociat</option>
-              <option value="UNATTACHED">Fara CV asociat</option>
-            </select>
-          </div>
-
-          {/* FILTER DOAR DIN GMAIL */}
+          {/* GMAIL SYNC BUTTON */}
           <button
-            type="button"
-            onClick={() => setFilterGmailOnly(prev => !prev)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold transition cursor-pointer select-none ${
-              filterGmailOnly 
-                ? 'bg-neutral-900 text-white border-neutral-900 shadow-2xs' 
-                : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-200'
-            }`}
-            title="Filtreaza doar aplicatiile extrase din Gmail"
+            onClick={() => setIsGmailModalOpen(true)}
+            className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border border-neutral-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95"
+            title="Sincronizeaza statusul aplicatiilor din emailurile Gmail"
           >
-            <Mail className={`w-3.5 h-3.5 ${filterGmailOnly ? 'text-white' : 'text-neutral-500'}`} />
-            <span>Doar din Gmail</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
-              filterGmailOnly ? 'bg-neutral-800 text-white' : 'bg-neutral-200 text-neutral-800'
-            }`}>
-              {gmailJobsCount}
-            </span>
+            <Mail className="w-3.5 h-3.5 text-neutral-600" />
+            <span className="hidden sm:inline">Gmail Sync</span>
           </button>
 
-          {/* RESET BUTTON */}
-          {isAnyFilterActive && (
+          {/* ADAUGA JOB BUTTON */}
+          {onOpenAddJob && (
             <button
-              onClick={handleResetFilters}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 hover:text-black text-xs font-bold transition cursor-pointer"
-              title="Reseteaza filtrele si cautarea"
+              onClick={onOpenAddJob}
+              className="px-3 py-1.5 bg-neutral-950 hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer shrink-0 active:scale-95 border border-neutral-900 group"
+              title="Adauga un job nou manual in tracker"
             >
-              <RotateCcw className="w-3 h-3 text-neutral-500" />
-              <span>Reseteaza</span>
+              <Plus className="w-3.5 h-3.5 transition-transform group-hover:rotate-90" />
+              <span>Adauga Job</span>
             </button>
           )}
-
-          {/* RESULTS COUNT */}
-          <span className="text-[11px] text-neutral-400 font-mono ml-auto">
-            Afisare: <strong className="text-neutral-900">{filteredApplications.length}</strong> din {applications.length}
-          </span>
 
         </div>
 
@@ -986,8 +783,8 @@ export default function KanbanBoard({
             })}
           </div>
 
-          {/* KANBAN GRID WITH INTERNAL SCROLLING & FIXED TOTAL HEIGHT */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 items-start">
+          {/* KANBAN GRID WITH INTERNAL SCROLLING & ADAPTIVE FLEX HEIGHT */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 items-stretch flex-1 min-h-0">
             {kanbanColumns.map((col) => {
               const colApps = filteredApplications.filter(app => normalizeStatus(app.status) === col.key);
               const isMobileVisible = mobileSelectedColumn === col.key;
@@ -998,12 +795,12 @@ export default function KanbanBoard({
                 <div 
                   key={col.key} 
                   data-kanban-col={col.key}
-                  className={`rounded-2xl border ${col.columnBg} ${col.accentBorder} transition-all duration-200 flex flex-col h-[calc(100vh-175px)] min-h-[480px] shadow-xs overflow-hidden ${
+                  className={`rounded-2xl border ${col.columnBg} ${col.accentBorder} transition-all duration-200 flex flex-col h-full min-h-0 shadow-xs overflow-hidden ${
                     isDragOverCol ? 'ring-2 ring-neutral-900/60 shadow-md' : ''
                   } ${isMobileVisible ? 'flex' : 'hidden md:flex'}`}
                 >
                   {/* FIXED COLUMN HEADER */}
-                  <div className={`flex items-center justify-between px-4 py-2.5 ${col.headerBg} font-bold text-sm sm:text-base shrink-0`}>
+                  <div className={`flex items-center justify-between px-3.5 py-2 ${col.headerBg} font-bold text-xs sm:text-sm shrink-0 border-b ${col.accentBorder}`}>
                     <div className="flex items-center gap-2">
                       <ColIcon className={`w-4 h-4 ${col.iconColor} shrink-0`} />
                       <span className="truncate">{col.title}</span>
@@ -1105,18 +902,18 @@ export default function KanbanBoard({
       {/* 2. LIST VIEW (CLEAN MINIMALIST TABLE & CARDS WITH CV SELECTOR) */}
       {/* ========================================================================= */}
       {viewMode === 'list' && (
-        <div className="bg-white border border-gray-200/90 shadow-sm rounded-2xl overflow-hidden font-sans">
+        <div className="bg-white border border-neutral-200/90 shadow-2xs rounded-2xl overflow-hidden font-sans flex-1 min-h-0 flex flex-col">
           
           {filteredApplications.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 kanban-column-scroll">
               <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-neutral-200 bg-neutral-50/80 text-xs font-mono font-bold text-neutral-500 uppercase tracking-wider">
-                    <th className="py-4 px-4 sm:px-6">Companie & Job</th>
-                    <th className="py-4 px-4">Status Curent</th>
-                    <th className="py-4 px-4">Scor Match AI</th>
-                    <th className="py-4 px-4">CV Asociat</th>
-                    <th className="py-4 px-4 sm:px-6 text-right">Actiuni</th>
+                <thead className="sticky top-0 bg-neutral-50/95 backdrop-blur-xs z-10 border-b border-neutral-200">
+                  <tr className="text-xs font-mono font-bold text-neutral-500 uppercase tracking-wider">
+                    <th className="py-3 px-4 sm:px-6">Companie & Job</th>
+                    <th className="py-3 px-4">Status Curent</th>
+                    <th className="py-3 px-4">Scor Match AI</th>
+                    <th className="py-3 px-4">CV Asociat</th>
+                    <th className="py-3 px-4 sm:px-6 text-right">Actiuni</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100 text-sm">
@@ -1280,14 +1077,6 @@ export default function KanbanBoard({
                             )}
 
                             <button
-                              onClick={() => setOutreachApp(app)}
-                              className="p-2 rounded-xl border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 hover:text-black transition shadow-2xs cursor-pointer group active:scale-95"
-                              title="Outreach Recruiter: Mesaj LinkedIn & Cold Email"
-                            >
-                              <Send className="w-4 h-4 text-neutral-700 group-hover:scale-110 transition-transform" />
-                            </button>
-
-                            <button
                               onClick={() => {
                                 if (window.confirm(`Sigur doresti sa stergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
                                   onDeleteApplication && onDeleteApplication(app.id);
@@ -1322,11 +1111,11 @@ export default function KanbanBoard({
       {/* 3. CALENDAR VIEW (CHRONOLOGICAL TIMELINE & AGENDA) */}
       {/* ========================================================================= */}
       {viewMode === 'calendar' && (
-        <CalendarView
-          applications={filteredApplications}
-          onOpenJobModal={handleOpenJobModal}
-          onOpenCoverLetter={onOpenCoverLetter}
-          onOpenOutreach={(targetJob) => setOutreachApp(targetJob)}
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <CalendarView
+            applications={filteredApplications}
+            onOpenJobModal={handleOpenJobModal}
+            onOpenCoverLetter={onOpenCoverLetter}
           onDeleteApplication={onDeleteApplication}
           onStatusChange={handleStatusSelectChange}
           statusColorMap={statusColorMap}
@@ -1334,6 +1123,7 @@ export default function KanbanBoard({
           onApplicationUpdated={onApplicationUpdated}
           activeUserId={activeUserId}
         />
+        </div>
       )}
 
       {/* JOB DETAIL MODAL INTEGRAT IN TRACKER */}
@@ -1344,7 +1134,6 @@ export default function KanbanBoard({
           isSaved={true}
           activeUserId={activeUserId}
           onOpenCoverLetter={onOpenCoverLetter}
-          onOpenOutreach={(targetJob) => setOutreachApp(targetJob)}
         />
       )}
 
@@ -1359,15 +1148,6 @@ export default function KanbanBoard({
         }}
         activeUserId={activeUserId}
       />
-
-      {/* OUTREACH CRM MODAL (NOTE LINKEDIN, COLD EMAIL, CADENCE) */}
-      {outreachApp && (
-        <OutreachCrmModal 
-          isOpen={!!outreachApp}
-          onClose={() => setOutreachApp(null)}
-          application={outreachApp}
-        />
-      )}
 
       {/* TOAST FEEDBACK NOTIFICATION */}
       {trackerToast && (

@@ -39,7 +39,6 @@ export default function CalendarView({
   applications = [],
   onOpenJobModal,
   onOpenCoverLetter,
-  onOpenOutreach,
   onDeleteApplication,
   onStatusChange,
   statusColorMap = {},
@@ -241,7 +240,7 @@ export default function CalendarView({
   const selectedDayApps = appsByDate[selectedDateStr] || [];
 
   return (
-    <div className="space-y-4 font-sans text-neutral-900">
+    <div className="flex-1 min-h-0 overflow-y-auto space-y-3 font-sans text-neutral-900 kanban-column-scroll pr-1">
       
       {/* 1. CALENDAR TOP CONTROLS & MONTH SELECTOR */}
       <div className="bg-white border border-neutral-200/90 shadow-2xs rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -510,15 +509,6 @@ export default function CalendarView({
                               <FileSignature className="w-4 h-4" />
                             </button>
                           )}
-
-                          <button
-                            type="button"
-                            onClick={() => onOpenOutreach && onOpenOutreach(app)}
-                            className="p-1 rounded-lg hover:bg-neutral-200 text-neutral-800 border border-neutral-200 transition cursor-pointer active:scale-95"
-                            title="Outreach Recruiter CRM"
-                          >
-                            <Send className="w-3.5 h-3.5" />
-                          </button>
 
                           <button
                             type="button"

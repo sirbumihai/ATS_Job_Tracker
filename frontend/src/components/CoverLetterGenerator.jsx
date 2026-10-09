@@ -30,6 +30,7 @@ export default function CoverLetterGenerator({
   applications = [], 
   currentUser,
   initialApplicationId = null,
+  initialJobData = null,
   onNavigateToStudio,
   onNavigateToKanban
 }) {
@@ -164,11 +165,27 @@ export default function CoverLetterGenerator({
   };
 
   useEffect(() => {
-    if (initialApplicationId && applications.length > 0) {
+    if (initialJobData) {
+      setJobMode('manual');
+      const cName = initialJobData.companyName || initialJobData.company || '';
+      const jTitle = initialJobData.jobTitle || initialJobData.title || '';
+      const jDesc = initialJobData.description || initialJobData.rawDescription || (initialJobData.jobPosting ? initialJobData.jobPosting.rawDescription : '') || '';
+      setCompanyName(cName);
+      setJobTitle(jTitle);
+      setJobDescription(jDesc);
+      if (jDesc) {
+        const lower = jDesc.toLowerCase();
+        if (lower.includes('experien') || lower.includes('cerin') || lower.includes('candidat')) {
+          setLanguage('RO');
+        } else if (lower.includes('experience') || lower.includes('requirements') || lower.includes('looking for')) {
+          setLanguage('EN');
+        }
+      }
+    } else if (initialApplicationId && applications.length > 0) {
       setJobMode('saved');
       handleSelectApplication(initialApplicationId);
     }
-  }, [initialApplicationId, applications]);
+  }, [initialApplicationId, initialJobData, applications]);
 
   // Paste from clipboard helper
   const handlePasteDescription = async () => {
