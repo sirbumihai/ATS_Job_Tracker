@@ -24,7 +24,8 @@ import {
   X,
   Save,
   Mail,
-  FileSignature
+  FileSignature,
+  MapPin
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 import GmailSyncModal from './GmailSyncModal';
@@ -508,7 +509,7 @@ export default function KanbanBoard({
       dropTargetSlot?.columnKey === columnKey && 
       dropTargetSlot?.slotIndex === slotIndex
     );
-    const targetH = Math.max(activeDrag?.cardHeight || 86, 76);
+    const targetH = Math.max(activeDrag?.cardHeight || 96, 86);
 
     return (
       <div 
@@ -530,7 +531,7 @@ export default function KanbanBoard({
         <div style={{ overflow: 'hidden', minHeight: 0 }} className="w-full min-w-0">
           <div 
             style={{ height: `${targetH}px` }} 
-            className="w-full rounded-xl border-2 border-dashed border-neutral-300/90 bg-neutral-100/60 shadow-inner flex items-center justify-center pointer-events-none select-none transition-colors"
+            className="w-full rounded-2xl border-2 border-dashed border-neutral-300/90 bg-neutral-100/60 shadow-inner flex items-center justify-center pointer-events-none select-none transition-colors"
           />
         </div>
       </div>
@@ -540,33 +541,42 @@ export default function KanbanBoard({
   // RENDER CARD INNER (SHARED BETWEEN COLUMN CARDS AND FLOATING PREVIEW)
   const renderCardInner = (app, isFloating = false) => {
     const isGmail = isAppGmail(app);
+    const companyLetter = (app.companyName || 'J').charAt(0).toUpperCase();
 
     return (
       <>
-        {/* CARD HEADER: COMPANY, TITLE, DELETE & DRAG */}
-        <div className="flex items-start justify-between gap-1.5 w-full min-w-0">
+        {/* CARD HEADER: COMPANY AVATAR, NAME, GMAIL TAG, DELETE BUTTON */}
+        <div className="flex items-start justify-between gap-2 w-full min-w-0">
           <div 
             onClick={() => {
               if (!isFloating) handleOpenJobModal(app);
             }}
-            className="cursor-pointer group/title flex-1 min-w-0"
+            className="cursor-pointer group/title flex items-start gap-2.5 flex-1 min-w-0"
             title="Apasa pentru a deschide fisa completa a jobului"
           >
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs sm:text-[13px] font-mono uppercase tracking-wider text-neutral-500 font-semibold truncate block group-hover/title:text-black transition">
-                {app.companyName}
-              </span>
-              {isGmail && (
-                <span className="inline-flex items-center gap-1 font-bold text-[10px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full shrink-0" title="Detectat automat prin sincronizare Gmail">
-                  <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
-                  <span>Gmail</span>
-                </span>
-              )}
+            {/* ARCHITECTURAL COMPANY AVATAR */}
+            <div className="w-7 h-7 rounded-lg bg-neutral-100 border border-neutral-200/90 text-neutral-800 flex items-center justify-center font-mono font-bold text-xs shrink-0 group-hover/title:bg-neutral-950 group-hover/title:text-white group-hover/title:border-neutral-950 transition-colors shadow-2xs">
+              {companyLetter}
             </div>
-            <h4 className="font-bold text-sm sm:text-[15px] text-neutral-950 leading-snug mt-1 line-clamp-2 group-hover/title:text-neutral-700 transition">
-              {app.jobTitle}
-            </h4>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-500 font-bold truncate block group-hover/title:text-neutral-950 transition-colors">
+                  {app.companyName}
+                </span>
+                {isGmail && (
+                  <span className="inline-flex items-center gap-1 font-bold text-[9px] text-red-700 bg-red-50 border border-red-200/90 px-1.5 py-0.2 rounded-md shrink-0" title="Detectat automat prin sincronizare Gmail">
+                    <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
+                    <span>Gmail</span>
+                  </span>
+                )}
+              </div>
+              <h4 className="font-extrabold text-[13.5px] sm:text-[14px] text-neutral-950 leading-snug tracking-tight mt-0.5 line-clamp-2 group-hover/title:text-neutral-700 transition-colors">
+                {app.jobTitle}
+              </h4>
+            </div>
           </div>
+
           <div className="flex items-center gap-0.5 shrink-0">
             {!isFloating && (
               <button
@@ -578,7 +588,7 @@ export default function KanbanBoard({
                   }
                 }}
                 title="Sterge din Tracker"
-                className="p-1 rounded-md text-neutral-300 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer shrink-0 opacity-0 group-hover:opacity-100"
+                className="p-1 rounded-md text-neutral-300 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shrink-0 opacity-0 group-hover:opacity-100 active:scale-95"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -586,26 +596,37 @@ export default function KanbanBoard({
           </div>
         </div>
 
-        {/* CARD FOOTER: METADATA CHIPS & QUICK ACTIONS */}
-        <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-neutral-100 text-xs">
+        {/* WORK MODEL & LOCATION BADGES (IF AVAILABLE) */}
+        {(app.workModel || app.jobLocation || app.location) && (
+          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+            {app.workModel && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-neutral-100 text-neutral-700 border border-neutral-200/80">
+                {app.workModel}
+              </span>
+            )}
+            {(app.jobLocation || app.location) && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-neutral-500 font-medium truncate max-w-[160px]">
+                <MapPin className="w-3 h-3 text-neutral-400 shrink-0" />
+                <span className="truncate">{app.jobLocation || app.location}</span>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* CARD FOOTER: DATE & QUICK ACTIONS */}
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-neutral-100 text-xs">
           <div className="flex items-center gap-1.5 flex-wrap min-w-0 text-[11px] text-neutral-500 font-mono">
-            {app.appliedDate && (
+            {app.appliedDate ? (
               <span className="inline-flex items-center gap-1 shrink-0" title={`Data aplicarii: ${app.appliedDate}`}>
                 <Calendar className="w-3 h-3 text-neutral-400 shrink-0" />
                 <span>{app.appliedDate}</span>
               </span>
-            )}
-            {(app.workModel || app.jobLocation || app.location) && (
-              <span className="text-neutral-400 truncate max-w-[140px]" title={app.workModel || app.jobLocation || app.location}>
-                {app.appliedDate ? '• ' : ''}{app.workModel || app.jobLocation || app.location}
-              </span>
-            )}
-            {!app.appliedDate && !app.workModel && !app.jobLocation && !app.location && (
-              <span className="text-neutral-400 italic font-sans text-[11px]">Detalii disponibile</span>
+            ) : (
+              <span className="text-neutral-400 italic font-sans text-[11px]">Inregistrat</span>
             )}
           </div>
 
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             {onOpenCoverLetter && !isFloating && (
               <button
                 type="button"
@@ -613,7 +634,7 @@ export default function KanbanBoard({
                   e.stopPropagation();
                   onOpenCoverLetter(app.id);
                 }}
-                className="p-1 rounded-md text-neutral-400 hover:text-black hover:bg-neutral-100 transition cursor-pointer"
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-black hover:bg-neutral-100 transition-all cursor-pointer active:scale-95"
                 title="Genereaza Scrisoare de Intentie AI"
               >
                 <FileSignature className="w-3.5 h-3.5" />
@@ -626,8 +647,8 @@ export default function KanbanBoard({
                 e.stopPropagation();
                 handleOpenJobModal(app);
               }}
-              className="p-1 rounded-md text-neutral-400 hover:text-black hover:bg-neutral-100 transition cursor-pointer"
-              title="Deschide fisa detaliata a jobului (procent match, CV, detalii)"
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-black hover:bg-neutral-100 transition-all cursor-pointer active:scale-95"
+              title="Deschide fisa detaliata a jobului"
             >
               <Eye className="w-3.5 h-3.5" />
             </button>
@@ -847,7 +868,7 @@ export default function KanbanBoard({
                                 onDragStart={(e) => { e.preventDefault(); return false; }}
                                 onPointerDown={(e) => handlePointerDown(e, app, col.key, visibleIdx)}
                                 style={{ touchAction: 'none', userSelect: 'none' }}
-                                className={`bg-white border rounded-xl p-3 space-y-2 relative group shadow-2xs hover:shadow-xs transition-all text-neutral-900 cursor-pointer active:cursor-grabbing w-full min-w-0 border-neutral-200/90 hover:border-neutral-400 select-none ${
+                                className={`bg-white border border-neutral-200/90 hover:border-neutral-400/90 rounded-2xl p-3.5 space-y-2.5 relative group shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-200 text-neutral-900 cursor-pointer active:cursor-grabbing w-full min-w-0 select-none ${
                                   justDroppedCardId === app.id ? 'animate-card-settle' : ''
                                 }`}
                               >
@@ -890,7 +911,7 @@ export default function KanbanBoard({
                 boxShadow: '0 25px 45px -8px rgba(0, 0, 0, 0.3), 0 12px 22px -6px rgba(0, 0, 0, 0.15)',
                 opacity: 1,
               }}
-              className="bg-white border border-neutral-300/90 rounded-xl p-3 space-y-2 select-none cursor-grabbing"
+              className="bg-white border border-neutral-300 rounded-2xl p-3.5 space-y-2.5 select-none cursor-grabbing shadow-2xl"
             >
               {renderCardInner(activeDrag.app, true)}
             </div>
