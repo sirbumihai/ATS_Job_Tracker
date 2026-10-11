@@ -714,7 +714,7 @@ export default function JobDetailModal({
       if (trimmed.includes('•') || trimmed.includes('- ') || trimmed.includes('* ')) {
         const lines = trimmed.split(/\n/);
         return (
-          <ul key={pIdx} className="my-3 space-y-1.5 list-disc pl-5 text-gray-700 leading-relaxed text-sm">
+          <ul key={pIdx} className="my-3 space-y-1.5 list-disc pl-5 text-neutral-800 leading-relaxed text-sm">
             {lines.map((line, lIdx) => {
               const cleanLine = line.replace(/^[•\-*]\s*/, '').trim();
               if (!cleanLine || !isValidRequirementItem(cleanLine)) return null;
@@ -727,63 +727,63 @@ export default function JobDetailModal({
       // Verificare daca este un antet (Header)
       if (trimmed.endsWith(':') || (trimmed.length < 50 && (trimmed.toLowerCase().includes('cerin') || trimmed.toLowerCase().includes('responsabilit') || trimmed.toLowerCase().includes('benefic') || trimmed.toLowerCase().includes('requirements') || trimmed.toLowerCase().includes('responsibilities')))) {
         return (
-          <h4 key={pIdx} className="text-sm font-black text-gray-950 uppercase tracking-wider mt-5 mb-2 border-b border-gray-100 pb-1">
+          <h4 key={pIdx} className="text-xs font-mono font-bold text-neutral-950 uppercase tracking-wider mt-5 mb-2 border-b border-neutral-200/80 pb-1">
             {trimmed}
           </h4>
         );
       }
 
       return (
-        <p key={pIdx} className="my-2 text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+        <p key={pIdx} className="my-2 text-sm text-neutral-800 leading-relaxed whitespace-pre-line">
           {trimmed}
         </p>
       );
     });
   };
 
+  const companyLetter = (currentJob?.companyName || 'J').trim().charAt(0).toUpperCase();
+
   return createPortal(
     <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-morphing-backdrop" onClick={onClose}>
       
       {/* CONTAINER MODAL / SHEET */}
       <div 
-        className="relative bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden my-auto animate-morphing-dialog flex flex-col max-h-[92vh]"
+        className="relative bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-neutral-200/90 overflow-hidden my-auto animate-morphing-dialog flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         
         {/* HEADER BAR FIX CU CLOSE & SHARE */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white/95 sticky top-0 z-20 backdrop-blur-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200/80 bg-white/95 sticky top-0 z-20 backdrop-blur-md">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className={`px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-              isGmailJob ? 'bg-red-600 text-white flex items-center gap-1.5' :
-              currentJob.sourcePlatform === 'LINKEDIN' ? 'bg-[#0077b5] text-white' :
-              currentJob.sourcePlatform === 'BESTJOBS' ? 'bg-amber-500 text-white' :
-              currentJob.sourcePlatform === 'HIPO' ? 'bg-rose-500 text-white' :
-              'bg-gray-900 text-white'
+            <span className={`px-2.5 py-1 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider ${
+              isGmailJob 
+                ? 'bg-red-50 text-red-700 border border-red-200/90 flex items-center gap-1.5' 
+                : 'bg-neutral-100 text-neutral-800 border border-neutral-200/90 flex items-center gap-1.5'
             }`}>
-              {isGmailJob && <Mail className="w-3.5 h-3.5 shrink-0" />}
+              {isGmailJob && <Mail className="w-3 h-3 text-red-600 shrink-0" />}
               <span>{isGmailJob ? 'GMAIL ATS' : (currentJob.sourcePlatform || 'JOB')}</span>
             </span>
-            <span className="text-xs font-bold text-gray-500 truncate max-w-[200px] sm:max-w-md">
+            <span className="text-xs font-mono uppercase tracking-wider text-neutral-500 font-bold truncate max-w-[200px] sm:max-w-md">
               {currentJob.companyName}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={handleCopyLink}
-              className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-200/70 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+              className="p-2 px-3 rounded-xl text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 border border-transparent hover:border-neutral-200/80 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-mono font-bold active:scale-95"
               title="Copiaza link-ul direct de aplicare"
             >
-              {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
+              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-neutral-500" />}
               <span className="hidden sm:inline">{copiedLink ? 'Copiat!' : 'Distribuie'}</span>
             </button>
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-200/70 transition cursor-pointer animate-morphing-close"
+              className="p-2 rounded-xl text-neutral-400 hover:text-neutral-950 hover:bg-neutral-100 border border-transparent hover:border-neutral-200/80 transition-all cursor-pointer animate-morphing-close active:scale-95"
               title="Inchide fereastra (Esc)"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -792,21 +792,16 @@ export default function JobDetailModal({
         <div className="overflow-y-auto p-6 sm:p-8 space-y-6 flex-1 scrollbar-thin">
 
           {isGmailJob ? (
-            /* DEDICATED GMAIL EMAIL CLIENT VIEW (NO AI ANALYSIS, NO FAKE MATCH SCORES, NO FAKE REQUIREMENTS) */
+            /* DEDICATED GMAIL EMAIL CLIENT VIEW */
             <div className="space-y-6 animate-in fade-in duration-200">
               {/* EMAIL BANNER & SENDER DETAILS */}
-              <div className="bg-gradient-to-br from-red-50/70 via-white to-gray-50/80 border border-red-200/90 rounded-3xl p-6 sm:p-7 space-y-4 shadow-xs">
+              <div className="bg-neutral-50/60 border border-neutral-200/90 rounded-2xl p-6 sm:p-7 space-y-4 shadow-2xs">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-red-600 text-white flex items-center gap-1.5 shadow-xs">
-                    <Mail className="w-3.5 h-3.5" />
+                  <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-red-50 text-red-700 border border-red-200/90 flex items-center gap-1.5">
+                    <Mail className="w-3 h-3 text-red-600" />
                     <span>EMAIL DE RECRUTARE GMAIL</span>
                   </span>
-                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider border ${
-                    emailData?.status === 'INTERVIEWING' ? 'bg-purple-100 text-purple-900 border-purple-300' :
-                    emailData?.status === 'OFFER_RECEIVED' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
-                    emailData?.status === 'REJECTED' ? 'bg-rose-100 text-rose-900 border-rose-300' :
-                    'bg-blue-100 text-blue-900 border-blue-300'
-                  }`}>
+                  <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-neutral-100 text-neutral-800 border border-neutral-200/90">
                     {emailData?.status === 'INTERVIEWING' ? 'Invitatie Interviu' :
                      emailData?.status === 'OFFER_RECEIVED' ? 'Oferta Primita' :
                      emailData?.status === 'REJECTED' ? 'Respins / Negativ' : 'Aplicat (Confirmare)'}
@@ -814,33 +809,33 @@ export default function JobDetailModal({
                 </div>
 
                 <div className="space-y-2">
-                  <h2 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight leading-snug">
+                  <h2 className="text-xl sm:text-2xl font-black text-neutral-950 tracking-tight leading-snug">
                     {emailData?.subject || currentJob.jobTitle}
                   </h2>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
-                    <div className="bg-white border border-gray-200 p-3.5 rounded-2xl shadow-2xs space-y-1">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                        <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                    <div className="bg-white border border-neutral-200/80 p-3.5 rounded-xl shadow-2xs space-y-1">
+                      <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-neutral-400" />
                         <span>Companie</span>
                       </span>
-                      <p className="font-extrabold text-gray-950 text-sm truncate">{currentJob.companyName}</p>
+                      <p className="font-extrabold text-neutral-950 text-sm truncate">{currentJob.companyName}</p>
                     </div>
-                    <div className="bg-white border border-gray-200 p-3.5 rounded-2xl shadow-2xs space-y-1">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-gray-400" />
+                    <div className="bg-white border border-neutral-200/80 p-3.5 rounded-xl shadow-2xs space-y-1">
+                      <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-neutral-400" />
                         <span>Expeditor (De la)</span>
                       </span>
-                      <p className="font-extrabold text-indigo-700 text-xs sm:text-sm truncate" title={emailData?.sender}>
+                      <p className="font-extrabold text-neutral-900 font-mono text-xs truncate" title={emailData?.sender}>
                         {emailData?.sender || 'Nespecificat'}
                       </p>
                     </div>
-                    <div className="bg-white border border-gray-200 p-3.5 rounded-2xl shadow-2xs space-y-1">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                    <div className="bg-white border border-neutral-200/80 p-3.5 rounded-xl shadow-2xs space-y-1">
+                      <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-neutral-400" />
                         <span>Data Primirii</span>
                       </span>
-                      <p className="font-extrabold text-gray-800 text-xs sm:text-sm">
+                      <p className="font-extrabold text-neutral-800 font-mono text-xs">
                         {emailData?.date || 'Nespecificata'}
                       </p>
                     </div>
@@ -848,12 +843,12 @@ export default function JobDetailModal({
                 </div>
               </div>
 
-              {/* EMAIL BODY CONTENT (CLEAN, NO AI HALLUCINATIONS) */}
-              <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
-                <div className="px-6 py-4 bg-gray-50/90 border-b border-gray-200 flex items-center justify-between gap-3">
+              {/* EMAIL BODY CONTENT */}
+              <div className="bg-white border border-neutral-200/90 rounded-2xl overflow-hidden shadow-2xs">
+                <div className="px-6 py-3.5 bg-neutral-50/90 border-b border-neutral-200/80 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gray-600" />
-                    <h3 className="text-xs font-black text-gray-900 uppercase tracking-wider">
+                    <Mail className="w-4 h-4 text-neutral-600" />
+                    <h3 className="text-xs font-mono font-bold text-neutral-900 uppercase tracking-wider">
                       Continut Integral al Emailului Primit
                     </h3>
                   </div>
@@ -864,18 +859,18 @@ export default function JobDetailModal({
                       setCopiedEmailBody(true);
                       setTimeout(() => setCopiedEmailBody(false), 2000);
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 text-xs font-bold text-gray-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-neutral-100 border border-neutral-200/90 text-xs font-mono font-bold text-neutral-700 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
                   >
-                    {copiedEmailBody ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-gray-500" />}
+                    {copiedEmailBody ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-neutral-400" />}
                     <span>{copiedEmailBody ? 'Copiat!' : 'Copiaza Text'}</span>
                   </button>
                 </div>
 
-                <div className="p-6 sm:p-8 font-sans text-sm text-gray-800 leading-relaxed whitespace-pre-wrap selection:bg-red-100 bg-gray-50/20 font-normal">
+                <div className="p-6 sm:p-8 font-sans text-sm text-neutral-800 leading-relaxed whitespace-pre-wrap selection:bg-neutral-200 font-normal">
                   {emailData?.body ? (
                     emailData.body
                   ) : (
-                    <p className="text-gray-400 italic">Mesajul nu contine text aditional in corpul emailului.</p>
+                    <p className="text-neutral-400 italic">Mesajul nu contine text aditional in corpul emailului.</p>
                   )}
                 </div>
               </div>
@@ -884,626 +879,624 @@ export default function JobDetailModal({
             <>
               {/* TITLU & COMPANIE */}
               <div className="flex flex-col sm:flex-row sm:items-start gap-4 justify-between">
-            <div className="flex items-start gap-4">
-              <img 
-                src={currentJob.companyLogoUrl} 
-                alt={currentJob.companyName}
-                className="w-16 h-16 rounded-2xl object-cover bg-gray-50 border border-gray-200 shrink-0 shadow-sm"
-                onError={(e) => {
-                  e.target.src = 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=120&auto=format&fit=crop&q=80';
-                }}
-              />
-              <div className="space-y-1">
-                <h1 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight leading-snug">
-                  {currentJob.jobTitle}
-                </h1>
-                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 font-semibold">
-                  <span className="flex items-center gap-1 text-gray-900 font-extrabold">
-                    <Building2 className="w-4 h-4 text-indigo-600" />
-                    {currentJob.companyName}
-                  </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    {currentJob.location}
-                  </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1 text-gray-700 font-bold text-xs" title={currentJob.postedAt ? `Data postarii: ${currentJob.postedAt}` : 'Data exacta de publicare nu a fost furnizata de angajator'}>
-                    <Calendar className="w-3.5 h-3.5 text-indigo-600" />
-                    {currentJob.postedAt ? (formatDateTime(currentJob.postedAt) !== 'Nespecificat' ? formatDateTime(currentJob.postedAt) : currentJob.postedDateAgo) : (currentJob.postedDateAgo || 'Data nespecificata')}
-                  </span>
-                  {currentJob.status && (
-                    <>
+                <div className="flex items-start gap-4 min-w-0 flex-1">
+                  {/* ARCHITECTURAL COMPANY AVATAR */}
+                  {currentJob.companyLogoUrl ? (
+                    <img 
+                      src={currentJob.companyLogoUrl} 
+                      alt={currentJob.companyName}
+                      className="w-14 h-14 rounded-2xl object-cover bg-neutral-100 border border-neutral-200/90 shrink-0 shadow-2xs"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className={`w-14 h-14 rounded-2xl bg-neutral-100 border border-neutral-200/90 text-neutral-950 flex items-center justify-center font-mono font-black text-xl shrink-0 shadow-2xs ${currentJob.companyLogoUrl ? 'hidden' : 'flex'}`}
+                  >
+                    {companyLetter}
+                  </div>
+
+                  <div className="space-y-1.5 min-w-0 flex-1">
+                    <h1 className="text-xl sm:text-2xl font-black text-neutral-950 tracking-tight leading-snug">
+                      {currentJob.jobTitle}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500 font-medium">
+                      <span className="flex items-center gap-1.5 text-neutral-950 font-mono font-bold uppercase tracking-wider text-[11px]">
+                        <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                        {currentJob.companyName}
+                      </span>
                       <span>•</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                        currentJob.status === 'ACTIVE' 
-                          ? 'bg-emerald-100 text-emerald-950 border border-emerald-300' 
-                          : 'bg-gray-100 text-gray-700 border border-gray-300'
-                      }`}>
-                        {currentJob.status === 'ACTIVE' ? 'Activ' : 'Expirat / Arhivat'}
+                      <span className="flex items-center gap-1 text-neutral-600">
+                        <MapPin className="w-3.5 h-3.5 text-neutral-400" />
+                        {currentJob.location}
                       </span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* SCOR ATS MATCH MARE */}
-            <div className={`shrink-0 flex items-center gap-2 px-4 py-3 rounded-2xl border self-start ${
-              displayScore >= 75 
-                ? 'bg-emerald-50 text-emerald-950 border-emerald-300 shadow-sm shadow-emerald-50' 
-                : displayScore >= 45 
-                ? 'bg-amber-50 text-amber-950 border-amber-300 shadow-sm shadow-amber-50' 
-                : 'bg-rose-50 text-rose-950 border-rose-300 shadow-sm shadow-rose-50'
-            }`}>
-              <Sparkles className={`w-5 h-5 ${displayScore >= 75 ? 'text-emerald-600' : displayScore >= 45 ? 'text-amber-600' : 'text-rose-600'}`} />
-              <div>
-                <div className="text-lg font-black leading-tight">
-                  {displayScore.toFixed(1)}% Match
-                </div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  {aiAnalysisData?.aiVerified ? 'Scor ATS Verificat AI' : 'Scor ATS Ponderat'}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* GRID METADATE CHEIE */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-gray-50/90 border border-gray-200/80 p-3.5 rounded-2xl space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                <Globe className="w-3.5 h-3.5 text-blue-600" />
-                Mod de Lucru
-              </span>
-              <p className="text-xs sm:text-sm font-extrabold text-gray-900">
-                {currentJob.workModel === 'REMOTE' ? 'Remote' : currentJob.workModel === 'HYBRID' ? 'Hibrid' : 'On-Site'}
-              </p>
-            </div>
-
-            <div className="bg-gray-50/90 border border-gray-200/80 p-3.5 rounded-2xl space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                <Briefcase className="w-3.5 h-3.5 text-purple-600" />
-                Nivel Experienta
-              </span>
-              <p className="text-xs sm:text-sm font-extrabold text-gray-900">
-                {effectiveExperienceLevel === 'INTERNSHIP' ? 'Internship' :
-                 effectiveExperienceLevel === 'JUNIOR' ? 'Junior' :
-                 effectiveExperienceLevel === 'SENIOR' ? 'Senior' : 'Mid-Level'}
-              </p>
-            </div>
-
-            <div className="bg-gray-50/90 border border-gray-200/80 p-3.5 rounded-2xl space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                <Users className="w-3.5 h-3.5 text-amber-600" />
-                Competitie
-              </span>
-              <p className="text-xs sm:text-sm font-extrabold text-gray-900 truncate">
-                {currentJob.applicantCountText ? currentJob.applicantCountText.replace(/[()]/g, '').trim() : 'Estimare Normala'}
-              </p>
-            </div>
-          </div>
-
-          {/* SECTIUNE PIPELINE DE AUDIT & ISTORIC MODIFICARI */}
-          <div className="bg-gray-50 border border-gray-200 rounded-3xl p-4 sm:p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-indigo-600" />
-                <span className="text-xs font-black uppercase tracking-wider text-gray-900">
-                  Audit Lifecycle & Istoric Modificari
-                </span>
-                {currentJob.contentHash && (
-                  <span className="text-[10px] font-mono bg-white text-gray-500 border border-gray-200 px-2 py-0.5 rounded-md hidden sm:inline" title={`SHA-256: ${currentJob.contentHash}`}>
-                    Hash: {currentJob.contentHash.substring(0, 10)}...
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={fetchChanges}
-                className="text-xs font-extrabold text-indigo-700 hover:text-indigo-950 bg-white border border-indigo-200 hover:bg-indigo-50 px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
-              >
-                <GitCommit className="w-3.5 h-3.5" />
-                <span>{showChanges ? 'Ascunde Istoric' : 'Vezi Istoric Modificari'}</span>
-              </button>
-            </div>
-
-            {showChanges && (
-              <div className="pt-2 border-t border-gray-200/80 space-y-2">
-                {loadingChanges ? (
-                  <div className="py-4 text-center text-xs font-semibold text-gray-500 animate-pulse">
-                    Se incarca istoricul din baza de date...
-                  </div>
-                ) : jobChanges.length === 0 ? (
-                  <div className="py-3 text-center text-xs text-gray-500 font-medium bg-white rounded-xl border border-gray-100">
-                    Niciun eveniment de modificare inregistrat inca (Job in starea initiala CREATED).
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {jobChanges.map((change) => (
-                      <div 
-                        key={change.id || Math.random()}
-                        className="bg-white border border-gray-200 p-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-2xs"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${
-                            change.changeType === 'CREATED' ? 'bg-emerald-100 text-emerald-950 border border-emerald-300' :
-                            change.changeType === 'CONTENT_UPDATED' ? 'bg-blue-100 text-blue-950 border border-blue-300' :
-                            change.changeType === 'REACTIVATED' ? 'bg-amber-100 text-amber-950 border border-amber-300' :
-                            change.changeType === 'EXPIRED' ? 'bg-rose-100 text-rose-950 border border-rose-300' :
-                            'bg-gray-100 text-gray-800'
+                      <span>•</span>
+                      <span className="flex items-center gap-1 text-neutral-600 font-mono" title={currentJob.postedAt ? `Data postarii: ${currentJob.postedAt}` : 'Data exacta de publicare nu a fost furnizata de angajator'}>
+                        <Calendar className="w-3.5 h-3.5 text-neutral-400" />
+                        {currentJob.postedAt ? (formatDateTime(currentJob.postedAt) !== 'Nespecificat' ? formatDateTime(currentJob.postedAt) : currentJob.postedDateAgo) : (currentJob.postedDateAgo || 'Data nespecificata')}
+                      </span>
+                      {currentJob.status && (
+                        <>
+                          <span>•</span>
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase ${
+                            currentJob.status === 'ACTIVE' 
+                              ? 'bg-neutral-100 text-neutral-900 border border-neutral-200/90' 
+                              : 'bg-neutral-100 text-neutral-500 border border-neutral-200/90'
                           }`}>
-                            {change.changeType}
+                            {currentJob.status === 'ACTIVE' ? 'Activ' : 'Expirat / Arhivat'}
                           </span>
-                          <span className="font-semibold text-gray-700">
-                            {change.details || 'Modificare detectata in pipeline'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[11px] text-gray-400 font-medium shrink-0">
-                          <Clock className="w-3 h-3 text-gray-400" />
-                          <span>{formatDateTime(change.changedAt)}</span>
-                        </div>
-                      </div>
-                    ))}
+                        </>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* SECTIUNE NOUA: BILANT INTELIGENT COMPETENTE (CE STII VS CE ITI LIPSESTE) */}
-          <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-5 sm:p-6 rounded-3xl shadow-xl space-y-4 border border-indigo-500/20">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-indigo-400" />
-                  <h3 className="text-sm font-black uppercase tracking-wider text-white">
-                    Bilant Competente: Ce Stii vs Ce Iti Lipseste
-                  </h3>
                 </div>
-                <p className="text-xs text-slate-300 mt-1">
-                  Comparat in timp real cu profilul tau de CV pentru a-ti evidentia atuurile la interviu
-                </p>
 
-                {/* SELECTOR CV UTILIZATOR PENTRU COMPARARE */}
-                {userCvs.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 mt-2.5 pt-2 border-t border-white/10">
-                    <span className="text-xs font-extrabold text-indigo-300 flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-indigo-400" />
-                      Compara cu CV-ul:
-                    </span>
-                    <select
-                      value={selectedCvId || ''}
-                      onChange={(e) => handleSelectCv(e.target.value)}
-                      disabled={loadingAiAnalysis}
-                      className="bg-indigo-900/90 hover:bg-indigo-900 border border-indigo-400/50 text-white font-extrabold text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer shadow-sm transition disabled:opacity-50"
-                    >
-                      {userCvs.map((c) => (
-                        <option key={c.id} value={c.id} className="bg-slate-900 text-white py-1">
-                          {c.title || 'CV Personal'} {c.isPrimary ? '⭐ (Principal)' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => runAiMatch(currentJob, selectedCvId, true)}
-                  disabled={loadingAiAnalysis}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-extrabold text-xs shadow-md transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed border border-indigo-400/40"
-                  title="Analizeaza semantic cerintele jobului direct cu AI Groq si CV-ul selectat"
-                >
-                  {loadingAiAnalysis ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-200" />
-                      <span>Verificare AI in curs...</span>
-                    </>
-                  ) : aiAnalysisData ? (
-                    <>
-                      <Bot className="w-3.5 h-3.5 text-emerald-300" />
-                      <span>Re-analizeaza cu AI</span>
-                    </>
-                  ) : (
-                    <>
-                      <Bot className="w-3.5 h-3.5 text-indigo-200" />
-                      <span>Verifica & Bifeaza cu AI</span>
-                    </>
-                  )}
-                </button>
-
-                <div className="flex items-center gap-2 bg-white/10 px-3.5 py-2 rounded-2xl backdrop-blur-sm border border-white/10">
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
-                  <div className="text-right">
-                    <div className="text-xs font-black text-white">{displayScore.toFixed(1)}% Match ATS</div>
-                    <div className="text-[10px] text-indigo-200 font-semibold">
-                      {matchedMandatoryCount} din {totalMandatoryCount > 0 ? totalMandatoryCount : (skillsRequired.length || 1)} cerinte bifate
+                {/* SCOR ATS MATCH MARE */}
+                <div className="shrink-0 flex items-center gap-3 px-4 py-3 rounded-2xl border border-neutral-200/90 bg-neutral-50/70 shadow-2xs self-start">
+                  <Sparkles className={`w-5 h-5 shrink-0 ${displayScore >= 75 ? 'text-emerald-600' : displayScore >= 45 ? 'text-amber-500' : 'text-neutral-400'}`} />
+                  <div>
+                    <div className="text-xl font-mono font-black text-neutral-950 leading-tight">
+                      {displayScore.toFixed(1)}% Match
+                    </div>
+                    <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500">
+                      {aiAnalysisData?.aiVerified ? 'Scor ATS Verificat AI' : 'Scor ATS Ponderat'}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* RAPORT / VERDICT AI RECRUITER DACA ESTE ACTIVAT */}
-            {aiAnalysisData?.verdict && (
-              <div className="bg-indigo-900/60 border border-indigo-400/30 rounded-2xl p-3.5 flex items-start gap-3">
-                <div className="p-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 shrink-0 mt-0.5">
-                  <Bot className="w-4 h-4 text-indigo-300" />
-                </div>
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300">
-                    Verdict Recruiter AI (Analiza Semantica CV)
+              {/* GRID METADATE CHEIE */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="bg-neutral-50/60 border border-neutral-200/80 p-3.5 rounded-2xl space-y-1.5 transition-colors hover:bg-neutral-50">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-neutral-400" />
+                    Mod de Lucru
                   </span>
-                  <p className="text-xs text-indigo-100 font-medium leading-relaxed">
-                    {aiAnalysisData.verdict}
+                  <p className="text-xs sm:text-sm font-extrabold text-neutral-950">
+                    {currentJob.workModel === 'REMOTE' ? 'Remote' : currentJob.workModel === 'HYBRID' ? 'Hibrid' : 'On-Site'}
+                  </p>
+                </div>
+
+                <div className="bg-neutral-50/60 border border-neutral-200/80 p-3.5 rounded-2xl space-y-1.5 transition-colors hover:bg-neutral-50">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
+                    <Briefcase className="w-3.5 h-3.5 text-neutral-400" />
+                    Nivel Experienta
+                  </span>
+                  <p className="text-xs sm:text-sm font-extrabold text-neutral-950">
+                    {effectiveExperienceLevel === 'INTERNSHIP' ? 'Internship' :
+                     effectiveExperienceLevel === 'JUNIOR' ? 'Junior' :
+                     effectiveExperienceLevel === 'SENIOR' ? 'Senior' : 'Mid-Level'}
+                  </p>
+                </div>
+
+                <div className="bg-neutral-50/60 border border-neutral-200/80 p-3.5 rounded-2xl space-y-1.5 transition-colors hover:bg-neutral-50">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-neutral-400" />
+                    Competitie
+                  </span>
+                  <p className="text-xs sm:text-sm font-extrabold text-neutral-950 truncate">
+                    {currentJob.applicantCountText ? currentJob.applicantCountText.replace(/[()]/g, '').trim() : 'Estimare Normala'}
                   </p>
                 </div>
               </div>
-            )}
 
-            {aiAnalysisError && (
-              <div className="bg-rose-950/40 border border-rose-500/30 rounded-2xl p-3 text-xs text-rose-300 font-semibold flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                <span>{aiAnalysisError}</span>
-              </div>
-            )}
-
-            {/* GRID CU 2 COLOANE CLARE: CE STII vs CE NU STII */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* COLOANA 1: CE STAPANESTI (VERDE) */}
-              <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-4 space-y-2.5">
+              {/* SECTIUNE PIPELINE DE AUDIT & ISTORIC MODIFICARI */}
+              <div className="bg-neutral-50/60 border border-neutral-200/80 rounded-2xl p-4 sm:p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    Ce Stapanesti Deja ({displayMatchingSkills.length})
-                  </span>
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    Puncte Forte
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5 min-h-[36px]">
-                  {displayMatchingSkills.length > 0 ? (
-                    displayMatchingSkills.map((skill, idx) => (
-                      <span 
-                        key={idx} 
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-2xs"
-                      >
-                        <Check className="w-3 h-3 text-emerald-400" />
-                        <span>{skill}</span>
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-slate-400 italic">Nu s-a detectat inca o suprapunere directa de cuvinte cheie din CV.</span>
-                  )}
-                </div>
-                <p className="text-[11px] text-emerald-300/80 leading-relaxed pt-1 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>Aceste competente sunt deja demonstrate in CV. Vor fi punctele tale forte la interviu!</span>
-                </p>
-              </div>
-
-              {/* COLOANA 2: CE ITI LIPSESTE / DE APROFUNDAT (PORTOCALIU) */}
-              <div className="bg-amber-950/30 border border-amber-500/30 rounded-2xl p-4 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
-                    <AlertCircle className="w-4 h-4 text-amber-400" />
-                    Ce Nu Ai in CV / De Invatat ({displayMissingSkills.length})
-                  </span>
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    Gaps de Acoperit
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5 min-h-[36px]">
-                  {displayMissingSkills.length > 0 ? (
-                    displayMissingSkills.map((skill, idx) => (
-                      <span 
-                        key={idx} 
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-200 border border-amber-500/40 shadow-2xs"
-                      >
-                        <BookOpen className="w-3 h-3 text-amber-400" />
-                        <span>{skill}</span>
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-emerald-300 font-bold flex items-center gap-1">
-                      <CheckCheck className="w-4 h-4 text-emerald-400" />
-                      Felicitari! Profilul tau acopera toate cerintele tehnice identificate!
+                  <div className="flex items-center gap-2">
+                    <History className="w-4 h-4 text-neutral-700" />
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-neutral-900">
+                      Audit Lifecycle & Istoric Modificari
                     </span>
-                  )}
-                </div>
-                <p className="text-[11px] text-amber-300/80 leading-relaxed pt-1 flex items-start gap-1.5">
-                  <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                  <span>Sfat: Daca ai lucrat chiar si la proiecte personale cu aceste tehnologii, adauga-le in CV Studio pentru a creste scorul ATS!</span>
-                </p>
-              </div>
-            </div>
-
-            {/* EVALUARE NIVEL EXPERIENTA */}
-            <div className="text-xs text-slate-200 bg-white/5 p-3 rounded-2xl border border-white/10 leading-relaxed">
-              <span className="font-black text-white">Evaluare Nivel: </span>
-              {effectiveExperienceLevel === 'JUNIOR' || effectiveExperienceLevel === 'INTERNSHIP' ? (
-                <span className="text-emerald-300 font-bold">
-                  Pozitia este ideala pentru debut de cariera (0-1 ani experienta). Sanse maxime de selectie la interviu! Fara penalizare de vechime.
-                </span>
-              ) : effectiveExperienceLevel === 'MID' ? (
-                <span className="text-amber-300 font-bold">
-                  Penalizare de nivel: Pozitia solicita 2-4 ani de experienta comerciala. Profilul de Junior este plafonat automat de algoritmul ATS din cauza deficitului de vechime cerut.
-                </span>
-              ) : (
-                <span className="text-rose-300 font-bold">
-                  Incompatibilitate de senioritate: Pozitie de nivel Senior / Lead (5+ ani). Sistemele automate ATS descalifica de regula profilurile fara vechime comerciala solida.
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* SECTIUNE FISA POSTULUI & CERINTE DETALIATE */}
-          <div className="space-y-5 pt-2">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-600" />
-                <div>
-                  <h3 className="text-sm font-black text-gray-950 uppercase tracking-wider">
-                    Fisa Postului & Cerinte Detaliate
-                  </h3>
-                  <p className="text-[11px] text-gray-500 font-medium">
-                    Cerinte tehnice si responsabilitati structurate inteligent
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {loadingDetails && (
-              <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-2xl text-xs font-bold text-indigo-700 flex items-center gap-2 animate-pulse">
-                <Sparkles className="w-4 h-4 text-indigo-600" />
-                Se extrage descrierea detaliata completa de pe {currentJob.sourcePlatform}...
-              </div>
-            )}
-
-            {loadingAiAnalysis && (
-              <div className="p-3 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 border border-indigo-200 rounded-2xl text-xs font-bold text-indigo-900 flex items-center justify-between gap-2 animate-pulse shadow-2xs">
-                <div className="flex items-center gap-2">
-                  <Bot className="w-4 h-4 text-indigo-600 animate-spin" />
-                  <span>AI extrage si separa cerintele, responsabilitatile si beneficiile din anunt...</span>
-                </div>
-                <span className="text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full uppercase font-black">AI Live</span>
-              </div>
-            )}
-
-            {/* CERINTE OBLIGATORII (MUST-HAVE) */}
-            {effectiveMandatoryRequirements.length > 0 && (
-              <div className="bg-white border-2 border-indigo-100 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
-                <div className="flex items-center justify-between border-b border-indigo-50 pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-xl bg-indigo-100/80 text-indigo-700">
-                      <Target className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-2">
-                        <span>Cerinte Obligatorii (Must-Have)</span>
-                        {aiAnalysisData && (
-                          <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                            <Bot className="w-3 h-3 text-indigo-600" />
-                            AI Verified
-                          </span>
-                        )}
-                      </h4>
-                      <span className="text-[11px] text-gray-500 font-semibold">
-                        Competente si calificari esentiale cerute pentru acest rol
+                    {currentJob.contentHash && (
+                      <span className="text-[10px] font-mono bg-white text-neutral-500 border border-neutral-200 px-2 py-0.5 rounded-md hidden sm:inline" title={`SHA-256: ${currentJob.contentHash}`}>
+                        Hash: {currentJob.contentHash.substring(0, 10)}...
                       </span>
-                    </div>
+                    )}
                   </div>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    {effectiveMandatoryRequirements.length} Cerinte
-                  </span>
+                  <button
+                    type="button"
+                    onClick={fetchChanges}
+                    className="text-xs font-mono font-bold text-neutral-700 hover:text-neutral-950 bg-white border border-neutral-200 hover:bg-neutral-100 px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95"
+                  >
+                    <GitCommit className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>{showChanges ? 'Ascunde Istoric' : 'Vezi Istoric Modificari'}</span>
+                  </button>
                 </div>
 
-                <div className="space-y-2.5">
-                  {effectiveMandatoryRequirements.map((req, idx) => (
-                    <div 
-                      key={idx}
-                      className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${
-                        req.isMatched 
-                          ? 'bg-emerald-50/60 border-emerald-200' 
-                          : 'bg-amber-50/50 border-amber-200'
-                      }`}
-                    >
-                      <div className="flex items-start gap-2.5 flex-1">
-                        {req.isMatched ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        ) : (
-                          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                        )}
-                        <div className="space-y-1">
-                          <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
-                            {req.text}
-                          </span>
-                          {req.explanation && (
-                            <p className="text-[11px] text-gray-500 italic">
-                              {req.explanation}
-                            </p>
-                          )}
-                        </div>
+                {showChanges && (
+                  <div className="pt-2 border-t border-neutral-200/80 space-y-2">
+                    {loadingChanges ? (
+                      <div className="py-4 text-center text-xs font-mono font-semibold text-neutral-500 animate-pulse">
+                        Se incarca istoricul din baza de date...
                       </div>
-
-                      <div className="flex flex-wrap items-center gap-1.5 shrink-0 self-start sm:self-center">
-                        {req.isMatched ? (
-                          <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
-                            <Check className="w-3 h-3 text-emerald-600" />
-                            <span>{req.matchedSkill ? `Bifat: ${req.matchedSkill}` : 'Bifat in CV'}</span>
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
-                            <BookOpen className="w-3 h-3 text-amber-600" />
-                            <span>Lipseste din CV</span>
-                          </span>
-                        )}
+                    ) : jobChanges.length === 0 ? (
+                      <div className="py-3 text-center text-xs text-neutral-500 font-medium bg-white rounded-xl border border-neutral-200/70">
+                        Niciun eveniment de modificare inregistrat inca (Job in starea initiala CREATED).
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {jobChanges.map((change) => (
+                          <div 
+                            key={change.id || Math.random()}
+                            className="bg-white border border-neutral-200/80 p-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-2xs"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase bg-neutral-100 text-neutral-800 border border-neutral-200/90">
+                                {change.changeType}
+                              </span>
+                              <span className="font-semibold text-neutral-800">
+                                {change.details || 'Modificare detectata in pipeline'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-neutral-400 font-mono shrink-0">
+                              <Clock className="w-3 h-3 text-neutral-400" />
+                              <span>{formatDateTime(change.changedAt)}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
 
-            {/* CUNOSTINTE BONUS / AVANTAJE (NICE-TO-HAVE) */}
-            {effectiveBonusRequirements.length > 0 && (
-              <div className="bg-gradient-to-br from-amber-50/50 to-purple-50/30 border-2 border-amber-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
-                <div className="flex items-center justify-between border-b border-amber-100 pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-xl bg-amber-100 text-amber-800">
-                      <Award className="w-4 h-4" />
+              {/* BILANT INTELIGENT COMPETENTE (OBSIDIAN DARK COMMAND CARD) */}
+              <div className="bg-neutral-950 text-white p-5 sm:p-6 rounded-2xl shadow-lg border border-neutral-800 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800 pb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-white" />
+                      <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
+                        Bilant Competente: Ce Stii vs Ce Iti Lipseste
+                      </h3>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-1.5">
-                        <span>Cunostinte Bonus & Avantaje (Nice-to-Have)</span>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                      </h4>
-                      <span className="text-[11px] text-gray-500 font-semibold">
-                        Cunostinte care nu sunt eliminatorii, dar iti ofera un avantaj major la selectie
-                      </span>
-                    </div>
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
-                    {effectiveBonusRequirements.length} Puncte Bonus
-                  </span>
-                </div>
+                    <p className="text-xs text-neutral-400 mt-1 font-normal">
+                      Comparat in timp real cu profilul tau de CV pentru a-ti evidentia atuurile la interviu
+                    </p>
 
-                <div className="space-y-2">
-                  {effectiveBonusRequirements.map((bonus, idx) => (
-                    <div 
-                      key={idx}
-                      className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
-                        bonus.isMatched 
-                          ? 'bg-emerald-50/70 border-emerald-300' 
-                          : 'bg-white/80 border-amber-100'
-                      }`}
-                    >
-                      <div className="flex items-start gap-2.5 flex-1">
-                        <Sparkles className={`w-4 h-4 shrink-0 mt-0.5 ${bonus.isMatched ? 'text-emerald-600' : 'text-amber-500'}`} />
-                        <span className="text-xs sm:text-sm font-medium text-gray-800 leading-snug">
-                          {bonus.text}
+                    {/* SELECTOR CV UTILIZATOR PENTRU COMPARARE */}
+                    {userCvs.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 mt-2.5 pt-2 border-t border-neutral-800/80">
+                        <span className="text-xs font-mono font-bold text-neutral-300 flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-neutral-400" />
+                          Compara cu CV-ul:
                         </span>
+                        <select
+                          value={selectedCvId || ''}
+                          onChange={(e) => handleSelectCv(e.target.value)}
+                          disabled={loadingAiAnalysis}
+                          className="bg-neutral-900 hover:bg-neutral-800/90 border border-neutral-700 text-white font-mono font-semibold text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer shadow-2xs transition-all disabled:opacity-50"
+                        >
+                          {userCvs.map((c) => (
+                            <option key={c.id} value={c.id} className="bg-neutral-900 text-white py-1">
+                              {c.title || 'CV Personal'} {c.isPrimary ? '[Principal]' : ''}
+                            </option>
+                          ))}
+                        </select>
                       </div>
+                    )}
+                  </div>
 
-                      {bonus.isMatched && (
-                        <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1 shrink-0 self-start sm:self-center">
-                          <Check className="w-3 h-3 text-emerald-600" />
-                          <span>{bonus.matchedSkill ? `Bonus Bifat: ${bonus.matchedSkill}` : 'Bonus Bifat in Profil!'}</span>
+                  <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => runAiMatch(currentJob, selectedCvId, true)}
+                      disabled={loadingAiAnalysis}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-neutral-100 active:scale-95 text-neutral-950 font-mono font-bold text-xs shadow-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed border border-neutral-200"
+                      title="Analizeaza semantic cerintele jobului direct cu AI Groq si CV-ul selectat"
+                    >
+                      {loadingAiAnalysis ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-neutral-700" />
+                          <span>Verificare AI in curs...</span>
+                        </>
+                      ) : aiAnalysisData ? (
+                        <>
+                          <Bot className="w-3.5 h-3.5 text-neutral-950" />
+                          <span>Re-analizeaza cu AI</span>
+                        </>
+                      ) : (
+                        <>
+                          <Bot className="w-3.5 h-3.5 text-neutral-950" />
+                          <span>Verifica & Bifeaza cu AI</span>
+                        </>
+                      )}
+                    </button>
+
+                    <div className="flex items-center gap-2.5 bg-neutral-900 border border-neutral-800 px-3.5 py-2 rounded-xl">
+                      <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <div className="text-right">
+                        <div className="text-xs font-mono font-black text-white">{displayScore.toFixed(1)}% Match ATS</div>
+                        <div className="text-[10px] font-mono text-neutral-400 font-medium">
+                          {matchedMandatoryCount} din {totalMandatoryCount > 0 ? totalMandatoryCount : (skillsRequired.length || 1)} cerinte bifate
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* RAPORT / VERDICT AI RECRUITER DACA ESTE ACTIVAT */}
+                {aiAnalysisData?.verdict && (
+                  <div className="bg-neutral-900 border border-neutral-800/90 rounded-xl p-3.5 flex items-start gap-3">
+                    <div className="p-1.5 rounded-lg bg-neutral-800 text-neutral-300 shrink-0 mt-0.5">
+                      <Bot className="w-4 h-4 text-neutral-300" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-bold">
+                        Verdict Recruiter AI (Analiza Semantica CV)
+                      </span>
+                      <p className="text-xs text-neutral-200 font-normal leading-relaxed">
+                        {aiAnalysisData.verdict}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {aiAnalysisError && (
+                  <div className="bg-rose-950/40 border border-rose-800/50 rounded-xl p-3 text-xs text-rose-300 font-medium flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>{aiAnalysisError}</span>
+                  </div>
+                )}
+
+                {/* GRID CU 2 COLOANE CLARE: CE STII vs CE NU STII */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* COLOANA 1: CE STAPANESTI */}
+                  <div className="bg-neutral-900/90 border border-emerald-900/40 rounded-xl p-4 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono uppercase tracking-wider text-emerald-300 font-bold flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        Ce Stapanesti Deja ({displayMatchingSkills.length})
+                      </span>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-950/80 text-emerald-300 border border-emerald-800/60">
+                        Puncte Forte
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 min-h-[36px]">
+                      {displayMatchingSkills.length > 0 ? (
+                        displayMatchingSkills.map((skill, idx) => (
+                          <span 
+                            key={idx} 
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-emerald-950/50 text-emerald-200 border border-emerald-800/50 shadow-2xs"
+                          >
+                            <Check className="w-3 h-3 text-emerald-400" />
+                            <span>{skill}</span>
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-neutral-400 italic">Nu s-a detectat inca o suprapunere directa de cuvinte cheie din CV.</span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-neutral-400 leading-relaxed pt-1 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>Aceste competente sunt deja demonstrate in CV. Vor fi punctele tale forte la interviu!</span>
+                    </p>
+                  </div>
+
+                  {/* COLOANA 2: CE ITI LIPSESTE */}
+                  <div className="bg-neutral-900/90 border border-amber-900/40 rounded-xl p-4 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono uppercase tracking-wider text-amber-300 font-bold flex items-center gap-1.5">
+                        <AlertCircle className="w-4 h-4 text-amber-400" />
+                        Ce Nu Ai in CV / De Invatat ({displayMissingSkills.length})
+                      </span>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-950/80 text-amber-300 border border-amber-800/60">
+                        Gaps de Acoperit
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 min-h-[36px]">
+                      {displayMissingSkills.length > 0 ? (
+                        displayMissingSkills.map((skill, idx) => (
+                          <span 
+                            key={idx} 
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-amber-950/50 text-amber-200 border border-amber-800/50 shadow-2xs"
+                          >
+                            <BookOpen className="w-3 h-3 text-amber-400" />
+                            <span>{skill}</span>
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-emerald-300 font-bold flex items-center gap-1">
+                          <CheckCheck className="w-4 h-4 text-emerald-400" />
+                          Felicitari! Profilul tau acopera toate cerintele tehnice identificate!
                         </span>
                       )}
                     </div>
-                  ))}
+                    <p className="text-[11px] text-neutral-400 leading-relaxed pt-1 flex items-start gap-1.5">
+                      <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                      <span>Sfat: Daca ai lucrat chiar si la proiecte personale cu aceste tehnologii, adauga-le in CV Studio pentru a creste scorul ATS!</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* EVALUARE NIVEL EXPERIENTA */}
+                <div className="text-xs text-neutral-300 bg-neutral-900 border border-neutral-800 p-3 rounded-xl leading-relaxed">
+                  <span className="font-mono font-bold text-white uppercase text-[10px] tracking-wider mr-1">Evaluare Nivel: </span>
+                  {effectiveExperienceLevel === 'JUNIOR' || effectiveExperienceLevel === 'INTERNSHIP' ? (
+                    <span className="text-emerald-300 font-medium">
+                      Pozitia este ideala pentru debut de cariera (0-1 ani experienta). Sanse maxime de selectie la interviu! Fara penalizare de vechime.
+                    </span>
+                  ) : effectiveExperienceLevel === 'MID' ? (
+                    <span className="text-amber-300 font-medium">
+                      Penalizare de nivel: Pozitia solicita 2-4 ani de experienta comerciala. Profilul de Junior este plafonat automat de algoritmul ATS din cauza deficitului de vechime cerut.
+                    </span>
+                  ) : (
+                    <span className="text-rose-300 font-medium">
+                      Incompatibilitate de senioritate: Pozitie de nivel Senior / Lead (5+ ani). Sistemele automate ATS descalifica de regula profilurile fara vechime comerciala solida.
+                    </span>
+                  )}
                 </div>
               </div>
-            )}
 
-            {/* RESPONSABILITATI PRINCIPALE */}
-            {displayResponsibilities && displayResponsibilities.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+              {/* SECTIUNE FISA POSTULUI & CERINTE DETALIATE */}
+              <div className="space-y-5 pt-2">
+                <div className="flex items-center justify-between border-b border-neutral-200/80 pb-3">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-xl bg-blue-50 text-blue-700">
-                      <Briefcase className="w-4 h-4" />
-                    </div>
+                    <FileText className="w-5 h-5 text-neutral-900" />
                     <div>
-                      <h4 className="text-sm font-black text-gray-950 uppercase tracking-wider flex items-center gap-2">
-                        <span>Ce Vei Face in Acest Rol (Responsabilitati)</span>
-                        {aiAnalysisData?.responsibilities?.length > 0 && (
-                          <span className="text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                            <Bot className="w-3 h-3 text-blue-600" />
-                            AI Extracted
-                          </span>
-                        )}
-                      </h4>
-                      <span className="text-[11px] text-gray-500 font-semibold">
-                        Activitatile tale zilnice si proiectele din cadrul echipei
-                      </span>
+                      <h3 className="text-xs font-mono font-bold text-neutral-950 uppercase tracking-wider">
+                        Fisa Postului & Cerinte Detaliate
+                      </h3>
+                      <p className="text-[11px] text-neutral-500 font-normal">
+                        Cerinte tehnice si responsabilitati structurate inteligent
+                      </p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
-                    {displayResponsibilities.length} Activitati
-                  </span>
                 </div>
 
-                <ul className="space-y-2 pl-1">
-                  {displayResponsibilities.map((resp, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-gray-700 leading-relaxed">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-2"></div>
-                      <span>{resp}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+                {loadingDetails && (
+                  <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono font-bold text-neutral-700 flex items-center gap-2 animate-pulse">
+                    <Sparkles className="w-4 h-4 text-neutral-600" />
+                    Se extrage descrierea detaliata completa de pe {currentJob.sourcePlatform}...
+                  </div>
+                )}
 
-            {/* BENEFICII & OFERTA */}
-            {displayBenefits && displayBenefits.length > 0 && (
-              <div className="bg-emerald-50/40 border border-emerald-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
-                <div className="flex items-center justify-between border-b border-emerald-100 pb-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
-                      <Gift className="w-4 h-4" />
+                {loadingAiAnalysis && (
+                  <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono font-bold text-neutral-800 flex items-center justify-between gap-2 animate-pulse shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <Bot className="w-4 h-4 text-neutral-700 animate-spin" />
+                      <span>AI extrage si separa cerintele, responsabilitatile si beneficiile din anunt...</span>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-black text-emerald-950 uppercase tracking-wider flex items-center gap-2">
-                        <span>Ce Iti Ofera Compania (Beneficii & Pachet)</span>
-                        {aiAnalysisData?.benefits?.length > 0 && (
-                          <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-md flex items-center gap-1">
-                            <Bot className="w-3 h-3 text-emerald-600" />
-                            AI Extracted
+                    <span className="text-[10px] font-mono bg-neutral-200 text-neutral-800 px-2 py-0.5 rounded-md uppercase font-bold">AI Live</span>
+                  </div>
+                )}
+
+                {/* CERINTE OBLIGATORII (MUST-HAVE) */}
+                {effectiveMandatoryRequirements.length > 0 && (
+                  <div className="bg-white border border-neutral-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-3.5">
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-neutral-100 text-neutral-800">
+                          <Target className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-mono font-bold text-neutral-950 uppercase tracking-wider flex items-center gap-2">
+                            <span>Cerinte Obligatorii (Must-Have)</span>
+                            {aiAnalysisData && (
+                              <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-neutral-100 text-neutral-800 border border-neutral-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                <Bot className="w-3 h-3 text-neutral-700" />
+                                AI Verified
+                              </span>
+                            )}
+                          </h4>
+                          <span className="text-[11px] text-neutral-500 font-medium">
+                            Competente si calificari esentiale cerute pentru acest rol
                           </span>
-                        )}
-                      </h4>
-                      <span className="text-[11px] text-emerald-700 font-semibold">
-                        Perks, asigurare, dezvoltare profesionala si conditii de lucru
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/80">
+                        {effectiveMandatoryRequirements.length} Cerinte
                       </span>
                     </div>
+
+                    <div className="space-y-2.5">
+                      {effectiveMandatoryRequirements.map((req, idx) => (
+                        <div 
+                          key={idx}
+                          className={`p-3.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                            req.isMatched 
+                              ? 'bg-neutral-50/70 border-neutral-200/80 hover:border-neutral-300' 
+                              : 'bg-amber-50/20 border-amber-200/60 hover:border-amber-300'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 flex-1">
+                            {req.isMatched ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                            ) : (
+                              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                            )}
+                            <div className="space-y-0.5">
+                              <span className="text-xs sm:text-sm font-medium text-neutral-900 leading-snug">
+                                {req.text}
+                              </span>
+                              {req.explanation && (
+                                <p className="text-[11px] text-neutral-500 italic">
+                                  {req.explanation}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-1.5 shrink-0 self-start sm:self-center">
+                            {req.isMatched ? (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/90 flex items-center gap-1">
+                                <Check className="w-3 h-3 text-emerald-600" />
+                                <span>{req.matchedSkill ? `Bifat: ${req.matchedSkill}` : 'Bifat in CV'}</span>
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200/80 flex items-center gap-1">
+                                <BookOpen className="w-3 h-3 text-amber-600" />
+                                <span>Lipseste din CV</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                    {displayBenefits.length} Beneficii
-                  </span>
-                </div>
+                )}
 
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {displayBenefits.map((ben, idx) => (
-                    <li key={idx} className="bg-white/80 p-2.5 rounded-xl border border-emerald-100 text-xs font-semibold text-emerald-950 flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>{ben}</span>
-                    </li>
-                  ))}
-                </ul>
+                {/* CUNOSTINTE BONUS / AVANTAJE (NICE-TO-HAVE) */}
+                {effectiveBonusRequirements.length > 0 && (
+                  <div className="bg-white border border-neutral-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-3.5">
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-neutral-100 text-neutral-800">
+                          <Award className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-mono font-bold text-neutral-950 uppercase tracking-wider flex items-center gap-1.5">
+                            <span>Cunostinte Bonus & Avantaje (Nice-to-Have)</span>
+                            <Sparkles className="w-3.5 h-3.5 text-neutral-400" />
+                          </h4>
+                          <span className="text-[11px] text-neutral-500 font-medium">
+                            Cunostinte care nu sunt eliminatorii, dar iti ofera un avantaj major la selectie
+                          </span>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/80">
+                        {effectiveBonusRequirements.length} Puncte Bonus
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {effectiveBonusRequirements.map((bonus, idx) => (
+                        <div 
+                          key={idx}
+                          className={`p-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                            bonus.isMatched 
+                              ? 'bg-emerald-50/30 border-emerald-200/70' 
+                              : 'bg-neutral-50/40 border-neutral-200/60'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 flex-1">
+                            <Sparkles className={`w-4 h-4 shrink-0 mt-0.5 ${bonus.isMatched ? 'text-emerald-600' : 'text-neutral-400'}`} />
+                            <span className="text-xs sm:text-sm font-medium text-neutral-800 leading-snug">
+                              {bonus.text}
+                            </span>
+                          </div>
+
+                          {bonus.isMatched && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/90 flex items-center gap-1 shrink-0 self-start sm:self-center">
+                              <Check className="w-3 h-3 text-emerald-600" />
+                              <span>{bonus.matchedSkill ? `Bonus Bifat: ${bonus.matchedSkill}` : 'Bonus Bifat in Profil!'}</span>
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* RESPONSABILITATI PRINCIPALE */}
+                {displayResponsibilities && displayResponsibilities.length > 0 && (
+                  <div className="bg-white border border-neutral-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-3.5">
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-neutral-100 text-neutral-800">
+                          <Briefcase className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-mono font-bold text-neutral-950 uppercase tracking-wider flex items-center gap-2">
+                            <span>Ce Vei Face in Acest Rol (Responsabilitati)</span>
+                            {aiAnalysisData?.responsibilities?.length > 0 && (
+                              <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-neutral-100 text-neutral-800 border border-neutral-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                <Bot className="w-3 h-3 text-neutral-700" />
+                                AI Extracted
+                              </span>
+                            )}
+                          </h4>
+                          <span className="text-[11px] text-neutral-500 font-medium">
+                            Activitatile tale zilnice si proiectele din cadrul echipei
+                          </span>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/80">
+                        {displayResponsibilities.length} Activitati
+                      </span>
+                    </div>
+
+                    <ul className="space-y-2">
+                      {displayResponsibilities.map((resp, idx) => (
+                        <li key={idx} className="p-2.5 rounded-xl bg-neutral-50/50 border border-neutral-100 flex items-start gap-2.5 text-xs sm:text-sm text-neutral-800 leading-relaxed">
+                          <div className="w-1.5 h-1.5 rounded-full bg-neutral-950 shrink-0 mt-2"></div>
+                          <span>{resp}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* BENEFICII & OFERTA */}
+                {displayBenefits && displayBenefits.length > 0 && (
+                  <div className="bg-white border border-neutral-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-3.5">
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-neutral-100 text-neutral-800">
+                          <Gift className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-mono font-bold text-neutral-950 uppercase tracking-wider flex items-center gap-2">
+                            <span>Ce Iti Ofera Compania (Beneficii & Pachet)</span>
+                            {aiAnalysisData?.benefits?.length > 0 && (
+                              <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-neutral-100 text-neutral-800 border border-neutral-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                <Bot className="w-3 h-3 text-neutral-700" />
+                                AI Extracted
+                              </span>
+                            )}
+                          </h4>
+                          <span className="text-[11px] text-neutral-500 font-medium">
+                            Perks, asigurare, dezvoltare profesionala si conditii de lucru
+                          </span>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/80">
+                        {displayBenefits.length} Beneficii
+                      </span>
+                    </div>
+
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {displayBenefits.map((ben, idx) => (
+                        <li key={idx} className="bg-neutral-50/60 p-3 rounded-xl border border-neutral-200/70 text-xs font-medium text-neutral-800 flex items-center gap-2.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>{ben}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* FALLBACK DACA NU S-A PUTUT STRUCTURA NICIO SECTIUNE */}
+                {(!parsedDescription.mandatoryRequirements.length &&
+                  (!aiAnalysisData?.mandatory || !aiAnalysisData.mandatory.length) &&
+                  !parsedDescription.bonusRequirements.length &&
+                  (!aiAnalysisData?.bonus || !aiAnalysisData.bonus.length) &&
+                  !displayResponsibilities.length &&
+                  !displayBenefits.length) && (
+                  <div className="bg-neutral-50/60 border border-neutral-200/80 rounded-2xl p-6 leading-relaxed">
+                    {formatDescription(currentJob.rawDescription)}
+                  </div>
+                )}
+
               </div>
-            )}
 
-            {/* FALLBACK DACA NU S-A PUTUT STRUCTURA NICIO SECTIUNE */}
-            {(!parsedDescription.mandatoryRequirements.length &&
-              (!aiAnalysisData?.mandatory || !aiAnalysisData.mandatory.length) &&
-              !parsedDescription.bonusRequirements.length &&
-              (!aiAnalysisData?.bonus || !aiAnalysisData.bonus.length) &&
-              !displayResponsibilities.length &&
-              !displayBenefits.length) && (
-              <div className="bg-gray-50/80 border border-gray-200 rounded-3xl p-6 leading-relaxed">
-                {formatDescription(currentJob.rawDescription)}
-              </div>
-            )}
+            </>
+          )}
 
-          </div>
-
-          </>
-        )}
-
-      </div>
+        </div>
 
         {/* FOOTER FIX CU ACTIUNI RAPIDE */}
-        <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
-          <div className="flex items-center gap-2 text-xs text-gray-500 font-semibold text-center sm:text-left flex-wrap">
-            <span>Platforma: <strong className="text-gray-900">{isGmailJob ? 'Gmail Sync' : (currentJob.sourcePlatform || 'DIRECT')}</strong></span>
+        <div className="p-4 sm:p-5 bg-white/95 border-t border-neutral-200/80 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
+          <div className="flex items-center gap-2 text-xs text-neutral-500 font-medium text-center sm:text-left flex-wrap">
+            <span className="font-mono">Platforma: <strong className="text-neutral-950 font-bold">{isGmailJob ? 'Gmail Sync' : (currentJob.sourcePlatform || 'DIRECT')}</strong></span>
             {(currentJob.appliedDate || emailData?.date) && (
               <>
                 <span>•</span>
-                <span className="inline-flex items-center gap-1 text-gray-700 font-bold">
-                  <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                <span className="inline-flex items-center gap-1 text-neutral-700 font-mono font-bold">
+                  <Calendar className="w-3.5 h-3.5 text-neutral-400" />
                   <span>{currentJob.appliedDate || emailData?.date}</span>
                 </span>
               </>
@@ -1519,7 +1512,7 @@ export default function JobDetailModal({
                   onOpenCoverLetter(currentJob);
                   onClose();
                 }}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border border-neutral-200 bg-neutral-100 hover:bg-neutral-200 text-neutral-900"
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200/80 text-neutral-900 active:scale-95"
                 title="Genereaza Scrisoare de Intentie AI pentru acest rol"
               >
                 <FileSignature className="w-3.5 h-3.5 text-neutral-800 shrink-0" />
@@ -1531,15 +1524,15 @@ export default function JobDetailModal({
               <button
                 onClick={() => onSaveToKanban(currentJob)}
                 disabled={isSaved || isSaving}
-                className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer border ${
+                className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border active:scale-95 ${
                   isSaved 
-                    ? 'bg-neutral-100 text-neutral-900 border-neutral-300' 
+                    ? 'bg-neutral-100 text-neutral-700 border-neutral-200/90' 
                     : 'bg-white hover:bg-neutral-100 text-neutral-900 border-neutral-300'
                 }`}
               >
                 {isSaved ? (
                   <>
-                    <CheckCircle2 className="w-4 h-4 text-black shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-neutral-950 shrink-0" />
                     <span>Aplicat in Tracker</span>
                   </>
                 ) : (
@@ -1556,7 +1549,7 @@ export default function JobDetailModal({
                 href={currentJob.directApplyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 sm:flex-none px-5 py-2.5 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                className="flex-1 sm:flex-none px-5 py-2.5 bg-neutral-950 hover:bg-neutral-800 text-white rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xs"
               >
                 <span>Aplica Oficial</span>
                 <ArrowUpRight className="w-4 h-4 shrink-0" />
