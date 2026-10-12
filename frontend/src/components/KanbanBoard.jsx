@@ -30,6 +30,20 @@ import {
 import JobDetailModal from './JobDetailModal';
 import GmailSyncModal from './GmailSyncModal';
 import CalendarView from './CalendarView';
+import {
+  SearchIcon,
+  Trash2Icon,
+  SparklesIcon,
+  FileSignatureIcon,
+  EyeIcon,
+  PlusIcon,
+  CalendarIcon,
+  RefreshCwIcon,
+  CheckCircle2Icon,
+  SendIcon,
+  MailIcon
+} from './animated-icons';
+
 
 export const isAppGmail = (app) => {
   if (!app) return false;
@@ -590,7 +604,7 @@ export default function KanbanBoard({
                 title="Sterge din Tracker"
                 className="p-1 rounded-md text-neutral-300 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shrink-0 opacity-0 group-hover:opacity-100 active:scale-95"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2Icon size={14} className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -637,7 +651,7 @@ export default function KanbanBoard({
                 className="p-1.5 rounded-lg text-neutral-400 hover:text-black hover:bg-neutral-100 transition-all cursor-pointer active:scale-95"
                 title="Genereaza Scrisoare de Intentie AI"
               >
-                <FileSignature className="w-3.5 h-3.5" />
+                <FileSignatureIcon size={14} className="w-3.5 h-3.5" />
               </button>
             )}
             <button
@@ -650,7 +664,7 @@ export default function KanbanBoard({
               className="p-1.5 rounded-lg text-neutral-400 hover:text-black hover:bg-neutral-100 transition-all cursor-pointer active:scale-95"
               title="Deschide fisa detaliata a jobului"
             >
-              <Eye className="w-3.5 h-3.5" />
+              <EyeIcon size={14} className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -684,7 +698,7 @@ export default function KanbanBoard({
 
           {/* SEARCH BAR IMMEDIATELY NEXT TO TRACKER NAME */}
           <div className="relative flex-1 max-w-xs sm:max-w-sm">
-            <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <SearchIcon size={14} className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input 
               type="text" 
               placeholder="Cauta companie, titlu, locatie..."
@@ -764,7 +778,7 @@ export default function KanbanBoard({
               className="px-3 py-1.5 bg-neutral-950 hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer shrink-0 active:scale-95 border border-neutral-900 group"
               title="Adauga un job nou manual in tracker"
             >
-              <Plus className="w-3.5 h-3.5 transition-transform group-hover:rotate-90" />
+              <PlusIcon size={14} className="w-3.5 h-3.5" />
               <span>Adauga Job</span>
             </button>
           )}
