@@ -16,6 +16,7 @@ import {
   Server, 
   Database, 
   ShieldCheck, 
+  CheckCircle2, 
   Layers, 
   Layout, 
   Smartphone, 
