@@ -1,99 +1,155 @@
-# 🚀 AI-Powered Job Tracker & ATS Matcher Engine
+# 🚀 JobFlow AI — Job Tracker & ATS Matcher
 
 ![Java 21](https://img.shields.io/badge/Java-21-orange.svg)
 ![Spring Boot 3.3](https://img.shields.io/badge/Spring%20Boot-3.3.2-brightgreen.svg)
+![React 18](https://img.shields.io/badge/React-18-61dafb.svg)
 ![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16%20%2B%20pgvector-blue.svg)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-> **Sistem Backend Enterprise** conceput pentru gestionarea eficientă a aplicațiilor de angajare, extragerea automată a textului din CV-uri PDF cu Apache Tika, căutarea semantică vectorială prin `pgvector` și generarea asincronă de rapoarte AI Gap Analysis și planuri de acțiune.
+> Platformă full-stack pentru candidații IT din România: agregă joburi de pe principalele site-uri de recrutare, calculează un scor ATS realist între CV și anunț, urmărește aplicațiile într-un Kanban și oferă unelte AI pentru CV, scrisori de intenție, LinkedIn, outreach și pregătirea interviurilor.
 
 ---
 
-## 🏗️ Arhitectura Sistemului
+## ✨ Funcționalități
+
+**Căutare și piață**
+* **Agregator de joburi multi-platformă** — scrapere pentru LinkedIn, eJobs, BestJobs, Hipo, DevJob.ro, Juniors.ro, UndeLucram, StagiiPeBune și listele GitHub cu joburi tech pentru juniori. Rulează în paralel pe Virtual Threads (Java 21), cu timeout per platformă, deduplicare între site-uri și crawling diferențial. Refresh automat la pornire și apoi la fiecare oră.
+* **Istoric de modificări pe joburi** — anunțurile trec printr-o tabelă de staging; schimbările de câmpuri sunt salvate, iar joburile vechi sunt marcate ca expirate.
+* **Market Insights** — cerințele reale ale pieței grupate pe domenii, cu frecvența skill-urilor și match-ul cu CV-ul tău.
+* **Daily Job Digest** — selecție zilnică (09:00) de joburi filtrate după scor, locație și nivel junior, trimisă pe Discord sau Telegram (canalul de email e deocamdată doar simulat).
+
+**Aplicații și analiză**
+* **Tracker Kanban** — pipeline de aplicații cu status, notițe, CV asociat, vizualizare calendar și dashboard de statistici.
+* **Scor ATS realist** (`JobAtsMatchEngine`) — evaluare pe piloni (hard skills, similaritate semantică, experiență), cu penalizare pentru roluri mid/senior când profilul e junior.
+* **AI Gap Analysis asincron** — la crearea unei aplicații, un eveniment procesat `@Async` după commit generează raportul de gap și planul de acțiune, fără să blocheze request-ul HTTP.
+* **Career Analytics** — funnel de conversie cu diagnostic, plus gamificare (quest-uri săptămânale, badge-uri).
+* **Sincronizare Gmail** — citește inbox-ul prin IMAP și actualizează automat statusul aplicațiilor (respingere, interviu, ofertă). Clasificarea e deterministă, iar AI-ul e folosit doar pentru un număr limitat de emailuri ambigue.
+
+**Documente și branding**
+* **Bibliotecă de CV-uri** — upload PDF/DOCX cu extragere de text prin Apache Tika (+ Tesseract OCR în Docker pentru PDF-uri scanate), parsare deterministă în profil structurat, mai multe CV-uri per utilizator, CV principal.
+* **CV Studio** — editor vizual, optimizare/tailoring pe un job anume, rescriere de bullet-uri și export PDF.
+* **Generator de scrisori de intenție** personalizat pe cerințele jobului.
+* **LinkedIn Optimizer** — import din PDF-ul exportat de LinkedIn, scor de profil pe 6 dimensiuni, headline-uri propuse, query-uri booleene de recruiter și sincronizare cu CV-ul.
+* **Outreach CRM** — mesaje de contact pentru recruiteri (sub limita de 300 de caractere a LinkedIn) și cadență de follow-up.
+* **GitHub README Studio** — generator de profil README pentru GitHub.
+
+**Pregătire și comunitate**
+* **Skill Roadmap** — trasee de învățare pe skill-uri, cu proiect capstone care poate fi adăugat direct în CV.
+* **Pregătire interviuri** — flashcard-uri tip Anki (Java, Spring, SQL, React, Python, System Design, DevOps, Cloud, ML/AI, Testing, Design Patterns) și întrebări HR.
+* **Feedback & Roadmap comunitar** — trimitere de feedback și idei votate de utilizatori.
+
+---
+
+## 🏗️ Arhitectură
 
 ```mermaid
 graph TD
-    Client[REST Client / Postman / Swagger UI] -->|HTTP / REST JSON| Controller[Controller Layer: @RestController]
-    Controller -->|DTO Records| Service[Service Layer: Logica de Business]
-    
-    subgraph Data Layer
-        Service -->|Entities| Repository[Spring Data JPA Repositories]
-        Repository -->|SQL Queries| DB[(PostgreSQL + pgvector)]
+    UI[React SPA / Vite + Tailwind] -->|/api proxy| Controller[REST Controllers /api/v1]
+    Controller --> Service[Servicii]
+    Service --> Repo[Spring Data JPA]
+    Repo --> DB[(PostgreSQL 16 + pgvector)]
+
+    subgraph Agregare joburi
+        Scheduler[@Scheduled hourly] --> Orchestrator[JobScraperOrchestrator - Virtual Threads]
+        Orchestrator --> Scrapers[Scrapere per platformă]
+        Orchestrator --> Ingestion[JobIngestionService: staging + changes]
+        Ingestion --> DB
     end
 
-    subgraph Async & AI Engine
-        Service -->|Event: ApplicationCreatedEvent| EventPublisher[ApplicationEventPublisher]
-        EventPublisher -->|Async Pool| Listener[ApplicationEventListener: @Async AFTER_COMMIT]
-        Listener -->|1. PDF Parsing| Tika[Apache Tika Text Extractor]
-        Listener -->|2. Vector Distance Search| PGVector[pgvector Cosine Distance Query]
-        Listener -->|3. Gap Report| Coach[AI Career Coach Agent]
+    subgraph Procesare asincronă
+        Service -->|ApplicationCreatedEvent| Listener[@Async AFTER_COMMIT]
+        Listener --> Gap[AiGapAnalysisService]
     end
 
-    Coach -->|Markdown Action Plan| DB
+    Service --> LLM[Groq API - OpenAI compatibil]
+    Service --> Tika[Apache Tika + OCR]
+    Service --> Mail[IMAP Gmail / SMTP / Discord / Telegram]
 ```
 
----
-
-## ✨ Caracteristici Cheie
-
-* **PDF Text Extraction Engine:** Extragerea automată a textului din fișiere PDF/Word încărcate folosind **Apache Tika**.
-* **Vector Embeddings & Semantic Search:** Stocarea vectorilor în PostgreSQL și calculul instant al similarității semantice dintre CV și descrierea jobului prin operatorul Cosine Distance (`<=>`) din **`pgvector`** și indecși **HNSW**.
-* **Arhitectură Event-Driven Asincronă:** Procesarea analizelor AI în fundal prin `@Async` și `@TransactionalEventListener(phase = AFTER_COMMIT)` fără a bloca firul principal HTTP (răspunsuri REST sub 50ms).
-* **Spring Boot 3 & Java 21 Records:** Utilizarea DTO-urilor imutabile moderne, validare declarativă cu Jakarta Validation și arhitectură pe straturi (Controller-Service-Repository).
-* **Tratarea Globală a Erorilor (RFC-7807):** Răspunsuri de eroare standardizate de tip `ProblemDetail`.
-* **Automated CI/CD Pipeline:** Pipeline integrat în **GitHub Actions** care execută automat testele la fiecare `git push`.
-* **OpenAPI / Swagger UI:** Interfață vizuală interactivă pentru testarea API-urilor direct din browser.
+* **Backend:** arhitectură pe straturi Controller → Service → Repository, DTO-uri ca Java records, erori standardizate RFC-7807 (`ProblemDetail`), schema gestionată de Flyway.
+* **LLM:** apelurile merg la Groq (endpoint compatibil OpenAI), cu fallback automat între mai multe modele. Fără cheie API, aplicația funcționează în continuare cu rezultate deterministe/euristice.
+* **Similaritate semantică:** vectori de 384 de dimensiuni stocați în `pgvector` și comparați cu operatorul de cosine distance (`<=>`). Embedding-urile sunt calculate local (hashing pe cuvinte), fără model extern.
+* **Frontend:** React 18 + Vite + Tailwind + Framer Motion; iconițele `lucide-react` sunt animate printr-un proxy configurat în `vite.config.js`. În Docker, nginx servește SPA-ul și face proxy pe `/api` către backend.
 
 ---
 
-## 🛠️ Stack Tehnologic
+## 🛠️ Stack tehnologic
 
-* **Core:** Java 21, Spring Boot 3.3.2
-* **Persistence & DB:** Spring Data JPA, Hibernate 6, PostgreSQL 16, `pgvector`, Flyway Migrations
-* **AI & Document Parsing:** Apache Tika 2.9.2, PGVector Cosine Similarity
-* **Testing & Tools:** JUnit 5, Mockito, Lombok, Docker, Docker Compose
-* **Documentation & CI/CD:** SpringDoc OpenAPI 3.0, GitHub Actions
+* **Backend:** Java 21, Spring Boot 3.3.2, Spring Security + JWT, Spring Mail, Lombok
+* **Persistență:** Spring Data JPA, Hibernate 6, PostgreSQL 16, `pgvector`, Flyway
+* **AI și parsare:** Groq API, Apache Tika 2.9.2, Tesseract OCR, Jsoup
+* **Frontend:** React 18, Vite 6, Tailwind CSS, Framer Motion, Axios, html2pdf.js
+* **Testare și tooling:** JUnit 5, Mockito, Docker Compose, GitHub Actions, SpringDoc OpenAPI
 
 ---
 
-## 🚦 Ghid de Rulare Quickstart
+## 🚦 Rulare locală
 
-### 1. Prerechizite
-* Java 21 JDK instalat
-* Docker & Docker Desktop pornit
+### Prerechizite
+* Java 21 JDK, Maven
+* Node.js 20+ (pentru frontend)
+* Docker
 
-### 2. Pornirea Bazei de Date cu Docker Compose
+### Configurare
 ```bash
-docker compose up -d
+cp .env.example .env
 ```
+Completează în `.env` cheia `SPRING_AI_GROQ_API_KEY` pentru funcționalitățile AI (opțional). Pentru notificările pe email (feedback) setează `SPRING_MAIL_USERNAME` / `SPRING_MAIL_PASSWORD`.
 
-### 3. Pornirea Aplicației Spring Boot
+### Varianta 1 — totul în Docker
 ```bash
+docker compose up -d --build
+```
+* Frontend: http://localhost:3000
+* Backend: http://localhost:8080
+
+### Varianta 2 — dezvoltare
+```bash
+# Baza de date
+docker compose up -d postgres
+
+# Backend (Flyway creează schema și utilizatorul demo)
 mvn spring-boot:run
+
+# Frontend (port 3000, proxy /api -> localhost:8080)
+cd frontend
+npm install
+npm run dev
 ```
-*Flyway va crea automat schema bazei de date și va insera utilizatorul demo.*
 
 ---
 
-## 📖 Documentația API Interactive (Swagger UI)
+## 📖 API
 
-După ce aplicația a pornit, accesează în browser interfața vizuală Swagger UI:
-👉 **[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)**
+Documentația interactivă e disponibilă în Swagger UI: **http://localhost:8080/swagger-ui.html**. Exemple de request-uri se găsesc în `requests.http`.
 
-### Endpoints Principale:
-* `POST /api/v1/jobs` — Salvează un job nou
-* `POST /api/v1/resumes` — Încarcă un CV în format PDF/DocX (Multipart)
-* `POST /api/v1/applications` — Creează o aplicație nouă și declanșează procesarea asincronă AI
-* `POST /api/v1/applications/{id}/analysis` — Generează raportul AI Gap Analysis
+| Prefix | Descriere |
+|---|---|
+| `/api/v1/auth` | Înregistrare și login (JWT) |
+| `/api/v1/applications` | Aplicații Kanban: status, notițe, CV asociat |
+| `/api/v1/applications/{id}/analysis`, `/api/v1/ai/*` | Gap analysis, diagnostic ATS, rescriere bullet-uri, match job |
+| `/api/v1/jobs` | Căutare agregată, detalii, istoric modificări, salvare în Kanban, sincronizare live, status crawlere |
+| `/api/v1/resumes`, `/api/v1/cv` | Upload CV-uri și profiluri CV structurate |
+| `/api/v1/cover-letter`, `/api/v1/github-readme` | Generatoare de documente |
+| `/api/v1/linkedin` | Import PDF și optimizare profil LinkedIn |
+| `/api/v1/outreach` | Mesaje și cadență de outreach |
+| `/api/v1/market-insights` | Statistici de piață pe domenii |
+| `/api/v1/career` | Analytics și gamificare |
+| `/api/v1/roadmap` | Roadmap-uri de skill-uri |
+| `/api/v1/digest` | Setări, preview și trimitere digest zilnic |
+| `/api/v1/integrations/gmail` | Sincronizare Gmail |
+| `/api/v1/feedback` | Feedback și idei comunitare |
 
 ---
 
-## 🧪 Rularea Testelor Automate
+## 🧪 Teste
 
 ```bash
-mvn clean test
+mvn clean test                                  # toate testele (rulează și în CI)
+mvn test -Dtest=JobAtsMatchEngineTest           # o singură clasă
 ```
+Testele sunt unit tests JUnit 5 + Mockito și nu au nevoie de baza de date. Pipeline-ul GitHub Actions rulează la fiecare push și pull request pe `main`.
 
 ---
 
