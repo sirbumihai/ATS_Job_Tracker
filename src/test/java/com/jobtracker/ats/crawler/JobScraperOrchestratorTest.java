@@ -3,6 +3,9 @@ package com.jobtracker.ats.crawler;
 import com.jobtracker.ats.dto.UnifiedJobListingDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.convert.ApplicationConversionService;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.env.MapPropertySource;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -169,5 +172,93 @@ class JobScraperOrchestratorTest {
 
         PlatformScrapeResult report = orchestrator.getLastExecutionReports().get(0);
         assertEquals("FAILED", report.status());
+    }
+
+    @Test
+    @DisplayName("Platformele din app.crawler.disabled-platforms nu sunt rulate")
+    void testDisabledPlatformsAreSkipped() {
+        JobScraper enabled = new JobScraper() {
+            @Override
+            public String getPlatformName() {
+                return "ENABLED_PLATFORM";
+            }
+
+            @Override
+            public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
+                freshList.add(createJob("j30", "Java Developer", "Acme", "ENABLED_PLATFORM"));
+            }
+        };
+
+        JobScraper disabled = new JobScraper() {
+            @Override
+            public String getPlatformName() {
+                return "DISABLED_PLATFORM";
+            }
+
+            @Override
+            public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
+                fail("Platforma dezactivată nu trebuie rulată");
+            }
+        };
+
+        // Configurarea nu ține cont de majuscule și ignoră spațiile
+        JobScraperOrchestrator orchestrator = new JobScraperOrchestrator(
+                List.of(enabled, disabled), Set.of(" disabled_platform ", ""), 30);
+
+        assertEquals(List.of("ENABLED_PLATFORM"), orchestrator.getActivePlatforms());
+        List<UnifiedJobListingDto> results = orchestrator.scrapeAll(Collections.emptySet());
+        assertEquals(1, results.size());
+        assertEquals(1, orchestrator.getLastExecutionReports().size());
+    }
+
+    static class NamedScraper implements JobScraper {
+        private final String name;
+
+        NamedScraper(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getPlatformName() {
+            return name;
+        }
+
+        @Override
+        public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
+        }
+    }
+
+    @Test
+    @DisplayName("Configurarea din application.yml (listă separată prin virgulă) se leagă corect în contextul Spring")
+    void testSpringBindsCrawlerProperties() {
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext()) {
+            ctx.getBeanFactory().setConversionService(ApplicationConversionService.getSharedInstance());
+            ctx.getEnvironment().getPropertySources().addFirst(new MapPropertySource("test", Map.of(
+                    "app.crawler.disabled-platforms", "LINKEDIN, ejobs",
+                    "app.crawler.scraper-timeout-seconds", "45")));
+            ctx.registerBean("linkedin", JobScraper.class, () -> new NamedScraper("LINKEDIN"));
+            ctx.registerBean("ejobs", JobScraper.class, () -> new NamedScraper("EJOBS"));
+            ctx.registerBean("hipo", JobScraper.class, () -> new NamedScraper("HIPO"));
+            ctx.register(JobScraperOrchestrator.class);
+            ctx.refresh();
+
+            assertEquals(List.of("HIPO"), ctx.getBean(JobScraperOrchestrator.class).getActivePlatforms());
+        }
+    }
+
+    @Test
+    @DisplayName("Fără configurare, toate platformele rămân active")
+    void testSpringDefaultsKeepAllPlatforms() {
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext()) {
+            ctx.getBeanFactory().setConversionService(ApplicationConversionService.getSharedInstance());
+            ctx.getEnvironment().getPropertySources().addFirst(new MapPropertySource("test", Map.of(
+                    "app.crawler.disabled-platforms", "")));
+            ctx.registerBean("linkedin", JobScraper.class, () -> new NamedScraper("LINKEDIN"));
+            ctx.registerBean("hipo", JobScraper.class, () -> new NamedScraper("HIPO"));
+            ctx.register(JobScraperOrchestrator.class);
+            ctx.refresh();
+
+            assertEquals(Set.of("LINKEDIN", "HIPO"), Set.copyOf(ctx.getBean(JobScraperOrchestrator.class).getActivePlatforms()));
+        }
     }
 }

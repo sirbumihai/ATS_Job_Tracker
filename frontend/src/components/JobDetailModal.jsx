@@ -992,7 +992,9 @@ export default function JobDetailModal({
                     Competitie
                   </span>
                   <p className="text-xs sm:text-sm font-extrabold text-neutral-950 truncate">
-                    {currentJob.applicantCountText ? currentJob.applicantCountText.replace(/[()]/g, '').trim() : 'Estimare Normala'}
+                    {currentJob.applicantCountText
+                      ? currentJob.applicantCountText.replace(/[()]/g, '').trim()
+                      : (currentJob.competitivenessLabel || 'Nespecificat')}
                   </p>
                 </div>
               </div>

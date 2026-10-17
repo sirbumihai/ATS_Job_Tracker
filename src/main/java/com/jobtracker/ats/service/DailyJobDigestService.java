@@ -6,6 +6,7 @@ import com.jobtracker.ats.dto.digest.DigestSettingsDto;
 import com.jobtracker.ats.dto.digest.DigestTestRequest;
 import com.jobtracker.ats.entity.CachedJobListing;
 import com.jobtracker.ats.repository.CachedJobListingRepository;
+import com.jobtracker.ats.service.JobAtsMatchEngine.AtsMatchResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,6 +28,9 @@ public class DailyJobDigestService {
 
     private final CachedJobListingRepository cachedJobListingRepository;
     private final RestClient.Builder restClientBuilder;
+    private final JobAtsMatchEngine jobAtsMatchEngine;
+
+    private record ScoredJob(CachedJobListing job, int score) {}
 
     // In-memory user settings for daily digest
     private final AtomicReference<DigestSettingsDto> currentSettings = new AtomicReference<>(
@@ -62,11 +66,16 @@ public class DailyJobDigestService {
         DigestSettingsDto settings = currentSettings.get();
         List<CachedJobListing> allJobs = cachedJobListingRepository.findAllOrderedByRecency();
 
+        // Scorul ATS real, calculat față de CV-ul candidatului (nu cel salvat la scraping)
+        String cvLower = jobAtsMatchEngine.getCandidateCvText(null).toLowerCase();
+
         List<DigestJobItemDto> matched = allJobs.stream()
                 .filter(job -> filterJobForDigest(job, settings))
-                .sorted(Comparator.comparingDouble(CachedJobListing::getAtsMatchScore).reversed())
+                .map(job -> new ScoredJob(job, calculateScore(job, cvLower)))
+                .filter(sj -> sj.score() >= settings.minMatchScore())
+                .sorted(Comparator.comparingInt(ScoredJob::score).reversed())
                 .limit(settings.maxJobsCount() > 0 ? settings.maxJobsCount() : 5)
-                .map(this::mapToDigestItem)
+                .map(sj -> mapToDigestItem(sj.job(), sj.score()))
                 .collect(Collectors.toList());
 
         // Fallback demo items if database has very few jobs matching criteria
@@ -217,12 +226,6 @@ public class DailyJobDigestService {
     private boolean filterJobForDigest(CachedJobListing job, DigestSettingsDto settings) {
         if (job == null) return false;
 
-        // Score filter
-        double score = job.getAtsMatchScore() > 0 ? job.getAtsMatchScore() : 75.0;
-        if (score < settings.minMatchScore()) {
-            return false;
-        }
-
         // Location filter (Romania or Remote)
         if (settings.onlyRomania()) {
             String loc = (job.getLocation() != null ? job.getLocation().toLowerCase() : "") + " " +
@@ -245,20 +248,25 @@ public class DailyJobDigestService {
         return true;
     }
 
-    private DigestJobItemDto mapToDigestItem(CachedJobListing j) {
-        List<String> skills = new ArrayList<>();
-        if (j.getSkillsRequired() != null && !j.getSkillsRequired().isBlank()) {
-            skills = Arrays.stream(j.getSkillsRequired().split("[,;|]"))
-                    .map(String::trim)
-                    .filter(s -> !s.isBlank())
-                    .limit(5)
-                    .collect(Collectors.toList());
-        }
+    private int calculateScore(CachedJobListing job, String cvLower) {
+        AtsMatchResult result = jobAtsMatchEngine.evaluateAtsMatch(job.getExperienceLevel(), splitSkills(job.getSkillsRequired()), cvLower);
+        return (int) Math.round(result.finalScore());
+    }
+
+    private static List<String> splitSkills(String skills) {
+        if (skills == null || skills.isBlank()) return List.of();
+        return Arrays.stream(skills.split("[,;|]"))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toList());
+    }
+
+    private DigestJobItemDto mapToDigestItem(CachedJobListing j, int score) {
+        List<String> skills = splitSkills(j.getSkillsRequired()).stream().limit(5).collect(Collectors.toList());
         if (skills.isEmpty()) {
             skills = List.of("Java", "Spring Boot", "SQL", "Git");
         }
 
-        int score = j.getAtsMatchScore() > 0 ? (int) Math.round(j.getAtsMatchScore()) : 86;
         String encodedComp = URLEncoder.encode(j.getCompanyName() != null ? j.getCompanyName() : "Company", StandardCharsets.UTF_8);
         String hook = "https://www.linkedin.com/search/results/people/?keywords=Recruiter%20" + encodedComp;
 

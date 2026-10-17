@@ -589,8 +589,12 @@ public class JobSearchService {
         Optional<CvProfile> primaryCv = cvProfileRepository.findFirstByUserIdAndIsPrimaryTrue(userId)
                 .or(() -> cvProfileRepository.findFirstByUserIdOrderByUpdatedAtDesc(userId));
 
-        BigDecimal score = BigDecimal.valueOf(jobDto.atsMatchScore() > 0 ? jobDto.atsMatchScore() : 94.5)
-                .setScale(1, RoundingMode.HALF_UP);
+        double rawScore = jobDto.atsMatchScore();
+        if (rawScore <= 0) {
+            String cvLower = jobAtsMatchEngine.getCandidateCvText(userId).toLowerCase();
+            rawScore = jobAtsMatchEngine.evaluateAtsMatch(jobDto.experienceLevel(), jobDto.skillsRequired(), cvLower).finalScore();
+        }
+        BigDecimal score = BigDecimal.valueOf(rawScore).setScale(1, RoundingMode.HALF_UP);
 
         Application application = Application.builder()
                 .user(user)
