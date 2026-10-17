@@ -580,6 +580,62 @@ public final class JobNormalizationUtils {
         };
     }
 
+    // Valori neutre pentru câmpurile pe care sursa nu le publică (nu inventăm date)
+    public static final String UNKNOWN_COMPANY = "Companie nespecificată";
+    public static final String UNKNOWN_SALARY = "Salariu nespecificat";
+    public static final String UNKNOWN_LOCATION = "România";
+    public static final String UNKNOWN_POSTED_DATE = "Dată nespecificată";
+
+    /**
+     * Cheia de deduplicare titlu + companie. Când compania nu e cunoscută, cheia include URL-ul,
+     * altfel joburi diferite cu același titlu ar fi comasate între ele.
+     */
+    public static String dedupKey(String title, String company, String url) {
+        String key = normalizeForDedup(title) + "::" + normalizeForDedup(company);
+        if (company == null || company.isBlank() || UNKNOWN_COMPANY.equals(company)) {
+            key += "::" + (url != null ? url : "");
+        }
+        return key;
+    }
+
+    /**
+     * ID stabil derivat din URL: același anunț primește același ID la fiecare rulare.
+     */
+    public static String stableId(String url) {
+        String hash = computeContentHash(url, null, null, null, null, null);
+        return hash.length() > 16 ? hash.substring(0, 16) : hash;
+    }
+
+    public static int daysSince(OffsetDateTime postedAt) {
+        if (postedAt == null) return -1;
+        long diff = java.time.temporal.ChronoUnit.DAYS.between(postedAt.toLocalDate(), LocalDate.now());
+        return (int) Math.max(0, diff);
+    }
+
+    public static String formatPostedAgo(int daysAgo) {
+        if (daysAgo < 0) return UNKNOWN_POSTED_DATE;
+        if (daysAgo == 0) return "Astăzi";
+        if (daysAgo == 1) return "Ieri";
+        return daysAgo + " zile în urmă";
+    }
+
+    /**
+     * Rezumat neutru pentru sursele care nu publică descrierea în listă. Conține doar ce s-a citit din anunț.
+     */
+    public static String listingSummary(String source, String title, String company, String location, List<String> skills) {
+        StringBuilder sb = new StringBuilder("Anunț preluat de pe ").append(source).append(". Rol: ").append(title).append('.');
+        if (company != null && !company.isBlank() && !UNKNOWN_COMPANY.equals(company)) {
+            sb.append(" Companie: ").append(company).append('.');
+        }
+        if (location != null && !location.isBlank()) {
+            sb.append(" Locație: ").append(location).append('.');
+        }
+        if (skills != null && !skills.isEmpty()) {
+            sb.append(" Competențe identificate: ").append(String.join(", ", skills)).append('.');
+        }
+        return sb.toString();
+    }
+
     public static String normalizeForDedup(String text) {
         if (text == null) return "";
         return text.toLowerCase()

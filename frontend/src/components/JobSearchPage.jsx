@@ -1730,14 +1730,23 @@ export default function JobSearchPage({
                     className="flex items-start gap-3 cursor-pointer group/title"
                     title="Apasa pentru a deschide fisa completa a postului"
                   >
-                    <img 
-                      src={job.companyLogoUrl} 
-                      alt={job.companyName}
-                      className="w-12 h-12 rounded-xl object-cover bg-neutral-50 border border-neutral-200 shrink-0 shadow-2xs group-hover/title:scale-105 transition"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80';
-                      }}
-                    />
+                    {job.companyLogoUrl ? (
+                      <img
+                        src={job.companyLogoUrl}
+                        alt={job.companyName}
+                        className="w-12 h-12 rounded-xl object-cover bg-neutral-50 border border-neutral-200 shrink-0 shadow-2xs group-hover/title:scale-105 transition"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-12 h-12 rounded-xl bg-neutral-100 border border-neutral-200 text-neutral-900 items-center justify-center font-mono font-black text-lg shrink-0 shadow-2xs group-hover/title:scale-105 transition"
+                      style={{ display: job.companyLogoUrl ? 'none' : 'flex' }}
+                    >
+                      {(job.companyName || '?').trim().charAt(0).toUpperCase()}
+                    </div>
                     <div className="space-y-0.5 flex-1 min-w-0">
                       <h3 className="text-base font-bold text-neutral-950 leading-snug line-clamp-2 group-hover/title:text-neutral-700 transition tracking-tight">
                         {job.jobTitle}

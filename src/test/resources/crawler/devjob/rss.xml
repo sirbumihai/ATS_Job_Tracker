@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fixture construit pe baza formatului RSS citit de DevJobRoScraper (nu e un feed descărcat de pe site) -->
+<rss version="2.0">
+  <channel>
+    <title>DevJob.ro</title>
+    <item>
+      <title>Junior Java Developer @ Acme Software [5000-7000 RON]</title>
+      <link>https://devjob.ro/jobs/junior-java-developer-acme</link>
+      <description>&lt;p&gt;Lucrăm cu Java, Spring și Docker. Program remote.&lt;/p&gt;</description>
+      <pubDate>Wed, 14 Oct 2026 09:00:00 GMT</pubDate>
+      <guid>job-1001</guid>
+    </item>
+    <item>
+      <title>Python Developer @ Beta Tech</title>
+      <link>https://devjob.ro/jobs/python-developer-beta</link>
+      <description>Proiecte de date.</description>
+    </item>
+    <item>
+      <title>Sofer distributie @ Gamma Logistics</title>
+      <link>https://devjob.ro/jobs/sofer</link>
+      <guid>job-1003</guid>
+    </item>
+  </channel>
+</rss>

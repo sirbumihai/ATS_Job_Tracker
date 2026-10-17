@@ -3,7 +3,6 @@ package com.jobtracker.ats.crawler;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jobtracker.ats.dto.UnifiedJobListingDto;
-import com.jobtracker.ats.util.JobNormalizationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -14,7 +13,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -191,48 +189,20 @@ public class GitHubJuniorTechScraper implements JobScraper {
                 List<String> skills = extractSkills(title, category + " " + industries);
                 String extId = linkedinJobId != null ? linkedinJobId : String.valueOf(Math.abs(link.hashCode()));
 
-                String desc = String.format(
-                        "Oportunitate tehnică de debut (%s) la compania %s în cadrul programului european 2027. Categorie: %s. Locație: %s. Tech stack & domenii: %s. Aplicare directă pe platforma angajatorului.",
-                        level.equals("INTERNSHIP") ? "Internship" : "Graduate / Junior",
-                        company,
-                        category,
-                        location,
-                        String.join(", ", skills)
-                );
-
-                String logoUrl = getCompanyLogoUrl(company);
-                String contentHash = computeContentHash(title, company, desc, "Salariu Conform Anunț", String.join(",", skills), location);
-                OffsetDateTime now = OffsetDateTime.now();
-                OffsetDateTime postedAt = now.minusDays(3);
-
-                freshList.add(new UnifiedJobListingDto(
-                        "gh-eu-" + extId,
-                        title,
-                        company,
-                        logoUrl,
-                        location,
-                        workModel,
-                        level,
-                        PLATFORM_NAME,
-                        link,
-                        desc,
-                        "Salariu Conform Anunț",
-                        skills,
-                        Collections.emptyList(),
-                        Collections.emptyList(),
-                        "3 zile în urmă",
-                        96.0,
-                        "LOW",
-                        "Șansă Mare",
-                        "Sub 35 de candidați",
-                        3,
-                        extId,
-                        contentHash,
-                        postedAt,
-                        now,
-                        now,
-                        "ACTIVE"
-                ));
+                // Sursa nu publică data anunțului, așa că o lăsăm nespecificată
+                freshList.add(JobListingBuilder.of(PLATFORM_NAME, "gh-eu-")
+                        .externalId(extId)
+                        .title(title)
+                        .company(company)
+                        .logoUrl(getCompanyLogoUrl(company))
+                        .location(location)
+                        .workModel(workModel)
+                        .level(level)
+                        .applyUrl(link)
+                        .description(listingSummary("European Tech Opportunities 2027 (GitHub)", title, company, location, skills)
+                                + " Categorie: " + category + ".")
+                        .skills(skills)
+                        .build());
             }
         } catch (Exception e) {
             log.warn("[GITHUB CRAWLER] Eroare la parsarea European Tech JSON: {}", e.getMessage());
@@ -289,52 +259,19 @@ public class GitHubJuniorTechScraper implements JobScraper {
             List<String> skills = extractSkills(title, company);
             String extId = String.valueOf(Math.abs(directApplyUrl.hashCode()));
 
-            String desc = String.format(
-                    "Poziție de debut tech (%s) la %s identificată în repository-urile GitHub Early Careers. Locație deschisă: %s. Tehnologii principale: %s. Candidații din România și UE pot aplica direct.",
-                    level.equals("INTERNSHIP") ? "Internship / Trainee" : "Junior / Graduate",
-                    company,
-                    location,
-                    String.join(", ", skills)
-            );
-
-            String logoUrl = getCompanyLogoUrl(company);
-            String postedDateAgo = daysAgo == 0 ? "Astăzi" : daysAgo == 1 ? "Ieri" : daysAgo + " zile în urmă";
-            String compLevel = daysAgo <= 14 ? "LOW" : "MEDIUM";
-            String compLabel = daysAgo <= 14 ? "Șansă Mare" : "Competiție Medie";
-            String applicantText = daysAgo <= 14 ? "Sub 30 de candidați" : "50-100 de candidați";
-
-            OffsetDateTime now = OffsetDateTime.now();
-            OffsetDateTime postedAt = now.minusDays(daysAgo);
-            String contentHash = computeContentHash(title, company, desc, "Salariu Conform Anunț", String.join(",", skills), location);
-
-            freshList.add(new UnifiedJobListingDto(
-                    "gh-intl-" + extId,
-                    title,
-                    company,
-                    logoUrl,
-                    location,
-                    workModel,
-                    level,
-                    PLATFORM_NAME,
-                    directApplyUrl,
-                    desc,
-                    "Salariu Conform Anunț",
-                    skills,
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    postedDateAgo,
-                    95.0,
-                    compLevel,
-                    compLabel,
-                    applicantText,
-                    daysAgo,
-                    extId,
-                    contentHash,
-                    postedAt,
-                    now,
-                    now,
-                    "ACTIVE"
-            ));
+            freshList.add(JobListingBuilder.of(PLATFORM_NAME, "gh-intl-")
+                    .externalId(extId)
+                    .title(title)
+                    .company(company)
+                    .logoUrl(getCompanyLogoUrl(company))
+                    .location(location)
+                    .workModel(workModel)
+                    .level(level)
+                    .applyUrl(directApplyUrl)
+                    .description(listingSummary("SpeedyApply 2027 (GitHub)", title, company, location, skills))
+                    .skills(skills)
+                    .postedDaysAgo(daysAgo)
+                    .build());
         }
     }
 
@@ -368,8 +305,11 @@ public class GitHubJuniorTechScraper implements JobScraper {
         return null;
     }
 
+    /**
+     * @return vechimea în zile sau -1 dacă coloana lipsește ori nu poate fi interpretată
+     */
     public static int parseAgeDays(String ageCol) {
-        if (ageCol == null || ageCol.isBlank()) return 7;
+        if (ageCol == null || ageCol.isBlank()) return -1;
         Matcher m = AGE_PATTERN.matcher(ageCol.trim());
         if (m.find()) {
             try {
@@ -383,13 +323,12 @@ public class GitHubJuniorTechScraper implements JobScraper {
                 };
             } catch (Exception ignored) {}
         }
-        return 7;
+        return -1;
     }
 
+    // Favicon-uri oficiale pentru câteva companii cunoscute; pentru restul nu avem logo
     private static String getCompanyLogoUrl(String company) {
-        if (company == null || company.isBlank()) {
-            return "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=120&auto=format&fit=crop&q=80";
-        }
+        if (company == null || company.isBlank()) return null;
         String clean = company.trim().toLowerCase().replaceAll("[^a-z0-9]", "");
         if (clean.contains("google")) return "https://www.google.com/favicon.ico";
         if (clean.contains("meta")) return "https://static.xx.fbcdn.net/rsrc.php/yT/r/a9RugiijeAr.ico";
@@ -401,7 +340,6 @@ public class GitHubJuniorTechScraper implements JobScraper {
         if (clean.contains("cisco")) return "https://www.cisco.com/favicon.ico";
         if (clean.contains("jane")) return "https://www.janestreet.com/favicon.ico";
         if (clean.contains("citadel")) return "https://www.citadel.com/favicon.ico";
-
-        return "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=120&auto=format&fit=crop&q=80";
+        return null;
     }
 }

@@ -1,7 +1,6 @@
 package com.jobtracker.ats.crawler;
 
 import com.jobtracker.ats.dto.UnifiedJobListingDto;
-import com.jobtracker.ats.util.JobNormalizationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.*;
@@ -38,7 +36,10 @@ public class LinkedInScraper implements JobScraper {
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
     );
 
-    private record SearchQuery(String query, String location, String expFilter, int maxPages) {
+    static final String PLATFORM = "LINKEDIN";
+    private static final Pattern JOB_ID_PATTERN = Pattern.compile("(\\d{7,15})");
+
+    record SearchQuery(String query, String location, String expFilter, int maxPages) {
         public SearchQuery(String query, String expFilter, int maxPages) {
             this(query, "Romania", expFilter, maxPages);
         }
@@ -46,7 +47,7 @@ public class LinkedInScraper implements JobScraper {
 
     @Override
     public String getPlatformName() {
-        return "LINKEDIN";
+        return PLATFORM;
     }
 
     @Override
@@ -161,157 +162,11 @@ public class LinkedInScraper implements JobScraper {
                             .timeout(8000)
                             .get();
 
-                    Elements cards = doc.select("li div.base-card");
-                    if (cards.isEmpty()) {
+                    PageResult result = parseResultsPage(doc, sq, freshList, seenDedupKeys, knownDbUrls, seenJobUrls);
+                    if (result.cards() == 0) {
                         return; // Sfarsit de rezultate pentru acest query
                     }
-
-                    int newJobsThisPage = 0;
-                    for (Element card : cards) {
-                        Element linkEl = card.selectFirst("a.base-card__full-link");
-                        if (linkEl == null) continue;
-
-                        String directUrl = linkEl.attr("href");
-                        if (directUrl == null || directUrl.isBlank()) continue;
-
-                        String cleanUrl = directUrl.contains("?") ? directUrl.split("\\?")[0] : directUrl;
-                        if (!seenJobUrls.add(cleanUrl)) continue;
-
-                        if (knownDbUrls != null && knownDbUrls.contains(cleanUrl)) continue;
-
-                        newJobsThisPage++;
-
-                        Element titleEl = card.selectFirst(".base-search-card__title");
-                        String title = titleEl != null ? titleEl.text().trim() : null;
-                        if (title == null || title.isBlank()) {
-                            Element srOnly = linkEl.selectFirst("span.sr-only");
-                            if (srOnly != null) {
-                                title = srOnly.text().trim();
-                            }
-                        }
-                        if (title == null || title.isBlank()) {
-                            title = query;
-                        }
-
-                        if (!isStrictlyItJob(title)) continue;
-
-                        Element compEl = card.selectFirst(".base-search-card__subtitle");
-                        Element locEl = card.selectFirst(".job-search-card__location");
-                        Element dateEl = card.selectFirst("time.job-search-card__listdate, time.job-search-card__listdate--new, time");
-                        Element logoEl = card.selectFirst("img.artdeco-entity-image");
-                        Element benefitEl = card.selectFirst(".job-posting-benefits__text");
-
-                        String company = compEl != null ? compEl.text().trim() : "Tech Company";
-                        String loc = locEl != null ? locEl.text().trim() : location;
-                        String postedDate = dateEl != null ? dateEl.text().trim() : "Postat recent";
-                        String dtAttr = dateEl != null ? dateEl.attr("datetime") : null;
-                        String benefitText = benefitEl != null ? benefitEl.text().trim().toLowerCase() : "";
-
-                        String logoUrl = logoEl != null && logoEl.hasAttr("data-delayed-url") ?
-                                logoEl.attr("data-delayed-url") :
-                                "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=100&auto=format&fit=crop&q=80";
-
-                        String level = determineExperienceLevel(title, null);
-                        if (level.equals("MID") && expFilter != null && expFilter.contains("f_E=1") &&
-                                (title.toLowerCase().contains("intern") || title.toLowerCase().contains("stagiu") ||
-                                 title.toLowerCase().contains("trainee") || title.toLowerCase().contains("student"))) {
-                            level = "INTERNSHIP";
-                        } else if (level.equals("MID") && expFilter != null && expFilter.contains("f_E=4") &&
-                                (title.toLowerCase().contains("senior") || title.toLowerCase().contains("lead") ||
-                                 title.toLowerCase().contains("principal"))) {
-                            level = "SENIOR";
-                        }
-
-                        int daysAgo = -1;
-                        OffsetDateTime postedAt = parseExactDate(dtAttr);
-                        if (postedAt != null) {
-                            long diff = java.time.temporal.ChronoUnit.DAYS.between(postedAt.toLocalDate(), LocalDate.now());
-                            daysAgo = (int) Math.max(0, diff);
-                        } else {
-                            daysAgo = parseDaysAgo(postedDate);
-                            if (daysAgo >= 0) {
-                                postedAt = OffsetDateTime.now().minusDays(daysAgo);
-                            }
-                        }
-                        String postedDateAgo = daysAgo == 0 ? "Astazi" : daysAgo == 1 ? "Ieri" : daysAgo > 1 ? (daysAgo + " zile in urma") : "Data nespecificata";
-
-                        boolean isEarlyApplicant = benefitText.contains("early applicant") || benefitText.contains("primii 25");
-                        String compLevel;
-                        String compLabel;
-                        String applicantCountText;
-
-                        if (isEarlyApplicant) {
-                            compLevel = "LOW";
-                            compLabel = "Sansa Mare";
-                            applicantCountText = "Sub 25 de candidati";
-                        } else {
-                            if (daysAgo >= 3 || postedDate.toLowerCase().contains("week") || postedDate.toLowerCase().contains("month")) {
-                                compLevel = "HIGH";
-                                compLabel = "Competitie Ridicata";
-                                applicantCountText = "Peste 100 de aplicanti";
-                            } else if (daysAgo >= 1 || isMajorTechBrand(company) || level.equals("JUNIOR") || level.equals("INTERNSHIP")) {
-                                compLevel = "HIGH";
-                                compLabel = "Competitie Ridicata";
-                                applicantCountText = "50-100+ de aplicanti";
-                            } else {
-                                compLevel = "MEDIUM";
-                                compLabel = "Competitie Medie";
-                                applicantCountText = "25-50 de candidati";
-                            }
-                        }
-
-                        List<String> skills = extractSkillsFromTitle(title);
-                        String desc = "Pozitie activa de " + title + " la " + company + " (" + loc + "). " +
-                                "Nivel identificat: " + level + ". Competente asociate: " + String.join(", ", skills) + ". " +
-                                (benefitText.isEmpty() ? "Aplicare directa securizata pe platforma oficiala LinkedIn Romania." : "Beneficii evidentiate: " + benefitText + ". Aplicare directa pe LinkedIn.");
-
-                        String dedupKey = normalizeForDedup(title) + "::" + normalizeForDedup(company);
-                        synchronized (seenDedupKeys) {
-                            if (!seenDedupKeys.add(dedupKey)) continue;
-                        }
-
-                        String externalId;
-                        Matcher m = Pattern.compile("(\\d{7,15})").matcher(cleanUrl);
-                        if (m.find()) {
-                            externalId = m.group(1);
-                        } else {
-                            externalId = "li-" + UUID.randomUUID().toString().substring(0, 8);
-                        }
-
-                        String contentHash = computeContentHash(title, company, desc, "Pachet Salarial Standard LinkedIn", String.join(",", skills), loc);
-                        OffsetDateTime now = OffsetDateTime.now();
-
-                        freshList.add(new UnifiedJobListingDto(
-                                "li-live-" + externalId,
-                                title,
-                                company,
-                                logoUrl,
-                                loc,
-                                loc.toLowerCase().contains("remote") ? "REMOTE" : "HYBRID",
-                                level,
-                                "LINKEDIN",
-                                cleanUrl,
-                                desc,
-                                "Pachet Salarial Standard LinkedIn",
-                                skills,
-                                Collections.emptyList(),
-                                Collections.emptyList(),
-                                postedDateAgo,
-                                97.0,
-                                compLevel,
-                                compLabel,
-                                applicantCountText,
-                                daysAgo,
-                                externalId,
-                                contentHash,
-                                postedAt,
-                                now,
-                                now,
-                                "ACTIVE"
-                        ));
-                    }
-
-                    if (cards.size() < 5 || (newJobsThisPage == 0 && page > 0)) {
+                    if (result.cards() < 5 || (result.newJobs() == 0 && page > 0)) {
                         return;
                     }
                     break; // Pagina curenta a reusit, trecem la pagina urmatoare
@@ -337,5 +192,100 @@ public class LinkedInScraper implements JobScraper {
                 }
             }
         }
+    }
+
+    record PageResult(int cards, int newJobs) {}
+
+    PageResult parseResultsPage(Document doc, SearchQuery sq, List<UnifiedJobListingDto> freshList,
+                                Set<String> seenDedupKeys, Set<String> knownDbUrls, Set<String> seenJobUrls) {
+        String location = sq.location() != null ? sq.location() : "Romania";
+        String expFilter = sq.expFilter();
+
+        Elements cards = doc.select("li div.base-card");
+        int newJobsThisPage = 0;
+        for (Element card : cards) {
+            Element linkEl = card.selectFirst("a.base-card__full-link");
+            if (linkEl == null) continue;
+
+            String directUrl = linkEl.attr("href");
+            if (directUrl.isBlank()) continue;
+
+            String cleanUrl = directUrl.contains("?") ? directUrl.split("\\?")[0] : directUrl;
+            if (!seenJobUrls.add(cleanUrl)) continue;
+            if (knownDbUrls != null && knownDbUrls.contains(cleanUrl)) continue;
+
+            newJobsThisPage++;
+
+            Element titleEl = card.selectFirst(".base-search-card__title");
+            String title = titleEl != null ? titleEl.text().trim() : null;
+            if (title == null || title.isBlank()) {
+                Element srOnly = linkEl.selectFirst("span.sr-only");
+                if (srOnly != null) {
+                    title = srOnly.text().trim();
+                }
+            }
+            if (title == null || title.isBlank()) continue;
+            if (!isStrictlyItJob(title)) continue;
+
+            Element compEl = card.selectFirst(".base-search-card__subtitle");
+            Element locEl = card.selectFirst(".job-search-card__location");
+            Element dateEl = card.selectFirst("time.job-search-card__listdate, time.job-search-card__listdate--new, time");
+            Element logoEl = card.selectFirst("img.artdeco-entity-image");
+            Element benefitEl = card.selectFirst(".job-posting-benefits__text");
+
+            String company = compEl != null ? compEl.text().trim() : null;
+            String loc = locEl != null ? locEl.text().trim() : location;
+            String postedDate = dateEl != null ? dateEl.text().trim() : null;
+            String dtAttr = dateEl != null ? dateEl.attr("datetime") : null;
+            String benefitText = benefitEl != null ? benefitEl.text().trim().toLowerCase() : "";
+
+            String level = determineExperienceLevel(title, null);
+            String tLower = title.toLowerCase();
+            if (level.equals("MID") && expFilter != null && expFilter.contains("f_E=1") &&
+                    (tLower.contains("intern") || tLower.contains("stagiu") || tLower.contains("trainee") || tLower.contains("student"))) {
+                level = "INTERNSHIP";
+            } else if (level.equals("MID") && expFilter != null && expFilter.contains("f_E=4") &&
+                    (tLower.contains("senior") || tLower.contains("lead") || tLower.contains("principal"))) {
+                level = "SENIOR";
+            }
+
+            String dedupKey = dedupKey(title, company, cleanUrl);
+            synchronized (seenDedupKeys) {
+                if (!seenDedupKeys.add(dedupKey)) continue;
+            }
+
+            Matcher m = JOB_ID_PATTERN.matcher(cleanUrl);
+            String externalId = m.find() ? m.group(1) : null;
+
+            List<String> skills = extractSkillsFromTitle(title);
+            JobListingBuilder builder = JobListingBuilder.of(PLATFORM, "li-live-")
+                    .externalId(externalId)
+                    .title(title)
+                    .company(company)
+                    .logoUrl(logoEl != null ? logoEl.attr("data-delayed-url") : null)
+                    .location(loc)
+                    .workModel(loc.toLowerCase().contains("remote") ? "REMOTE" : "HYBRID")
+                    .level(level)
+                    .applyUrl(cleanUrl)
+                    .description(listingSummary("LinkedIn", title, company, loc, skills)
+                            + (benefitText.isEmpty() ? "" : " Beneficii evidențiate: " + benefitText + "."))
+                    .skills(skills);
+
+            OffsetDateTime postedAt = parseExactDate(dtAttr);
+            if (postedAt != null) {
+                builder.postedAt(postedAt);
+            } else {
+                builder.postedDaysAgo(parseDaysAgo(postedDate));
+            }
+
+            // Singurul semnal real despre numărul de candidați pe care îl afișează LinkedIn
+            if (benefitText.contains("early applicant") || benefitText.contains("primii 25")) {
+                builder.competitiveness("LOW", "Șansă Mare")
+                        .applicantCountText("Printre primii candidați (LinkedIn)");
+            }
+
+            freshList.add(builder.build());
+        }
+        return new PageResult(cards.size(), newJobsThisPage);
     }
 }

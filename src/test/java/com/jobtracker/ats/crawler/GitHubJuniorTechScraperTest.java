@@ -161,6 +161,6 @@ class GitHubJuniorTechScraperTest {
         assertEquals(5, GitHubJuniorTechScraper.parseAgeDays("5d"));
         assertEquals(14, GitHubJuniorTechScraper.parseAgeDays("2w"));
         assertEquals(30, GitHubJuniorTechScraper.parseAgeDays("1mo"));
-        assertEquals(7, GitHubJuniorTechScraper.parseAgeDays(""));
+        assertEquals(-1, GitHubJuniorTechScraper.parseAgeDays(""));
     }
 }

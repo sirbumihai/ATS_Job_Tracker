@@ -172,6 +172,12 @@ public class JobIngestionService {
                         existing.setWorkModel(dto.workModel());
                         existing.setExperienceLevel(dto.experienceLevel());
                         existing.setSkillsRequired(skillsStr);
+                        // Suprascrie și estimările vechi (logo de rezervă, număr de candidați, scor fix)
+                        existing.setCompanyLogoUrl(dto.companyLogoUrl());
+                        existing.setAtsMatchScore(dto.atsMatchScore());
+                        existing.setCompetitiveness(dto.competitiveness());
+                        existing.setCompetitivenessLabel(dto.competitivenessLabel());
+                        existing.setApplicantCountText(dto.applicantCountText());
                         existing.setUpdatedAt(now);
                         modified = true;
 

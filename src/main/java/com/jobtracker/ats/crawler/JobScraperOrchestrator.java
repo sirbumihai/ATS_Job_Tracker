@@ -1,28 +1,60 @@
 package com.jobtracker.ats.crawler;
 
 import com.jobtracker.ats.dto.UnifiedJobListingDto;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.*;
 
-import static com.jobtracker.ats.util.JobNormalizationUtils.normalizeForDedup;
+import static com.jobtracker.ats.util.JobNormalizationUtils.dedupKey;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class JobScraperOrchestrator {
 
+    static final int DEFAULT_TIMEOUT_SECONDS = 90;
+
     private final List<JobScraper> scrapers;
-    private static final int SCRAPER_TIMEOUT_SECONDS = 90;
+    private final int scraperTimeoutSeconds;
 
     // Executor bazat pe Virtual Threads (Java 21) pentru I/O concurent optim
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     // Ultimul raport de telemetrie per platformă
     private volatile List<PlatformScrapeResult> lastExecutionReports = Collections.emptyList();
+
+    public JobScraperOrchestrator(List<JobScraper> scrapers) {
+        this(scrapers, Set.of(), DEFAULT_TIMEOUT_SECONDS);
+    }
+
+    /**
+     * @param disabledPlatforms platformele excluse din rulare (app.crawler.disabled-platforms), ex. LINKEDIN,EJOBS
+     * @param scraperTimeoutSeconds timpul maxim per platformă (app.crawler.scraper-timeout-seconds)
+     */
+    @Autowired
+    public JobScraperOrchestrator(
+            List<JobScraper> scrapers,
+            @Value("${app.crawler.disabled-platforms:}") Set<String> disabledPlatforms,
+            @Value("${app.crawler.scraper-timeout-seconds:" + DEFAULT_TIMEOUT_SECONDS + "}") int scraperTimeoutSeconds) {
+        Set<String> disabled = new HashSet<>();
+        for (String p : disabledPlatforms) {
+            if (p != null && !p.isBlank()) disabled.add(p.trim().toUpperCase());
+        }
+        this.scrapers = scrapers.stream()
+                .filter(s -> !disabled.contains(s.getPlatformName().toUpperCase()))
+                .toList();
+        this.scraperTimeoutSeconds = scraperTimeoutSeconds > 0 ? scraperTimeoutSeconds : DEFAULT_TIMEOUT_SECONDS;
+        if (!disabled.isEmpty()) {
+            log.info("[JOB ORCHESTRATOR] Platforme dezactivate din configurare: {}", disabled);
+        }
+    }
+
+    public List<String> getActivePlatforms() {
+        return scrapers.stream().map(JobScraper::getPlatformName).toList();
+    }
 
     public List<PlatformScrapeResult> getLastExecutionReports() {
         return lastExecutionReports;
@@ -72,7 +104,7 @@ public class JobScraperOrchestrator {
                             );
                         }
                     }, executor)
-                    .orTimeout(SCRAPER_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .orTimeout(scraperTimeoutSeconds, TimeUnit.SECONDS)
                     .exceptionally(ex -> {
                         long duration = System.currentTimeMillis() - startTime;
                         int collected = platformList.size();
@@ -98,8 +130,7 @@ public class JobScraperOrchestrator {
                 ScraperTaskResult res = future.join();
                 reports.add(res.report());
                 for (UnifiedJobListingDto job : res.jobs()) {
-                    String dedupKey = normalizeForDedup(job.jobTitle()) + "::" + normalizeForDedup(job.companyName());
-                    if (globalDedupKeys.add(dedupKey)) {
+                    if (globalDedupKeys.add(dedupKey(job.jobTitle(), job.companyName(), job.directApplyUrl()))) {
                         freshList.add(job);
                     }
                 }
