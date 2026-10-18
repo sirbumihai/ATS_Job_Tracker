@@ -42,7 +42,6 @@ export default function LandingPage({
   // Interactive preview tab in the showcase section
   const [activeInteractiveTab, setActiveInteractiveTab] = useState('ats_audit'); // 'ats_audit' | 'pipeline' | 'interview_sim'
 
-
   return (
     <div className="w-full bg-white text-black font-sans selection:bg-black selection:text-white pb-20">
 

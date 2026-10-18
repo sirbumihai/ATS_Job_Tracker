@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { animate, motion, useInView, useReducedMotion } from 'framer-motion';
 
-const EASE = [0.22, 1, 0.36, 1];
+export const EASE = [0.22, 1, 0.36, 1];
 
 /**
  * Fade/slide-in on scroll. Renders static and fully visible with reduced motion.

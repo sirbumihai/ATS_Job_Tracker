@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { EASE } from './motion';
 
-const EASE = [0.22, 1, 0.36, 1];
 
 /**
  * Single-open FAQ accordion. Height animates smoothly, the +/- indicator
@@ -10,7 +10,7 @@ const EASE = [0.22, 1, 0.36, 1];
 export default function FaqAccordion({ items }) {
   const [openIndex, setOpenIndex] = useState(null);
   const reduced = useReducedMotion();
-  const t = { duration: reduced ? 0 : 0.35, ease: EASE };
+  const transition = { duration: reduced ? 0 : 0.35, ease: EASE };
 
   return (
     <div className="space-y-4">
@@ -30,11 +30,11 @@ export default function FaqAccordion({ items }) {
                 <span className="text-base sm:text-lg font-bold text-neutral-900 leading-snug">{faq.q}</span>
                 <motion.span
                   aria-hidden="true"
-                  className="text-xl font-mono text-neutral-400 shrink-0"
-                  animate={{ rotate: open ? 180 : 0 }}
-                  transition={t}
+                  className="text-xl font-mono leading-none text-neutral-400 shrink-0"
+                  animate={{ rotate: open ? 45 : 0 }}
+                  transition={transition}
                 >
-                  {open ? '−' : '+'}
+                  +
                 </motion.span>
               </button>
             </h3>
@@ -46,7 +46,7 @@ export default function FaqAccordion({ items }) {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={t}
+                  transition={transition}
                   className="overflow-hidden"
                 >
                   <p className="mx-6 pb-6 pt-3 border-t border-neutral-100 text-sm sm:text-base text-neutral-600 leading-relaxed">
