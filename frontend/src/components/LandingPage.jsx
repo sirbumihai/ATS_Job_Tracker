@@ -27,6 +27,8 @@ import {
   MessageSquare
 } from 'lucide-react';
 import Footer from './Footer';
+import { Reveal, RevealStagger, RevealItem, CountUp } from './landing/motion';
+import { HeroShowcase, CvStudioMedia, MarketInsightsMedia, LinkedInMedia, CoverLetterMedia } from './landing/showcase';
 
 export default function LandingPage({ 
   onNavigateTab, 
@@ -217,87 +219,9 @@ export default function LandingPage({
 
             </div>
 
-            {/* Right Column: Pure CSS Floating Architectural Composition (5 cols) */}
+            {/* Right Column: real Tracker screenshot with animated floating cards (5 cols) */}
             <div className="lg:col-span-5 relative">
-              
-              <div className="relative mx-auto max-w-md lg:max-w-none">
-                
-                {/* Back Plate (Subtle Tilted Offset, -rotate-2) */}
-                <div className="absolute inset-0 bg-neutral-100 rounded-2xl -rotate-2 border border-neutral-200/80 transform translate-x-2 translate-y-2 pointer-events-none" />
-
-                {/* Main Architectural Card (Rotate-0.5) */}
-                <div className="relative rounded-2xl bg-white border border-neutral-300/90 p-6 sm:p-7 shadow-sm rotate-0.5 space-y-5 transition-transform hover:rotate-0 duration-300">
-                  
-                  {/* Top Bar: Pipeline Status Header */}
-                  <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-black text-white flex items-center justify-center font-mono text-xs font-bold">
-                        JF
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-neutral-900">Aplicatie Activa</div>
-                        <div className="text-xs text-neutral-500 font-mono">Fintech Core Labs • Remote EU</div>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 rounded-full text-xs font-mono uppercase bg-neutral-100 text-neutral-800 border border-neutral-200 font-semibold">
-                      Runda 2: Tehnic
-                    </span>
-                  </div>
-
-                  {/* Role & ATS Match Indicator */}
-                  <div className="bg-neutral-50 rounded-xl p-5 border border-neutral-200/80 space-y-3.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-neutral-800">Rol: Senior Full Stack Engineer</span>
-                      <span className="text-xs font-mono font-bold text-black bg-white px-2.5 py-1 rounded border border-neutral-200">
-                        94% ATS Match
-                      </span>
-                    </div>
-
-                    {/* Minimal Progress Bar */}
-                    <div className="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
-                      <div className="bg-black h-full rounded-full" style={{ width: '94%' }} />
-                    </div>
-
-                    {/* Real Extracted Skills */}
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {['Spring Boot', 'React 18', 'PostgreSQL', 'Docker', 'System Design'].map((skill) => (
-                        <span key={skill} className="px-2.5 py-1 rounded-md bg-white border border-neutral-200 text-xs font-mono text-neutral-800 font-medium">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Floating Secondary Snippet Plate: Interview Trainer Teaser (rotate-1) */}
-                  <div className="p-4 rounded-xl bg-white border border-neutral-300 shadow-2xs rotate-1 space-y-2.5">
-                    <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-neutral-600 flex items-center gap-2 font-medium">
-                        <Terminal className="w-3.5 h-3.5 text-black" />
-                        Simulator Interviu Tehnic
-                      </span>
-                      <span className="text-neutral-950 font-bold">Java / Backend</span>
-                    </div>
-                    <p className="text-sm text-neutral-900 font-medium leading-relaxed">
-                      "Cum optimizezi o interogare SQL cu N+1 in JPA/Hibernate pentru volume mari de date?"
-                    </p>
-                    <div className="flex items-center justify-between pt-1 text-xs text-neutral-500 font-mono">
-                      <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Rezolvare Validata
-                      </span>
-                      <span>Dificultate: Mediu</span>
-                    </div>
-                  </div>
-
-                  {/* Micro Footer Spec */}
-                  <div className="pt-1 flex items-center justify-between text-xs font-mono text-neutral-400">
-                    <span>Sincronizat cu Kanban & Roadmaps</span>
-                    <span>JobFlow Architecture</span>
-                  </div>
-
-                </div>
-
-              </div>
-
+              <HeroShowcase />
             </div>
 
           </div>
@@ -311,11 +235,11 @@ export default function LandingPage({
       {/* ========================================================================= */}
       <section className="border-b border-neutral-200/90 bg-neutral-50/50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 divide-y sm:divide-y-0 sm:divide-x divide-neutral-200">
+          <RevealStagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 divide-y sm:divide-y-0 sm:divide-x divide-neutral-200">
             
-            <div className="pt-4 sm:pt-0 sm:px-6 first:pl-0 space-y-1">
+            <RevealItem className="pt-4 sm:pt-0 sm:px-6 first:pl-0 space-y-1">
               <div className="text-4xl sm:text-5xl font-light tracking-tight text-black font-mono">
-                94.2%
+                <CountUp value="94.2%" />
               </div>
               <div className="text-base font-bold text-neutral-900 pt-1">
                 Acuratete Semantica ATS
@@ -323,11 +247,11 @@ export default function LandingPage({
               <p className="text-sm text-neutral-600 leading-relaxed">
                 Scanare precisa a fisei postului si aliniere semantica a CV-ului tau cu algoritmii de triere.
               </p>
-            </div>
+            </RevealItem>
 
-            <div className="pt-4 sm:pt-0 sm:px-6 space-y-1">
+            <RevealItem className="pt-4 sm:pt-0 sm:px-6 space-y-1">
               <div className="text-4xl sm:text-5xl font-light tracking-tight text-black font-mono">
-                3.4x
+                <CountUp value="3.4x" />
               </div>
               <div className="text-base font-bold text-neutral-900 pt-1">
                 Rata Invitatii la Interviu
@@ -335,11 +259,11 @@ export default function LandingPage({
               <p className="text-sm text-neutral-600 leading-relaxed">
                 Crestere medie a raspunsurilor de la recrutori prin aplicatii optimizate si scrisori de intentie tintite.
               </p>
-            </div>
+            </RevealItem>
 
-            <div className="pt-4 sm:pt-0 sm:px-6 space-y-1">
+            <RevealItem className="pt-4 sm:pt-0 sm:px-6 space-y-1">
               <div className="text-4xl sm:text-5xl font-light tracking-tight text-black font-mono">
-                500+
+                <CountUp value="500+" />
               </div>
               <div className="text-base font-bold text-neutral-900 pt-1">
                 Intrebari Tehnice & Grile
@@ -347,11 +271,11 @@ export default function LandingPage({
               <p className="text-sm text-neutral-600 leading-relaxed">
                 Flashcard-uri pe tehnologii de varf: Java, Spring, React, SQL, DevOps si scenarii de arhitectura.
               </p>
-            </div>
+            </RevealItem>
 
-            <div className="pt-4 sm:pt-0 sm:px-6 space-y-1">
+            <RevealItem className="pt-4 sm:pt-0 sm:px-6 space-y-1">
               <div className="text-4xl sm:text-5xl font-light tracking-tight text-black font-mono">
-                100%
+                <CountUp value="100%" />
               </div>
               <div className="text-base font-bold text-neutral-900 pt-1">
                 Control & Confidentialitate
@@ -359,9 +283,9 @@ export default function LandingPage({
               <p className="text-sm text-neutral-600 leading-relaxed">
                 Datele tale, documentele si istoricul de interviuri raman pe statia ta, fara partajare externa.
               </p>
-            </div>
+            </RevealItem>
 
-          </div>
+          </RevealStagger>
         </div>
       </section>
 
@@ -371,7 +295,7 @@ export default function LandingPage({
       <section className="py-20 sm:py-28 border-b border-neutral-200/90">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
           
-          <div className="max-w-3xl space-y-4">
+          <Reveal className="max-w-3xl space-y-4">
             <span className="text-xs font-mono uppercase tracking-widest text-neutral-500">
               ANALIZA REALITATII DIN PIATA IT
             </span>
@@ -383,12 +307,12 @@ export default function LandingPage({
               (Applicant Tracking System) din cauza nepotrivirii cuvintelor cheie sau formatarii incompatibile. 
               Chiar si atunci cand ajungi la interviu, lipsa de pregatire structurata pe scenarii reale reduce sansele la oferta.
             </p>
-          </div>
+          </Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <RevealStagger className="grid grid-cols-1 md:grid-cols-2 gap-8" stagger={0.2}>
             
             {/* The Old Chaotic Way */}
-            <div className="p-8 sm:p-9 rounded-2xl border border-neutral-200 bg-neutral-50/60 space-y-6">
+            <RevealItem className="p-8 sm:p-9 rounded-2xl border border-neutral-200 bg-neutral-50/60 space-y-6">
               <div className="flex items-center gap-3.5">
                 <div className="w-9 h-9 rounded-full bg-neutral-200 text-neutral-700 flex items-center justify-center font-mono text-sm font-bold">
                   X
@@ -417,10 +341,10 @@ export default function LandingPage({
                   <span>Raspunsuri vagi la interviul HR comportamental, fara o structura convingatoare (STAR).</span>
                 </li>
               </ul>
-            </div>
+            </RevealItem>
 
             {/* The JobFlow AI Systematic Method */}
-            <div className="p-8 sm:p-9 rounded-2xl border border-neutral-300 bg-white shadow-2xs space-y-6 relative overflow-hidden">
+            <RevealItem className="p-8 sm:p-9 rounded-2xl border border-neutral-300 bg-white shadow-2xs space-y-6 relative overflow-hidden">
               <div className="flex items-center gap-3.5">
                 <div className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center font-mono text-sm font-bold">
                   <Check className="w-4.5 h-4.5 text-white" />
@@ -449,9 +373,9 @@ export default function LandingPage({
                   <span><strong>Playbook HR Comportamental:</strong> Raspunsuri formulate dupa metoda STAR si strategii dovedite de negociere salariala.</span>
                 </li>
               </ul>
-            </div>
+            </RevealItem>
 
-          </div>
+          </RevealStagger>
 
         </div>
       </section>
@@ -489,6 +413,7 @@ export default function LandingPage({
                   Descopera joburi relevante din piata IT agregata si organizeaza fiecare oportunitate 
                   intr-un board vizual cu etape bine definite. Nu mai rata niciun interviu sau termen de aplicare.
                 </p>
+                <div className="pt-1"><MarketInsightsMedia /></div>
                 <div className="pt-2 flex flex-wrap gap-2 text-xs font-mono text-neutral-600">
                   <span className="px-3 py-1 rounded bg-neutral-100 font-medium">Board Drag & Drop</span>
                   <span className="px-3 py-1 rounded bg-neutral-100 font-medium">Statusuri Personalizate</span>
@@ -520,6 +445,7 @@ export default function LandingPage({
                   Incarca CV-ul in format PDF si compara-l direct cu anuntul de angajare. 
                   Sistemul identifica abilitatile lipsa, calculeaza compatibilitatea semantica si genereaza scrisori de intentie personalizate.
                 </p>
+                <div className="pt-1 space-y-4"><CvStudioMedia /><CoverLetterMedia /></div>
                 <div className="pt-2 flex flex-wrap gap-2 text-xs font-mono text-neutral-600">
                   <span className="px-3 py-1 rounded bg-neutral-100 font-medium">Scor Semantic ATS</span>
                   <span className="px-3 py-1 rounded bg-neutral-100 font-medium">Sugestii Cuvinte Cheie</span>
@@ -582,6 +508,7 @@ export default function LandingPage({
                   Fa-te remarcat de recrutori inainte sa aplici. Optimizeaza-ti profilul de LinkedIn 
                   pentru algoritmul de cautare si genereaza documentatii README atragatoare pentru proiectele de GitHub.
                 </p>
+                <div className="pt-1"><LinkedInMedia /></div>
                 <div className="pt-2 flex flex-wrap gap-2 text-xs font-mono text-neutral-600">
                   <span className="px-3 py-1 rounded bg-neutral-100 font-medium">Audit LinkedIn 100/100</span>
                   <span className="px-3 py-1 rounded bg-neutral-100 font-medium">README Studio</span>
@@ -956,7 +883,7 @@ export default function LandingPage({
       {/* 8. FINAL MONOLITHIC DECISIVE CALL TO ACTION                               */}
       {/* ========================================================================= */}
       <section className="py-24 sm:py-32 bg-neutral-950 text-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-9">
+        <Reveal y={40} className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-9">
           
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-neutral-800 bg-neutral-900 text-xs font-mono text-neutral-400">
             <span>PREGATIRE STRATEGICA • REZULTATE MASURABILE</span>
@@ -993,7 +920,7 @@ export default function LandingPage({
             Fara card de credit necesar • Configurare instanta • 100% Date Securizate
           </div>
 
-        </div>
+        </Reveal>
       </section>
 
       {/* ========================================================================= */}
