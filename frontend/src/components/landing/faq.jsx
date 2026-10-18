@@ -23,7 +23,7 @@ export default function FaqAccordion({ items }) {
                 type="button"
                 id={`faq-btn-${idx}`}
                 aria-expanded={open}
-                aria-controls={`faq-panel-${idx}`}
+                aria-controls={open ? `faq-panel-${idx}` : undefined}
                 onClick={() => setOpenIndex(open ? null : idx)}
                 className="w-full flex items-center justify-between gap-4 p-6 text-left cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-neutral-900"
               >
@@ -43,8 +43,6 @@ export default function FaqAccordion({ items }) {
                 <motion.div
                   key="panel"
                   id={`faq-panel-${idx}`}
-                  role="region"
-                  aria-labelledby={`faq-btn-${idx}`}
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}

@@ -70,7 +70,7 @@ export default function MethodSteps() {
               aria-hidden="true"
             />
             <div className="p-5 sm:p-6 rounded-2xl bg-white border border-neutral-200 space-y-3.5 shadow-2xs h-full">
-              <div className="rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50 aspect-[16/10]">
+              <div className="rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50">
                 <img
                   src={s.img}
                   alt={s.alt}
@@ -78,7 +78,7 @@ export default function MethodSteps() {
                   height={s.h}
                   loading="lazy"
                   decoding="async"
-                  className="block w-full h-full object-cover object-top-left"
+                  className="block w-full h-auto"
                 />
               </div>
               <span className="block text-xs font-mono font-bold text-neutral-400">PASUL {s.n}</span>
