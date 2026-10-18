@@ -49,3 +49,17 @@ Tests are plain JUnit 5 + Mockito unit tests (`@ExtendWith(MockitoExtension.clas
 - **`lucide-react` is aliased** in `vite.config.js` to `src/components/animated-icons/lucide-proxy.jsx`, which wraps every Lucide icon with Framer Motion hover animations and substitutes custom animated icons from `animated-icons/index.js`. Import icons from `'lucide-react'` as usual; a new custom animated icon must be exported from that `index.js`.
 - Static content (interview flashcard decks, roadmap tracks, HR questions) lives in `src/data/`.
 - In Docker, nginx (`frontend/nginx.conf`) serves the SPA and proxies `/api` to `backend:8080` with 300 s timeouts (LLM calls are slow).
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as local markdown files under `.scratch/<feature-slug>/`; never publish to GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
