@@ -27,6 +27,8 @@ import {
   MessageSquare
 } from 'lucide-react';
 import Footer from './Footer';
+import MethodSteps from './landing/method';
+import FaqAccordion from './landing/faq';
 import { Reveal, RevealStagger, RevealItem, CountUp } from './landing/motion';
 import { HeroShowcase, CvStudioMedia, MarketInsightsMedia, LinkedInMedia, CoverLetterMedia } from './landing/showcase';
 
@@ -39,11 +41,7 @@ export default function LandingPage({
 }) {
   // Interactive preview tab in the showcase section
   const [activeInteractiveTab, setActiveInteractiveTab] = useState('ats_audit'); // 'ats_audit' | 'pipeline' | 'interview_sim'
-  const [faqOpenIndex, setFaqOpenIndex] = useState(null);
 
-  const toggleFaq = (idx) => {
-    setFaqOpenIndex(faqOpenIndex === idx ? null : idx);
-  };
 
   return (
     <div className="w-full bg-white text-black font-sans selection:bg-black selection:text-white pb-20">
@@ -781,41 +779,7 @@ export default function LandingPage({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 sm:gap-8">
-            
-            <div className="p-7 rounded-2xl bg-white border border-neutral-200 space-y-3.5 shadow-2xs">
-              <span className="text-xs font-mono font-bold text-neutral-400">PASUL 01</span>
-              <h3 className="text-lg sm:text-xl font-bold text-black">Audit & Calibrare CV</h3>
-              <p className="text-sm text-neutral-600 leading-relaxed">
-                Incarci CV-ul curent, primesti raportul de compatibilitate si adaugi competentele cheie solicitate in anunturile tinta.
-              </p>
-            </div>
-
-            <div className="p-7 rounded-2xl bg-white border border-neutral-200 space-y-3.5 shadow-2xs">
-              <span className="text-xs font-mono font-bold text-neutral-400">PASUL 02</span>
-              <h3 className="text-lg sm:text-xl font-bold text-black">Aplicare Tintita</h3>
-              <p className="text-sm text-neutral-600 leading-relaxed">
-                Generezi scrisori de intentie specifice si inregistrezi aplicatia in board-ul Kanban pentru urmarire disciplinata.
-              </p>
-            </div>
-
-            <div className="p-7 rounded-2xl bg-white border border-neutral-200 space-y-3.5 shadow-2xs">
-              <span className="text-xs font-mono font-bold text-neutral-400">PASUL 03</span>
-              <h3 className="text-lg sm:text-xl font-bold text-black">Drill-down Tehnic</h3>
-              <p className="text-sm text-neutral-600 leading-relaxed">
-                Exersezi 15-20 de flashcard-uri zilnic pe stiva ta tehnica si parcurgi scenariile practice de arhitectura de sistem.
-              </p>
-            </div>
-
-            <div className="p-7 rounded-2xl bg-white border border-neutral-200 space-y-3.5 shadow-2xs">
-              <span className="text-xs font-mono font-bold text-neutral-400">PASUL 04</span>
-              <h3 className="text-lg sm:text-xl font-bold text-black">Conversie in Oferta</h3>
-              <p className="text-sm text-neutral-600 leading-relaxed">
-                Sustii interviul HR cu povesti clare prin metoda STAR, stapanesti intrebarile tehnice si negociezi pachetul salarial.
-              </p>
-            </div>
-
-          </div>
+          <MethodSteps />
 
         </div>
       </section>
@@ -835,9 +799,7 @@ export default function LandingPage({
             </h2>
           </div>
 
-          <div className="space-y-4">
-            
-            {[
+          <FaqAccordion items={[
               {
                 q: "Cum ma ajuta JobFlow AI daca sunt la inceput de drum (Junior / Student)?",
                 a: "Platforma este ideala pentru candidatii la inceput de cariera. Iti ofera un ghid clar cu ce tehnologii cauta cu adevarat companiile in acest moment, cum sa iti structurezi proiectele personale in CV pentru a trece de filtrele automate si sute de intrebari reale de interviu pentru a invata exact ce ti se va cere."
@@ -854,27 +816,7 @@ export default function LandingPage({
                 q: "Datele mele si fisierele PDF incarcate sunt in siguranta?",
                 a: "Absolut. JobFlow AI respecta confidentialitatea datelor tale. Fisierele tale PDF si aplicatiile sunt stocate in baza de date locala sau in profilul tau privat securizat, fara a fi partajate sau vandute vreunei platforme terte de recrutare."
               }
-            ].map((faq, idx) => (
-              <div 
-                key={idx}
-                className="rounded-2xl border border-neutral-200 bg-white p-6 cursor-pointer transition hover:border-neutral-300"
-                onClick={() => toggleFaq(idx)}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <h3 className="text-base sm:text-lg font-bold text-neutral-900 leading-snug">{faq.q}</h3>
-                  <span className="text-xl font-mono text-neutral-400">
-                    {faqOpenIndex === idx ? '−' : '+'}
-                  </span>
-                </div>
-                {faqOpenIndex === idx && (
-                  <p className="mt-4 text-sm sm:text-base text-neutral-600 leading-relaxed pt-3 border-t border-neutral-100">
-                    {faq.a}
-                  </p>
-                )}
-              </div>
-            ))}
-
-          </div>
+          ]} />
 
         </div>
       </section>
