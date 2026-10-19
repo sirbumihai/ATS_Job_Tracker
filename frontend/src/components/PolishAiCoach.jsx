@@ -2,21 +2,18 @@ import React, { useState, useEffect } from 'react';
 import Card from './ui/Card';
 import ScoreRing from './ui/ScoreRing';
 import ScoreBar from './ui/ScoreBar';
-import { 
-  Sparkles, 
-  CheckCircle2, 
-  ArrowRight, 
-  TrendingUp, 
-  BrainCircuit, 
-  Layers, 
-  Cpu, 
-  BarChart3, 
-  FileCheck, 
-  ShieldCheck, 
-  Zap, 
-  ChevronDown, 
-  ChevronUp, 
-  Check, 
+import {
+  Sparkles,
+  TrendingUp,
+  BrainCircuit,
+  Layers,
+  Cpu,
+  FileCheck,
+  ShieldCheck,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  Check,
   RefreshCw,
   X
 } from 'lucide-react';

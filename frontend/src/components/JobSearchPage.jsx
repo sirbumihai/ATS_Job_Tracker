@@ -1,29 +1,25 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { 
-  Search, 
-  MapPin, 
-  Building2, 
-  Briefcase, 
-  ExternalLink, 
-  Bookmark, 
-  BookmarkCheck, 
-  Sparkles, 
-  CheckCircle2, 
-  TrendingUp, 
-  Filter, 
-  RefreshCw, 
-  Layers, 
-  Globe, 
-  Zap, 
-  GraduationCap, 
-  ShieldCheck, 
-  DollarSign, 
-  Clock, 
-  ChevronDown, 
-  ChevronUp,
+import {
+  createPortal
+} from 'react-dom';
+import {
+  Search,
+  MapPin,
+  Building2,
+  Briefcase,
+  ExternalLink,
+  Sparkles,
+  CheckCircle2,
+  Filter,
+  RefreshCw,
+  Layers,
+  Globe,
+  Zap,
+  GraduationCap,
+  ShieldCheck,
+  Clock,
+  ChevronDown,
   ArrowUpRight,
-  SlidersHorizontal,
   Code2,
   Database,
   Cpu,
@@ -44,9 +40,8 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  X, 
-  Flame, 
-  AlertCircle,
+  X,
+  Flame,
   FileText,
   Check,
   Calendar,
@@ -54,7 +49,6 @@ import {
   GitCommit,
   Download,
   Send,
-  Bell,
   FileSignature
 } from 'lucide-react';
 import { JOB_PLATFORMS } from '../data/jobPlatforms';
@@ -458,7 +452,7 @@ export default function JobSearchPage({
     { name: 'Oradea', region: 'România (Bihor)' },
     { name: 'Craiova', region: 'România (Oltenia)' },
     { name: 'Remote România', region: 'Lucru la distanță (Companii RO)' },
-    { name: 'Romania', region: 'Toate orasele (National)' },
+    { name: 'Romania', region: 'Toate orașele (Național)' },
     { name: 'Remote', region: 'Telemunca / WFH' },
     { name: 'Ploiesti', region: 'România (Muntenia)' },
     { name: 'Constanta', region: 'România (Dobrogea)' }
@@ -642,7 +636,7 @@ export default function JobSearchPage({
   // EXPORT JOBURI CAUTATE IN FORMAT CSV (RFC 4180 + UTF-8 BOM)
   const handleExportJobsCsv = () => {
     if (!jobs || jobs.length === 0) {
-      setToastMessage('Nu exista joburi afișate de exportat.');
+      setToastMessage('Nu există joburi afișate de exportat.');
       setTimeout(() => setToastMessage(null), 3000);
       return;
     }
@@ -651,7 +645,7 @@ export default function JobSearchPage({
       'Companie',
       'Titlu Job',
       'Platforma',
-      'Locatie',
+      'Locație',
       'Mod Lucru',
       'Salariu',
       'Nivel Experiență',
@@ -1237,7 +1231,7 @@ export default function JobSearchPage({
                   : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
               }`}
             >
-              <option value="ALL" className="bg-white text-neutral-900">Toate joburile (Oricand)</option>
+              <option value="ALL" className="bg-white text-neutral-900">Toate joburile (Oricând)</option>
               <option value="NEWLY_DISCOVERED" className="bg-white text-neutral-900">Doar NOU GĂSIT (Ultima Sincronizare)</option>
               <option value="24H" className="bg-white text-neutral-900">Ultimele 24 de ore (Noi)</option>
               <option value="48H" className="bg-white text-neutral-900">Ultimele 48 de ore</option>
@@ -1983,7 +1977,7 @@ export default function JobSearchPage({
                 ) : jobChangesList.length === 0 ? (
                   <div className="p-4 rounded-xl bg-neutral-50 border border-dashed border-neutral-200 text-center text-neutral-500 space-y-1">
                     <CheckCircle2 className="w-5 h-5 text-neutral-900 mx-auto" />
-                    <p className="font-semibold text-neutral-800">Nicio modificare ulterioara</p>
+                    <p className="font-semibold text-neutral-800">Nicio modificare ulterioară</p>
                     <p className="text-[11px]">
                       Jobul a fost indexat initial si continutul nu a suferit modificari intre crawl-uri.
                     </p>

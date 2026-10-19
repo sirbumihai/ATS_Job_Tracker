@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
+import {
+  createPortal
+} from 'react-dom';
 import Card from './ui/Card';
 import PageHeader from './ui/PageHeader';
 import {
@@ -8,48 +10,36 @@ import {
   RefreshCwIcon,
   CheckCircle2Icon,
   CheckIcon,
-  CalendarIcon,
   ExternalLinkIcon
 } from './animated-icons';
 
-import { 
-  Brain, 
-  Cloud, 
-  Server, 
-  Database, 
-  ShieldCheck, 
-  CheckCircle2, 
-  Layers, 
-  Layout, 
-  Smartphone, 
-  Cpu, 
-  Headphones, 
-  Briefcase, 
-  Code, 
-  X, 
-  ChevronRight, 
-  Info, 
-  Target, 
-  Flame, 
-  Zap, 
-  BarChart3, 
+import {
+  Brain,
+  Cloud,
+  Server,
+  Database,
+  ShieldCheck,
+  CheckCircle2,
+  Layers,
+  Layout,
+  Smartphone,
+  Cpu,
+  Headphones,
+  Briefcase,
+  Code,
+  X,
+  ChevronRight,
+  Info,
+  Target,
+  Flame,
+  Zap,
+  BarChart3,
   SlidersHorizontal,
-  Compass, 
-  Building2, 
-  MapPin, 
-  Globe, 
-  AlertCircle, 
-  BookOpen,
-  TrendingUp,
-  Award,
-  Check,
-  DollarSign,
-  Lightbulb,
-  ArrowUpRight,
-  Filter,
-  ArrowRight,
-  Clock,
-  Sparkles
+  Compass,
+  Building2,
+  MapPin,
+  Globe,
+  AlertCircle
 } from 'lucide-react';
 
 const DOMAIN_ICONS = {

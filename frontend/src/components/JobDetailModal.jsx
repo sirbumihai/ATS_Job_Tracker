@@ -1,59 +1,34 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import {
-  SparklesIcon,
-  SearchIcon,
-  Trash2Icon,
+  createPortal
+} from 'react-dom';
+import {
   SendIcon,
   CheckCircle2Icon,
   CheckIcon,
-  RefreshCwIcon,
-  MailIcon,
-  EyeIcon,
   FileSignatureIcon,
-  CalendarIcon,
   ExternalLinkIcon
 } from './animated-icons';
 
-import { 
-  X, 
-  MapPin, 
-  Building2, 
-  Briefcase, 
-  ExternalLink, 
-  Bookmark, 
-  BookmarkCheck, 
-  Sparkles, 
-  CheckCircle2, 
-  Clock, 
-  DollarSign, 
-  Layers, 
-  Globe, 
-  ArrowUpRight,
-  ShieldCheck,
+import {
+  X,
+  MapPin,
+  Building2,
+  Briefcase,
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  Globe,
   AlertCircle,
   Users,
   User,
-  FileText,
-  Check, 
-  ChevronRight, 
-  TrendingUp, 
+  Check,
   Share2,
   Calendar,
   History,
-  GitCommit,
-  Database,
-  Target,
-  Award,
-  BookOpen,
-  Gift,
-  CheckCheck,
-  Lightbulb,
   AlertTriangle,
   RefreshCw,
   Bot,
-  FileSignature,
-  Send,
   Mail
 } from 'lucide-react';
 

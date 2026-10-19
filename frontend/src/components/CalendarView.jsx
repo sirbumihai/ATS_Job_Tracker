@@ -1,24 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import Card from './ui/Card';
-import { 
-  Calendar as CalendarIcon, 
-  ChevronLeft, 
-  ChevronRight, 
-  Sparkles, 
-  Mail, 
-  Building2, 
-  Eye, 
-  FileSignature, 
-  Send, 
-  Trash2, 
-  Clock, 
-  Award, 
-  XCircle, 
-  AlertTriangle,
-  CalendarCheck,
-  CheckCircle2,
-  CalendarDays,
-  Plus
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Mail,
+  Eye,
+  FileSignature,
+  Trash2,
+  Clock,
+  Award,
+  CalendarDays
 } from 'lucide-react';
 
 const MONTH_NAMES_RO = [

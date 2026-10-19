@@ -1,50 +1,22 @@
 import Modal from './ui/Modal';
 import Card from './ui/Card';
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import html2pdf from 'html2pdf.js';
-import { 
-  FileText, 
-  Sparkles, 
-  BrainCircuit, 
-  RefreshCw, 
-  Download, 
-  Check, 
-  Target, 
-  Save, 
-  Zap,
+import {
+  FileText,
+  Sparkles,
+  RefreshCw,
+  Download,
+  Check,
   CheckCircle2,
   AlertTriangle,
-  Briefcase,
-  FolderGit2,
-  GraduationCap,
-  Award,
   Plus,
   Trash2,
-  Code2,
   Database,
   ArrowUp,
   ArrowDown,
-  ArrowRight,
-  Eye,
-  Columns,
-  Maximize2,
-  ExternalLink,
-  Mail,
-  Printer,
-  Phone,
-  MapPin,
-  Linkedin,
-  Github,
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
-  Maximize,
   Edit3,
   X,
-  Link as LinkIcon,
-  Globe,
-  Copy,
   ChevronDown
 } from 'lucide-react';
 import PolishAiCoach from './PolishAiCoach';

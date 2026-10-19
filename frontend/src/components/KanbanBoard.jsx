@@ -1,31 +1,20 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { 
-  Building2, 
-  Sparkles, 
-  FileText, 
-  BrainCircuit, 
-  RefreshCw, 
-  Search, 
-  Filter, 
-  Trash2, 
-  Columns, 
+import {
+  Building2,
+  Sparkles,
+  FileText,
+  Trash2,
+  Columns,
   List,
   Edit3,
   CheckCircle2,
-  Clock,
-  ExternalLink,
   Eye,
   Send,
   Calendar,
   XCircle,
-  Plus,
-  FolderKanban,
-  StickyNote,
   X,
-  Save,
   Mail,
-  FileSignature,
-  MapPin
+  FileSignature
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 import GmailSyncModal from './GmailSyncModal';
@@ -35,15 +24,9 @@ import PageHeader from './ui/PageHeader';
 import {
   SearchIcon,
   Trash2Icon,
-  SparklesIcon,
   FileSignatureIcon,
   EyeIcon,
-  PlusIcon,
-  CalendarIcon,
-  RefreshCwIcon,
-  CheckCircle2Icon,
-  SendIcon,
-  MailIcon
+  PlusIcon
 } from './animated-icons';
 
 

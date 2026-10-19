@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import Card from './ui/Card';
 import Modal from './ui/Modal';
-import { 
-  FileText, 
-  Plus, 
-  Search, 
-  Copy, 
-  Trash2, 
-  Star, 
-  Edit3, 
-  CheckCircle2, 
-  Clock, 
-  Upload, 
-  Sparkles, 
+import {
+  FileText,
+  Plus,
+  Search,
+  Copy,
+  Trash2,
+  Star,
+  Edit3,
+  CheckCircle2,
+  Clock,
+  Upload,
   RefreshCw,
-  ExternalLink,
-  ChevronRight,
   X
 } from 'lucide-react';
 
