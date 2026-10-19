@@ -17,6 +17,8 @@ Backend (Maven, run from repo root):
 
 Frontend (from `frontend/`): `npm install`, `npm run dev` (port 3000, proxies `/api` → `localhost:8080`), `npm run build`, `npm run test:e2e` (Playwright, Chromium only; first time `npx playwright install chromium`). The e2e tests in `frontend/e2e/` start Vite on port 4317 and answer every `/api` call from `e2e/fixtures/*.json` (`e2e/support/mockApi.js`), so no backend or DB is needed; an `/api` call without a fixture or any console error fails the test. CI runs them in the `frontend-e2e` job. There is no lint setup for the frontend.
 
+Frontend test commands (from `frontend/`): `npx playwright test e2e/cv-library.spec.js` (one file), `npx playwright test -g "text"` (by test name), `npx playwright test e2e/app-wide.spec.js` (global checks). Every page has its own `e2e/<page>.spec.js`; new `/api` endpoints need a route in `e2e/support/mockApi.js` (+ a fixture). `e2e/app-wide.spec.js` reads `TAB_METADATA` from `App.jsx` and, for the landing and every tab, checks no emoji in visible text, no horizontal scroll at 375px and visible content under `prefers-reduced-motion`, so a new tab is covered automatically (it needs a `targetPath` in `handleTabChange`). Helpers: `e2e/support/checks.js` (`expectNoEmoji`, `expectNoHorizontalScroll`, `expectContentVisible`).
+
 `requests.http` holds sample API calls. `src/Main.java` is an unused IntelliJ stub.
 
 ## Configuration
@@ -48,6 +50,9 @@ Tests are plain JUnit 5 + Mockito unit tests (`@ExtendWith(MockitoExtension.clas
 - JWT is stored in `localStorage` as `ats_jwt_token` and handled in `App.jsx`.
 - **`lucide-react` is aliased** in `vite.config.js` to `src/components/animated-icons/lucide-proxy.jsx`, which wraps every Lucide icon with Framer Motion hover animations and substitutes custom animated icons from `animated-icons/index.js`. Import icons from `'lucide-react'` as usual; a new custom animated icon must be exported from that `index.js`.
 - Static content (interview flashcard decks, roadmap tracks, HR questions) lives in `src/data/`.
+- **Shared UI primitives** live in `src/components/ui/`: `Card` (single thin border, marks itself with `data-card`; never nest cards), `PageHeader`, `Modal` (portal, Escape/backdrop close, scroll lock — use it for every dialog), `ScoreRing`, `ScoreBar`, `BrandMark`. App pages get only the palette (`brand-500` accent), Lora headings (`font-serif`) and these primitives; they stay compact with sans text. Light mode only: do not add `dark:` classes. No emoji anywhere — use Lucide icons where an icon has a role. Long explanations go behind `<details>`.
+- **Lenis smooth scroll** runs only on the landing (`components/landing/lenis.jsx`); it is stopped when leaving the landing and disabled under `prefers-reduced-motion`. The landing's scroll animations and parallax live in `components/landing/` and must render fully static with reduced motion.
+- `src/data/` files (HR playbook, role tracks, flashcard decks) are static content kept without diacritics by convention; page chrome around them uses diacritics.
 - In Docker, nginx (`frontend/nginx.conf`) serves the SPA and proxies `/api` to `backend:8080` with 300 s timeouts (LLM calls are slow).
 
 ## Agent skills

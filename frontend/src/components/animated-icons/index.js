@@ -10,5 +10,4 @@ export { EyeIcon } from './EyeIcon';
 export { FileSignatureIcon } from './FileSignatureIcon';
 export { CalendarIcon } from './CalendarIcon';
 export { ExternalLinkIcon } from './ExternalLinkIcon';
-export { BookmarkIcon } from './BookmarkIcon';
 export { PlusIcon } from './PlusIcon';

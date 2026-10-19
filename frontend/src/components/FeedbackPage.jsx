@@ -330,7 +330,7 @@ export default function FeedbackPage({
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-10">
 
         <div className="space-y-2">
           <h1 className="font-serif text-3xl sm:text-4xl font-medium tracking-tight text-neutral-950">
@@ -617,7 +617,7 @@ export default function FeedbackPage({
           </div>
 
         </div>
-      </main>
+      </div>
 
       <Modal
         isOpen={showNewIdeaModal}
