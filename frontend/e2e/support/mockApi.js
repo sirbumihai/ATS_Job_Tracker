@@ -55,6 +55,7 @@ const DEFAULT_ROUTES = [
   ['POST', /^\/api\/v1\/linkedin\/optimize$/, 'linkedin-optimization'],
 
   ['POST', /^\/api\/v1\/ai\/cover-letter$/, 'cover-letter'],
+  ['POST', /^\/api\/v1\/github-readme$/, 'github-readme'],
 
   ['GET', /^\/api\/v1\/feedback\/ideas$/, 'feedback-ideas'],
 ];

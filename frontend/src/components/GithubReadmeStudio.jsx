@@ -1,36 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { 
-  Github, 
-  Sparkles, 
-  Copy, 
-  Check, 
-  Download, 
-  RefreshCw, 
-  Code2, 
-  Layers, 
-  Eye, 
-  Sliders, 
-  ShieldCheck, 
-  CheckCircle2, 
-  HelpCircle, 
-  ExternalLink, 
-  User, 
-  Briefcase, 
-  Mail, 
-  Linkedin, 
-  FileCode, 
-  Terminal, 
-  Flame, 
-  BookOpen, 
-  Wrench, 
-  Plus, 
-  Trash2, 
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  X
-} from 'lucide-react';
+import Card from './ui/Card';
+import Modal from './ui/Modal';
+import { Github, Sparkles, Copy, Check, Download, RefreshCw, Code2, Layers, Eye, ShieldCheck, CheckCircle2, HelpCircle, User, FileCode, Terminal, Flame, BookOpen, ArrowRight, X } from 'lucide-react';
 
 export default function GithubReadmeStudio({ currentUser }) {
   const DEFAULT_USER_ID = '23fe8bdd-08f4-413d-9985-f99c21040b59';
@@ -41,25 +13,21 @@ export default function GithubReadmeStudio({ currentUser }) {
     {
       id: 'BACKEND_SYSTEMS',
       title: 'Backend & Systems Engineer',
-      desc: 'Focus pe Java 21, Spring Boot, baze de date relationale, microservicii si latenta redusa.',
       badge: 'Recomandat'
     },
     {
       id: 'FULLSTACK_SYSTEMS',
       title: 'Full-Stack & Cloud Engineer',
-      desc: 'Ecosistem complet: Spring Boot + React, Docker, containere si livrare end-to-end.',
       badge: 'Popular'
     },
     {
       id: 'MINIMALIST_LEAD',
       title: 'Minimalist Senior / Tech Lead',
-      desc: 'Zero decoratiuni inutile, stil curat Unix, cod si arhitectura pe primul loc.',
-      badge: 'Clean Code'
+      badge: 'Minimal'
     },
     {
       id: 'OPEN_SOURCE',
       title: 'Open Source & Product Builder',
-      desc: 'Orientat pe proiecte publice, invatare activa, documentatie impecabila si metrici.',
       badge: 'Community'
     }
   ];
@@ -161,11 +129,11 @@ export default function GithubReadmeStudio({ currentUser }) {
   const [generating, setGenerating] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [antiAiTips, setAntiAiTips] = useState([
-    'Design Senior 100% Non-AI: Fara emoticoane (fara rachete, unelte, fete zambitoare sau degete indicatoare).',
-    'Structura inginereasca clara: Focus activ, stack tehnic grupat pe categorii, proiecte cu metrici concrete.',
-    'Zero clisee corporatiste ("passionate developer", "crafting seamless experiences", "transformative synergy").',
-    'Insigne Shields.io flat-square discrete cu logo-uri oficiale de brand.',
-    'Metrici tehnice masurabile (latenta P99, cereri concurente, indici de baze de date, acoperire de teste).'
+    'Fără emoticoane în README.',
+    'Structură clară: focus actual, stack grupat pe categorii, proiecte cu metrici.',
+    'Fără clișee corporatiste („passionate developer”, „seamless experiences”).',
+    'Insigne Shields.io discrete, cu logo-uri oficiale.',
+    'Metrici tehnice măsurabile: latență, cereri concurente, acoperire de teste.'
   ]);
 
   // Load CV profiles from backend
@@ -452,39 +420,8 @@ export default function GithubReadmeStudio({ currentUser }) {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 text-neutral-900 font-sans">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16 font-sans text-neutral-900">
       
-      {/* HEADER SECTION */}
-      <div className="bg-white p-5 rounded-xl border border-neutral-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="p-2 rounded-xl bg-black text-white">
-              <Github className="w-5 h-5 text-white" />
-            </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
-              GitHub Profile README Studio
-            </h2>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[10px] font-mono font-semibold uppercase tracking-wider bg-neutral-100 text-neutral-800 border border-neutral-300">
-              <ShieldCheck className="w-3.5 h-3.5 text-neutral-900" />
-              Senior Clean · Non-AI
-            </span>
-          </div>
-          <p className="text-xs sm:text-sm text-neutral-500 max-w-3xl leading-relaxed">
-            Creeaza un README.md autentic, sobru si orientat spre productie pentru profilul tau de GitHub. Axat pe arhitectura reala, metrici masurabile si stack tehnic clar structurat.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={() => setShowGuideModal(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium bg-white hover:bg-neutral-100 text-neutral-900 border border-neutral-300 transition cursor-pointer"
-          >
-            <span>Ghid Configurare GitHub</span>
-            <HelpCircle className="w-3.5 h-3.5 text-neutral-600" />
-          </button>
-        </div>
-      </div>
-
       {/* WORKSPACE GRID: 5 COLS CONFIG, 7 COLS PREVIEW */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
@@ -492,14 +429,14 @@ export default function GithubReadmeStudio({ currentUser }) {
         <div className="lg:col-span-5 space-y-5">
           
           {/* MAIN CONFIGURATION CARD */}
-          <div className="bg-white p-5 rounded-xl border border-neutral-200 space-y-5">
+          <Card padding="p-5" className="space-y-5">
             
             {/* 1. CV PROFILE SELECTION & SYNC */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-mono font-bold text-neutral-800 uppercase tracking-wider flex items-center gap-1.5">
+                <label htmlFor="gh-cv" className="text-sm font-semibold text-neutral-900 flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-neutral-900" />
-                  1. Sursa Date Profil (CV)
+                  CV sursă
                 </label>
                 {cvList.length > 0 && (
                   <button
@@ -508,26 +445,27 @@ export default function GithubReadmeStudio({ currentUser }) {
                       const chosen = cvList.find(c => c.id === selectedCvId);
                       if (chosen) syncFromCvProfile(chosen);
                     }}
-                    className="text-[11px] font-mono font-medium text-neutral-700 hover:text-black flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-xs font-medium text-brand-600 hover:text-brand-500 flex items-center gap-1 cursor-pointer transition-colors"
                   >
-                    <RefreshCw className="w-3 h-3" /> Resincronizeaza
+                    <RefreshCw className="w-3 h-3" /> Resincronizează
                   </button>
                 )}
               </div>
 
               {loadingCvList ? (
                 <div className="text-xs text-neutral-400 py-2.5 flex items-center gap-2 font-mono">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-neutral-900" /> Se incarca CV-urile...
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-neutral-900" /> Se încarcă CV-urile...
                 </div>
               ) : cvList.length > 0 ? (
                 <select
+                  id="gh-cv"
                   value={selectedCvId}
                   onChange={(e) => {
                     setSelectedCvId(e.target.value);
                     const chosen = cvList.find(c => c.id === e.target.value);
                     if (chosen) syncFromCvProfile(chosen);
                   }}
-                  className="w-full text-xs font-medium px-3.5 py-2.5 rounded-xl border border-neutral-300 bg-white text-neutral-900 focus:border-black transition outline-none cursor-pointer"
+                  className="w-full text-xs font-medium px-3.5 py-2.5 rounded-xl border border-neutral-300 bg-white text-neutral-900 focus:border-brand-500 transition outline-none cursor-pointer"
                 >
                   {cvList.map((cv) => (
                     <option key={cv.id}>
@@ -537,7 +475,7 @@ export default function GithubReadmeStudio({ currentUser }) {
                 </select>
               ) : (
                 <p className="text-xs text-neutral-500 bg-neutral-50 p-3 rounded-xl border border-neutral-200">
-                  Nu ai un CV salvat in aplicatie. Se folosesc datele implicite.
+                  Nu ai un CV salvat. Se folosesc datele implicite.
                 </p>
               )}
             </div>
@@ -546,9 +484,9 @@ export default function GithubReadmeStudio({ currentUser }) {
 
             {/* 2. ARCHETYPE PRESETS */}
             <div className="space-y-2.5">
-              <label className="text-xs font-mono font-bold text-neutral-800 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-sm font-semibold text-neutral-900 flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-neutral-900" />
-                2. Arhetip Ingineresc
+                Arhetip
               </label>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -576,19 +514,18 @@ export default function GithubReadmeStudio({ currentUser }) {
                       }}
                       className={`p-3 rounded-xl border text-left transition cursor-pointer ${
                         isSelected 
-                          ? 'border-black bg-neutral-100 text-neutral-950 font-semibold' 
+                          ? 'border-brand-500 bg-brand-50 text-neutral-950 font-semibold' 
                           : 'border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-300'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[11px] font-bold">{arch.title}</span>
-                        <span className={`text-[9px] font-mono uppercase px-1.5 py-0.5 rounded ${
-                          isSelected ? 'bg-black text-white' : 'bg-neutral-200 text-neutral-700'
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                          isSelected ? 'bg-brand-500 text-white' : 'bg-neutral-200 text-neutral-700'
                         }`}>
                           {arch.badge}
                         </span>
                       </div>
-                      <p className="text-[10px] text-neutral-500 leading-tight line-clamp-2">{arch.desc}</p>
                     </button>
                   );
                 })}
@@ -599,52 +536,56 @@ export default function GithubReadmeStudio({ currentUser }) {
 
             {/* 3. PROFILE IDENTIFIERS & HEADLINE */}
             <div className="space-y-3">
-              <label className="text-xs font-mono font-bold text-neutral-800 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-sm font-semibold text-neutral-900 flex items-center gap-1.5">
                 <Terminal className="w-3.5 h-3.5 text-neutral-900" />
-                3. Identificatori & Titlu
+                Profil
               </label>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-neutral-600 block">Nume Complet</label>
+                  <label htmlFor="gh-name" className="text-[11px] font-medium text-neutral-600 block">Nume complet</label>
                   <input
+                    id="gh-name"
                     type="text"
                     value={candidateName}
                     onChange={(e) => setCandidateName(e.target.value)}
-                    className="w-full text-xs font-medium px-3 py-2 rounded-xl border border-neutral-300 bg-white focus:border-black transition outline-none text-neutral-900"
+                    className="w-full text-xs font-medium px-3 py-2 rounded-xl border border-neutral-300 bg-white focus:border-brand-500 transition outline-none text-neutral-900"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-neutral-600 block flex items-center gap-1">
-                    <Github className="w-3 h-3 text-neutral-500" /> GitHub Username
+                  <label htmlFor="gh-user" className="text-[11px] font-medium text-neutral-600 flex items-center gap-1">
+                    <Github className="w-3 h-3 text-neutral-500" /> Username GitHub
                   </label>
                   <input
+                    id="gh-user"
                     type="text"
                     value={githubUsername}
                     onChange={(e) => setGithubUsername(e.target.value)}
                     placeholder="sarbumihai"
-                    className="w-full text-xs px-3 py-2 rounded-xl border border-neutral-300 bg-white focus:border-black transition outline-none font-mono font-bold text-neutral-900"
+                    className="w-full text-xs px-3 py-2 rounded-xl border border-neutral-300 bg-white focus:border-brand-500 transition outline-none font-mono font-bold text-neutral-900"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-medium text-neutral-600 block">Headline Principal</label>
+                <label htmlFor="gh-headline" className="text-[11px] font-medium text-neutral-600 block">Headline</label>
                 <input
+                  id="gh-headline"
                   type="text"
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
-                  className="w-full text-xs font-medium px-3 py-2 rounded-xl border border-neutral-300 bg-white focus:border-black transition outline-none text-neutral-900"
+                  className="w-full text-xs font-medium px-3 py-2 rounded-xl border border-neutral-300 bg-white focus:border-brand-500 transition outline-none text-neutral-900"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-medium text-neutral-600 block">Bio / Descriere Concisa (Non-AI)</label>
+                <label htmlFor="gh-bio" className="text-[11px] font-medium text-neutral-600 block">Bio</label>
                 <textarea
+                  id="gh-bio"
                   rows={3}
                   value={bioText}
                   onChange={(e) => setBioText(e.target.value)}
-                  className="w-full text-xs p-3 rounded-xl border border-neutral-300 bg-white focus:border-black transition outline-none resize-none leading-relaxed text-neutral-800 font-sans"
+                  className="w-full text-xs p-3 rounded-xl border border-neutral-300 bg-white focus:border-brand-500 transition outline-none resize-none leading-relaxed text-neutral-800 font-sans"
                 />
               </div>
             </div>
@@ -654,16 +595,16 @@ export default function GithubReadmeStudio({ currentUser }) {
             {/* 4. TECH STACK SELECTION (BADGES) */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-mono font-bold text-neutral-800 uppercase tracking-wider flex items-center gap-1.5">
+                <label className="text-sm font-semibold text-neutral-900 flex items-center gap-1.5">
                   <Code2 className="w-3.5 h-3.5 text-neutral-900" />
-                  4. Stack Tehnic & Insigne ({selectedTechs.length})
+                  Stack tehnic ({selectedTechs.length})
                 </label>
               </div>
 
               <div className="space-y-3 max-h-52 overflow-y-auto pr-1">
                 {Object.entries(TECH_CATALOG).map(([category, techs]) => (
                   <div key={category} className="space-y-1.5">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 block">{category}</span>
+                    <span className="text-xs font-medium text-neutral-400 block">{category}</span>
                     <div className="flex flex-wrap gap-1.5">
                       {techs.map((t) => {
                         const isSelected = selectedTechs.includes(t.name);
@@ -672,9 +613,9 @@ export default function GithubReadmeStudio({ currentUser }) {
                             key={t.name}
                             type="button"
                             onClick={() => toggleTech(t.name)}
-                            className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-medium border transition cursor-pointer flex items-center gap-1.5 ${
+                            className={`px-2.5 py-1 rounded-md text-xs font-medium border transition cursor-pointer flex items-center gap-1.5 ${
                               isSelected 
-                                ? 'bg-black text-white border-black' 
+                                ? 'bg-brand-500 text-white border-brand-500' 
                                 : 'bg-neutral-100 text-neutral-700 border-neutral-200 hover:bg-neutral-200'
                             }`}
                           >
@@ -693,9 +634,9 @@ export default function GithubReadmeStudio({ currentUser }) {
 
             {/* 5. GITHUB STATS & THEME */}
             <div className="space-y-3">
-              <label className="text-xs font-mono font-bold text-neutral-800 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-sm font-semibold text-neutral-900 flex items-center gap-1.5">
                 <Flame className="w-3.5 h-3.5 text-neutral-900" />
-                5. Widget-uri GitHub Stats
+                Widget-uri GitHub
               </label>
 
               <div className="grid grid-cols-3 gap-2">
@@ -704,44 +645,44 @@ export default function GithubReadmeStudio({ currentUser }) {
                     type="checkbox"
                     checked={includeStats}
                     onChange={(e) => setIncludeStats(e.target.checked)}
-                    className="rounded text-black focus:ring-0 cursor-pointer"
+                    className="rounded text-brand-500 focus:ring-0 cursor-pointer"
                   />
-                  <span>Stats Card</span>
+                  <span>Statistici</span>
                 </label>
                 <label className="flex items-center gap-2 text-xs text-neutral-800 font-medium cursor-pointer p-2 rounded-xl bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 transition-colors">
                   <input
                     type="checkbox"
                     checked={includeLanguages}
                     onChange={(e) => setIncludeLanguages(e.target.checked)}
-                    className="rounded text-black focus:ring-0 cursor-pointer"
+                    className="rounded text-brand-500 focus:ring-0 cursor-pointer"
                   />
-                  <span>Top Langs</span>
+                  <span>Limbaje</span>
                 </label>
                 <label className="flex items-center gap-2 text-xs text-neutral-800 font-medium cursor-pointer p-2 rounded-xl bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 transition-colors">
                   <input
                     type="checkbox"
                     checked={includeStreak}
                     onChange={(e) => setIncludeStreak(e.target.checked)}
-                    className="rounded text-black focus:ring-0 cursor-pointer"
+                    className="rounded text-brand-500 focus:ring-0 cursor-pointer"
                   />
-                  <span>Streak Card</span>
+                  <span>Serie zile</span>
                 </label>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-medium text-neutral-600 block">Tema Carduri GitHub</label>
+                <label className="text-[11px] font-medium text-neutral-600 block">Temă carduri</label>
                 <select
                   value={statsTheme}
                   onChange={(e) => setStatsTheme(e.target.value)}
-                  className="w-full text-xs font-medium px-3 py-2 rounded-xl border border-neutral-300 bg-white focus:border-black transition outline-none cursor-pointer text-neutral-900"
+                  className="w-full text-xs font-medium px-3 py-2 rounded-xl border border-neutral-300 bg-white focus:border-brand-500 transition outline-none cursor-pointer text-neutral-900"
                 >
-                  <option value="github_dark">GitHub Dark (Implicit)</option>
-                  <option value="dark">Dark Minimal</option>
+                  <option value="github_dark">GitHub Dark</option>
+                  <option value="dark">Dark minimal</option>
                   <option value="tokyonight">Tokyo Night</option>
                   <option value="dracula">Dracula</option>
                   <option value="nord">Nord</option>
                   <option value="radical">Radical</option>
-                  <option value="minimal">Minimal White</option>
+                  <option value="minimal">Minimal alb</option>
                 </select>
               </div>
             </div>
@@ -750,33 +691,33 @@ export default function GithubReadmeStudio({ currentUser }) {
             <button
               onClick={handleAiRefine}
               disabled={generating}
-              className="w-full py-3 px-4 rounded-xl font-medium text-xs flex items-center justify-between gap-3 bg-black hover:bg-neutral-800 text-white transition cursor-pointer disabled:opacity-50"
+              className="w-full py-3 px-4 rounded-xl font-medium text-xs flex items-center justify-between gap-3 bg-brand-500 hover:bg-brand-600 text-white transition cursor-pointer disabled:opacity-50"
             >
               <span className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-white" />
-                <span>{generating ? 'Se analizeaza si optimizeaza README-ul...' : 'Lustruieste cu Filtru Non-AI'}</span>
+                <span>{generating ? 'Se optimizează...' : 'Lustruiește cu filtru Non-AI'}</span>
               </span>
-              <span className="w-6 h-6 rounded-lg bg-neutral-800 flex items-center justify-center">
+              <span className="w-6 h-6 rounded-lg bg-brand-600 flex items-center justify-center">
                 {generating ? <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" /> : <ArrowRight className="w-3.5 h-3.5 text-white" />}
               </span>
             </button>
 
-          </div>
+          </Card>
 
-          {/* ANTI-AI QUALITY BADGE */}
-          <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 text-xs text-neutral-900 space-y-2.5">
-            <h4 className="font-bold flex items-center gap-2 text-neutral-950 font-mono text-xs">
-              <ShieldCheck className="w-4 h-4 text-neutral-900" /> Ce face acest profil 100% Non-AI?
-            </h4>
-            <ul className="space-y-1.5 text-[11px] text-neutral-600 leading-relaxed font-normal">
+          {/* DETALII LA CERERE: CRITERIILE FILTRULUI NON-AI */}
+          <Card padding="px-4 py-3" as="details" className="group">
+            <summary className="text-sm font-semibold text-neutral-900 cursor-pointer select-none flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-brand-500" /> Criteriile filtrului Non-AI
+            </summary>
+            <ul className="mt-3 space-y-1.5 text-xs text-neutral-600 leading-relaxed">
               {antiAiTips.map((tip, idx) => (
                 <li key={idx} className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-neutral-900 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-500 shrink-0 mt-0.5" />
                   <span>{tip}</span>
                 </li>
               ))}
             </ul>
-          </div>
+          </Card>
 
         </div>
 
@@ -784,40 +725,40 @@ export default function GithubReadmeStudio({ currentUser }) {
         <div className="lg:col-span-7 space-y-4">
           
           {/* TOOLBAR */}
-          <div className="bg-white p-3 rounded-xl border border-neutral-200 flex flex-wrap items-center justify-between gap-2.5">
+          <Card padding="p-3" className="flex flex-wrap items-center justify-between gap-2.5">
             {/* VIEW MODE TABS */}
-            <div className="flex bg-neutral-100 p-1 rounded-xl border border-neutral-200 gap-1 font-mono">
+            <div className="flex bg-neutral-100 p-1 rounded-xl gap-1">
               <button
                 type="button"
                 onClick={() => setViewTab('preview')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                  viewTab === 'preview' ? 'bg-black text-white' : 'text-neutral-600 hover:text-black'
+                  viewTab === 'preview' ? 'bg-white text-neutral-950 shadow-sm' : 'text-neutral-600 hover:text-neutral-950'
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
-                <span>Previzualizare GitHub</span>
+                <span>Previzualizare</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setViewTab('code')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                  viewTab === 'code' ? 'bg-black text-white' : 'text-neutral-600 hover:text-black'
+                  viewTab === 'code' ? 'bg-white text-neutral-950 shadow-sm' : 'text-neutral-600 hover:text-neutral-950'
                 }`}
               >
                 <FileCode className="w-3.5 h-3.5" />
-                <span>Cod Markdown (README.md)</span>
+                <span>Markdown</span>
               </button>
             </div>
 
             {/* PREVIEW THEME TOGGLE */}
             {viewTab === 'preview' && (
-              <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl border border-neutral-200 text-xs font-mono">
+              <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl text-xs">
                 <button
                   type="button"
                   onClick={() => setPreviewTheme('dark')}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer ${
-                    previewTheme === 'dark' ? 'bg-neutral-900 text-white font-bold' : 'text-neutral-600 hover:text-black'
+                    previewTheme === 'dark' ? 'bg-neutral-900 text-white font-semibold' : 'text-neutral-600 hover:text-neutral-950'
                   }`}
                 >
                   GitHub Dark
@@ -826,7 +767,7 @@ export default function GithubReadmeStudio({ currentUser }) {
                   type="button"
                   onClick={() => setPreviewTheme('light')}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer ${
-                    previewTheme === 'light' ? 'bg-white text-black font-bold shadow-xs' : 'text-neutral-600 hover:text-black'
+                    previewTheme === 'light' ? 'bg-white text-neutral-950 font-semibold shadow-sm' : 'text-neutral-600 hover:text-neutral-950'
                   }`}
                 >
                   GitHub Light
@@ -840,26 +781,35 @@ export default function GithubReadmeStudio({ currentUser }) {
                 type="button"
                 onClick={handleCopyMarkdown}
                 className="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white hover:bg-neutral-100 text-neutral-800 border border-neutral-300 flex items-center gap-1.5 transition cursor-pointer"
-                title="Copiaza tot codul Markdown in clipboard"
+                title="Copiază tot codul Markdown"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-neutral-900" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Copiat!' : 'Copiaza Markdown'}</span>
+                <span>{copied ? 'Copiat!' : 'Copiază Markdown'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleDownloadReadme}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium bg-black hover:bg-neutral-800 text-white transition cursor-pointer"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium bg-brand-500 hover:bg-brand-600 text-white transition cursor-pointer"
               >
-                <span>Descarca README.md</span>
+                <span>Descarcă README.md</span>
                 <Download className="w-3.5 h-3.5 text-white" />
               </button>
+              <button
+                type="button"
+                onClick={() => setShowGuideModal(true)}
+                aria-label="Ghid GitHub"
+                title="Cum activezi README-ul pe GitHub"
+                className="p-2 rounded-xl text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 border border-neutral-200 transition cursor-pointer"
+              >
+                <HelpCircle className="w-4 h-4" />
+              </button>
             </div>
-          </div>
+          </Card>
 
           {/* MAIN PREVIEW CONTAINER (MIMICS GITHUB PROFILE REPO) */}
           {viewTab === 'preview' ? (
-            <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+            <Card padding="p-0" className="overflow-hidden">
               <div className={`transition-colors overflow-hidden ${
                 previewTheme === 'dark' 
                   ? 'bg-[#0d1117] text-[#c9d1d9]' 
@@ -874,13 +824,12 @@ export default function GithubReadmeStudio({ currentUser }) {
                 }`}>
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-3.5 h-3.5 text-neutral-400" />
-                    <span className="font-bold text-neutral-900 dark:text-neutral-100">{githubUsername.trim() || 'username'}</span>
+                    <span className={`font-bold ${previewTheme === 'dark' ? 'text-neutral-100' : 'text-neutral-900'}`}>{githubUsername.trim() || 'username'}</span>
                     <span>/</span>
                     <span className="font-bold">README.md</span>
                   </div>
                   <div className="flex items-center gap-2 text-[11px]">
-                    <span className="w-2 h-2 rounded-full bg-neutral-900 dark:bg-neutral-200"></span>
-                    <span className="font-mono">Special Repository</span>
+                    <span className="font-mono">Repository special</span>
                   </div>
                 </div>
 
@@ -915,7 +864,7 @@ export default function GithubReadmeStudio({ currentUser }) {
                         <strong className={`font-bold ${previewTheme === 'dark' ? 'text-white' : 'text-neutral-950'}`} {...props} />
                       ),
                       a: ({node, ...props}) => (
-                        <a className="text-neutral-900 dark:text-neutral-100 underline font-medium" target="_blank" rel="noopener noreferrer" {...props} />
+                        <a className={`underline font-medium ${previewTheme === 'dark' ? 'text-neutral-100' : 'text-neutral-900'}`} target="_blank" rel="noopener noreferrer" {...props} />
                       )
                     }}
                   >
@@ -924,15 +873,16 @@ export default function GithubReadmeStudio({ currentUser }) {
                 </div>
 
               </div>
-            </div>
+            </Card>
           ) : (
             /* RAW MARKDOWN CODE EDITOR */
-            <div className="bg-neutral-950 rounded-xl border border-neutral-800 overflow-hidden flex flex-col">
+            <div className="bg-neutral-950 rounded-2xl overflow-hidden flex flex-col">
               <div className="px-4 py-3 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between text-xs text-neutral-400 font-mono">
-                <span className="font-bold text-neutral-300">README.md (Editor Direct)</span>
+                <span className="font-bold text-neutral-300">README.md</span>
                 <span className="font-bold text-neutral-400">{rawMarkdown.length} caractere</span>
               </div>
               <textarea
+                aria-label="Cod Markdown README"
                 value={rawMarkdown}
                 onChange={(e) => setRawMarkdown(e.target.value)}
                 rows={28}
@@ -945,70 +895,37 @@ export default function GithubReadmeStudio({ currentUser }) {
 
       </div>
 
-      {/* STEP-BY-STEP MODAL: HOW TO SETUP GITHUB PROFILE README */}
-      {showGuideModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-morphing-backdrop">
-          <div className="bg-white rounded-2xl border border-neutral-300 p-6 max-w-xl w-full space-y-5 shadow-2xl animate-morphing-dialog">
-            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <span className="p-2 rounded-xl bg-black text-white">
-                  <Github className="w-5 h-5" />
-                </span>
-                <h3 className="font-bold text-lg text-neutral-950">Cum activezi README-ul pe GitHub?</h3>
-              </div>
-              <button
-                onClick={() => setShowGuideModal(false)}
-                className="p-1.5 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition-colors cursor-pointer animate-morphing-close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <p className="text-xs text-neutral-600 leading-relaxed">
-              GitHub ofera o functionalitate speciala: daca creezi un repository public cu <strong className="text-neutral-950 font-bold">acelasi nume exact ca username-ul tau</strong>, continutul fisierului <code className="text-neutral-900 font-mono font-bold bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200">README.md</code> va fi afisat automat pe pagina ta de profil!
-            </p>
-
-            <div className="space-y-2.5 text-xs text-neutral-800">
-              <div className="flex items-start gap-3 p-3.5 rounded-xl bg-neutral-50 border border-neutral-200">
-                <span className="w-5 h-5 rounded-full bg-black text-white font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">1</span>
-                <div className="leading-relaxed">
-                  <strong className="text-neutral-950 font-bold">Creeaza un repository nou pe GitHub:</strong> Mergi la <a href="https://github.com/new" target="_blank" rel="noreferrer" className="text-neutral-950 underline font-bold">github.com/new</a>.
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-3.5 rounded-xl bg-neutral-50 border border-neutral-200">
-                <span className="w-5 h-5 rounded-full bg-black text-white font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">2</span>
-                <div className="leading-relaxed">
-                  <strong className="text-neutral-950 font-bold">Numeste repository-ul:</strong> Pune exact username-ul tau (ex: <code className="text-neutral-900 font-mono font-bold bg-neutral-100 px-1 py-0.5 rounded border border-neutral-200">{githubUsername.trim() || 'sarbumihai'}</code>).
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-3.5 rounded-xl bg-neutral-50 border border-neutral-200">
-                <span className="w-5 h-5 rounded-full bg-black text-white font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">3</span>
-                <div className="leading-relaxed">
-                  <strong className="text-neutral-950 font-bold">Bifeaza Public si Add a README file:</strong> Creeaza repository-ul.
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-3.5 rounded-xl bg-neutral-50 border border-neutral-200">
-                <span className="w-5 h-5 rounded-full bg-black text-white font-mono font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">4</span>
-                <div className="leading-relaxed">
-                  <strong className="text-neutral-950 font-bold">Lipeste codul generat:</strong> Apasa butonul <strong className="text-neutral-900 font-bold">„Copiaza Markdown”</strong> din acest Studio, deschide <code className="font-mono text-neutral-900 font-bold bg-neutral-100 px-1 py-0.5 rounded border border-neutral-200">README.md</code> in GitHub, lipeste continutul si apasa <strong className="text-neutral-900 font-bold">Commit changes</strong>!
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => setShowGuideModal(false)}
-                className="px-5 py-2.5 bg-black hover:bg-neutral-800 text-white font-medium text-xs rounded-xl cursor-pointer transition"
-              >
-                Am inteles, multumesc!
-              </button>
-            </div>
-          </div>
+      <Modal
+        isOpen={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+        title="Activează README-ul pe GitHub"
+        subtitle="Patru pași, o singură dată"
+        icon={Github}
+        size="lg"
+      >
+        <ol className="space-y-2.5 text-sm text-neutral-800">
+          {[
+            <>Creează un repository nou pe <a href="https://github.com/new" target="_blank" rel="noreferrer" className="text-brand-600 underline font-medium">github.com/new</a>.</>,
+            <>Numește-l exact ca username-ul tău: <code className="font-mono font-semibold bg-neutral-100 px-1.5 py-0.5 rounded">{githubUsername.trim() || 'username'}</code>.</>,
+            <>Bifează <strong>Public</strong> și <strong>Add a README file</strong>.</>,
+            <>Apasă „Copiază Markdown” aici, lipește conținutul în <code className="font-mono font-semibold bg-neutral-100 px-1.5 py-0.5 rounded">README.md</code> și fă commit.</>
+          ].map((step, idx) => (
+            <li key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-neutral-50">
+              <span className="w-5 h-5 rounded-full bg-brand-500 text-white font-semibold flex items-center justify-center text-[11px] shrink-0 mt-0.5">{idx + 1}</span>
+              <span className="leading-relaxed">{step}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="flex justify-end pt-5">
+          <button
+            type="button"
+            onClick={() => setShowGuideModal(false)}
+            className="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm rounded-xl cursor-pointer transition"
+          >
+            Am înțeles
+          </button>
         </div>
-      )}
+      </Modal>
 
     </div>
   );
