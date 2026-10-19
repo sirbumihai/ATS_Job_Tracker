@@ -81,7 +81,7 @@ export function HeroShowcase() {
         from={{ x: -80, y: 40 }}
         rotate={3}
         delay={0.35}
-        className="right-2 top-14 md:-right-4 md:top-16 w-52"
+        className="right-2 top-14 md:-right-4 md:top-16 w-max max-w-[14rem]"
       >
         <div className="flex items-center gap-2">
           <span className="w-7 h-7 rounded-lg bg-brand-500 text-white text-xs font-bold flex items-center justify-center">R</span>
@@ -100,7 +100,7 @@ export function HeroShowcase() {
         from={{ x: -60, y: -60 }}
         rotate={-2}
         delay={0.5}
-        className="hidden md:block right-8 -bottom-2 w-56"
+        className="hidden md:block right-8 -bottom-2 w-max max-w-[14rem]"
       >
         <div className="flex items-center gap-2.5">
           <span className="w-8 h-8 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center">
