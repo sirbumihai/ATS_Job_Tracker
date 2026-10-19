@@ -64,13 +64,15 @@ export function HeroShowcase() {
         className="left-2 -bottom-2 md:-left-6 md:bottom-6 w-44"
       >
         <div className="text-[10px] font-medium uppercase tracking-widest text-neutral-500">Scor ATS</div>
-        <div className="flex items-end gap-1.5 mt-0.5">
+        <div className="flex items-center justify-between gap-3 mt-0.5">
           <span className="font-serif text-3xl text-neutral-950">
             <CountUp value="94%" duration={2} />
           </span>
-          <TrendingUp className="w-4 h-4 text-brand-600 mb-1.5" />
+          <span className="w-8 h-8 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center">
+            <TrendingUp className="w-4 h-4" />
+          </span>
         </div>
-        <div className="mt-1.5 h-1.5 w-full rounded-full bg-neutral-100 overflow-hidden">
+        <div className="mt-2 h-1.5 w-full rounded-full bg-neutral-100 overflow-hidden">
           <div className="h-full rounded-full bg-brand-500" style={{ width: '94%' }} />
         </div>
       </FanCard>
