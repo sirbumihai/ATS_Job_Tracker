@@ -43,11 +43,13 @@ const DEFAULT_ROUTES = [
   ['DELETE', /^\/api\/v1\/cv\/[^/]+$/, () => ({})],
   ['GET', /^\/api\/v1\/cv$/, () => fixture('cv-profiles')[0]],
   ['GET', /^\/api\/v1\/cv\/[^/]+$/, () => fixture('cv-profiles')[0]],
+  ['PUT', /^\/api\/v1\/cv\/[^/]+$/, () => fixture('cv-profiles')[0]],
 
   ['GET', /^\/api\/v1\/resumes\/user$/, 'resumes'],
   ['POST', /^\/api\/v1\/resumes$/, () => fixture('resumes')[0]],
 
   ['GET', /^\/api\/v1\/market-insights$/, 'market-insights'],
+  ['GET', /^\/api\/v1\/ai\/polish-diagnosis$/, 'polish-diagnosis'],
 
   ['GET', /^\/api\/v1\/linkedin\/(all-star|demo)-profile$/, 'linkedin-profile'],
   ['POST', /^\/api\/v1\/linkedin\/optimize$/, 'linkedin-optimization'],
