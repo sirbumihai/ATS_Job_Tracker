@@ -14,7 +14,12 @@ const DEFAULT_ROUTES = [
   ['POST', /^\/api\/v1\/auth\/(login|register)$/, 'user'],
 
   ['GET', /^\/api\/v1\/applications$/, 'applications'],
-  ['POST', /^\/api\/v1\/applications$/, () => fixture('applications')[0]],
+  ['POST', /^\/api\/v1\/applications$/, () => ({
+    ...fixture('applications')[2],
+    id: 'a9999999-9999-4999-8999-999999999999',
+    companyName: 'Firma Test',
+    jobTitle: 'QA Engineer',
+  })],
   ['PATCH', /^\/api\/v1\/applications\/[^/]+\/status$/, () => fixture('applications')[0]],
   ['DELETE', /^\/api\/v1\/applications\/[^/]+$/, () => ({})],
 

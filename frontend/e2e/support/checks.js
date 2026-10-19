@@ -4,7 +4,7 @@ const EMOJI_RE = /\p{Extended_Pictographic}/gu;
 
 /** Textul vizibil al paginii (sau al unui locator) nu contine niciun emoji. */
 export async function expectNoEmoji(target) {
-  const root = 'locator' in target ? target.locator('body') : target;
+  const root = typeof target.goto === 'function' ? target.locator('body') : target;
   const text = await root.innerText();
   const found = [];
   for (const m of text.matchAll(EMOJI_RE)) {

@@ -1,443 +1,265 @@
-import React, { useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { 
-  X, 
-  Lock, 
-  AlertTriangle, 
-  Plus, 
-  Upload, 
-  FileText, 
-  Check, 
-  BrainCircuit, 
-  CheckCircle2 
+import React, { useEffect, useState } from 'react';
+import {
+  Lock,
+  AlertTriangle,
+  Plus,
+  Upload,
+  FileText,
+  BrainCircuit,
+  CheckCircle2
 } from 'lucide-react';
+import Modal from './ui/Modal';
+import Card from './ui/Card';
+import ScoreRing from './ui/ScoreRing';
+import ScoreBar from './ui/ScoreBar';
+
+const LABEL = 'block text-xs font-semibold text-neutral-700 mb-1';
+const INPUT = 'w-full bg-white border border-neutral-200 rounded-lg px-3 py-2.5 text-sm text-neutral-950 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition';
+const PRIMARY = 'px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-semibold transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
+const SECONDARY = 'px-4 py-2.5 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded-lg text-sm font-semibold transition cursor-pointer';
 
 export function AuthModal({ isOpen, onClose, authMode, setAuthMode, authForm, setAuthForm, authError, onSubmit }) {
-  useEffect(() => {
-    if (isOpen) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-
-      const handleKeyDown = (e) => {
-        if (e.key === 'Escape') onClose();
-      };
-      window.addEventListener('keydown', handleKeyDown);
-
-      return () => {
-        document.body.style.overflow = prev === 'hidden' ? '' : prev;
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
+  const isLogin = authMode === 'login';
   return (
-    <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-morphing-backdrop"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white text-neutral-900 w-full max-w-md rounded-2xl p-6 sm:p-7 space-y-4 relative border border-neutral-200 shadow-2xl my-auto animate-morphing-dialog"
-        onClick={e => e.stopPropagation()}
-      >
-        <button 
-          onClick={onClose} 
-          className="absolute top-4 right-4 p-1.5 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition cursor-pointer animate-morphing-close"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-neutral-100 text-neutral-900 rounded-xl border border-neutral-200">
-            <Lock className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-base sm:text-lg font-black text-neutral-950 tracking-tight">
-              {authMode === 'login' ? 'Autentificare Utilizator' : 'Inregistrare Cont Nou'}
-            </h3>
-            <p className="text-xs text-neutral-500 font-mono font-medium">Spring Security 6 + Token JWT</p>
-          </div>
+    <Modal isOpen={isOpen} onClose={onClose} icon={Lock} title={isLogin ? 'Autentificare' : 'Cont nou'}>
+      {authError && (
+        <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>{authError}</span>
         </div>
+      )}
 
-        {authError && (
-          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2 font-medium">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
-            <span>{authError}</span>
+      <form onSubmit={onSubmit} className="space-y-3.5">
+        {!isLogin && (
+          <div>
+            <label htmlFor="auth-name" className={LABEL}>Nume complet</label>
+            <input
+              id="auth-name"
+              type="text"
+              required
+              placeholder="Mihai Sîrbu"
+              value={authForm.fullName}
+              onChange={e => setAuthForm({ ...authForm, fullName: e.target.value })}
+              className={INPUT}
+            />
           </div>
         )}
 
-        <form onSubmit={onSubmit} className="space-y-3.5 text-sm">
-          {authMode === 'register' && (
-            <div>
-              <label className="block text-xs font-bold text-neutral-700 mb-1">Nume Complet</label>
-              <input 
-                type="text" 
-                required
-                placeholder="Mihai Sirbu"
-                value={authForm.fullName}
-                onChange={e => setAuthForm({...authForm, fullName: e.target.value})}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3.5 py-2.5 text-xs text-neutral-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-medium transition"
-              />
-            </div>
-          )}
+        <div>
+          <label htmlFor="auth-email" className={LABEL}>Email</label>
+          <input
+            id="auth-email"
+            type="email"
+            required
+            placeholder="nume@exemplu.ro"
+            value={authForm.email}
+            onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
+            className={INPUT}
+          />
+        </div>
 
-          <div>
-            <label className="block text-xs font-bold text-neutral-700 mb-1">Adresa Email</label>
-            <input 
-              type="email" 
-              required
-              placeholder="nume@exemplu.ro"
-              value={authForm.email}
-              onChange={e => setAuthForm({...authForm, email: e.target.value})}
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3.5 py-2.5 text-xs text-neutral-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-medium transition"
-            />
-          </div>
+        <div>
+          <label htmlFor="auth-password" className={LABEL}>Parolă</label>
+          <input
+            id="auth-password"
+            type="password"
+            required
+            value={authForm.password}
+            onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
+            className={INPUT}
+          />
+        </div>
 
-          <div>
-            <label className="block text-xs font-bold text-neutral-700 mb-1">Parola Cont</label>
-            <input 
-              type="password" 
-              required
-              placeholder="••••••••"
-              value={authForm.password}
-              onChange={e => setAuthForm({...authForm, password: e.target.value})}
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3.5 py-2.5 text-xs text-neutral-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-medium transition"
-            />
-          </div>
+        <button type="submit" className={`${PRIMARY} w-full`}>
+          {isLogin ? 'Conectează-te' : 'Creează contul'}
+        </button>
 
-          <button 
-            type="submit" 
-            className="w-full py-2.5 bg-black hover:bg-neutral-800 text-white rounded-xl font-bold text-xs shadow-sm transition cursor-pointer active:scale-98"
+        <p className="text-center text-sm text-neutral-500 pt-1">
+          {isLogin ? 'Nu ai cont? ' : 'Ai deja cont? '}
+          <button
+            type="button"
+            onClick={() => setAuthMode(isLogin ? 'register' : 'login')}
+            className="text-brand-600 font-semibold hover:underline cursor-pointer"
           >
-            {authMode === 'login' ? 'Conectare in Cont' : 'Creeaza Contul Acum'}
+            {isLogin ? 'Creează cont' : 'Conectează-te'}
           </button>
-
-          <div className="text-center pt-2 border-t border-neutral-100">
-            {authMode === 'login' ? (
-              <p className="text-xs text-neutral-500 font-medium">
-                Nu ai un cont?{' '}
-                <button type="button" onClick={() => setAuthMode('register')} className="text-black font-bold hover:underline cursor-pointer">
-                  Inregistreaza-te acum
-                </button>
-              </p>
-            ) : (
-              <p className="text-xs text-neutral-500 font-medium">
-                Ai deja cont?{' '}
-                <button type="button" onClick={() => setAuthMode('login')} className="text-black font-bold hover:underline cursor-pointer">
-                  Autentifica-te
-                </button>
-              </p>
-            )}
-          </div>
-        </form>
-      </div>
-    </div>
+        </p>
+      </form>
+    </Modal>
   );
 }
 
 export function AddJobModal({ isOpen, onClose, newJob, setNewJob, onSubmit }) {
-  useEffect(() => {
-    if (!isOpen) return;
-    const prevBody = document.body.style.overflow;
-    const prevHtml = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = prevBody;
-      document.documentElement.style.overflow = prevHtml;
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
-  return createPortal(
-    <div 
-      className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-morphing-backdrop"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white text-gray-900 w-full max-w-lg rounded-2xl p-6 sm:p-7 space-y-4 relative border border-gray-200 shadow-2xl my-auto animate-morphing-dialog"
-        onClick={e => e.stopPropagation()}
-      >
-        <button 
-          onClick={onClose} 
-          className="absolute top-4 right-4 p-1.5 rounded-xl text-gray-400 hover:text-black hover:bg-gray-100 transition cursor-pointer animate-morphing-close"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="flex items-center gap-2.5">
-          <div className="p-2.5 bg-neutral-100 text-neutral-900 rounded-xl border border-neutral-200">
-            <Plus className="w-5 h-5" />
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} icon={Plus} size="lg" title="Adaugă un job" subtitle="Lipește descrierea pentru scorul ATS">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label htmlFor="job-company" className={LABEL}>Companie</label>
+            <input
+              id="job-company"
+              type="text"
+              required
+              placeholder="ex: Bitdefender"
+              value={newJob.companyName}
+              onChange={e => setNewJob({ ...newJob, companyName: e.target.value })}
+              className={INPUT}
+            />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-black text-gray-950 tracking-tight">
-              Adauga un Job Nou in Tracker
-            </h3>
-            <p className="text-xs text-gray-500 font-semibold">Introducere manuala sau descriere bruta</p>
+            <label htmlFor="job-title" className={LABEL}>Rol</label>
+            <input
+              id="job-title"
+              type="text"
+              required
+              placeholder="ex: Junior Java Developer"
+              value={newJob.jobTitle}
+              onChange={e => setNewJob({ ...newJob, jobTitle: e.target.value })}
+              className={INPUT}
+            />
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4 text-sm">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Nume Companie</label>
-            <input 
-              type="text" 
-              required
-              placeholder="ex: Google, UiPath, Bitdefender, BRD"
-              value={newJob.companyName}
-              onChange={e => setNewJob({...newJob, companyName: e.target.value})}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-medium transition"
-            />
-          </div>
+        <div>
+          <label htmlFor="job-description" className={LABEL}>Descrierea jobului</label>
+          <textarea
+            id="job-description"
+            required
+            rows={5}
+            placeholder="Textul anunțului"
+            value={newJob.rawDescription}
+            onChange={e => setNewJob({ ...newJob, rawDescription: e.target.value })}
+            className={`${INPUT} resize-none leading-relaxed`}
+          />
+        </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Titlul Rolului / Pozitiei</label>
-            <input 
-              type="text" 
-              required
-              placeholder="ex: Junior Java Backend Developer"
-              value={newJob.jobTitle}
-              onChange={e => setNewJob({...newJob, jobTitle: e.target.value})}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-medium transition"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Descrierea Jobului (Text pentru ATS Match)</label>
-            <textarea 
-              required
-              rows={5}
-              placeholder="Lipeste textul descrierii jobului aici pentru analiza automata a compatibilitatii..."
-              value={newJob.rawDescription}
-              onChange={e => setNewJob({...newJob, rawDescription: e.target.value})}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs text-gray-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-medium transition resize-none leading-relaxed"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2.5 pt-2 border-t border-gray-100">
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="px-4 py-2 border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-xl text-xs font-bold transition cursor-pointer"
-            >
-              Anuleaza
-            </button>
-            <button 
-              type="submit" 
-              className="px-5 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer"
-            >
-              Salveaza Jobul
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>,
-    document.body
+        <div className="flex justify-end gap-2.5 pt-1">
+          <button type="button" onClick={onClose} className={SECONDARY}>Anulează</button>
+          <button type="submit" className={PRIMARY}>Salvează</button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
-export function UploadResumeModal({ isOpen, onClose, selectedFile, setSelectedFile, uploading, uploadedSuccess, onSubmit }) {
+export function UploadResumeModal({ isOpen, onClose, onUpload }) {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
   useEffect(() => {
-    if (isOpen) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
+    if (!isOpen) setSelectedFile(null);
+  }, [isOpen]);
 
-      const handleKeyDown = (e) => {
-        if (e.key === 'Escape') onClose();
-      };
-      window.addEventListener('keydown', handleKeyDown);
-
-      return () => {
-        document.body.style.overflow = prev === 'hidden' ? '' : prev;
-        window.removeEventListener('keydown', handleKeyDown);
-      };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) return;
+    setUploading(true);
+    try {
+      await onUpload(selectedFile);
+    } finally {
+      setUploading(false);
     }
-  }, [isOpen, onClose]);
+  };
 
-  if (!isOpen) return null;
   return (
-    <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-morphing-backdrop"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white text-neutral-900 w-full max-w-md rounded-2xl p-6 sm:p-7 space-y-4 relative border border-neutral-200 shadow-2xl my-auto animate-morphing-dialog"
-        onClick={e => e.stopPropagation()}
-      >
-        <button 
-          onClick={onClose} 
-          className="absolute top-4 right-4 p-1.5 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition cursor-pointer animate-morphing-close"
+    <Modal isOpen={isOpen} onClose={onClose} icon={Upload} title="Încarcă un CV" subtitle="PDF sau DOCX">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <label
+          htmlFor="resume-file"
+          className="block border border-dashed border-neutral-300 hover:border-brand-500 rounded-xl p-6 text-center cursor-pointer transition"
         >
-          <X className="w-5 h-5" />
-        </button>
+          <FileText className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+          <span className="block text-sm font-medium text-neutral-800">
+            {selectedFile ? selectedFile.name : 'Alege fișierul'}
+          </span>
+        </label>
+        <input
+          id="resume-file"
+          type="file"
+          accept=".pdf,.docx"
+          aria-label="Fișier CV"
+          onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+          className="sr-only"
+        />
 
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-neutral-100 text-neutral-900 rounded-xl border border-neutral-200">
-            <Upload className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-base sm:text-lg font-black text-neutral-950 tracking-tight">
-              Incarcare CV PDF
-            </h3>
-            <p className="text-xs text-neutral-500 font-mono font-medium">Procesare text & parsare competente</p>
-          </div>
+        <div className="flex justify-end gap-2.5">
+          <button type="button" onClick={onClose} className={SECONDARY}>Anulează</button>
+          <button type="submit" disabled={!selectedFile || uploading} className={PRIMARY}>
+            {uploading ? 'Se procesează...' : 'Procesează CV-ul'}
+          </button>
         </div>
-
-        {uploadedSuccess ? (
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-2">
-            <Check className="w-8 h-8 text-emerald-600 mx-auto animate-bounce" />
-            <p className="text-xs font-bold text-emerald-900">CV-ul a fost procesat si asociat cu succes!</p>
-            <p className="text-[11px] text-emerald-700">{uploadedSuccess}</p>
-          </div>
-        ) : (
-          <form onSubmit={onSubmit} className="space-y-4">
-            <div className="border-2 border-dashed border-neutral-300 hover:border-black bg-neutral-50/50 hover:bg-neutral-100/50 rounded-xl p-6 text-center cursor-pointer transition">
-              <FileText className="w-10 h-10 text-neutral-600 mx-auto mb-2" />
-              <p className="text-xs text-neutral-800 font-bold">Selecteaza fisierul CV (PDF sau DOCX)</p>
-              <input 
-                type="file" 
-                accept=".pdf,.docx"
-                onChange={e => setSelectedFile(e.target.files[0])}
-                className="mt-3 text-xs text-neutral-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border file:border-neutral-200 file:text-xs file:font-bold file:bg-white file:text-neutral-900 hover:file:bg-neutral-100 cursor-pointer"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2.5 pt-2 border-t border-neutral-100">
-              <button 
-                type="button" 
-                onClick={onClose} 
-                className="px-4 py-2 border border-neutral-200 hover:bg-neutral-100 text-neutral-700 rounded-xl text-xs font-bold transition cursor-pointer"
-              >
-                Anuleaza
-              </button>
-              <button 
-                type="submit" 
-                disabled={!selectedFile || uploading} 
-                className="px-5 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50 active:scale-98"
-              >
-                {uploading ? 'Se proceseaza CV...' : 'Proceseaza CV'}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }
 
 export function AiReportModal({ isOpen, onClose, analysis }) {
-  useEffect(() => {
-    if (isOpen) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-
-      const handleKeyDown = (e) => {
-        if (e.key === 'Escape') onClose();
-      };
-      window.addEventListener('keydown', handleKeyDown);
-
-      return () => {
-        document.body.style.overflow = prev === 'hidden' ? '' : prev;
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [isOpen, onClose]);
-
-  if (!isOpen || !analysis) return null;
+  if (!analysis) return null;
 
   const matching = Array.isArray(analysis.matchingSkills) ? analysis.matchingSkills : [];
   const missing = Array.isArray(analysis.missingSkills) ? analysis.missingSkills : [];
   const score = Number(analysis.matchScore || analysis.semanticMatchScore || 85.0);
+  const verdict = score >= 80 ? 'Potrivire foarte bună' : score >= 60 ? 'Potrivire moderată' : 'Lipsuri importante';
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-morphing-backdrop"
-      onClick={onClose}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      icon={BrainCircuit}
+      size="xl"
+      title="Raport ATS"
+      subtitle={[analysis.jobTitle, analysis.companyName].filter(Boolean).join(' · ')}
     >
-      <div 
-        className="bg-white rounded-2xl p-6 sm:p-7 space-y-4 relative border border-neutral-200 shadow-2xl max-w-2xl w-full max-h-[88vh] flex flex-col text-neutral-900 my-auto animate-morphing-dialog"
-        onClick={e => e.stopPropagation()}
-      >
-        <button 
-          onClick={onClose} 
-          className="absolute top-4 right-4 p-1.5 rounded-xl hover:bg-neutral-100 text-neutral-400 hover:text-neutral-900 transition cursor-pointer animate-morphing-close"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-neutral-100 text-neutral-900 rounded-xl border border-neutral-200">
-            <BrainCircuit className="w-5 h-5" />
+      <div className="max-h-[65vh] overflow-y-auto space-y-5 pr-1">
+        <div className="flex items-center gap-5">
+          <ScoreRing value={score} label="Scor ATS" />
+          <div className="flex-1 min-w-0 space-y-3">
+            <p className="font-serif text-lg text-neutral-950">{verdict}</p>
+            {matching.length + missing.length > 0 && (
+              <ScoreBar label="Competențe acoperite" value={matching.length} max={matching.length + missing.length} />
+            )}
           </div>
+        </div>
+
+        {matching.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-lg font-black text-neutral-950 tracking-tight">Raport Analiza AI & Compatibilitate ATS</h3>
-            <p className="text-xs text-neutral-500 font-mono font-medium">Comparatie semantica intre cerintele jobului si profilul tau</p>
+            <h4 className="text-sm font-semibold text-neutral-900 mb-2 flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>Găsite în CV ({matching.length})</span>
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {matching.map((sk, idx) => (
+                <span key={idx} className="px-2.5 py-1 bg-neutral-50 text-neutral-800 border border-neutral-200 rounded-md text-xs font-medium">
+                  {sk}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl border border-neutral-200">
+        {missing.length > 0 && (
           <div>
-            <span className="text-xs font-mono uppercase tracking-wider text-neutral-500 font-bold block">Scor General de Potrivire</span>
-            <span className="text-2xl font-light text-neutral-950">{score.toFixed(1)}% Match ATS</span>
+            <h4 className="text-sm font-semibold text-neutral-900 mb-2 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-rose-600" />
+              <span>Lipsă ({missing.length})</span>
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {missing.map((sk, idx) => (
+                <span key={idx} className="px-2.5 py-1 bg-rose-50 text-rose-800 border border-rose-200 rounded-md text-xs font-medium">
+                  {sk}
+                </span>
+              ))}
+            </div>
           </div>
-          <span className={`px-3 py-1 rounded-xl text-xs font-mono font-bold border ${
-            score >= 80 ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
-            score >= 60 ? 'bg-amber-50 text-amber-800 border-amber-200' :
-            'bg-rose-50 text-rose-800 border-rose-200'
-          }`}>
-            {score >= 80 ? 'Candidat Excelent' : score >= 60 ? 'Potrivire Moderata' : 'Gap-uri Semnificative'}
-          </span>
-        </div>
+        )}
 
-        <div className="overflow-y-auto space-y-4 flex-1 pr-1">
-          {matching.length > 0 && (
-            <div>
-              <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-mono">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Competente Validate in CV ({matching.length})</span>
-              </h4>
-              <div className="flex flex-wrap gap-1.5">
-                {matching.map((sk, idx) => (
-                  <span key={idx} className="px-2.5 py-1 bg-neutral-100 text-neutral-900 border border-neutral-200 rounded-lg text-xs font-mono font-medium">
-                    {sk}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {missing.length > 0 && (
-            <div>
-              <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-mono">
-                <AlertTriangle className="w-4 h-4 text-rose-600" />
-                <span>Competente Cheie Lipsa ({missing.length})</span>
-              </h4>
-              <div className="flex flex-wrap gap-1.5">
-                {missing.map((sk, idx) => (
-                  <span key={idx} className="px-2.5 py-1 bg-rose-50 text-rose-800 border border-rose-200 rounded-lg text-xs font-mono font-medium">
-                    {sk}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {analysis.recommendation && (
-            <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-1">
-              <span className="text-xs font-mono font-bold text-neutral-950 uppercase tracking-wider">Recomandare Strategica:</span>
-              <p className="text-xs text-neutral-700 leading-relaxed font-medium">{analysis.recommendation}</p>
-            </div>
-          )}
-        </div>
+        {analysis.recommendation && (
+          <Card padding="p-4" className="bg-neutral-50">
+            <p className="text-xs font-semibold text-neutral-900 mb-1">Recomandare</p>
+            <p className="text-sm text-neutral-700 leading-relaxed">{analysis.recommendation}</p>
+          </Card>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }
