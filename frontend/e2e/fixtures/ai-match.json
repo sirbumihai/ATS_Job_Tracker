@@ -1,0 +1,40 @@
+{
+  "aiVerified": true,
+  "atsScore": 72.0,
+  "verdict": "Profil potrivit pentru un rol de junior backend.",
+  "matchingSkills": [
+    "Java",
+    "Spring Boot"
+  ],
+  "missingSkills": [
+    "PostgreSQL"
+  ],
+  "experienceLevel": "JUNIOR",
+  "mandatory": [
+    {
+      "text": "Java 17 și Spring Boot",
+      "isMatched": true,
+      "matchedSkill": "Java",
+      "explanation": "Apare în CV"
+    },
+    {
+      "text": "PostgreSQL",
+      "isMatched": false,
+      "matchedSkill": null,
+      "explanation": null
+    }
+  ],
+  "bonus": [
+    {
+      "text": "Docker",
+      "isMatched": false,
+      "matchedSkill": null
+    }
+  ],
+  "responsibilities": [
+    "Dezvoltare de servicii REST"
+  ],
+  "benefits": [
+    "Program flexibil"
+  ]
+}

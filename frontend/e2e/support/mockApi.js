@@ -24,9 +24,12 @@ const DEFAULT_ROUTES = [
   ['DELETE', /^\/api\/v1\/applications\/[^/]+$/, () => ({})],
 
   ['POST', /^\/api\/v1\/jobs$/, () => ({ id: 'b9999999-9999-4999-8999-999999999999' })],
+  ['POST', /^\/api\/v1\/jobs\/save-to-kanban$/, () => ({})],
   ['GET', /^\/api\/v1\/jobs\/search$/, 'jobs-search'],
   ['GET', /^\/api\/v1\/jobs\/stats$/, 'jobs-stats'],
   ['GET', /^\/api\/v1\/jobs\/[^/]+\/changes$/, () => []],
+  ['GET', /^\/api\/v1\/jobs\/[^/]+\/details$/, 'job-details'],
+  ['POST', /^\/api\/v1\/ai\/match-job$/, 'ai-match'],
 
   ['GET', /^\/api\/v1\/cv\/list$/, 'cv-profiles'],
   ['GET', /^\/api\/v1\/cv$/, () => fixture('cv-profiles')[0]],
