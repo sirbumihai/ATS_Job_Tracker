@@ -3,8 +3,8 @@ import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'fr
 import { Bell, Sparkles, TrendingUp } from 'lucide-react';
 import { CountUp, EASE } from './motion';
 
-const cardClass =
-  'absolute rounded-xl bg-white/95 backdrop-blur border border-neutral-200 shadow-lg p-3 text-left';
+const faceClass = 'rounded-xl bg-white/95 backdrop-blur border border-neutral-200 shadow-lg p-3 text-left';
+const cardClass = `absolute ${faceClass}`;
 
 /**
  * Card de interfata din evantai. Strat exterior: paralaxa legata de scroll,
@@ -24,8 +24,9 @@ function FanCard({ progress, shift, from, rotate, delay, className, children }) 
   }
 
   return (
-    <motion.div data-testid="hero-card" className={`${cardClass} ${className}`} style={{ y }}>
+    <motion.div data-testid="hero-card" className={`absolute ${className}`} style={{ y }}>
       <motion.div
+        className={faceClass}
         initial={{ opacity: 0, x: from.x, y: from.y, rotate: 0, scale: 0.85 }}
         animate={{ opacity: 1, x: 0, y: 0, rotate, scale: 1 }}
         transition={{ duration: 1.1, delay, ease: EASE }}
