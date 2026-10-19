@@ -32,6 +32,15 @@ const DEFAULT_ROUTES = [
   ['POST', /^\/api\/v1\/ai\/match-job$/, 'ai-match'],
 
   ['GET', /^\/api\/v1\/cv\/list$/, 'cv-profiles'],
+  ['POST', /^\/api\/v1\/cv$/, (request) => ({
+    ...fixture('cv-profiles')[0],
+    id: 'c9999999-9999-4999-8999-999999999999',
+    title: request.postDataJSON().title,
+    isPrimary: false,
+  })],
+  ['POST', /^\/api\/v1\/cv\/[^/]+\/duplicate$/, () => ({ ...fixture('cv-profiles')[0], id: 'c8888888-8888-4888-8888-888888888888', title: 'CV Backend Java (copie)', isPrimary: false })],
+  ['PATCH', /^\/api\/v1\/cv\/[^/]+\/primary$/, () => ({})],
+  ['DELETE', /^\/api\/v1\/cv\/[^/]+$/, () => ({})],
   ['GET', /^\/api\/v1\/cv$/, () => fixture('cv-profiles')[0]],
   ['GET', /^\/api\/v1\/cv\/[^/]+$/, () => fixture('cv-profiles')[0]],
 
