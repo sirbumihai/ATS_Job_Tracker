@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { motion, useReducedMotion, useScroll } from 'framer-motion';
+import { motion, useReducedMotion, useScroll, useSpring } from 'framer-motion';
 
 const STEPS = [
   {
@@ -49,7 +49,9 @@ export default function MethodSteps() {
   const ref = useRef(null);
   const reduced = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 75%', 'end 65%'] });
-  const progress = reduced ? 1 : scrollYProgress;
+  // Spring peste progresul de scroll, ca linia sa urmareasca lin, fara sacadari.
+  const smooth = useSpring(scrollYProgress, { stiffness: 90, damping: 26, mass: 0.4 });
+  const progress = reduced ? 1 : smooth;
 
   return (
     <div ref={ref} className="relative">

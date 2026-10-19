@@ -10,7 +10,7 @@ import { EASE } from './motion';
 export default function FaqAccordion({ items }) {
   const [openIndex, setOpenIndex] = useState(null);
   const reduced = useReducedMotion();
-  const transition = { duration: reduced ? 0 : 0.35, ease: EASE };
+  const transition = { duration: reduced ? 0 : 0.5, ease: EASE };
 
   return (
     <div className="space-y-4">
@@ -44,7 +44,7 @@ export default function FaqAccordion({ items }) {
                   key="panel"
                   id={`faq-panel-${idx}`}
                   initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
+                  animate={{ height: 'auto', opacity: 1, transition: { ...transition, opacity: { ...transition, delay: reduced ? 0 : 0.1 } } }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={transition}
                   className="overflow-hidden"

@@ -5,7 +5,9 @@ import Footer from './Footer';
 import MethodSteps from './landing/method';
 import FaqAccordion from './landing/faq';
 import { Reveal, RevealStagger, RevealItem, CountUp } from './landing/motion';
-import { HeroShowcase, CvStudioMedia, MarketInsightsMedia, LinkedInMedia } from './landing/showcase';
+import { HeroShowcase } from './landing/hero';
+import { TrackerFragment, CvFragment, FlashcardFragment, LinkedInFragment } from './landing/cells';
+import useLenis, { smoothScrollTo } from './landing/lenis';
 import { JOB_PLATFORMS } from '../data/jobPlatforms';
 import { ALL_TECH_ANKI_CARDS } from '../data/decks';
 
@@ -20,28 +22,28 @@ const FEATURES = [
   {
     title: 'Tracker',
     text: 'Fiecare aplicație, pe etape, de la salvat la ofertă.',
-    media: MarketInsightsMedia,
+    media: TrackerFragment,
     cta: 'Deschide Tracker',
     tab: 'tracker',
   },
   {
     title: 'Optimizare CV',
     text: 'Vezi ce cuvinte-cheie lipsesc din CV pentru fiecare job.',
-    media: CvStudioMedia,
+    media: CvFragment,
     cta: 'Deschide CV-urile',
     tab: 'cv_library',
   },
   {
     title: 'Pregătire interviu',
     text: 'Flashcard-uri tehnice și întrebări HR, pe stack-ul tău.',
-    media: null,
+    media: FlashcardFragment,
     cta: 'Exersează întrebări',
     tab: 'skill_roadmap',
   },
   {
     title: 'Brand personal',
     text: 'Profil LinkedIn și README GitHub pe care recrutorii le găsesc.',
-    media: LinkedInMedia,
+    media: LinkedInFragment,
     cta: 'Deschide LinkedIn Optimizer',
     tab: 'linkedin_optimizer',
   },
@@ -66,6 +68,12 @@ const FAQ = [
   },
 ];
 
+// Ancora din meniu: deruleaza prin Lenis (ia in calcul scroll-mt de pe sectiune); fara Lenis ramane comportamentul nativ.
+function anchorClick(e) {
+  const hash = e.currentTarget.getAttribute('href');
+  if (smoothScrollTo(hash)) e.preventDefault();
+}
+
 const CONTAINER = 'max-w-6xl mx-auto border-x border-neutral-200';
 
 function SectionHeading({ id, title, subtitle, center = false }) {
@@ -85,6 +93,7 @@ export default function LandingPage({
   onOpenAuth
 }) {
   const go = (tab) => onNavigateTab && onNavigateTab(tab);
+  useLenis();
 
   return (
     <div data-testid="landing" className="w-full bg-white text-neutral-950 font-sans">
@@ -94,7 +103,7 @@ export default function LandingPage({
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onClick={() => { if (!smoothScrollTo(0)) window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             className="flex items-center gap-2.5 cursor-pointer shrink-0"
             aria-label="JobFlow AI, începutul paginii"
           >
@@ -102,9 +111,9 @@ export default function LandingPage({
           </button>
 
           <nav className="hidden lg:flex items-center gap-1 text-sm font-medium text-neutral-600">
-            <a href="#functionalitati" className="px-3 py-2 rounded-lg hover:text-neutral-950 hover:bg-neutral-100 transition">Funcționalități</a>
-            <a href="#metodologie" className="px-3 py-2 rounded-lg hover:text-neutral-950 hover:bg-neutral-100 transition">Metodologie</a>
-            <a href="#intrebari" className="px-3 py-2 rounded-lg hover:text-neutral-950 hover:bg-neutral-100 transition">Întrebări</a>
+            <a href="#functionalitati" onClick={anchorClick} className="px-3 py-2 rounded-lg hover:text-neutral-950 hover:bg-neutral-100 transition">Funcționalități</a>
+            <a href="#metodologie" onClick={anchorClick} className="px-3 py-2 rounded-lg hover:text-neutral-950 hover:bg-neutral-100 transition">Metodologie</a>
+            <a href="#intrebari" onClick={anchorClick} className="px-3 py-2 rounded-lg hover:text-neutral-950 hover:bg-neutral-100 transition">Întrebări</a>
             <button
               type="button"
               onClick={() => go('feedback')}

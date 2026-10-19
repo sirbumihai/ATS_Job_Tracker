@@ -1,12 +1,46 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { animate, motion, useInView, useReducedMotion } from 'framer-motion';
 
+// Ease partajat de toate animatiile din landing.
 export const EASE = [0.22, 1, 0.36, 1];
+
+// Aparitie moale: opacitate + translatie mica + blur usor care dispare.
+const REVEAL_DURATION = 0.9;
+const HIDDEN_BLUR = 'blur(8px)';
+const SHOWN_BLUR = 'blur(0px)';
+
+/**
+ * Drives a 0..1 progress value in a loop, but only while `ref` is in the
+ * viewport. Stays at 1 (final static state) with reduced motion.
+ */
+export function useLoopProgress(ref, { duration = 3.2, hold = 2.2 } = {}) {
+  const reduced = useReducedMotion();
+  const inView = useInView(ref, { margin: '-10% 0px -10% 0px' });
+  const [p, setP] = useState(reduced ? 1 : 0);
+
+  useEffect(() => {
+    if (reduced) {
+      setP(1);
+      return undefined;
+    }
+    if (!inView) return undefined;
+    const controls = animate(0, 1, {
+      duration,
+      ease: EASE,
+      repeat: Infinity,
+      repeatDelay: hold,
+      onUpdate: setP,
+    });
+    return () => controls.stop();
+  }, [inView, reduced, duration, hold]);
+
+  return p;
+}
 
 /**
  * Fade/slide-in on scroll. Renders static and fully visible with reduced motion.
  */
-export function Reveal({ as = 'div', delay = 0, y = 24, className, children, ...rest }) {
+export function Reveal({ as = 'div', delay = 0, y = 20, className, children, ...rest }) {
   const reduced = useReducedMotion();
   const Tag = motion[as] || motion.div;
 
@@ -17,10 +51,10 @@ export function Reveal({ as = 'div', delay = 0, y = 24, className, children, ...
   return (
     <Tag
       className={className}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y, filter: HIDDEN_BLUR }}
+      whileInView={{ opacity: 1, y: 0, filter: SHOWN_BLUR }}
       viewport={{ once: true, margin: '0px 0px -80px 0px' }}
-      transition={{ duration: 0.6, delay, ease: EASE }}
+      transition={{ duration: REVEAL_DURATION, delay, ease: EASE }}
       {...rest}
     >
       {children}
@@ -31,7 +65,7 @@ export function Reveal({ as = 'div', delay = 0, y = 24, className, children, ...
 /**
  * Children appear one after another once the container enters the viewport.
  */
-export function RevealStagger({ className, stagger = 0.12, children }) {
+export function RevealStagger({ className, stagger = 0.15, children }) {
   const reduced = useReducedMotion();
   if (reduced) return <div className={className}>{children}</div>;
 
@@ -48,7 +82,7 @@ export function RevealStagger({ className, stagger = 0.12, children }) {
   );
 }
 
-export function RevealItem({ className, y = 20, children }) {
+export function RevealItem({ className, y = 16, children }) {
   const reduced = useReducedMotion();
   if (reduced) return <div className={className}>{children}</div>;
 
@@ -56,8 +90,8 @@ export function RevealItem({ className, y = 20, children }) {
     <motion.div
       className={className}
       variants={{
-        hidden: { opacity: 0, y },
-        shown: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } },
+        hidden: { opacity: 0, y, filter: HIDDEN_BLUR },
+        shown: { opacity: 1, y: 0, filter: SHOWN_BLUR, transition: { duration: REVEAL_DURATION, ease: EASE } },
       }}
     >
       {children}
