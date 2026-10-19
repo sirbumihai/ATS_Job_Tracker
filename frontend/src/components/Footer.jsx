@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Sparkles,
   MessageSquare,
   Mail,
   Github,
@@ -8,6 +7,7 @@ import {
   Copy,
   ExternalLink
 } from 'lucide-react';
+import BrandMark from './ui/BrandMark';
 
 const LINK = 'hover:text-neutral-950 transition-colors cursor-pointer text-left';
 
@@ -36,12 +36,7 @@ export default function Footer({ onNavigateTab }) {
               }}
               className="flex items-center gap-2.5 cursor-pointer"
             >
-              <span className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center">
-                <Sparkles className="w-4 h-4" />
-              </span>
-              <span className="font-serif text-lg font-medium tracking-tight">
-                JobFlow <span className="text-brand-500">AI</span>
-              </span>
+              <BrandMark />
             </button>
             <p className="text-sm text-neutral-500 leading-relaxed max-w-sm">
               Tracker de aplicații, optimizare CV pentru ATS și pregătire de interviu.

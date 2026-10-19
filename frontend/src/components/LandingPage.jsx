@@ -1,5 +1,6 @@
 import React from 'react';
-import { ArrowRight, GraduationCap, MessageSquare, Sparkles } from 'lucide-react';
+import { ArrowRight, GraduationCap, MessageSquare } from 'lucide-react';
+import BrandMark from './ui/BrandMark';
 import Footer from './Footer';
 import MethodSteps from './landing/method';
 import FaqAccordion from './landing/faq';
@@ -97,12 +98,7 @@ export default function LandingPage({
             className="flex items-center gap-2.5 cursor-pointer shrink-0"
             aria-label="JobFlow AI, începutul paginii"
           >
-            <span className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center">
-              <Sparkles className="w-4 h-4" />
-            </span>
-            <span className="font-serif text-lg font-medium tracking-tight">
-              JobFlow <span className="text-brand-500">AI</span>
-            </span>
+            <BrandMark />
           </button>
 
           <nav className="hidden lg:flex items-center gap-1 text-sm font-medium text-neutral-600">
@@ -156,8 +152,8 @@ export default function LandingPage({
               <h1 className="font-serif text-5xl sm:text-6xl lg:text-[64px] font-normal tracking-tight leading-[1.05] text-neutral-950">
                 Găsește jobul. Trece de ATS. Ia oferta.
               </h1>
-              <p className="text-lg text-neutral-600 max-w-xl leading-relaxed">
-                Multe CV-uri sunt respinse de ATS înainte să le citească un om; JobFlow îți arată ce lipsește și te duce până la ofertă.
+              <p className="text-lg text-neutral-600 max-w-2xl leading-relaxed">
+                Multe CV-uri pică filtrul ATS. Află ce lipsește din al tău.
               </p>
               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <button

@@ -384,7 +384,7 @@ export default function JobSearchPage({
     UNDELUCRAM: Building2,
     EJOBS: Layers
   };
-  const platformsConfig = JOB_PLATFORMS.map(p => ({ ...p, icon: PLATFORM_ICONS[p.id], countKey: p.id }));
+  const platformsConfig = JOB_PLATFORMS.map(p => ({ ...p, icon: PLATFORM_ICONS[p.id] || Briefcase, countKey: p.id }));
 
   // 27 SPECIALIZARI IT CUPRINZATOARE (FARA EMOTICOANE)
   const roleCategories = [

@@ -43,7 +43,7 @@ const TAB_METADATA = {
     category: 'Optimizare ATS'
   },
   cover_letter: {
-    title: 'Scrisoare de intenție',
+    title: 'Cover Letter',
     subtitle: 'Scrisă pe cerințele jobului',
     category: 'AI Assistant'
   },
@@ -58,7 +58,7 @@ const TAB_METADATA = {
     category: 'LinkedIn'
   },
   skill_roadmap: {
-    title: 'Roadmap și interviuri',
+    title: 'Skill Roadmap',
     subtitle: 'Trasee de învățare și întrebări tehnice',
     category: 'Educație'
   },
@@ -490,6 +490,7 @@ export default function App() {
         {activeTab !== 'landing' && activeTab !== 'feedback' && (
           <header className="hidden lg:block px-6 xl:px-8 py-3 bg-white/95 backdrop-blur-md border-b border-neutral-200 shrink-0 sticky top-0 z-20">
             <PageHeader
+              as="h2"
               title={currentTabInfo.title}
               subtitle={currentTabInfo.subtitle}
               actions={currentUser ? (

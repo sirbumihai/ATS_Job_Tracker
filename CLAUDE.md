@@ -15,7 +15,7 @@ Backend (Maven, run from repo root):
 - `mvn test -Dtest=JobIngestionServiceTest` / `mvn test -Dtest=JobIngestionServiceTest#methodName` — single class / method.
 - `mvn package -DskipTests` — build the jar (as the Dockerfile does).
 
-Frontend (from `frontend/`): `npm install`, `npm run dev` (port 3000, proxies `/api` → `localhost:8080`), `npm run build`. There is no lint or test setup for the frontend.
+Frontend (from `frontend/`): `npm install`, `npm run dev` (port 3000, proxies `/api` → `localhost:8080`), `npm run build`, `npm run test:e2e` (Playwright, Chromium only; first time `npx playwright install chromium`). The e2e tests in `frontend/e2e/` start Vite on port 4317 and answer every `/api` call from `e2e/fixtures/*.json` (`e2e/support/mockApi.js`), so no backend or DB is needed; an `/api` call without a fixture or any console error fails the test. CI runs them in the `frontend-e2e` job. There is no lint setup for the frontend.
 
 `requests.http` holds sample API calls. `src/Main.java` is an unused IntelliJ stub.
 

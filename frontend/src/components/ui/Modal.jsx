@@ -1,4 +1,4 @@
-import React, { useEffect, useId } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -11,6 +11,11 @@ const WIDTHS = { md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-2xl' };
  */
 export default function Modal({ isOpen, onClose, title, subtitle, icon: Icon, size = 'md', className = '', children }) {
   const titleId = useId();
+  // onClose vine adesea ca arrow inline; ref-ul evita re-atasarea listenerilor la fiecare randare.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  // Se inchide doar daca si apasarea, si eliberarea au fost pe fundal (nu la o selectie de text trasa afara).
+  const pressedOnBackdrop = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -20,7 +25,7 @@ export default function Modal({ isOpen, onClose, title, subtitle, icon: Icon, si
     document.documentElement.style.overflow = 'hidden';
 
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onCloseRef.current();
     };
     window.addEventListener('keydown', handleKeyDown);
 
@@ -29,21 +34,23 @@ export default function Modal({ isOpen, onClose, title, subtitle, icon: Icon, si
       document.documentElement.style.overflow = prevHtml;
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] bg-neutral-950/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-morphing-backdrop"
-      onClick={onClose}
+      onMouseDown={(e) => { pressedOnBackdrop.current = e.target === e.currentTarget; }}
+      onClick={(e) => {
+        if (pressedOnBackdrop.current && e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         className={`relative w-full ${WIDTHS[size]} my-auto rounded-2xl border border-neutral-200 bg-white text-neutral-900 shadow-xl p-6 sm:p-7 animate-morphing-dialog ${className}`}
-        onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"

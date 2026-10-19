@@ -13,11 +13,11 @@ import {
   Compass,
   Linkedin,
   GraduationCap,
-  Sparkles,
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen
 } from 'lucide-react';
+import BrandMark from './ui/BrandMark';
 
 // Ordinea si destinatiile tab-urilor sunt fixe; se schimba doar textul si stilul.
 const NAV_SECTIONS = [
@@ -52,14 +52,6 @@ const ALL_ITEMS = NAV_SECTIONS.flatMap(s => s.items);
 
 function initialOf(user) {
   return (user.fullName || user.email || 'U').charAt(0).toUpperCase();
-}
-
-function BrandMark({ size = 'w-9 h-9' }) {
-  return (
-    <span className={`${size} rounded-xl bg-brand-500 text-white flex items-center justify-center shrink-0`}>
-      <Sparkles className="w-4 h-4" />
-    </span>
-  );
 }
 
 export default function Navbar({
@@ -112,12 +104,7 @@ export default function Navbar({
             onClick={() => handleSelectTab('landing')}
             aria-label="JobFlow AI, pagina principală"
           >
-            <BrandMark />
-            {!isCollapsed && (
-              <span className="font-serif text-lg font-medium text-neutral-950 tracking-tight">
-                JobFlow <span className="text-brand-500">AI</span>
-              </span>
-            )}
+            <BrandMark size="w-9 h-9" withName={!isCollapsed} />
           </button>
 
           <button
@@ -218,10 +205,7 @@ export default function Navbar({
           onClick={() => handleSelectTab('landing')}
           aria-label="JobFlow AI, pagina principală"
         >
-          <BrandMark size="w-8 h-8" />
-          <span className="font-serif text-lg font-medium text-neutral-950 tracking-tight">
-            JobFlow <span className="text-brand-500">AI</span>
-          </span>
+          <BrandMark />
         </button>
 
         <div className="flex items-center gap-2">
@@ -260,8 +244,7 @@ export default function Navbar({
               onClick={() => handleSelectTab('landing')}
               aria-label="JobFlow AI, pagina principală"
             >
-              <BrandMark size="w-8 h-8" />
-              <span className="font-serif text-lg font-medium text-neutral-950">JobFlow</span>
+              <BrandMark />
             </button>
             <button
               type="button"
