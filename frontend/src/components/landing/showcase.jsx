@@ -98,7 +98,7 @@ export function HeroShowcase() {
   return (
     <div className="relative mx-auto w-full max-w-md md:max-w-xl lg:max-w-none pb-6 md:pb-10">
       <Frame>
-        <Shot src="/landing/hero-tracker.webp" alt="Board Kanban din JobFlow AI cu aplicatii pe etape" width={844} height={540} eager />
+        <Shot src="/landing/hero-tracker.webp" alt="Board Kanban din JobFlow AI cu aplicații pe etape" width={844} height={540} eager />
       </Frame>
 
       {/* Card 1: ATS score (always visible) */}
@@ -154,7 +154,7 @@ export function CvStudioMedia() {
   return (
     <div ref={ref} className="relative">
       <Frame>
-        <Shot src="/landing/cv-studio.webp" alt="Studio CV cu editorul si scorul de compatibilitate ATS" />
+        <Shot src="/landing/cv-studio.webp" alt="Studio CV cu editorul și scorul de compatibilitate ATS" />
       </Frame>
       <div className={`${overlayCard} right-2 top-2 sm:right-3 sm:top-3 w-36`}>
         <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Scor ATS</div>
@@ -162,7 +162,7 @@ export function CvStudioMedia() {
         <ScoreBar value={score} className="mt-1" />
       </div>
       <div className={`${overlayCard} left-2 bottom-2 sm:left-3 sm:bottom-3 max-w-[88%]`}>
-        <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 mb-1.5">Cuvinte cheie</div>
+        <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 mb-1.5">Cuvinte-cheie</div>
         <div className="flex flex-wrap gap-1.5">
           {CV_KEYWORDS.map((k, i) => {
             const on = p >= 0.1 + i * 0.15;
@@ -195,7 +195,7 @@ export function MarketInsightsMedia() {
   return (
     <div ref={ref} className="relative">
       <Frame>
-        <Shot src="/landing/market-insights.webp" alt="Market Insights cu cererea pe piata IT din Romania" />
+        <Shot src="/landing/market-insights.webp" alt="Market Insights cu cererea pe piața IT din România" />
       </Frame>
       <div className={`${overlayCard} right-2 bottom-2 sm:right-3 sm:bottom-3 w-48`}>
         <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Skill match</div>
@@ -227,34 +227,6 @@ export function LinkedInMedia() {
           {score}<span className="text-sm text-neutral-400">/100</span>
         </div>
         <ScoreBar value={score} className="mt-1" />
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------- COVER LETTER
-
-const LETTER =
-  'Solicit postul de Java Software Engineer la Revolut. Cu 4 ani de experienta in dezvoltarea backend cu Java si Spring Boot, ' +
-  'am construit solutii scalabile care se aliniaza direct cu stack-ul tehnologic al companiei.';
-
-export function CoverLetterMedia() {
-  const ref = useRef(null);
-  const [p, reduced] = useLoopProgress(ref, { duration: 4.5, hold: 2.5 });
-  const shown = reduced ? LETTER : LETTER.slice(0, Math.round(LETTER.length * seg(p, 0, 0.92)));
-  const typing = !reduced && shown.length < LETTER.length;
-
-  return (
-    <div ref={ref} className="relative">
-      <Frame>
-        <Shot src="/landing/cover-letter.webp" alt="Generatorul de scrisori de intentie" />
-      </Frame>
-      <div className={`${overlayCard} left-2 right-2 bottom-2 sm:left-auto sm:right-3 sm:bottom-3 sm:w-72`}>
-        <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 mb-1">Scrisoare generata</div>
-        <p className="text-[11px] leading-relaxed text-neutral-800 min-h-[4.5rem]">
-          {shown}
-          {typing && <span className="inline-block w-px h-3 ml-0.5 align-middle bg-black animate-pulse" />}
-        </p>
       </div>
     </div>
   );

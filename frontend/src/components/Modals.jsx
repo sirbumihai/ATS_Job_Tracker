@@ -37,7 +37,7 @@ export function AuthModal({ isOpen, onClose, authMode, setAuthMode, authForm, se
               id="auth-name"
               type="text"
               required
-              placeholder="Mihai Sîrbu"
+              placeholder="Mihai Sirbu"
               value={authForm.fullName}
               onChange={e => setAuthForm({ ...authForm, fullName: e.target.value })}
               className={INPUT}

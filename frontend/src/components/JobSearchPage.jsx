@@ -57,6 +57,7 @@ import {
   Bell,
   FileSignature
 } from 'lucide-react';
+import { JOB_PLATFORMS } from '../data/jobPlatforms';
 import JobDetailModal from './JobDetailModal';
 
 // Helper eliminare diacritice
@@ -371,18 +372,19 @@ export default function JobSearchPage({
     setCurrentPage(1);
   };
 
-  // 9 PLATFORME REALE CU ICONITE SI CONTOARE PERMANENTE (FARA EMOTICOANE)
-  const platformsConfig = [
-    { id: 'DEVJOB_RO', label: 'DevJob.ro (Tech)', icon: Code2, countKey: 'DEVJOB_RO' },
-    { id: 'LINKEDIN', label: 'LinkedIn Jobs', icon: ExternalLink, countKey: 'LINKEDIN' },
-    { id: 'GITHUB_COMMUNITY', label: 'GitHub Early Careers (EU & Intl)', icon: Globe, countKey: 'GITHUB_COMMUNITY' },
-    { id: 'BESTJOBS', label: 'BestJobs.eu IT', icon: Briefcase, countKey: 'BESTJOBS' },
-    { id: 'HIPO', label: 'Hipo.ro Trainee & IT', icon: GraduationCap, countKey: 'HIPO' },
-    { id: 'STAGIIPEBUNE', label: 'StagiiPeBune.ro', icon: GraduationCap, countKey: 'STAGIIPEBUNE' },
-    { id: 'JUNIORS_RO', label: 'Juniors.ro', icon: Briefcase, countKey: 'JUNIORS_RO' },
-    { id: 'UNDELUCRAM', label: 'UndeLucram.ro', icon: Building2, countKey: 'UNDELUCRAM' },
-    { id: 'EJOBS', label: 'eJobs.ro', icon: Layers, countKey: 'EJOBS' }
-  ];
+  // PLATFORMELE REALE CU ICONITE SI CONTOARE PERMANENTE (FARA EMOTICOANE)
+  const PLATFORM_ICONS = {
+    DEVJOB_RO: Code2,
+    LINKEDIN: ExternalLink,
+    GITHUB_COMMUNITY: Globe,
+    BESTJOBS: Briefcase,
+    HIPO: GraduationCap,
+    STAGIIPEBUNE: GraduationCap,
+    JUNIORS_RO: Briefcase,
+    UNDELUCRAM: Building2,
+    EJOBS: Layers
+  };
+  const platformsConfig = JOB_PLATFORMS.map(p => ({ ...p, icon: PLATFORM_ICONS[p.id], countKey: p.id }));
 
   // 27 SPECIALIZARI IT CUPRINZATOARE (FARA EMOTICOANE)
   const roleCategories = [

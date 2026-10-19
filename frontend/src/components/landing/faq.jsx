@@ -27,7 +27,7 @@ export default function FaqAccordion({ items }) {
                 onClick={() => setOpenIndex(open ? null : idx)}
                 className="w-full flex items-center justify-between gap-4 p-6 text-left cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-neutral-900"
               >
-                <span className="text-base sm:text-lg font-bold text-neutral-900 leading-snug">{faq.q}</span>
+                <span className="font-serif text-lg sm:text-xl text-neutral-950 leading-snug">{faq.q}</span>
                 <motion.span
                   aria-hidden="true"
                   className="text-xl font-mono leading-none text-neutral-400 shrink-0"

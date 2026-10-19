@@ -625,8 +625,6 @@ export default function App() {
             onNavigateTab={handleTabChange}
             currentUser={currentUser}
             onOpenAuth={() => setShowAuthModal(true)}
-            onOpenUpload={() => setShowUploadResumeModal(true)}
-            onOpenAddJob={() => setShowAddJobModal(true)}
           />
         )}
 
