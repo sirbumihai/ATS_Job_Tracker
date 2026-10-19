@@ -1,0 +1,70 @@
+{
+  "totalJobsAnalyzed": 120,
+  "totalJuniorJobs": 48,
+  "totalMidJobs": 50,
+  "totalSeniorJobs": 22,
+  "totalLowCompetitionJobs": 30,
+  "overallLowCompetitionPct": 25.0,
+  "selectedLevel": "ALL",
+  "selectedLocation": "ALL",
+  "topSweetSpots": [],
+  "mostInDemand": [],
+  "lowestCompetition": [],
+  "domains": [
+    {
+      "id": "backend_java",
+      "title": "Backend Java",
+      "tagLine": "Servicii REST si microservicii",
+      "icon": "Server",
+      "totalJobs": 40,
+      "juniorJobs": 15,
+      "midJobs": 18,
+      "seniorJobs": 7,
+      "levelJobCount": 40,
+      "lowCompetitionCount": 10,
+      "lowCompetitionRate": 25.0,
+      "opportunityScore": 72,
+      "opportunityBadge": "Oportunitate buna",
+      "competitionLevel": "MEDIUM",
+      "salaryEstimate": "6.000 - 9.000 RON",
+      "interviewFormat": "Tehnic + HR",
+      "topSkills": [
+        { "skill": "Java", "count": 35, "percentage": 87.5, "category": "Limbaje", "userHasSkill": true },
+        { "skill": "Spring Boot", "count": 30, "percentage": 75.0, "category": "Framework-uri", "userHasSkill": true },
+        { "skill": "Kafka", "count": 10, "percentage": 25.0, "category": "Mesagerie", "userHasSkill": false }
+      ],
+      "requirementsChecklist": [
+        { "categoryName": "Fundamente", "iconName": "Code2", "items": ["OOP", "Colectii"] }
+      ],
+      "seniorityComparison": {
+        "juniorFocus": ["Fundamente Java"],
+        "midFocus": ["Design de API"],
+        "seniorFocus": ["Arhitectura"]
+      },
+      "preparationRoadmap": [
+        { "stageNumber": 1, "stageTitle": "Fundamente", "durationEst": "2 saptamani", "keyMilestones": ["OOP", "Colectii"] }
+      ],
+      "sampleJobs": [
+        {
+          "id": "job-e2e-1",
+          "jobTitle": "Junior Java Developer",
+          "companyName": "Bitdefender",
+          "location": "Bucuresti",
+          "workModel": "HYBRID",
+          "experienceLevel": "JUNIOR",
+          "competitiveness": "MEDIUM",
+          "salaryRange": null,
+          "directApplyUrl": "https://example.test/jobs/1",
+          "sourcePlatform": "EJOBS"
+        }
+      ],
+      "userMatchScore": 66,
+      "userMatchingSkills": ["Java", "Spring Boot"],
+      "userMissingSkills": ["Kafka"]
+    }
+  ],
+  "universalTopSkills": [
+    { "skill": "Git", "count": 90, "percentage": 75.0, "category": "Unelte", "userHasSkill": true },
+    { "skill": "SQL", "count": 70, "percentage": 58.3, "category": "Baze de date", "userHasSkill": true }
+  ]
+}

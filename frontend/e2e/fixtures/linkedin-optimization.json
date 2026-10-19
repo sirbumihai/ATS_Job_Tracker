@@ -1,0 +1,32 @@
+{
+  "overallScore": 74,
+  "scoreGrade": "B",
+  "scoreBreakdown": {
+    "Headline": 15,
+    "Despre": 12,
+    "Experienta": 14,
+    "Competente": 13,
+    "Proiecte": 10,
+    "Activitate": 10
+  },
+  "criticalGaps": ["Lipsesc rezultate masurabile in experienta"],
+  "strengths": ["Headline cu stack-ul tehnic"],
+  "optimizedHeadlines": [
+    { "formulaName": "Rol + Stack", "headline": "Junior Java Developer | Spring Boot | REST APIs", "rationale": "Cuvinte-cheie cautate de recrutori.", "recommended": true }
+  ],
+  "optimizedAbout": "Dezvoltator backend junior care construieste API-uri REST testate.",
+  "recommendedSkills": [
+    { "skillName": "Kafka", "category": "Backend", "marketDemand": "HIGH", "rationale": "Ceruta in 25% din anunturi." }
+  ],
+  "recruiterTips": [
+    { "id": "tip-1", "title": "Activeaza Open to Work", "description": "Recrutorii filtreaza dupa acest semnal.", "badge": "Rapid", "actionAdvice": "Seteaza vizibil doar pentru recrutori." }
+  ],
+  "actionPlan": [
+    { "id": "step-1", "stepNumber": "01", "title": "Rescrie headline-ul", "category": "Headline", "impact": "HIGH", "estimatedMinutes": "5", "instructions": "Pune rolul si stack-ul in headline.", "exampleSnippet": "Junior Java Developer | Spring Boot", "isCrucial": true },
+    { "id": "step-2", "stepNumber": "02", "title": "Adauga un proiect", "category": "Proiecte", "impact": "MEDIUM", "estimatedMinutes": "15", "instructions": "Descrie un proiect cu rezultate.", "exampleSnippet": "JobFlow - tracker de aplicatii", "isCrucial": false }
+  ],
+  "suggestedProjects": [],
+  "recruiterQueries": [
+    { "roleTarget": "Junior Java", "booleanString": "(Java OR \"Spring Boot\") AND junior", "explanation": "Cautare tipica de recrutor.", "whyYouMatch": "Ai ambele cuvinte-cheie." }
+  ]
+}
