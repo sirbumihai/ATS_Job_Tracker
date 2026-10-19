@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Linkedin,
   Upload,
   Sparkles,
-  CheckCircle2,
-  AlertTriangle,
-  ArrowRight,
-  Copy,
   Check,
+  Copy,
   Edit3,
   Plus,
   ShieldCheck,
@@ -15,30 +11,77 @@ import {
   Mail,
   Phone,
   MapPin,
-  Building,
-  GraduationCap,
   Award,
-  Layers,
   Flame,
   Lightbulb,
   X,
   RefreshCw,
   Eye,
-  Briefcase,
   CheckSquare,
-  Square,
   Terminal,
-  Code2,
   FolderGit2,
   FileText,
-  BookmarkCheck,
-  Palette,
-  Sliders,
-  CheckCheck,
-  Trash2,
-  ChevronDown,
-  Target
+  Download,
+  Target,
+  Linkedin
 } from 'lucide-react';
+import Card from './ui/Card';
+import Modal from './ui/Modal';
+import ProfileBanner from './linkedin/ProfileBanner';
+import ScoreSummary from './linkedin/ScoreSummary';
+import ActionPlan from './linkedin/ActionPlan';
+import { BANNER_TEMPLATES, DEFAULT_BANNER_TEMPLATE, loadBannerFonts, renderBannerBlob } from './linkedin/bannerCanvas';
+
+const DEFAULT_HEADLINE = 'Junior Software Engineer | Java 21 & Spring Boot 3 | UPB Automatică & Calculatoare';
+
+const TABS = [
+  { id: 'action_plan', label: 'Plan', icon: CheckSquare },
+  { id: 'headlines', label: 'Headline', icon: Lightbulb },
+  { id: 'about', label: 'Despre', icon: Edit3 },
+  { id: 'star_projects', label: 'Proiecte STAR', icon: FolderGit2 },
+  { id: 'boolean_search', label: 'Căutare recruiter', icon: Terminal },
+  { id: 'skills', label: 'Skills piață', icon: Flame },
+  { id: 'tips', label: 'Sfaturi', icon: Award },
+];
+
+const inputClass =
+  'w-full px-3.5 py-2.5 text-sm bg-white text-neutral-900 border border-neutral-300 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100';
+const primaryButton =
+  'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-brand-500 hover:bg-brand-600 text-white transition cursor-pointer disabled:opacity-50';
+const secondaryButton =
+  'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-300 transition cursor-pointer disabled:opacity-50';
+const iconButton = 'p-1.5 rounded-lg text-neutral-500 hover:text-neutral-950 hover:bg-neutral-100 transition cursor-pointer';
+
+function SectionHeading({ title, hint, onAdd, addLabel, action }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <h3 className="font-serif text-lg font-medium text-neutral-950 leading-tight">{title}</h3>
+        {hint && <p className="text-sm text-neutral-500 mt-0.5">{hint}</p>}
+      </div>
+      {action}
+      {onAdd && (
+        <button type="button" onClick={onAdd} aria-label={addLabel} className={`${iconButton} shrink-0`}>
+          <Plus className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function CopyButton({ text, copyKey, copiedKey, onCopy, label = 'Copiază' }) {
+  const copied = copiedKey === copyKey;
+  return (
+    <button
+      type="button"
+      onClick={() => onCopy(text, copyKey)}
+      className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700 cursor-pointer shrink-0"
+    >
+      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+      {copied ? 'Copiat' : label}
+    </button>
+  );
+}
 
 export default function LinkedInOptimizerPage({ currentUser }) {
   const [profile, setProfile] = useState(null);
@@ -47,10 +90,10 @@ export default function LinkedInOptimizerPage({ currentUser }) {
   const [optimizationResult, setOptimizationResult] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const [copiedKey, setCopiedKey] = useState(null);
-  const [targetDomain, setTargetDomain] = useState('BACKEND');
+  const [targetDomain] = useState('BACKEND');
   const [profileMode, setProfileMode] = useState('all_star'); // 'current' | 'all_star'
-  
-  // Modale & Interactiuni
+
+  // Modale & interactiuni
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [addSkillModalOpen, setAddSkillModalOpen] = useState(false);
   const [newSkillText, setNewSkillText] = useState('');
@@ -59,8 +102,9 @@ export default function LinkedInOptimizerPage({ currentUser }) {
   const [editAboutModalOpen, setEditAboutModalOpen] = useState(false);
   const [tempAbout, setTempAbout] = useState('');
   const [selectedAboutVariant, setSelectedAboutVariant] = useState('technical');
-  const [bannerPickerOpen, setBannerPickerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('action_plan'); // 'action_plan', 'headlines', 'about', 'star_projects', 'boolean_search', 'skills', 'tips'
+  const [bannerTemplate, setBannerTemplate] = useState(DEFAULT_BANNER_TEMPLATE);
+  const [bannerError, setBannerError] = useState(false);
+  const [activeTab, setActiveTab] = useState('action_plan');
   const [completedSteps, setCompletedSteps] = useState({});
 
   // Sincronizare CV Library
@@ -76,7 +120,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
   useEffect(() => {
     loadAllStarProfile();
     fetchUserCvs();
-    
+
     // Incarca starea checklist-ului din localStorage
     try {
       const savedSteps = localStorage.getItem('linkedin_action_steps');
@@ -154,7 +198,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
 
   const handleSyncWithSelectedCv = async () => {
     if (!selectedCvId && cvList.length === 0) {
-      alert('Nu ai niciun CV in biblioteca pentru a sincroniza.');
+      alert('Nu ai niciun CV în bibliotecă pentru a sincroniza.');
       return;
     }
     const targetCv = cvList.find(c => c.id === selectedCvId) || cvList[0];
@@ -185,7 +229,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
       }
     } catch (err) {
       console.error('Eroare la sincronizarea cu CV-ul:', err);
-      alert('A aparut o eroare la sincronizare.');
+      alert('A apărut o eroare la sincronizare.');
     } finally {
       setSyncingCv(false);
     }
@@ -193,7 +237,7 @@ export default function LinkedInOptimizerPage({ currentUser }) {
 
   const handleFileUpload = async (file) => {
     if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
-      alert('Te rugam sa incarci un fisier PDF exportat din LinkedIn.');
+      alert('Încarcă un fișier PDF exportat din LinkedIn.');
       return;
     }
 
@@ -212,11 +256,11 @@ export default function LinkedInOptimizerPage({ currentUser }) {
         setProfile(parsed);
         triggerOptimization(parsed);
       } else {
-        alert('Nu am putut citi fisierul PDF. Asigura-te ca este un export PDF valid LinkedIn.');
+        alert('Nu am putut citi fișierul PDF. Asigură-te că este un export PDF valid LinkedIn.');
       }
     } catch (err) {
       console.error('Eroare la upload PDF:', err);
-      alert('A aparut o eroare la incarcarea fisierului PDF.');
+      alert('A apărut o eroare la încărcarea fișierului PDF.');
     } finally {
       setLoading(false);
     }
@@ -246,8 +290,13 @@ export default function LinkedInOptimizerPage({ currentUser }) {
     }
   };
 
-  const copyToClipboard = (text, key) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = async (text, key) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error('Nu s-a putut copia în clipboard:', err);
+      return;
+    }
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2500);
   };
@@ -296,6 +345,11 @@ export default function LinkedInOptimizerPage({ currentUser }) {
     }
   };
 
+  const openHeadlineEditor = () => {
+    setTempHeadline(profile?.headline || '');
+    setEditHeadlineModalOpen(true);
+  };
+
   const handleSaveHeadline = () => {
     if (tempHeadline.trim()) {
       applyHeadline(tempHeadline.trim());
@@ -324,162 +378,164 @@ export default function LinkedInOptimizerPage({ currentUser }) {
     triggerOptimization(updated);
   };
 
-  const setBannerStyle = (styleName) => {
-    if (!profile) return;
-    const updated = { ...profile, bannerTheme: styleName };
-    setProfile(updated);
-    setBannerPickerOpen(false);
-  };
+  // Banner: textul vine din headline-ul si stack-ul profilului afisat
+  const bannerHeadline = profile?.headline || DEFAULT_HEADLINE;
+  const bannerStack = profile?.skills || [];
 
-  const getBannerBackground = () => {
-    const theme = profile?.bannerTheme || 'tech_terminal';
-    switch (theme) {
-      case 'upb_academic':
-        return 'bg-gradient-to-r from-[#002f6c] via-[#004b87] to-[#0a66c2]';
-      case 'minimalist_slate':
-        return 'bg-gradient-to-r from-slate-900 via-slate-800 to-zinc-900';
-      case 'cloud_violet':
-        return 'bg-gradient-to-r from-[#1e1b4b] via-[#2e1065] to-[#3b0764]';
-      case 'tech_terminal':
-      default:
-        return 'bg-gradient-to-r from-gray-950 via-neutral-900 to-[#0a192f]';
+  const handleDownloadBanner = async () => {
+    setBannerError(false);
+    try {
+      await loadBannerFonts();
+      const blob = await renderBannerBlob({ template: bannerTemplate, headline: bannerHeadline, stack: bannerStack });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `banner-linkedin-${bannerTemplate}.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      console.error('Eroare la generarea bannerului:', err);
+      setBannerError(true);
     }
   };
 
+  const userEmail = profile?.email || 'sarbumihai0@gmail.com';
+  const aboutVariants = [
+    {
+      id: 'technical',
+      label: 'Tehnic și detaliat',
+      badge: 'Backend',
+      text: optimizationResult?.optimizedAbout || `Inginer software la început de drum, student la Facultatea de Automatică și Calculatoare din cadrul Universității POLITEHNICA din București. Lucrez în principal pe dezvoltare backend și arhitectura aplicațiilor folosind Java și ecosistemul Spring Boot.
+
+În proiectele mele mă concentrez pe scrierea de cod modular și ușor de întreținut, proiectarea de baze de date relaționale (PostgreSQL, Microsoft SQL Server) și containerizarea serviciilor cu Docker. Recent am dezvoltat ATS Job Tracker, o platformă full-stack cu backend în Spring Boot 3, persistență în PostgreSQL cu extensia pgvector pentru căutare semantică, frontend în React și deployment containerizat. Anterior, am activat ca Software Engineering Intern la SIMAVI, unde am lucrat pe întregul ciclu de dezvoltare (SDLC) pentru aplicații enterprise în Java.
+
+Sunt deschis pentru oportunități de Junior Software Engineer sau Junior Backend Developer, unde pot contribui tehnic și pot aprofunda sisteme distribuite de înaltă performanță.
+
+Contact: ${userEmail} | București, România`
+    },
+    {
+      id: 'concise',
+      label: 'Concis și direct',
+      badge: 'Scurt',
+      text: `Student în anul final la Automatică și Calculatoare (UPB), pasionat de inginerie software și dezvoltare backend. Experiența mea practică include atât stagiu de practică ca Software Engineering Intern (SIMAVI), cât și proiecte software complete dezvoltate de la zero.
+
+Stiva tehnică principală: Java 21, Spring Boot 3, PostgreSQL, Docker, Git, REST APIs și baze de date relaționale. Îmi place să lucrez la optimizarea interogărilor SQL, structura curată a serviciilor și integrarea de soluții moderne, precum căutarea vectorială în PostgreSQL (pgvector).
+
+Urmăresc un rol de Junior Software Engineer / Backend Developer într-o echipă tehnică care pune accent pe bune practici, clean code și colaborare solidă.
+
+Email: ${userEmail}`
+    },
+    {
+      id: 'english',
+      label: 'Internațional (engleză)',
+      badge: 'Global',
+      text: `Software engineer and Computer Science student at University POLITEHNICA of Bucharest (Faculty of Automatic Control and Computers), focused on backend engineering, RESTful APIs, and database performance.
+
+My primary technical stack revolves around Java, Spring Boot, relational databases (PostgreSQL, SQL Server), and Docker. I care deeply about writing clean, maintainable code, structuring scalable database schemas, and understanding systems down to query execution and memory management.
+
+Key projects include ATS Job Tracker, an open-source platform built with Spring Boot 3, PostgreSQL (pgvector), React, and Docker, featuring automated web scrapers and semantic candidate matching. Previously, as a Software Engineering Intern at SIMAVI, I contributed to full-stack Java/Spring enterprise solutions across the complete SDLC.
+
+Currently open to Junior Software Engineer, Junior Backend Developer, and Software Developer roles.
+
+Reach out directly at: ${userEmail}`
+    }
+  ];
+  const currentAboutVariant = aboutVariants.find(v => v.id === selectedAboutVariant) || aboutVariants[0];
+
+  const initials = profile?.fullName
+    ? profile.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'SM';
+
   return (
-    <div className="space-y-6 pb-16 font-sans text-neutral-900">
-      
-      {/* HERO BANNER & CV SYNC TOOLBAR */}
-      <div className="bg-white rounded-xl p-5 sm:p-6 border border-neutral-200 space-y-5">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider font-bold text-neutral-800 bg-neutral-100 border border-neutral-300">
-              <Linkedin className="w-3.5 h-3.5 fill-black text-black" />
-              <span>Optimizator Profil LinkedIn & Sincronizare CV Studio</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-950 tracking-tight leading-tight">
-              Profil LinkedIn Magnet pentru Recruiteri
-            </h1>
-            <p className="text-xs sm:text-sm text-neutral-500 font-normal leading-relaxed">
-              Combina datele oficiale din CV-ul tau cu algoritmul LinkedIn Recruiter pentru a genera un profil de autoritate maxima (100/100 All-Star).
-            </p>
-          </div>
+    <div className="space-y-6 pb-16 text-neutral-900">
 
-          {/* QUICK ACTIONS & VIEW MODE SWITCHER */}
-          <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-2.5">
-            
-            <div className="bg-neutral-100 p-1 rounded-xl flex gap-1 border border-neutral-200 font-mono text-xs">
-              <button
-                onClick={loadAllStarProfile}
-                className={`flex-1 py-2 px-3.5 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                  profileMode === 'all_star'
-                    ? 'bg-black text-white font-bold'
-                    : 'text-neutral-600 hover:text-black'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-white" />
-                All-Star (100/100)
-              </button>
-              <button
-                onClick={loadDemoProfile}
-                className={`flex-1 py-2 px-3.5 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                  profileMode === 'current'
-                    ? 'bg-black text-white font-bold'
-                    : 'text-neutral-600 hover:text-black'
-                }`}
-              >
-                <Eye className="w-3.5 h-3.5 text-neutral-500" />
-                Profilul Curent
-              </button>
-            </div>
-
-            {/* RE-EVALUATE BUTTON */}
-            <button
-              onClick={() => triggerOptimization()}
-              disabled={optimizing}
-              className="inline-flex items-center justify-between gap-3 py-2 px-4 rounded-xl text-xs font-medium bg-black hover:bg-neutral-800 text-white transition cursor-pointer disabled:opacity-50"
-            >
-              <span>Re-evalueaza Scorul ATS</span>
-              <RefreshCw className={`w-3.5 h-3.5 text-white ${optimizing ? 'animate-spin' : ''}`} />
-            </button>
-
-          </div>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex gap-1 p-1 rounded-xl bg-neutral-100" role="group" aria-label="Profil afișat">
+          <button
+            type="button"
+            onClick={loadAllStarProfile}
+            aria-pressed={profileMode === 'all_star'}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer flex items-center gap-1.5 ${
+              profileMode === 'all_star' ? 'bg-white text-neutral-950 shadow-sm' : 'text-neutral-600 hover:text-neutral-950'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            All-Star
+          </button>
+          <button
+            type="button"
+            onClick={loadDemoProfile}
+            aria-pressed={profileMode === 'current'}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer flex items-center gap-1.5 ${
+              profileMode === 'current' ? 'bg-white text-neutral-950 shadow-sm' : 'text-neutral-600 hover:text-neutral-950'
+            }`}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            Profil curent
+          </button>
         </div>
+        <button type="button" onClick={() => triggerOptimization()} disabled={optimizing} className={secondaryButton}>
+          <RefreshCw className={`w-4 h-4 ${optimizing ? 'animate-spin' : ''}`} />
+          Reevaluează
+        </button>
+      </div>
 
-        {/* CV SELECTOR & DEEP SYNC BAR */}
-        <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center shrink-0">
-              <FileText className="w-4 h-4" />
-            </div>
-            <div>
-              <h4 className="text-xs font-mono font-bold uppercase text-neutral-900 tracking-wider">
-                Sincronizeaza Profilul cu un CV din Biblioteca
-              </h4>
-              <p className="text-xs text-neutral-500 mt-0.5">
-                Importa automat proiectele STAR, experienta de internship si competentele tehnice fara a le tasta manual.
-              </p>
-            </div>
+      {/* SINCRONIZARE CV & INCARCARE PDF */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="space-y-3">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-brand-600" />
+            <h2 className="text-sm font-medium text-neutral-900">Sincronizează cu un CV</h2>
           </div>
-
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <div className="flex flex-col sm:flex-row gap-2">
             <select
               value={selectedCvId}
               onChange={(e) => setSelectedCvId(e.target.value)}
-              className="px-3.5 py-2 text-xs font-medium bg-white text-neutral-900 border border-neutral-300 rounded-xl focus:border-black cursor-pointer outline-none"
+              aria-label="CV pentru sincronizare"
+              className={`${inputClass} min-w-0 cursor-pointer`}
             >
               {cvList.length > 0 ? (
                 cvList.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.title || 'CV Fara Titlu'}{c.isPrimary ? ' [Principal]' : ''}
+                    {c.title || 'CV fără titlu'}{c.isPrimary ? ' (principal)' : ''}
                   </option>
                 ))
               ) : (
-                <option value="">Sirbu Mihai-Alexandru (CV Principal Tehnic)</option>
+                <option value="">Niciun CV în bibliotecă</option>
               )}
             </select>
-
-            <button
-              onClick={handleSyncWithSelectedCv}
-              disabled={syncingCv}
-              className="py-2 px-4 rounded-xl text-xs font-medium bg-black hover:bg-neutral-800 text-white transition flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-50"
-            >
-              <span>{syncingCv ? 'Se fuzioneaza...' : 'Sincronizeaza cu CV-ul'}</span>
-              <Sparkles className={`w-3.5 h-3.5 text-white ${syncingCv ? 'animate-spin' : ''}`} />
+            <button type="button" onClick={handleSyncWithSelectedCv} disabled={syncingCv} className={`${primaryButton} whitespace-nowrap`}>
+              {syncingCv ? 'Se sincronizează...' : 'Sincronizează'}
+              <Sparkles className={`w-4 h-4 ${syncingCv ? 'animate-spin' : ''}`} />
             </button>
           </div>
-        </div>
-
-        {/* SYNC NOTIFICATION BANNER */}
-        {syncMessage && (
-          <div className="p-4 rounded-xl bg-neutral-100 border border-neutral-300 text-neutral-900 text-xs flex items-start justify-between gap-3 animate-in fade-in">
-            <div className="flex items-start gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-neutral-900 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold">{syncMessage.text}</p>
-                {syncMessage.imported && syncMessage.imported.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-1.5 font-mono">
+          {syncMessage && (
+            <div role="status" className="flex items-start justify-between gap-3 text-sm text-neutral-700">
+              <div className="min-w-0">
+                <p className="font-medium text-neutral-900">{syncMessage.text}</p>
+                {syncMessage.imported.length > 0 && (
+                  <ul className="flex flex-wrap gap-1.5 mt-1.5">
                     {syncMessage.imported.map((item, idx) => (
-                      <span key={idx} className="bg-white px-2 py-0.5 rounded text-[11px] border border-neutral-200 inline-flex items-center gap-1">
-                        <Check className="w-3 h-3 text-neutral-900 shrink-0" />
-                        <span>{item}</span>
-                      </span>
+                      <li key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 text-xs">
+                        <Check className="w-3 h-3 shrink-0" />
+                        {item}
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
               </div>
+              <button type="button" onClick={() => setSyncMessage(null)} aria-label="Închide mesajul" className={iconButton}>
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <button 
-              onClick={() => setSyncMessage(null)}
-              className="text-neutral-500 hover:text-black p-1 cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+          )}
+        </Card>
 
-        {/* DRAG & DROP UPLOAD BOX */}
-        <div 
+        <Card
+          padding="p-5"
+          className={`border-dashed transition cursor-pointer flex items-center gap-3 ${dragOver ? 'border-brand-500 bg-brand-50' : 'hover:border-brand-300'}`}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => {
@@ -489,1487 +545,625 @@ export default function LinkedInOptimizerPage({ currentUser }) {
               handleFileUpload(e.dataTransfer.files[0]);
             }
           }}
-          className={`p-6 border-2 border-dashed rounded-xl text-center transition flex flex-col items-center justify-center gap-2 cursor-pointer ${
-            dragOver 
-              ? 'border-black bg-neutral-100' 
-              : 'border-neutral-300 hover:border-black bg-white'
-          }`}
           onClick={() => document.getElementById('linkedin-pdf-input')?.click()}
         >
-          <input 
-            type="file" 
-            id="linkedin-pdf-input" 
-            accept=".pdf" 
-            className="hidden" 
+          <input
+            type="file"
+            id="linkedin-pdf-input"
+            accept=".pdf"
+            className="hidden"
+            onClick={(e) => e.stopPropagation()}
             onChange={(e) => {
               if (e.target.files && e.target.files.length > 0) {
                 handleFileUpload(e.target.files[0]);
               }
-            }} 
+            }}
           />
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-neutral-100 text-neutral-900 border border-neutral-200 flex items-center justify-center">
-              <Upload className="w-4 h-4" />
-            </div>
-            <div className="text-left">
-              <p className="text-xs font-bold text-neutral-900">
-                {loading ? 'Se analizeaza PDF-ul LinkedIn...' : 'Ai descarcat un nou PDF din LinkedIn? Trage fisierul aici'}
-              </p>
-              <p className="text-[11px] text-neutral-500">
-                Foloseste More -&gt; Save to PDF de pe profilul LinkedIn pentru a compara cu starea ta live.
-              </p>
-            </div>
+          <span className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+            <Upload className="w-4 h-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-neutral-900">
+              {loading ? 'Se analizează PDF-ul...' : 'Încarcă PDF-ul din LinkedIn'}
+            </p>
+            <p className="text-xs text-neutral-500">Trage fișierul aici sau apasă. Din LinkedIn: More, apoi Save to PDF.</p>
           </div>
-        </div>
-
+        </Card>
       </div>
 
-      {/* MAIN TWO-COLUMN SPLIT: INTERACTIVE LINKEDIN UI REPLICA (LEFT) & AI ADVISOR (RIGHT) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* LEFT COLUMN: PIXEL-PERFECT LINKEDIN DESKTOP PROFILE UI (7/12) */}
-        <div className="lg:col-span-7 space-y-4">
-          
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Previzualizare Profil Live</span>
-              <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full flex items-center gap-1.5 border border-slate-200/80 shadow-2xs">
-                <Eye className="w-3 h-3 text-indigo-600" />
-                {profileMode === 'all_star' ? 'All-Star Demo (Recomandat 100/100)' : 'Profilul Tau Curent'}
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setBannerPickerOpen(!bannerPickerOpen)}
-                className="text-xs font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1.5 p-1.5 rounded-xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer active:scale-[0.98]"
-                title="Alege Tema Banner-ului"
-              >
-                <Palette className="w-3.5 h-3.5 text-indigo-600" />
-                <span className="hidden sm:inline">Schimba Banner</span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        {/* STANGA: PREVIZUALIZARE PROFIL */}
+        <div className="lg:col-span-7 space-y-4 min-w-0">
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-serif text-lg font-medium text-neutral-950">Banner</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <div role="radiogroup" aria-label="Șablon banner" className="flex gap-1 p-1 rounded-xl bg-neutral-100">
+                {BANNER_TEMPLATES.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={bannerTemplate === template.id}
+                    onClick={() => setBannerTemplate(template.id)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer ${
+                      bannerTemplate === template.id ? 'bg-white text-neutral-950 shadow-sm' : 'text-neutral-600 hover:text-neutral-950'
+                    }`}
+                  >
+                    {template.label}
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={handleDownloadBanner} className={primaryButton}>
+                <Download className="w-4 h-4" />
+                Descarcă PNG
               </button>
             </div>
           </div>
+          {bannerError && <p role="alert" className="text-sm text-red-600">Nu s-a putut genera bannerul. Încearcă din nou.</p>}
 
-          {/* BANNER THEME SELECTOR MODAL / DROPDOWN */}
-          {bannerPickerOpen && (
-            <div className="p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
-              <div className="p-4 rounded-xl bg-white border border-white/80 shadow-xs flex items-center justify-between gap-2 flex-wrap">
-                <span className="text-xs font-bold text-slate-800">Alege Stilul Banner-ului Tehnic:</span>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    onClick={() => setBannerStyle('tech_terminal')}
-                    className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-950 text-emerald-400 border border-slate-800 hover:scale-105 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer active:scale-[0.98]"
-                  >
-                    Terminal Java
-                  </button>
-                  <button
-                    onClick={() => setBannerStyle('upb_academic')}
-                    className="px-3 py-1.5 text-xs font-bold rounded-xl bg-[#004b87] text-white border border-blue-400 hover:scale-105 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer active:scale-[0.98]"
-                  >
-                    UPB Academic Blue
-                  </button>
-                  <button
-                    onClick={() => setBannerStyle('minimalist_slate')}
-                    className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 text-slate-200 border border-slate-600 hover:scale-105 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer active:scale-[0.98]"
-                  >
-                    Minimalist Slate
-                  </button>
-                  <button
-                    onClick={() => setBannerStyle('cloud_violet')}
-                    className="px-3 py-1.5 text-xs font-bold rounded-xl bg-[#2e1065] text-purple-300 border border-purple-500 hover:scale-105 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer active:scale-[0.98]"
-                  >
-                    Cloud & Microservices
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* CARD PROFIL */}
+          <Card padding="p-0" className="overflow-hidden">
+            <ProfileBanner template={bannerTemplate} headline={bannerHeadline} stack={bannerStack} />
 
-          {/* MAIN PROFILE CARD (DOUBLE-BEZEL HARDWARE SHELL) */}
-          <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
-            <div className="bg-white rounded-[calc(2rem-0.375rem)] border border-white/80 overflow-hidden shadow-xs relative group">
-              
-              {/* LINKEDIN COVER BANNER */}
-              <div className={`h-32 sm:h-44 w-full relative transition-colors duration-300 ${getBannerBackground()}`}>
-                <div className="absolute inset-0 p-4 flex flex-col justify-between text-white/80 pointer-events-none">
-                  <div className="text-[11px] font-mono tracking-wider text-emerald-400/90 font-bold">
-                    // Java 21 • Spring Boot 3 • PostgreSQL pgvector • Docker • Distributed Systems
+            <div className="px-5 sm:px-6 pb-6">
+              <div className="flex justify-between items-end pt-4 mb-3">
+                <div className="relative">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white bg-brand-500 text-white flex items-center justify-center font-serif text-3xl sm:text-4xl">
+                    {initials}
                   </div>
-                  <div className="text-right text-[10px] font-mono opacity-40">
-                    National University of Science and Technology POLITEHNICA Bucharest
-                  </div>
-                </div>
-
-                <div className="absolute top-3 right-3">
-                  <button 
-                    onClick={() => setBannerPickerOpen(!bannerPickerOpen)}
-                    className="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-700 flex items-center justify-center shadow-md transition cursor-pointer"
-                    title="Personalizeaza Banner-ul"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* AVATAR & BASIC DETAILS */}
-              <div className="px-6 pb-6 pt-0 relative">
-                
-                {/* CIRCULAR AVATAR */}
-                <div className="flex justify-between items-end -mt-16 sm:-mt-20 mb-3">
-                  <div className="relative">
-                    <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-4 border-white bg-slate-900 text-white flex items-center justify-center text-3xl sm:text-4xl font-black shadow-md ring-1 ring-slate-200/80">
-                      {profile?.fullName ? profile.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'SM'}
-                    </div>
-                    {profile?.isOpenToWork && (
-                      <div className="absolute -bottom-1 -right-1 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider border-2 border-white shadow-xs">
-                        Open to Work
-                      </div>
-                    )}
-                  </div>
-
-                  {/* UNIVERSITY LOGO BADGE */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-200/80 flex items-center justify-center font-black text-xs text-indigo-700 shadow-2xs">
-                      UP
-                    </div>
-                    <span className="text-xs font-bold text-slate-900 hidden sm:inline max-w-[200px] leading-tight">
-                      Universitatea POLITEHNICA din Bucuresti
+                  {profile?.isOpenToWork && (
+                    <span className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-medium border-2 border-white">
+                      Open to Work
                     </span>
-                  </div>
-                </div>
-
-                {/* NAME & VERIFICATION */}
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
-                      {profile?.fullName || 'Sirbu Mihai'}
-                    </h1>
-                    <ShieldCheck className="w-5 h-5 text-indigo-600 fill-indigo-100" title="Verificat" />
-                  </div>
-
-                  {/* HEADLINE WITH EDIT BUTTON */}
-                  <div className="flex items-start justify-between gap-3 pt-0.5 group/h">
-                    <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed">
-                      {profile?.headline || 'Junior Software Engineer | Java 21 & Spring Boot 3 | UPB Automatica & Calculatoare'}
-                    </p>
-                    <button
-                      onClick={() => {
-                        setTempHeadline(profile?.headline || '');
-                        setEditHeadlineModalOpen(true);
-                      }}
-                      className="p-1 rounded-full text-slate-400 hover:text-slate-950 opacity-0 group-hover/h:opacity-100 transition cursor-pointer shrink-0"
-                      title="Editeaza Headline"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  {/* CREATOR TOPICS */}
-                  {profile?.isCreatorMode && (
-                    <p className="text-xs text-slate-500 font-medium pt-0.5">
-                      Discuta despre{' '}
-                      <span className="font-bold text-indigo-700">
-                        {profile.creatorTopics ? profile.creatorTopics.join(' ') : '#java #springboot #backend #algorithms #softwareengineering'}
-                      </span>
-                    </p>
                   )}
-
-                  {/* LOCATION & CONTACT INFO */}
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 pt-1 font-medium">
-                    <span>{profile?.location || 'Bucuresti, Romania'}</span>
-                    <span>•</span>
-                    <button 
-                      onClick={() => setContactModalOpen(true)}
-                      className="text-indigo-600 hover:text-indigo-800 font-bold cursor-pointer transition-colors"
-                    >
-                      Contact info
-                    </button>
-                  </div>
-
-                  {/* CONNECTIONS COUNT */}
-                  <div className="pt-0.5">
-                    <a href="#connections" className="text-xs font-bold text-indigo-600 hover:text-indigo-800">
-                      {profile?.connectionsCount || '500+ conexiuni'}
-                    </a>
-                  </div>
                 </div>
-
-                {/* ACTION PILLS & TOGGLES */}
-                <div className="flex flex-wrap items-center gap-2 pt-4">
-                  <button 
-                    onClick={toggleOpenToWork}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] shadow-2xs cursor-pointer active:scale-[0.98] ${
-                      profile?.isOpenToWork 
-                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
-                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                    }`}
-                  >
-                    {profile?.isOpenToWork ? 'Open to Work: Activ' : 'Open to'}
-                  </button>
-
-                  <button 
-                    onClick={toggleCreatorMode}
-                    className="px-4 py-1.5 rounded-full text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/90 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] shadow-2xs cursor-pointer active:scale-[0.98]"
-                  >
-                    {profile?.isCreatorMode ? 'Creator Mode: Pornit' : 'Porneste Creator Mode'}
-                  </button>
-
-                  <button 
-                    onClick={() => {
-                      setTempHeadline(profile?.headline || '');
-                      setEditHeadlineModalOpen(true);
-                    }}
-                    className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] shadow-2xs cursor-pointer flex items-center gap-1 active:scale-[0.98]"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    Editeaza Profil
-                  </button>
-                </div>
-
               </div>
-            </div>
-          </div>
 
-          {/* FEATURED SECTION (DOUBLE-BEZEL HARDWARE SHELL) */}
-          <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
-            <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 shadow-xs border border-white/80 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
-                    Featured (In prim-plan)
-                    <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/80">
-                      +30% Vizualizari
-                    </span>
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Vitrina ta tehnica vizuala: proiecte de pe GitHub, demo-uri live si CV PDF.
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setActiveTab('action_plan')}
-                  className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
+              <div className="flex items-center gap-2">
+                <h2 className="font-serif text-2xl text-neutral-950">{profile?.fullName || 'Sirbu Mihai'}</h2>
+                <ShieldCheck className="w-5 h-5 text-brand-500" aria-label="Verificat" />
+              </div>
+
+              <div className="flex items-start justify-between gap-3 mt-1">
+                <p className="text-sm text-neutral-800 leading-relaxed">{profile?.headline || DEFAULT_HEADLINE}</p>
+                <button type="button" onClick={openHeadlineEditor} aria-label="Editează headline-ul" className={`${iconButton} shrink-0`}>
+                  <Edit3 className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {profile?.featured && profile.featured.length > 0 ? (
-                  profile.featured.map((item, idx) => (
-                    <div key={idx} className="border border-slate-200/80 rounded-2xl p-3.5 bg-slate-50/70 hover:bg-indigo-50/30 hover:border-indigo-300 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] space-y-2 flex flex-col justify-between shadow-2xs">
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded-md border border-indigo-200/80">
-                          {item.badge}
-                        </span>
-                        <h4 className="text-xs font-bold text-slate-900 leading-snug line-clamp-2">
-                          {item.title}
-                        </h4>
-                        <p className="text-[11px] text-slate-500 leading-tight">
-                          {item.subtitle}
-                        </p>
-                      </div>
-                      <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px] font-bold text-indigo-600">
-                        <span>{item.type === 'LINK' ? 'Deschide Link' : item.type === 'DOCUMENT' ? 'Descarca PDF' : 'Vezi Postarea'}</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-3 py-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl">
-                    Adauga proiectele de pe GitHub in sectiunea Featured pentru a demonstra expertiza practica!
-                  </div>
-                )}
+              {profile?.isCreatorMode && (
+                <p className="text-sm text-brand-600 mt-1">
+                  {profile.creatorTopics ? profile.creatorTopics.join(' ') : '#java #springboot #backend #algorithms #softwareengineering'}
+                </p>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500 mt-1.5">
+                <span>{profile?.location || 'București, România'}</span>
+                <span aria-hidden="true">·</span>
+                <button type="button" onClick={() => setContactModalOpen(true)} className="text-brand-600 hover:text-brand-700 font-medium cursor-pointer">
+                  Contact
+                </button>
+                <span aria-hidden="true">·</span>
+                <span>{profile?.connectionsCount || '500+ conexiuni'}</span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-4">
+                <button
+                  type="button"
+                  onClick={toggleOpenToWork}
+                  aria-pressed={!!profile?.isOpenToWork}
+                  className={profile?.isOpenToWork ? 'px-4 py-1.5 rounded-full text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white transition cursor-pointer' : `${primaryButton} !rounded-full !py-1.5`}
+                >
+                  {profile?.isOpenToWork ? 'Open to Work activ' : 'Open to Work'}
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleCreatorMode}
+                  aria-pressed={!!profile?.isCreatorMode}
+                  className={`${secondaryButton} !rounded-full !py-1.5`}
+                >
+                  {profile?.isCreatorMode ? 'Creator Mode pornit' : 'Pornește Creator Mode'}
+                </button>
+                <button type="button" onClick={openHeadlineEditor} className={`${secondaryButton} !rounded-full !py-1.5`}>
+                  <Edit3 className="w-3.5 h-3.5" />
+                  Editează profilul
+                </button>
               </div>
             </div>
-          </div>
+          </Card>
 
-          {/* ABOUT CARD (DOUBLE-BEZEL HARDWARE SHELL) */}
-          <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
-            <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 shadow-xs border border-white/80 space-y-3 relative group">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-base font-black text-slate-950">About (Despre)</h3>
-                <button 
-                  onClick={() => {
-                    setTempAbout(profile?.about || '');
-                    setEditAboutModalOpen(true);
-                  }}
-                  title="Editeaza sectiunea About"
-                  className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition cursor-pointer"
+          {/* FEATURED */}
+          <Card className="space-y-4">
+            <SectionHeading title="Featured" hint="Proiecte GitHub, demo-uri live și CV PDF." onAdd={() => setActiveTab('action_plan')} addLabel="Adaugă în Featured" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {profile?.featured && profile.featured.length > 0 ? (
+                profile.featured.map((item, idx) => (
+                  <div key={idx} className="rounded-xl bg-neutral-50 p-3.5 flex flex-col justify-between gap-2">
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-medium text-brand-700">{item.badge}</span>
+                      <h4 className="text-sm font-medium text-neutral-900 leading-snug line-clamp-2">{item.title}</h4>
+                      <p className="text-xs text-neutral-500">{item.subtitle}</p>
+                    </div>
+                    <div className="flex items-center justify-between text-xs font-medium text-brand-600">
+                      <span>{item.type === 'LINK' ? 'Deschide linkul' : item.type === 'DOCUMENT' ? 'Descarcă PDF' : 'Vezi postarea'}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="sm:col-span-3 text-sm text-neutral-400">Adaugă proiectele de pe GitHub în Featured.</p>
+              )}
+            </div>
+          </Card>
+
+          {/* ABOUT */}
+          <Card className="space-y-3">
+            <SectionHeading
+              title="Despre"
+              action={
+                <button
+                  type="button"
+                  onClick={() => { setTempAbout(profile?.about || ''); setEditAboutModalOpen(true); }}
+                  aria-label="Editează secțiunea Despre"
+                  className={`${iconButton} shrink-0`}
                 >
                   <Edit3 className="w-4 h-4" />
                 </button>
-              </div>
+              }
+            />
+            {profile?.about && profile.about.trim().length > 0 ? (
+              <p className="text-sm text-neutral-700 leading-relaxed whitespace-pre-line">{profile.about}</p>
+            ) : (
+              <button type="button" onClick={() => setActiveTab('about')} className="text-sm text-brand-600 hover:text-brand-700 cursor-pointer">
+                Adaugă secțiunea Despre
+              </button>
+            )}
+          </Card>
 
-              {profile?.about && profile.about.trim().length > 0 ? (
-                <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line space-y-2 font-sans select-text">
-                  {profile.about}
-                </div>
+          {/* EXPERIENCE */}
+          <Card className="space-y-4">
+            <SectionHeading title="Experiență" hint="Internship-uri și proiecte în echipă." onAdd={() => setActiveTab('action_plan')} addLabel="Adaugă experiență" />
+            <div className="divide-y divide-neutral-100">
+              {profile?.experience && profile.experience.length > 0 ? (
+                profile.experience.map((exp, idx) => (
+                  <div key={idx} className={`space-y-1.5 ${idx > 0 ? 'pt-4' : ''} ${idx < profile.experience.length - 1 ? 'pb-4' : ''}`}>
+                    <h4 className="text-sm font-medium text-neutral-950">{exp.title}</h4>
+                    <p className="text-sm text-neutral-700">{exp.company}</p>
+                    <p className="text-xs text-neutral-400">{exp.period} · {exp.location}</p>
+                    <p className="text-sm text-neutral-600 leading-relaxed whitespace-pre-line pt-1">{exp.description}</p>
+                  </div>
+                ))
               ) : (
-                <div 
-                  onClick={() => setActiveTab('about')}
-                  className="py-4 px-3 rounded-2xl border border-dashed border-slate-200 text-center text-xs text-slate-400 hover:text-indigo-600 hover:border-indigo-300 transition cursor-pointer"
-                >
-                  + Adauga sectiunea About (Apasa pentru a alege un rezumat tehnic)
+                <button type="button" onClick={handleSyncWithSelectedCv} className="text-sm text-brand-600 hover:text-brand-700 cursor-pointer">
+                  Nicio experiență listată. Importă din CV.
+                </button>
+              )}
+            </div>
+          </Card>
+
+          {/* PROJECTS */}
+          <Card className="space-y-4">
+            <SectionHeading title="Proiecte" hint="Formule STAR pentru proiectele tehnice." onAdd={() => setActiveTab('star_projects')} addLabel="Adaugă proiect" />
+            <div className="divide-y divide-neutral-100">
+              {profile?.projects && profile.projects.length > 0 ? (
+                profile.projects.map((proj, idx) => (
+                  <div key={idx} className={`space-y-2 ${idx > 0 ? 'pt-4' : ''} ${idx < profile.projects.length - 1 ? 'pb-4' : ''}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-medium text-neutral-950">{proj.title}</h4>
+                        <p className="text-xs text-neutral-400">{proj.timePeriod} · {proj.associatedWith}</p>
+                      </div>
+                      {proj.url && (
+                        <a href={proj.url} target="_blank" rel="noreferrer" className={`${secondaryButton} !px-3 !py-1.5 text-xs shrink-0`}>
+                          <FolderGit2 className="w-3.5 h-3.5" />
+                          Proiect
+                        </a>
+                      )}
+                    </div>
+                    <p className="text-sm text-neutral-600 leading-relaxed">{proj.description}</p>
+                    {proj.skills && proj.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {proj.skills.map((sk, sidx) => (
+                          <span key={sidx} className="text-xs px-2 py-0.5 rounded-md bg-brand-50 text-brand-700">{sk}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <button type="button" onClick={() => setActiveTab('star_projects')} className="text-sm text-brand-600 hover:text-brand-700 cursor-pointer">
+                  Adaugă proiecte în format STAR
+                </button>
+              )}
+            </div>
+          </Card>
+
+          {/* EDUCATION */}
+          <Card className="space-y-4">
+            <SectionHeading title="Studii" />
+            <div className="divide-y divide-neutral-100">
+              {profile?.education && profile.education.length > 0 ? (
+                profile.education.map((edu, idx) => (
+                  <div key={idx} className={`flex items-start gap-3.5 ${idx > 0 ? 'pt-4' : ''} ${idx < profile.education.length - 1 ? 'pb-4' : ''}`}>
+                    <span className="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center text-xs font-medium shrink-0">
+                      {edu.logoBadge || 'UP'}
+                    </span>
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-medium text-neutral-950">{edu.institution}</h4>
+                      <p className="text-sm text-neutral-600">{edu.degree}</p>
+                      <p className="text-xs text-neutral-400">{edu.period}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-start gap-3.5">
+                  <span className="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center text-xs font-medium shrink-0">UP</span>
+                  <div>
+                    <h4 className="text-sm font-medium text-neutral-950">Universitatea POLITEHNICA din București</h4>
+                    <p className="text-sm text-neutral-600">Informatică</p>
+                    <p className="text-xs text-neutral-400">octombrie 2022 – iulie 2026</p>
+                  </div>
                 </div>
               )}
             </div>
-          </div>
+          </Card>
 
-          {/* EXPERIENCE CARD (DOUBLE-BEZEL HARDWARE SHELL) */}
-          <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
-            <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 shadow-xs border border-white/80 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                  <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
-                    Experience (Experienta Profesionala)
-                    <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/80">
-                      Validare Practica
-                    </span>
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Internship-urile si proiectele in echipa demonstreaza adaptarea la rigorile industriei.
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setActiveTab('action_plan')}
-                  className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
+          {/* SKILLS */}
+          <Card className="space-y-4">
+            <SectionHeading
+              title="Competențe"
+              hint={`${profile?.skills?.length || 0} competențe. Fixează primele 3 (Java, Spring Boot, SQL).`}
+              action={
+                <button type="button" onClick={() => setAddSkillModalOpen(true)} className={`${secondaryButton} !px-3 !py-1.5 shrink-0`}>
+                  <Plus className="w-3.5 h-3.5" />
+                  Adaugă
                 </button>
-              </div>
-
-              <div className="space-y-4 divide-y divide-slate-100">
-                {profile?.experience && profile.experience.length > 0 ? (
-                  profile.experience.map((exp, idx) => (
-                    <div key={idx} className={`space-y-2 ${idx > 0 ? 'pt-4' : ''}`}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h4 className="text-sm font-black text-slate-950 leading-tight">
-                            {exp.title}
-                          </h4>
-                          <p className="text-xs font-bold text-slate-700 mt-0.5">
-                            {exp.company}
-                          </p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">
-                            {exp.period} • {exp.location}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50/80 p-3.5 rounded-xl border border-slate-200/80 font-sans shadow-2xs">
-                        {exp.description}
-                      </div>
+              }
+            />
+            {profile?.skills && profile.skills.length > 0 ? (
+              <ul className="divide-y divide-neutral-100">
+                {profile.skills.map((sk, idx) => (
+                  <li key={idx} className="flex items-center justify-between py-2 first:pt-0 last:pb-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm text-neutral-900">{sk}</span>
+                      {idx < 3 && <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-brand-50 text-brand-700">Fixat {idx + 1}</span>}
                     </div>
-                  ))
-                ) : (
-                  <div 
-                    onClick={handleSyncWithSelectedCv}
-                    className="py-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-indigo-300 hover:text-indigo-600 transition"
-                  >
-                    + Nu ai nicio experienta listata. Apasa pe „Sincronizeaza cu CV-ul” pentru a importa automat internship-ul SIMAVI!
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+                    <button type="button" onClick={() => removeSkillFromProfile(sk)} aria-label={`Șterge ${sk}`} className={iconButton}>
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-neutral-400">Nicio competență listată încă.</p>
+            )}
+          </Card>
 
-          {/* PROJECTS CARD (DOUBLE-BEZEL HARDWARE SHELL) */}
-          <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
-            <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 shadow-xs border border-white/80 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                  <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
-                    Projects (Proiecte Tehnice)
-                    <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                      Formule STAR
-                    </span>
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Proiecte complexe cu cod deschis si arhitectura scalabila (Java 21, Spring Boot, PyTorch).
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setActiveTab('star_projects')}
-                  className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-4 divide-y divide-slate-100">
-                {profile?.projects && profile.projects.length > 0 ? (
-                  profile.projects.map((proj, idx) => (
-                    <div key={idx} className={`space-y-2.5 ${idx > 0 ? 'pt-4' : ''}`}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h4 className="text-sm font-black text-slate-950 leading-tight">
-                            {proj.title}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 mt-0.5">
-                            {proj.timePeriod} • {proj.associatedWith}
-                          </p>
-                        </div>
-                        {proj.url && (
-                          <a 
-                            href={proj.url} 
-                            target="_blank" 
-                            rel="noreferrer" 
-                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center gap-1.5 shrink-0 active:scale-[0.98]"
-                          >
-                            <FolderGit2 className="w-3.5 h-3.5 text-slate-600" />
-                            Link Proiect
-                          </a>
-                        )}
-                      </div>
-
-                      <p className="text-xs text-slate-700 leading-relaxed font-sans bg-slate-50/70 p-3 rounded-xl border border-slate-200/80">
-                        {proj.description}
-                      </p>
-
-                      {proj.skills && proj.skills.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          {proj.skills.map((sk, sidx) => (
-                            <span key={sidx} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/80">
-                              {sk}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <div 
-                    onClick={() => setActiveTab('star_projects')}
-                    className="py-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl cursor-pointer"
-                  >
-                    + Adauga proiecte tehnice cu formula STAR / Google XYZ
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* EDUCATION CARD (DOUBLE-BEZEL HARDWARE SHELL) */}
-          <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
-            <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 shadow-xs border border-white/80 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-base font-black text-slate-950">Education (Studii)</h3>
-                <div className="flex items-center gap-1">
-                  <button className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition cursor-pointer">
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-4 divide-y divide-slate-100">
-                {profile?.education && profile.education.length > 0 ? (
-                  profile.education.map((edu, idx) => (
-                    <div key={idx} className={`flex items-start gap-3.5 ${idx > 0 ? 'pt-4' : ''}`}>
-                      <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center font-black text-xs text-indigo-700 shrink-0 shadow-2xs">
-                        {edu.logoBadge || 'UP'}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-slate-900 leading-tight">
-                          {edu.institution}
-                        </h4>
-                        <p className="text-xs text-slate-600 mt-0.5">
-                          {edu.degree}
-                        </p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          {edu.period}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center font-black text-xs text-indigo-700 shrink-0 shadow-2xs">
-                      UP
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900">Universitatea POLITEHNICA din Bucuresti</h4>
-                      <p className="text-xs text-slate-600">Informatica</p>
-                      <p className="text-[11px] text-slate-400">octombrie 2022 – iulie 2026</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* SKILLS CARD (DOUBLE-BEZEL HARDWARE SHELL) */}
-          <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
-            <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 shadow-xs border border-white/80 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                  <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
-                    Skills & Endorsements
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/80">
-                      {profile?.skills?.length || 0} competente
-                    </span>
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Fixeaza Top 3 Pinned Skills (Java, Spring Boot, SQL)</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => setAddSkillModalOpen(true)}
-                    className="px-3.5 py-1.5 rounded-full text-xs font-bold text-indigo-600 border border-indigo-200/90 hover:bg-indigo-50 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-[0.98]"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Add Skill
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-2.5 divide-y divide-slate-100">
-                {profile?.skills && profile.skills.length > 0 ? (
-                  profile.skills.map((sk, idx) => (
-                    <div key={idx} className={`flex items-center justify-between group/sk ${idx > 0 ? 'pt-2.5' : ''}`}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-900">{sk}</span>
-                        {idx < 3 && (
-                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs">
-                            Pinned Top {idx + 1}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-400">Aptitudine listata</span>
-                        <button
-                          onClick={() => removeSkillFromProfile(sk)}
-                          className="text-slate-300 hover:text-rose-600 transition p-1 cursor-pointer opacity-0 group-hover/sk:opacity-100"
-                          title="Sterge aptitudinea"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-slate-400">Nicio aptitudine listata inca.</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* LICENSES & CERTIFICATIONS CARD (DOUBLE-BEZEL) */}
+          {/* CERTIFICATIONS */}
           {profile?.certifications && profile.certifications.length > 0 && (
-            <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
-              <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 shadow-xs border border-white/80 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <h3 className="text-base font-black text-slate-950">Licenses & Certifications</h3>
-                  <button className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition cursor-pointer">
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="space-y-2 divide-y divide-slate-100">
-                  {profile.certifications.map((cert, idx) => (
-                    <div key={idx} className={`flex items-center justify-between ${idx > 0 ? 'pt-2' : ''}`}>
-                      <div className="flex items-center gap-2.5">
-                        <Award className="w-4 h-4 text-amber-500 shrink-0" />
-                        <span className="text-xs font-bold text-slate-800">{cert}</span>
-                      </div>
-                      <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-semibold border border-emerald-200">
-                        Verificat
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <Card className="space-y-3">
+              <SectionHeading title="Certificări" />
+              <ul className="divide-y divide-neutral-100">
+                {profile.certifications.map((cert, idx) => (
+                  <li key={idx} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
+                    <span className="flex items-center gap-2.5 text-sm text-neutral-900">
+                      <Award className="w-4 h-4 text-neutral-400 shrink-0" />
+                      {cert}
+                    </span>
+                    <span className="text-xs text-emerald-700">Verificat</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
           )}
 
-          {/* LANGUAGES CARD (DOUBLE-BEZEL) */}
+          {/* LANGUAGES */}
           {profile?.languages && profile.languages.length > 0 && (
-            <div className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-b from-slate-200/70 via-slate-100/40 to-slate-200/40 border border-slate-200/80 shadow-2xs">
-              <div className="bg-white rounded-[calc(2rem-0.375rem)] p-6 shadow-xs border border-white/80 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <h3 className="text-base font-black text-slate-950">Languages</h3>
-                  <button className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition cursor-pointer">
-                    <Edit3 className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="space-y-2 divide-y divide-slate-100">
-                  {profile.languages.map((lang, idx) => (
-                    <div key={idx} className={`flex items-center justify-between ${idx > 0 ? 'pt-2' : ''}`}>
-                      <span className="text-xs font-bold text-slate-800">{lang}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <Card className="space-y-3">
+              <SectionHeading title="Limbi" />
+              <ul className="divide-y divide-neutral-100">
+                {profile.languages.map((lang, idx) => (
+                  <li key={idx} className="text-sm text-neutral-900 py-2 first:pt-0 last:pb-0">{lang}</li>
+                ))}
+              </ul>
+            </Card>
           )}
 
         </div>
 
-        {/* RIGHT COLUMN: AI AUDIT & OPTIMIZATION ADVISOR (5/12) */}
-        <div className="lg:col-span-5 space-y-5">
-          
-          {/* PROFILE STRENGTH SCORE CARD */}
-          <div className="bg-white p-5 rounded-xl border border-neutral-200 space-y-5">
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider bg-neutral-100 text-neutral-800 border border-neutral-300">
-                <Sparkles className="w-3.5 h-3.5 text-neutral-900" />
-                Scor Vizibilitate Recruiteri
-              </span>
-              <span className="text-xs font-medium text-neutral-400 font-mono">Algoritm 2026 Audit</span>
-            </div>
+        {/* DREAPTA: SCOR SI SUGESTII */}
+        <div className="lg:col-span-5 space-y-5 min-w-0">
 
-            <div className="flex items-center gap-5">
-              <div className="relative w-20 h-20 rounded-xl bg-neutral-50 border border-neutral-200 flex flex-col items-center justify-center shrink-0">
-                <span className="text-2xl font-bold text-neutral-950 font-mono tracking-tight">
-                  {optimizationResult?.overallScore || 85}
-                </span>
-                <span className="text-[10px] text-neutral-500 font-mono uppercase">din 100</span>
-              </div>
+          <ScoreSummary result={optimizationResult} />
 
-              <div>
-                <h3 className="text-sm font-bold text-neutral-950 leading-tight tracking-tight">
-                  {optimizationResult?.scoreGrade || 'All-Star Profile (Optimizat Recruiteri)'}
-                </h3>
-                <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
-                  Profilurile cu scor peste 85 obtin cu pana la <strong className="text-neutral-950 font-bold">3.5x mai multe mesaje directe</strong> de la recruiteri din Romania.
-                </p>
-              </div>
-            </div>
+          <div role="tablist" aria-label="Sugestii" className="flex flex-wrap gap-1 p-1 rounded-xl bg-neutral-100">
+            {TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === id}
+                onClick={() => setActiveTab(id)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === id ? 'bg-white text-neutral-950 shadow-sm' : 'text-neutral-600 hover:text-neutral-950'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
 
-            {/* SCORE BREAKDOWN BARS */}
-            {optimizationResult?.scoreBreakdown && (
-              <div className="space-y-2.5 pt-3 border-t border-neutral-100">
-                {Object.entries(optimizationResult.scoreBreakdown).map(([label, val]) => (
-                  <div key={label} className="space-y-1">
-                    <div className="flex justify-between text-[11px] font-medium text-neutral-600 font-mono">
-                      <span>{label}</span>
-                      <span className="font-mono text-neutral-900 font-bold">{val} pts</span>
+          {activeTab === 'action_plan' && (
+            <ActionPlan
+              steps={optimizationResult?.actionPlan}
+              completed={completedSteps}
+              onToggle={toggleStep}
+              onCopy={copyToClipboard}
+              copiedKey={copiedKey}
+            />
+          )}
+
+          {activeTab === 'headlines' && (
+            <Card className="space-y-4">
+              <SectionHeading title="Headline-uri optimizate" hint="Maximum 220 de caractere." />
+              <div className="space-y-3">
+                {optimizationResult?.optimizedHeadlines?.map((h, i) => (
+                  <div key={i} className={`rounded-xl p-4 space-y-2 ${h.recommended ? 'bg-brand-50' : 'bg-neutral-50'}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium text-brand-700">{h.formulaName}</span>
+                      {h.recommended && <span className="text-xs font-medium text-brand-700">Recomandat</span>}
                     </div>
-                    <div className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full bg-black transition-all duration-500" 
-                        style={{ width: `${Math.min(100, (val / 20) * 100)}%` }}
-                      />
+                    <p className="text-sm font-medium text-neutral-950 leading-snug">{h.headline}</p>
+                    <p className="text-xs text-neutral-500">{h.rationale}</p>
+                    <div className="flex items-center gap-3 pt-1">
+                      <button type="button" onClick={() => applyHeadline(h.headline)} className={`${primaryButton} !px-3 !py-1.5`}>
+                        <Check className="w-3.5 h-3.5" />
+                        Folosește
+                      </button>
+                      <CopyButton text={h.headline} copyKey={`h_${i}`} copiedKey={copiedKey} onCopy={copyToClipboard} />
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-
-            {/* CRITICAL GAPS */}
-            {optimizationResult?.criticalGaps && optimizationResult.criticalGaps.length > 0 && (
-              <div className="space-y-2 pt-3 border-t border-neutral-100">
-                <span className="text-xs font-mono font-bold uppercase text-neutral-800 tracking-wider flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-neutral-700" />
-                  Lipsuri Critice Identificate ({optimizationResult.criticalGaps.length})
-                </span>
-                <ul className="space-y-1.5">
-                  {optimizationResult.criticalGaps.map((gap, i) => (
-                    <li key={i} className="text-xs text-neutral-800 font-medium flex items-start gap-2 leading-relaxed bg-neutral-50 border border-neutral-200 p-2.5 rounded-xl">
-                      <span className="w-1.5 h-1.5 rounded-full bg-neutral-900 shrink-0 mt-1.5"></span>
-                      <span>{gap}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          {/* TABS NAVIGATION FOR SUGGESTIONS */}
-          <div className="bg-neutral-100 border border-neutral-200 rounded-xl p-1 flex flex-wrap gap-1 font-mono text-xs">
-            <button
-              onClick={() => setActiveTab('action_plan')}
-              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'action_plan'
-                  ? 'bg-black text-white font-bold'
-                  : 'bg-transparent text-neutral-600 hover:text-black'
-              }`}
-            >
-              <CheckSquare className="w-3.5 h-3.5" />
-              Plan Pas-cu-Pas
-            </button>
-            <button
-              onClick={() => setActiveTab('headlines')}
-              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'headlines'
-                  ? 'bg-black text-white font-bold'
-                  : 'bg-transparent text-neutral-600 hover:text-black'
-              }`}
-            >
-              <Lightbulb className="w-3.5 h-3.5" />
-              Headline
-            </button>
-            <button
-              onClick={() => setActiveTab('about')}
-              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'about'
-                  ? 'bg-black text-white font-bold'
-                  : 'bg-transparent text-neutral-600 hover:text-black'
-              }`}
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              Despre
-            </button>
-            <button
-              onClick={() => setActiveTab('star_projects')}
-              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'star_projects'
-                  ? 'bg-black text-white font-bold'
-                  : 'bg-transparent text-neutral-600 hover:text-black'
-              }`}
-            >
-              <FolderGit2 className="w-3.5 h-3.5" />
-              Proiecte STAR
-            </button>
-            <button
-              onClick={() => setActiveTab('boolean_search')}
-              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'boolean_search'
-                  ? 'bg-black text-white font-bold'
-                  : 'bg-transparent text-neutral-600 hover:text-black'
-              }`}
-            >
-              <Terminal className="w-3.5 h-3.5" />
-              Cautare Recruiter
-            </button>
-            <button
-              onClick={() => setActiveTab('skills')}
-              className={`py-2 px-3 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'skills'
-                  ? 'bg-black text-white font-bold'
-                  : 'bg-transparent text-neutral-600 hover:text-black'
-              }`}
-            >
-              <Flame className="w-3.5 h-3.5" />
-              Skills Piata
-            </button>
-            <button
-              onClick={() => setActiveTab('tips')}
-              className={`py-2 px-3 rounded-xl text-xs font-black transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'tips'
-                  ? 'bg-indigo-600 text-white shadow-xs ring-1 ring-indigo-500/20'
-                  : 'bg-transparent text-slate-600 hover:text-slate-950 hover:bg-white/80 border border-transparent hover:border-slate-200/60'
-              }`}
-            >
-              <Award className={`w-3.5 h-3.5 ${activeTab === 'tips' ? 'text-white' : 'text-emerald-500'}`} />
-              Sfaturi Pro
-            </button>
-          </div>
-
-          {/* TAB 0: ACTION PLAN CHECKLIST (10 DETAILED CONCRETE STEPS) - DOUBLE-BEZEL */}
-          {activeTab === 'action_plan' && (
-            <div className="bg-slate-100/70 p-1.5 rounded-[2rem] border border-slate-200/80 shadow-xs">
-              <div className="bg-white p-6 rounded-[calc(2rem-0.375rem)] border border-slate-200/60 shadow-xs space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                      <CheckSquare className="w-4 h-4 text-emerald-500" />
-                      Plan de Actiune Pas cu Pas (10 Etape)
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                      Bifeaza etapele pe masura ce le aplici pe profilul tau LinkedIn real.
-                    </p>
-                  </div>
-                  <span className="text-xs font-black px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0 font-mono">
-                    {Object.values(completedSteps).filter(Boolean).length} / {optimizationResult?.actionPlan?.length || 10} Completate
-                  </span>
-                </div>
-
-                <div className="space-y-3 pt-1">
-                  {optimizationResult?.actionPlan?.map((step) => {
-                    const isDone = !!completedSteps[step.id];
-                    return (
-                      <div 
-                        key={step.id} 
-                        className={`p-4 rounded-2xl border transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] space-y-2.5 ${
-                          isDone 
-                            ? 'border-emerald-200/80 bg-emerald-50/40 opacity-80' 
-                            : 'border-slate-200/80 bg-slate-50/80 hover:bg-slate-50 hover:border-slate-300/80'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3">
-                            <button
-                              onClick={() => toggleStep(step.id)}
-                              className="mt-0.5 text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer"
-                            >
-                              {isDone ? (
-                                <CheckCircle2 className="w-5 h-5 text-emerald-600 fill-emerald-100" />
-                              ) : (
-                                <Square className="w-5 h-5 text-slate-300 hover:text-slate-400" />
-                              )}
-                            </button>
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-black text-slate-950 leading-tight">
-                                  {step.stepNumber}. {step.title}
-                                </span>
-                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                                  {step.impact}
-                                </span>
-                              </div>
-                              <p className="text-[11px] text-slate-500 mt-1 font-medium">
-                                Timp estimat: <strong className="text-slate-700 font-bold">{step.estimatedMinutes}</strong> • Categorie: {step.category}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-slate-600 leading-relaxed pl-8">
-                          {step.instructions}
-                        </p>
-
-                        {step.exampleSnippet && (
-                          <div className="ml-8 p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between gap-2 shadow-2xs">
-                            <code className="text-[11px] font-mono text-slate-800 truncate">
-                              {step.exampleSnippet}
-                            </code>
-                            <button
-                              onClick={() => copyToClipboard(step.exampleSnippet, step.id)}
-                              className="text-xs font-black text-indigo-600 hover:text-indigo-700 flex items-center gap-1 shrink-0 cursor-pointer transition-colors"
-                            >
-                              {copiedKey === step.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                              {copiedKey === step.id ? 'Copiat!' : 'Copiaza'}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+            </Card>
           )}
 
-          {/* TAB 1: HEADLINE SUGGESTIONS - DOUBLE-BEZEL */}
-          {activeTab === 'headlines' && (
-            <div className="bg-slate-100/70 p-1.5 rounded-[2rem] border border-slate-200/80 shadow-xs">
-              <div className="bg-white p-6 rounded-[calc(2rem-0.375rem)] border border-slate-200/60 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                      <Lightbulb className="w-4 h-4 text-amber-500" />
-                      Headline-uri Magnetice Optimizate
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                      Semnalul #1 in algoritmul LinkedIn Recruiter. Foloseste la maximum cele 220 de caractere.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3 pt-1">
-                  {optimizationResult?.optimizedHeadlines?.map((h, i) => (
-                    <div 
-                      key={i} 
-                      className={`p-4 rounded-2xl border transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] space-y-2.5 ${
-                        h.recommended 
-                          ? 'border-indigo-200/90 bg-indigo-50/40' 
-                          : 'border-slate-200/80 bg-slate-50/80 hover:bg-slate-50 hover:border-slate-300/80'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-black text-indigo-700 uppercase tracking-wider">
-                          {h.formulaName}
-                        </span>
-                        {h.recommended && (
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-600 text-white shadow-2xs">
-                            Recomandat
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="text-xs font-bold text-slate-950 leading-snug">
-                        "{h.headline}"
-                      </p>
-
-                      <p className="text-[11px] text-slate-500 leading-relaxed">
-                        {h.rationale}
-                      </p>
-
-                      <div className="flex items-center gap-2 pt-1">
-                        <button
-                          onClick={() => applyHeadline(h.headline)}
-                          className="group inline-flex items-center gap-2 pl-3.5 pr-2 py-1.5 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs hover:shadow-sm active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
-                        >
-                          <span>Adopta in Profil</span>
-                          <span className="w-5 h-5 rounded-lg bg-indigo-700/60 flex items-center justify-center transition-transform group-hover:scale-105">
-                            <Check className="w-3.5 h-3.5 text-white" />
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => copyToClipboard(h.headline, `h_${i}`)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/80 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                        >
-                          {copiedKey === `h_${i}` ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
-                              Copiat!
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5" />
-                              Copiaza
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          {activeTab === 'about' && (
+            <Card className="space-y-4">
+              <SectionHeading title="Rezumat profesional" hint="Alege o variantă și aplic-o pe profil." />
+              <div role="radiogroup" aria-label="Variantă Despre" className="flex flex-wrap gap-2">
+                {aboutVariants.map((variant) => (
+                  <button
+                    key={variant.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selectedAboutVariant === variant.id}
+                    onClick={() => setSelectedAboutVariant(variant.id)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer ${
+                      selectedAboutVariant === variant.id ? 'bg-brand-500 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                    }`}
+                  >
+                    {variant.label}
+                  </button>
+                ))}
               </div>
-            </div>
+              <p className="rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 leading-relaxed whitespace-pre-line max-h-96 overflow-y-auto select-text">
+                {currentAboutVariant.text}
+              </p>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => applyAbout(currentAboutVariant.text)} className={`${primaryButton} flex-1`}>
+                  <Check className="w-4 h-4" />
+                  Folosește pe profil
+                </button>
+                <CopyButton text={currentAboutVariant.text} copyKey={`about_${currentAboutVariant.id}`} copiedKey={copiedKey} onCopy={copyToClipboard} label="Copiază textul" />
+              </div>
+            </Card>
           )}
 
-          {/* TAB 2: ABOUT / SUMMARY (NON-AI & PROFESSIONAL) - DOUBLE-BEZEL */}
-          {activeTab === 'about' && (() => {
-            const userEmail = profile?.email || 'sarbumihai0@gmail.com';
-            const aboutVariants = [
-              {
-                id: 'technical',
-                label: 'Tehnic & Detaliat (Romana)',
-                badge: 'Recomandat Backend',
-                text: optimizationResult?.optimizedAbout || `Inginer software la inceput de drum, student la Facultatea de Automatica si Calculatoare din cadrul Universitatii POLITEHNICA din Bucuresti. Lucrez in principal pe dezvoltare backend si arhitectura de aplicatii folosind Java si ecosistemul Spring Boot.
-
-In proiectele mele ma concentrez pe scrierea de cod modular si usor de intretinut, proiectarea de baze de date relationale (PostgreSQL, Microsoft SQL Server) si containerizarea serviciilor cu Docker. Recent am dezvoltat ATS Job Tracker, o platforma full-stack cu backend in Spring Boot 3, persistenta in PostgreSQL cu extensia pgvector pentru cautare semantica, frontend in React si deployment containerizat. Anterior, am activat ca Software Engineering Intern la SIMAVI, unde am lucrat pe intregul ciclu de dezvoltare (SDLC) pentru aplicatii enterprise in Java.
-
-Sunt deschis pentru oportunitati de Junior Software Engineer sau Junior Backend Developer, unde pot contribui tehnic si pot aprofunda sisteme distribuite de inalta performanta.
-
-Contact: ${userEmail} | Bucuresti, Romania`
-              },
-              {
-                id: 'concise',
-                label: 'Concis & Direct (Romana)',
-                badge: 'Format Scurt',
-                text: `Student in anul final la Automatica si Calculatoare (UPB), pasionat de inginerie software si dezvoltare backend. Experienta mea practica include atat stagiu de practica ca Software Engineering Intern (SIMAVI), cat si proiecte software complete dezvoltate de la zero.
-
-Stiva tehnica principala: Java 21, Spring Boot 3, PostgreSQL, Docker, Git, REST APIs si baze de date relationale. Imi place sa lucrez la optimizarea interogarilor SQL, structura curata a serviciilor si integrarea de solutii moderne, precum cautarea vectoriala in PostgreSQL (pgvector).
-
-Urmaresc un rol de Junior Software Engineer / Backend Developer intr-o echipa tehnica care pune accent pe bune practici, clean code si colaborare solida.
-
-Email: ${userEmail}`
-              },
-              {
-                id: 'english',
-                label: 'International (Engleza)',
-                badge: 'Companii Globale',
-                text: `Software engineer and Computer Science student at University POLITEHNICA of Bucharest (Faculty of Automatic Control and Computers), focused on backend engineering, RESTful APIs, and database performance.
-
-My primary technical stack revolves around Java, Spring Boot, relational databases (PostgreSQL, SQL Server), and Docker. I care deeply about writing clean, maintainable code, structuring scalable database schemas, and understanding systems down to query execution and memory management.
-
-Key projects include ATS Job Tracker, an open-source platform built with Spring Boot 3, PostgreSQL (pgvector), React, and Docker, featuring automated web scrapers and semantic candidate matching. Previously, as a Software Engineering Intern at SIMAVI, I contributed to full-stack Java/Spring enterprise solutions across the complete SDLC.
-
-Currently open to Junior Software Engineer, Junior Backend Developer, and Software Developer roles.
-
-Reach out directly at: ${userEmail}`
-              }
-            ];
-
-            const currentAboutVariant = aboutVariants.find(v => v.id === selectedAboutVariant) || aboutVariants[0];
-
-            return (
-              <div className="bg-slate-100/70 p-1.5 rounded-[2rem] border border-slate-200/80 shadow-xs">
-                <div className="bg-white p-6 rounded-[calc(2rem-0.375rem)] border border-slate-200/60 shadow-xs space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                        <Edit3 className="w-4 h-4 text-indigo-600" />
-                        Rezumat Profesional 'About' (Scris Uman • Fara Emoticoane)
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                        Texte reale si concise pentru ingineri software. Fara sabloane generice de AI, fara emoticoane si fara formulari artificiale.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* VARIANT PILLS SELECTOR */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {aboutVariants.map((variant) => (
-                      <button
-                        key={variant.id}
-                        onClick={() => setSelectedAboutVariant(variant.id)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer flex items-center gap-1.5 ${
-                          selectedAboutVariant === variant.id
-                            ? 'bg-indigo-600 text-white shadow-xs ring-1 ring-indigo-500/20'
-                            : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/60'
-                        }`}
-                      >
-                        <span>{variant.label}</span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold ${
-                          selectedAboutVariant === variant.id
-                            ? 'bg-indigo-700 text-indigo-100'
-                            : 'bg-slate-200 text-slate-600'
-                        }`}>
-                          {variant.badge}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="space-y-4 pt-1">
-                    <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-line max-h-96 overflow-y-auto font-sans select-text shadow-2xs">
-                      {currentAboutVariant.text}
-                    </div>
-
-                    <div className="flex items-center gap-2.5">
-                      <button
-                        onClick={() => applyAbout(currentAboutVariant.text)}
-                        className="group flex-1 py-2.5 px-4 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs hover:shadow-sm active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <span>Adopta in Profilul Live</span>
-                        <span className="w-5 h-5 rounded-lg bg-indigo-700/60 flex items-center justify-center transition-transform group-hover:scale-105">
-                          <Check className="w-3.5 h-3.5 text-white" />
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => copyToClipboard(currentAboutVariant.text, `about_${currentAboutVariant.id}`)}
-                        className="py-2.5 px-4 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/80 shadow-2xs active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center gap-1.5 cursor-pointer"
-                      >
-                        {copiedKey === `about_${currentAboutVariant.id}` ? (
-                          <>
-                            <Check className="w-4 h-4 text-emerald-600" />
-                            Copiat!
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-4 h-4" />
-                            Copiaza Textul
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* TAB 3: STAR PROJECTS (GOOGLE XYZ FORMULA) - DOUBLE-BEZEL */}
           {activeTab === 'star_projects' && (
-            <div className="bg-slate-100/70 p-1.5 rounded-[2rem] border border-slate-200/80 shadow-xs">
-              <div className="bg-white p-6 rounded-[calc(2rem-0.375rem)] border border-slate-200/60 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                      <FolderGit2 className="w-4 h-4 text-purple-600" />
-                      Proiecte Sugerate in Format STAR / Google XYZ
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                      Formula Accomplished [X] as measured by [Y] by doing [Z] care atrage direct interviuri tehnice.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-1">
-                  {optimizationResult?.suggestedProjects?.map((proj, idx) => (
-                    <div key={idx} className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h4 className="text-xs font-black text-slate-950 leading-snug">{proj.title}</h4>
-                          <span className="text-[11px] font-mono text-slate-500">{proj.timePeriod}</span>
-                        </div>
-                        <button
-                          onClick={() => copyToClipboard(`${proj.title}\n\n${proj.description}\n\nSkills: ${proj.skills.join(', ')}\nLink: ${proj.url}`, `proj_${idx}`)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/80 shadow-2xs active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] flex items-center gap-1.5 cursor-pointer shrink-0"
-                        >
-                          {copiedKey === `proj_${idx}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                          {copiedKey === `proj_${idx}` ? 'Copiat!' : 'Copiaza'}
-                        </button>
+            <Card className="space-y-4">
+              <SectionHeading title="Proiecte în format STAR" hint="Realizat [X], măsurat prin [Y], făcând [Z]." />
+              <div className="space-y-3">
+                {optimizationResult?.suggestedProjects?.map((proj, idx) => (
+                  <div key={idx} className="rounded-xl bg-neutral-50 p-4 space-y-2.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-medium text-neutral-950">{proj.title}</h4>
+                        <span className="text-xs text-neutral-400">{proj.timePeriod}</span>
                       </div>
-
-                      <p className="text-xs text-slate-700 leading-relaxed bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
-                        {proj.description}
-                      </p>
-
-                      <div className="flex flex-wrap gap-1.5">
-                        {proj.skills.map((sk, sidx) => (
-                          <span key={sidx} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                            {sk}
-                          </span>
-                        ))}
-                      </div>
+                      <CopyButton
+                        text={`${proj.title}\n\n${proj.description}\n\nSkills: ${proj.skills.join(', ')}\nLink: ${proj.url}`}
+                        copyKey={`proj_${idx}`}
+                        copiedKey={copiedKey}
+                        onCopy={copyToClipboard}
+                      />
                     </div>
-                  ))}
-                </div>
+                    <p className="text-sm text-neutral-700 leading-relaxed">{proj.description}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {proj.skills.map((sk, sidx) => (
+                        <span key={sidx} className="text-xs px-2 py-0.5 rounded-md bg-brand-50 text-brand-700">{sk}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            </Card>
           )}
 
-          {/* TAB 4: BOOLEAN SEARCH QUERIES - DOUBLE-BEZEL */}
           {activeTab === 'boolean_search' && (
-            <div className="bg-slate-100/70 p-1.5 rounded-[2rem] border border-slate-200/80 shadow-xs">
-              <div className="bg-white p-6 rounded-[calc(2rem-0.375rem)] border border-slate-200/60 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                      <Terminal className="w-4 h-4 text-sky-600" />
-                      Interogari Booleene Rulate de Recruiteri
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                      Iata cum filtreaza recruiterii candidatii in LinkedIn Recruiter si cum apari tu pe prima pagina.
+            <Card className="space-y-4">
+              <SectionHeading title="Căutări de recruiter" hint="Cum te găsesc recruiterii în LinkedIn Recruiter." />
+              <div className="space-y-3">
+                {optimizationResult?.recruiterQueries?.map((q, idx) => (
+                  <div key={idx} className="rounded-xl bg-neutral-50 p-4 space-y-2.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <h4 className="text-sm font-medium text-neutral-950">{q.roleTarget}</h4>
+                      <CopyButton text={q.booleanString} copyKey={`bq_${idx}`} copiedKey={copiedKey} onCopy={copyToClipboard} label="Copiază query" />
+                    </div>
+                    <code className="block rounded-lg bg-neutral-900 text-neutral-100 text-xs leading-relaxed p-3 break-words select-all">
+                      {q.booleanString}
+                    </code>
+                    <p className="text-xs text-neutral-600">{q.explanation}</p>
+                    <p className="flex items-start gap-1.5 text-xs text-neutral-700">
+                      <Target className="w-3.5 h-3.5 text-brand-600 shrink-0 mt-0.5" />
+                      <span>{q.whyYouMatch}</span>
                     </p>
                   </div>
-                </div>
-
-                <div className="space-y-4 pt-1">
-                  {optimizationResult?.recruiterQueries?.map((q, idx) => (
-                    <div key={idx} className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2.5">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-black text-slate-950">{q.roleTarget}</h4>
-                        <button
-                          onClick={() => copyToClipboard(q.booleanString, `bq_${idx}`)}
-                          className="text-xs font-black text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer transition-colors"
-                        >
-                          {copiedKey === `bq_${idx}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                          {copiedKey === `bq_${idx}` ? 'Copiat!' : 'Copiaza Query'}
-                        </button>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-slate-900 text-slate-100 font-mono text-[11px] leading-relaxed select-all border border-slate-800 shadow-inner">
-                        {q.booleanString}
-                      </div>
-
-                      <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                        <strong className="text-slate-900 font-bold">Cum functioneaza:</strong> {q.explanation}
-                      </p>
-
-                      <div className="text-[11px] text-emerald-900 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200/80 font-medium flex items-start gap-1.5">
-                        <Target className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
-                        <div>
-                          <strong className="text-emerald-950 font-bold">De ce te potrivesti:</strong> {q.whyYouMatch}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
-            </div>
+            </Card>
           )}
 
-          {/* TAB 5: RECOMMENDED SKILLS - DOUBLE-BEZEL */}
           {activeTab === 'skills' && (
-            <div className="bg-slate-100/70 p-1.5 rounded-[2rem] border border-slate-200/80 shadow-xs">
-              <div className="bg-white p-6 rounded-[calc(2rem-0.375rem)] border border-slate-200/60 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                      <Flame className="w-4 h-4 text-rose-500" />
-                      Aptitudini Recomandate de Piata
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                      Tehnologii solicitate frecvent in rolurile de Junior din Romania care iti lipsesc din profil.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2.5 pt-1">
-                  {optimizationResult?.recommendedSkills?.map((sk) => (
-                    <div 
-                      key={sk.skillName}
-                      className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 flex items-center justify-between gap-3 hover:bg-slate-100/80 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-black text-slate-950">{sk.skillName}</span>
-                          <span className="text-[10px] font-bold text-slate-600 bg-slate-200/80 px-2 py-0.5 rounded-md">
-                            {sk.category}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
-                          {sk.rationale} • <strong className="text-indigo-600 font-bold">{sk.marketDemand}</strong>
-                        </p>
+            <Card className="space-y-4">
+              <SectionHeading title="Competențe cerute pe piață" hint="Lipsesc din profilul tău." />
+              <ul className="space-y-2">
+                {optimizationResult?.recommendedSkills?.map((sk) => (
+                  <li key={sk.skillName} className="rounded-xl bg-neutral-50 p-3.5 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium text-neutral-950">{sk.skillName}</span>
+                        <span className="text-xs text-neutral-500">{sk.category}</span>
                       </div>
-
-                      <button
-                        onClick={() => addSkillToProfile(sk.skillName)}
-                        className="px-3 py-1.5 rounded-xl text-xs font-black bg-white hover:bg-indigo-600 hover:text-white text-slate-800 border border-slate-200/90 hover:border-indigo-600 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] shadow-2xs whitespace-nowrap cursor-pointer flex items-center gap-1"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        Adauga
-                      </button>
+                      <p className="text-xs text-neutral-500 mt-0.5">
+                        {sk.rationale} · <span className="text-brand-600 font-medium">{sk.marketDemand}</span>
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+                    <button type="button" onClick={() => addSkillToProfile(sk.skillName)} className={`${secondaryButton} !px-3 !py-1.5 shrink-0`}>
+                      <Plus className="w-3.5 h-3.5" />
+                      Adaugă
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Card>
           )}
 
-          {/* TAB 6: RECRUITER STRATEGIC TIPS - DOUBLE-BEZEL */}
           {activeTab === 'tips' && (
-            <div className="bg-slate-100/70 p-1.5 rounded-[2rem] border border-slate-200/80 shadow-xs">
-              <div className="bg-white p-6 rounded-[calc(2rem-0.375rem)] border border-slate-200/60 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
-                      <Award className="w-4 h-4 text-emerald-600" />
-                      Top Strategii Verificate de la Recruiteri IT
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                      Puncte cheie pentru a trece peste filtrele automate si a obtine interviuri.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3 pt-1">
-                  {optimizationResult?.recruiterTips?.map((tip) => (
-                    <div key={tip.id} className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-black text-slate-950 leading-snug">{tip.title}</h4>
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                          {tip.badge}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                        {tip.description}
-                      </p>
-
-                      <div className="pt-1 text-[11px] text-indigo-950 bg-indigo-50/70 p-2.5 rounded-xl border border-indigo-200/60">
-                        <strong className="text-indigo-900 font-bold">Cum faci:</strong> {tip.actionAdvice}
-                      </div>
+            <Card className="space-y-4">
+              <SectionHeading title="Sfaturi de la recruiteri" hint="Cum treci de filtrele automate." />
+              <div className="space-y-3">
+                {optimizationResult?.recruiterTips?.map((tip) => (
+                  <div key={tip.id} className="rounded-xl bg-neutral-50 p-4 space-y-1.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <h4 className="text-sm font-medium text-neutral-950">{tip.title}</h4>
+                      <span className="text-xs text-brand-700 shrink-0">{tip.badge}</span>
                     </div>
-                  ))}
-                </div>
+                    <p className="text-sm text-neutral-600">{tip.description}</p>
+                    <p className="text-xs text-neutral-700"><span className="font-medium">Cum faci:</span> {tip.actionAdvice}</p>
+                  </div>
+                ))}
               </div>
-            </div>
+            </Card>
           )}
 
         </div>
-
       </div>
 
-      {/* EDIT HEADLINE MODAL - DOUBLE-BEZEL DIALOG */}
-      {editHeadlineModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-morphing-backdrop">
-          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-lg animate-morphing-dialog">
-            <div className="bg-white rounded-[calc(2.25rem-0.375rem)] border border-slate-200/60 p-6 space-y-4 shadow-xs">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
-                  <Edit3 className="w-4 h-4 text-indigo-600" />
-                  Editeaza Headline Profil
-                </h3>
-                <button 
-                  onClick={() => setEditHeadlineModalOpen(false)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer animate-morphing-close"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <label className="font-bold text-slate-700">Titlu Profil (Headline)</label>
-                  <span className={`font-mono font-bold ${tempHeadline.length > 220 ? 'text-rose-600' : 'text-slate-400'}`}>
-                    {tempHeadline.length} / 220 caractere
-                  </span>
-                </div>
-                <textarea
-                  value={tempHeadline}
-                  onChange={(e) => setTempHeadline(e.target.value)}
-                  rows={3}
-                  className="w-full p-3.5 text-xs font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white transition-all leading-relaxed"
-                  placeholder="Ex: Junior Software Engineer | Java 21 & Spring Boot | Student UPB..."
-                />
-                <p className="text-[11px] text-slate-500 font-medium">
-                  Sfat: Foloseste separatorul `|` si include rolul dorit + stiva tehnica principala.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEditHeadlineModalOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
-                >
-                  Anuleaza
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveHeadline}
-                  disabled={!tempHeadline.trim()}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer disabled:opacity-50 shadow-xs"
-                >
-                  Salveaza in Profil
-                </button>
-              </div>
+      {/* MODALE */}
+      <Modal isOpen={editHeadlineModalOpen} onClose={() => setEditHeadlineModalOpen(false)} title="Editează headline-ul" icon={Edit3}>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center text-sm">
+              <label htmlFor="linkedin-headline-input" className="font-medium text-neutral-700">Headline</label>
+              <span className={`text-xs tabular-nums ${tempHeadline.length > 220 ? 'text-red-600' : 'text-neutral-400'}`}>
+                {tempHeadline.length} / 220
+              </span>
             </div>
+            <textarea
+              id="linkedin-headline-input"
+              value={tempHeadline}
+              onChange={(e) => setTempHeadline(e.target.value)}
+              rows={3}
+              className={inputClass}
+              placeholder="Ex: Junior Software Engineer | Java 21 & Spring Boot | Student UPB"
+            />
+            <p className="text-xs text-neutral-500">Folosește separatorul | și include rolul dorit și stiva principală.</p>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <button type="button" onClick={() => setEditHeadlineModalOpen(false)} className={`${secondaryButton} flex-1`}>Anulează</button>
+            <button type="button" onClick={handleSaveHeadline} disabled={!tempHeadline.trim()} className={`${primaryButton} flex-1`}>Salvează</button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {/* EDIT ABOUT MODAL - DOUBLE-BEZEL DIALOG */}
-      {editAboutModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-morphing-backdrop">
-          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-xl animate-morphing-dialog">
-            <div className="bg-white rounded-[calc(2.25rem-0.375rem)] border border-slate-200/60 p-6 space-y-4 shadow-xs">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
-                  <Edit3 className="w-4 h-4 text-indigo-600" />
-                  Editeaza Sectiunea About (Despre)
-                </h3>
-                <button 
-                  onClick={() => setEditAboutModalOpen(false)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer animate-morphing-close"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700">Rezumat Profesional</label>
-                <textarea
-                  value={tempAbout}
-                  onChange={(e) => setTempAbout(e.target.value)}
-                  rows={10}
-                  className="w-full p-3.5 text-xs font-normal text-slate-900 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white leading-relaxed font-sans transition-all"
-                  placeholder="Scrie povestea ta profesionala, proiectele realizate si datele de contact..."
-                />
-              </div>
-
-              <div className="flex items-center gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEditAboutModalOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
-                >
-                  Anuleaza
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveAbout}
-                  disabled={!tempAbout.trim()}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer disabled:opacity-50 shadow-xs"
-                >
-                  Salveaza in Profil
-                </button>
-              </div>
-            </div>
+      <Modal isOpen={editAboutModalOpen} onClose={() => setEditAboutModalOpen(false)} title="Editează secțiunea Despre" icon={Edit3} size="lg">
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label htmlFor="linkedin-about-input" className="text-sm font-medium text-neutral-700">Rezumat profesional</label>
+            <textarea
+              id="linkedin-about-input"
+              value={tempAbout}
+              onChange={(e) => setTempAbout(e.target.value)}
+              rows={10}
+              className={inputClass}
+              placeholder="Povestea ta profesională, proiectele realizate și datele de contact"
+            />
+          </div>
+          <div className="flex items-center gap-2.5">
+            <button type="button" onClick={() => setEditAboutModalOpen(false)} className={`${secondaryButton} flex-1`}>Anulează</button>
+            <button type="button" onClick={handleSaveAbout} disabled={!tempAbout.trim()} className={`${primaryButton} flex-1`}>Salvează</button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {/* CONTACT INFO MODAL - DOUBLE-BEZEL DIALOG */}
-      {contactModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-morphing-backdrop">
-          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-md animate-morphing-dialog">
-            <div className="bg-white rounded-[calc(2.25rem-0.375rem)] border border-slate-200/60 p-6 space-y-5 shadow-xs">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
-                  <Linkedin className="w-4 h-4 text-indigo-600" />
-                  Informatii de Contact (Contact Info)
-                </h3>
-                <button 
-                  onClick={() => setContactModalOpen(false)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer animate-morphing-close"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-indigo-600" /> Adresa Email
-                  </span>
-                  <p className="text-sm font-bold text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-200 font-mono">
-                    {profile?.email || 'sarbumihai0@gmail.com'}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-emerald-600" /> Numar de Telefon
-                  </span>
-                  <p className="text-sm font-bold text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-200 font-mono">
-                    {profile?.phone || '(+40) 723 034 706'}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <Linkedin className="w-3.5 h-3.5 text-indigo-600" /> Profil LinkedIn
-                  </span>
-                  <a 
-                    href={profile?.linkedinUrl || 'https://www.linkedin.com/in/sirbu-mihai'} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-xs font-black text-indigo-600 hover:text-indigo-700 bg-indigo-50/50 hover:bg-indigo-50 p-2.5 rounded-xl border border-indigo-200/60 flex items-center justify-between transition-colors"
-                  >
-                    <span className="truncate">{profile?.linkedinUrl || 'www.linkedin.com/in/sirbu-mihai'}</span>
-                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                  </a>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-rose-500" /> Locatie
-                  </span>
-                  <p className="text-sm font-bold text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                    {profile?.location || 'Bucuresti, Romania'}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setContactModalOpen(false)}
-                className="w-full py-2.5 rounded-xl text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-xs"
-              >
-                Inchide
-              </button>
+      <Modal isOpen={contactModalOpen} onClose={() => setContactModalOpen(false)} title="Date de contact" icon={Linkedin}>
+        <div className="space-y-4">
+          <dl className="space-y-3 text-sm">
+            <div>
+              <dt className="flex items-center gap-1.5 text-xs text-neutral-500"><Mail className="w-3.5 h-3.5" /> Email</dt>
+              <dd className="mt-0.5 font-medium text-neutral-900 break-all">{profile?.email || 'sarbumihai0@gmail.com'}</dd>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* ADD CUSTOM SKILL MODAL - DOUBLE-BEZEL DIALOG */}
-      {addSkillModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-morphing-backdrop">
-          <div className="bg-slate-100/90 p-1.5 rounded-[2.25rem] border border-slate-200/90 shadow-2xl w-full max-w-md animate-morphing-dialog">
-            <div className="bg-white rounded-[calc(2.25rem-0.375rem)] border border-slate-200/60 p-6 space-y-4 shadow-xs">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-base font-black text-slate-950 flex items-center gap-2">
-                  <Plus className="w-4 h-4 text-indigo-600" />
-                  Adauga Aptitudine Manuala
-                </h3>
-                <button 
-                  onClick={() => setAddSkillModalOpen(false)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer animate-morphing-close"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleManualAddSkill} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Denumire Aptitudine / Tehnologie</label>
-                  <input
-                    type="text"
-                    value={newSkillText}
-                    onChange={(e) => setNewSkillText(e.target.value)}
-                    placeholder="Ex: Docker, Spring Boot, PostgreSQL, Git..."
-                    className="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white text-slate-900 transition-all"
-                    autoFocus
-                  />
-                </div>
-
-                <div className="flex items-center gap-2.5 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setAddSkillModalOpen(false)}
-                    className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
-                  >
-                    Anuleaza
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!newSkillText.trim()}
-                    className="flex-1 py-2.5 rounded-xl text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer disabled:opacity-50 shadow-xs"
-                  >
-                    Salveaza in Profil
-                  </button>
-                </div>
-              </form>
+            <div>
+              <dt className="flex items-center gap-1.5 text-xs text-neutral-500"><Phone className="w-3.5 h-3.5" /> Telefon</dt>
+              <dd className="mt-0.5 font-medium text-neutral-900">{profile?.phone || '(+40) 723 034 706'}</dd>
             </div>
-          </div>
+            <div>
+              <dt className="flex items-center gap-1.5 text-xs text-neutral-500"><Linkedin className="w-3.5 h-3.5" /> Profil LinkedIn</dt>
+              <dd className="mt-0.5">
+                <a
+                  href={profile?.linkedinUrl || 'https://www.linkedin.com/in/sirbu-mihai'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 font-medium text-brand-600 hover:text-brand-700 break-all"
+                >
+                  {profile?.linkedinUrl || 'www.linkedin.com/in/sirbu-mihai'}
+                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                </a>
+              </dd>
+            </div>
+            <div>
+              <dt className="flex items-center gap-1.5 text-xs text-neutral-500"><MapPin className="w-3.5 h-3.5" /> Locație</dt>
+              <dd className="mt-0.5 font-medium text-neutral-900">{profile?.location || 'București, România'}</dd>
+            </div>
+          </dl>
+          <button type="button" onClick={() => setContactModalOpen(false)} className={`${primaryButton} w-full`}>Închide</button>
         </div>
-      )}
+      </Modal>
+
+      <Modal isOpen={addSkillModalOpen} onClose={() => setAddSkillModalOpen(false)} title="Adaugă competență" icon={Plus}>
+        <form onSubmit={handleManualAddSkill} className="space-y-4">
+          <div className="space-y-1.5">
+            <label htmlFor="linkedin-skill-input" className="text-sm font-medium text-neutral-700">Competență sau tehnologie</label>
+            <input
+              id="linkedin-skill-input"
+              type="text"
+              value={newSkillText}
+              onChange={(e) => setNewSkillText(e.target.value)}
+              placeholder="Ex: Docker, Spring Boot, PostgreSQL"
+              className={inputClass}
+              autoFocus
+            />
+          </div>
+          <div className="flex items-center gap-2.5">
+            <button type="button" onClick={() => setAddSkillModalOpen(false)} className={`${secondaryButton} flex-1`}>Anulează</button>
+            <button type="submit" disabled={!newSkillText.trim()} className={`${primaryButton} flex-1`}>Salvează</button>
+          </div>
+        </form>
+      </Modal>
 
     </div>
   );

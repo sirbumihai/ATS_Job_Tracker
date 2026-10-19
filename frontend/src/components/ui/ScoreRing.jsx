@@ -1,7 +1,7 @@
 import React from 'react';
 
 /** Inel de scor: arc `brand-500` proportional cu `value / max`, cu valoarea in centru. */
-export default function ScoreRing({ value, max = 100, size = 88, stroke = 7, label, className = '' }) {
+export default function ScoreRing({ value, max = 100, size = 88, stroke = 7, label, className = '', ...rest }) {
   const pct = Math.min(1, Math.max(0, (Number(value) || 0) / max));
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -13,6 +13,7 @@ export default function ScoreRing({ value, max = 100, size = 88, stroke = 7, lab
       aria-label={`${label ? `${label}: ` : ''}${shown} din ${max}`}
       className={`relative inline-flex items-center justify-center shrink-0 ${className}`}
       style={{ width: size, height: size }}
+      {...rest}
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90" aria-hidden="true">
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={stroke} className="stroke-neutral-100" />
