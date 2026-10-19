@@ -1,36 +1,49 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Sparkles, 
-  ArrowRight, 
-  MessageSquare, 
-  Send, 
-  ThumbsUp, 
-  CheckCircle2, 
-  AlertCircle, 
-  Star, 
+import {
+  ArrowRight,
+  Send,
+  ThumbsUp,
+  CheckCircle2,
+  Star,
   Plus,
   Mail,
-  Filter,
-  Check,
-  ChevronDown,
-  Layers,
-  GraduationCap,
-  ExternalLink,
-  Clock,
-  User,
-  Vote,
-  Lightbulb,
-  X
+  Lightbulb
 } from 'lucide-react';
 import Footer from './Footer';
+import Card from './ui/Card';
+import Modal from './ui/Modal';
+import BrandMark from './ui/BrandMark';
 
 const FEEDBACK_CATEGORIES = [
-  { id: 'feature', label: 'Functie Noua', description: 'Idee de modul sau functionalitate utila' },
-  { id: 'interview', label: 'Pregatire Interviu', description: 'Sugestii de intrebari tehnice sau scenarii HR' },
-  { id: 'ats_cv', label: 'ATS & Optimizare CV', description: 'Imbunatatiri pentru parsare, comparatie si scor' },
-  { id: 'bug', label: 'Raportare Problema', description: 'Comportament neasteptat sau eroare vizuala' },
-  { id: 'other', label: 'Altele', description: 'Orice alt gand sau sugestie generala' }
+  { id: 'feature', label: 'Funcție nouă' },
+  { id: 'interview', label: 'Pregătire interviu' },
+  { id: 'ats_cv', label: 'ATS și CV' },
+  { id: 'bug', label: 'Problemă' },
+  { id: 'other', label: 'Altele' }
 ];
+
+// Valorile se trimit către backend și se compară cu categoriile existente; doar etichetele au diacritice.
+const IDEA_CATEGORIES = [
+  { value: 'Pregatire Interviu', label: 'Pregătire interviu' },
+  { value: 'ATS & Optimizare CV', label: 'ATS și CV' },
+  { value: 'Piata IT', label: 'Piața IT' },
+  { value: 'Functie Noua', label: 'Funcție nouă' },
+  { value: 'Altele', label: 'Altele' }
+];
+const IDEA_FILTERS = IDEA_CATEGORIES.slice(0, 4);
+
+const IDEA_STATUSES = {
+  IN_DEZVOLTARE: { label: 'În dezvoltare', style: 'bg-amber-50 text-amber-800' },
+  IN_PLANIFICARE: { label: 'În planificare', style: 'bg-sky-50 text-sky-800' },
+  FINALIZAT: { label: 'Finalizat', style: 'bg-emerald-50 text-emerald-800' },
+  CERCETARE: { label: 'Cercetare', style: 'bg-purple-50 text-purple-800' }
+};
+const DEFAULT_IDEA_STATUS = { label: 'În analiză', style: 'bg-neutral-100 text-neutral-700' };
+
+const RATING_LABELS = { 5: 'Excelent', 4: 'Foarte bun', 3: 'Decent', 2: 'Poate fi mai bine', 1: 'Slab' };
+
+const INPUT = 'w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 bg-white text-sm focus:outline-none focus:border-brand-500 transition';
+const LABEL = 'block text-sm font-medium text-neutral-900 mb-1.5';
 
 export default function FeedbackPage({ 
   onNavigateTab, 
@@ -106,23 +119,6 @@ export default function FeedbackPage({
     }
   }, [voterToken]);
 
-  // Lock body scroll and support Escape key when modal is open
-  useEffect(() => {
-    if (showNewIdeaModal) {
-      document.body.style.overflow = 'hidden';
-      const handleKeyDown = (e) => {
-        if (e.key === 'Escape') setShowNewIdeaModal(false);
-      };
-      window.addEventListener('keydown', handleKeyDown);
-      return () => {
-        document.body.style.overflow = 'unset';
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-  }, [showNewIdeaModal]);
-
   // Handle standard feedback submission
   const handleSubmitFeedback = async (e) => {
     e.preventDefault();
@@ -178,7 +174,7 @@ export default function FeedbackPage({
         title: title.trim(),
         message: message.trim(),
         mailToUrl: `mailto:sarbumihai0@gmail.com?subject=${encodeURIComponent('[JobFlow Feedback] ' + title.trim())}&body=${encodeURIComponent(
-          `Buna Mihai,\n\nIata feedback-ul meu pentru JobFlow AI:\n\nCategorie: ${selectedCategory}\nRating: ${rating}/5\nSubiect: ${title.trim()}\n\nDetalii:\n${message.trim()}\n\n--\nDe la: ${name.trim() || 'Utilizator'} (${email.trim() || 'Nespecificat'})`
+          `Bună Mihai,\n\nIată feedback-ul meu pentru JobFlow AI:\n\nCategorie: ${selectedCategory}\nRating: ${rating}/5\nSubiect: ${title.trim()}\n\nDetalii:\n${message.trim()}\n\n--\nDe la: ${name.trim() || 'Utilizator'} (${email.trim() || 'Nespecificat'})`
         )}`
       });
 
@@ -298,676 +294,408 @@ export default function FeedbackPage({
   }, [communityIdeas]);
 
   return (
-    <div className="w-full bg-white text-black font-sans selection:bg-black selection:text-white min-h-screen">
+    <div data-testid="feedback" className="w-full bg-white text-neutral-950 font-sans min-h-screen">
 
-      {/* ========================================================================= */}
-      {/* 0. ARCHITECTURAL TOP BAR (SPACIOUS, MONOCHROME DISTILL)                   */}
-      {/* ========================================================================= */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          
-          {/* Brand Logo & Context Pill */}
-          <div 
-            onClick={() => onNavigateTab ? onNavigateTab('landing') : null}
-            className="flex items-center gap-3.5 cursor-pointer group select-none shrink-0"
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-neutral-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => onNavigateTab && onNavigateTab('landing')}
+            className="cursor-pointer shrink-0"
+            aria-label="JobFlow AI, înapoi la prezentare"
           >
-            <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center font-bold text-sm shadow-xs group-hover:scale-105 transition-transform">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex items-center gap-2.5">
-              <span className="font-bold text-xl tracking-tight text-neutral-950">JobFlow AI</span>
-              <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full border border-neutral-200 bg-neutral-50 text-[11px] font-medium text-neutral-500">
-                Feedback & Comunitate
-              </span>
-            </div>
-          </div>
+            <BrandMark />
+          </button>
 
-          {/* Centered Navigation Links */}
-          <nav className="hidden md:flex items-center gap-2 text-sm font-medium text-neutral-600">
-            <button 
-              onClick={() => onNavigateTab ? onNavigateTab('landing') : null}
-              className="px-4 py-2 rounded-xl hover:text-black hover:bg-neutral-100/80 transition-all cursor-pointer"
+          <nav className="hidden md:flex items-center gap-1 text-sm font-medium text-neutral-600" aria-label="Pagina Feedback">
+            <a href="#formular" className="px-3 py-2 rounded-lg hover:text-neutral-950 hover:bg-neutral-100 transition">Trimite sugestie</a>
+            <a href="#comunitate" className="px-3 py-2 rounded-lg hover:text-neutral-950 hover:bg-neutral-100 transition">Idei votate</a>
+            <button
+              type="button"
+              onClick={() => onNavigateTab && onNavigateTab('skill_roadmap')}
+              className="px-3 py-2 rounded-lg hover:text-neutral-950 hover:bg-neutral-100 transition cursor-pointer"
             >
-              Acasa
-            </button>
-            <a 
-              href="#formular" 
-              className="px-4 py-2 rounded-xl hover:text-black hover:bg-neutral-100/80 transition-all cursor-pointer"
-            >
-              Trimite Sugestie
-            </a>
-            <a 
-              href="#comunitate" 
-              className="px-4 py-2 rounded-xl text-neutral-900 font-semibold hover:bg-neutral-100/80 transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <Vote className="w-4 h-4 text-neutral-700" />
-              <span>Roadmap Comunitar</span>
-            </a>
-            <button 
-              onClick={() => onNavigateTab ? onNavigateTab('skill_roadmap') : null}
-              className="px-4 py-2 rounded-xl hover:text-black hover:bg-neutral-100/80 transition-all cursor-pointer"
-            >
-              Skill Roadmaps
+              Skill Roadmap
             </button>
           </nav>
 
-          {/* Right Action Buttons */}
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => onNavigateTab ? onNavigateTab('landing') : null}
-              className="hidden sm:inline-block text-sm font-semibold text-neutral-700 hover:text-black px-4 py-2 rounded-xl hover:bg-neutral-100 transition cursor-pointer"
-            >
-              Inapoi la Landing
-            </button>
-            <button
-              onClick={() => onNavigateTab ? onNavigateTab('tracker') : null}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-black text-white text-sm font-semibold hover:bg-neutral-800 transition cursor-pointer shadow-xs active:scale-95"
-            >
-              <span>Deschide Tracker</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-
+          <button
+            type="button"
+            onClick={() => onNavigateTab && onNavigateTab('tracker')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition cursor-pointer shrink-0"
+          >
+            <span>Deschide Tracker</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </header>
 
-      {/* ========================================================================= */}
-      {/* 1. HERO SECTION: MONOLITHIC TITLE & CONTEXT                               */}
-      {/* ========================================================================= */}
-      <section className="relative pt-16 sm:pt-20 pb-16 sm:pb-20 border-b border-neutral-200/90 overflow-hidden bg-neutral-50/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="max-w-5xl space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-neutral-200 bg-white text-xs font-mono text-neutral-600 shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Canal Direct sarbumihai0@gmail.com • Voturi Comunitate Live</span>
-            </div>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-10">
 
-            <h1 className="text-4xl sm:text-6xl font-light tracking-tight text-neutral-950 leading-[1.08]">
-              Spune-ne ce putem <span className="font-bold">construi mai bine</span>.
-            </h1>
-
-            <p className="text-lg text-neutral-600 leading-relaxed">
-              Fiecare feedback, idee de functionalitate sau raportare de bug ajunge direct pe emailul 
-              fondatorului si poate fi integrata in roadmap-ul votat deschis de intreaga comunitate.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-6 pt-3 text-xs sm:text-sm text-neutral-500 font-mono">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-neutral-900">{communityIdeas.length}</span>
-                <span>Idei Inregistrate</span>
-              </div>
-              <span className="text-neutral-300">•</span>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-neutral-900">{totalVotesCount}</span>
-                <span>Voturi Acordate</span>
-              </div>
-              <span className="text-neutral-300">•</span>
-              <div className="flex items-center gap-2 text-neutral-900 font-medium">
-                <Mail className="w-3.5 h-3.5" />
-                <span>sarbumihai0@gmail.com</span>
-              </div>
-            </div>
-          </div>
-
+        <div className="space-y-2">
+          <h1 className="font-serif text-3xl sm:text-4xl font-medium tracking-tight text-neutral-950">
+            Spune-ne ce putem construi mai bine
+          </h1>
+          <p className="text-neutral-500">
+            {communityIdeas.length} idei și {totalVotesCount} voturi de la utilizatori.
+          </p>
         </div>
-      </section>
 
-      {/* ========================================================================= */}
-      {/* 2. MAIN SPLIT: FEEDBACK FORM + COMMUNITY VOTED ROADMAP                    */}
-      {/* ========================================================================= */}
-      <section className="py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-14 items-start">
-            
-            {/* LEFT COLUMN: THE FEEDBACK FORM (4 cols on xl) */}
-            <div id="formular" className="lg:col-span-5 xl:col-span-4 space-y-8">
-              
-              <div className="space-y-2">
-                <span className="text-xs font-mono uppercase tracking-wider text-neutral-400 font-semibold">
-                  Transmite Opinia Ta
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-light tracking-tight text-neutral-950">
-                  Formular de Feedback Direct
-                </h2>
-                <p className="text-sm text-neutral-600">
-                  Mesajul tau este salvat in sistem si expediat pe loc la sarbumihai0@gmail.com.
-                </p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+          {/* FORMULAR */}
+          <div id="formular" className="lg:col-span-5 space-y-4">
+            <Card padding="p-5 sm:p-6" className="space-y-5">
+              <div>
+                <h2 className="font-serif text-xl font-medium text-neutral-950">Trimite o sugestie</h2>
+                <p className="text-sm text-neutral-500 mt-0.5">Ajunge direct la echipă.</p>
               </div>
 
-              {/* Success Notification Alert */}
               {submissionSuccess && (
-                <div className="p-6 rounded-2xl border border-emerald-300 bg-emerald-50/70 space-y-4 animate-in fade-in">
-                  <div className="flex items-start gap-3">
+                <div role="status" className="p-4 rounded-xl bg-emerald-50 space-y-3">
+                  <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-bold text-emerald-950">
-                        Feedback-ul a fost expediat cu succes!
-                      </h4>
-                      <p className="text-xs text-emerald-800 leading-relaxed">
-                        Multumim pentru contributie! Mesajul a fost inregistrat in baza de date si transmis echipei la <span className="font-semibold">sarbumihai0@gmail.com</span>.
-                      </p>
+                    <div>
+                      <h3 className="text-sm font-semibold text-emerald-950">Feedback trimis</h3>
+                      <p className="text-xs text-emerald-800 mt-0.5">Mulțumim! Mesajul a ajuns la echipă.</p>
                     </div>
                   </div>
-
-                  <div className="pt-2 flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <a
                       href={submissionSuccess.mailToUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold transition"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-medium transition"
                     >
                       <Mail className="w-3.5 h-3.5" />
-                      <span>Deschide si in clientul tau de email</span>
+                      <span>Trimite și pe email</span>
                     </a>
                     <button
+                      type="button"
                       onClick={() => setSubmissionSuccess(null)}
                       className="text-xs text-emerald-800 hover:underline cursor-pointer"
                     >
-                      Inchide alerta
+                      Închide
                     </button>
                   </div>
                 </div>
               )}
 
-              <form onSubmit={handleSubmitFeedback} className="space-y-6">
-                
-                {/* Category Selection */}
-                <div className="space-y-2.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                    1. Tipul Mesajului
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {FEEDBACK_CATEGORIES.map(cat => (
-                      <button
-                        type="button"
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`p-3 text-left rounded-xl border text-xs transition cursor-pointer flex flex-col justify-between gap-1 ${
-                          selectedCategory === cat.id
-                            ? 'border-black bg-black text-white font-semibold'
-                            : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300'
-                        }`}
-                      >
-                        <span>{cat.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              <form onSubmit={handleSubmitFeedback} className="space-y-4">
 
-                {/* Rating 1-5 */}
-                <div className="space-y-2.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                    2. Nivel de Satisfactie Platforma
-                  </label>
-                  <div className="flex items-center gap-2 p-3 rounded-xl border border-neutral-200 bg-neutral-50/50">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        type="button"
-                        key={star}
-                        onClick={() => setRating(star)}
-                        className="p-1 cursor-pointer transition hover:scale-110 active:scale-95"
-                      >
-                        <Star 
-                          className={`w-6 h-6 ${
-                            star <= rating 
-                              ? 'text-amber-500 fill-amber-500' 
-                              : 'text-neutral-300'
-                          }`} 
-                        />
-                      </button>
-                    ))}
-                    <span className="text-xs font-mono text-neutral-600 ml-3">
-                      {rating === 5 && 'Excelent (5/5)'}
-                      {rating === 4 && 'Foarte bun (4/5)'}
-                      {rating === 3 && 'Decent (3/5)'}
-                      {rating === 2 && 'Necesita imbunatatiri (2/5)'}
-                      {rating === 1 && 'Slab (1/5)'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Title */}
-                <div className="space-y-2">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                    3. Subiect / Titlu Relevat
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="ex: Simulator tehnic pentru System Design sau Filtrare companii..."
-                    className="w-full px-4 py-3 rounded-xl border border-neutral-300 bg-white text-sm focus:outline-none focus:border-black transition"
-                  />
-                </div>
-
-                {/* Message */}
-                <div className="space-y-2">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                    4. Detalii & Argumentatie
-                  </label>
-                  <textarea
-                    required
-                    rows={4}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Descrie problema observata sau cum te-ar ajuta o noua functionalitate in pregatirea pentru interviuri..."
-                    className="w-full px-4 py-3 rounded-xl border border-neutral-300 bg-white text-sm focus:outline-none focus:border-black transition resize-none leading-relaxed"
-                  />
-                </div>
-
-                {/* Sender Email & Name */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                      Nume (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Anonim"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 bg-white text-xs focus:outline-none focus:border-black transition"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                      Email-ul Tau (Raspuns)
-                    </label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="email@exemplu.ro"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 bg-white text-xs focus:outline-none focus:border-black transition"
-                    />
-                  </div>
-                </div>
-
-                {/* Share in community roadmap checkbox */}
-                <div className="p-3.5 rounded-xl border border-neutral-200 bg-neutral-50/50 flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    id="shareCommunity"
-                    checked={shareInCommunity}
-                    onChange={(e) => setShareInCommunity(e.target.checked)}
-                    className="mt-0.5 rounded border-neutral-300 text-black focus:ring-black cursor-pointer"
-                  />
-                  <label htmlFor="shareCommunity" className="text-xs text-neutral-700 leading-snug cursor-pointer select-none">
-                    <span className="font-bold text-neutral-900 block">Adauga si pe Roadmap-ul Comunitar</span>
-                    Propunerea ta va aparea public in panoul din dreapta pentru a putea fi votata si sustinuta de ceilalti utilizatori.
-                  </label>
-                </div>
-
-                {/* Submit Action */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !title.trim() || !message.trim()}
-                  className="w-full py-4 rounded-xl bg-black hover:bg-neutral-800 disabled:opacity-50 text-white font-semibold text-sm transition cursor-pointer flex items-center justify-center gap-2.5 shadow-xs active:scale-98"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>{isSubmitting ? 'Se expediaza...' : 'Trimite Feedback & Notifica Echipa'}</span>
-                </button>
-
-              </form>
-
-              {/* User Previous Submissions Box */}
-              {userFeedbacks.length > 0 && (
-                <div className="p-6 rounded-2xl border border-neutral-200 bg-neutral-50/60 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-neutral-900 flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      Propunerile Tale Recente ({userFeedbacks.length})
-                    </h4>
-                  </div>
-                  <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
-                    {userFeedbacks.map(fb => (
-                      <div key={fb.id} className="p-3 rounded-xl bg-white border border-neutral-200 text-xs space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-neutral-900 truncate max-w-[220px]">{fb.title}</span>
-                          <span className="text-[10px] font-mono text-neutral-400">{fb.createdAt}</span>
-                        </div>
-                        <p className="text-neutral-600 text-[11px] line-clamp-2">{fb.message}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-            </div>
-
-            {/* RIGHT COLUMN: REAL COMMUNITY ROADMAP & VOTING (8 cols on xl) */}
-            <div id="comunitate" className="lg:col-span-7 xl:col-span-8 space-y-8">
-              
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <span className="text-xs font-mono uppercase tracking-wider text-neutral-400 font-semibold">
-                    Roadmap Decis de Utilizatori
-                  </span>
-                  <h2 className="text-2xl sm:text-3xl font-light tracking-tight text-neutral-950">
-                    Idei Votate de Comunitate
-                  </h2>
-                </div>
-
-                <button
-                  onClick={() => setShowNewIdeaModal(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-semibold transition cursor-pointer shadow-xs active:scale-95"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Propune o Idee</span>
-                </button>
-              </div>
-
-              {/* Filter and Sorting Toolbar */}
-              <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-2xl border border-neutral-200 bg-neutral-50/50">
-                
-                {/* Category Pills */}
-                <div className="flex flex-wrap items-center gap-1.5 text-xs font-medium">
-                  {['ALL', 'Pregatire Interviu', 'ATS & Optimizare CV', 'Piata IT', 'Functie Noua'].map(cat => (
+                <div role="group" aria-label="Tipul mesajului" className="flex flex-wrap gap-1.5">
+                  {FEEDBACK_CATEGORIES.map(cat => (
                     <button
-                      key={cat}
-                      onClick={() => setCategoryFilter(cat)}
-                      className={`px-3 py-1.5 rounded-lg transition cursor-pointer text-xs ${
-                        categoryFilter === cat
-                          ? 'bg-black text-white font-semibold'
-                          : 'bg-white border border-neutral-200 text-neutral-600 hover:text-black'
+                      type="button"
+                      key={cat.id}
+                      aria-pressed={selectedCategory === cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                        selectedCategory === cat.id
+                          ? 'bg-brand-500 text-white'
+                          : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
                       }`}
                     >
-                      {cat === 'ALL' ? 'Toate Categoriile' : cat}
+                      {cat.label}
                     </button>
                   ))}
                 </div>
 
-                {/* Sort Toggle */}
-                <div className="flex items-center gap-1.5 text-xs">
-                  <span className="text-neutral-400 font-mono text-[11px]">Sortare:</span>
-                  <button
-                    onClick={() => setSortBy('VOTES')}
-                    className={`px-2.5 py-1 rounded transition cursor-pointer ${
-                      sortBy === 'VOTES' ? 'font-bold text-black underline' : 'text-neutral-500 hover:text-black'
-                    }`}
-                  >
-                    Voturi
-                  </button>
-                  <span className="text-neutral-300">|</span>
-                  <button
-                    onClick={() => setSortBy('NEWEST')}
-                    className={`px-2.5 py-1 rounded transition cursor-pointer ${
-                      sortBy === 'NEWEST' ? 'font-bold text-black underline' : 'text-neutral-500 hover:text-black'
-                    }`}
-                  >
-                    Recente
-                  </button>
+                <div>
+                  <label htmlFor="fb-title" className={LABEL}>Titlu</label>
+                  <input
+                    id="fb-title"
+                    type="text"
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Despre ce este vorba?"
+                    className={INPUT}
+                  />
                 </div>
 
+                <div>
+                  <label htmlFor="fb-message" className={LABEL}>Detalii</label>
+                  <textarea
+                    id="fb-message"
+                    required
+                    rows={4}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Descrie pe scurt"
+                    className={`${INPUT} resize-none leading-relaxed`}
+                  />
+                </div>
+
+                <details className="group">
+                  <summary className="text-sm font-medium text-neutral-600 hover:text-neutral-950 cursor-pointer select-none">Mai multe opțiuni</summary>
+                  <div className="mt-3 space-y-4">
+                    <div>
+                      <span className={LABEL}>Cum evaluezi platforma?</span>
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            type="button"
+                            key={star}
+                            aria-label={`${star} din 5`}
+                            aria-pressed={star === rating}
+                            onClick={() => setRating(star)}
+                            className="p-1 cursor-pointer transition hover:scale-110"
+                          >
+                            <Star className={`w-6 h-6 ${star <= rating ? 'text-amber-500 fill-amber-500' : 'text-neutral-300'}`} />
+                          </button>
+                        ))}
+                        <span className="text-xs text-neutral-500 ml-2">{RATING_LABELS[rating]}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label htmlFor="fb-name" className={LABEL}>Nume</label>
+                        <input id="fb-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Anonim" className={INPUT} />
+                      </div>
+                      <div>
+                        <label htmlFor="fb-email" className={LABEL}>Email</label>
+                        <input id="fb-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@exemplu.ro" className={INPUT} />
+                      </div>
+                    </div>
+
+                    <label htmlFor="shareCommunity" className="flex items-center gap-2.5 text-sm text-neutral-700 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        id="shareCommunity"
+                        checked={shareInCommunity}
+                        onChange={(e) => setShareInCommunity(e.target.checked)}
+                        className="rounded border-neutral-300 text-brand-500 focus:ring-brand-500 cursor-pointer"
+                      />
+                      Adaugă și în ideile votate
+                    </label>
+                  </div>
+                </details>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !title.trim() || !message.trim()}
+                  className="w-full py-3 rounded-xl bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-medium text-sm transition cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>{isSubmitting ? 'Se trimite...' : 'Trimite feedback'}</span>
+                </button>
+              </form>
+            </Card>
+
+            {userFeedbacks.length > 0 && (
+              <Card padding="px-5 py-3" as="details">
+                <summary className="text-sm font-semibold text-neutral-900 cursor-pointer select-none">
+                  Propunerile tale ({userFeedbacks.length})
+                </summary>
+                <ul className="mt-3 space-y-2 max-h-56 overflow-y-auto">
+                  {userFeedbacks.map(fb => (
+                    <li key={fb.id} className="p-3 rounded-xl bg-neutral-50 text-xs space-y-0.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-neutral-900 truncate">{fb.title}</span>
+                        <span className="text-[11px] text-neutral-400 shrink-0">{fb.createdAt}</span>
+                      </div>
+                      <p className="text-neutral-500 line-clamp-2">{fb.message}</p>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            )}
+          </div>
+
+          {/* IDEI VOTATE */}
+          <div id="comunitate" className="lg:col-span-7 space-y-4">
+
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-serif text-xl font-medium text-neutral-950">Idei votate</h2>
+              <button
+                type="button"
+                onClick={() => setShowNewIdeaModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium transition cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Propune o idee</span>
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div role="group" aria-label="Filtrare după categorie" className="flex flex-wrap items-center gap-1.5">
+                {[{ value: 'ALL', label: 'Toate' }, ...IDEA_FILTERS].map(cat => (
+                  <button
+                    type="button"
+                    key={cat.value}
+                    aria-pressed={categoryFilter === cat.value}
+                    onClick={() => setCategoryFilter(cat.value)}
+                    className={`px-3 py-1.5 rounded-lg transition cursor-pointer text-xs font-medium ${
+                      categoryFilter === cat.value
+                        ? 'bg-brand-500 text-white'
+                        : 'bg-neutral-100 text-neutral-600 hover:text-neutral-950'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
               </div>
 
-              {/* Ideas Cards Stream */}
-              {isLoadingIdeas ? (
-                <div className="p-12 text-center text-sm font-mono text-neutral-400 border border-neutral-200 rounded-2xl">
-                  Se incarca propunerile din baza de date...
-                </div>
-              ) : filteredIdeas.length === 0 ? (
-                <div className="p-12 text-center space-y-3 border border-dashed border-neutral-300 rounded-2xl">
-                  <Lightbulb className="w-8 h-8 text-neutral-300 mx-auto" />
-                  <p className="text-sm text-neutral-500">Nicio propunere gasita in aceasta categorie.</p>
-                  <button
-                    onClick={() => setShowNewIdeaModal(true)}
-                    className="text-xs font-semibold text-black hover:underline cursor-pointer"
-                  >
-                    Fii primul care propune o idee!
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredIdeas.map((idea) => {
-                    const statusColor = 
-                      idea.status === 'IN_DEZVOLTARE' ? 'border-amber-300 bg-amber-50 text-amber-900' :
-                      idea.status === 'IN_PLANIFICARE' ? 'border-sky-300 bg-sky-50 text-sky-900' :
-                      idea.status === 'FINALIZAT' ? 'border-emerald-300 bg-emerald-50 text-emerald-900' :
-                      idea.status === 'CERCETARE' ? 'border-purple-300 bg-purple-50 text-purple-900' :
-                      'border-neutral-200 bg-neutral-100 text-neutral-700';
+              <div role="group" aria-label="Sortare" className="flex items-center gap-1 text-xs">
+                <button
+                  type="button"
+                  aria-pressed={sortBy === 'VOTES'}
+                  onClick={() => setSortBy('VOTES')}
+                  className={`px-2.5 py-1 rounded transition cursor-pointer ${sortBy === 'VOTES' ? 'font-semibold text-neutral-950 underline' : 'text-neutral-500 hover:text-neutral-950'}`}
+                >
+                  Voturi
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={sortBy === 'NEWEST'}
+                  onClick={() => setSortBy('NEWEST')}
+                  className={`px-2.5 py-1 rounded transition cursor-pointer ${sortBy === 'NEWEST' ? 'font-semibold text-neutral-950 underline' : 'text-neutral-500 hover:text-neutral-950'}`}
+                >
+                  Recente
+                </button>
+              </div>
+            </div>
 
-                    const statusLabel = 
-                      idea.status === 'IN_DEZVOLTARE' ? 'In Dezvoltare' :
-                      idea.status === 'IN_PLANIFICARE' ? 'In Planificare' :
-                      idea.status === 'FINALIZAT' ? 'Finalizat' :
-                      idea.status === 'CERCETARE' ? 'Cercetare' :
-                      'In Analiza';
+            {isLoadingIdeas ? (
+              <Card padding="p-12" className="text-center text-sm text-neutral-400">Se încarcă ideile...</Card>
+            ) : filteredIdeas.length === 0 ? (
+              <Card padding="p-12" className="text-center space-y-3">
+                <Lightbulb className="w-8 h-8 text-neutral-300 mx-auto" />
+                <p className="text-sm text-neutral-500">Nicio idee în această categorie.</p>
+                <button
+                  type="button"
+                  onClick={() => setShowNewIdeaModal(true)}
+                  className="text-sm font-medium text-brand-600 hover:underline cursor-pointer"
+                >
+                  Propune prima idee
+                </button>
+              </Card>
+            ) : (
+              <ul className="space-y-3">
+                {filteredIdeas.map((idea) => {
+                  const status = IDEA_STATUSES[idea.status] || DEFAULT_IDEA_STATUS;
+                  const categoryLabel = IDEA_CATEGORIES.find(c => c.value === idea.category)?.label || idea.category;
 
-                    return (
-                      <div 
-                        key={idea.id}
-                        className={`p-6 rounded-2xl border transition-all duration-150 ${
-                          idea.hasVoted 
-                            ? 'border-neutral-900 bg-neutral-50/80 shadow-2xs' 
-                            : 'border-neutral-200 bg-white hover:border-neutral-300'
-                        }`}
-                      >
-                        <div className="flex items-start gap-4 sm:gap-5">
-                          
-                          {/* Vote Action Column */}
+                  return (
+                    <li key={idea.id}>
+                      <Card padding="p-5" data-idea={idea.id} className={`transition-colors ${idea.hasVoted ? 'border-brand-500' : 'hover:border-neutral-300'}`}>
+                        <div className="flex items-start gap-4">
                           <button
                             type="button"
                             onClick={() => handleVoteIdea(idea.id)}
                             disabled={votingIdeaId === idea.id}
-                            className={`shrink-0 flex flex-col items-center justify-center w-14 sm:w-16 py-3 rounded-xl border transition-all cursor-pointer active:scale-95 ${
+                            aria-pressed={!!idea.hasVoted}
+                            aria-label={`${idea.hasVoted ? 'Retrage votul' : 'Votează'}: ${idea.title}`}
+                            className={`shrink-0 flex flex-col items-center justify-center w-14 py-2.5 rounded-xl border transition cursor-pointer ${
                               idea.hasVoted
-                                ? 'bg-black text-white border-black shadow-xs'
-                                : 'bg-neutral-50 border-neutral-200 text-neutral-700 hover:border-neutral-400 hover:bg-neutral-100'
+                                ? 'bg-brand-500 text-white border-brand-500'
+                                : 'bg-white border-neutral-200 text-neutral-700 hover:border-neutral-400'
                             }`}
                           >
-                            <ThumbsUp className={`w-4 h-4 mb-1 transition-transform ${idea.hasVoted ? 'scale-110' : ''}`} />
-                            <span className="text-sm font-bold leading-none">{idea.votesCount}</span>
-                            <span className="text-[10px] font-mono mt-1 opacity-80">
-                              {idea.hasVoted ? 'Votat' : 'Vot'}
-                            </span>
+                            <ThumbsUp className="w-4 h-4 mb-1" />
+                            <span className="text-sm font-semibold leading-none">{idea.votesCount}</span>
                           </button>
 
-                          {/* Content Column */}
-                          <div className="flex-1 space-y-2.5">
-                            
+                          <div className="flex-1 min-w-0 space-y-1.5">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                                {idea.category}
-                              </span>
-                              
-                              <span className={`px-2.5 py-0.5 rounded-full border text-[11px] font-medium font-mono ${statusColor}`}>
-                                {statusLabel}
-                              </span>
+                              <span className="text-xs text-neutral-500">{categoryLabel}</span>
+                              <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${status.style}`}>{status.label}</span>
                             </div>
-
-                            <h3 className="text-base sm:text-lg font-bold text-neutral-950 leading-snug">
-                              {idea.title}
-                            </h3>
-
-                            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed">
-                              {idea.description}
-                            </p>
-
-                            <div className="pt-2 flex items-center justify-between text-[11px] text-neutral-400 font-mono">
-                              <span>Autor: {idea.authorName || 'Comunitate'}</span>
-                              <span>JobFlow Roadmap</span>
-                            </div>
-
+                            <h3 className="text-base font-semibold text-neutral-950 leading-snug">{idea.title}</h3>
+                            <p className="text-sm text-neutral-500 leading-relaxed line-clamp-3">{idea.description}</p>
+                            <p className="text-xs text-neutral-400">{idea.authorName || 'Comunitate'}</p>
                           </div>
-
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-            </div>
-
+                      </Card>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
 
         </div>
-      </section>
+      </main>
 
-      {/* ========================================================================= */}
-      {/* 3. PROPOSE COMMUNITY IDEA MODAL                                           */}
-      {/* ========================================================================= */}
-      {showNewIdeaModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto animate-morphing-backdrop"
-          onClick={() => setShowNewIdeaModal(false)}
-        >
-          <div 
-            className="w-full max-w-lg rounded-2xl bg-white border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-2xl relative animate-morphing-dialog my-8"
-            onClick={(e) => e.stopPropagation()}
-          >
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <span className="text-xs font-mono uppercase tracking-wider text-neutral-400 font-semibold">
-                  Comunitate JobFlow
-                </span>
-                <h3 className="text-xl font-bold text-neutral-950">
-                  Propune o Idee pe Roadmap
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowNewIdeaModal(false)}
-                className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-black cursor-pointer animate-morphing-close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmitNewIdea} className="space-y-4">
-              
-              <div className="space-y-1.5">
-                <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                  Titlu Propunere
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newIdeaTitle}
-                  onChange={(e) => setNewIdeaTitle(e.target.value)}
-                  placeholder="ex: Integrare cu platforma HackerRank / LeetCode..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-neutral-300 text-sm focus:outline-none focus:border-black"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                  Categorie
-                </label>
-                <select
-                  value={newIdeaCategory}
-                  onChange={(e) => setNewIdeaCategory(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-neutral-300 text-sm focus:outline-none focus:border-black bg-white"
-                >
-                  <option value="Pregatire Interviu">Pregatire Interviu</option>
-                  <option value="ATS & Optimizare CV">ATS & Optimizare CV</option>
-                  <option value="Piata IT">Piata IT</option>
-                  <option value="Functie Noua">Functie Noua</option>
-                  <option value="Altele">Altele</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                  Descriere Detaliata
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  value={newIdeaDescription}
-                  onChange={(e) => setNewIdeaDescription(e.target.value)}
-                  placeholder="Explica pe scurt utilitatea acestei idei pentru candidati..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-neutral-300 text-sm focus:outline-none focus:border-black resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                    Nume Autor
-                  </label>
-                  <input
-                    type="text"
-                    value={newIdeaAuthor}
-                    onChange={(e) => setNewIdeaAuthor(e.target.value)}
-                    placeholder="Membru Comunitate"
-                    className="w-full px-3.5 py-2 rounded-xl border border-neutral-300 text-xs focus:outline-none focus:border-black"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                    Email (Optional)
-                  </label>
-                  <input
-                    type="email"
-                    value={newIdeaEmail}
-                    onChange={(e) => setNewIdeaEmail(e.target.value)}
-                    placeholder="sarbumihai0@gmail.com"
-                    className="w-full px-3.5 py-2 rounded-xl border border-neutral-300 text-xs focus:outline-none focus:border-black"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowNewIdeaModal(false)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-neutral-600 hover:text-black cursor-pointer"
-                >
-                  Anuleaza
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingIdea || !newIdeaTitle.trim() || !newIdeaDescription.trim()}
-                  className="px-6 py-2.5 rounded-xl bg-black hover:bg-neutral-800 disabled:opacity-50 text-white text-xs font-semibold transition cursor-pointer shadow-xs"
-                >
-                  {isSubmittingIdea ? 'Se publica...' : 'Publica pe Roadmap'}
-                </button>
-              </div>
-
-            </form>
-
+      <Modal
+        isOpen={showNewIdeaModal}
+        onClose={() => setShowNewIdeaModal(false)}
+        title="Propune o idee"
+        icon={Lightbulb}
+      >
+        <form onSubmit={handleSubmitNewIdea} className="space-y-4">
+          <div>
+            <label htmlFor="idea-title" className={LABEL}>Titlu</label>
+            <input
+              id="idea-title"
+              type="text"
+              required
+              value={newIdeaTitle}
+              onChange={(e) => setNewIdeaTitle(e.target.value)}
+              placeholder="Ce ar trebui adăugat?"
+              className={INPUT}
+            />
           </div>
-        </div>
-      )}
 
-      {/* ========================================================================= */}
-      {/* 4. BALANCED BOTTOM CALL TO ACTION                                         */}
-      {/* ========================================================================= */}
-      <section className="border-t border-neutral-200/90 bg-neutral-50/60 py-16 sm:py-20">
-        <div className="max-w-4xl mx-auto px-6 sm:px-8 text-center space-y-6">
-          <h3 className="text-3xl sm:text-4xl font-light tracking-tight text-neutral-950">
-            Pregatit sa aplici cu <span className="font-bold">avantaj strategic</span>?
-          </h3>
-          <p className="text-sm sm:text-base text-neutral-600 max-w-xl mx-auto leading-relaxed">
-            Acceseaza tracker-ul centralizat de aplicatii, optimizeaza-ti CV-ul pentru algoritmi ATS 
-            sau exerseaza intrebarile de interviu pe stiva ta tehnica.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-            <button
-              onClick={() => onNavigateTab ? onNavigateTab('tracker') : null}
-              className="px-8 py-3.5 rounded-xl bg-black text-white text-sm font-semibold hover:bg-neutral-800 transition cursor-pointer shadow-xs active:scale-95"
+          <div>
+            <label htmlFor="idea-category" className={LABEL}>Categorie</label>
+            <select
+              id="idea-category"
+              value={newIdeaCategory}
+              onChange={(e) => setNewIdeaCategory(e.target.value)}
+              className={`${INPUT} cursor-pointer`}
             >
-              Deschide Tracker Aplicatii
+              {IDEA_CATEGORIES.map(cat => (
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="idea-description" className={LABEL}>Descriere</label>
+            <textarea
+              id="idea-description"
+              required
+              rows={4}
+              value={newIdeaDescription}
+              onChange={(e) => setNewIdeaDescription(e.target.value)}
+              placeholder="De ce ar ajuta candidații?"
+              className={`${INPUT} resize-none`}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="idea-author" className={LABEL}>Nume</label>
+              <input id="idea-author" type="text" value={newIdeaAuthor} onChange={(e) => setNewIdeaAuthor(e.target.value)} placeholder="Membru comunitate" className={INPUT} />
+            </div>
+            <div>
+              <label htmlFor="idea-email" className={LABEL}>Email (opțional)</label>
+              <input id="idea-email" type="email" value={newIdeaEmail} onChange={(e) => setNewIdeaEmail(e.target.value)} placeholder="email@exemplu.ro" className={INPUT} />
+            </div>
+          </div>
+
+          <div className="pt-1 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setShowNewIdeaModal(false)}
+              className="px-4 py-2.5 rounded-xl text-sm font-medium text-neutral-600 hover:text-neutral-950 cursor-pointer"
+            >
+              Anulează
             </button>
             <button
-              onClick={() => onNavigateTab ? onNavigateTab('skill_roadmap') : null}
-              className="px-7 py-3.5 rounded-xl bg-white text-black border border-neutral-300 text-sm font-semibold hover:border-black transition cursor-pointer shadow-2xs"
+              type="submit"
+              disabled={isSubmittingIdea || !newIdeaTitle.trim() || !newIdeaDescription.trim()}
+              className="px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white text-sm font-medium transition cursor-pointer"
             >
-              Vezi Intrebari Interviu
+              {isSubmittingIdea ? 'Se publică...' : 'Publică'}
             </button>
           </div>
-        </div>
-      </section>
+        </form>
+      </Modal>
 
-      {/* ========================================================================= */}
-      {/* 5. ARCHITECTURAL SHARED FOOTER                                            */}
-      {/* ========================================================================= */}
       <Footer onNavigateTab={onNavigateTab} />
 
     </div>

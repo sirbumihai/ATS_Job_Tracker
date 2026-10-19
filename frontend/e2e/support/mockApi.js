@@ -58,6 +58,14 @@ const DEFAULT_ROUTES = [
   ['POST', /^\/api\/v1\/github-readme$/, 'github-readme'],
 
   ['GET', /^\/api\/v1\/feedback\/ideas$/, 'feedback-ideas'],
+  ['POST', /^\/api\/v1\/feedback$/, () => ({ id: 'f1111111-1111-4111-8111-111111111111' })],
+  ['POST', /^\/api\/v1\/feedback\/ideas$/, (request) => ({
+    ...fixture('feedback-ideas')[0],
+    id: 'e9999999-9999-4999-8999-999999999999',
+    title: request.postDataJSON().title,
+    votesCount: 0,
+  })],
+  ['POST', /^\/api\/v1\/feedback\/ideas\/[^/]+\/vote$/, () => ({ hasVoted: true, votesCount: 5 })],
 ];
 
 /**

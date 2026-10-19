@@ -43,6 +43,8 @@ export async function expectContentVisible(locator) {
         const hasText = [...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
         if (!hasText || el.getClientRects().length === 0) continue;
         if (el.closest('[aria-hidden="true"]')) continue;
+        // Controalele dezactivate sunt estompate intentionat.
+        if (el.closest(':disabled')) continue;
         let opacity = 1;
         for (let node = el; node && node.nodeType === Node.ELEMENT_NODE; node = node.parentElement) {
           opacity *= parseFloat(getComputedStyle(node).opacity);
