@@ -31,6 +31,7 @@ import {
   Bot,
   Mail
 } from 'lucide-react';
+import { platformSiteName } from '../data/jobPlatforms';
 
 // Filtru riguros pentru a elimina artefacte web, tag-uri SVG Sketch/Figma sau titluri izolate
 export const isValidRequirementItem = (item) => {
@@ -758,7 +759,7 @@ export default function JobDetailModal({
         <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-100 shrink-0">
           <div className="flex items-center gap-2 min-w-0 text-xs text-neutral-500">
             {isGmailJob && <Mail className="w-3.5 h-3.5 text-neutral-400 shrink-0" />}
-            <span className="truncate">{isGmailJob ? 'Gmail' : (currentJob.sourcePlatform || 'Job')}</span>
+            <span className="truncate">{isGmailJob ? 'Gmail' : (platformSiteName(currentJob.sourcePlatform) || 'Job')}</span>
           </div>
           <div className="flex items-center gap-1">
             <button
@@ -1091,7 +1092,7 @@ export default function JobDetailModal({
 
         <div className="px-5 py-4 border-t border-neutral-100 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           <div className="text-xs text-neutral-500 flex items-center gap-2 flex-wrap">
-            <span>{isGmailJob ? 'Gmail Sync' : (currentJob.sourcePlatform || 'Direct')}</span>
+            <span>{isGmailJob ? 'Gmail Sync' : (platformSiteName(currentJob.sourcePlatform) || 'Direct')}</span>
             {(currentJob.appliedDate || emailData?.date) && (
               <span className="inline-flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />

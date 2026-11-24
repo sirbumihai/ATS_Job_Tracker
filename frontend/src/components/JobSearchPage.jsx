@@ -48,10 +48,10 @@ import {
   History,
   GitCommit,
   Download,
-  Send,
+  FolderKanban,
   FileSignature
 } from 'lucide-react';
-import { JOB_PLATFORMS } from '../data/jobPlatforms';
+import { JOB_PLATFORMS, platformSiteName } from '../data/jobPlatforms';
 import Card from './ui/Card';
 import PageHeader from './ui/PageHeader';
 import JobDetailModal from './JobDetailModal';
@@ -706,25 +706,6 @@ export default function JobSearchPage({
         jobsListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
-  };
-
-  const getPlatformBadge = (platform) => {
-    const labelMap = {
-      'DEVJOB_RO': 'DevJob.ro',
-      'BESTJOBS': 'BestJobs.eu',
-      'HIPO': 'Hipo.ro Trainee',
-      'LINKEDIN': 'LinkedIn Jobs',
-      'GITHUB_COMMUNITY': 'GitHub Early Careers',
-      'STAGIIPEBUNE': 'StagiiPeBune.ro',
-      'JUNIORS_RO': 'Juniors.ro',
-      'EJOBS': 'eJobs.ro',
-      'UNDELUCRAM': 'UndeLucram.ro'
-    };
-    return {
-      label: labelMap[platform] || platform,
-      bg: 'bg-neutral-100 text-neutral-900 border-neutral-300 font-mono font-semibold',
-      dot: 'bg-brand-500'
-    };
   };
 
   // INDICATOR PROFESIONAL DE COMPETITIVITATE (MONOLITHIC ARCHITECTURAL DISTILL)
@@ -1668,7 +1649,11 @@ export default function JobSearchPage({
           {currentJobs.map((job) => {
             const isSaved = savedJobIds.has(job.id);
             const isSaving = savingJobId === job.id;
+            const sourceSite = platformSiteName(job.sourcePlatform);
+            const applyLabel = sourceSite ? `Aplică pe ${sourceSite}` : 'Aplică pe site-ul sursă';
+            const trackerLabel = isSaved ? 'Adăugat în tracker, la Aplicat' : isSaving ? 'Se adaugă în tracker' : 'Adaugă în tracker, la Aplicat';
             const iconBtn = 'p-2 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-50 hover:text-brand-600 text-neutral-600 transition cursor-pointer shrink-0';
+            const savedIconBtn = 'p-2 rounded-xl border border-brand-100 bg-brand-50 text-brand-600 shrink-0';
 
             return (
               <Card key={job.id} data-job-card={job.id} className="flex flex-col gap-4 hover:border-brand-300 transition-colors">
@@ -1690,6 +1675,12 @@ export default function JobSearchPage({
                       <MapPin className="w-3.5 h-3.5 shrink-0 text-neutral-400" />
                       <span className="truncate">{job.location}</span>
                     </div>
+                    {sourceSite && (
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-0.5 truncate">
+                        <Globe className="w-3.5 h-3.5 shrink-0 text-neutral-400" />
+                        <span className="truncate">{sourceSite}</span>
+                      </div>
+                    )}
                   </button>
 
                   <span
@@ -1708,26 +1699,25 @@ export default function JobSearchPage({
                 </div>
 
                 <div className="mt-auto flex items-center gap-2">
+                  <a
+                    href={job.directApplyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 min-w-0 py-2 px-3 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 bg-brand-500 hover:bg-brand-600 text-white transition"
+                    title={applyLabel}
+                    aria-label={applyLabel}
+                  >
+                    <span>Aplică</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                  </a>
                   <button
                     onClick={() => handleSaveToKanban(job)}
                     disabled={isSaved || isSaving}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                      isSaved
-                        ? 'bg-brand-50 text-brand-700'
-                        : 'bg-brand-500 hover:bg-brand-600 text-white'
-                    }`}
+                    className={isSaved ? savedIconBtn : `${iconBtn} disabled:opacity-60 disabled:cursor-wait`}
+                    title={trackerLabel}
+                    aria-label={trackerLabel}
                   >
-                    {isSaved ? (
-                      <>
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Aplicat</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-3.5 h-3.5" />
-                        <span>{isSaving ? 'Se adaugă...' : 'Adaugă la Aplicat'}</span>
-                      </>
-                    )}
+                    {isSaved ? <CheckCircle2 className="w-4 h-4" /> : <FolderKanban className="w-4 h-4" />}
                   </button>
                   <button onClick={() => setSelectedJobForDetails(job)} className={iconBtn} title="Vezi fișa jobului" aria-label="Vezi fișa jobului">
                     <FileText className="w-4 h-4" />
@@ -1740,16 +1730,6 @@ export default function JobSearchPage({
                       <FileSignature className="w-4 h-4" />
                     </button>
                   )}
-                  <a
-                    href={job.directApplyUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={iconBtn}
-                    title="Aplică pe site-ul sursă"
-                    aria-label="Aplică pe site-ul sursă"
-                  >
-                    <ArrowUpRight className="w-4 h-4" />
-                  </a>
                 </div>
               </Card>
             );
@@ -1925,7 +1905,7 @@ export default function JobSearchPage({
                       <Building2 className="w-3.5 h-3.5 text-neutral-400" />
                       <span>{auditJobForChanges.companyName}</span>
                       <span>•</span>
-                      <span>{auditJobForChanges.sourcePlatform}</span>
+                      <span>{platformSiteName(auditJobForChanges.sourcePlatform)}</span>
                     </div>
                   </div>
                   <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold border shrink-0 ${

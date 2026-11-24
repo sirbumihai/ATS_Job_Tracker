@@ -4,6 +4,7 @@ import {
 } from 'react-dom';
 import Card from './ui/Card';
 import PageHeader from './ui/PageHeader';
+import { platformSiteName } from '../data/jobPlatforms';
 import {
   SparklesIcon,
   SearchIcon,
@@ -1083,7 +1084,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                                 {job.companyName}
                               </span>
                               <span className="text-[10px] font-semibold px-2 py-0.5 rounded border border-neutral-200 bg-neutral-100 text-neutral-800">
-                                {job.sourcePlatform}
+                                {platformSiteName(job.sourcePlatform)}
                               </span>
                             </div>
 
@@ -1121,7 +1122,7 @@ export default function MarketInsightsPage({ currentUser, onNavigateToJobSearch,
                                 className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold transition cursor-pointer active:scale-95"
                               >
                                 <ExternalLinkIcon size={13} className="w-3.5 h-3.5 text-white" />
-                                <span>Aplică pe {job.sourcePlatform}</span>
+                                <span>Aplică pe {platformSiteName(job.sourcePlatform)}</span>
                               </a>
                             </div>
                           )}
