@@ -48,6 +48,24 @@ public class JobIngestionService {
         return knownDbUrls;
     }
 
+    /**
+     * Șterge marcajul „nou descoperit” de pe toate joburile. Se apelează o dată pe sincronizare,
+     * înainte de primul lot salvat, ca marcajul să rămână doar pe joburile găsite în rularea curentă.
+     */
+    public void resetNewlyDiscovered() {
+        try {
+            cachedJobListingRepository.clearAllNewlyDiscovered();
+        } catch (Exception e) {
+            log.warn("[JOB INGESTION] Nu s-a putut reseta newlyDiscovered: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Salvează un lot de joburi (de regulă, cele ale unei platforme care tocmai a terminat): staging,
+     * upsert în cached_live_jobs și evenimente în job_changes. Resetarea marcajului „nou descoperit”
+     * și marcarea joburilor expirate se fac o singură dată pe sincronizare, nu la fiecare lot
+     * (vezi {@link #resetNewlyDiscovered()} și {@link #markExpiredJobs()}).
+     */
     @Transactional
     public void saveNewJobsToDatabase(List<UnifiedJobListingDto> freshList) {
         if (freshList == null || freshList.isEmpty()) return;
@@ -78,12 +96,6 @@ public class JobIngestionService {
             }
 
             // 2. Mapare pentru upsert & tracking modificari (cached_live_jobs & job_changes)
-            try {
-                cachedJobListingRepository.clearAllNewlyDiscovered();
-            } catch (Exception e) {
-                log.warn("[JOB INGESTION] Nu s-a putut reseta newlyDiscovered: {}", e.getMessage());
-            }
-
             // Interogare selectiva in loturi pe baza URL-urilor primite (in loc de incarcare completa a tabelei cu findAll)
             Set<String> freshUrls = freshList.stream()
                     .map(UnifiedJobListingDto::directApplyUrl)
@@ -260,8 +272,6 @@ public class JobIngestionService {
                 }
                 log.info("[JOB INGESTION] Inregistrate {} evenimente in job_changes.", changesToInsert.size());
             }
-
-            markExpiredJobs();
 
         } catch (Exception e) {
             log.error("[JOB INGESTION] Eroare in pipeline-ul de ingestie: {}", e.getMessage(), e);

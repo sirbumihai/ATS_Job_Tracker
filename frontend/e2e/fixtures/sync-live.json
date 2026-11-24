@@ -1,0 +1,13 @@
+{
+  "status": "STARTED",
+  "message": "Sincronizarea a pornit în fundal; joburile fiecărui site apar imediat ce site-ul termină.",
+  "crawlerStatus": {
+    "running": true,
+    "startedAt": "2026-10-19T10:00:00Z",
+    "finishedAt": null,
+    "platformsTotal": 2,
+    "runningPlatforms": ["EJOBS", "LINKEDIN"],
+    "finishedPlatforms": [],
+    "jobsSaved": 0
+  }
+}

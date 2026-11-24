@@ -27,6 +27,8 @@ const DEFAULT_ROUTES = [
   ['POST', /^\/api\/v1\/jobs\/save-to-kanban$/, () => ({})],
   ['GET', /^\/api\/v1\/jobs\/search$/, 'jobs-search'],
   ['GET', /^\/api\/v1\/jobs\/stats$/, 'jobs-stats'],
+  ['GET', /^\/api\/v1\/jobs\/crawler-status$/, 'crawler-status'],
+  ['POST', /^\/api\/v1\/jobs\/sync-live$/, 'sync-live'],
   ['GET', /^\/api\/v1\/jobs\/[^/]+\/changes$/, () => []],
   ['GET', /^\/api\/v1\/jobs\/[^/]+\/details$/, 'job-details'],
   ['POST', /^\/api\/v1\/ai\/match-job$/, 'ai-match'],

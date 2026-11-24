@@ -4,6 +4,27 @@ import { fixture } from './support/mockApi.js';
 
 const PATH = '/job-search';
 
+// Starea sincronizarii din /crawler-status, cu site-urile terminate date in ordinea in care au terminat
+function syncState({ platforms = ['EJOBS', 'LINKEDIN'], finished, jobsSaved }) {
+  const running = finished.length < platforms.length;
+  return {
+    running,
+    startedAt: '2026-10-19T10:00:00Z',
+    finishedAt: running ? null : '2026-10-19T10:02:40Z',
+    platformsTotal: platforms.length,
+    runningPlatforms: platforms.filter((p) => !finished.includes(p)),
+    finishedPlatforms: finished.map((p) => ({
+      platformName: p,
+      status: 'SUCCESS',
+      jobsCollected: 1,
+      durationMs: p === 'LINKEDIN' ? 160000 : 4200,
+      errorMessage: null,
+      executedAt: '2026-10-19T10:00:04Z',
+    })),
+    jobsSaved,
+  };
+}
+
 async function openPage(page) {
   await loginAsDemoUser(page);
   await page.goto(PATH);
@@ -95,6 +116,65 @@ test('cautarea trimite cuvantul cheie catre API', async ({ page }) => {
   await search;
 });
 
+test('Sincronizeaza porneste rularea in fundal: butonul revine imediat, iar joburile fiecarui site apar cand site-ul termina', async ({ page, api }) => {
+  const search = fixture('jobs-search');
+  const ejobsJob = { ...search.content[0], id: 'job-e2e-ejobs-nou', jobTitle: 'QA Automation Engineer', directApplyUrl: 'https://example.test/jobs/3' };
+  const linkedInJob = { ...search.content[1], id: 'job-e2e-linkedin-nou', jobTitle: 'Backend Engineer Kotlin', directApplyUrl: 'https://example.test/jobs/4' };
+  const searchWith = (...extra) => ({ ...search, content: [...search.content, ...extra], totalElements: search.content.length + extra.length });
+
+  // idle -> started (POST) -> eJobs gata, LinkedIn ruleaza inca -> done (LinkedIn gata)
+  let phase = 'idle';
+  api.on('POST', /^\/api\/v1\/jobs\/sync-live$/, () => {
+    phase = 'started';
+    return { ...fixture('sync-live'), crawlerStatus: syncState({ finished: [], jobsSaved: 0 }) };
+  });
+  api.on('GET', /^\/api\/v1\/jobs\/crawler-status$/, () => {
+    if (phase === 'idle') return fixture('crawler-status');
+    if (phase === 'done') return syncState({ finished: ['EJOBS', 'LINKEDIN'], jobsSaved: 2 });
+    return syncState({ finished: ['EJOBS'], jobsSaved: 1 });
+  });
+  api.on('GET', /^\/api\/v1\/jobs\/search$/, () => {
+    if (phase === 'idle') return search;
+    return phase === 'done' ? searchWith(ejobsJob, linkedInJob) : searchWith(ejobsJob);
+  });
+
+  await openPage(page);
+  const button = page.getByRole('button', { name: 'Sincronizează' });
+  await button.click();
+
+  // eJobs a terminat: jobul lui apare fara alta apasare, cat timp LinkedIn ruleaza inca
+  const progress = page.getByRole('status', { name: 'Progresul sincronizării' });
+  await expect(page.locator(`[data-job-card="${ejobsJob.id}"]`)).toContainText(ejobsJob.jobTitle, { timeout: 10_000 });
+  await expect(progress).toContainText('În curs: LinkedIn.');
+  await expect(progress.getByRole('progressbar', { name: 'Site-uri sincronizate' })).toHaveAttribute('aria-valuenow', '1');
+  await expect(button).toBeEnabled();
+  await expect(page.locator(`[data-job-card="${linkedInJob.id}"]`)).toHaveCount(0);
+
+  // LinkedIn termina: lista se reimprospateaza din nou, progresul dispare si apare rezumatul
+  phase = 'done';
+  await expect(page.locator(`[data-job-card="${linkedInJob.id}"]`)).toContainText(linkedInJob.jobTitle, { timeout: 10_000 });
+  await expect(progress).toBeHidden();
+  await expect(page.getByText('Sincronizare încheiată. Joburi preluate: 2.')).toBeVisible();
+});
+
+test('o sincronizare pornita de server se vede la deschiderea paginii, iar a doua apasare nu porneste alta', async ({ page, api }) => {
+  const running = syncState({ finished: ['EJOBS'], jobsSaved: 1 });
+  api.on('GET', /^\/api\/v1\/jobs\/crawler-status$/, () => running);
+  api.on('POST', /^\/api\/v1\/jobs\/sync-live$/, () => ({
+    status: 'ALREADY_RUNNING',
+    message: 'O sincronizare rulează deja; nu s-a pornit alta.',
+    crawlerStatus: running,
+  }));
+
+  await openPage(page);
+  const progress = page.getByRole('status', { name: 'Progresul sincronizării' });
+  await expect(progress).toContainText('În curs: LinkedIn.');
+
+  await page.getByRole('button', { name: 'Sincronizează' }).click();
+  await expect(page.getByText('Sincronizarea rulează deja.')).toBeVisible();
+  await expect(progress).toContainText('În curs: LinkedIn.');
+});
+
 test.describe('la 375px', () => {
   test.use({ viewport: { width: 375, height: 812 } });
   test('nu are scroll orizontal, nici cu modalul deschis', async ({ page }) => {
@@ -102,6 +182,14 @@ test.describe('la 375px', () => {
     await expectNoHorizontalScroll(page);
     await page.locator('[data-job-card]').first().getByRole('button', { name: 'Vezi fișa jobului' }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
+    await expectNoHorizontalScroll(page);
+  });
+
+  test('progresul sincronizarii incape pe ecran, si cu toate site-urile in curs', async ({ page, api }) => {
+    const platforms = ['DEVJOB_RO', 'LINKEDIN', 'GITHUB_COMMUNITY', 'BESTJOBS', 'HIPO', 'STAGIIPEBUNE', 'JUNIORS_RO', 'UNDELUCRAM', 'EJOBS'];
+    api.on('GET', /^\/api\/v1\/jobs\/crawler-status$/, () => syncState({ platforms, finished: [], jobsSaved: 0 }));
+    await openPage(page);
+    await expect(page.getByRole('status', { name: 'Progresul sincronizării' })).toContainText('DevJob.ro, LinkedIn, GitHub și încă 6');
     await expectNoHorizontalScroll(page);
   });
 });
