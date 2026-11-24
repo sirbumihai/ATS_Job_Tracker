@@ -227,6 +227,99 @@ class JobScraperOrchestratorTest {
         assertEquals(200, report.jobsCollected());
     }
 
+    @Test
+    @DisplayName("Fiecare platformă e anunțată imediat ce termină, iar cea care termină mai târziu nu reintroduce duplicatele")
+    void testAnnouncesEachPlatformAsSoonAsItFinishes() {
+        CountDownLatch fastAnnounced = new CountDownLatch(1);
+        JobScraper fast = new JobScraper() {
+            @Override
+            public String getPlatformName() {
+                return "FAST";
+            }
+
+            @Override
+            public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
+                freshList.add(createJob("fast-1", "Java Developer", "Acme", "FAST"));
+                freshList.add(createJob("fast-2", "QA Engineer", "Beta", "FAST"));
+            }
+        };
+        JobScraper slow = new JobScraper() {
+            @Override
+            public String getPlatformName() {
+                return "SLOW";
+            }
+
+            @Override
+            public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
+                // Platforma lentă termină abia după ce rezultatele celei rapide au fost anunțate
+                try {
+                    if (!fastAnnounced.await(5, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("Platforma rapidă n-a fost anunțată cât timp rula cea lentă");
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException(e);
+                }
+                freshList.add(createJob("slow-1", "Java Developer", "Acme", "SLOW"));
+                freshList.add(createJob("slow-2", "DevOps Engineer", "Gamma", "SLOW"));
+            }
+        };
+
+        List<String> announcements = new ArrayList<>();
+        PlatformScrapeListener listener = (report, newJobs) -> {
+            announcements.add(report.platformName() + " " + report.status() + " "
+                    + newJobs.stream().map(UnifiedJobListingDto::id).toList());
+            if ("FAST".equals(report.platformName())) fastAnnounced.countDown();
+        };
+
+        JobScraperOrchestrator orchestrator = new JobScraperOrchestrator(List.of(slow, fast));
+        List<UnifiedJobListingDto> results = orchestrator.scrapeAll(Collections.emptySet(), listener);
+
+        assertEquals(List.of("FAST SUCCESS [fast-1, fast-2]", "SLOW SUCCESS [slow-2]"), announcements);
+        assertEquals(List.of("fast-1", "fast-2", "slow-2"), results.stream().map(UnifiedJobListingDto::id).toList());
+    }
+
+    @Test
+    @DisplayName("Platforma eșuată e anunțată cu joburile colectate înainte de eroare, iar o eroare a listener-ului nu oprește celelalte platforme")
+    void testAnnouncesFailedPlatformsAndSurvivesListenerErrors() {
+        JobScraper failing = new JobScraper() {
+            @Override
+            public String getPlatformName() {
+                return "PARTIAL_PLATFORM";
+            }
+
+            @Override
+            public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
+                freshList.add(createJob("j50", "Data Engineer", "Snowflake", "PARTIAL_PLATFORM"));
+                throw new RuntimeException("Network drop after collecting 1 job");
+            }
+        };
+        JobScraper good = new JobScraper() {
+            @Override
+            public String getPlatformName() {
+                return "GOOD_PLATFORM";
+            }
+
+            @Override
+            public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
+                freshList.add(createJob("j51", "Backend Engineer", "Stripe", "GOOD_PLATFORM"));
+            }
+        };
+
+        Map<String, String> announcements = new HashMap<>();
+        PlatformScrapeListener listener = (report, newJobs) -> {
+            announcements.put(report.platformName(), report.status() + " " + newJobs.size());
+            throw new IllegalStateException("Salvare eșuată pentru " + report.platformName());
+        };
+
+        JobScraperOrchestrator orchestrator = new JobScraperOrchestrator(List.of(failing, good));
+        List<UnifiedJobListingDto> results = orchestrator.scrapeAll(Collections.emptySet(), listener);
+
+        assertEquals(Map.of("PARTIAL_PLATFORM", "FAILED 1", "GOOD_PLATFORM", "SUCCESS 1"), announcements);
+        assertEquals(2, results.size());
+        assertEquals(2, orchestrator.getLastExecutionReports().size());
+    }
+
     static class AwaitingScraper implements JobScraper {
         private final String name;
         private final CountDownLatch bothStarted;

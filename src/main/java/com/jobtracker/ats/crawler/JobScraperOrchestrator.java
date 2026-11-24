@@ -59,41 +59,62 @@ public class JobScraperOrchestrator {
             List<UnifiedJobListingDto> jobs
     ) {}
 
+    public List<UnifiedJobListingDto> scrapeAll(Set<String> knownDbUrls) {
+        return scrapeAll(knownDbUrls, PlatformScrapeListener.NONE);
+    }
+
     /**
      * Rulează în paralel, pe Virtual Threads Java 21, toate crawlerele active și așteaptă ca fiecare
      * să termine, fără limită de timp per platformă: fiecare cerere HTTP are propriul timeout, iar
      * scraperele se opresc singure când o platformă refuză sau nu mai răspunde, deci rularea nu rămâne
-     * blocată. Erorile unei platforme nu le afectează pe celelalte, joburile colectate înainte de o
-     * eroare se păstrează, iar la final se elimină duplicatele dintre platforme.
+     * blocată. Erorile unei platforme nu le afectează pe celelalte, iar joburile colectate înainte de o
+     * eroare se păstrează.
+     * <p>
+     * Fiecare platformă e anunțată prin {@code listener} imediat ce termină, ca joburile ei să poată fi
+     * salvate fără să aștepte platformele lente. Deduplicarea dintre platforme se face în ordinea în care
+     * termină: o platformă care termină mai târziu nu mai primește joburile (titlu + companie) anunțate
+     * deja de alta.
      *
      * @param knownDbUrls Set de URL-uri existente în baza de date pentru crawling diferențial
-     * @return Lista completă de joburi unificate nou colectate
+     * @param listener    apelat o dată per platformă, în ordinea în care termină, din firul apelant
+     * @return Toate joburile anunțate prin listener, în ordinea în care au terminat platformele
      */
-    public List<UnifiedJobListingDto> scrapeAll(Set<String> knownDbUrls) {
+    public List<UnifiedJobListingDto> scrapeAll(Set<String> knownDbUrls, PlatformScrapeListener listener) {
         log.info("[JOB ORCHESTRATOR] Începere agregare concurentă (Virtual Threads) pentru {} platforme active.", scrapers.size());
         long totalStartTime = System.currentTimeMillis();
 
-        List<CompletableFuture<ScraperTaskResult>> futures = scrapers.stream()
-                .map(scraper -> CompletableFuture.supplyAsync(() -> runScraper(scraper, knownDbUrls), executor))
+        CompletionService<ScraperTaskResult> completion = new ExecutorCompletionService<>(executor);
+        List<Future<ScraperTaskResult>> tasks = scrapers.stream()
+                .map(scraper -> completion.submit(() -> runScraper(scraper, knownDbUrls)))
                 .toList();
 
         List<UnifiedJobListingDto> freshList = new ArrayList<>();
         Set<String> globalDedupKeys = new HashSet<>();
         List<PlatformScrapeResult> reports = new ArrayList<>();
 
-        // Rezultatele se citesc în ordinea platformelor, ca deduplicarea să nu depindă de cine termină primul
-        for (CompletableFuture<ScraperTaskResult> future : futures) {
+        for (int remaining = tasks.size(); remaining > 0; remaining--) {
+            ScraperTaskResult res;
             try {
-                ScraperTaskResult res = future.join();
-                reports.add(res.report());
-                for (UnifiedJobListingDto job : res.jobs()) {
-                    if (globalDedupKeys.add(dedupKey(job.jobTitle(), job.companyName(), job.directApplyUrl()))) {
-                        freshList.add(job);
-                    }
-                }
-            } catch (CompletionException e) {
-                log.error("[JOB ORCHESTRATOR] Eroare la citirea rezultatelor unui scraper: {}", e.getMessage());
+                res = completion.take().get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("[JOB ORCHESTRATOR] Rulare întreruptă; se opresc cele {} platforme rămase.", remaining);
+                tasks.forEach(task -> task.cancel(true));
+                break;
+            } catch (ExecutionException e) {
+                log.error("[JOB ORCHESTRATOR] Eroare la citirea rezultatelor unui scraper: {}", e.getCause().getMessage());
+                continue;
             }
+
+            List<UnifiedJobListingDto> newJobs = new ArrayList<>();
+            for (UnifiedJobListingDto job : res.jobs()) {
+                if (globalDedupKeys.add(dedupKey(job.jobTitle(), job.companyName(), job.directApplyUrl()))) {
+                    newJobs.add(job);
+                }
+            }
+            reports.add(res.report());
+            freshList.addAll(newJobs);
+            notifyPlatformFinished(listener, res.report(), newJobs);
         }
 
         this.lastExecutionReports = Collections.unmodifiableList(reports);
@@ -102,6 +123,17 @@ public class JobScraperOrchestrator {
                 totalDuration, freshList.size());
 
         return freshList;
+    }
+
+    // O eroare la procesarea unei platforme (ex. salvarea în DB) nu oprește celelalte platforme
+    private void notifyPlatformFinished(PlatformScrapeListener listener, PlatformScrapeResult report,
+                                        List<UnifiedJobListingDto> newJobs) {
+        try {
+            listener.onPlatformFinished(report, Collections.unmodifiableList(newJobs));
+        } catch (RuntimeException e) {
+            log.error("[JOB ORCHESTRATOR] Procesarea rezultatelor platformei {} a eșuat: {}",
+                    report.platformName(), e.getMessage(), e);
+        }
     }
 
     private ScraperTaskResult runScraper(JobScraper scraper, Set<String> knownDbUrls) {

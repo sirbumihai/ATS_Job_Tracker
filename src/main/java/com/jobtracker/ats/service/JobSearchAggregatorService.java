@@ -1,15 +1,17 @@
 package com.jobtracker.ats.service;
 
 import com.jobtracker.ats.crawler.JobScraperOrchestrator;
+import com.jobtracker.ats.crawler.PlatformScrapeListener;
 import com.jobtracker.ats.crawler.PlatformScrapeResult;
 import com.jobtracker.ats.dto.ApplicationResponse;
+import com.jobtracker.ats.dto.CrawlerSyncStatus;
 import com.jobtracker.ats.dto.JobSearchResponse;
 import com.jobtracker.ats.dto.UnifiedJobListingDto;
 import com.jobtracker.ats.entity.JobChange;
 import com.jobtracker.ats.util.JobNormalizationUtils;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Facade Service pentru motorul de căutare a joburilor.
@@ -26,16 +32,40 @@ import java.util.concurrent.CompletableFuture;
  * Menține 100% compatibilitate retroactivă pentru toate componentele existente.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class JobSearchAggregatorService {
 
     private final JobScraperOrchestrator jobScraperOrchestrator;
     private final JobIngestionService jobIngestionService;
     private final JobSearchService jobSearchService;
+    // Rulează sincronizările din fundal (la pornire și cele cerute din interfață)
+    private final Executor syncExecutor;
+
+    // Starea sincronizării curente sau a ultimei; o rulare nouă pornește doar dacă nu rulează alta
+    private final AtomicReference<CrawlerSyncStatus> syncStatus = new AtomicReference<>(CrawlerSyncStatus.idle());
 
     public static final Set<String> REMOVED_PLATFORMS = JobNormalizationUtils.REMOVED_PLATFORMS;
     public static final String BROWSER_USER_AGENT = JobNormalizationUtils.BROWSER_USER_AGENT;
+
+    @Autowired
+    public JobSearchAggregatorService(
+            JobScraperOrchestrator jobScraperOrchestrator,
+            JobIngestionService jobIngestionService,
+            JobSearchService jobSearchService) {
+        this(jobScraperOrchestrator, jobIngestionService, jobSearchService,
+                Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("sincronizare-joburi-", 1).factory()));
+    }
+
+    JobSearchAggregatorService(
+            JobScraperOrchestrator jobScraperOrchestrator,
+            JobIngestionService jobIngestionService,
+            JobSearchService jobSearchService,
+            Executor syncExecutor) {
+        this.jobScraperOrchestrator = jobScraperOrchestrator;
+        this.jobIngestionService = jobIngestionService;
+        this.jobSearchService = jobSearchService;
+        this.syncExecutor = syncExecutor;
+    }
 
     @PostConstruct
     public void initializeLiveFeed() {
@@ -54,7 +84,7 @@ public class JobSearchAggregatorService {
             } catch (Exception e) {
                 log.warn("[JOB AGGREGATOR FACADE] Eroare la sincronizarea asincronă din fundal: {}", e.getMessage());
             }
-        });
+        }, syncExecutor);
     }
 
     /**
@@ -67,25 +97,109 @@ public class JobSearchAggregatorService {
     }
 
     /**
-     * Declanșează agregarea completă de la toate platformele active,
-     * persistă noile joburi în PostgreSQL și actualizează cache-ul de căutare.
+     * Rulează în firul curent agregarea completă de la toate platformele active (la pornire și orar).
+     * Joburile fiecărei platforme sunt salvate în PostgreSQL și apar în căutare imediat ce platforma
+     * termină. Dacă rulează deja o sincronizare, nu pornește alta.
+     *
+     * @return numărul de joburi active din cache-ul de căutare
      */
-    public synchronized int refreshLiveJobs() {
-        Set<String> knownDbUrls = jobIngestionService.getKnownDatabaseUrls();
-        log.info("[JOB AGGREGATOR FACADE] Baza de date conține {} joburi salvate. Lansare crawlere...", knownDbUrls.size());
+    public int refreshLiveJobs() {
+        if (!tryBeginSync()) {
+            log.info("[JOB AGGREGATOR FACADE] O sincronizare rulează deja; nu se pornește alta.");
+            return jobSearchService.getActiveLiveJobsCache().size();
+        }
+        return runBegunSync();
+    }
 
-        List<UnifiedJobListingDto> freshList = jobScraperOrchestrator.scrapeAll(knownDbUrls);
-        jobIngestionService.saveNewJobsToDatabase(freshList);
+    /**
+     * Pornește sincronizarea în fundal și revine imediat; progresul se citește din {@link #getSyncStatus()}.
+     *
+     * @return false dacă rulează deja o sincronizare (caz în care nu se pornește alta)
+     */
+    public boolean startLiveRefresh() {
+        if (!tryBeginSync()) {
+            return false;
+        }
+        try {
+            syncExecutor.execute(this::runBegunSync);
+        } catch (RejectedExecutionException e) {
+            syncStatus.updateAndGet(CrawlerSyncStatus::finish);
+            throw e;
+        }
+        return true;
+    }
 
-        int totalLoaded = jobSearchService.loadJobsFromDatabase();
-        if (totalLoaded == 0 && !freshList.isEmpty()) {
-            jobSearchService.getActiveLiveJobsCache().clear();
-            jobSearchService.getActiveLiveJobsCache().addAll(freshList);
-            totalLoaded = jobSearchService.getActiveLiveJobsCache().size();
+    public CrawlerSyncStatus getSyncStatus() {
+        return syncStatus.get();
+    }
+
+    private boolean tryBeginSync() {
+        CrawlerSyncStatus current = syncStatus.get();
+        while (!current.running()) {
+            if (syncStatus.compareAndSet(current, CrawlerSyncStatus.start(jobScraperOrchestrator.getActivePlatforms()))) {
+                return true;
+            }
+            current = syncStatus.get();
+        }
+        return false;
+    }
+
+    private int runBegunSync() {
+        try {
+            Set<String> knownDbUrls = jobIngestionService.getKnownDatabaseUrls();
+            log.info("[JOB AGGREGATOR FACADE] Baza de date conține {} joburi salvate. Lansare crawlere...", knownDbUrls.size());
+
+            List<UnifiedJobListingDto> freshList = jobScraperOrchestrator.scrapeAll(knownDbUrls, new PlatformJobSaver());
+
+            // O singură dată pe rulare, după ce toate platformele au actualizat lastSeenAt: altfel un job
+            // al unei platforme lente ar fi marcat expirat și apoi reactivat în aceeași sincronizare
+            if (!freshList.isEmpty() && jobIngestionService.markExpiredJobs() > 0) {
+                jobSearchService.loadJobsFromDatabase();
+            }
+
+            int totalLoaded = jobSearchService.getActiveLiveJobsCache().size();
+            log.info("[JOB AGGREGATOR FACADE] Sincronizare finalizată. Total joburi active în cache: {}", totalLoaded);
+            return totalLoaded;
+        } catch (RuntimeException e) {
+            log.error("[JOB AGGREGATOR FACADE] Sincronizarea joburilor a eșuat: {}", e.getMessage(), e);
+            return jobSearchService.getActiveLiveJobsCache().size();
+        } finally {
+            syncStatus.updateAndGet(CrawlerSyncStatus::finish);
+        }
+    }
+
+    /**
+     * Salvează joburile fiecărei platforme imediat ce termină și reîncarcă cache-ul de căutare,
+     * apoi o marchează terminată în starea sincronizării. Orchestratorul o apelează pe rând.
+     */
+    private final class PlatformJobSaver implements PlatformScrapeListener {
+
+        private final List<UnifiedJobListingDto> savedThisRun = new ArrayList<>();
+
+        @Override
+        public void onPlatformFinished(PlatformScrapeResult report, List<UnifiedJobListingDto> newJobs) {
+            if (!newJobs.isEmpty()) {
+                if (savedThisRun.isEmpty()) {
+                    // Marcajul „nou descoperit” rămâne doar pe joburile găsite în rularea curentă
+                    jobIngestionService.resetNewlyDiscovered();
+                }
+                savedThisRun.addAll(newJobs);
+                jobIngestionService.saveNewJobsToDatabase(newJobs);
+                reloadSearchCache();
+            }
+            syncStatus.updateAndGet(status -> status.withPlatformFinished(report, newJobs.size()));
+            log.info("[JOB AGGREGATOR FACADE] Platforma {} a terminat: {} joburi salvate și vizibile în căutare.",
+                    report.platformName(), newJobs.size());
         }
 
-        log.info("[JOB AGGREGATOR FACADE] Sincronizare finalizată. Total joburi active în cache: {}", totalLoaded);
-        return totalLoaded;
+        private void reloadSearchCache() {
+            if (jobSearchService.loadJobsFromDatabase() == 0) {
+                // Fără bază de date, căutarea folosește direct joburile colectate în rularea curentă
+                List<UnifiedJobListingDto> cache = jobSearchService.getActiveLiveJobsCache();
+                cache.clear();
+                cache.addAll(savedThisRun);
+            }
+        }
     }
 
     @Transactional(readOnly = true)
@@ -219,10 +333,6 @@ public class JobSearchAggregatorService {
 
     public String fetchFullDescription(String applyUrl, String platform) {
         return jobSearchService.fetchFullDescription(applyUrl, platform);
-    }
-
-    public List<PlatformScrapeResult> getLastExecutionReports() {
-        return jobScraperOrchestrator.getLastExecutionReports();
     }
 
     // Metode statice expuse pentru compatibilitate cu AiGapAnalysisService și alte clase existente

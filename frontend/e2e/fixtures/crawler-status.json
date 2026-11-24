@@ -1,0 +1,26 @@
+{
+  "running": false,
+  "startedAt": "2026-10-19T09:00:00Z",
+  "finishedAt": "2026-10-19T09:02:40Z",
+  "platformsTotal": 2,
+  "runningPlatforms": [],
+  "finishedPlatforms": [
+    {
+      "platformName": "EJOBS",
+      "status": "SUCCESS",
+      "jobsCollected": 1,
+      "durationMs": 4200,
+      "errorMessage": null,
+      "executedAt": "2026-10-19T09:00:04Z"
+    },
+    {
+      "platformName": "LINKEDIN",
+      "status": "SUCCESS",
+      "jobsCollected": 1,
+      "durationMs": 160000,
+      "errorMessage": null,
+      "executedAt": "2026-10-19T09:02:40Z"
+    }
+  ],
+  "jobsSaved": 2
+}

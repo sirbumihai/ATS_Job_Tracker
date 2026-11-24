@@ -54,7 +54,27 @@ import {
 import { JOB_PLATFORMS, platformSiteName } from '../data/jobPlatforms';
 import Card from './ui/Card';
 import PageHeader from './ui/PageHeader';
+import ScoreBar from './ui/ScoreBar';
 import JobDetailModal from './JobDetailModal';
+
+// Cat de des se citeste starea sincronizarii cat timp ruleaza in fundal pe server
+const SYNC_POLL_MS = 2000;
+// Cate site-uri in curs se numesc explicit sub bara de progres
+const MAX_NAMED_RUNNING_SITES = 3;
+
+const runningSitesLabel = (platforms) => {
+  const names = platforms.map(platformSiteName);
+  if (names.length <= MAX_NAMED_RUNNING_SITES) return names.join(', ');
+  return `${names.slice(0, MAX_NAMED_RUNNING_SITES).join(', ')} și încă ${names.length - MAX_NAMED_RUNNING_SITES}`;
+};
+
+const syncFinishedMessage = (status) => {
+  const failedSites = (status.finishedPlatforms || [])
+    .filter((report) => report.status !== 'SUCCESS')
+    .map((report) => platformSiteName(report.platformName));
+  const summary = `Sincronizare încheiată. Joburi preluate: ${status.jobsSaved}.`;
+  return failedSites.length > 0 ? `${summary} Site-uri cu erori: ${failedSites.join(', ')}.` : summary;
+};
 
 // Helper eliminare diacritice
 const removeDiacritics = (str) => {
@@ -190,6 +210,15 @@ export default function JobSearchPage({
 
   const [savingJobId, setSavingJobId] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Sincronizarea live ruleaza in fundal pe server; starea ei (site-uri gata / in curs) vine din /crawler-status
+  const [syncStatus, setSyncStatus] = useState(null);
+  const [syncRequesting, setSyncRequesting] = useState(false);
+  const syncStatusRef = useRef(null);
+  // Ultimele versiuni ale functiilor de incarcare, ca reimprospatarea din timpul sincronizarii sa foloseasca filtrele curente
+  const latestLoadersRef = useRef(null);
+  // Numarul ultimei cautari pornite: un raspuns intarziat nu suprascrie rezultatele uneia mai noi
+  const jobsRequestRef = useRef(0);
 
   // Helper pentru calculul secundelor ramase pana la urmatoarea ora fixa (:00:00)
   // Nu se reseteaza la refresh deoarece este calculat direct din ceasul sistemului!
@@ -470,8 +499,10 @@ export default function JobSearchPage({
     }
   };
 
-  const fetchJobs = async (targetPage = currentPage) => {
-    setLoading(true);
+  // `silent`: reimprospatare in timpul sincronizarii, fara scheletul de incarcare peste lista
+  const fetchJobs = async (targetPage = currentPage, { silent = false } = {}) => {
+    const requestId = ++jobsRequestRef.current;
+    if (!silent) setLoading(true);
     try {
       const params = new URLSearchParams();
       if (keyword.trim()) params.append('keyword', keyword.trim());
@@ -505,6 +536,7 @@ export default function JobSearchPage({
       });
       if (res.ok) {
         const data = await res.json();
+        if (requestId !== jobsRequestRef.current) return;
         if (Array.isArray(data)) {
           setJobs(data);
           setTotalJobs(data.length);
@@ -520,25 +552,72 @@ export default function JobSearchPage({
     } catch (err) {
       console.error('Eroare la preluarea joburilor:', err);
     } finally {
-      setLoading(false);
+      if (requestId === jobsRequestRef.current) setLoading(false);
     }
   };
 
+  useEffect(() => {
+    latestLoadersRef.current = { fetchJobs, fetchGlobalStats };
+  });
+
+  // Aplica o stare noua a sincronizarii: cand s-au salvat joburi noi (un site a terminat) lista si
+  // contoarele se reimprospateaza pe loc, iar la finalul rularii apare un rezumat
+  const applySyncStatus = (next) => {
+    const prev = syncStatusRef.current;
+    syncStatusRef.current = next;
+    setSyncStatus(next);
+    if (!prev?.running) return;
+
+    const runEnded = !next.running;
+    const jobsChanged = next.jobsSaved !== prev.jobsSaved || next.startedAt !== prev.startedAt;
+    if (runEnded || jobsChanged) {
+      latestLoadersRef.current.fetchJobs(undefined, { silent: true });
+      latestLoadersRef.current.fetchGlobalStats();
+    }
+    if (runEnded) {
+      setToastMessage(syncFinishedMessage(next));
+      setTimeout(() => setToastMessage(null), 6000);
+    }
+  };
+
+  const fetchCrawlerStatus = async () => {
+    try {
+      const res = await fetch('/api/v1/jobs/crawler-status');
+      if (res.ok) {
+        applySyncStatus(await res.json());
+        return;
+      }
+    } catch (err) {
+      console.warn('Nu s-a putut citi starea sincronizarii:', err);
+    }
+    // Starea ramane aceeasi, iar citirea se reia la urmatorul interval
+    setSyncStatus((current) => (current ? { ...current } : current));
+  };
+
+  // Cat timp ruleaza o sincronizare, starea se citeste periodic; citirea se opreste singura la final
+  useEffect(() => {
+    if (!syncStatus?.running) return undefined;
+    const timer = setTimeout(fetchCrawlerStatus, SYNC_POLL_MS);
+    return () => clearTimeout(timer);
+  }, [syncStatus]);
+
+  // Porneste sincronizarea in fundal: serverul raspunde imediat, iar joburile fiecarui site apar cand site-ul termina
   const handleSyncLive = async () => {
-    setLoading(true);
+    setSyncRequesting(true);
     try {
       const res = await fetch('/api/v1/jobs/sync-live', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        setToastMessage(`Sincronizare Reușită! ${data.totalLiveJobs || '1500+'} joburi agregate și actualizate.`);
-        setSecondsUntilSync(getSecondsUntilNextHour());
-        setTimeout(() => setToastMessage(null), 4500);
+        if (data.crawlerStatus) applySyncStatus(data.crawlerStatus);
+        if (data.status === 'ALREADY_RUNNING') {
+          setToastMessage('Sincronizarea rulează deja. Joburile apar pe măsură ce termină fiecare site.');
+          setTimeout(() => setToastMessage(null), 4500);
+        }
       }
     } catch (err) {
       console.warn('Sync live warn:', err);
     } finally {
-      fetchJobs();
-      fetchGlobalStats();
+      setSyncRequesting(false);
     }
   };
 
@@ -573,6 +652,8 @@ export default function JobSearchPage({
 
   useEffect(() => {
     fetchGlobalStats();
+    // O sincronizare pornita de server (la pornire sau orar) poate rula deja: progresul ei se afiseaza la fel
+    fetchCrawlerStatus();
   }, []);
 
   // Cautare debounced (300ms) - declanseaza cautarea pe server cu pagina 1 la orice modificare de filtru
@@ -845,16 +926,30 @@ export default function JobSearchPage({
                 <span className="font-medium tabular-nums">{formatCountdown(secondsUntilSync)}</span>
               </span>
               <button
+                type="button"
                 onClick={handleSyncLive}
-                disabled={loading}
+                disabled={syncRequesting}
                 className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${syncRequesting ? 'animate-spin' : ''}`} />
                 <span>Sincronizează</span>
               </button>
             </>
           }
         />
+        {syncStatus?.running && syncStatus.platformsTotal > 0 && (
+          <div role="status" aria-label="Progresul sincronizării" className="mt-4 pt-4 border-t border-neutral-100 space-y-2">
+            <ScoreBar
+              label="Site-uri sincronizate"
+              value={syncStatus.finishedPlatforms.length}
+              max={syncStatus.platformsTotal}
+            />
+            <p className="text-xs text-neutral-500">
+              Joburile fiecărui site apar în listă imediat ce site-ul termină.
+              {syncStatus.runningPlatforms.length > 0 && ` În curs: ${runningSitesLabel(syncStatus.runningPlatforms)}.`}
+            </p>
+          </div>
+        )}
       </Card>
 
       {/* CAUTARE & FILTRE MULTI-SELECT CU AUTOCOMPLETE */}

@@ -1,7 +1,7 @@
 package com.jobtracker.ats.controller;
 
-import com.jobtracker.ats.crawler.PlatformScrapeResult;
 import com.jobtracker.ats.dto.ApplicationResponse;
+import com.jobtracker.ats.dto.CrawlerSyncStatus;
 import com.jobtracker.ats.dto.JobSearchResponse;
 import com.jobtracker.ats.dto.UnifiedJobListingDto;
 import com.jobtracker.ats.entity.JobChange;
@@ -129,24 +129,25 @@ public class JobSearchController {
         ));
     }
 
+    /**
+     * Pornește sincronizarea în fundal și răspunde imediat (202). Joburile fiecărei platforme apar în
+     * căutare imediat ce platforma termină; progresul se citește din /crawler-status. Dacă rulează deja
+     * o sincronizare, nu se pornește alta.
+     */
     @PostMapping("/sync-live")
     public ResponseEntity<Map<String, Object>> syncLiveJobs() {
-        long start = System.currentTimeMillis();
-        int totalJobs = jobSearchAggregatorService.refreshLiveJobs();
-        long duration = System.currentTimeMillis() - start;
-        List<PlatformScrapeResult> reports = jobSearchAggregatorService.getLastExecutionReports();
-
-        return ResponseEntity.ok(Map.of(
-                "status", "SUCCESS",
-                "message", "Feed-ul de joburi a fost actualizat cu succes în mod concurent.",
-                "totalLiveJobs", totalJobs,
-                "durationMs", duration,
-                "crawlerReports", reports
+        boolean started = jobSearchAggregatorService.startLiveRefresh();
+        return ResponseEntity.accepted().body(Map.of(
+                "status", started ? "STARTED" : "ALREADY_RUNNING",
+                "message", started
+                        ? "Sincronizarea a pornit în fundal; joburile fiecărui site apar imediat ce site-ul termină."
+                        : "O sincronizare rulează deja; nu s-a pornit alta.",
+                "crawlerStatus", jobSearchAggregatorService.getSyncStatus()
         ));
     }
 
     @GetMapping("/crawler-status")
-    public ResponseEntity<List<PlatformScrapeResult>> getCrawlerStatus() {
-        return ResponseEntity.ok(jobSearchAggregatorService.getLastExecutionReports());
+    public ResponseEntity<CrawlerSyncStatus> getCrawlerStatus() {
+        return ResponseEntity.ok(jobSearchAggregatorService.getSyncStatus());
     }
 }
