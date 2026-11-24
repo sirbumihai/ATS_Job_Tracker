@@ -1,0 +1,28 @@
+{
+  "totalScore": 84.0,
+  "roleMatchScore": 90,
+  "projectsDepthScore": 82,
+  "productionScore": 78,
+  "techSkillsScore": 88,
+  "impactScore": 70,
+  "structureScore": 96,
+  "summaryVerdict": "Profil solid; adaugă rezultate măsurabile.",
+  "suggestions": [
+    {
+      "id": "fix-1",
+      "category": "IMPACT",
+      "title": "Adaugă cifre în experiență",
+      "beforeText": "Am construit un API REST cu Spring Boot.",
+      "afterText": "Am construit un API REST cu Spring Boot, reducând latența cu 20%.",
+      "rationale": "Recrutorii caută rezultate măsurabile."
+    },
+    {
+      "id": "fix-2",
+      "category": "STACK",
+      "title": "Menționează Docker",
+      "beforeText": "Tracker de aplicații cu scor ATS.",
+      "afterText": "Tracker de aplicații cu scor ATS, livrat în Docker.",
+      "rationale": "Docker apare în majoritatea anunțurilor."
+    }
+  ]
+}

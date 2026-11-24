@@ -1,48 +1,22 @@
+import Modal from './ui/Modal';
+import Card from './ui/Card';
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import html2pdf from 'html2pdf.js';
-import { 
-  FileText, 
-  Sparkles, 
-  BrainCircuit, 
-  RefreshCw, 
-  Download, 
-  Check, 
-  Target, 
-  Save, 
-  Zap,
+import {
+  FileText,
+  Sparkles,
+  RefreshCw,
+  Download,
+  Check,
   CheckCircle2,
   AlertTriangle,
-  Briefcase,
-  FolderGit2,
-  GraduationCap,
-  Award,
   Plus,
   Trash2,
-  Code2,
   Database,
   ArrowUp,
   ArrowDown,
-  ArrowRight,
-  Eye,
-  Columns,
-  Maximize2,
-  ExternalLink,
-  Mail,
-  Printer,
-  Phone,
-  MapPin,
-  Linkedin,
-  Github,
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
-  Maximize,
   Edit3,
   X,
-  Link as LinkIcon,
-  Globe,
-  Copy,
   ChevronDown
 } from 'lucide-react';
 import PolishAiCoach from './PolishAiCoach';
@@ -876,18 +850,18 @@ export default function CvStudio({
                 Education
               </span>
               
-              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
-                <button onClick={addEducation} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga o noua scoala">+ new</button>
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-semibold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai sus"><ArrowUp className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai jos"><ArrowDown className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={addEducation} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer" title="Adaugă o școală">+ nou</button>
                 {isMultiPage && (
                   !isPage2 ? (
                     <button 
                       onClick={() => { setSplitSectionKey('education'); setSplitProjectIdx(null); }}
-                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune pe Pagina 2"
+                      className="no-pdf hover:text-neutral-900 hover:bg-brand-50 text-brand-700 border border-brand-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 2"
                     >
-                      Muta pe Pag. 2 ↷
+                      <span>Mută pe pag. 2</span>
                     </button>
                   ) : (
                     <button 
@@ -900,10 +874,10 @@ export default function CvStudio({
                         }
                         setSplitProjectIdx(null);
                       }}
-                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune inapoi pe Pagina 1"
+                      className="no-pdf hover:text-neutral-900 hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 1"
                     >
-                      ↶ Pagina 1
+                      <span>Mută pe pag. 1</span>
                     </button>
                   )
                 )}
@@ -911,7 +885,7 @@ export default function CvStudio({
             </div>
 
             <button onClick={() => deleteSection('education')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-              <Trash2 className="w-3 h-3" /> delete section
+              <Trash2 className="w-3 h-3" /> șterge secțiunea
             </button>
           </div>
 
@@ -921,8 +895,8 @@ export default function CvStudio({
           {educationList.map((edu, eduIdx) => (
             <div key={edu.id || eduIdx} className="mt-1 mb-1.5 group/item relative">
               <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
-                <button onClick={() => moveEducationItem(eduIdx, -1)} disabled={eduIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
-                <button onClick={() => moveEducationItem(eduIdx, 1)} disabled={eduIdx === educationList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+                <button onClick={() => moveEducationItem(eduIdx, -1)} disabled={eduIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-neutral-900 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-semibold disabled:opacity-20 cursor-pointer" title="Mută mai sus"><ArrowUp className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={() => moveEducationItem(eduIdx, 1)} disabled={eduIdx === educationList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-neutral-900 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-semibold disabled:opacity-20 cursor-pointer" title="Mută mai jos"><ArrowDown className="w-3 h-3" aria-hidden="true" /></button>
               </div>
 
               {/* ROW 1: SCHOOL + DATES */}
@@ -936,16 +910,16 @@ export default function CvStudio({
                       updated[eduIdx].school = e.currentTarget.textContent || "";
                       setEducationList(updated);
                     }}
-                    className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                    className="font-semibold text-neutral-900 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
                     style={{ fontSize: '9.5pt' }}
                   >
                     {edu.school}
                   </span>
                   <button 
                     onClick={() => addEduBullet(eduIdx)}
-                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0"
+                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-neutral-900 font-semibold cursor-pointer shrink-0"
                   >
-                    + bullet
+                    + punct
                   </button>
                 </div>
 
@@ -958,7 +932,7 @@ export default function CvStudio({
                       updated[eduIdx].period = e.currentTarget.textContent || "";
                       setEducationList(updated);
                     }}
-                    className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
+                    className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-neutral-900"
                     style={{ fontSize: '9pt' }}
                   >
                     {edu.period || ""}
@@ -968,7 +942,7 @@ export default function CvStudio({
                     <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
                       <button 
                         onClick={(e) => { e.stopPropagation(); deleteEducation(edu.id); }}
-                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
                       >
                         <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                       </button>
@@ -980,8 +954,8 @@ export default function CvStudio({
                       e.stopPropagation();
                       setSelectedTarget({ type: 'item', section: 'education', idx: eduIdx });
                     }}
-                    className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
-                    title="Delete entry"
+                    className="no-pdf text-gray-400 hover:text-neutral-900 p-0.5 cursor-pointer"
+                    title="Șterge intrarea"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -1027,7 +1001,7 @@ export default function CvStudio({
                       <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
                         <button 
                           onClick={(e) => { e.stopPropagation(); deleteEduBullet(eduIdx, bIdx); }}
-                          className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                          className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
                         >
                           <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                         </button>
@@ -1080,18 +1054,18 @@ export default function CvStudio({
                 Experience
               </span>
               
-              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
-                <button onClick={addExperience} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga experienta">+ new</button>
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-semibold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai sus"><ArrowUp className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai jos"><ArrowDown className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={addExperience} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer" title="Adaugă experiență">+ nou</button>
                 {isMultiPage && (
                   !isPage2 ? (
                     <button 
                       onClick={() => { setSplitSectionKey('experience'); setSplitProjectIdx(null); }}
-                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune pe Pagina 2"
+                      className="no-pdf hover:text-neutral-900 hover:bg-brand-50 text-brand-700 border border-brand-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 2"
                     >
-                      Muta pe Pag. 2 ↷
+                      <span>Mută pe pag. 2</span>
                     </button>
                   ) : (
                     <button 
@@ -1104,10 +1078,10 @@ export default function CvStudio({
                         }
                         setSplitProjectIdx(null);
                       }}
-                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune inapoi pe Pagina 1"
+                      className="no-pdf hover:text-neutral-900 hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 1"
                     >
-                      ↶ Pagina 1
+                      <span>Mută pe pag. 1</span>
                     </button>
                   )
                 )}
@@ -1115,7 +1089,7 @@ export default function CvStudio({
             </div>
 
             <button onClick={() => deleteSection('experience')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-              <Trash2 className="w-3 h-3" /> delete section
+              <Trash2 className="w-3 h-3" /> șterge secțiunea
             </button>
           </div>
 
@@ -1125,8 +1099,8 @@ export default function CvStudio({
           {experienceList.map((exp, expIdx) => (
             <div key={exp.id || expIdx} className="mt-1.5 mb-2 group/item relative">
               <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
-                <button onClick={() => moveExperienceItem(expIdx, -1)} disabled={expIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
-                <button onClick={() => moveExperienceItem(expIdx, 1)} disabled={expIdx === experienceList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+                <button onClick={() => moveExperienceItem(expIdx, -1)} disabled={expIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-neutral-900 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-semibold disabled:opacity-20 cursor-pointer" title="Mută mai sus"><ArrowUp className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={() => moveExperienceItem(expIdx, 1)} disabled={expIdx === experienceList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-neutral-900 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-semibold disabled:opacity-20 cursor-pointer" title="Mută mai jos"><ArrowDown className="w-3 h-3" aria-hidden="true" /></button>
               </div>
 
               {/* ROW 1: ROLE + DATES */}
@@ -1140,16 +1114,16 @@ export default function CvStudio({
                       updated[expIdx].role = e.currentTarget.textContent || "";
                       setExperienceList(updated);
                     }}
-                    className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                    className="font-semibold text-neutral-900 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
                     style={{ fontSize: '9.5pt' }}
                   >
                     {exp.role}
                   </span>
                   <button 
                     onClick={() => addExpBullet(expIdx)}
-                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0"
+                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-neutral-900 font-semibold cursor-pointer shrink-0"
                   >
-                    + bullet
+                    + punct
                   </button>
                 </div>
 
@@ -1162,7 +1136,7 @@ export default function CvStudio({
                       updated[expIdx].period = e.currentTarget.textContent || "";
                       setExperienceList(updated);
                     }}
-                    className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
+                    className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-neutral-900"
                     style={{ fontSize: '9pt' }}
                   >
                     {exp.period || ""}
@@ -1172,7 +1146,7 @@ export default function CvStudio({
                     <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
                       <button 
                         onClick={(e) => { e.stopPropagation(); deleteExperience(exp.id); }}
-                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
                       >
                         <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                       </button>
@@ -1184,8 +1158,8 @@ export default function CvStudio({
                       e.stopPropagation();
                       setSelectedTarget({ type: 'item', section: 'experience', idx: expIdx });
                     }}
-                    className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
-                    title="Delete entry"
+                    className="no-pdf text-gray-400 hover:text-neutral-900 p-0.5 cursor-pointer"
+                    title="Șterge intrarea"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -1237,7 +1211,7 @@ export default function CvStudio({
                         <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
                           <button 
                             onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
-                            className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                            className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
                           >
                             <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                           </button>
@@ -1274,18 +1248,18 @@ export default function CvStudio({
                         {b}
                       </div>
 
-                      <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
+                      <div className="no-pdf transition flex items-center gap-1 shrink-0 pt-0.5">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleOpenBulletRewrite('experience', expIdx, bIdx, b);
                           }}
-                          className={`px-1.5 py-0.5 border rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs transition ${
+                          className={`px-1.5 py-0.5 border rounded text-[9px] font-semibold flex items-center gap-0.5 cursor-pointer transition ${
                             isRewritingThisBullet
-                              ? 'bg-amber-500 text-white border-amber-600'
-                              : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
+                              ? 'bg-brand-500 text-white border-amber-600'
+                              : 'bg-brand-50 hover:bg-brand-100 text-neutral-800 border-brand-300'
                           }`}
-                          title="Rescrie acest punct cu asistenta AI"
+                          title="Rescrie punctul cu AI"
                         >
                           <Sparkles className={`w-2.5 h-2.5 ${isRewritingThisBullet ? 'text-white' : 'text-amber-600'}`} />
                           <span>AI</span>
@@ -1293,7 +1267,7 @@ export default function CvStudio({
                         <button 
                           onClick={(e) => { e.stopPropagation(); deleteExpBullet(expIdx, bIdx); }}
                           className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
-                          title="Sterge bullet"
+                          title="Șterge punctul"
                         >
                           <Trash2 className="w-2.5 h-2.5" />
                         </button>
@@ -1306,7 +1280,7 @@ export default function CvStudio({
                         {activeRewritingBullet.loading ? (
                           <div className="flex items-center gap-1.5 text-neutral-600 py-0.5 text-xs">
                             <RefreshCw className="w-3.5 h-3.5 animate-spin text-neutral-800" />
-                            <span className="text-[11px] font-medium">Generare sugestie AI...</span>
+                            <span className="text-[11px] font-medium">Se generează sugestia AI...</span>
                           </div>
                         ) : activeRewritingBullet.suggestion ? (
                           <>
@@ -1323,8 +1297,8 @@ export default function CvStudio({
                                   e.stopPropagation();
                                   handleSelectBulletVariation(activeRewritingBullet.suggestion);
                                 }}
-                                title="Accepta modificarea"
-                                className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-2xs transition cursor-pointer flex items-center justify-center"
+                                title="Acceptă modificarea"
+                                className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition cursor-pointer flex items-center justify-center"
                               >
                                 <Check className="w-3.5 h-3.5" />
                               </button>
@@ -1334,7 +1308,7 @@ export default function CvStudio({
                                   e.stopPropagation();
                                   setActiveRewritingBullet(null);
                                 }}
-                                title="Refuza modificarea"
+                                title="Refuză modificarea"
                                 className="p-1.5 bg-gray-100 hover:bg-rose-100 text-gray-600 hover:text-rose-700 border border-gray-200 hover:border-rose-300 rounded-lg transition cursor-pointer flex items-center justify-center"
                               >
                                 <X className="w-3.5 h-3.5" />
@@ -1349,7 +1323,7 @@ export default function CvStudio({
                               onClick={(e) => { e.stopPropagation(); setActiveRewritingBullet(null); }}
                               className="text-neutral-500 hover:text-neutral-800 text-[10px] font-medium cursor-pointer"
                             >
-                              Inchide
+                              Închide
                             </button>
                           </div>
                         )}
@@ -1396,18 +1370,18 @@ export default function CvStudio({
                 Projects {isSplitHere ? (isPage2 ? '(Continuare)' : '') : ''}
               </span>
               
-              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
-                <button onClick={addProject} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga proiect">+ new</button>
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-semibold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai sus"><ArrowUp className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai jos"><ArrowDown className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={addProject} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer" title="Adaugă proiect">+ nou</button>
                 {isMultiPage && (
                   !isPage2 ? (
                     <button 
                       onClick={() => { setSplitSectionKey('projects'); setSplitProjectIdx(null); }}
-                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune pe Pagina 2"
+                      className="no-pdf hover:text-neutral-900 hover:bg-brand-50 text-brand-700 border border-brand-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 2"
                     >
-                      Muta pe Pag. 2 ↷
+                      <span>Mută pe pag. 2</span>
                     </button>
                   ) : (
                     <button 
@@ -1420,10 +1394,10 @@ export default function CvStudio({
                         }
                         setSplitProjectIdx(null);
                       }}
-                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune inapoi pe Pagina 1"
+                      className="no-pdf hover:text-neutral-900 hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 1"
                     >
-                      ↶ Pagina 1
+                      <span>Mută pe pag. 1</span>
                     </button>
                   )
                 )}
@@ -1431,7 +1405,7 @@ export default function CvStudio({
             </div>
 
             <button onClick={() => deleteSection('projects')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-              <Trash2 className="w-3 h-3" /> delete section
+              <Trash2 className="w-3 h-3" /> șterge secțiunea
             </button>
           </div>
 
@@ -1443,8 +1417,8 @@ export default function CvStudio({
             return (
               <div key={proj.id || projIdx} className="mt-1.5 mb-2 group/item relative">
                 <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
-                  <button onClick={() => moveProjectItem(projIdx, -1)} disabled={projIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
-                  <button onClick={() => moveProjectItem(projIdx, 1)} disabled={projIdx === projectsList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+                  <button onClick={() => moveProjectItem(projIdx, -1)} disabled={projIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-neutral-900 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-semibold disabled:opacity-20 cursor-pointer" title="Mută mai sus"><ArrowUp className="w-3 h-3" aria-hidden="true" /></button>
+                  <button onClick={() => moveProjectItem(projIdx, 1)} disabled={projIdx === projectsList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-neutral-900 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-semibold disabled:opacity-20 cursor-pointer" title="Mută mai jos"><ArrowDown className="w-3 h-3" aria-hidden="true" /></button>
                 </div>
 
                 {/* ROW 1: TITLE + TECH STACK + (+ ADD LINK) + (+ BULLET) + DATES */}
@@ -1458,7 +1432,7 @@ export default function CvStudio({
                         updated[projIdx].title = e.currentTarget.textContent || "";
                         setProjectsList(updated);
                       }}
-                      className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                      className="font-semibold text-neutral-900 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
                       style={{ fontSize: '9.5pt' }}
                     >
                       {proj.title}
@@ -1487,7 +1461,7 @@ export default function CvStudio({
                           href={proj.linkUrl.startsWith('http') ? proj.linkUrl : `https://${proj.linkUrl}`} 
                           target="_blank" 
                           rel="noreferrer"
-                          className="text-black underline font-normal hover:text-gray-700"
+                          className="text-neutral-900 underline font-normal hover:text-gray-700"
                           style={{ fontSize: '8.5pt' }}
                         >
                           ({proj.linkText || proj.linkUrl})
@@ -1500,7 +1474,7 @@ export default function CvStudio({
                             setProjectsList(updated);
                           }}
                           className="no-pdf text-gray-400 hover:text-rose-600 cursor-pointer"
-                          title="Sterge link"
+                          title="Șterge link"
                         >
                           <X className="w-2.5 h-2.5" />
                         </button>
@@ -1516,17 +1490,17 @@ export default function CvStudio({
                           updated[projIdx].linkText = text || url;
                           setProjectsList(updated);
                         }}
-                        className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0"
+                        className="no-pdf text-[10px] font-sans text-gray-400 hover:text-neutral-900 font-semibold cursor-pointer shrink-0"
                       >
-                        + add link
+                        + link
                       </button>
                     )}
 
                     <button 
                       onClick={() => addProjectBullet(projIdx)}
-                      className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0 ml-1"
+                      className="no-pdf text-[10px] font-sans text-gray-400 hover:text-neutral-900 font-semibold cursor-pointer shrink-0 ml-1"
                     >
-                      + bullet
+                      + punct
                     </button>
                   </div>
 
@@ -1539,7 +1513,7 @@ export default function CvStudio({
                         updated[projIdx].period = e.currentTarget.textContent || "";
                         setProjectsList(updated);
                       }}
-                      className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
+                      className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-neutral-900"
                       style={{ fontSize: '9pt' }}
                     >
                       {proj.period || ""}
@@ -1549,7 +1523,7 @@ export default function CvStudio({
                       <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
                         <button 
                           onClick={(e) => { e.stopPropagation(); deleteProject(proj.id); }}
-                          className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                          className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
                         >
                           <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                         </button>
@@ -1561,8 +1535,8 @@ export default function CvStudio({
                         e.stopPropagation();
                         setSelectedTarget({ type: 'item', section: 'projects', idx: projIdx });
                       }}
-                      className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
-                      title="Delete entry"
+                      className="no-pdf text-gray-400 hover:text-neutral-900 p-0.5 cursor-pointer"
+                      title="Șterge intrarea"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -1584,7 +1558,7 @@ export default function CvStudio({
                           <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
                             <button 
                               onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
-                              className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                              className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
                             >
                               <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                             </button>
@@ -1621,18 +1595,18 @@ export default function CvStudio({
                           {b}
                         </div>
 
-                        <div className="no-pdf opacity-0 group-hover/b:opacity-100 transition flex items-center gap-1 shrink-0 pt-0.5">
+                        <div className="no-pdf transition flex items-center gap-1 shrink-0 pt-0.5">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleOpenBulletRewrite('projects', projIdx, bIdx, b);
                             }}
-                            className={`px-1.5 py-0.5 border rounded text-[9px] font-bold flex items-center gap-0.5 cursor-pointer shadow-2xs transition ${
+                            className={`px-1.5 py-0.5 border rounded text-[9px] font-semibold flex items-center gap-0.5 cursor-pointer transition ${
                               isRewritingThisBullet
-                                ? 'bg-amber-500 text-white border-amber-600'
-                                : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
+                                ? 'bg-brand-500 text-white border-amber-600'
+                                : 'bg-brand-50 hover:bg-brand-100 text-neutral-800 border-brand-300'
                             }`}
-                            title="Rescrie acest punct cu asistenta AI"
+                            title="Rescrie punctul cu AI"
                           >
                             <Sparkles className={`w-2.5 h-2.5 ${isRewritingThisBullet ? 'text-white' : 'text-amber-600'}`} />
                             <span>AI</span>
@@ -1640,7 +1614,7 @@ export default function CvStudio({
                           <button 
                             onClick={(e) => { e.stopPropagation(); deleteProjectBullet(projIdx, bIdx); }}
                             className="p-0.5 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded cursor-pointer"
-                            title="Sterge bullet"
+                            title="Șterge punctul"
                           >
                             <Trash2 className="w-2.5 h-2.5" />
                           </button>
@@ -1653,7 +1627,7 @@ export default function CvStudio({
                           {activeRewritingBullet.loading ? (
                             <div className="flex items-center gap-1.5 text-neutral-600 py-0.5 text-xs">
                               <RefreshCw className="w-3.5 h-3.5 animate-spin text-neutral-800" />
-                              <span className="text-[11px] font-medium">Generare sugestie AI...</span>
+                              <span className="text-[11px] font-medium">Se generează sugestia AI...</span>
                             </div>
                           ) : activeRewritingBullet.suggestion ? (
                             <>
@@ -1670,8 +1644,8 @@ export default function CvStudio({
                                     e.stopPropagation();
                                     handleSelectBulletVariation(activeRewritingBullet.suggestion);
                                   }}
-                                  title="Accepta modificarea"
-                                  className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-2xs transition cursor-pointer flex items-center justify-center"
+                                  title="Acceptă modificarea"
+                                  className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition cursor-pointer flex items-center justify-center"
                                 >
                                   <Check className="w-3.5 h-3.5" />
                                 </button>
@@ -1681,7 +1655,7 @@ export default function CvStudio({
                                     e.stopPropagation();
                                     setActiveRewritingBullet(null);
                                   }}
-                                  title="Refuza modificarea"
+                                  title="Refuză modificarea"
                                   className="p-1.5 bg-gray-100 hover:bg-rose-100 text-gray-600 hover:text-rose-700 border border-gray-200 hover:border-rose-300 rounded-lg transition cursor-pointer flex items-center justify-center"
                                 >
                                   <X className="w-3.5 h-3.5" />
@@ -1696,7 +1670,7 @@ export default function CvStudio({
                                 onClick={(e) => { e.stopPropagation(); setActiveRewritingBullet(null); }}
                                 className="text-neutral-500 hover:text-neutral-800 text-[10px] font-medium cursor-pointer"
                               >
-                                Inchide
+                                Închide
                               </button>
                             </div>
                           )}
@@ -1729,18 +1703,18 @@ export default function CvStudio({
                 Certifications
               </span>
               
-              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
-                <button onClick={addCertification} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga certificare">+ new</button>
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-semibold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai sus"><ArrowUp className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai jos"><ArrowDown className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={addCertification} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer" title="Adaugă certificare">+ nou</button>
                 {isMultiPage && (
                   !isPage2 ? (
                     <button 
                       onClick={() => { setSplitSectionKey('certifications'); setSplitProjectIdx(null); }}
-                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune pe Pagina 2"
+                      className="no-pdf hover:text-neutral-900 hover:bg-brand-50 text-brand-700 border border-brand-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 2"
                     >
-                      Muta pe Pag. 2 ↷
+                      <span>Mută pe pag. 2</span>
                     </button>
                   ) : (
                     <button 
@@ -1753,10 +1727,10 @@ export default function CvStudio({
                         }
                         setSplitProjectIdx(null);
                       }}
-                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune inapoi pe Pagina 1"
+                      className="no-pdf hover:text-neutral-900 hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 1"
                     >
-                      ↶ Pagina 1
+                      <span>Mută pe pag. 1</span>
                     </button>
                   )
                 )}
@@ -1764,7 +1738,7 @@ export default function CvStudio({
             </div>
 
             <button onClick={() => deleteSection('certifications')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-              <Trash2 className="w-3 h-3" /> delete section
+              <Trash2 className="w-3 h-3" /> șterge secțiunea
             </button>
           </div>
 
@@ -1774,8 +1748,8 @@ export default function CvStudio({
           {certificationsList.map((cert, certIdx) => (
             <div key={cert.id || certIdx} className="mt-1.5 mb-2 group/item relative">
               <div className="no-pdf absolute -left-12 top-0.5 opacity-0 group-hover/item:opacity-100 transition flex items-center gap-1">
-                <button onClick={() => moveCertificationItem(certIdx, -1)} disabled={certIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai sus">↑</button>
-                <button onClick={() => moveCertificationItem(certIdx, 1)} disabled={certIdx === certificationsList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta mai jos">↓</button>
+                <button onClick={() => moveCertificationItem(certIdx, -1)} disabled={certIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-neutral-900 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-semibold disabled:opacity-20 cursor-pointer" title="Mută mai sus"><ArrowUp className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={() => moveCertificationItem(certIdx, 1)} disabled={certIdx === certificationsList.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-neutral-900 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-semibold disabled:opacity-20 cursor-pointer" title="Mută mai jos"><ArrowDown className="w-3 h-3" aria-hidden="true" /></button>
               </div>
 
               {/* ROW 1: CERT NAME + ISSUER + DATES */}
@@ -1789,7 +1763,7 @@ export default function CvStudio({
                       updated[certIdx].name = e.currentTarget.textContent || "";
                       setCertificationsList(updated);
                     }}
-                    className="font-bold text-black outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
+                    className="font-semibold text-neutral-900 outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block"
                     style={{ fontSize: '9.5pt' }}
                   >
                     {cert.name}
@@ -1816,9 +1790,9 @@ export default function CvStudio({
 
                   <button 
                     onClick={() => addCertBullet(certIdx)}
-                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer shrink-0 ml-1"
+                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-neutral-900 font-semibold cursor-pointer shrink-0 ml-1"
                   >
-                    + bullet
+                    + punct
                   </button>
                 </div>
 
@@ -1831,7 +1805,7 @@ export default function CvStudio({
                       updated[certIdx].period = e.currentTarget.textContent || "";
                       setCertificationsList(updated);
                     }}
-                    className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-black"
+                    className="text-right outline-none border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1 py-0.5 rounded transition cursor-text inline-block min-w-[30px] text-neutral-900"
                     style={{ fontSize: '9pt' }}
                   >
                     {cert.period || ""}
@@ -1841,7 +1815,7 @@ export default function CvStudio({
                     <div className="no-pdf absolute bottom-full right-0 mb-1 z-40 animate-in fade-in">
                       <button 
                         onClick={(e) => { e.stopPropagation(); deleteCertification(cert.id); }}
-                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
                       >
                         <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                       </button>
@@ -1853,8 +1827,8 @@ export default function CvStudio({
                       e.stopPropagation();
                       setSelectedTarget({ type: 'item', section: 'certifications', idx: certIdx });
                     }}
-                    className="no-pdf text-gray-400 hover:text-black p-0.5 cursor-pointer"
-                    title="Delete entry"
+                    className="no-pdf text-gray-400 hover:text-neutral-900 p-0.5 cursor-pointer"
+                    title="Șterge intrarea"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -1870,7 +1844,7 @@ export default function CvStudio({
                       <div className="no-pdf absolute bottom-full left-4 mb-1 z-40 animate-in fade-in">
                         <button 
                           onClick={(e) => { e.stopPropagation(); deleteCertBullet(certIdx, bIdx); }}
-                          className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                          className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
                         >
                           <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                         </button>
@@ -1923,18 +1897,18 @@ export default function CvStudio({
                 Technical Skills
               </span>
               
-              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
-                <button onClick={addSkillField} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer shadow-2xs" title="Adauga o noua categorie de skill-uri">+ field</button>
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-semibold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai sus"><ArrowUp className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai jos"><ArrowDown className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={addSkillField} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer" title="Adaugă o categorie de competențe">+ câmp</button>
                 {isMultiPage && (
                   !isPage2 ? (
                     <button 
                       onClick={() => { setSplitSectionKey('skills'); setSplitProjectIdx(null); }}
-                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune pe Pagina 2"
+                      className="no-pdf hover:text-neutral-900 hover:bg-brand-50 text-brand-700 border border-brand-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 2"
                     >
-                      Muta pe Pag. 2 ↷
+                      <span>Mută pe pag. 2</span>
                     </button>
                   ) : (
                     <button 
@@ -1947,10 +1921,10 @@ export default function CvStudio({
                         }
                         setSplitProjectIdx(null);
                       }}
-                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune inapoi pe Pagina 1"
+                      className="no-pdf hover:text-neutral-900 hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 1"
                     >
-                      ↶ Pagina 1
+                      <span>Mută pe pag. 1</span>
                     </button>
                   )
                 )}
@@ -1958,28 +1932,28 @@ export default function CvStudio({
             </div>
 
             <button onClick={() => deleteSection('skills')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-              <Trash2 className="w-3 h-3" /> delete section
+              <Trash2 className="w-3 h-3" /> șterge secțiunea
             </button>
           </div>
 
           <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
 
           {/* SKILLS ROWS */}
-          <div className="space-y-0.5 mt-1 text-black" style={{ fontSize: '8.5pt', lineHeight: '1.4' }}>
+          <div className="space-y-0.5 mt-1 text-neutral-900" style={{ fontSize: '8.5pt', lineHeight: '1.4' }}>
             {skillsFields.map((field, fieldIdx) => (
               <div key={field.id || fieldIdx} className="group/f relative leading-normal">
                 <div className="no-pdf absolute -left-12 top-0 opacity-0 group-hover/f:opacity-100 transition flex items-center gap-1">
-                  <button onClick={() => moveSkillFieldItem(fieldIdx, -1)} disabled={fieldIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta categoria mai sus">↑</button>
-                  <button onClick={() => moveSkillFieldItem(fieldIdx, 1)} disabled={fieldIdx === skillsFields.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-black border border-gray-200 px-1.5 py-0.5 rounded text-xs font-bold shadow-sm disabled:opacity-20 cursor-pointer" title="Muta categoria mai jos">↓</button>
+                  <button onClick={() => moveSkillFieldItem(fieldIdx, -1)} disabled={fieldIdx === 0} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-neutral-900 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-semibold disabled:opacity-20 cursor-pointer" title="Mută categoria mai sus"><ArrowUp className="w-3 h-3" aria-hidden="true" /></button>
+                  <button onClick={() => moveSkillFieldItem(fieldIdx, 1)} disabled={fieldIdx === skillsFields.length - 1} className="bg-white hover:bg-gray-100 text-gray-600 hover:text-neutral-900 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-semibold disabled:opacity-20 cursor-pointer" title="Mută categoria mai jos"><ArrowDown className="w-3 h-3" aria-hidden="true" /></button>
                 </div>
 
                 {/* FIELD LABEL */}
-                <span className="cv-popup-target relative inline font-bold">
+                <span className="cv-popup-target relative inline font-semibold">
                   {selectedTarget?.type === 'field' && selectedTarget?.idx === fieldIdx && (
                     <div className="no-pdf absolute bottom-full left-0 mb-1 z-40 animate-in fade-in">
                       <button 
                         onClick={(e) => { e.stopPropagation(); deleteSkillField(fieldIdx); }}
-                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                        className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
                       >
                         <Trash2 className="w-3 h-3 text-gray-500" /> Delete Field
                       </button>
@@ -2016,7 +1990,7 @@ export default function CvStudio({
                         <div className="no-pdf absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-40 animate-in fade-in">
                           <button 
                             onClick={(e) => { e.stopPropagation(); deleteSkillItem(fieldIdx, itemIdx); }}
-                            className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                            className="bg-white hover:bg-gray-100 text-gray-700 hover:text-rose-600 border border-gray-300 shadow-md px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
                           >
                             <Trash2 className="w-3 h-3 text-gray-500" /> Delete
                           </button>
@@ -2037,7 +2011,7 @@ export default function CvStudio({
                         }}
                         className={`outline-none border px-0.5 rounded transition ${
                           isSkillSelected 
-                            ? 'border-gray-400 bg-gray-100/40 text-black font-medium' 
+                            ? 'border-gray-400 bg-gray-100/40 text-neutral-900 font-medium' 
                             : 'border-transparent hover:border-gray-300 hover:bg-gray-50/50'
                         }`}
                       >
@@ -2054,7 +2028,7 @@ export default function CvStudio({
                     <input
                       type="text"
                       autoFocus
-                      placeholder="Scrie skill..."
+                      placeholder="Scrie o competență..."
                       value={newSkillText}
                       onChange={e => setNewSkillText(e.target.value)}
                       onKeyDown={e => {
@@ -2062,16 +2036,16 @@ export default function CvStudio({
                         if (e.key === 'Escape') { setAddingSkillFieldIdx(null); setNewSkillText(""); }
                       }}
                       onBlur={() => handleCommitSkill(fieldIdx)}
-                      className="no-pdf border border-gray-400 bg-gray-50 px-1.5 py-0.5 rounded text-[8.5pt] outline-none text-black font-medium w-24 shadow-2xs"
+                      className="no-pdf border border-gray-400 bg-gray-50 px-1.5 py-0.5 rounded text-[8.5pt] outline-none text-neutral-900 font-medium w-24"
                     />
                   </span>
                 ) : (
                   <button
                     onClick={() => { setAddingSkillFieldIdx(fieldIdx); setNewSkillText(""); }}
-                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-black font-semibold cursor-pointer px-1 hover:bg-gray-100 rounded ml-1 inline"
-                    title={`Adauga skill in ${field.label}`}
+                    className="no-pdf text-[10px] font-sans text-gray-400 hover:text-neutral-900 font-semibold cursor-pointer px-1 hover:bg-gray-100 rounded ml-1 inline"
+                    title={`Adaugă competență în ${field.label}`}
                   >
-                    + add
+                    + adaugă
                   </button>
                 )}
               </div>
@@ -2097,17 +2071,17 @@ export default function CvStudio({
               }}>
                 Professional Summary
               </span>
-              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-bold">
-                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai sus">↑</button>
-                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-black hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer shadow-2xs" title="Muta mai jos">↓</button>
+              <div className="no-pdf flex items-center gap-1 font-sans text-xs text-gray-500 font-semibold">
+                <button onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai sus"><ArrowUp className="w-3 h-3" aria-hidden="true" /></button>
+                <button onClick={() => moveSection(sIdx, 1)} disabled={sIdx === sectionOrder.length - 1} className="hover:text-neutral-900 hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs disabled:opacity-20 cursor-pointer" title="Mută mai jos"><ArrowDown className="w-3 h-3" aria-hidden="true" /></button>
                 {isMultiPage && (
                   !isPage2 ? (
                     <button 
                       onClick={() => { setSplitSectionKey('summary'); setSplitProjectIdx(null); }}
-                      className="no-pdf hover:text-black hover:bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune pe Pagina 2"
+                      className="no-pdf hover:text-neutral-900 hover:bg-brand-50 text-brand-700 border border-brand-300 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 2"
                     >
-                      Muta pe Pag. 2 ↷
+                      <span>Mută pe pag. 2</span>
                     </button>
                   ) : (
                     <button 
@@ -2120,17 +2094,17 @@ export default function CvStudio({
                         }
                         setSplitProjectIdx(null);
                       }}
-                      className="no-pdf hover:text-black hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer shadow-2xs ml-1"
-                      title="Muta aceasta sectiune inapoi pe Pagina 1"
+                      className="no-pdf hover:text-neutral-900 hover:bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer ml-1"
+                      title="Mută această secțiune pe pagina 1"
                     >
-                      ↶ Pagina 1
+                      <span>Mută pe pag. 1</span>
                     </button>
                   )
                 )}
               </div>
             </div>
             <button onClick={() => deleteSection('summary')} className="no-pdf text-[11px] font-sans text-gray-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer">
-              <Trash2 className="w-3 h-3" /> delete section
+              <Trash2 className="w-3 h-3" /> șterge secțiunea
             </button>
           </div>
           <div style={{ width: '100%', height: '1px', backgroundColor: '#000000', marginTop: '2px', marginBottom: '4px' }}></div>
@@ -2167,31 +2141,31 @@ export default function CvStudio({
     <div className="space-y-6 w-full max-w-[210mm] mx-auto pb-16 font-sans">
       
       {/* ================= MODERN WORKSPACE TOOLBAR ================= */}
-      <div className="w-full bg-white border border-neutral-200 p-4 rounded-xl space-y-3.5 text-neutral-900">
+      <Card padding="p-4" className="w-full space-y-3.5 text-neutral-900">
         
         {/* ROW 1: TITLE, STATUS & A4 PAGE CONTROLLER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <div className="p-1.5 bg-black text-white rounded-lg shrink-0">
+              <div className="p-1.5 bg-brand-500 text-white rounded-lg shrink-0">
                 <FileText className="w-4 h-4" />
               </div>
               <input 
                 type="text" 
                 value={cvTitle} 
                 onChange={e => setCvTitle(e.target.value)} 
-                placeholder="Denumire CV..." 
-                className="font-bold text-base sm:text-lg text-neutral-950 bg-transparent border-b border-transparent hover:border-neutral-300 focus:border-black outline-none transition px-0.5"
-                title="Apasa pentru a redenumi aceasta versiune de CV"
+                placeholder="Denumire CV" 
+                className="font-semibold text-base sm:text-lg text-neutral-950 bg-transparent border-b border-transparent hover:border-neutral-300 focus:border-brand-500 outline-none transition px-0.5"
+                title="Redenumește CV-ul"
               />
               
               {/* REAL-TIME AUTO-SAVE STATUS PILL */}
               {isAutoSaving ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-neutral-500 bg-neutral-100 px-2.5 py-0.5 rounded-md">
-                  <RefreshCw className="w-3 h-3 animate-spin text-neutral-400" /> Se salveaza...
+                <span className="inline-flex items-center gap-1 text-[11px] text-neutral-500 bg-neutral-100 px-2.5 py-0.5 rounded-md">
+                  <RefreshCw className="w-3 h-3 animate-spin text-neutral-400" /> Se salvează...
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-neutral-800 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-md">
+                <span className="inline-flex items-center gap-1 text-[11px] text-neutral-800 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-md">
                   <CheckCircle2 className="w-3 h-3 text-neutral-900" /> Salvat
                 </span>
               )}
@@ -2201,58 +2175,54 @@ export default function CvStudio({
           {/* RIGHT: REAL-TIME A4 PAGE CONTROLLER (COMPACT SEGMENTED PILL) */}
           <div className="flex items-center gap-1.5 self-start sm:self-auto bg-neutral-100 p-1 rounded-xl border border-neutral-200">
             <div 
-              className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 transition ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
                 isMultiPage
-                  ? 'bg-neutral-900 text-white border border-black' 
+                  ? 'bg-brand-500 text-white border border-brand-500' 
                   : 'bg-white text-neutral-900 border border-neutral-300'
               }`}
-              title={
-                isMultiPage
-                  ? `CV-ul este structurat pe 2 pagini A4 (${pageStats.percent}% raportat la Pag. 1).`
-                  : `CV-ul se incadreaza pe 1 pagina A4 (${pageStats.percent}% spatiu utilizat).`
-              }
+              title={`${pageStats.percent}% din pagina 1`}
             >
               {isMultiPage ? (
                 <>
-                  <AlertTriangle className="w-3.5 h-3.5 text-neutral-200 shrink-0" />
-                  <span>2 Pagini ({pageStats.percent}%)</span>
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>2 pagini ({pageStats.percent}%)</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-3.5 h-3.5 text-neutral-900 shrink-0" />
-                  <span>1 Pagina ({pageStats.percent}%)</span>
+                  <span>1 pagină ({pageStats.percent}%)</span>
                 </>
               )}
             </div>
 
             {/* SEGMENTED TOGGLE BUTTONS */}
-            <div className="flex items-center bg-neutral-200/60 p-0.5 rounded-lg text-xs font-medium font-mono">
+            <div className="flex items-center bg-neutral-200/60 p-0.5 rounded-lg text-xs font-medium">
               <button
                 onClick={() => setPageLayoutMode('auto')}
                 className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
-                  pageLayoutMode === 'auto' ? 'bg-white text-black font-semibold' : 'text-neutral-500 hover:text-black'
+                  pageLayoutMode === 'auto' ? 'bg-white text-neutral-900 font-semibold' : 'text-neutral-500 hover:text-neutral-900'
                 }`}
-                title="Detecteaza automat: adauga a doua pagina doar cand continutul depaseste prima pagina"
+                title="Pagina 2 apare doar când conținutul depășește prima pagină"
               >
                 Auto
               </button>
               <button
                 onClick={() => setPageLayoutMode('1')}
                 className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
-                  pageLayoutMode === '1' ? 'bg-white text-black font-semibold' : 'text-neutral-500 hover:text-black'
+                  pageLayoutMode === '1' ? 'bg-white text-neutral-900 font-semibold' : 'text-neutral-500 hover:text-neutral-900'
                 }`}
-                title="Forteaza vizualizarea stricta pe 1 pagina A4"
+                title="Forțează o singură pagină A4"
               >
-                1 Pagina
+                1 pagină
               </button>
               <button
                 onClick={() => setPageLayoutMode('2')}
                 className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
-                  pageLayoutMode === '2' ? 'bg-white text-black font-semibold' : 'text-neutral-500 hover:text-black'
+                  pageLayoutMode === '2' ? 'bg-white text-neutral-900 font-semibold' : 'text-neutral-500 hover:text-neutral-900'
                 }`}
-                title="Adauga Pagina 2 si separa continutul pe 2 foi fizice A4"
+                title="Adaugă pagina 2"
               >
-                2 Pagini
+                2 pagini
               </button>
             </div>
           </div>
@@ -2272,12 +2242,12 @@ export default function CvStudio({
               onClick={() => setShowPolishCoach(!showPolishCoach)}
               className={`px-3 py-1.5 rounded-xl font-medium text-xs flex items-center gap-1.5 border transition cursor-pointer ${
                 showPolishCoach 
-                  ? 'bg-black text-white border-black' 
+                  ? 'bg-brand-500 text-white border-brand-500' 
                   : 'bg-white hover:bg-neutral-50 text-neutral-800 border-neutral-300'
               }`}
-              title="Deschide panoul AI Review pentru diagnostic si sugestii de optimizare"
+              title="Deschide AI Review"
             >
-              <Sparkles className="w-3.5 h-3.5 text-neutral-500" />
+              <Sparkles className="w-3.5 h-3.5" />
               <span>AI Review</span>
             </button>
 
@@ -2286,18 +2256,18 @@ export default function CvStudio({
                 <div className="relative">
                   <button
                     onClick={() => setShowAddSectionDropdown(!showAddSectionDropdown)}
-                    className="px-2.5 py-1.5 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-black border border-neutral-300 rounded-xl font-medium text-xs flex items-center gap-1 transition cursor-pointer"
-                    title="Adauga inapoi sectiunile eliminate"
+                    className="px-2.5 py-1.5 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 border border-neutral-300 rounded-xl font-medium text-xs flex items-center gap-1 transition cursor-pointer"
+                    title="Adaugă înapoi secțiunile eliminate"
                   >
                     <Plus className="w-3.5 h-3.5 text-neutral-600" />
-                    <span>Sectiuni ({missingSections.length})</span>
+                    <span>Secțiuni ({missingSections.length})</span>
                     <ChevronDown className="w-3 h-3 text-neutral-500" />
                   </button>
 
                   {showAddSectionDropdown && (
                     <div className="absolute left-0 mt-1.5 w-44 bg-white border border-neutral-200 rounded-xl shadow-lg z-30 py-1 font-sans text-xs">
-                      <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-neutral-400">
-                        Restaureaza sectiune
+                      <div className="px-3 py-1 text-[10px] font-medium text-neutral-400">
+                        Restaurează secțiunea
                       </div>
                       {missingSections.map(key => (
                         <button
@@ -2321,32 +2291,32 @@ export default function CvStudio({
           {/* RIGHT CLUSTER: EXPORT & PDF DOWNLOAD */}
           <div className="flex items-center gap-1.5 flex-wrap">
             {/* COMPACT FILENAME INPUT */}
-            <div className="hidden sm:flex items-center bg-white border border-neutral-300 rounded-xl px-2.5 py-1 text-xs text-neutral-700 focus-within:border-black transition">
+            <div className="hidden sm:flex items-center bg-white border border-neutral-300 rounded-xl px-2.5 py-1 text-xs text-neutral-700 focus-within:border-brand-500 transition">
               <FileText className="w-3.5 h-3.5 text-neutral-400 mr-1.5 shrink-0" />
               <input 
                 type="text" 
                 value={pdfCustomName} 
                 onChange={e => setPdfCustomName(e.target.value)} 
-                title="Editeaza numele fisierului PDF descarcat"
-                placeholder="Nume fisier..." 
+                title="Numele fișierului PDF"
+                placeholder="Nume fișier" 
                 className="bg-transparent text-xs text-neutral-900 outline-none w-28 sm:w-36 font-medium placeholder-neutral-400" 
               />
-              <span className="text-neutral-400 text-xs font-mono select-none">.pdf</span>
+              <span className="text-neutral-400 text-xs select-none">.pdf</span>
             </div>
 
             {/* DIRECT DOWNLOAD */}
             <button
               onClick={handleDownloadDirectPdf}
               disabled={isDownloadingPdf}
-              className="px-4 py-1.5 bg-black hover:bg-neutral-800 text-white rounded-xl font-medium text-xs flex items-center gap-1.5 transition disabled:opacity-60 cursor-pointer"
-              title="Descarca direct fisierul PDF"
+              className="px-4 py-1.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-medium text-xs flex items-center gap-1.5 transition disabled:opacity-60 cursor-pointer"
+              title="Descarcă PDF"
             >
               {isDownloadingPdf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-              <span>Descarca</span>
+              <span>Descarcă</span>
             </button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* POLISH AI COACH PANEL */}
       {showPolishCoach && (
@@ -2390,7 +2360,7 @@ export default function CvStudio({
             {/* ================= PAGE 1 (A4 PHYSICAL SHEET) ================= */}
             <div
               id="cv-page-1"
-              className="bg-white text-black shadow-xl rounded-2xl border border-gray-200/90 transition-all relative w-[210mm] text-left"
+              className="bg-white text-neutral-900 shadow-xl rounded-2xl border border-gray-200/90 transition-all relative w-[210mm] text-left"
               style={{
                 width: '210mm',
                 minHeight: '297mm',
@@ -2410,10 +2380,10 @@ export default function CvStudio({
                   {/* EDIT CONTACT BUTTON */}
                   <button 
                     onClick={() => setShowEditContactModal(true)}
-                    className="no-pdf absolute right-0 top-0 text-[11px] font-sans text-gray-500 hover:text-black flex items-center gap-1 bg-gray-50 hover:bg-gray-100 px-2.5 py-1 rounded border border-gray-200 shadow-2xs transition cursor-pointer"
-                    title="Editeaza datele de contact ca in formular"
+                    className="no-pdf absolute right-0 top-0 text-[11px] font-sans text-gray-500 hover:text-neutral-900 flex items-center gap-1 bg-gray-50 hover:bg-gray-100 px-2.5 py-1 rounded border border-gray-200 transition cursor-pointer"
+                    title="Editează datele de contact"
                   >
-                    <Edit3 className="w-3.5 h-3.5 text-gray-500" /> Edit Contact
+                    <Edit3 className="w-3.5 h-3.5 text-gray-500" /> Date contact
                   </button>
 
                   {/* CANDIDATE FULL NAME IN EDITABLE BOX */}
@@ -2421,7 +2391,7 @@ export default function CvStudio({
                     contentEditable={true}
                     suppressContentEditableWarning={true}
                     onBlur={e => setContactData({...contactData, fullName: e.currentTarget.textContent || ""})}
-                    className="outline-none font-bold uppercase tracking-wide cursor-text inline-block border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1.5 py-0.5 rounded transition"
+                    className="outline-none font-semibold uppercase tracking-wide cursor-text inline-block border border-transparent hover:border-gray-300 hover:bg-gray-50/50 focus:border-gray-400 focus:bg-gray-100/40 px-1.5 py-0.5 rounded transition"
                     style={{ 
                       fontSize: '20pt', 
                       fontFamily: 'Arial, Helvetica, sans-serif',
@@ -2434,7 +2404,7 @@ export default function CvStudio({
 
                   {/* CONTACT DETAILS ROW */}
                   <div 
-                    className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-black mt-1 font-sans"
+                    className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-neutral-900 mt-1 font-sans"
                     style={{ fontSize: '9pt' }}
                   >
                     {contactData.phone && <span>{contactData.phone}</span>}
@@ -2442,14 +2412,14 @@ export default function CvStudio({
                     {contactData.email && (
                       <>
                         <span className="text-gray-400">|</span>
-                        <a href={`mailto:${contactData.email}`} className="text-black underline hover:text-gray-700">{contactData.email}</a>
+                        <a href={`mailto:${contactData.email}`} className="text-neutral-900 underline hover:text-gray-700">{contactData.email}</a>
                       </>
                     )}
                     
                     {contactData.linkedin && (
                       <>
                         <span className="text-gray-400">|</span>
-                        <a href={contactData.linkedin.startsWith('http') ? contactData.linkedin : `https://${contactData.linkedin}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
+                        <a href={contactData.linkedin.startsWith('http') ? contactData.linkedin : `https://${contactData.linkedin}`} target="_blank" rel="noreferrer" className="text-neutral-900 underline hover:text-gray-700">
                           {contactData.linkedinFull ? contactData.linkedin : 'LinkedIn'}
                         </a>
                       </>
@@ -2458,7 +2428,7 @@ export default function CvStudio({
                     {contactData.github && (
                       <>
                         <span className="text-gray-400">|</span>
-                        <a href={contactData.github.startsWith('http') ? contactData.github : `https://${contactData.github}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
+                        <a href={contactData.github.startsWith('http') ? contactData.github : `https://${contactData.github}`} target="_blank" rel="noreferrer" className="text-neutral-900 underline hover:text-gray-700">
                           {contactData.githubFull ? contactData.github : 'GitHub'}
                         </a>
                       </>
@@ -2467,7 +2437,7 @@ export default function CvStudio({
                     {contactData.portfolio && (
                       <>
                         <span className="text-gray-400">|</span>
-                        <a href={contactData.portfolio.startsWith('http') ? contactData.portfolio : `https://${contactData.portfolio}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
+                        <a href={contactData.portfolio.startsWith('http') ? contactData.portfolio : `https://${contactData.portfolio}`} target="_blank" rel="noreferrer" className="text-neutral-900 underline hover:text-gray-700">
                           {contactData.portfolioFull ? contactData.portfolio : 'Portfolio'}
                         </a>
                       </>
@@ -2476,7 +2446,7 @@ export default function CvStudio({
                     {contactData.blog && (
                       <>
                         <span className="text-gray-400">|</span>
-                        <a href={contactData.blog.startsWith('http') ? contactData.blog : `https://${contactData.blog}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
+                        <a href={contactData.blog.startsWith('http') ? contactData.blog : `https://${contactData.blog}`} target="_blank" rel="noreferrer" className="text-neutral-900 underline hover:text-gray-700">
                           {contactData.blogFull ? contactData.blog : 'Blog'}
                         </a>
                       </>
@@ -2485,7 +2455,7 @@ export default function CvStudio({
                     {contactData.social && (
                       <>
                         <span className="text-gray-400">|</span>
-                        <a href={contactData.social.startsWith('http') ? contactData.social : `https://${contactData.social}`} target="_blank" rel="noreferrer" className="text-black underline hover:text-gray-700">
+                        <a href={contactData.social.startsWith('http') ? contactData.social : `https://${contactData.social}`} target="_blank" rel="noreferrer" className="text-neutral-900 underline hover:text-gray-700">
                           {contactData.socialFull ? contactData.social : 'Social'}
                         </a>
                       </>
@@ -2519,10 +2489,10 @@ export default function CvStudio({
                   }}
                 >
                   <div className={`h-[2px] border-t-2 border-dashed flex-1 ${pageStats.isOverflown ? 'border-rose-500' : 'border-gray-300'}`}></div>
-                  <span className={`mx-2 px-2.5 py-0.5 text-white font-sans text-[10px] font-bold rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider ${
+                  <span className={`mx-2 px-2.5 py-0.5 text-white font-sans text-[10px] font-semibold rounded-full shadow-md flex items-center gap-1  ${
                     pageStats.isOverflown ? 'bg-rose-600 animate-pulse' : 'bg-gray-600'
                   }`}>
-                    Limita Pagina 1 (A4: 297mm) {pageStats.isOverflown ? `— Depasit cu ${pageStats.percent - 100}% (apasa "2 Pagini" sus sau comuta pe Auto)!` : '— Pagina 1 se termina aici'}
+                    {pageStats.isOverflown ? `Pagina 1 depășită cu ${pageStats.percent - 100}%` : 'Limita paginii 1'}
                   </span>
                   <div className={`h-[2px] border-t-2 border-dashed flex-1 ${pageStats.isOverflown ? 'border-rose-500' : 'border-gray-300'}`}></div>
                 </div>
@@ -2535,21 +2505,21 @@ export default function CvStudio({
                 {/* VISUAL PAGE BREAK CONTROLLER IN UI */}
                 <div className="no-pdf my-6 w-full max-w-[210mm] flex flex-col items-center gap-2 select-none">
                   <div className="flex items-center gap-3 w-full">
-                    <div className="h-[2px] border-t-2 border-dashed border-amber-400 flex-1"></div>
-                    <div className="bg-amber-50 border border-amber-300 px-4 py-2 rounded-2xl text-xs font-bold text-amber-950 flex flex-wrap items-center justify-center gap-3 shadow-md">
-                      <span className="flex items-center gap-1.5 text-amber-900">
-                        <strong>Intrerupere Pagina A4 (297 mm)</strong>
+                    <div className="h-[2px] border-t-2 border-dashed border-brand-400 flex-1"></div>
+                    <div className="bg-brand-50 border border-brand-300 px-4 py-2 rounded-2xl text-xs font-semibold text-neutral-900 flex flex-wrap items-center justify-center gap-3 shadow-md">
+                      <span className="flex items-center gap-1.5 text-neutral-800">
+                        <strong>Întrerupere de pagină A4</strong>
                       </span>
-                      <span className="text-amber-300">|</span>
+                      <span className="text-brand-300">|</span>
                       <div className="flex items-center gap-2">
-                        <label className="text-amber-900 font-semibold">Incepe Pagina 2 de la:</label>
+                        <label className="text-neutral-800 font-semibold">Pagina 2 începe de la:</label>
                         <select 
                           value={splitSectionKey} 
                           onChange={e => {
                             setSplitSectionKey(e.target.value);
                             setSplitProjectIdx(null);
                           }}
-                          className="bg-white border border-amber-300 rounded-lg px-2.5 py-1 text-xs font-bold text-gray-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+                          className="bg-white border border-brand-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500"
                         >
                           {sectionOrder.map((key) => {
                             const labels = {
@@ -2570,14 +2540,14 @@ export default function CvStudio({
                       </div>
 
                       {splitSectionKey === 'projects' && projectsList.length > 1 && (
-                        <div className="flex items-center gap-2 pl-2 border-l border-amber-200">
-                          <span className="text-[11px] text-amber-900 font-medium">Imparte proiectele:</span>
+                        <div className="flex items-center gap-2 pl-2 border-l border-brand-200">
+                          <span className="text-[11px] text-neutral-800 font-medium">Împarte proiectele:</span>
                           <select
                             value={splitProjectIdx === null ? 'all' : splitProjectIdx}
                             onChange={e => setSplitProjectIdx(e.target.value === 'all' ? null : Number(e.target.value))}
-                            className="bg-white border border-amber-300 rounded px-2 py-0.5 text-xs font-semibold text-gray-800"
+                            className="bg-white border border-brand-300 rounded px-2 py-0.5 text-xs font-semibold text-gray-800"
                           >
-                            <option value="all">Toate pe Pagina 2</option>
+                            <option value="all">Toate pe pagina 2</option>
                             {projectsList.slice(1).map((_, idx) => (
                               <option key={idx + 1} value={idx + 1}>
                                 De la #{idx + 2} ({projectsList[idx + 1].name || `Proiect ${idx + 2}`})
@@ -2587,11 +2557,8 @@ export default function CvStudio({
                         </div>
                       )}
                     </div>
-                    <div className="h-[2px] border-t-2 border-dashed border-amber-400 flex-1"></div>
+                    <div className="h-[2px] border-t-2 border-dashed border-brand-400 flex-1"></div>
                   </div>
-                  <p className="text-[11px] text-gray-500 font-sans text-center">
-                    Sectiunile de mai jos sunt asezate pe <strong>Pagina 2</strong>. La descarcare PDF sau print se genereaza automat exact 2 pagini separate fara taieri de text.
-                  </p>
                 </div>
 
                 {/* EXACT HTML2PDF & PRINT PAGE BREAK ELEMENT */}
@@ -2609,7 +2576,7 @@ export default function CvStudio({
                 {/* ================= PAGE 2 (A4 PHYSICAL SHEET) ================= */}
                 <div
                   id="cv-page-2"
-                  className="bg-white text-black shadow-xl rounded-2xl border border-gray-200/90 transition-all relative w-[210mm] text-left"
+                  className="bg-white text-neutral-900 shadow-xl rounded-2xl border border-gray-200/90 transition-all relative w-[210mm] text-left"
                   style={{
                     width: '210mm',
                     minHeight: '297mm',
@@ -2623,8 +2590,8 @@ export default function CvStudio({
                   }}
                 >
                   {/* PAGE 2 HEADER (CONTINUATION) */}
-                  <div className="flex items-center justify-between border-b border-black pb-1 mb-3 text-black font-sans">
-                    <div className="text-[10pt] font-bold uppercase tracking-wider">
+                  <div className="flex items-center justify-between border-b border-brand-500 pb-1 mb-3 text-neutral-900 font-sans">
+                    <div className="text-[10pt] font-semibold ">
                       {contactData.fullName} <span className="text-gray-500 font-normal normal-case">— Curriculum Vitae (Continuare)</span>
                     </div>
                     <div className="text-[9pt] text-gray-500 font-medium">
@@ -2648,186 +2615,77 @@ export default function CvStudio({
         </div>
       </div>
 
-      {/* ================= MODAL: EDIT CONTACT ================= */}
-      {showEditContactModal && typeof document !== 'undefined' && createPortal(
-        <div 
-          onClick={() => setShowEditContactModal(false)}
-          className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto animate-morphing-backdrop"
-        >
-          <div 
-            onClick={e => e.stopPropagation()}
-            className="max-w-xl w-full my-6 animate-morphing-dialog font-sans"
+      {/* ================= MODAL: DATE DE CONTACT ================= */}
+      <Modal
+        isOpen={showEditContactModal}
+        onClose={() => setShowEditContactModal(false)}
+        title="Date de contact"
+        subtitle={contactData.fullName}
+        icon={Edit3}
+        size="lg"
+      >
+        <div className="space-y-3">
+          {[
+            ['email', 'Email', 'email@example.com', null, 'email'],
+            ['phone', 'Telefon', '(+40) 700 000 000', null, 'text'],
+            ['location', 'Locație', 'București', null, 'text'],
+          ].map(([key, label, placeholder, , type]) => (
+            <div key={key} className="grid grid-cols-12 items-center gap-3">
+              <label htmlFor={`contact-${key}`} className="col-span-3 text-xs font-medium text-neutral-600">{label}</label>
+              <input
+                id={`contact-${key}`}
+                type={type}
+                placeholder={placeholder}
+                value={contactData[key]}
+                onChange={e => setContactData({ ...contactData, [key]: e.target.value })}
+                className="col-span-9 bg-white border border-neutral-200 rounded-xl px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:border-brand-500 transition"
+              />
+            </div>
+          ))}
+
+          <div className="border-t border-neutral-100 my-1" />
+
+          {[
+            ['linkedin', 'LinkedIn', 'https://www.linkedin.com/in/username'],
+            ['github', 'GitHub', 'https://github.com/username'],
+            ['portfolio', 'Portofoliu', 'yourname.com'],
+            ['blog', 'Blog', 'medium.com/@yourname'],
+            ['social', 'Social', 'x.com/yourhandle'],
+          ].map(([key, label, placeholder]) => (
+            <div key={key} className="grid grid-cols-12 items-center gap-3">
+              <label htmlFor={`contact-${key}`} className="col-span-3 text-xs font-medium text-neutral-600">{label}</label>
+              <input
+                id={`contact-${key}`}
+                type="text"
+                placeholder={placeholder}
+                value={contactData[key]}
+                onChange={e => setContactData({ ...contactData, [key]: e.target.value })}
+                className="col-span-6 bg-white border border-neutral-200 rounded-xl px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:border-brand-500 transition"
+              />
+              <label className="col-span-3 flex items-center gap-1.5 text-xs text-neutral-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={contactData[`${key}Full`]}
+                  onChange={e => setContactData({ ...contactData, [`${key}Full`]: e.target.checked })}
+                  aria-label={`${label}: URL complet`}
+                  className="rounded border-neutral-300 accent-brand-500"
+                />
+                URL complet
+              </label>
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-5 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={() => setShowEditContactModal(false)}
+            className="bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm px-5 py-2 rounded-xl transition cursor-pointer"
           >
-            <div className="text-center mb-3">
-              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wide" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
-                {contactData.fullName}
-              </h2>
-            </div>
-
-            <div className="bg-white text-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl space-y-4 border border-gray-200 relative">
-              <button 
-                type="button"
-                onClick={() => setShowEditContactModal(false)}
-                className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition cursor-pointer animate-morphing-close"
-                title="Inchide"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="space-y-3">
-                <div className="grid grid-cols-12 items-center gap-3">
-                  <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Email</label>
-                  <input 
-                    type="email" 
-                    placeholder="email@example.com"
-                    value={contactData.email} 
-                    onChange={e => setContactData({...contactData, email: e.target.value})}
-                    className="col-span-9 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-400" 
-                  />
-                </div>
-
-                <div className="grid grid-cols-12 items-center gap-3">
-                  <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Phone</label>
-                  <input 
-                    type="text" 
-                    placeholder="(+40) 700 000 000"
-                    value={contactData.phone} 
-                    onChange={e => setContactData({...contactData, phone: e.target.value})}
-                    className="col-span-9 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-400" 
-                  />
-                </div>
-
-                <div className="grid grid-cols-12 items-center gap-3">
-                  <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Location</label>
-                  <input 
-                    type="text" 
-                    placeholder="Location"
-                    value={contactData.location} 
-                    onChange={e => setContactData({...contactData, location: e.target.value})}
-                    className="col-span-9 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-400" 
-                  />
-                </div>
-              </div>
-
-              <div className="border-t border-gray-200 my-4"></div>
-
-              <div className="space-y-3">
-                <div className="grid grid-cols-12 items-center gap-3">
-                  <label className="col-span-3 text-right text-xs font-semibold text-gray-500">LinkedIn</label>
-                  <input 
-                    type="text" 
-                    placeholder="https://www.linkedin.com/in/username"
-                    value={contactData.linkedin} 
-                    onChange={e => setContactData({...contactData, linkedin: e.target.value})}
-                    className="col-span-6 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-400" 
-                  />
-                  <label className="col-span-3 flex items-center gap-1.5 text-[11px] text-gray-600 font-medium cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={contactData.linkedinFull}
-                      onChange={e => setContactData({...contactData, linkedinFull: e.target.checked})}
-                      className="rounded border-gray-300 text-gray-800 focus:ring-gray-500"
-                    />
-                    Show Full URL
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-12 items-center gap-3">
-                  <label className="col-span-3 text-right text-xs font-semibold text-gray-500">GitHub</label>
-                  <input 
-                    type="text" 
-                    placeholder="https://github.com/username"
-                    value={contactData.github} 
-                    onChange={e => setContactData({...contactData, github: e.target.value})}
-                    className="col-span-6 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-400" 
-                  />
-                  <label className="col-span-3 flex items-center gap-1.5 text-[11px] text-gray-600 font-medium cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={contactData.githubFull}
-                      onChange={e => setContactData({...contactData, githubFull: e.target.checked})}
-                      className="rounded border-gray-300 text-gray-800 focus:ring-gray-500"
-                    />
-                    Show Full URL
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-12 items-center gap-3">
-                  <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Portfolio</label>
-                  <input 
-                    type="text" 
-                    placeholder="yourname.com"
-                    value={contactData.portfolio} 
-                    onChange={e => setContactData({...contactData, portfolio: e.target.value})}
-                    className="col-span-6 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-400" 
-                  />
-                  <label className="col-span-3 flex items-center gap-1.5 text-[11px] text-gray-600 font-medium cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={contactData.portfolioFull}
-                      onChange={e => setContactData({...contactData, portfolioFull: e.target.checked})}
-                      className="rounded border-gray-300 text-gray-800 focus:ring-gray-500"
-                    />
-                    Show Full URL
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-12 items-center gap-3">
-                  <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Blog</label>
-                  <input 
-                    type="text" 
-                    placeholder="medium.com/@yourname"
-                    value={contactData.blog} 
-                    onChange={e => setContactData({...contactData, blog: e.target.value})}
-                    className="col-span-6 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-400" 
-                  />
-                  <label className="col-span-3 flex items-center gap-1.5 text-[11px] text-gray-600 font-medium cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={contactData.blogFull}
-                      onChange={e => setContactData({...contactData, blogFull: e.target.checked})}
-                      className="rounded border-gray-300 text-gray-800 focus:ring-gray-500"
-                    />
-                    Show Full URL
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-12 items-center gap-3">
-                  <label className="col-span-3 text-right text-xs font-semibold text-gray-500">Social</label>
-                  <input 
-                    type="text" 
-                    placeholder="x.com/yourhandle"
-                    value={contactData.social} 
-                    onChange={e => setContactData({...contactData, social: e.target.value})}
-                    className="col-span-6 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-400" 
-                  />
-                  <label className="col-span-3 flex items-center gap-1.5 text-[11px] text-gray-600 font-medium cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={contactData.socialFull}
-                      onChange={e => setContactData({...contactData, socialFull: e.target.checked})}
-                      className="rounded border-gray-300 text-gray-800 focus:ring-gray-500"
-                    />
-                    Show Full URL
-                  </label>
-                </div>
-              </div>
-
-              <div className="pt-4 flex items-center justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowEditContactModal(false)}
-                  className="bg-black hover:bg-gray-800 text-white font-bold text-xs px-5 py-2 rounded-lg shadow transition cursor-pointer"
-                >
-                  Done
-                </button>
-              </div>
-
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+            Gata
+          </button>
+        </div>
+      </Modal>
 
     </div>
   );

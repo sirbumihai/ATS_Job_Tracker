@@ -9,6 +9,10 @@ import org.springframework.core.env.MapPropertySource;
 
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -175,6 +179,86 @@ class JobScraperOrchestratorTest {
     }
 
     @Test
+    @DisplayName("Platformele rulează simultan, nu una după alta")
+    void testScrapersRunConcurrently() {
+        // Fiecare scraper așteaptă ca și celălalt să fi pornit; rulate pe rând, primul n-ar trece de barieră
+        CountDownLatch bothStarted = new CountDownLatch(2);
+        JobScraper first = new AwaitingScraper("FIRST", bothStarted, createJob("j40", "Java Developer", "Acme", "FIRST"));
+        JobScraper second = new AwaitingScraper("SECOND", bothStarted, createJob("j41", "QA Engineer", "Beta", "SECOND"));
+
+        JobScraperOrchestrator orchestrator = new JobScraperOrchestrator(List.of(first, second));
+        List<UnifiedJobListingDto> results = orchestrator.scrapeAll(Collections.emptySet());
+
+        assertEquals(2, results.size());
+        assertTrue(orchestrator.getLastExecutionReports().stream().allMatch(r -> "SUCCESS".equals(r.status())));
+    }
+
+    @Test
+    @DisplayName("Joburile adăugate din mai multe fire ale aceleiași platforme sunt păstrate toate")
+    void testKeepsJobsAddedFromSeveralThreads() {
+        JobScraper parallelScraper = new JobScraper() {
+            @Override
+            public String getPlatformName() {
+                return "PARALLEL_PLATFORM";
+            }
+
+            @Override
+            public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
+                try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                    for (int t = 0; t < 4; t++) {
+                        int thread = t;
+                        executor.submit(() -> {
+                            for (int i = 0; i < 50; i++) {
+                                String id = "p" + thread + "-" + i;
+                                freshList.add(createJob(id, "Developer " + id, "Firma " + id, "PARALLEL_PLATFORM"));
+                            }
+                        });
+                    }
+                }
+            }
+        };
+
+        JobScraperOrchestrator orchestrator = new JobScraperOrchestrator(List.of(parallelScraper));
+        List<UnifiedJobListingDto> results = orchestrator.scrapeAll(Collections.emptySet());
+
+        assertEquals(200, results.size());
+        PlatformScrapeResult report = orchestrator.getLastExecutionReports().get(0);
+        assertEquals("SUCCESS", report.status());
+        assertEquals(200, report.jobsCollected());
+    }
+
+    static class AwaitingScraper implements JobScraper {
+        private final String name;
+        private final CountDownLatch bothStarted;
+        private final UnifiedJobListingDto job;
+
+        AwaitingScraper(String name, CountDownLatch bothStarted, UnifiedJobListingDto job) {
+            this.name = name;
+            this.bothStarted = bothStarted;
+            this.job = job;
+        }
+
+        @Override
+        public String getPlatformName() {
+            return name;
+        }
+
+        @Override
+        public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
+            bothStarted.countDown();
+            try {
+                if (!bothStarted.await(5, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("Platformele nu au rulat simultan");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(e);
+            }
+            freshList.add(job);
+        }
+    }
+
+    @Test
     @DisplayName("Platformele din app.crawler.disabled-platforms nu sunt rulate")
     void testDisabledPlatformsAreSkipped() {
         JobScraper enabled = new JobScraper() {
@@ -203,7 +287,7 @@ class JobScraperOrchestratorTest {
 
         // Configurarea nu ține cont de majuscule și ignoră spațiile
         JobScraperOrchestrator orchestrator = new JobScraperOrchestrator(
-                List.of(enabled, disabled), Set.of(" disabled_platform ", ""), 30);
+                List.of(enabled, disabled), Set.of(" disabled_platform ", ""));
 
         assertEquals(List.of("ENABLED_PLATFORM"), orchestrator.getActivePlatforms());
         List<UnifiedJobListingDto> results = orchestrator.scrapeAll(Collections.emptySet());
@@ -234,8 +318,7 @@ class JobScraperOrchestratorTest {
         try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext()) {
             ctx.getBeanFactory().setConversionService(ApplicationConversionService.getSharedInstance());
             ctx.getEnvironment().getPropertySources().addFirst(new MapPropertySource("test", Map.of(
-                    "app.crawler.disabled-platforms", "LINKEDIN, ejobs",
-                    "app.crawler.scraper-timeout-seconds", "45")));
+                    "app.crawler.disabled-platforms", "LINKEDIN, ejobs")));
             ctx.registerBean("linkedin", JobScraper.class, () -> new NamedScraper("LINKEDIN"));
             ctx.registerBean("ejobs", JobScraper.class, () -> new NamedScraper("EJOBS"));
             ctx.registerBean("hipo", JobScraper.class, () -> new NamedScraper("HIPO"));

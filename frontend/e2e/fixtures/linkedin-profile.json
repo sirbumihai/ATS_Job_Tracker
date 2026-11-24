@@ -1,0 +1,29 @@
+{
+  "fullName": "Utilizator Demo",
+  "headline": "Junior Java Developer | Spring Boot | PostgreSQL",
+  "location": "Bucuresti, Romania",
+  "email": "demo@jobflow.test",
+  "linkedinUrl": "linkedin.com/in/demo",
+  "phone": "",
+  "connectionsCount": "500+ conexiuni",
+  "about": "Dezvoltator backend junior, pasionat de API-uri curate si testare.",
+  "education": [
+    { "institution": "Universitatea Politehnica Bucuresti", "degree": "Licenta Calculatoare", "period": "2022 - 2026", "logoBadge": "UPB" }
+  ],
+  "experience": [
+    { "title": "Intern Java", "company": "Firma Demo", "period": "2025 - 2026", "location": "Bucuresti", "description": "Am construit un API REST cu Spring Boot." }
+  ],
+  "skills": ["Java", "Spring Boot", "PostgreSQL", "Docker"],
+  "languages": ["Romana", "Engleza"],
+  "certifications": [],
+  "projects": [
+    { "title": "JobFlow", "description": "Tracker de aplicatii cu scor ATS.", "timePeriod": "2026", "url": "https://example.test/jobflow", "skills": ["Java", "React"], "associatedWith": "Proiect personal" }
+  ],
+  "featured": [
+    { "title": "JobFlow pe GitHub", "type": "LINK", "url": "https://example.test/jobflow", "subtitle": "Cod sursa", "badge": "GitHub" }
+  ],
+  "bannerTheme": "tech_terminal",
+  "isOpenToWork": true,
+  "isCreatorMode": false,
+  "creatorTopics": ["#java", "#springboot"]
+}

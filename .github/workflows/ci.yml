@@ -42,3 +42,37 @@ jobs:
           SPRING_DATASOURCE_USERNAME: ats_user
           SPRING_DATASOURCE_PASSWORD: ats_password
         run: mvn clean test
+
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright Tests (API simulat, fara backend)
+        run: npm run test:e2e
+
+      - name: Upload Playwright Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7

@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FileText, 
-  Plus, 
-  Search, 
-  Copy, 
-  Trash2, 
-  Star, 
-  Edit3, 
-  CheckCircle2, 
-  Clock, 
-  Upload, 
-  Sparkles, 
+import Card from './ui/Card';
+import Modal from './ui/Modal';
+import {
+  FileText,
+  Plus,
+  Search,
+  Copy,
+  Trash2,
+  Star,
+  Edit3,
+  CheckCircle2,
+  Clock,
+  Upload,
   RefreshCw,
-  ExternalLink,
-  ChevronRight,
   X
 } from 'lucide-react';
 
@@ -66,7 +65,7 @@ export default function CvLibrary({
     if (!file) return;
 
     if (!activeUserId) {
-      alert("Te rugam sa te autentifici inainte de a incarca un CV.");
+      alert("Autentifică-te înainte să încarci un CV.");
       return;
     }
 
@@ -85,16 +84,16 @@ export default function CvLibrary({
         const data = await res.json();
         await fetchCvProfiles();
         const createdCvId = data?.parsedProfile?.id;
-        showNotification(`CV-ul "${file.name}" a fost importat cu succes!`);
+        showNotification(`CV-ul "${file.name}" a fost importat.`);
         if (createdCvId && onEditCvInStudio) {
           onEditCvInStudio(createdCvId);
         }
       } else {
-        alert("Eroare la importarea fisierului. Te rugam sa incerci din nou.");
+        alert("Importul fișierului a eșuat. Încearcă din nou.");
       }
     } catch (err) {
       console.error("Eroare la importarea CV-ului:", err);
-      alert("A aparut o eroare la conexiunea cu serverul.");
+      alert("Eroare de conexiune cu serverul.");
     } finally {
       setImportingPdf(false);
       if (e.target) e.target.value = '';
@@ -201,7 +200,7 @@ export default function CvLibrary({
         setShowCreateModal(false);
         setNewCvTitle('');
         await fetchCvProfiles();
-        showNotification(`CV-ul "${created.title}" a fost creat cu succes!`);
+        showNotification(`CV-ul "${created.title}" a fost creat.`);
         if (onEditCvInStudio) {
           onEditCvInStudio(created.id);
         }
@@ -234,7 +233,7 @@ export default function CvLibrary({
   // DELETE CV
   const handleDeleteCv = async (cvId, cvTitle, e) => {
     e.stopPropagation();
-    if (!window.confirm(`Sigur doresti sa stergi CV-ul "${cvTitle}"?`)) return;
+    if (!window.confirm(`Sigur vrei să ștergi CV-ul "${cvTitle}"?`)) return;
     try {
       const res = await fetch(`/api/v1/cv/${cvId}`, {
         method: 'DELETE',
@@ -242,7 +241,7 @@ export default function CvLibrary({
       });
       if (res.ok) {
         await fetchCvProfiles();
-        showNotification(`CV-ul "${cvTitle}" a fost sters.`);
+        showNotification(`CV-ul "${cvTitle}" a fost șters.`);
       }
     } catch (err) {
       console.error('Eroare la stergerea CV-ului:', err);
@@ -259,7 +258,7 @@ export default function CvLibrary({
       });
       if (res.ok) {
         await fetchCvProfiles();
-        showNotification('CV-ul a fost setat ca versiune principala implicita.');
+        showNotification('CV-ul este acum CV-ul principal.');
       }
     } catch (err) {
       console.error('Eroare la setarea CV-ului principal:', err);
@@ -272,293 +271,208 @@ export default function CvLibrary({
     (cv.summary || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const secondaryBtn = 'px-3.5 py-2 bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-200 rounded-xl font-medium text-xs flex items-center gap-1.5 transition cursor-pointer';
+  const primaryBtn = 'px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-medium text-xs flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50';
+  const importLabel = (
+    <label className={secondaryBtn}>
+      {importingPdf ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+      <span>{importingPdf ? 'Se importă...' : 'Importă CV'}</span>
+      <input
+        type="file"
+        accept=".pdf,.docx,.doc"
+        aria-label="Fișier CV pentru import"
+        onChange={handleImportCv}
+        disabled={importingPdf}
+        className="hidden"
+      />
+    </label>
+  );
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 font-sans text-neutral-900">
-      
-      {/* ACTION NOTIFICATION PILL */}
       {actionMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-black text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 text-xs font-medium animate-in fade-in slide-in-from-top-2">
-          <CheckCircle2 className="w-4 h-4 text-white" />
+        <div role="status" className="fixed top-20 right-6 z-50 bg-brand-500 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-medium animate-in fade-in slide-in-from-top-2">
+          <CheckCircle2 className="w-4 h-4" />
           <span>{actionMessage}</span>
         </div>
       )}
 
-      {/* HEADER & CONTROLS TOOLBAR */}
-      <div className="bg-white border border-neutral-200 p-5 rounded-xl space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-black text-white rounded-xl shrink-0">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-neutral-950 tracking-tight flex items-center gap-2">
-                CV-urile Mele (CV Library)
-              </h2>
-              <p className="text-xs text-neutral-500 font-normal">
-                Gestioneaza si personalizeaza multiple versiuni de CV adaptate pentru fiecare domeniu si rol.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <label className="px-3.5 py-2 bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-300 rounded-xl font-medium text-xs flex items-center gap-1.5 transition cursor-pointer">
-              {importingPdf ? <RefreshCw className="w-4 h-4 animate-spin text-neutral-600" /> : <Upload className="w-4 h-4 text-neutral-700" />}
-              <span>{importingPdf ? 'Se importa...' : 'Importa CV (PDF / Word)'}</span>
-              <input 
-                type="file" 
-                accept=".pdf,.docx,.doc" 
-                onChange={handleImportCv} 
-                disabled={importingPdf}
-                className="hidden" 
-              />
-            </label>
-
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl font-medium text-xs flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Creeaza CV Nou
-            </button>
-          </div>
-        </div>
-
-        {/* SEARCH BAR & COUNTER */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-100">
+      <Card padding="px-4 py-3" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="relative w-full sm:w-80">
             <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
+            <input
               type="text"
-              placeholder="Cauta in CV-urile tale..."
+              aria-label="Caută în CV-uri"
+              placeholder="Caută în CV-uri"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-black transition"
+              className="w-full bg-white border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-brand-500 transition"
             />
           </div>
-
-          <div className="text-xs text-neutral-500 font-mono flex items-center gap-2">
-            <span>Total: <strong className="text-neutral-900">{cvList.length}</strong> {cvList.length === 1 ? 'CV' : 'CV-uri'} salvate</span>
-          </div>
+          <span className="text-xs text-neutral-500 whitespace-nowrap hidden sm:inline">
+            {cvList.length} {cvList.length === 1 ? 'versiune' : 'versiuni'}
+          </span>
         </div>
-      </div>
+        <div className="flex items-center gap-2">
+          {importLabel}
+          <button onClick={() => setShowCreateModal(true)} className={primaryBtn}>
+            <Plus className="w-4 h-4" />
+            CV nou
+          </button>
+        </div>
+      </Card>
 
-      {/* CV CARDS GRID */}
       {loading ? (
-        <div className="py-16 text-center text-neutral-400 flex flex-col items-center justify-center gap-2">
-          <RefreshCw className="w-6 h-6 animate-spin text-neutral-900" />
-          <span className="text-xs font-mono">Se incarca CV-urile...</span>
+        <div role="status" className="py-16 text-center text-neutral-500 flex flex-col items-center justify-center gap-2">
+          <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
+          <span className="text-xs">Se încarcă CV-urile</span>
         </div>
       ) : filteredList.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {filteredList.map((cv) => (
-            <div 
-              key={cv.id}
-              onClick={() => onEditCvInStudio && onEditCvInStudio(cv.id)}
-              className="bg-white border border-neutral-200 rounded-xl p-5 hover:border-black transition-all cursor-pointer flex flex-col justify-between group relative"
-            >
-              
-              {/* CARD TOP INFO */}
+            <Card key={cv.id} data-cv-card={cv.id} className="flex flex-col justify-between gap-4 hover:border-brand-300 transition-colors">
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="space-y-1 flex-1">
+                  <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-sm sm:text-base text-neutral-950 group-hover:text-black transition">
-                        {cv.title || "CV Fara Titlu"}
-                      </h3>
+                      <h3 className="font-sans font-medium text-base text-neutral-950">{cv.title || 'CV fără titlu'}</h3>
                       {cv.isPrimary && (
-                        <span className="font-mono px-2 py-0.5 bg-black text-white text-[10px] font-bold rounded flex items-center gap-1">
-                          <Star className="w-2.5 h-2.5 fill-current" /> Principal
+                        <span className="px-2 py-0.5 bg-brand-50 text-brand-700 text-xs font-medium rounded-md flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-current" /> Principal
                         </span>
                       )}
                     </div>
-                    <p className="text-xs font-medium text-neutral-600">
-                      {cv.fullName || "Fara Nume"}
-                    </p>
+                    <p className="text-sm text-neutral-500">{cv.fullName || 'Fără nume'}</p>
                   </div>
 
-                  {/* QUICK MENU ACTIONS */}
-                  <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center gap-0.5 shrink-0">
                     {!cv.isPrimary && (
                       <button
                         onClick={(e) => handleSetPrimary(cv.id, e)}
-                        title="Seteaza ca principal"
-                        className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-black transition cursor-pointer"
+                        title="Setează ca principal"
+                        aria-label={`Setează ${cv.title} ca principal`}
+                        className="p-1.5 rounded-lg hover:bg-brand-50 text-neutral-400 hover:text-brand-600 transition cursor-pointer"
                       >
-                        <Star className="w-3.5 h-3.5" />
+                        <Star className="w-4 h-4" />
                       </button>
                     )}
                     <button
                       onClick={(e) => handleDuplicateCv(cv.id, e)}
-                      title="Duplica acest CV"
-                      className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-black transition cursor-pointer"
+                      title="Duplică"
+                      aria-label={`Duplică ${cv.title}`}
+                      className="p-1.5 rounded-lg hover:bg-brand-50 text-neutral-400 hover:text-brand-600 transition cursor-pointer"
                     >
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-4 h-4" />
                     </button>
                     <button
                       onClick={(e) => handleDeleteCv(cv.id, cv.title, e)}
-                      title="Sterge CV-ul"
-                      className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-black transition cursor-pointer"
+                      title="Șterge"
+                      aria-label={`Șterge ${cv.title}`}
+                      className="p-1.5 rounded-lg hover:bg-red-50 text-neutral-400 hover:text-red-600 transition cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                {/* SUMMARY SNIPPET */}
                 {cv.summary && (
-                  <p className="text-xs text-neutral-600 line-clamp-2 leading-relaxed">
-                    {cv.summary}
-                  </p>
+                  <p className="text-sm text-neutral-600 line-clamp-2 leading-relaxed">{cv.summary}</p>
                 )}
 
-                {/* SKILLS PILLS */}
                 {cv.skillsLanguages && (
-                  <div className="flex flex-wrap gap-1 pt-1 font-mono">
+                  <div className="flex flex-wrap gap-1.5">
                     {cv.skillsLanguages.split(',').slice(0, 4).map((skill, sIdx) => (
-                      <span key={sIdx} className="px-2 py-0.5 bg-neutral-100 border border-neutral-200 text-neutral-800 text-[10px] rounded">
+                      <span key={sIdx} className="px-2 py-0.5 bg-neutral-100 text-neutral-700 text-xs rounded-md">
                         {skill.trim()}
                       </span>
                     ))}
                     {cv.skillsLanguages.split(',').length > 4 && (
-                      <span className="text-[10px] text-neutral-400 font-mono self-center">
-                        +{cv.skillsLanguages.split(',').length - 4}
-                      </span>
+                      <span className="text-xs text-neutral-400 self-center">+{cv.skillsLanguages.split(',').length - 4}</span>
                     )}
                   </div>
                 )}
               </div>
 
-              {/* CARD FOOTER WITH TIMESTAMP & EDIT BUTTON */}
-              <div className="pt-4 mt-4 border-t border-neutral-100 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1 text-[11px] text-neutral-400 font-mono">
+              <div className="pt-4 border-t border-neutral-100 flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1 text-xs text-neutral-400">
                   <Clock className="w-3 h-3" />
-                  <span>{cv.updatedAt ? new Date(cv.updatedAt).toLocaleDateString('ro-RO') : 'Recent'}</span>
-                </div>
-
+                  {cv.updatedAt ? new Date(cv.updatedAt).toLocaleDateString('ro-RO') : 'Recent'}
+                </span>
                 <button
                   onClick={() => onEditCvInStudio && onEditCvInStudio(cv.id)}
-                  className="px-3 py-1.5 bg-neutral-100 group-hover:bg-black text-neutral-800 group-hover:text-white rounded-lg text-xs font-medium flex items-center gap-1 transition cursor-pointer"
+                  className="px-3 py-1.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <Edit3 className="w-3 h-3" />
-                  <span>Editeaza in Studio</span>
-                  <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  <span>Editează</span>
                 </button>
               </div>
-
-            </div>
+            </Card>
           ))}
         </div>
       ) : (
-        <div className="bg-white border border-neutral-200 rounded-xl p-12 text-center space-y-4">
-          <FileText className="w-12 h-12 text-neutral-300 mx-auto" />
-          <div>
-            <h3 className="text-base font-bold text-neutral-900">Nu ai niciun CV salvat inca</h3>
-            <p className="text-xs text-neutral-500 mt-1">
-              Creeaza primul tau CV sau importa un fisier existent pentru a incepe sa personalizezi aplicarile.
-            </p>
-          </div>
+        <Card className="py-12 text-center space-y-4">
+          <FileText className="w-10 h-10 text-neutral-300 mx-auto" />
+          <h3 className="font-sans text-base font-medium text-neutral-900">Niciun CV salvat</h3>
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <label className="px-4 py-2 bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-300 rounded-xl font-medium text-xs inline-flex items-center gap-1.5 transition cursor-pointer">
-              {importingPdf ? <RefreshCw className="w-4 h-4 animate-spin text-neutral-600" /> : <Upload className="w-4 h-4 text-neutral-700" />}
-              <span>{importingPdf ? 'Se importa...' : 'Importa CV (PDF / Word)'}</span>
-              <input 
-                type="file" 
-                accept=".pdf,.docx,.doc" 
-                onChange={handleImportCv} 
-                disabled={importingPdf}
-                className="hidden" 
+            {importLabel}
+            <button onClick={() => setShowCreateModal(true)} className={primaryBtn}>
+              <Plus className="w-4 h-4" />
+              Creează primul CV
+            </button>
+          </div>
+        </Card>
+      )}
+
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="CV nou"
+        icon={Plus}
+      >
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="new-cv-title" className="block text-xs font-medium text-neutral-700 mb-1.5">Denumire</label>
+            <input
+              id="new-cv-title"
+              type="text"
+              placeholder="Ex: Java Backend Developer"
+              value={newCvTitle}
+              onChange={e => setNewCvTitle(e.target.value)}
+              autoFocus
+              className="w-full bg-white border border-neutral-200 rounded-xl px-3.5 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-brand-500 transition"
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-3 pt-3 border-t border-neutral-100">
+            <span className="text-sm text-neutral-700">Sau pornește de la un fișier</span>
+            <label className={`${secondaryBtn} shrink-0`}>
+              <Upload className="w-3.5 h-3.5" />
+              <span>Importă</span>
+              <input
+                type="file"
+                accept=".pdf,.docx,.doc"
+                aria-label="Fișier CV pentru import"
+                onChange={(e) => {
+                  setShowCreateModal(false);
+                  handleImportCv(e);
+                }}
+                className="hidden"
               />
             </label>
+          </div>
 
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl font-medium text-xs inline-flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Creeaza Primul CV
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">
+            <button onClick={() => setShowCreateModal(false)} className={secondaryBtn}>
+              Anulează
+            </button>
+            <button onClick={handleCreateCv} disabled={creatingNew || !newCvTitle.trim()} className={primaryBtn}>
+              {creatingNew ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+              <span>{creatingNew ? 'Se creează...' : 'Creează și editează'}</span>
             </button>
           </div>
         </div>
-      )}
-
-      {/* CREATE NEW CV MODAL */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-morphing-backdrop">
-          <div className="bg-white border border-neutral-300 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-morphing-dialog">
-            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
-              <h3 className="font-bold text-base text-neutral-950 flex items-center gap-2">
-                <Plus className="w-4 h-4 text-black" />
-                Creeaza o Versiune Noua de CV
-              </h3>
-              <button 
-                onClick={() => setShowCreateModal(false)}
-                className="text-neutral-400 hover:text-black p-1 rounded-lg hover:bg-neutral-100 transition cursor-pointer animate-morphing-close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-neutral-800 mb-1">
-                  Denumire Versiune CV *
-                </label>
-                <input 
-                  type="text"
-                  placeholder="Ex: Java Backend Developer, Full Stack Engineer..."
-                  value={newCvTitle}
-                  onChange={e => setNewCvTitle(e.target.value)}
-                  autoFocus
-                  className="w-full bg-white border border-neutral-300 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-black transition"
-                />
-                <p className="text-[11px] text-neutral-500 mt-1">
-                  Poti crea versiuni specifice pentru diferite domenii, companii sau tehnologii.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-neutral-100">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <span className="text-xs font-medium text-neutral-800 block">Sau porneste de la un CV existent</span>
-                    <span className="text-[11px] text-neutral-500">Incarca un fisier PDF sau Word pentru extragere automata</span>
-                  </div>
-                  <label className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl text-xs font-medium flex items-center gap-1.5 cursor-pointer transition shrink-0 border border-neutral-200">
-                    <Upload className="w-3.5 h-3.5 text-neutral-700" />
-                    <span>Importa fisier</span>
-                    <input 
-                      type="file" 
-                      accept=".pdf,.docx,.doc" 
-                      onChange={(e) => {
-                        setShowCreateModal(false);
-                        handleImportCv(e);
-                      }} 
-                      className="hidden" 
-                    />
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-100">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-xs font-medium transition cursor-pointer border border-neutral-200"
-              >
-                Anuleaza
-              </button>
-              <button
-                onClick={handleCreateCv}
-                disabled={creatingNew || !newCvTitle.trim()}
-                className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-medium flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
-              >
-                {creatingNew ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                <span>{creatingNew ? 'Se creeaza...' : 'Creeaza si Editeaza'}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      </Modal>
     </div>
   );
 }

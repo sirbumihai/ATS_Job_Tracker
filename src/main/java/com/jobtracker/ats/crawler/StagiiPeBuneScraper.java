@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 import static com.jobtracker.ats.util.JobNormalizationUtils.*;
 
@@ -34,15 +35,19 @@ public class StagiiPeBuneScraper implements JobScraper {
     @Override
     public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
         ScrapeContext ctx = new ScrapeContext(freshList, seenDedupKeys, knownDbUrls);
-        for (int page = 1; page <= MAX_PAGES; page++) {
-            String url = page == 1 ? "https://stagiipebune.ro/students/jobs/" : "https://stagiipebune.ro/students/jobs/?page=" + page;
+        List<String> urls = IntStream.rangeClosed(1, MAX_PAGES).mapToObj(StagiiPeBuneScraper::pageUrl).toList();
+        for (FetchedPage page : pageFetcher.fetchAllHtml(urls)) {
             try {
-                if (!parsePage(pageFetcher.fetchHtml(url), ctx)) break;
+                if (!parsePage(page.document(), ctx)) break;
             } catch (Exception e) {
-                log.warn("[JOB CRAWLER] StagiiPeBune scrape error pe pagina {}: {}", page, e.getMessage());
+                log.warn("[JOB CRAWLER] StagiiPeBune scrape error pe {}: {}", page.url(), e.getMessage());
             }
         }
         log.info("[JOB CRAWLER] StagiiPeBune: {} stagii IT preluate.", ctx.collectedCount());
+    }
+
+    private static String pageUrl(int page) {
+        return page == 1 ? "https://stagiipebune.ro/students/jobs/" : "https://stagiipebune.ro/students/jobs/?page=" + page;
     }
 
     /**

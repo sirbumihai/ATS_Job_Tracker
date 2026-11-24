@@ -1,0 +1,13 @@
+[
+  {
+    "id": "e1111111-1111-4111-8111-111111111111",
+    "title": "Export aplicatii in CSV",
+    "description": "Vreau sa pot exporta lista de aplicatii.",
+    "category": "FEATURE",
+    "authorName": "Ana",
+    "votesCount": 4,
+    "status": "PLANNED",
+    "hasVoted": false,
+    "createdAt": "2026-10-01T10:00:00Z"
+  }
+]

@@ -1,23 +1,17 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Calendar as CalendarIcon, 
-  ChevronLeft, 
-  ChevronRight, 
-  Sparkles, 
-  Mail, 
-  Building2, 
-  Eye, 
-  FileSignature, 
-  Send, 
-  Trash2, 
-  Clock, 
-  Award, 
-  XCircle, 
-  AlertTriangle,
-  CalendarCheck,
-  CheckCircle2,
-  CalendarDays,
-  Plus
+import Card from './ui/Card';
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Mail,
+  Eye,
+  FileSignature,
+  Trash2,
+  Clock,
+  Award,
+  CalendarDays
 } from 'lucide-react';
 
 const MONTH_NAMES_RO = [
@@ -225,7 +219,7 @@ export default function CalendarView({
 
   // Formatare estetica a datei selectate
   const formatSelectedDateHuman = (dateStr) => {
-    if (!dateStr) return 'Nicio zi selectata';
+    if (!dateStr) return 'Nicio zi selectată';
     try {
       const [y, m, d] = dateStr.split('-').map(Number);
       const dt = new Date(y, m - 1, d);
@@ -243,24 +237,24 @@ export default function CalendarView({
     <div className="flex-1 min-h-0 overflow-y-auto space-y-3 font-sans text-neutral-900 kanban-column-scroll pr-1">
       
       {/* 1. CALENDAR TOP CONTROLS & MONTH SELECTOR */}
-      <div className="bg-white border border-neutral-200/90 shadow-2xs rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <Card className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         
         {/* MONTH & YEAR HEADER WITH NAVIGATION BUTTONS */}
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-black text-white rounded-xl border border-neutral-900 shrink-0 shadow-2xs">
+          <div className="p-2.5 bg-brand-50 text-brand-600 rounded-xl shrink-0">
             <CalendarIcon className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg sm:text-xl font-bold text-neutral-950 tracking-tight">
+              <h3 className="font-serif text-lg sm:text-xl font-medium text-neutral-950">
                 {MONTH_NAMES_RO[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h3>
               <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200">
-                {totalMonthApps} aplicari in luna
+                {totalMonthApps} aplicații în lună
               </span>
             </div>
             <p className="text-xs text-neutral-500 font-medium mt-0.5">
-              Click pe orice zi pentru a vizualiza sau adauga aplicari
+              Alege o zi pentru detalii
             </p>
           </div>
         </div>
@@ -270,16 +264,16 @@ export default function CalendarView({
           
           {/* QUICK STATUS FILTER */}
           <div className="flex items-center gap-1.5 bg-neutral-50 px-2.5 py-1.5 rounded-xl border border-neutral-200 text-xs">
-            <span className="text-[11px] font-bold text-neutral-500 shrink-0 font-mono">Status:</span>
+            <span className="text-[11px] font-bold text-neutral-500 shrink-0 font-mono">Etapă:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="bg-transparent text-neutral-900 font-bold text-xs outline-none cursor-pointer"
             >
-              <option value="ALL">Toate statusurile</option>
+              <option value="ALL">Toate etapele</option>
               <option value="APPLIED">Aplicat</option>
               <option value="INTERVIEWING">Interviu</option>
-              <option value="REJECTED">Respinse</option>
+              <option value="REJECTED">Respins</option>
             </select>
           </div>
 
@@ -287,21 +281,21 @@ export default function CalendarView({
             <button
               onClick={handlePrevMonth}
               className="p-1.5 rounded-lg hover:bg-white text-neutral-600 hover:text-black transition cursor-pointer"
-              title="Luna Anterioara"
+              title="Luna anterioară"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={handleGoToday}
               className="px-2.5 py-1 text-xs font-bold rounded-lg hover:bg-white text-neutral-800 transition cursor-pointer"
-              title="Mergi la ziua de azi"
+              title="Azi"
             >
-              Astazi
+              Azi
             </button>
             <button
               onClick={handleNextMonth}
               className="p-1.5 rounded-lg hover:bg-white text-neutral-600 hover:text-black transition cursor-pointer"
-              title="Luna Urmatoare"
+              title="Luna următoare"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -309,13 +303,13 @@ export default function CalendarView({
 
         </div>
 
-      </div>
+      </Card>
 
       {/* 2. MAIN SPLIT: CALENDAR GRID (LEFT) + SELECTED DAY AGENDA (RIGHT) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         
         {/* CALENDAR GRID (SPAN 8/12) */}
-        <div className="lg:col-span-8 bg-white border border-neutral-200/90 shadow-2xs rounded-xl overflow-hidden flex flex-col">
+        <div className="lg:col-span-8 bg-white border border-neutral-200/90 rounded-2xl overflow-hidden flex flex-col">
           
           {/* DAY NAMES HEADER */}
           <div className="grid grid-cols-7 border-b border-neutral-200 bg-neutral-50/90 text-center py-2.5 text-xs font-bold text-neutral-600 uppercase tracking-wider font-mono">
@@ -341,7 +335,7 @@ export default function CalendarView({
                     !cell.isCurrentMonth ? 'bg-neutral-50/50 text-neutral-300' : 'bg-white text-neutral-900'
                   } ${
                     cell.isSelected 
-                      ? 'ring-2 ring-neutral-950 bg-neutral-100/60 z-10' 
+                      ? 'ring-2 ring-brand-500 bg-brand-50/50 z-10' 
                       : 'hover:bg-neutral-50/80'
                   }`}
                 >
@@ -349,9 +343,9 @@ export default function CalendarView({
                   <div className="flex items-center justify-between mb-1">
                     <span className={`inline-flex items-center justify-center w-6 h-6 text-xs font-bold rounded-lg transition font-mono ${
                       cell.isToday 
-                        ? 'bg-black text-white font-bold shadow-xs' 
+                        ? 'bg-brand-500 text-white font-bold' 
                         : cell.isSelected 
-                        ? 'bg-neutral-900 text-white font-bold' 
+                        ? 'bg-brand-100 text-brand-700 font-bold' 
                         : cell.isCurrentMonth 
                         ? 'text-neutral-800' 
                         : 'text-neutral-400'
@@ -360,9 +354,9 @@ export default function CalendarView({
                     </span>
 
                     {appCount > 0 && (
-                      <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full border ${
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded-full border ${
                         hasInterviews
-                          ? 'bg-neutral-950 text-white border-neutral-900 shadow-xs'
+                          ? 'bg-brand-500 text-white border-brand-500'
                           : 'bg-gray-100 text-gray-700 border-gray-200'
                       }`}>
                         {appCount}
@@ -382,7 +376,7 @@ export default function CalendarView({
                             e.stopPropagation();
                             onOpenJobModal(app);
                           }}
-                          className={`px-1.5 py-0.5 rounded-md border text-[10px] font-bold truncate flex items-center gap-1 transition shadow-2xs hover:scale-[1.02] cursor-pointer ${
+                          className={`px-1.5 py-0.5 rounded-md border text-[10px] font-bold truncate flex items-center gap-1 transition hover:scale-[1.02] cursor-pointer ${
                             statusColorMap[app.status] || 'bg-gray-50 text-gray-800 border-gray-200'
                           }`}
                           title={`${app.companyName}: ${app.jobTitle} (${app.status})`}
@@ -395,7 +389,7 @@ export default function CalendarView({
                     })}
 
                     {appCount > 2 && (
-                      <div className="text-[9px] font-extrabold text-blue-600 hover:text-blue-800 pl-0.5">
+                      <div className="text-[9px] font-semibold text-blue-600 hover:text-blue-800 pl-0.5">
                         +{appCount - 2} altele
                       </div>
                     )}
@@ -412,7 +406,7 @@ export default function CalendarView({
         <div className="lg:col-span-4 space-y-4">
           
           {/* DAY AGENDA BOX */}
-          <div className="bg-white border border-neutral-200/90 shadow-2xs rounded-xl p-4 sm:p-5 space-y-3.5">
+          <div className="bg-white border border-neutral-200/90 rounded-xl p-4 sm:p-5 space-y-3.5">
             <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
               <div>
                 <span className="text-xs font-mono uppercase tracking-wider text-neutral-500 block font-semibold">
@@ -437,13 +431,13 @@ export default function CalendarView({
                   return (
                     <div 
                       key={app.id} 
-                      className="p-3.5 bg-neutral-50/80 hover:bg-neutral-100/80 border border-neutral-200 rounded-xl space-y-2.5 transition shadow-2xs group"
+                      className="p-3.5 bg-neutral-50/80 hover:bg-neutral-100/80 border border-neutral-200 rounded-xl space-y-2.5 transition group"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div 
                           onClick={() => onOpenJobModal(app)} 
                           className="cursor-pointer flex-1 min-w-0"
-                          title="Deschide fisa completa a jobului"
+                          title="Deschide fișa jobului"
                         >
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
@@ -494,7 +488,7 @@ export default function CalendarView({
                             type="button"
                             onClick={() => onOpenJobModal(app)}
                             className="p-1.5 rounded-lg hover:bg-neutral-200 text-neutral-800 border border-neutral-200 transition cursor-pointer active:scale-95"
-                            title="Deschide Fisa Jobului"
+                            title="Deschide fișa jobului"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -504,7 +498,7 @@ export default function CalendarView({
                               type="button"
                               onClick={() => onOpenCoverLetter(app.id)}
                               className="p-1.5 rounded-lg hover:bg-neutral-200 text-neutral-800 border border-neutral-200 transition cursor-pointer active:scale-95"
-                              title="Genereaza Scrisoare de Intentie AI"
+                              title="Generează scrisoare de intenție"
                             >
                               <FileSignature className="w-4 h-4" />
                             </button>
@@ -518,7 +512,7 @@ export default function CalendarView({
                               }
                             }}
                             className="p-1 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition cursor-pointer"
-                            title="Sterge aplicarea"
+                            title="Șterge aplicația"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -532,9 +526,9 @@ export default function CalendarView({
             ) : (
               <div className="py-8 text-center text-gray-400 space-y-2 border border-dashed border-gray-200 rounded-xl p-4">
                 <CalendarDays className="w-8 h-8 text-gray-300 mx-auto" />
-                <p className="text-xs font-semibold text-gray-600">Nicio aplicare in aceasta zi</p>
+                <p className="text-xs font-semibold text-gray-600">Nicio aplicație în această zi</p>
                 <p className="text-[11px] text-gray-400">
-                  Selecteaza alta zi cu marcaje sau adauga o data joburilor salvate mai jos.
+                  Alege altă zi.
                 </p>
               </div>
             )}
@@ -543,10 +537,10 @@ export default function CalendarView({
 
           {/* ACTIVE INTERVIEWS HIGHLIGHT (DACA EXISTA) */}
           {interviewApps.length > 0 && (
-            <div className="bg-neutral-50/80 border border-neutral-200/90 rounded-xl p-4 space-y-2.5 shadow-2xs">
+            <div className="bg-neutral-50/80 border border-neutral-200/90 rounded-xl p-4 space-y-2.5">
               <div className="flex items-center gap-2 text-neutral-900">
                 <Award className="w-4 h-4 text-neutral-900 shrink-0" />
-                <h4 className="text-xs font-mono font-bold uppercase tracking-wider">
+                <h4 className="text-xs font-medium">
                   Interviuri Active ({interviewApps.length})
                 </h4>
               </div>
@@ -574,7 +568,7 @@ export default function CalendarView({
 
           {/* JOBS WITHOUT DATE (COLLAPSIBLE ACCORDION) */}
           {unscheduledApps.length > 0 && (
-            <div className="bg-white border border-neutral-200/90 rounded-xl p-4 space-y-3 shadow-2xs">
+            <div className="bg-white border border-neutral-200/90 rounded-xl p-4 space-y-3">
               <button
                 type="button"
                 onClick={() => setShowUnscheduled(!showUnscheduled)}
@@ -583,7 +577,7 @@ export default function CalendarView({
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-neutral-500 group-hover:text-black transition" />
                   <span className="text-xs font-bold text-neutral-800 group-hover:text-black transition">
-                    Joburi fara data specificata ({unscheduledApps.length})
+                    Joburi fără dată ({unscheduledApps.length})
                   </span>
                 </div>
                 <span className="text-xs font-mono font-bold text-neutral-400 group-hover:text-neutral-700">
@@ -594,13 +588,13 @@ export default function CalendarView({
               {showUnscheduled && (
                 <div className="space-y-2 pt-2 border-t border-gray-100 max-h-[260px] overflow-y-auto pr-1">
                   <p className="text-[11px] text-gray-500 font-medium">
-                    Seteaza o data pentru a le pozitiona in calendar:
+                    Setează o dată ca să apară în calendar:
                   </p>
                   {unscheduledApps.map((app) => (
                     <div key={app.id} className="p-2.5 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-gray-900 truncate">{app.companyName}</span>
-                        <span className="text-[10px] font-extrabold text-gray-500">{app.status}</span>
+                        <span className="text-[10px] font-semibold text-gray-500">{app.status}</span>
                       </div>
                       <p className="text-[11px] text-gray-600 truncate">{app.jobTitle}</p>
                       <div className="flex items-center gap-1.5 pt-1">
@@ -619,7 +613,7 @@ export default function CalendarView({
                               handleAssignDate(app.id, inp.value);
                             }
                           }}
-                          className="px-2 py-1 bg-black hover:bg-neutral-800 text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                          className="px-2 py-1 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
                         >
                           {savingDateAppId === app.id ? '...' : 'Programeaza'}
                         </button>

@@ -1,42 +1,42 @@
 import React, { useRef } from 'react';
-import { motion, useReducedMotion, useScroll } from 'framer-motion';
+import { motion, useReducedMotion, useScroll, useSpring } from 'framer-motion';
 
 const STEPS = [
   {
     n: '01',
-    title: 'Audit & Calibrare CV',
-    text: 'Incarci CV-ul curent, primesti raportul de compatibilitate si adaugi competentele cheie solicitate in anunturile tinta.',
+    title: 'Calibrezi CV-ul',
+    text: 'Vezi scorul ATS și adaugi cuvintele-cheie care lipsesc.',
     img: '/landing/method/audit-cv.webp',
     w: 670,
     h: 330,
-    alt: 'Decupaj din CV Studio cu un CV demo',
+    alt: 'Decupaj din Studio CV cu un CV demo',
   },
   {
     n: '02',
-    title: 'Aplicare Tintita',
-    text: 'Generezi scrisori de intentie specifice si inregistrezi aplicatia in board-ul Kanban pentru urmarire disciplinata.',
+    title: 'Aplici țintit',
+    text: 'Scrisoare de intenție pe job și aplicația urmărită în Tracker.',
     img: '/landing/method/aplicare-tracker.webp',
     w: 513,
     h: 330,
-    alt: 'Decupaj din board-ul Kanban cu aplicatii demo',
+    alt: 'Decupaj din board-ul Kanban cu aplicații demo',
   },
   {
     n: '03',
-    title: 'Drill-down Tehnic',
-    text: 'Exersezi 15-20 de flashcard-uri zilnic pe stiva ta tehnica si parcurgi scenariile practice de arhitectura de sistem.',
+    title: 'Exersezi tehnic',
+    text: 'Câteva flashcard-uri pe zi, pe stack-ul cerut de piață.',
     img: '/landing/method/drilldown-piata.webp',
     w: 950,
     h: 330,
-    alt: 'Decupaj din Market Insights cu statistici despre piata IT',
+    alt: 'Decupaj din Market Insights cu statistici despre piața IT',
   },
   {
     n: '04',
-    title: 'Conversie in Oferta',
-    text: 'Sustii interviul HR cu povesti clare prin metoda STAR, stapanesti intrebarile tehnice si negociezi pachetul salarial.',
+    title: 'Iei oferta',
+    text: 'Răspunsuri STAR la interviul HR și negociere pregătită.',
     img: '/landing/method/oferta-scrisoare.webp',
     w: 545,
     h: 330,
-    alt: 'Decupaj dintr-o scrisoare de intentie generata pentru un job demo',
+    alt: 'Decupaj dintr-o scrisoare de intenție generată pentru un job demo',
   },
 ];
 
@@ -49,27 +49,29 @@ export default function MethodSteps() {
   const ref = useRef(null);
   const reduced = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 75%', 'end 65%'] });
-  const progress = reduced ? 1 : scrollYProgress;
+  // Spring peste progresul de scroll, ca linia sa urmareasca lin, fara sacadari.
+  const smooth = useSpring(scrollYProgress, { stiffness: 90, damping: 26, mass: 0.4 });
+  const progress = reduced ? 1 : smooth;
 
   return (
     <div ref={ref} className="relative">
       {/* Desktop line */}
       <div className="hidden md:block absolute left-0 right-0 top-[7px] h-px bg-neutral-200" aria-hidden="true">
-        <motion.div className="h-full bg-neutral-900 origin-left" style={{ scaleX: progress }} />
+        <motion.div className="h-full bg-brand-500 origin-left" style={{ scaleX: progress }} />
       </div>
       {/* Mobile line */}
       <div className="md:hidden absolute left-[7px] top-2 bottom-2 w-px bg-neutral-200" aria-hidden="true">
-        <motion.div className="w-full h-full bg-neutral-900 origin-top" style={{ scaleY: progress }} />
+        <motion.div className="w-full h-full bg-brand-500 origin-top" style={{ scaleY: progress }} />
       </div>
 
       <ol className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6 list-none m-0 p-0">
         {STEPS.map((s) => (
           <li key={s.n} className="relative pl-8 md:pl-0 md:pt-10">
             <span
-              className="absolute left-0 top-1 md:top-0 w-[15px] h-[15px] rounded-full bg-white border-2 border-neutral-900"
+              className="absolute left-0 top-1 md:top-0 w-[15px] h-[15px] rounded-full bg-white border-2 border-brand-500"
               aria-hidden="true"
             />
-            <div className="p-5 sm:p-6 rounded-2xl bg-white border border-neutral-200 space-y-3.5 shadow-2xs h-full">
+            <div className="p-5 rounded-2xl bg-white border border-neutral-200 space-y-3 h-full">
               <div className="rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50">
                 <img
                   src={s.img}
@@ -81,9 +83,9 @@ export default function MethodSteps() {
                   className="block w-full h-auto"
                 />
               </div>
-              <span className="block text-xs font-mono font-bold text-neutral-400">PASUL {s.n}</span>
-              <h3 className="text-lg sm:text-xl font-bold text-black">{s.title}</h3>
-              <p className="text-sm text-neutral-600 leading-relaxed">{s.text}</p>
+              <span className="block text-xs font-medium text-brand-600">Pasul {s.n}</span>
+              <h3 className="font-serif text-xl text-neutral-950">{s.title}</h3>
+              <p className="text-sm text-neutral-500 leading-relaxed">{s.text}</p>
             </div>
           </li>
         ))}

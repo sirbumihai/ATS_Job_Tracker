@@ -15,10 +15,7 @@ import static com.jobtracker.ats.util.JobNormalizationUtils.dedupKey;
 @Slf4j
 public class JobScraperOrchestrator {
 
-    static final int DEFAULT_TIMEOUT_SECONDS = 90;
-
     private final List<JobScraper> scrapers;
-    private final int scraperTimeoutSeconds;
 
     // Executor bazat pe Virtual Threads (Java 21) pentru I/O concurent optim
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -27,18 +24,16 @@ public class JobScraperOrchestrator {
     private volatile List<PlatformScrapeResult> lastExecutionReports = Collections.emptyList();
 
     public JobScraperOrchestrator(List<JobScraper> scrapers) {
-        this(scrapers, Set.of(), DEFAULT_TIMEOUT_SECONDS);
+        this(scrapers, Set.of());
     }
 
     /**
      * @param disabledPlatforms platformele excluse din rulare (app.crawler.disabled-platforms), ex. LINKEDIN,EJOBS
-     * @param scraperTimeoutSeconds timpul maxim per platformă (app.crawler.scraper-timeout-seconds)
      */
     @Autowired
     public JobScraperOrchestrator(
             List<JobScraper> scrapers,
-            @Value("${app.crawler.disabled-platforms:}") Set<String> disabledPlatforms,
-            @Value("${app.crawler.scraper-timeout-seconds:" + DEFAULT_TIMEOUT_SECONDS + "}") int scraperTimeoutSeconds) {
+            @Value("${app.crawler.disabled-platforms:}") Set<String> disabledPlatforms) {
         Set<String> disabled = new HashSet<>();
         for (String p : disabledPlatforms) {
             if (p != null && !p.isBlank()) disabled.add(p.trim().toUpperCase());
@@ -46,7 +41,6 @@ public class JobScraperOrchestrator {
         this.scrapers = scrapers.stream()
                 .filter(s -> !disabled.contains(s.getPlatformName().toUpperCase()))
                 .toList();
-        this.scraperTimeoutSeconds = scraperTimeoutSeconds > 0 ? scraperTimeoutSeconds : DEFAULT_TIMEOUT_SECONDS;
         if (!disabled.isEmpty()) {
             log.info("[JOB ORCHESTRATOR] Platforme dezactivate din configurare: {}", disabled);
         }
@@ -66,9 +60,11 @@ public class JobScraperOrchestrator {
     ) {}
 
     /**
-     * Rulează în paralel toate crawler-ele active din sistem folosind Virtual Threads Java 21,
-     * izolând eventualele erori sau timeout-uri per sursă și asigurând deduplicarea globală a anunțurilor.
-     * Reține întotdeauna rezultatele parțial colectate chiar dacă o platformă depășește timpul limită.
+     * Rulează în paralel, pe Virtual Threads Java 21, toate crawlerele active și așteaptă ca fiecare
+     * să termine, fără limită de timp per platformă: fiecare cerere HTTP are propriul timeout, iar
+     * scraperele se opresc singure când o platformă refuză sau nu mai răspunde, deci rularea nu rămâne
+     * blocată. Erorile unei platforme nu le afectează pe celelalte, joburile colectate înainte de o
+     * eroare se păstrează, iar la final se elimină duplicatele dintre platforme.
      *
      * @param knownDbUrls Set de URL-uri existente în baza de date pentru crawling diferențial
      * @return Lista completă de joburi unificate nou colectate
@@ -78,53 +74,14 @@ public class JobScraperOrchestrator {
         long totalStartTime = System.currentTimeMillis();
 
         List<CompletableFuture<ScraperTaskResult>> futures = scrapers.stream()
-                .map(scraper -> {
-                    long startTime = System.currentTimeMillis();
-                    List<UnifiedJobListingDto> platformList = Collections.synchronizedList(new ArrayList<>());
-                    Set<String> platformDedup = Collections.synchronizedSet(new HashSet<>());
-
-                    return CompletableFuture.supplyAsync(() -> {
-                        try {
-                            log.info("[JOB ORCHESTRATOR] [START] Lansare scraper: {}", scraper.getPlatformName());
-                            scraper.scrape(platformList, platformDedup, knownDbUrls);
-                            long duration = System.currentTimeMillis() - startTime;
-                            log.info("[JOB ORCHESTRATOR] [SUCCESS] Scraper {} a colectat {} joburi în {} ms.",
-                                    scraper.getPlatformName(), platformList.size(), duration);
-                            return new ScraperTaskResult(
-                                    PlatformScrapeResult.success(scraper.getPlatformName(), platformList.size(), duration),
-                                    new ArrayList<>(platformList)
-                            );
-                        } catch (Exception e) {
-                            long duration = System.currentTimeMillis() - startTime;
-                            log.error("[JOB ORCHESTRATOR] [ERROR] Scraper {} a eșuat după {} ms: {}",
-                                    scraper.getPlatformName(), duration, e.getMessage(), e);
-                            return new ScraperTaskResult(
-                                    PlatformScrapeResult.failed(scraper.getPlatformName(), duration, e.getMessage()),
-                                    new ArrayList<>(platformList)
-                            );
-                        }
-                    }, executor)
-                    .orTimeout(scraperTimeoutSeconds, TimeUnit.SECONDS)
-                    .exceptionally(ex -> {
-                        long duration = System.currentTimeMillis() - startTime;
-                        int collected = platformList.size();
-                        log.warn("[JOB ORCHESTRATOR] [TIMEOUT] Scraper {} a depășit timpul limită ({} ms). Se rețin cele {} joburi colectate parțial.",
-                                scraper.getPlatformName(), duration, collected);
-                        return new ScraperTaskResult(
-                                PlatformScrapeResult.timeout(scraper.getPlatformName(), duration),
-                                new ArrayList<>(platformList)
-                        );
-                    });
-                })
+                .map(scraper -> CompletableFuture.supplyAsync(() -> runScraper(scraper, knownDbUrls), executor))
                 .toList();
-
-        // Așteptăm finalizarea tuturor crawlerelor
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
         List<UnifiedJobListingDto> freshList = new ArrayList<>();
         Set<String> globalDedupKeys = new HashSet<>();
         List<PlatformScrapeResult> reports = new ArrayList<>();
 
+        // Rezultatele se citesc în ordinea platformelor, ca deduplicarea să nu depindă de cine termină primul
         for (CompletableFuture<ScraperTaskResult> future : futures) {
             try {
                 ScraperTaskResult res = future.join();
@@ -134,7 +91,7 @@ public class JobScraperOrchestrator {
                         freshList.add(job);
                     }
                 }
-            } catch (Exception e) {
+            } catch (CompletionException e) {
                 log.error("[JOB ORCHESTRATOR] Eroare la citirea rezultatelor unui scraper: {}", e.getMessage());
             }
         }
@@ -145,5 +102,33 @@ public class JobScraperOrchestrator {
                 totalDuration, freshList.size());
 
         return freshList;
+    }
+
+    private ScraperTaskResult runScraper(JobScraper scraper, Set<String> knownDbUrls) {
+        String platform = scraper.getPlatformName();
+        long startTime = System.currentTimeMillis();
+        // Scraperele pot adăuga joburi din mai multe fire, de aceea colecțiile sunt sincronizate
+        List<UnifiedJobListingDto> platformList = Collections.synchronizedList(new ArrayList<>());
+        Set<String> platformDedup = Collections.synchronizedSet(new HashSet<>());
+
+        try {
+            log.info("[JOB ORCHESTRATOR] [START] Lansare scraper: {}", platform);
+            scraper.scrape(platformList, platformDedup, knownDbUrls);
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("[JOB ORCHESTRATOR] [SUCCESS] Scraper {} a colectat {} joburi în {} ms.",
+                    platform, platformList.size(), duration);
+            return new ScraperTaskResult(
+                    PlatformScrapeResult.success(platform, platformList.size(), duration),
+                    new ArrayList<>(platformList)
+            );
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            log.error("[JOB ORCHESTRATOR] [ERROR] Scraper {} a eșuat după {} ms: {}",
+                    platform, duration, e.getMessage(), e);
+            return new ScraperTaskResult(
+                    PlatformScrapeResult.failed(platform, duration, e.getMessage()),
+                    new ArrayList<>(platformList)
+            );
+        }
     }
 }

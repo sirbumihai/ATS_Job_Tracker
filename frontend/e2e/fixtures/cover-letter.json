@@ -1,0 +1,18 @@
+{
+  "candidateName": "Mihai Test",
+  "candidateEmail": "mihai@example.test",
+  "candidatePhone": "+40 700 000 000",
+  "candidateLocation": "București, România",
+  "companyName": "Endava",
+  "jobTitle": "Junior Java Developer",
+  "letterDate": "20 octombrie 2026",
+  "recipientTitle": "Echipa de Recrutare",
+  "subjectLine": "Candidatură pentru poziția de Junior Java Developer",
+  "salutation": "Stimată echipă,",
+  "openingParagraph": "Vă scriu pentru poziția de Junior Java Developer.",
+  "bodyParagraph1": "Am experiență cu Spring Boot și PostgreSQL.",
+  "bodyParagraph2": "Îmi place să lucrez în echipă.",
+  "closingParagraph": "Vă mulțumesc pentru timpul acordat.",
+  "signOff": "Cu stimă,",
+  "matchedSkills": ["Java", "Spring Boot"]
+}

@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  Building2, 
-  User, 
-  LogOut, 
-  Lock, 
-  Upload, 
-  Plus, 
-  ShieldCheck, 
-  Menu, 
-  X, 
+import {
+  LogOut,
+  Lock,
+  Menu,
+  X,
   Search,
   FileText,
   FolderKanban,
@@ -18,91 +13,53 @@ import {
   Compass,
   Linkedin,
   GraduationCap,
-  ChevronRight,
-  Sparkles,
-  Zap,
-  ExternalLink,
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen
 } from 'lucide-react';
+import BrandMark from './ui/BrandMark';
 
+// Ordinea si destinatiile tab-urilor sunt fixe; se schimba doar textul si stilul.
 const NAV_SECTIONS = [
   {
-    title: 'PIPELINE & CAUTARE',
+    title: 'Pipeline',
     items: [
-      {
-        id: 'tracker',
-        label: 'Tracker Aplicatii',
-        icon: FolderKanban
-      },
-      {
-        id: 'job_search',
-        label: 'Cautare Job-uri',
-        icon: Search
-      },
-      {
-        id: 'market_insights',
-        label: 'Market Insights',
-        icon: Compass
-      }
+      { id: 'tracker', label: 'Tracker aplicații', icon: FolderKanban },
+      { id: 'job_search', label: 'Căutare joburi', icon: Search },
+      { id: 'market_insights', label: 'Market Insights', icon: Compass }
     ]
   },
   {
-    title: 'DOCUMENTE & ATS STUDIO',
+    title: 'Documente',
     items: [
-      {
-        id: 'cv_library',
-        label: 'CV-urile Mele',
-        icon: Files
-      },
-      {
-        id: 'cv_studio',
-        label: 'Studio CV',
-        icon: FileText
-      },
-      {
-        id: 'cover_letter',
-        label: 'Cover Letter AI',
-        icon: FileSignature
-      },
-      {
-        id: 'github_readme',
-        label: 'GitHub README',
-        icon: Github
-      },
-      {
-        id: 'linkedin_optimizer',
-        label: 'LinkedIn Optimizer',
-        icon: Linkedin
-      }
+      { id: 'cv_library', label: 'CV-urile mele', icon: Files },
+      { id: 'cv_studio', label: 'Studio CV', icon: FileText },
+      { id: 'cover_letter', label: 'Cover Letter', icon: FileSignature },
+      { id: 'github_readme', label: 'GitHub README', icon: Github },
+      { id: 'linkedin_optimizer', label: 'LinkedIn Optimizer', icon: Linkedin }
     ]
   },
   {
-    title: 'PREGATIRE & RESURSE',
+    title: 'Pregătire',
     items: [
-      {
-        id: 'skill_roadmap',
-        label: 'Skill Roadmaps',
-        icon: GraduationCap
-      },
-      {
-        id: 'feedback',
-        label: 'Feedback & Sugestii',
-        icon: MessageSquare
-      }
+      { id: 'skill_roadmap', label: 'Skill Roadmap', icon: GraduationCap },
+      { id: 'feedback', label: 'Feedback', icon: MessageSquare }
     ]
   }
 ];
 
-export default function Navbar({ 
-  activeTab, 
-  setActiveTab, 
-  currentUser, 
-  onLogout, 
-  onOpenAuth, 
-  onOpenUpload, 
-  onOpenAddJob
+const ALL_ITEMS = NAV_SECTIONS.flatMap(s => s.items);
+
+function initialOf(user) {
+  return (user.fullName || user.email || 'U').charAt(0).toUpperCase();
+}
+
+export default function Navbar({
+  activeTab,
+  setActiveTab,
+  currentUser,
+  onLogout,
+  onOpenAuth
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -128,335 +85,217 @@ export default function Navbar({
     setMobileMenuOpen(false);
   };
 
-  // Render expanded navigation list
-  const renderNavListExpanded = () => (
-    <div className="space-y-6">
-      {NAV_SECTIONS.map((section, idx) => (
-        <div key={idx} className="space-y-1.5">
-          <div className="px-3 text-[11px] font-mono uppercase tracking-wider text-neutral-400 font-bold select-none">
-            {section.title}
-          </div>
-          <div className="space-y-1">
-            {section.items.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleSelectTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer group ${
-                    isActive 
-                      ? 'bg-black text-white shadow-xs' 
-                      : 'text-neutral-700 hover:text-black hover:bg-neutral-100/90 border border-transparent'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`p-1.5 rounded-lg shrink-0 transition-all ${
-                      isActive 
-                        ? 'bg-neutral-800 text-white' 
-                        : 'bg-neutral-100 text-neutral-700 group-hover:bg-neutral-200 group-hover:text-black'
-                    }`}>
-                      <Icon className="w-4.5 h-4.5" />
-                    </div>
-                    <span className={`text-[13px] sm:text-sm truncate ${
-                      isActive ? 'text-white font-bold' : 'text-neutral-800 font-medium group-hover:text-black'
-                    }`}>
-                      {item.label}
-                    </span>
-                  </div>
-
-                  {isActive ? (
-                    <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
-                  ) : item.badge ? (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 bg-neutral-100 text-neutral-600 border border-neutral-200">
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  // Render compact collapsed icon rail
-  const renderNavListCollapsed = () => (
-    <div className="space-y-3 py-1 w-full">
-      {NAV_SECTIONS.map((section, sIdx) => (
-        <div key={sIdx} className="space-y-1.5 w-full">
-          {sIdx > 0 && <div className="w-8 h-px bg-neutral-200 mx-auto my-2" />}
-          {section.items.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <div key={item.id} className="flex justify-center w-full">
-                <button
-                  onClick={() => handleSelectTab(item.id)}
-                  title={item.label}
-                  className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-150 cursor-pointer ${
-                    isActive 
-                      ? 'bg-black text-white shadow-xs' 
-                      : 'text-neutral-700 hover:text-black hover:bg-neutral-100'
-                  }`}
-                  aria-label={item.label}
-                >
-                  <Icon className="w-5 h-5" />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  );
+  const itemClass = (isActive) => isActive
+    ? 'bg-brand-50 text-brand-700'
+    : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100';
 
   return (
     <>
-      {/* ======================================================== */}
-      {/* 1. DESKTOP VERTICAL SIDEBAR (COLLAPSIBLE FOR SPACE SAVING) */}
-      {/* ======================================================== */}
-      <aside 
-        className={`hidden lg:flex h-screen sticky top-0 bg-white border-r border-neutral-200/90 flex-col justify-between shrink-0 z-30 select-none shadow-2xs transition-all duration-200 overflow-x-hidden ${
-          isCollapsed ? 'w-[72px]' : 'w-64'
+      {/* 1. MENIU LATERAL DESKTOP (RESTRANGIBIL) */}
+      <aside
+        className={`hidden lg:flex h-screen sticky top-0 bg-white border-r border-neutral-200 flex-col justify-between shrink-0 z-30 select-none transition-all duration-200 overflow-x-hidden ${
+          isCollapsed ? 'w-[72px]' : 'w-60'
         }`}
       >
-        
-        {/* LOGO & BRAND HEADER */}
-        <div className={`border-b border-neutral-100 ${isCollapsed ? 'p-3 flex flex-col items-center gap-2' : 'p-4 flex items-center justify-between'}`}>
-          <div 
-            className="flex items-center gap-3 cursor-pointer group"
-            onClick={() => handleSelectTab('landing')}
-            title="Mergi la pagina principala JobFlow AI"
-          >
-            <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-all shrink-0">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            {!isCollapsed && (
-              <div>
-                <h1 className="font-bold text-lg text-neutral-950 flex items-center gap-1 tracking-tight leading-tight">
-                  JobFlow <span className="text-neutral-950">AI</span>
-                </h1>
-                <p className="text-[10px] text-neutral-400 font-mono flex items-center gap-1 mt-0.5">
-                  <ShieldCheck className="w-3 h-3 text-neutral-600" />
-                  <span>Tracker & ATS Studio</span>
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* TOGGLE COLLAPSE BUTTON */}
+        <div className={`border-b border-neutral-100 ${isCollapsed ? 'p-3 flex flex-col items-center gap-2' : 'px-4 py-4 flex items-center justify-between'}`}>
           <button
-            onClick={toggleCollapsed}
-            title={isCollapsed ? "Extinde meniul lateral" : "Restrange meniul lateral (Castiga spatiu pentru tabele si Kanban)"}
-            className={`p-2 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition cursor-pointer ${
-              isCollapsed ? 'mt-1' : ''
-            }`}
+            type="button"
+            className="flex items-center gap-2.5 cursor-pointer"
+            onClick={() => handleSelectTab('landing')}
+            aria-label="JobFlow AI, pagina principală"
           >
-            {isCollapsed ? (
-              <PanelLeftOpen className="w-4.5 h-4.5" />
-            ) : (
-              <PanelLeftClose className="w-4.5 h-4.5" />
-            )}
+            <BrandMark size="w-9 h-9" withName={!isCollapsed} />
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-label={isCollapsed ? 'Extinde meniul' : 'Restrânge meniul'}
+            title={isCollapsed ? 'Extinde meniul' : 'Restrânge meniul'}
+            className="p-2 rounded-lg text-neutral-400 hover:text-neutral-950 hover:bg-neutral-100 transition cursor-pointer"
+          >
+            {isCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
           </button>
         </div>
 
-        {/* SCROLLABLE VERTICAL NAVIGATION */}
-        <div className={`flex-1 overflow-y-auto overflow-x-hidden ${isCollapsed ? 'px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden' : 'px-3.5'} py-3 space-y-4`}>
-          {isCollapsed ? renderNavListCollapsed() : renderNavListExpanded()}
-        </div>
-
-        {/* BOTTOM SECTION: USER FOOTER */}
-        <div className={`border-t border-neutral-100 bg-neutral-50/70 ${isCollapsed ? 'p-2.5 flex flex-col items-center gap-2' : 'p-3.5 space-y-2.5'}`}>
-
-          {/* USER PROFILE & LOGOUT */}
-          {currentUser ? (
-            isCollapsed ? (
-              <div className="flex flex-col items-center gap-2 w-full py-1">
-                <div 
-                  className="w-10 h-10 rounded-xl bg-black text-white font-bold text-xs flex items-center justify-center shadow-xs relative"
-                  title={currentUser.fullName || currentUser.email}
-                >
-                  {(currentUser.fullName || currentUser.email || 'U').charAt(0).toUpperCase()}
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white absolute -top-0.5 -right-0.5 animate-pulse"></span>
-                </div>
-                <button
-                  onClick={onLogout}
-                  title="Deconectare cont"
-                  className="p-2 rounded-xl text-neutral-400 hover:text-rose-600 hover:bg-neutral-200/60 transition cursor-pointer"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-neutral-200/90 shadow-2xs">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-black text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
-                    {(currentUser.fullName || currentUser.email || 'U').charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-neutral-900 truncate">
-                      {currentUser.fullName || currentUser.email}
-                    </div>
-                    <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 font-mono">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      Online
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={onLogout}
-                  title="Deconectare din cont"
-                  className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            )
-          ) : (
-            isCollapsed ? (
-              <button
-                onClick={onOpenAuth}
-                title="Conectare in cont"
-                className="w-10 h-10 rounded-xl bg-black hover:bg-neutral-800 text-white flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
-              >
-                <Lock className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                onClick={onOpenAuth}
-                className="w-full py-2.5 px-3 rounded-xl bg-black hover:bg-neutral-800 text-white font-semibold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer active:scale-95"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                <span>Conectare in Cont</span>
-              </button>
-            )
-          )}
-
-        </div>
-      </aside>
-
-      {/* ======================================================== */}
-      {/* 2. MOBILE TOP BAR (Shown on screens < lg)                 */}
-      {/* ======================================================== */}
-      <header className="lg:hidden border-b border-gray-200 bg-white/95 backdrop-blur-md sticky top-0 z-40 text-gray-900 shadow-2xs h-15 px-4 flex items-center justify-between">
-        
-        {/* Mobile Brand */}
-        <div 
-          className="flex items-center gap-2 cursor-pointer"
-          onClick={() => handleSelectTab('landing')}
+        <nav
+          aria-label="Meniu principal"
+          className={`flex-1 overflow-y-auto overflow-x-hidden py-4 ${isCollapsed ? 'px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden' : 'px-3'}`}
         >
-          <div className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center shadow-xs">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg text-neutral-950 flex items-center gap-1 tracking-tight leading-tight">
-              JobFlow <span className="text-neutral-950">AI</span>
-            </h1>
-            <span className="text-[9px] font-mono text-neutral-400 block -mt-0.5">
-              ATS Studio
-            </span>
-          </div>
-        </div>
+          {NAV_SECTIONS.map((section, sIdx) => (
+            <div key={section.title} className={sIdx > 0 ? 'mt-5' : ''}>
+              {isCollapsed
+                ? sIdx > 0 && <div className="w-8 h-px bg-neutral-200 mx-auto mb-3" />
+                : (
+                  <div className="px-3 mb-1.5 text-[11px] font-medium uppercase tracking-wider text-neutral-400">
+                    {section.title}
+                  </div>
+                )}
+              <div className="space-y-0.5">
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleSelectTab(item.id)}
+                      aria-current={isActive ? 'page' : undefined}
+                      aria-label={isCollapsed ? item.label : undefined}
+                      title={isCollapsed ? item.label : undefined}
+                      className={`flex items-center rounded-lg transition-colors cursor-pointer ${itemClass(isActive)} ${
+                        isCollapsed ? 'w-11 h-11 mx-auto justify-center' : 'w-full gap-3 px-3 py-2 text-sm font-medium text-left'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-brand-500' : ''}`} />
+                      {!isCollapsed && <span className="truncate">{item.label}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
 
-        {/* Mobile Right Controls */}
-        <div className="flex items-center gap-2">
-
+        <div className={`border-t border-neutral-100 ${isCollapsed ? 'p-2.5 flex flex-col items-center gap-2' : 'p-3'}`}>
           {currentUser ? (
-            <div className="w-7 h-7 rounded-lg bg-black text-white font-bold text-xs flex items-center justify-center shadow-xs">
-              {(currentUser.fullName || currentUser.email || 'U').charAt(0).toUpperCase()}
+            <div className={`flex items-center ${isCollapsed ? 'flex-col gap-2' : 'justify-between gap-2'}`}>
+              <div className="flex items-center gap-2.5 min-w-0" title={currentUser.fullName || currentUser.email}>
+                <span className="w-8 h-8 rounded-lg bg-neutral-900 text-white font-semibold text-xs flex items-center justify-center shrink-0">
+                  {initialOf(currentUser)}
+                </span>
+                {!isCollapsed && (
+                  <span className="text-sm font-medium text-neutral-900 truncate">
+                    {currentUser.fullName || currentUser.email}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={onLogout}
+                aria-label="Deconectare"
+                title="Deconectare"
+                className="p-2 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
           ) : (
             <button
+              type="button"
               onClick={onOpenAuth}
-              className="text-xs px-2.5 py-1.5 rounded-lg bg-black text-white font-semibold"
+              aria-label="Conectare"
+              title="Conectare"
+              className={`rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
+                isCollapsed ? 'w-10 h-10' : 'w-full py-2.5'
+              }`}
             >
-              Login
+              <Lock className="w-4 h-4" />
+              {!isCollapsed && <span>Conectare</span>}
             </button>
           )}
+        </div>
+      </aside>
 
+      {/* 2. BARA DE SUS PE MOBIL (< lg) */}
+      <header className="lg:hidden border-b border-neutral-200 bg-white/95 backdrop-blur-md sticky top-0 z-40 h-14 px-4 flex items-center justify-between">
+        <button
+          type="button"
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => handleSelectTab('landing')}
+          aria-label="JobFlow AI, pagina principală"
+        >
+          <BrandMark />
+        </button>
+
+        <div className="flex items-center gap-2">
+          {currentUser ? (
+            <span className="w-8 h-8 rounded-lg bg-neutral-900 text-white font-semibold text-xs flex items-center justify-center">
+              {initialOf(currentUser)}
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenAuth}
+              className="text-xs px-3 py-1.5 rounded-lg bg-brand-500 text-white font-semibold cursor-pointer"
+            >
+              Conectare
+            </button>
+          )}
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-xl border bg-neutral-100 border-neutral-200 text-neutral-900 cursor-pointer"
-            aria-label="Meniu Navigare"
+            className="p-2 rounded-lg border border-neutral-200 text-neutral-900 cursor-pointer"
+            aria-label={mobileMenuOpen ? 'Închide meniul' : 'Deschide meniul'}
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </header>
 
-      {/* ======================================================== */}
-      {/* 3. FULL-SCREEN ARCHITECTURAL MOBILE MENU OVERLAY          */}
-      {/* ======================================================== */}
+      {/* 3. MENIU MOBIL PE TOT ECRANUL */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-[9999] bg-white flex flex-col justify-between p-6 sm:p-8 animate-in fade-in duration-200 select-none overflow-y-auto">
-          {/* Top Bar: Minimalist Logo + Close Button */}
-          <div className="flex items-center justify-between w-full shrink-0">
-            <div 
+        <div className="lg:hidden fixed inset-0 z-[9999] bg-white flex flex-col p-5 select-none overflow-y-auto">
+          <div className="flex items-center justify-between shrink-0">
+            <button
+              type="button"
               className="flex items-center gap-2 cursor-pointer"
               onClick={() => handleSelectTab('landing')}
+              aria-label="JobFlow AI, pagina principală"
             >
-              <div className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center shadow-xs">
-                <Sparkles className="w-4.5 h-4.5 text-white" />
-              </div>
-              <span className="font-bold text-lg text-black tracking-tight">JobFlow</span>
-            </div>
-
-            <button 
+              <BrandMark />
+            </button>
+            <button
+              type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2 -mr-2 text-black hover:opacity-60 transition cursor-pointer"
-              aria-label="Inchide meniul"
+              className="p-2 -mr-2 text-neutral-950 cursor-pointer"
+              aria-label="Închide meniul"
             >
-              <X className="w-6 h-6 stroke-[2.2]" />
+              <X className="w-6 h-6" />
             </button>
           </div>
 
-          {/* Center Links: Large Centered Typography (Matching Reference) */}
-          <nav className="my-auto py-8 flex flex-col items-center justify-center space-y-5 sm:space-y-6 text-center">
-            {NAV_SECTIONS.flatMap(s => s.items).map((item) => {
+          <nav aria-label="Meniu mobil" className="my-auto py-8 space-y-1">
+            {ALL_ITEMS.map((item) => {
+              const Icon = item.icon;
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => handleSelectTab(item.id)}
-                  className={`text-2xl sm:text-3xl font-medium tracking-tight transition cursor-pointer ${
-                    isActive 
-                      ? 'font-bold text-black border-b-2 border-black pb-0.5' 
-                      : 'text-neutral-900 hover:text-neutral-500'
-                  }`}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl font-serif text-xl text-left transition-colors cursor-pointer ${itemClass(isActive)}`}
                 >
-                  {item.label}
+                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-brand-500' : 'text-neutral-400'}`} />
+                  <span>{item.label}</span>
                 </button>
               );
             })}
           </nav>
 
-          {/* Bottom Bar: Subtle Footer Links & User Action */}
-          <div className="pt-6 border-t border-neutral-100 flex items-center justify-between text-xs sm:text-sm text-neutral-400 font-medium shrink-0">
-            <div className="flex items-center gap-5 sm:gap-6">
-              <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-black transition">GitHub</a>
-              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-black transition">LinkedIn</a>
-              <button onClick={() => handleSelectTab('feedback')} className="hover:text-black transition cursor-pointer">Feedback</button>
-            </div>
+          <div className="pt-4 border-t border-neutral-100 flex items-center justify-end text-sm shrink-0">
             {currentUser ? (
               <button
+                type="button"
                 onClick={() => {
                   onLogout();
                   setMobileMenuOpen(false);
                 }}
                 className="text-neutral-900 hover:text-rose-600 font-semibold transition cursor-pointer flex items-center gap-1.5"
               >
-                <LogOut className="w-3.5 h-3.5" />
+                <LogOut className="w-4 h-4" />
                 <span>Deconectare</span>
               </button>
             ) : (
               <button
+                type="button"
                 onClick={() => {
                   onOpenAuth();
                   setMobileMenuOpen(false);
                 }}
-                className="text-black font-bold hover:underline transition cursor-pointer"
+                className="text-brand-600 font-semibold hover:underline transition cursor-pointer"
               >
                 Conectare
               </button>

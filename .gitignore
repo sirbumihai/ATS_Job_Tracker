@@ -47,3 +47,6 @@ bin/
 ### Mac OS / Misc ###
 .DS_Store
 *.log
+### Playwright ###
+frontend/test-results/
+frontend/playwright-report/

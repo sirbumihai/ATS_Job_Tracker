@@ -38,11 +38,11 @@ public class JuniorsRoScraper implements JobScraper {
     @Override
     public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
         ScrapeContext ctx = new ScrapeContext(freshList, seenDedupKeys, knownDbUrls);
-        for (String url : TARGET_URLS) {
+        for (FetchedPage page : pageFetcher.fetchAllHtml(TARGET_URLS)) {
             try {
-                parsePage(pageFetcher.fetchHtml(url), ctx);
+                parsePage(page.document(), ctx);
             } catch (Exception e) {
-                log.warn("[JOB CRAWLER] Juniors.ro scrape error pe {}: {}", url, e.getMessage());
+                log.warn("[JOB CRAWLER] Juniors.ro scrape error pe {}: {}", page.url(), e.getMessage());
             }
         }
         log.info("[JOB CRAWLER] Juniors.ro: {} joburi IT preluate.", ctx.collectedCount());

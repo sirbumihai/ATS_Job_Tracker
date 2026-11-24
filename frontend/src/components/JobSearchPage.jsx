@@ -1,29 +1,25 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { 
-  Search, 
-  MapPin, 
-  Building2, 
-  Briefcase, 
-  ExternalLink, 
-  Bookmark, 
-  BookmarkCheck, 
-  Sparkles, 
-  CheckCircle2, 
-  TrendingUp, 
-  Filter, 
-  RefreshCw, 
-  Layers, 
-  Globe, 
-  Zap, 
-  GraduationCap, 
-  ShieldCheck, 
-  DollarSign, 
-  Clock, 
-  ChevronDown, 
-  ChevronUp,
+import {
+  createPortal
+} from 'react-dom';
+import {
+  Search,
+  MapPin,
+  Building2,
+  Briefcase,
+  ExternalLink,
+  Sparkles,
+  CheckCircle2,
+  Filter,
+  RefreshCw,
+  Layers,
+  Globe,
+  Zap,
+  GraduationCap,
+  ShieldCheck,
+  Clock,
+  ChevronDown,
   ArrowUpRight,
-  SlidersHorizontal,
   Code2,
   Database,
   Cpu,
@@ -44,19 +40,20 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  X, 
-  Flame, 
-  AlertCircle,
+  X,
+  Flame,
   FileText,
   Check,
   Calendar,
   History,
   GitCommit,
   Download,
-  Send,
-  Bell,
+  FolderKanban,
   FileSignature
 } from 'lucide-react';
+import { JOB_PLATFORMS, platformSiteName } from '../data/jobPlatforms';
+import Card from './ui/Card';
+import PageHeader from './ui/PageHeader';
 import JobDetailModal from './JobDetailModal';
 
 // Helper eliminare diacritice
@@ -371,18 +368,19 @@ export default function JobSearchPage({
     setCurrentPage(1);
   };
 
-  // 9 PLATFORME REALE CU ICONITE SI CONTOARE PERMANENTE (FARA EMOTICOANE)
-  const platformsConfig = [
-    { id: 'DEVJOB_RO', label: 'DevJob.ro (Tech)', icon: Code2, countKey: 'DEVJOB_RO' },
-    { id: 'LINKEDIN', label: 'LinkedIn Jobs', icon: ExternalLink, countKey: 'LINKEDIN' },
-    { id: 'GITHUB_COMMUNITY', label: 'GitHub Early Careers (EU & Intl)', icon: Globe, countKey: 'GITHUB_COMMUNITY' },
-    { id: 'BESTJOBS', label: 'BestJobs.eu IT', icon: Briefcase, countKey: 'BESTJOBS' },
-    { id: 'HIPO', label: 'Hipo.ro Trainee & IT', icon: GraduationCap, countKey: 'HIPO' },
-    { id: 'STAGIIPEBUNE', label: 'StagiiPeBune.ro', icon: GraduationCap, countKey: 'STAGIIPEBUNE' },
-    { id: 'JUNIORS_RO', label: 'Juniors.ro', icon: Briefcase, countKey: 'JUNIORS_RO' },
-    { id: 'UNDELUCRAM', label: 'UndeLucram.ro', icon: Building2, countKey: 'UNDELUCRAM' },
-    { id: 'EJOBS', label: 'eJobs.ro', icon: Layers, countKey: 'EJOBS' }
-  ];
+  // PLATFORMELE REALE CU ICONITE SI CONTOARE PERMANENTE (FARA EMOTICOANE)
+  const PLATFORM_ICONS = {
+    DEVJOB_RO: Code2,
+    LINKEDIN: ExternalLink,
+    GITHUB_COMMUNITY: Globe,
+    BESTJOBS: Briefcase,
+    HIPO: GraduationCap,
+    STAGIIPEBUNE: GraduationCap,
+    JUNIORS_RO: Briefcase,
+    UNDELUCRAM: Building2,
+    EJOBS: Layers
+  };
+  const platformsConfig = JOB_PLATFORMS.map(p => ({ ...p, icon: PLATFORM_ICONS[p.id] || Briefcase, countKey: p.id }));
 
   // 27 SPECIALIZARI IT CUPRINZATOARE (FARA EMOTICOANE)
   const roleCategories = [
@@ -445,19 +443,19 @@ export default function JobSearchPage({
 
   // SUGESTII INTERACTIVE LA CAUTARE DUPA LOCATIE
   const locationSuggestions = [
-    { name: 'Bucuresti', region: 'Romania (Hub Principal)' },
-    { name: 'Cluj-Napoca', region: 'Romania (Transilvania Tech)' },
-    { name: 'Timisoara', region: 'Romania (Banat Tech)' },
-    { name: 'Iasi', region: 'Romania (Moldova Tech)' },
-    { name: 'Brasov', region: 'Romania (Centru)' },
-    { name: 'Sibiu', region: 'Romania (Transilvania)' },
-    { name: 'Oradea', region: 'Romania (Bihor)' },
-    { name: 'Craiova', region: 'Romania (Oltenia)' },
-    { name: 'Remote Romania', region: 'Lucru la distanta (Companii RO)' },
-    { name: 'Romania', region: 'Toate orasele (National)' },
+    { name: 'Bucuresti', region: 'România (Hub Principal)' },
+    { name: 'Cluj-Napoca', region: 'România (Transilvania Tech)' },
+    { name: 'Timisoara', region: 'România (Banat Tech)' },
+    { name: 'Iasi', region: 'România (Moldova Tech)' },
+    { name: 'Brasov', region: 'România (Centru)' },
+    { name: 'Sibiu', region: 'România (Transilvania)' },
+    { name: 'Oradea', region: 'România (Bihor)' },
+    { name: 'Craiova', region: 'România (Oltenia)' },
+    { name: 'Remote România', region: 'Lucru la distanță (Companii RO)' },
+    { name: 'Romania', region: 'Toate orașele (Național)' },
     { name: 'Remote', region: 'Telemunca / WFH' },
-    { name: 'Ploiesti', region: 'Romania (Muntenia)' },
-    { name: 'Constanta', region: 'Romania (Dobrogea)' }
+    { name: 'Ploiesti', region: 'România (Muntenia)' },
+    { name: 'Constanta', region: 'România (Dobrogea)' }
   ];
 
   const fetchGlobalStats = async () => {
@@ -532,7 +530,7 @@ export default function JobSearchPage({
       const res = await fetch('/api/v1/jobs/sync-live', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        setToastMessage(`Sincronizare Reusita! ${data.totalLiveJobs || '1500+'} joburi agregate si actualizate.`);
+        setToastMessage(`Sincronizare Reușită! ${data.totalLiveJobs || '1500+'} joburi agregate și actualizate.`);
         setSecondsUntilSync(getSecondsUntilNextHour());
         setTimeout(() => setToastMessage(null), 4500);
       }
@@ -624,7 +622,7 @@ export default function JobSearchPage({
           console.warn('Nu s-a putut salva in localStorage:', e);
         }
 
-        setToastMessage(`Jobul "${job.jobTitle}" la ${job.companyName} a fost adaugat direct la Aplicat in Tracker!`);
+        setToastMessage(`Jobul "${job.jobTitle}" la ${job.companyName} a fost adăugat direct la Aplicat în Tracker!`);
         setTimeout(() => setToastMessage(null), 4000);
         if (onSaveToKanbanSuccess) onSaveToKanbanSuccess();
       }
@@ -638,7 +636,7 @@ export default function JobSearchPage({
   // EXPORT JOBURI CAUTATE IN FORMAT CSV (RFC 4180 + UTF-8 BOM)
   const handleExportJobsCsv = () => {
     if (!jobs || jobs.length === 0) {
-      setToastMessage('Nu exista joburi afisate de exportat.');
+      setToastMessage('Nu există joburi afișate de exportat.');
       setTimeout(() => setToastMessage(null), 3000);
       return;
     }
@@ -647,10 +645,10 @@ export default function JobSearchPage({
       'Companie',
       'Titlu Job',
       'Platforma',
-      'Locatie',
+      'Locație',
       'Mod Lucru',
       'Salariu',
-      'Nivel Experienta',
+      'Nivel Experiență',
       'Scor Match ATS (%)',
       'Competitivitate',
       'Data Publicarii',
@@ -692,7 +690,7 @@ export default function JobSearchPage({
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    setToastMessage(`${jobs.length} job-uri au fost exportate cu succes in CSV!`);
+    setToastMessage(`${jobs.length} job-uri au fost exportate cu succes în CSV!`);
     setTimeout(() => setToastMessage(null), 4000);
   };
 
@@ -710,48 +708,29 @@ export default function JobSearchPage({
     }
   };
 
-  const getPlatformBadge = (platform) => {
-    const labelMap = {
-      'DEVJOB_RO': 'DevJob.ro',
-      'BESTJOBS': 'BestJobs.eu',
-      'HIPO': 'Hipo.ro Trainee',
-      'LINKEDIN': 'LinkedIn Jobs',
-      'GITHUB_COMMUNITY': 'GitHub Early Careers',
-      'STAGIIPEBUNE': 'StagiiPeBune.ro',
-      'JUNIORS_RO': 'Juniors.ro',
-      'EJOBS': 'eJobs.ro',
-      'UNDELUCRAM': 'UndeLucram.ro'
-    };
-    return {
-      label: labelMap[platform] || platform,
-      bg: 'bg-neutral-100 text-neutral-900 border-neutral-300 font-mono font-semibold',
-      dot: 'bg-neutral-950'
-    };
-  };
-
   // INDICATOR PROFESIONAL DE COMPETITIVITATE (MONOLITHIC ARCHITECTURAL DISTILL)
   const renderCompetitivenessBadge = (job) => {
     const comp = job.competitiveness || 'MEDIUM';
     if (comp === 'LOW') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 shadow-2xs">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-          <span>Competitie Redusa</span>
+          <span>Competiție Redusă</span>
         </span>
       );
     }
     if (comp === 'HIGH') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 shadow-2xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-neutral-950"></span>
-          <span>Competitie Ridicata</span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+          <span>Competiție Ridicată</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 shadow-2xs">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200">
         <span className="w-1.5 h-1.5 rounded-full bg-neutral-400"></span>
-        <span>Competitie Medie</span>
+        <span>Competiție Medie</span>
       </span>
     );
   };
@@ -836,69 +815,57 @@ export default function JobSearchPage({
       
       {/* TOAST NOTIFICATION */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-neutral-950 text-white px-4 py-3 rounded-xl shadow-2xl border border-neutral-800 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-          <span className="text-xs sm:text-sm font-bold">{toastMessage}</span>
+        <div className="fixed bottom-6 right-6 z-50 bg-brand-500 text-white px-4 py-3 rounded-xl shadow-2xl border border-neutral-800 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
+          <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
+          <span className="text-xs sm:text-sm font-semibold">{toastMessage}</span>
           {onNavigateToKanban && (
             <button 
               onClick={onNavigateToKanban}
-              className="ml-2 px-2.5 py-1 bg-white text-black text-xs font-bold rounded-lg hover:bg-neutral-200 transition cursor-pointer"
+              className="ml-2 px-2.5 py-1 bg-white text-neutral-900 text-xs font-semibold rounded-lg hover:bg-neutral-200 transition cursor-pointer"
             >
-              Vezi in Tracker →
+              Vezi în Tracker
             </button>
           )}
         </div>
       )}
 
-      {/* HERO HEADER SLIM & MODERN - MONOLITHIC ARCHITECTURAL DISTILL */}
-      <div className="bg-white border border-neutral-200/90 shadow-2xs p-5 sm:p-6 rounded-2xl">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h2 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
-                Cautare & Agregator Job-uri IT
-              </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold uppercase bg-neutral-100 text-neutral-800 border border-neutral-300 flex items-center gap-1.5 shadow-2xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Live Feed
+      {/* HEADER DE PAGINA: TITLU, AUTO-REFRESH SI SINCRONIZARE */}
+      <Card padding="px-5 py-4">
+        <PageHeader
+          as="h2"
+          title="Joburi IT"
+          subtitle="România și Europa, cu scor ATS pe fiecare job"
+          actions={
+            <>
+              <span
+                className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-neutral-50 rounded-xl text-xs text-neutral-600"
+                title="Reîmprospătare automată din oră în oră"
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span className="font-medium tabular-nums">{formatCountdown(secondsUntilSync)}</span>
               </span>
-            </div>
-            <p className="text-xs sm:text-sm text-neutral-600 font-medium mt-1">
-              Oportunitati agregate in timp real din Romania si Europa, cu calcul automat de compatibilitate ATS.
-            </p>
-          </div>
-
-          {/* CONTROALE RAPIDE: TIMER & SINCRONIZARE */}
-          <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-auto">
-            <div className="flex items-center gap-1.5 px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono text-neutral-700" title="Auto-refresh din ora in ora la ora fixa (ex: 20:00, 21:00). Nu se reseteaza la refresh pagina.">
-              <Clock className="w-4 h-4 text-neutral-700" />
-              <span className="font-semibold">Auto-refresh:</span>
-              <span className="font-mono font-bold text-neutral-950 bg-neutral-100 px-2 py-0.5 rounded-lg border border-neutral-200">
-                {formatCountdown(secondsUntilSync)}
-              </span>
-            </div>
-
-            <button 
-              onClick={handleSyncLive}
-              disabled={loading}
-              className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition cursor-pointer shadow-xs disabled:opacity-50 active:scale-95"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>Sincronizeaza Acum</span>
-            </button>
-          </div>
-        </div>
-      </div>
+              <button
+                onClick={handleSyncLive}
+                disabled={loading}
+                className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                <span>Sincronizează</span>
+              </button>
+            </>
+          }
+        />
+      </Card>
 
       {/* CAUTARE & FILTRE MULTI-SELECT CU AUTOCOMPLETE */}
-      <div className="bg-white border border-neutral-200/90 shadow-2xs p-5 sm:p-6 rounded-2xl space-y-4">
+      <Card padding="p-5 sm:p-6" className="space-y-4">
         
         {/* BARA PRINCIPALA DE CAUTARE CU AUTOCOMPLETE */}
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-3">
           
           {/* CAMP CAUTARE KEYWORD CU RECOMANDARI */}
           <div className="relative md:col-span-6" ref={keywordInputRef}>
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-neutral-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input 
               type="text"
               value={keyword}
@@ -908,13 +875,13 @@ export default function JobSearchPage({
               }}
               onFocus={() => setShowKeywordSuggestions(true)}
               placeholder="Titlu rol, tehnologii (Java, Spring Boot, React, Python, C++, QA, DevOps)..."
-              className="w-full pl-11 pr-9 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:border-neutral-900 transition"
+              className="w-full pl-11 pr-9 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:border-brand-500 transition"
             />
             {keyword && (
               <button
                 type="button"
                 onClick={() => { setKeyword(''); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1 cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-brand-600 p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -923,9 +890,9 @@ export default function JobSearchPage({
             {/* POPUP SUGESTII INTERACTIVE KEYWORD */}
             {showKeywordSuggestions && filteredKeywordSuggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-neutral-200 rounded-xl shadow-xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                <div className="px-3.5 py-2 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between text-xs font-mono font-bold uppercase tracking-wider text-neutral-500">
-                  <span>Recomandari Cautare IT</span>
-                  <span className="text-[11px] font-normal lowercase text-neutral-400">selecteaza</span>
+                <div className="px-3.5 py-2 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between text-xs font-medium text-neutral-500">
+                  <span>Recomandări Căutare IT</span>
+                  <span className="text-[11px] font-normal lowercase text-neutral-400">selectează</span>
                 </div>
                 <div className="max-h-64 overflow-y-auto p-1.5 divide-y divide-neutral-100">
                   {filteredKeywordSuggestions.map((item, idx) => (
@@ -939,8 +906,8 @@ export default function JobSearchPage({
                       className="w-full px-3 py-2 text-left rounded-lg hover:bg-neutral-100 transition flex items-center justify-between group cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
-                        <Search className="w-3.5 h-3.5 text-neutral-400 group-hover:text-black" />
-                        <span className="text-xs sm:text-sm font-bold text-neutral-900 group-hover:text-black">
+                        <Search className="w-3.5 h-3.5 text-neutral-400 group-hover:text-brand-600" />
+                        <span className="text-xs sm:text-sm font-semibold text-neutral-900 group-hover:text-brand-600">
                           {item.title}
                         </span>
                       </div>
@@ -956,7 +923,7 @@ export default function JobSearchPage({
 
           {/* CAMP CAUTARE LOCATIE CU RECOMANDARI */}
           <div className="relative md:col-span-4" ref={locationInputRef}>
-            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-neutral-400" />
+            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input 
               type="text"
               value={location}
@@ -965,14 +932,14 @@ export default function JobSearchPage({
                 setShowLocationSuggestions(true);
               }}
               onFocus={() => setShowLocationSuggestions(true)}
-              placeholder="Locatie (Bucuresti, Cluj, Timisoara, Remote, Europa)..."
-              className="w-full pl-11 pr-9 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:border-neutral-900 transition"
+              placeholder="Locație (București, Cluj, Timișoara, Remote, Europa)..."
+              className="w-full pl-11 pr-9 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:border-brand-500 transition"
             />
             {location && (
               <button
                 type="button"
                 onClick={() => { setLocation(''); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1 cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-brand-600 p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -981,9 +948,9 @@ export default function JobSearchPage({
             {/* POPUP SUGESTII INTERACTIVE LOCATIE */}
             {showLocationSuggestions && filteredLocationSuggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-neutral-200 rounded-xl shadow-xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                <div className="px-3.5 py-2 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between text-xs font-mono font-bold uppercase tracking-wider text-neutral-500">
+                <div className="px-3.5 py-2 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between text-xs font-medium text-neutral-500">
                   <span>Hub-uri & Regiuni IT</span>
-                  <span className="text-[11px] font-normal lowercase text-neutral-400">selecteaza</span>
+                  <span className="text-[11px] font-normal lowercase text-neutral-400">selectează</span>
                 </div>
                 <div className="max-h-64 overflow-y-auto p-1.5 divide-y divide-neutral-100">
                   {filteredLocationSuggestions.map((item, idx) => (
@@ -997,8 +964,8 @@ export default function JobSearchPage({
                       className="w-full px-3 py-2 text-left rounded-lg hover:bg-neutral-100 transition flex items-center justify-between group cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-neutral-400 group-hover:text-black" />
-                        <span className="text-xs sm:text-sm font-bold text-neutral-900 group-hover:text-black">
+                        <MapPin className="w-3.5 h-3.5 text-neutral-400 group-hover:text-brand-600" />
+                        <span className="text-xs sm:text-sm font-semibold text-neutral-900 group-hover:text-brand-600">
                           {item.name}
                         </span>
                       </div>
@@ -1017,10 +984,10 @@ export default function JobSearchPage({
             <button 
               type="submit"
               disabled={loading}
-              className="w-full h-full py-3 bg-black hover:bg-neutral-800 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-xs disabled:opacity-50 active:scale-95"
+              className="w-full h-full py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50 active:scale-95"
             >
               <Search className="w-4 h-4" />
-              <span>Cauta</span>
+              <span>Caută</span>
             </button>
           </div>
         </form>
@@ -1030,8 +997,8 @@ export default function JobSearchPage({
           
           {/* 1. DROPDOWN MULTI-SELECT PENTRU PLATFORME */}
           <div className="relative" ref={platformDropdownRef}>
-            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-black shrink-0" />
+            <label className="block text-[11px] font-medium font-semibold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-neutral-900 shrink-0" />
               <span>Platforme</span>
             </label>
             <button
@@ -1040,9 +1007,9 @@ export default function JobSearchPage({
                 setIsPlatformDropdownOpen(prev => !prev);
                 setIsRoleDropdownOpen(false);
               }}
-              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-between transition cursor-pointer ${
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
                 selectedPlatforms.length > 0
-                  ? 'bg-black border-black text-white shadow-xs'
+                  ? 'bg-brand-500 border-brand-500 text-white'
                   : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100 hover:border-neutral-300'
               }`}
             >
@@ -1069,22 +1036,22 @@ export default function JobSearchPage({
                       type="text"
                       value={platformSearchQuery}
                       onChange={(e) => setPlatformSearchQuery(e.target.value)}
-                      placeholder="Filtreaza platforma..."
-                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:border-black"
+                      placeholder="Filtrează platformă..."
+                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:border-brand-500"
                     />
                   </div>
-                  <div className="flex items-center justify-between text-[11px] font-bold px-1 font-mono">
+                  <div className="flex items-center justify-between text-[11px] font-semibold px-1 font-mono">
                     <button
                       type="button"
                       onClick={selectAllPlatforms}
-                      className="text-black hover:underline cursor-pointer"
+                      className="text-neutral-900 hover:underline cursor-pointer"
                     >
                       Selecteaza Toate
                     </button>
                     <button
                       type="button"
                       onClick={clearAllPlatforms}
-                      className="text-neutral-500 hover:text-black cursor-pointer"
+                      className="text-neutral-500 hover:text-brand-600 cursor-pointer"
                     >
                       Deselecteaza Toate
                     </button>
@@ -1102,16 +1069,16 @@ export default function JobSearchPage({
                         key={plat.id}
                         type="button"
                         onClick={() => togglePlatform(plat.id)}
-                        className={`w-full px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition cursor-pointer ${
+                        className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
                           isChecked 
-                            ? 'bg-black text-white font-bold' 
+                            ? 'bg-brand-500 text-white font-semibold' 
                             : 'hover:bg-neutral-100 text-neutral-800'
                         }`}
                       >
                         <div className="flex items-center gap-2.5 truncate">
                           <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition shrink-0 ${
                             isChecked 
-                              ? 'bg-white border-white text-black' 
+                              ? 'bg-white border-white text-neutral-900' 
                               : 'border-neutral-300 bg-white'
                           }`}>
                             {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
@@ -1119,7 +1086,7 @@ export default function JobSearchPage({
                           <Icon className={`w-3.5 h-3.5 shrink-0 ${isChecked ? 'text-white' : 'text-neutral-500'}`} />
                           <span className="truncate">{plat.label}</span>
                         </div>
-                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md shrink-0 ${
+                        <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md shrink-0 ${
                           isChecked ? 'bg-neutral-800 text-white' : 'bg-neutral-100 text-neutral-700'
                         }`}>
                           {count}
@@ -1134,8 +1101,8 @@ export default function JobSearchPage({
 
           {/* 2. DROPDOWN MULTI-SELECT PENTRU SPECIALIZARI & ROLURI IT */}
           <div className="relative" ref={roleDropdownRef}>
-            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-black shrink-0" />
+            <label className="block text-[11px] font-medium font-semibold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-neutral-900 shrink-0" />
               <span>Specializare IT</span>
             </label>
             <button
@@ -1144,9 +1111,9 @@ export default function JobSearchPage({
                 setIsRoleDropdownOpen(prev => !prev);
                 setIsPlatformDropdownOpen(false);
               }}
-              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-between transition cursor-pointer ${
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
                 selectedRoleCategories.length > 0
-                  ? 'bg-black border-black text-white shadow-xs'
+                  ? 'bg-brand-500 border-brand-500 text-white'
                   : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100 hover:border-neutral-300'
               }`}
             >
@@ -1173,22 +1140,22 @@ export default function JobSearchPage({
                       type="text"
                       value={roleSearchQuery}
                       onChange={(e) => setRoleSearchQuery(e.target.value)}
-                      placeholder="Filtreaza rol (Java, DevOps, etc.)..."
-                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:border-black"
+                      placeholder="Filtrează rol (Java, DevOps, etc.)..."
+                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:border-brand-500"
                     />
                   </div>
-                  <div className="flex items-center justify-between text-[11px] font-bold px-1 font-mono">
+                  <div className="flex items-center justify-between text-[11px] font-semibold px-1 font-mono">
                     <button
                       type="button"
                       onClick={selectAllRoles}
-                      className="text-black hover:underline cursor-pointer"
+                      className="text-neutral-900 hover:underline cursor-pointer"
                     >
                       Selecteaza Toate
                     </button>
                     <button
                       type="button"
                       onClick={clearAllRoles}
-                      className="text-neutral-500 hover:text-black cursor-pointer"
+                      className="text-neutral-500 hover:text-brand-600 cursor-pointer"
                     >
                       Deselecteaza Toate
                     </button>
@@ -1205,16 +1172,16 @@ export default function JobSearchPage({
                         key={cat.id}
                         type="button"
                         onClick={() => toggleRoleCategory(cat.id)}
-                        className={`w-full px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition cursor-pointer ${
+                        className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
                           isChecked 
-                            ? 'bg-black text-white font-bold' 
+                            ? 'bg-brand-500 text-white font-semibold' 
                             : 'hover:bg-neutral-100 text-neutral-800'
                         }`}
                       >
                         <div className="flex items-center gap-2.5 truncate">
                           <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition shrink-0 ${
                             isChecked 
-                              ? 'bg-white border-white text-black' 
+                              ? 'bg-white border-white text-neutral-900' 
                               : 'border-neutral-300 bg-white'
                           }`}>
                             {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
@@ -1232,33 +1199,33 @@ export default function JobSearchPage({
 
           {/* 3. FILTRU UNIFICAT: DATA POSTARII */}
           <div>
-            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-black shrink-0" />
+            <label className="block text-[11px] font-medium font-semibold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-neutral-900 shrink-0" />
               <span>Data Postarii</span>
             </label>
             <select
               value={selectedDatePosted}
               onChange={(e) => { setSelectedDatePosted(e.target.value); setCurrentPage(1); }}
-              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer focus:outline-none focus:border-black ${
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer focus:outline-none focus:border-brand-500 ${
                 selectedDatePosted !== 'ALL'
-                  ? 'bg-black border-black text-white'
+                  ? 'bg-brand-500 border-brand-500 text-white'
                   : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
               }`}
             >
-              <option value="ALL" className="bg-white text-black">Toate joburile (Oricand)</option>
-              <option value="NEWLY_DISCOVERED" className="bg-white text-black">Doar NOU GASIT (Ultima Sincronizare)</option>
-              <option value="24H" className="bg-white text-black">Ultimele 24 de ore (Noi)</option>
-              <option value="48H" className="bg-white text-black">Ultimele 48 de ore</option>
-              <option value="7D" className="bg-white text-black">Ultima saptamana (7 zile)</option>
-              <option value="30D" className="bg-white text-black">Ultima luna (30 de zile)</option>
+              <option value="ALL" className="bg-white text-neutral-900">Toate joburile (Oricând)</option>
+              <option value="NEWLY_DISCOVERED" className="bg-white text-neutral-900">Doar NOU GĂSIT (Ultima Sincronizare)</option>
+              <option value="24H" className="bg-white text-neutral-900">Ultimele 24 de ore (Noi)</option>
+              <option value="48H" className="bg-white text-neutral-900">Ultimele 48 de ore</option>
+              <option value="7D" className="bg-white text-neutral-900">Ultima săptămână (7 zile)</option>
+              <option value="30D" className="bg-white text-neutral-900">Ultima lună (30 de zile)</option>
             </select>
           </div>
 
           {/* 4. DROPDOWN MULTI-SELECT PENTRU NIVEL EXPERIENTA */}
           <div className="relative" ref={levelDropdownRef}>
-            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
-              <GraduationCap className="w-3.5 h-3.5 text-black shrink-0" />
-              <span>Nivel Experienta</span>
+            <label className="block text-[11px] font-medium font-semibold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <GraduationCap className="w-3.5 h-3.5 text-neutral-900 shrink-0" />
+              <span>Nivel Experiență</span>
             </label>
             <button
               type="button"
@@ -1267,9 +1234,9 @@ export default function JobSearchPage({
                 setIsPlatformDropdownOpen(false);
                 setIsRoleDropdownOpen(false);
               }}
-              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-between transition cursor-pointer ${
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
                 selectedLevels.length > 0
-                  ? 'bg-black border-black text-white shadow-xs'
+                  ? 'bg-brand-500 border-brand-500 text-white'
                   : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100 hover:border-neutral-300'
               }`}
             >
@@ -1289,18 +1256,18 @@ export default function JobSearchPage({
             {/* MENIU DROPDOWN NIVELURI */}
             {isLevelDropdownOpen && (
               <div className="absolute left-0 top-full mt-1.5 w-64 bg-white border border-neutral-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                <div className="p-2.5 border-b border-neutral-100 flex items-center justify-between text-[11px] font-bold bg-neutral-50 font-mono">
+                <div className="p-2.5 border-b border-neutral-100 flex items-center justify-between text-[11px] font-semibold bg-neutral-50 font-mono">
                   <button
                     type="button"
                     onClick={selectAllLevels}
-                    className="text-black hover:underline cursor-pointer"
+                    className="text-neutral-900 hover:underline cursor-pointer"
                   >
                     Selecteaza Toate
                   </button>
                   <button
                     type="button"
                     onClick={clearAllLevels}
-                    className="text-neutral-500 hover:text-black cursor-pointer"
+                    className="text-neutral-500 hover:text-brand-600 cursor-pointer"
                   >
                     Deselecteaza Toate
                   </button>
@@ -1314,16 +1281,16 @@ export default function JobSearchPage({
                         key={lvl.id}
                         type="button"
                         onClick={() => toggleLevel(lvl.id)}
-                        className={`w-full px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition cursor-pointer ${
+                        className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
                           isChecked 
-                            ? 'bg-black text-white font-bold' 
+                            ? 'bg-brand-500 text-white font-semibold' 
                             : 'hover:bg-neutral-100 text-neutral-800'
                         }`}
                       >
                         <div className="flex items-center gap-2.5 truncate">
                           <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition shrink-0 ${
                             isChecked 
-                              ? 'bg-white border-white text-black' 
+                              ? 'bg-white border-white text-neutral-900' 
                               : 'border-neutral-300 bg-white'
                           }`}>
                             {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
@@ -1340,108 +1307,108 @@ export default function JobSearchPage({
 
           {/* 5. MOD DE LUCRU (FARA EMOTICOANE) */}
           <div>
-            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
-              <Briefcase className="w-3.5 h-3.5 text-black shrink-0" />
+            <label className="block text-[11px] font-medium font-semibold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Briefcase className="w-3.5 h-3.5 text-neutral-900 shrink-0" />
               <span>Mod de Lucru</span>
             </label>
             <select
               value={selectedWorkModel}
               onChange={(e) => { setSelectedWorkModel(e.target.value); setCurrentPage(1); }}
-              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer focus:outline-none focus:border-black ${
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer focus:outline-none focus:border-brand-500 ${
                 selectedWorkModel !== 'ALL'
-                  ? 'bg-black border-black text-white'
+                  ? 'bg-brand-500 border-brand-500 text-white'
                   : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
               }`}
             >
-              <option value="ALL" className="bg-white text-black">Toate Modurile</option>
-              <option value="REMOTE" className="bg-white text-black">Remote</option>
-              <option value="HYBRID" className="bg-white text-black">Hibrid</option>
-              <option value="ONSITE" className="bg-white text-black">On-Site</option>
+              <option value="ALL" className="bg-white text-neutral-900">Toate Modurile</option>
+              <option value="REMOTE" className="bg-white text-neutral-900">Remote</option>
+              <option value="HYBRID" className="bg-white text-neutral-900">Hibrid</option>
+              <option value="ONSITE" className="bg-white text-neutral-900">On-Site</option>
             </select>
           </div>
 
           {/* 6. COMPETITIVITATE & SANSE (FARA EMOTICOANE) */}
           <div>
-            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-black shrink-0" />
-              <span>Competitie</span>
+            <label className="block text-[11px] font-medium font-semibold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-neutral-900 shrink-0" />
+              <span>Competiție</span>
             </label>
             <select
               value={selectedCompetitiveness}
               onChange={(e) => { setSelectedCompetitiveness(e.target.value); setCurrentPage(1); }}
-              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer focus:outline-none focus:border-black ${
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer focus:outline-none focus:border-brand-500 ${
                 selectedCompetitiveness !== 'ALL'
-                  ? 'bg-black border-black text-white'
+                  ? 'bg-brand-500 border-brand-500 text-white'
                   : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
               }`}
             >
-              <option value="ALL" className="bg-white text-black">Toate Tipurile</option>
-              <option value="LOW" className="bg-white text-black">Competitie Redusa</option>
-              <option value="MEDIUM" className="bg-white text-black">Competitie Medie</option>
-              <option value="HIGH" className="bg-white text-black">Competitie Ridicata</option>
+              <option value="ALL" className="bg-white text-neutral-900">Toate Tipurile</option>
+              <option value="LOW" className="bg-white text-neutral-900">Competiție Redusă</option>
+              <option value="MEDIUM" className="bg-white text-neutral-900">Competiție Medie</option>
+              <option value="HIGH" className="bg-white text-neutral-900">Competiție Ridicată</option>
             </select>
           </div>
 
           {/* 7. STATUS JOB & LIFECYCLE (ACTIVE / EXPIRED / TOATE) */}
           <div>
-            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-black shrink-0" />
+            <label className="block text-[11px] font-medium font-semibold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-neutral-900 shrink-0" />
               <span>Status Job</span>
             </label>
             <select
               value={selectedStatus}
               onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
-              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer focus:outline-none focus:border-black ${
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer focus:outline-none focus:border-brand-500 ${
                 selectedStatus !== 'ACTIVE'
-                  ? 'bg-black border-black text-white'
+                  ? 'bg-brand-500 border-brand-500 text-white'
                   : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
               }`}
             >
-              <option value="ACTIVE" className="bg-white text-black">Doar Active (Recente)</option>
-              <option value="EXPIRED" className="bg-white text-black">Expirate / Inactive</option>
-              <option value="ALL" className="bg-white text-black">Toate Statusurile</option>
+              <option value="ACTIVE" className="bg-white text-neutral-900">Doar Active (Recente)</option>
+              <option value="EXPIRED" className="bg-white text-neutral-900">Expirate / Inactive</option>
+              <option value="ALL" className="bg-white text-neutral-900">Toate Statusurile</option>
             </select>
           </div>
 
           {/* 8. FILTRU SCOR ATS */}
           <div>
-            <label className="block text-[11px] font-mono uppercase tracking-wider font-bold text-neutral-600 mb-1.5 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-black shrink-0" />
+            <label className="block text-[11px] font-medium font-semibold text-neutral-600 mb-1.5 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-neutral-900 shrink-0" />
               <span>Scor ATS</span>
             </label>
             <select
               value={selectedAtsScore}
               onChange={(e) => { setSelectedAtsScore(e.target.value); setCurrentPage(1); }}
-              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer focus:outline-none focus:border-black ${
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer focus:outline-none focus:border-brand-500 ${
                 selectedAtsScore !== 'ALL'
-                  ? 'bg-black border-black text-white'
+                  ? 'bg-brand-500 border-brand-500 text-white'
                   : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
               }`}
             >
-              <option value="ALL" className="bg-white text-black">Toate Scorurile ATS</option>
-              <option value="TOP_80" className="bg-white text-black">Excelent (80%+ Match)</option>
-              <option value="TOP_60" className="bg-white text-black">Bun (60%+ Match)</option>
-              <option value="TOP_40" className="bg-white text-black">Mediu (40%+ Match)</option>
-              <option value="UNDER_40" className="bg-white text-black">Sub 40% Match</option>
+              <option value="ALL" className="bg-white text-neutral-900">Toate Scorurile ATS</option>
+              <option value="TOP_80" className="bg-white text-neutral-900">Excelent (80%+ Match)</option>
+              <option value="TOP_60" className="bg-white text-neutral-900">Bun (60%+ Match)</option>
+              <option value="TOP_40" className="bg-white text-neutral-900">Mediu (40%+ Match)</option>
+              <option value="UNDER_40" className="bg-white text-neutral-900">Sub 40% Match</option>
             </select>
           </div>
 
         </div>
 
-      </div>
+      </Card>
 
       {/* BARA DE FILTRE ACTIVE CU RESET RAPID */}
       {activeFiltersCount > 0 && (
-        <div className="bg-neutral-50 border border-neutral-200/90 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
+        <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-black flex items-center gap-1.5 mr-1">
-              <Filter className="w-3.5 h-3.5 text-black" />
+            <span className="text-xs font-medium text-neutral-900 flex items-center gap-1.5 mr-1">
+              <Filter className="w-3.5 h-3.5 text-neutral-900" />
               Filtre Active ({activeFiltersCount}):
             </span>
 
             {keyword && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
-                <span>Cuvant: <strong>"{keyword}"</strong></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200">
+                <span>Cuvânt: <strong>"{keyword}"</strong></span>
                 <button onClick={() => setKeyword('')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
                 </button>
@@ -1449,8 +1416,8 @@ export default function JobSearchPage({
             )}
 
             {location && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
-                <span>Locatie: <strong>"{location}"</strong></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200">
+                <span>Locație: <strong>"{location}"</strong></span>
                 <button onClick={() => setLocation('')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
                 </button>
@@ -1460,8 +1427,8 @@ export default function JobSearchPage({
             {selectedPlatforms.map(platId => {
               const p = platformsConfig.find(item => item.id === platId);
               return (
-                <span key={platId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
-                  <span>Platforma: <strong>{p?.label || platId}</strong></span>
+                <span key={platId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200">
+                  <span>Platformă: <strong>{p?.label || platId}</strong></span>
                   <button onClick={() => togglePlatform(platId)} className="hover:text-rose-600 cursor-pointer p-0.5">
                     <X className="w-3 h-3" />
                   </button>
@@ -1472,7 +1439,7 @@ export default function JobSearchPage({
             {selectedRoleCategories.map(roleId => {
               const r = roleCategories.find(item => item.id === roleId);
               return (
-                <span key={roleId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
+                <span key={roleId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200">
                   <span>Rol: <strong>{r?.label || roleId}</strong></span>
                   <button onClick={() => toggleRoleCategory(roleId)} className="hover:text-rose-600 cursor-pointer p-0.5">
                     <X className="w-3 h-3" />
@@ -1482,25 +1449,25 @@ export default function JobSearchPage({
             })}
 
             {selectedDatePosted !== 'ALL' && (
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold shadow-2xs border ${
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold border ${
                 selectedDatePosted === 'NEWLY_DISCOVERED'
-                  ? 'bg-black text-white border-black font-mono'
+                  ? 'bg-brand-500 text-white border-brand-500 font-mono'
                   : 'bg-white text-neutral-900 border-neutral-200'
               }`}>
                 {selectedDatePosted === 'NEWLY_DISCOVERED' ? (
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <Sparkles className="w-3.5 h-3.5" />
                 ) : (
-                  <Calendar className="w-3 h-3 text-black" />
+                  <Calendar className="w-3 h-3 text-neutral-900" />
                 )}
                 <span>{
                   selectedDatePosted === 'NEWLY_DISCOVERED' ? (
-                    <>Doar: <strong>NOU GASIT (Ultima Sincronizare)</strong></>
+                    <>Doar: <strong>NOU GĂSIT (Ultima Sincronizare)</strong></>
                   ) : (
-                    <>Data postarii: <strong>{
+                    <>Data postării: <strong>{
                       selectedDatePosted === '24H' ? 'Ultimele 24h' :
                       selectedDatePosted === '48H' ? 'Ultimele 48h' :
-                      selectedDatePosted === '7D' ? 'Ultima saptamana' :
-                      selectedDatePosted === '30D' ? 'Ultima luna' : selectedDatePosted
+                      selectedDatePosted === '7D' ? 'Ultima săptămână' :
+                      selectedDatePosted === '30D' ? 'Ultima lună' : selectedDatePosted
                     }</strong></>
                   )
                 }</span>
@@ -1516,7 +1483,7 @@ export default function JobSearchPage({
             {selectedLevels.map(lvlId => {
               const lvl = levelsConfig.find(item => item.id === lvlId);
               return (
-                <span key={lvlId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
+                <span key={lvlId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200">
                   <span>Nivel: <strong>{lvl?.label || lvlId}</strong></span>
                   <button onClick={() => toggleLevel(lvlId)} className="hover:text-rose-600 cursor-pointer p-0.5">
                     <X className="w-3 h-3" />
@@ -1526,8 +1493,8 @@ export default function JobSearchPage({
             })}
 
             {selectedAtsScore !== 'ALL' && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-neutral-100 text-neutral-900 border border-neutral-300 shadow-2xs font-mono">
-                <Sparkles className="w-3.5 h-3.5 text-black" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-neutral-100 text-neutral-900 border border-neutral-300 font-mono">
+                <Sparkles className="w-3.5 h-3.5 text-neutral-900" />
                 <span>Scor ATS: <strong>{
                   selectedAtsScore === 'TOP_80' ? '80%+ Match' :
                   selectedAtsScore === 'TOP_60' ? '60%+ Match' :
@@ -1541,7 +1508,7 @@ export default function JobSearchPage({
             )}
 
             {selectedWorkModel !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200">
                 <span>Mod: <strong>{selectedWorkModel}</strong></span>
                 <button onClick={() => setSelectedWorkModel('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
@@ -1550,8 +1517,8 @@ export default function JobSearchPage({
             )}
 
             {selectedCompetitiveness !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
-                <span>Competitie: <strong>{selectedCompetitiveness}</strong></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200">
+                <span>Competiție: <strong>{selectedCompetitiveness}</strong></span>
                 <button onClick={() => setSelectedCompetitiveness('ALL')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
                 </button>
@@ -1559,7 +1526,7 @@ export default function JobSearchPage({
             )}
 
             {selectedStatus !== 'ACTIVE' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200/90 shadow-2xs">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-white text-neutral-900 border border-neutral-200">
                 <span>Status: <strong>{selectedStatus === 'EXPIRED' ? 'Expirate / Inactive' : 'Toate Statusurile'}</strong></span>
                 <button onClick={() => setSelectedStatus('ACTIVE')} className="hover:text-rose-600 cursor-pointer p-0.5">
                   <X className="w-3 h-3" />
@@ -1570,10 +1537,10 @@ export default function JobSearchPage({
 
           <button
             onClick={handleResetFilters}
-            className="text-xs font-bold text-neutral-900 hover:text-black bg-white hover:bg-neutral-100 border border-neutral-300 px-3.5 py-2 rounded-xl transition cursor-pointer shadow-2xs flex items-center gap-1.5"
+            className="text-xs font-semibold text-neutral-900 hover:text-brand-600 bg-white hover:bg-neutral-100 border border-neutral-300 px-3.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Reseteaza Toate Filtrele</span>
+            <span>Resetează filtrele</span>
           </button>
         </div>
       )}
@@ -1581,8 +1548,8 @@ export default function JobSearchPage({
       {/* HEADER REZULTATE CU STATISTICI & CONTROALE DE PAGINARE */}
       <div ref={jobsListRef} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
         <div className="flex items-center gap-2.5">
-          <span className="text-xl sm:text-2xl font-bold tracking-tight text-black">
-            {loading ? 'Se cauta...' : `${totalJobs} Oportunitati Gasite`}
+          <span className="font-serif text-xl font-medium text-neutral-950">
+            {loading ? 'Se caută...' : `${totalJobs} joburi găsite`}
           </span>
           <span className="text-xs font-mono font-medium text-neutral-500">
             • {totalJobs > 0 ? startIndex + 1 : 0} - {endIndex} din {totalJobs}
@@ -1596,23 +1563,23 @@ export default function JobSearchPage({
             type="button"
             onClick={handleExportJobsCsv}
             disabled={loading || totalJobs === 0}
-            className="px-3.5 py-2 bg-white hover:bg-neutral-100 border border-neutral-300 hover:border-black text-neutral-900 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-            title="Exporta joburile afisate in format CSV compatibil Excel"
+            className="px-3.5 py-2 bg-white hover:bg-neutral-100 border border-neutral-300 hover:border-brand-500 text-neutral-900 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shrink-0 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Exportă joburile afișate în format CSV compatibil Excel"
           >
-            <Download className="w-3.5 h-3.5 text-black" />
-            <span>Exporta CSV</span>
+            <Download className="w-3.5 h-3.5 text-neutral-900" />
+            <span>Exportă CSV</span>
           </button>
 
           {/* DIMENSIUNE PAGINA */}
           <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-mono bg-neutral-50 p-1 rounded-xl border border-neutral-200">
-            <span className="px-1.5 font-bold">Pe pagina:</span>
+            <span className="px-1.5 font-semibold">Pe pagină:</span>
             {[12, 24, 48].map((size) => (
               <button
                 key={size}
                 onClick={() => { setPageSize(size); setCurrentPage(1); }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-extrabold transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
                   pageSize === size 
-                    ? 'bg-black text-white shadow-xs' 
+                    ? 'bg-brand-500 text-white' 
                     : 'text-gray-700 hover:bg-gray-200/70'
                 }`}
               >
@@ -1627,7 +1594,7 @@ export default function JobSearchPage({
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[1, 2, 3, 4, 5, 6].map(n => (
-            <div key={n} className="bg-white border border-neutral-200 p-6 rounded-2xl animate-pulse space-y-4 shadow-2xs">
+            <div key={n} className="bg-white border border-neutral-200 p-6 rounded-2xl animate-pulse space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-neutral-200 rounded-xl"></div>
                 <div className="space-y-2 flex-1">
@@ -1644,236 +1611,127 @@ export default function JobSearchPage({
         <div className="bg-white border border-dashed border-neutral-300 p-12 rounded-2xl text-center space-y-3">
           <div className="w-12 h-12 rounded-xl bg-neutral-100 text-neutral-400 mx-auto flex items-center justify-center">
             {selectedDatePosted === 'NEWLY_DISCOVERED' ? (
-              <Sparkles className="w-6 h-6 text-black" />
+              <Sparkles className="w-6 h-6 text-neutral-900" />
             ) : (
               <Search className="w-6 h-6" />
             )}
           </div>
-          <h3 className="text-base font-bold text-neutral-900">
+          <h3 className="text-base font-semibold text-neutral-900">
             {selectedDatePosted === 'NEWLY_DISCOVERED' 
               ? 'Nu au fost identificate joburi noi la cea mai recenta sincronizare'
-              : 'Nu am gasit joburi care sa corespunda filtrelor selectate'}
+              : 'Nu am găsit joburi care să corespundă filtrelor selectate'}
           </h3>
           <p className="text-xs text-neutral-500 max-w-md mx-auto">
             {selectedDatePosted === 'NEWLY_DISCOVERED'
-              ? 'Toate joburile scanate erau deja inregistrate in baza de date. Apasa pe «Sincronizeaza Acum» pentru a relua cautarea live sau comuta pe «Toate joburile».'
-              : 'Incearca sa relaxezi selectia de platforme sau sa schimbi termenul de cautare.'}
+              ? 'Toate joburile scanate erau deja înregistrate în baza de date. Apasă pe «Sincronizează Acum» pentru a relua căutarea live sau comută pe «Toate joburile».'
+              : 'Încearcă să relaxezi selecția de platforme sau să schimbi termenul de căutare.'}
           </p>
           <div className="flex items-center justify-center gap-2 pt-2">
             {selectedDatePosted === 'NEWLY_DISCOVERED' && (
               <button
                 type="button"
                 onClick={() => { setSelectedDatePosted('ALL'); setCurrentPage(1); }}
-                className="px-4 py-2 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold rounded-xl transition cursor-pointer"
               >
-                Vezi Toate Joburile
+                Vezi toate joburile
               </button>
             )}
             <button
               onClick={handleResetFilters}
-              className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-black text-xs font-bold rounded-xl border border-neutral-200 transition cursor-pointer"
+              className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 text-xs font-semibold rounded-xl border border-neutral-200 transition cursor-pointer"
             >
-              Reseteaza Filtrele
+              Resetează filtrele
             </button>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {currentJobs.map((job) => {
-            const platformBadge = getPlatformBadge(job.sourcePlatform);
             const isSaved = savedJobIds.has(job.id);
             const isSaving = savingJobId === job.id;
+            const sourceSite = platformSiteName(job.sourcePlatform);
+            const applyLabel = sourceSite ? `Aplică pe ${sourceSite}` : 'Aplică pe site-ul sursă';
+            const trackerLabel = isSaved ? 'Adăugat în tracker, la Aplicat' : isSaving ? 'Se adaugă în tracker' : 'Adaugă în tracker, la Aplicat';
+            const iconBtn = 'p-2 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-50 hover:text-brand-600 text-neutral-600 transition cursor-pointer shrink-0';
+            const savedIconBtn = 'p-2 rounded-xl border border-brand-100 bg-brand-50 text-brand-600 shrink-0';
 
             return (
-              <div 
-                key={job.id} 
-                className="bg-white border border-neutral-200 hover:border-black shadow-2xs hover:shadow-md transition-all duration-200 rounded-2xl p-5 flex flex-col justify-between group"
-              >
-                {/* PARTEA SUPERIOARA: HEADER, LOGO, TITLU, METADATE */}
-                <div className="space-y-3.5 flex-1 flex flex-col justify-start">
-                  
-                  {/* TOP HEADER: PLATFORMA, STATUS & SCOR MATCH DINAMIC */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border flex items-center gap-1.5 ${platformBadge.bg}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${platformBadge.dot}`}></span>
-                        {platformBadge.label}
-                      </span>
-                      {isJobTrulyNew(job) && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-black text-white shadow-2xs">
-                          <Sparkles className="w-2.5 h-2.5 text-amber-300" />
-                          NOU
-                        </span>
-                      )}
-                      {job.status === 'EXPIRED' && (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-neutral-100 text-neutral-600 border border-neutral-300">
-                          Expirat
-                        </span>
-                      )}
-                    </div>
-
-                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono font-bold border ${
-                      job.atsMatchScore >= 75 
-                        ? 'bg-black text-white border-black' 
-                        : job.atsMatchScore >= 45 
-                        ? 'bg-neutral-100 text-neutral-900 border-neutral-300' 
-                        : 'bg-neutral-50 text-neutral-500 border-neutral-200'
-                    }`}>
-                      <Sparkles className={`w-3 h-3 ${job.atsMatchScore >= 75 ? 'text-amber-400' : job.atsMatchScore >= 45 ? 'text-amber-500' : 'text-neutral-400'}`} />
-                      <span>{job.atsMatchScore.toFixed(1)}% Match</span>
-                    </div>
-                  </div>
-
-                  {/* LOGO & TITLU */}
-                  <div 
+              <Card key={job.id} data-job-card={job.id} className="flex flex-col gap-4 hover:border-brand-300 transition-colors">
+                <div className="flex items-start justify-between gap-3">
+                  <button
+                    type="button"
                     onClick={() => setSelectedJobForDetails(job)}
-                    className="flex items-start gap-3 cursor-pointer group/title"
-                    title="Apasa pentru a deschide fisa completa a postului"
+                    className="min-w-0 text-left cursor-pointer"
+                    title="Deschide fișa jobului"
                   >
-                    {job.companyLogoUrl ? (
-                      <img
-                        src={job.companyLogoUrl}
-                        alt={job.companyName}
-                        className="w-12 h-12 rounded-xl object-cover bg-neutral-50 border border-neutral-200 shrink-0 shadow-2xs group-hover/title:scale-105 transition"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      className="w-12 h-12 rounded-xl bg-neutral-100 border border-neutral-200 text-neutral-900 items-center justify-center font-mono font-black text-lg shrink-0 shadow-2xs group-hover/title:scale-105 transition"
-                      style={{ display: job.companyLogoUrl ? 'none' : 'flex' }}
-                    >
-                      {(job.companyName || '?').trim().charAt(0).toUpperCase()}
+                    <h3 className="font-sans text-base font-medium text-neutral-950 leading-snug line-clamp-2">
+                      {job.jobTitle}
+                    </h3>
+                    <div className="flex items-center gap-1.5 text-sm text-neutral-600 mt-1 truncate">
+                      <Building2 className="w-3.5 h-3.5 shrink-0 text-neutral-400" />
+                      <span className="truncate">{job.companyName}</span>
                     </div>
-                    <div className="space-y-0.5 flex-1 min-w-0">
-                      <h3 className="text-base font-bold text-neutral-950 leading-snug line-clamp-2 group-hover/title:text-neutral-700 transition tracking-tight">
-                        {job.jobTitle}
-                      </h3>
-                      <div className="flex items-center gap-1.5 text-xs text-neutral-600 font-mono truncate">
-                        <Building2 className="w-3.5 h-3.5 shrink-0 text-neutral-400" />
-                        <span className="truncate">{job.companyName}</span>
+                    <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-0.5 truncate">
+                      <MapPin className="w-3.5 h-3.5 shrink-0 text-neutral-400" />
+                      <span className="truncate">{job.location}</span>
+                    </div>
+                    {sourceSite && (
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-0.5 truncate">
+                        <Globe className="w-3.5 h-3.5 shrink-0 text-neutral-400" />
+                        <span className="truncate">{sourceSite}</span>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* BADGE-URI DE META-DATE: LOCATIE, MOD, NIVEL */}
-                  <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-neutral-700">
-                    <span className="px-2 py-0.5 bg-neutral-100 border border-neutral-200 rounded-md flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-neutral-500" />
-                      {removeDiacritics(job.location)}
-                    </span>
-                    <span className="px-2 py-0.5 bg-neutral-100 border border-neutral-200 rounded-md">
-                      {job.workModel === 'REMOTE' ? 'Remote' : job.workModel === 'HYBRID' ? 'Hibrid' : 'On-Site'}
-                    </span>
-                    <span className="px-2 py-0.5 bg-neutral-100 border border-neutral-200 rounded-md font-bold text-black">
-                      {job.experienceLevel === 'INTERNSHIP' ? 'Internship' :
-                       job.experienceLevel === 'JUNIOR' ? 'Junior' :
-                       job.experienceLevel === 'SENIOR' ? 'Senior' : 'Mid-Level'}
-                    </span>
-                  </div>
-
-                  {/* INDICATOR DE COMPETITIVITATE & NUMAR DE CANDIDATI */}
-                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                    {renderCompetitivenessBadge(job)}
-
-                    {job.applicantCountText && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-neutral-50 text-neutral-700 border border-neutral-200">
-                        <Users className="w-3 h-3 text-neutral-500" />
-                        <span>{removeDiacritics(job.applicantCountText)}</span>
-                      </span>
                     )}
-                  </div>
+                  </button>
 
+                  <span
+                    className={`shrink-0 px-2.5 py-1 rounded-lg text-sm font-medium tabular-nums ${
+                      job.atsMatchScore >= 75
+                        ? 'bg-brand-500 text-white'
+                        : job.atsMatchScore >= 45
+                        ? 'bg-brand-50 text-brand-700'
+                        : 'bg-neutral-100 text-neutral-500'
+                    }`}
+                    title="Scor ATS"
+                    aria-label={`Scor ATS ${Math.round(job.atsMatchScore)}%`}
+                  >
+                    {Math.round(job.atsMatchScore)}%
+                  </span>
                 </div>
 
-                {/* PARTEA INFERIOARA: DATA POSTARII & TOATE BUTOANELE DE ACTIUNE FIXATE LA BAZA */}
-                <div className="mt-auto pt-4 space-y-2.5">
-                  
-                  {/* DATA EXACTA A POSTARII */}
-                  <div className="flex items-center justify-end text-xs pb-1 border-b border-neutral-100 text-neutral-500 font-mono">
-                    <span 
-                      className={`flex items-center gap-1 text-[11px] ${
-                        formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo) === 'Data nespecificata'
-                          ? 'text-neutral-400 italic'
-                          : 'text-neutral-600'
-                      }`}
-                      title={job.postedAt ? `Publicat la: ${new Date(job.postedAt).toLocaleString('ro-RO')}` : 'Data exacta de publicare nu a fost furnizata de angajator'}
-                    >
-                      <Calendar className="w-3 h-3 text-neutral-400" />
-                      {removeDiacritics(formatExactDate(job.postedAt, job.postedDaysAgo, job.postedDateAgo))}
-                    </span>
-                  </div>
-
-                  {/* BUTOANE: VEZI FISA COMPLETA & AUDIT MODIFICARI */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setSelectedJobForDetails(job)}
-                      className="flex-1 py-2 px-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border border-neutral-200 shadow-2xs"
-                    >
-                      <FileText className="w-3.5 h-3.5 text-black" />
-                      <span>Vezi Fisa Completa</span>
+                <div className="mt-auto flex items-center gap-2">
+                  <a
+                    href={job.directApplyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 min-w-0 py-2 px-3 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 bg-brand-500 hover:bg-brand-600 text-white transition"
+                    title={applyLabel}
+                    aria-label={applyLabel}
+                  >
+                    <span>Aplică</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                  </a>
+                  <button
+                    onClick={() => handleSaveToKanban(job)}
+                    disabled={isSaved || isSaving}
+                    className={isSaved ? savedIconBtn : `${iconBtn} disabled:opacity-60 disabled:cursor-wait`}
+                    title={trackerLabel}
+                    aria-label={trackerLabel}
+                  >
+                    {isSaved ? <CheckCircle2 className="w-4 h-4" /> : <FolderKanban className="w-4 h-4" />}
+                  </button>
+                  <button onClick={() => setSelectedJobForDetails(job)} className={iconBtn} title="Vezi fișa jobului" aria-label="Vezi fișa jobului">
+                    <FileText className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleOpenAuditModal(job)} className={iconBtn} title="Istoric modificări" aria-label="Istoric modificări">
+                    <History className="w-4 h-4" />
+                  </button>
+                  {onOpenCoverLetter && (
+                    <button onClick={() => onOpenCoverLetter(job)} className={iconBtn} title="Generează scrisoare de intenție" aria-label="Generează scrisoare de intenție">
+                      <FileSignature className="w-4 h-4" />
                     </button>
-                    <button
-                      onClick={() => handleOpenAuditModal(job)}
-                      className="py-2 px-2.5 bg-white hover:bg-neutral-100 text-neutral-700 hover:text-black rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer border border-neutral-200 shadow-2xs"
-                      title="Istoric modificari & audit pipeline"
-                    >
-                      <History className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline text-[11px]">Istoric</span>
-                    </button>
-                  </div>
-
-                  {/* BUTOANE ACTIUNI: SALVARE KANBAN & APLICARE DIRECTA */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleSaveToKanban(job)}
-                      disabled={isSaved || isSaving}
-                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border ${
-                        isSaved 
-                          ? 'bg-neutral-900 text-white border-neutral-900' 
-                          : 'bg-white hover:bg-neutral-50 text-neutral-900 border-neutral-300 shadow-2xs'
-                      }`}
-                    >
-                      {isSaved ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                          <span>Aplicat</span>
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-3.5 h-3.5 text-neutral-600" />
-                          <span>{isSaving ? 'Se adauga...' : 'Adauga la Aplicat'}</span>
-                        </>
-                      )}
-                    </button>
-
-                    {onOpenCoverLetter && (
-                      <button
-                        onClick={() => onOpenCoverLetter(job)}
-                        className="py-2 px-3 bg-white hover:bg-neutral-100 text-neutral-900 border border-neutral-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
-                        title="Genereaza Scrisoare de Intentie AI pentru acest job"
-                      >
-                        <FileSignature className="w-3.5 h-3.5 text-neutral-700" />
-                        <span>Scrisoare AI</span>
-                      </button>
-                    )}
-
-                    <a 
-                      href={job.directApplyUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 py-2 px-3 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
-                    >
-                      <span>Aplica</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-
+                  )}
                 </div>
-
-              </div>
+              </Card>
             );
           })}
         </div>
@@ -1881,9 +1739,9 @@ export default function JobSearchPage({
 
       {/* PAGINARE IN PARTEA DE JOS */}
       {!loading && totalPages > 1 && (
-        <div className="bg-white border border-neutral-200/90 p-4 rounded-2xl shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="bg-white border border-neutral-200 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs font-mono font-medium text-neutral-500">
-            Pagina <span className="text-black font-bold">{currentPage}</span> din <span className="text-black font-bold">{totalPages}</span> ({totalJobs} joburi in total)
+            Pagina <span className="text-neutral-900 font-semibold">{currentPage}</span> din <span className="text-neutral-900 font-semibold">{totalPages}</span> ({totalJobs} joburi în total)
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -1891,7 +1749,7 @@ export default function JobSearchPage({
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
               className="p-2 rounded-xl border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-neutral-700"
-              title="Prima pagina"
+              title="Prima pagină"
             >
               <ChevronsLeft className="w-4 h-4" />
             </button>
@@ -1899,7 +1757,7 @@ export default function JobSearchPage({
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded-xl border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-xs font-mono font-bold flex items-center gap-1 text-neutral-800"
+              className="px-3 py-1.5 rounded-xl border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-xs font-mono font-semibold flex items-center gap-1 text-neutral-800"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               <span>Anterior</span>
@@ -1924,9 +1782,9 @@ export default function JobSearchPage({
                   <button
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
-                    className={`w-8 h-8 rounded-xl text-xs font-mono font-bold transition cursor-pointer ${
+                    className={`w-8 h-8 rounded-xl text-xs font-mono font-semibold transition cursor-pointer ${
                       isActive 
-                        ? 'bg-black text-white shadow-xs' 
+                        ? 'bg-brand-500 text-white' 
                         : 'bg-white text-neutral-800 hover:bg-neutral-100 border border-neutral-200'
                     }`}
                   >
@@ -1939,9 +1797,9 @@ export default function JobSearchPage({
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded-xl border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-xs font-mono font-bold flex items-center gap-1 text-neutral-800"
+              className="px-3 py-1.5 rounded-xl border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-xs font-mono font-semibold flex items-center gap-1 text-neutral-800"
             >
-              <span>Urmator</span>
+              <span>Următor</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
 
@@ -1949,7 +1807,7 @@ export default function JobSearchPage({
               onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
               className="p-2 rounded-xl border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-white transition cursor-pointer text-neutral-700"
-              title="Ultima pagina"
+              title="Ultima pagină"
             >
               <ChevronsRight className="w-4 h-4" />
             </button>
@@ -2004,7 +1862,7 @@ export default function JobSearchPage({
       {/* MODAL AUDIT LIFECYCLE & ISTORIC MODIFICARI */}
       {auditJobForChanges && typeof document !== 'undefined' && createPortal(
         <div 
-          className="fixed inset-0 z-[9999] overflow-y-auto bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-morphing-backdrop"
+          className="fixed inset-0 z-[9999] overflow-y-auto bg-brand-500/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-morphing-backdrop"
           onClick={() => setAuditJobForChanges(null)}
         >
           <div 
@@ -2014,11 +1872,11 @@ export default function JobSearchPage({
             {/* Modal Header */}
             <div className="p-5 border-b border-neutral-200 flex items-center justify-between bg-neutral-50">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-black">
+                <div className="w-9 h-9 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-900">
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-neutral-950">
+                  <h3 className="text-base font-semibold text-neutral-950">
                     Istoric & Audit Pipeline
                   </h3>
                   <p className="text-xs text-neutral-500 font-mono">
@@ -2028,7 +1886,7 @@ export default function JobSearchPage({
               </div>
               <button
                 onClick={() => setAuditJobForChanges(null)}
-                className="w-8 h-8 rounded-xl bg-white hover:bg-neutral-100 text-neutral-600 hover:text-black border border-neutral-200 flex items-center justify-center transition cursor-pointer animate-morphing-close"
+                className="w-8 h-8 rounded-xl bg-white hover:bg-neutral-100 text-neutral-600 hover:text-brand-600 border border-neutral-200 flex items-center justify-center transition cursor-pointer animate-morphing-close"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2040,19 +1898,19 @@ export default function JobSearchPage({
               <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="font-bold text-sm text-neutral-950">
+                    <div className="font-semibold text-sm text-neutral-950">
                       {auditJobForChanges.jobTitle}
                     </div>
                     <div className="text-xs font-mono text-neutral-600 flex items-center gap-1.5 mt-0.5">
                       <Building2 className="w-3.5 h-3.5 text-neutral-400" />
                       <span>{auditJobForChanges.companyName}</span>
                       <span>•</span>
-                      <span>{auditJobForChanges.sourcePlatform}</span>
+                      <span>{platformSiteName(auditJobForChanges.sourcePlatform)}</span>
                     </div>
                   </div>
-                  <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border shrink-0 ${
+                  <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold border shrink-0 ${
                     auditJobForChanges.status === 'ACTIVE'
-                      ? 'bg-black text-white border-black'
+                      ? 'bg-brand-500 text-white border-brand-500'
                       : 'bg-neutral-100 text-neutral-600 border-neutral-300'
                   }`}>
                     {auditJobForChanges.status === 'ACTIVE' ? 'Activ' : 'Expirat / Inactiv'}
@@ -2063,14 +1921,14 @@ export default function JobSearchPage({
                 <div className="pt-2 border-t border-neutral-200 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
                   <div>
                     <span className="text-neutral-500 block">Data Reala Publicare:</span>
-                    <span className="font-bold text-neutral-900 flex items-center gap-1 mt-0.5">
+                    <span className="font-semibold text-neutral-900 flex items-center gap-1 mt-0.5">
                       <Calendar className="w-3 h-3 text-neutral-400" />
                       {formatDateTime(auditJobForChanges.postedAt)}
                     </span>
                   </div>
                   <div>
                     <span className="text-neutral-500 block">Ultima Verificare (Crawl):</span>
-                    <span className="font-bold text-neutral-900 flex items-center gap-1 mt-0.5">
+                    <span className="font-semibold text-neutral-900 flex items-center gap-1 mt-0.5">
                       <Clock className="w-3 h-3 text-neutral-400" />
                       {formatDateTime(auditJobForChanges.lastSeenAt || auditJobForChanges.firstSeenAt)}
                     </span>
@@ -2086,20 +1944,20 @@ export default function JobSearchPage({
 
               {/* Timeline of Changes */}
               <div className="space-y-2">
-                <div className="font-mono font-bold text-xs uppercase tracking-wider text-neutral-700 flex items-center gap-1.5">
-                  <GitCommit className="w-3.5 h-3.5 text-black" />
+                <div className="font-mono font-semibold text-xs  text-neutral-700 flex items-center gap-1.5">
+                  <GitCommit className="w-3.5 h-3.5 text-neutral-900" />
                   <span>Jurnal Modificari Inregistrate ({jobChangesList.length})</span>
                 </div>
 
                 {loadingChanges ? (
                   <div className="py-8 text-center text-neutral-500 space-y-2">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto text-black" />
-                    <p className="font-medium">Se incarca jurnalul de modificari...</p>
+                    <RefreshCw className="w-5 h-5 animate-spin mx-auto text-neutral-900" />
+                    <p className="font-medium">Se încarcă jurnalul de modificari...</p>
                   </div>
                 ) : jobChangesList.length === 0 ? (
                   <div className="p-4 rounded-xl bg-neutral-50 border border-dashed border-neutral-200 text-center text-neutral-500 space-y-1">
-                    <CheckCircle2 className="w-5 h-5 text-black mx-auto" />
-                    <p className="font-bold text-neutral-800">Nicio modificare ulterioara</p>
+                    <CheckCircle2 className="w-5 h-5 text-neutral-900 mx-auto" />
+                    <p className="font-semibold text-neutral-800">Nicio modificare ulterioară</p>
                     <p className="text-[11px]">
                       Jobul a fost indexat initial si continutul nu a suferit modificari intre crawl-uri.
                     </p>
@@ -2108,18 +1966,18 @@ export default function JobSearchPage({
                   <div className="space-y-2 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-neutral-200">
                     {jobChangesList.map((ch, idx) => {
                       const typeConfig = {
-                        CREATED: { label: 'Descoperit & Indexat', bg: 'bg-black text-white border-black', dot: 'bg-black' },
-                        CONTENT_UPDATED: { label: 'Continut Modificat', bg: 'bg-neutral-100 text-neutral-900 border-neutral-300', dot: 'bg-neutral-700' },
+                        CREATED: { label: 'Descoperit & Indexat', bg: 'bg-brand-500 text-white border-brand-500', dot: 'bg-brand-500' },
+                        CONTENT_UPDATED: { label: 'Conținut Modificat', bg: 'bg-neutral-100 text-neutral-900 border-neutral-300', dot: 'bg-neutral-700' },
                         EXPIRED: { label: 'Marcat ca Expirat', bg: 'bg-neutral-100 text-neutral-600 border-neutral-200', dot: 'bg-neutral-400' },
-                        REACTIVATED: { label: 'Reactivat la Recrawling', bg: 'bg-black text-white border-black', dot: 'bg-black' }
+                        REACTIVATED: { label: 'Reactivat la Recrawling', bg: 'bg-brand-500 text-white border-brand-500', dot: 'bg-brand-500' }
                       }[ch.changeType] || { label: ch.changeType, bg: 'bg-neutral-100 text-neutral-800 border-neutral-200', dot: 'bg-neutral-500' };
 
                       return (
                         <div key={ch.id || idx} className="relative pl-7 flex items-start justify-between gap-3 group">
                           <div className={`absolute left-2.5 top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white ring-1 ring-neutral-300 ${typeConfig.dot}`}></div>
-                          <div className="flex-1 bg-white p-2.5 rounded-xl border border-neutral-200 shadow-2xs space-y-1">
+                          <div className="flex-1 bg-white p-2.5 rounded-xl border border-neutral-200 space-y-1">
                             <div className="flex items-center justify-between gap-2">
-                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border ${typeConfig.bg}`}>
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold border ${typeConfig.bg}`}>
                                 {typeConfig.label}
                               </span>
                               <span className="text-[10px] text-neutral-500 font-mono">
@@ -2149,7 +2007,7 @@ export default function JobSearchPage({
             <div className="p-4 border-t border-neutral-200 bg-neutral-50 flex justify-end">
               <button
                 onClick={() => setAuditJobForChanges(null)}
-                className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 Inchide
               </button>

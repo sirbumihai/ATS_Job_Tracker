@@ -1,12 +1,18 @@
 package com.jobtracker.ats.crawler;
 
 import com.jobtracker.ats.dto.UnifiedJobListingDto;
+import org.jsoup.HttpStatusException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.IntStream;
 
 import static com.jobtracker.ats.util.JobNormalizationUtils.stableId;
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,5 +83,60 @@ class LinkedInScraperTest {
         assertEquals(1, jobs.size());
         assertEquals("QA Automation Engineer", jobs.get(0).jobTitle());
         assertEquals(2, result.newJobs());
+    }
+
+    @Test
+    @DisplayName("URL-ul de căutare conține cuvintele cheie, locația, filtrul de experiență și pagina")
+    void buildsSearchUrl() {
+        String url = LinkedInScraper.searchUrl(
+                new LinkedInScraper.SearchQuery("Junior C++ Developer", "Bucharest, Romania", "f_E=1", 4), 20);
+
+        assertEquals("https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
+                + "?keywords=Junior+C%2B%2B+Developer&location=Bucharest%2C+Romania&sortBy=DD&f_TPR=r2592000&f_E=1&start=20", url);
+    }
+
+    @Test
+    @DisplayName("O pagină refuzată cu HTTP 429 se reîncearcă după pauză, fără să se piardă joburile")
+    void retriesPageAfterRateLimit() {
+        AtomicInteger calls = new AtomicInteger();
+        LinkedInScraper liveLike = new LinkedInScraper((url, userAgent) -> {
+            if (calls.incrementAndGet() == 1) throw new HttpStatusException("Too Many Requests", 429, url);
+            return CrawlerFixtures.html("linkedin/search-page.html");
+        }, this::fakeTimeThrottle);
+
+        List<UnifiedJobListingDto> jobs = Collections.synchronizedList(new ArrayList<>());
+        liveLike.scrape(List.of(query), jobs, Collections.synchronizedSet(new HashSet<>()), Set.of());
+
+        assertEquals(2, calls.get());
+        assertEquals(2, jobs.size());
+    }
+
+    @Test
+    @DisplayName("Dacă LinkedIn refuză în continuare cererile, rularea se oprește singură")
+    void stopsWhenLinkedInKeepsRateLimiting() {
+        AtomicInteger calls = new AtomicInteger();
+        LinkedInScraper blocked = new LinkedInScraper((url, userAgent) -> {
+            calls.incrementAndGet();
+            throw new HttpStatusException("Too Many Requests", 429, url);
+        }, this::fakeTimeThrottle);
+
+        // Fără oprire, fiecare căutare ar trimite cel puțin o cerere
+        List<LinkedInScraper.SearchQuery> queries = IntStream.range(0, 30)
+                .mapToObj(i -> new LinkedInScraper.SearchQuery("Junior Developer " + i, "", 3))
+                .toList();
+        List<UnifiedJobListingDto> jobs = Collections.synchronizedList(new ArrayList<>());
+        blocked.scrape(queries, jobs, Collections.synchronizedSet(new HashSet<>()), Set.of());
+
+        assertTrue(jobs.isEmpty());
+        assertTrue(calls.get() >= RequestThrottle.MAX_BACKOFFS_IN_A_ROW);
+        assertTrue(calls.get() < queries.size(), "cereri trimise: " + calls.get());
+    }
+
+    // Ceas fals comun: pauzele throttle-ului doar avansează timpul
+    private final AtomicLong fakeNow = new AtomicLong(1_000);
+
+    private RequestThrottle fakeTimeThrottle() {
+        return new RequestThrottle(LinkedInScraper.MAX_PARALLEL_REQUESTS, 250, 800, 2_000, 0,
+                LinkedInScraper::isRateLimited, fakeNow::get, fakeNow::addAndGet);
     }
 }

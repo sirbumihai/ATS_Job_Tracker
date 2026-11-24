@@ -1,0 +1,38 @@
+{
+  "id": "job-e2e-1",
+  "jobTitle": "Junior Java Developer",
+  "companyName": "Bitdefender",
+  "companyLogoUrl": null,
+  "location": "Bucuresti",
+  "workModel": "HYBRID",
+  "experienceLevel": "JUNIOR",
+  "sourcePlatform": "EJOBS",
+  "directApplyUrl": "https://example.test/jobs/1",
+  "rawDescription": "Cerințe:\n- Java 17 și Spring Boot\n- PostgreSQL\n\nResponsabilități:\n- Dezvoltare de servicii REST\n\nBeneficii:\n- Program flexibil",
+  "salaryRange": null,
+  "skillsRequired": [
+    "Java",
+    "Spring Boot",
+    "PostgreSQL"
+  ],
+  "matchingSkills": [
+    "Java",
+    "Spring Boot"
+  ],
+  "missingSkills": [
+    "PostgreSQL"
+  ],
+  "postedDateAgo": "acum 2 zile",
+  "atsMatchScore": 72.0,
+  "competitiveness": "MEDIUM",
+  "competitivenessLabel": "Competitie medie",
+  "applicantCountText": null,
+  "postedDaysAgo": 2,
+  "externalId": "job-e2e-1",
+  "contentHash": "hash-1",
+  "postedAt": "2026-10-17T08:00:00Z",
+  "firstSeenAt": "2026-10-17T09:00:00Z",
+  "lastSeenAt": "2026-10-19T09:00:00Z",
+  "status": "ACTIVE",
+  "newlyDiscovered": false
+}

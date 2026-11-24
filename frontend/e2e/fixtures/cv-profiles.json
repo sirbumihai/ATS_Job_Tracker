@@ -1,0 +1,24 @@
+[
+  {
+    "id": "c1111111-1111-4111-8111-111111111111",
+    "title": "CV Backend Java",
+    "isPrimary": true,
+    "fullName": "Utilizator Demo",
+    "email": "demo@jobflow.test",
+    "phone": "+40 700 000 000",
+    "location": "Bucuresti",
+    "linkedin": "linkedin.com/in/demo",
+    "github": "github.com/demo",
+    "summary": "Dezvoltator backend junior cu proiecte in Java si Spring Boot.",
+    "skillsLanguages": "Java, SQL, JavaScript",
+    "skillsFrameworks": "Spring Boot, React",
+    "skillsDatabases": "PostgreSQL",
+    "skillsDevops": "Docker, Git",
+    "workExperienceJson": "[{\"id\":\"exp-1\",\"company\":\"Firma Demo\",\"role\":\"Intern Java\",\"period\":\"2025 - 2026\",\"bullets\":[\"Am construit un API REST cu Spring Boot.\"]}]",
+    "projectsJson": "[{\"id\":\"proj-1\",\"name\":\"JobFlow\",\"tech\":\"Java, React\",\"bullets\":[\"Tracker de aplicatii cu scor ATS.\"]}]",
+    "educationJson": "[{\"id\":\"edu-1\",\"school\":\"Universitatea Politehnica Bucuresti\",\"degree\":\"Licenta Calculatoare\",\"period\":\"2022 - 2026\"}]",
+    "languagePreference": "ro",
+    "createdAt": "2026-09-01T10:00:00Z",
+    "updatedAt": "2026-10-01T10:00:00Z"
+  }
+]

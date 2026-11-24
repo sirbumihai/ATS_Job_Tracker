@@ -1,47 +1,32 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { 
-  Building2, 
-  Sparkles, 
-  FileText, 
-  BrainCircuit, 
-  RefreshCw, 
-  Search, 
-  Filter, 
-  Trash2, 
-  Columns, 
+import {
+  Building2,
+  Sparkles,
+  FileText,
+  Trash2,
+  Columns,
   List,
   Edit3,
   CheckCircle2,
-  Clock,
-  ExternalLink,
   Eye,
   Send,
   Calendar,
   XCircle,
-  Plus,
-  FolderKanban,
-  StickyNote,
   X,
-  Save,
   Mail,
-  FileSignature,
-  MapPin
+  FileSignature
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 import GmailSyncModal from './GmailSyncModal';
 import CalendarView from './CalendarView';
+import Card from './ui/Card';
+import PageHeader from './ui/PageHeader';
 import {
   SearchIcon,
   Trash2Icon,
-  SparklesIcon,
   FileSignatureIcon,
   EyeIcon,
-  PlusIcon,
-  CalendarIcon,
-  RefreshCwIcon,
-  CheckCircle2Icon,
-  SendIcon,
-  MailIcon
+  PlusIcon
 } from './animated-icons';
 
 
@@ -121,7 +106,7 @@ export default function KanbanBoard({
   const getEmailSender = (app) => {
     if (!app) return null;
     if (app.rawDescription) {
-      const m = app.rawDescription.match(/👤\s*Expeditor:\s*([^\n\r]+)/i);
+      const m = app.rawDescription.match(/(?:\u{1F464}\s*)?Expeditor:\s*([^\n\r]+)/iu);
       if (m) return m[1].trim();
     }
     if (app.notes) {
@@ -189,54 +174,54 @@ export default function KanbanBoard({
       key: 'APPLIED', 
       title: 'Aplicat', 
       label: 'Aplicat',
-      headerBg: 'bg-white text-neutral-950 border-b border-neutral-200/90',
-      columnBg: 'bg-[#fafafa] border-neutral-200/90',
-      accentBorder: 'border-t-2 border-t-neutral-800',
-      badgeBg: 'bg-white text-neutral-900 border border-neutral-200 shadow-2xs font-mono',
-      iconColor: 'text-neutral-800',
-      tabActive: 'bg-black text-white shadow-xs',
+      headerBg: 'bg-white text-neutral-950',
+      columnBg: 'bg-neutral-50',
+      accentBorder: 'border-neutral-200',
+      badgeBg: 'bg-neutral-100 text-neutral-700 font-medium',
+      iconColor: 'text-brand-500',
+      tabActive: 'bg-brand-500 text-white',
       icon: Send
     },
     { 
       key: 'INTERVIEWING', 
       title: 'Interviu', 
       label: 'Interviu',
-      headerBg: 'bg-white text-neutral-950 border-b border-neutral-200/90',
-      columnBg: 'bg-[#fafafa] border-neutral-200/90',
-      accentBorder: 'border-t-2 border-t-neutral-950',
-      badgeBg: 'bg-white text-neutral-900 border border-neutral-200 shadow-2xs font-mono',
-      iconColor: 'text-neutral-950',
-      tabActive: 'bg-black text-white shadow-xs',
+      headerBg: 'bg-white text-neutral-950',
+      columnBg: 'bg-neutral-50',
+      accentBorder: 'border-neutral-200',
+      badgeBg: 'bg-neutral-100 text-neutral-700 font-medium',
+      iconColor: 'text-brand-500',
+      tabActive: 'bg-brand-500 text-white',
       icon: Calendar
     },
     { 
       key: 'REJECTED', 
       title: 'Respins', 
       label: 'Respins',
-      headerBg: 'bg-white text-neutral-950 border-b border-neutral-200/90',
-      columnBg: 'bg-[#fafafa] border-neutral-200/90',
-      accentBorder: 'border-t-2 border-t-neutral-300',
-      badgeBg: 'bg-white text-neutral-600 border border-neutral-200 shadow-2xs font-mono',
+      headerBg: 'bg-white text-neutral-950',
+      columnBg: 'bg-neutral-50',
+      accentBorder: 'border-neutral-200',
+      badgeBg: 'bg-neutral-100 text-neutral-700 font-medium',
       iconColor: 'text-neutral-400',
-      tabActive: 'bg-black text-white shadow-xs',
+      tabActive: 'bg-brand-500 text-white',
       icon: XCircle
     },
   ];
 
   const statusColorMap = {
-    APPLIED: 'bg-neutral-100 text-neutral-800 border-neutral-300',
-    INTERVIEWING: 'bg-neutral-900 text-white border-neutral-900',
+    APPLIED: 'bg-neutral-100 text-neutral-800 border-neutral-200',
+    INTERVIEWING: 'bg-brand-50 text-brand-700 border-brand-200',
     REJECTED: 'bg-neutral-100 text-neutral-500 border-neutral-200',
-    SAVED: 'bg-neutral-100 text-neutral-800 border-neutral-300',
-    OFFER_RECEIVED: 'bg-neutral-900 text-white border-neutral-900',
+    SAVED: 'bg-neutral-100 text-neutral-800 border-neutral-200',
+    OFFER_RECEIVED: 'bg-brand-50 text-brand-700 border-brand-200',
   };
 
   const statusDotMap = {
     APPLIED: 'bg-neutral-600',
-    INTERVIEWING: 'bg-neutral-950',
+    INTERVIEWING: 'bg-brand-500',
     REJECTED: 'bg-neutral-300',
     SAVED: 'bg-neutral-600',
-    OFFER_RECEIVED: 'bg-neutral-950',
+    OFFER_RECEIVED: 'bg-brand-500',
   };
 
   // FILTER APPLICATIONS (BY SEARCH QUERY ONLY)
@@ -545,7 +530,7 @@ export default function KanbanBoard({
         <div style={{ overflow: 'hidden', minHeight: 0 }} className="w-full min-w-0">
           <div 
             style={{ height: `${targetH}px` }} 
-            className="w-full rounded-2xl border-2 border-dashed border-neutral-300/90 bg-neutral-100/60 shadow-inner flex items-center justify-center pointer-events-none select-none transition-colors"
+            className="w-full rounded-2xl border-2 border-dashed border-brand-200 bg-brand-50/50 flex items-center justify-center pointer-events-none select-none transition-colors"
           />
         </div>
       </div>
@@ -566,26 +551,26 @@ export default function KanbanBoard({
               if (!isFloating) handleOpenJobModal(app);
             }}
             className="cursor-pointer group/title flex items-start gap-2.5 flex-1 min-w-0"
-            title="Apasa pentru a deschide fisa completa a jobului"
+            title="Deschide fișa jobului"
           >
             {/* ARCHITECTURAL COMPANY AVATAR */}
-            <div className="w-7 h-7 rounded-lg bg-neutral-100 border border-neutral-200/90 text-neutral-800 flex items-center justify-center font-mono font-bold text-xs shrink-0 group-hover/title:bg-neutral-950 group-hover/title:text-white group-hover/title:border-neutral-950 transition-colors shadow-2xs">
+            <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-700 flex items-center justify-center font-serif text-sm shrink-0 transition-colors">
               {companyLetter}
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-500 font-bold truncate block group-hover/title:text-neutral-950 transition-colors">
+                <span className="text-xs text-neutral-500 truncate block">
                   {app.companyName}
                 </span>
                 {isGmail && (
-                  <span className="inline-flex items-center gap-1 font-bold text-[9px] text-red-700 bg-red-50 border border-red-200/90 px-1.5 py-0.2 rounded-md shrink-0" title="Detectat automat prin sincronizare Gmail">
+                  <span className="inline-flex items-center gap-1 font-bold text-[9px] text-red-700 bg-red-50 border border-red-200/90 px-1.5 py-0.2 rounded-md shrink-0" title="Detectat prin sincronizare Gmail">
                     <Mail className="w-2.5 h-2.5 text-red-600 shrink-0" />
                     <span>Gmail</span>
                   </span>
                 )}
               </div>
-              <h4 className="font-extrabold text-[13.5px] sm:text-[14px] text-neutral-950 leading-snug tracking-tight mt-0.5 line-clamp-2 group-hover/title:text-neutral-700 transition-colors">
+              <h4 className="font-sans font-medium text-sm text-neutral-950 leading-snug mt-0.5 line-clamp-2">
                 {app.jobTitle}
               </h4>
             </div>
@@ -597,11 +582,11 @@ export default function KanbanBoard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (window.confirm(`Sigur doresti sa stergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
+                  if (window.confirm(`Sigur vrei să ștergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
                     onDeleteApplication && onDeleteApplication(app.id);
                   }
                 }}
-                title="Sterge din Tracker"
+                title="Șterge din Tracker"
                 className="p-1 rounded-md text-neutral-300 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shrink-0 opacity-0 group-hover:opacity-100 active:scale-95"
               >
                 <Trash2Icon size={14} className="w-3.5 h-3.5" />
@@ -610,33 +595,16 @@ export default function KanbanBoard({
           </div>
         </div>
 
-        {/* WORK MODEL & LOCATION BADGES (IF AVAILABLE) */}
-        {(app.workModel || app.jobLocation || app.location) && (
-          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-            {app.workModel && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-neutral-100 text-neutral-700 border border-neutral-200/80">
-                {app.workModel}
-              </span>
-            )}
-            {(app.jobLocation || app.location) && (
-              <span className="inline-flex items-center gap-1 text-[11px] text-neutral-500 font-medium truncate max-w-[160px]">
-                <MapPin className="w-3 h-3 text-neutral-400 shrink-0" />
-                <span className="truncate">{app.jobLocation || app.location}</span>
-              </span>
-            )}
-          </div>
-        )}
-
         {/* CARD FOOTER: DATE & QUICK ACTIONS */}
         <div className="flex items-center justify-between gap-2 pt-2 border-t border-neutral-100 text-xs">
           <div className="flex items-center gap-1.5 flex-wrap min-w-0 text-[11px] text-neutral-500 font-mono">
             {app.appliedDate ? (
-              <span className="inline-flex items-center gap-1 shrink-0" title={`Data aplicarii: ${app.appliedDate}`}>
+              <span className="inline-flex items-center gap-1 shrink-0" title={`Data aplicării: ${app.appliedDate}`}>
                 <Calendar className="w-3 h-3 text-neutral-400 shrink-0" />
                 <span>{app.appliedDate}</span>
               </span>
             ) : (
-              <span className="text-neutral-400 italic font-sans text-[11px]">Inregistrat</span>
+              <span className="text-neutral-400 font-sans text-[11px]">Înregistrat</span>
             )}
           </div>
 
@@ -648,8 +616,8 @@ export default function KanbanBoard({
                   e.stopPropagation();
                   onOpenCoverLetter(app.id);
                 }}
-                className="p-1.5 rounded-lg text-neutral-400 hover:text-black hover:bg-neutral-100 transition-all cursor-pointer active:scale-95"
-                title="Genereaza Scrisoare de Intentie AI"
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-brand-600 hover:bg-brand-50 transition-all cursor-pointer active:scale-95"
+                title="Generează scrisoare de intenție"
               >
                 <FileSignatureIcon size={14} className="w-3.5 h-3.5" />
               </button>
@@ -661,8 +629,8 @@ export default function KanbanBoard({
                 e.stopPropagation();
                 handleOpenJobModal(app);
               }}
-              className="p-1.5 rounded-lg text-neutral-400 hover:text-black hover:bg-neutral-100 transition-all cursor-pointer active:scale-95"
-              title="Deschide fisa detaliata a jobului"
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-brand-600 hover:bg-brand-50 transition-all cursor-pointer active:scale-95"
+              title="Deschide fișa jobului"
             >
               <EyeIcon size={14} className="w-3.5 h-3.5" />
             </button>
@@ -675,117 +643,83 @@ export default function KanbanBoard({
   return (
     <div className="flex-1 min-h-0 flex flex-col space-y-2.5 font-sans text-neutral-900 select-none">
       
-      {/* UNIFIED COMPACT SINGLE-ROW HEADER & TOOLBAR */}
-      <div className="bg-white border border-neutral-200/90 shadow-2xs px-3.5 py-2 rounded-2xl flex items-center justify-between gap-3 shrink-0 flex-wrap">
-        
-        {/* LEFT: TITLE, COUNT & SEARCH BAR DIRECTLY NEXT TO IT */}
-        <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-[280px]">
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-xl bg-neutral-950 text-white flex items-center justify-center shrink-0 shadow-2xs">
-              <FolderKanban className="w-4 h-4" />
-            </div>
-            <h2 className="text-sm sm:text-base font-extrabold text-neutral-950 tracking-tight leading-none">
-              {viewMode === 'kanban' 
-                ? 'Tracker & Pipeline' 
-                : viewMode === 'list' 
-                ? 'Lista Centralizata' 
-                : 'Calendar & Agenda'}
-            </h2>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 border border-neutral-200">
-              {filteredApplications.length}
-            </span>
-          </div>
-
-          {/* SEARCH BAR IMMEDIATELY NEXT TO TRACKER NAME */}
+      {/* HEADER DE PAGINA: TITLU, CAUTARE, VIZUALIZARI SI ACTIUNI */}
+      <Card padding="px-4 py-3" className="flex items-center justify-between gap-3 shrink-0 flex-wrap">
+        <div className="flex items-center gap-3 flex-1 min-w-[260px]">
+          <PageHeader
+            as="h2"
+            title={viewMode === 'kanban' ? 'Board' : viewMode === 'list' ? 'Listă' : 'Calendar'}
+            subtitle={`${filteredApplications.length} aplicații`}
+            className="shrink-0"
+          />
           <div className="relative flex-1 max-w-xs sm:max-w-sm">
             <SearchIcon size={14} className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input 
-              type="text" 
-              placeholder="Cauta companie, titlu, locatie..."
+            <input
+              type="text"
+              aria-label="Caută aplicații"
+              placeholder="Caută companie, rol, locație"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl pl-8 pr-7 py-1.5 text-xs text-neutral-900 placeholder-neutral-400 outline-none transition"
+              className="w-full bg-white border border-neutral-200 focus:border-brand-500 rounded-xl pl-8 pr-7 py-1.5 text-xs text-neutral-900 placeholder-neutral-400 outline-none transition"
             />
             {searchQuery && (
-              <button 
+              <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black text-xs font-bold p-1 cursor-pointer"
-                title="Sterge textul cautat"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-900 p-1 cursor-pointer"
+                title="Șterge căutarea"
+                aria-label="Șterge căutarea"
               >
-                ✕
+                <X className="w-3 h-3" />
               </button>
             )}
           </div>
         </div>
 
-        {/* RIGHT: CONTROLS & ACTIONS GROUP */}
-        <div className="flex items-center gap-2 shrink-0">
-          
-          {/* VIEW MODE TOGGLE */}
-          <div className="flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200 shrink-0">
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                viewMode === 'kanban' 
-                  ? 'bg-black text-white shadow-2xs' 
-                  : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
-              }`}
-              title="Vizualizare Kanban Board"
-            >
-              <Columns className="w-3.5 h-3.5" />
-              <span>Kanban</span>
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                viewMode === 'list' 
-                  ? 'bg-black text-white shadow-2xs' 
-                  : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
-              }`}
-              title="Vizualizare Lista Tabelara"
-            >
-              <List className="w-3.5 h-3.5" />
-              <span>Lista</span>
-            </button>
-            <button
-              onClick={() => setViewMode('calendar')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                viewMode === 'calendar' 
-                  ? 'bg-black text-white shadow-2xs' 
-                  : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60'
-              }`}
-              title="Vizualizare Calendar & Agenda Aplicari"
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              <span>Calendar</span>
-            </button>
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
+          <div className="flex items-center bg-neutral-100 p-0.5 rounded-xl shrink-0">
+            {[
+              ['kanban', 'Kanban', Columns],
+              ['list', 'Listă', List],
+              ['calendar', 'Calendar', Calendar],
+            ].map(([mode, label, ModeIcon]) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                aria-pressed={viewMode === mode}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition cursor-pointer ${
+                  viewMode === mode
+                    ? 'bg-white text-brand-700 shadow-sm'
+                    : 'text-neutral-600 hover:text-neutral-950'
+                }`}
+              >
+                <ModeIcon className="w-3.5 h-3.5" />
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
 
-          {/* GMAIL SYNC BUTTON */}
           <button
             onClick={() => setIsGmailModalOpen(true)}
-            className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border border-neutral-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0 active:scale-95"
-            title="Sincronizeaza statusul aplicatiilor din emailurile Gmail"
+            className="px-3 py-1.5 bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-200 rounded-xl text-xs font-medium flex items-center gap-1.5 transition cursor-pointer shrink-0"
+            title="Sincronizează din Gmail"
+            aria-label="Gmail Sync"
           >
             <Mail className="w-3.5 h-3.5 text-neutral-600" />
             <span className="hidden sm:inline">Gmail Sync</span>
           </button>
 
-          {/* ADAUGA JOB BUTTON */}
           {onOpenAddJob && (
             <button
               onClick={onOpenAddJob}
-              className="px-3 py-1.5 bg-neutral-950 hover:bg-neutral-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer shrink-0 active:scale-95 border border-neutral-900 group"
-              title="Adauga un job nou manual in tracker"
+              className="px-3 py-1.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-medium flex items-center gap-1.5 transition cursor-pointer shrink-0"
+              title="Adaugă un job în tracker"
             >
               <PlusIcon size={14} className="w-3.5 h-3.5" />
-              <span>Adauga Job</span>
+              <span>Adaugă job</span>
             </button>
           )}
-
         </div>
-
-      </div>
+      </Card>
 
       {/* ========================================================================= */}
       {/* 1. KANBAN VIEW (COLUMNS WITH DRAG & DROP & PREVIEW) */}
@@ -793,7 +727,7 @@ export default function KanbanBoard({
       {viewMode === 'kanban' && (
         <>
           {/* MOBILE COLUMN TAB SELECTOR */}
-          <div className="flex md:hidden overflow-x-auto gap-1.5 p-1.5 bg-neutral-100 rounded-2xl border border-neutral-200">
+          <div className="flex md:hidden overflow-x-auto gap-1.5 p-1.5 bg-neutral-100 rounded-2xl">
             {kanbanColumns.map((col) => {
               const count = filteredApplications.filter(a => normalizeStatus(a.status) === col.key).length;
               const ColIcon = col.icon;
@@ -802,10 +736,10 @@ export default function KanbanBoard({
                 <button
                   key={col.key}
                   onClick={() => setMobileSelectedColumn(col.key)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 transition cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 flex items-center gap-1.5 transition cursor-pointer ${
                     isSelected 
-                      ? `${col.tabActive} shadow-sm font-black` 
-                      : 'text-neutral-700 hover:text-black bg-white/70'
+                      ? col.tabActive 
+                      : 'text-neutral-700 hover:text-neutral-950 bg-white/70'
                   }`}
                 >
                   <ColIcon className="w-3.5 h-3.5" />
@@ -830,12 +764,12 @@ export default function KanbanBoard({
                 <div 
                   key={col.key} 
                   data-kanban-col={col.key}
-                  className={`rounded-2xl border ${col.columnBg} ${col.accentBorder} transition-all duration-200 flex flex-col h-full min-h-0 shadow-xs overflow-hidden ${
-                    isDragOverCol ? 'ring-2 ring-neutral-900/60 shadow-md' : ''
+                  className={`rounded-2xl border ${col.columnBg} ${col.accentBorder} transition-all duration-200 flex flex-col h-full min-h-0 overflow-hidden ${
+                    isDragOverCol ? 'ring-2 ring-brand-500/50' : ''
                   } ${isMobileVisible ? 'flex' : 'hidden md:flex'}`}
                 >
                   {/* FIXED COLUMN HEADER */}
-                  <div className={`flex items-center justify-between px-3.5 py-2 ${col.headerBg} font-bold text-xs sm:text-sm shrink-0 border-b ${col.accentBorder}`}>
+                  <div className={`flex items-center justify-between px-3.5 py-2 ${col.headerBg} font-medium text-xs sm:text-sm shrink-0 border-b ${col.accentBorder}`}>
                     <div className="flex items-center gap-2">
                       <ColIcon className={`w-4 h-4 ${col.iconColor} shrink-0`} />
                       <span className="truncate">{col.title}</span>
@@ -882,7 +816,7 @@ export default function KanbanBoard({
                                 onDragStart={(e) => { e.preventDefault(); return false; }}
                                 onPointerDown={(e) => handlePointerDown(e, app, col.key, visibleIdx)}
                                 style={{ touchAction: 'none', userSelect: 'none' }}
-                                className={`bg-white border border-neutral-200/90 hover:border-neutral-400/90 rounded-2xl p-3.5 space-y-2.5 relative group shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-200 text-neutral-900 cursor-pointer active:cursor-grabbing w-full min-w-0 select-none ${
+                                className={`bg-white border border-neutral-200 hover:border-brand-300 rounded-2xl p-3.5 space-y-2.5 relative group transition-colors duration-200 text-neutral-900 cursor-pointer active:cursor-grabbing w-full min-w-0 select-none ${
                                   justDroppedCardId === app.id ? 'animate-card-settle' : ''
                                 }`}
                               >
@@ -900,7 +834,7 @@ export default function KanbanBoard({
                     {/* EMPTY COLUMN PLACEHOLDER WHEN NOT DRAGGING */}
                     {colApps.length === 0 && !activeDrag && (
                       <div className="h-28 w-full flex items-center justify-center text-xs text-neutral-400 font-medium italic border border-dashed border-neutral-300/80 rounded-xl p-3 text-center select-none">
-                        {currentUser ? 'Niciun job in aceasta etapa' : 'Autentifica-te'}
+                        {currentUser ? 'Niciun job în această etapă' : 'Autentifică-te'}
                       </div>
                     )}
                   </div>
@@ -925,7 +859,7 @@ export default function KanbanBoard({
                 boxShadow: '0 25px 45px -8px rgba(0, 0, 0, 0.3), 0 12px 22px -6px rgba(0, 0, 0, 0.15)',
                 opacity: 1,
               }}
-              className="bg-white border border-neutral-300 rounded-2xl p-3.5 space-y-2.5 select-none cursor-grabbing shadow-2xl"
+              className="bg-white border border-brand-300 rounded-2xl p-3.5 space-y-2.5 select-none cursor-grabbing"
             >
               {renderCardInner(activeDrag.app, true)}
             </div>
@@ -937,18 +871,18 @@ export default function KanbanBoard({
       {/* 2. LIST VIEW (CLEAN MINIMALIST TABLE & CARDS WITH CV SELECTOR) */}
       {/* ========================================================================= */}
       {viewMode === 'list' && (
-        <div className="bg-white border border-neutral-200/90 shadow-2xs rounded-2xl overflow-hidden font-sans flex-1 min-h-0 flex flex-col">
+        <Card padding="p-0" className="overflow-hidden font-sans flex-1 min-h-0 flex flex-col">
           
           {filteredApplications.length > 0 ? (
             <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 kanban-column-scroll">
               <table className="w-full text-left border-collapse">
                 <thead className="sticky top-0 bg-neutral-50/95 backdrop-blur-xs z-10 border-b border-neutral-200">
-                  <tr className="text-xs font-mono font-bold text-neutral-500 uppercase tracking-wider">
-                    <th className="py-3 px-4 sm:px-6">Companie & Job</th>
-                    <th className="py-3 px-4">Status Curent</th>
-                    <th className="py-3 px-4">Scor Match AI</th>
-                    <th className="py-3 px-4">CV Asociat</th>
-                    <th className="py-3 px-4 sm:px-6 text-right">Actiuni</th>
+                  <tr className="text-xs font-medium text-neutral-500">
+                    <th className="py-3 px-4 sm:px-6">Rol</th>
+                    <th className="py-3 px-4">Etapă</th>
+                    <th className="py-3 px-4">Scor ATS</th>
+                    <th className="py-3 px-4">CV</th>
+                    <th className="py-3 px-4 sm:px-6 text-right">Acțiuni</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100 text-sm">
@@ -965,17 +899,17 @@ export default function KanbanBoard({
                         <td className="py-4 px-4 sm:px-6">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <span className="text-xs sm:text-[13px] font-mono font-bold uppercase tracking-wider text-neutral-500">
+                              <span className="text-xs sm:text-[13px] text-neutral-500">
                                 {app.companyName}
                               </span>
                               {isGmail && (
-                                <span className="inline-flex items-center gap-1 font-bold text-[10px] text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full" title="Detectat automat prin sincronizare Gmail">
+                                <span className="inline-flex items-center gap-1 font-bold text-[10px] text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full" title="Detectat prin sincronizare Gmail">
                                   <Mail className="w-3 h-3 text-red-600 shrink-0" />
                                   <span>Gmail</span>
                                 </span>
                               )}
                               {app.appliedDate && (
-                                <span className="inline-flex items-center gap-1 font-mono text-xs text-neutral-500 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md" title={`Data aplicarii: ${app.appliedDate}`}>
+                                <span className="inline-flex items-center gap-1 font-mono text-xs text-neutral-500 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md" title={`Data aplicării: ${app.appliedDate}`}>
                                   <Calendar className="w-3 h-3 text-neutral-400 shrink-0" />
                                   <span>{app.appliedDate}</span>
                                 </span>
@@ -983,8 +917,8 @@ export default function KanbanBoard({
                             </div>
                             <span 
                               onClick={() => handleOpenJobModal(app)}
-                              className="font-bold text-sm sm:text-base text-neutral-950 block hover:text-neutral-700 transition cursor-pointer"
-                              title="Deschide fisa completa a jobului"
+                              className="font-medium text-sm sm:text-base text-neutral-950 block hover:text-brand-600 transition cursor-pointer"
+                              title="Deschide fișa jobului"
                             >
                               {app.jobTitle}
                             </span>
@@ -1003,7 +937,7 @@ export default function KanbanBoard({
                             <select
                               value={normalizeStatus(app.status)}
                               onChange={(e) => handleStatusSelectChange(app.id, e.target.value)}
-                              className={`text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl border outline-none cursor-pointer transition ${statusColorMap[normalizeStatus(app.status)] || 'bg-neutral-50 text-neutral-700 border-neutral-200'}`}
+                              className={`text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl border outline-none cursor-pointer transition ${statusColorMap[normalizeStatus(app.status)] || 'bg-neutral-50 text-neutral-700 border-neutral-200'}`}
                             >
                               <option value="APPLIED">Aplicat</option>
                               <option value="INTERVIEWING">Interviu</option>
@@ -1022,15 +956,14 @@ export default function KanbanBoard({
                           ) : (
                             <div className="w-40 space-y-1.5">
                               <div className="flex items-center justify-between">
-                                <span className="flex items-center gap-1 font-mono font-bold text-neutral-900 text-xs sm:text-sm">
-                                  <Sparkles className="w-3.5 h-3.5 text-neutral-600" />
+                                <span className="flex items-center gap-1 font-medium text-neutral-900 text-xs sm:text-sm">
+                                  <Sparkles className="w-3.5 h-3.5 text-brand-500" />
                                   {score.toFixed(1)}%
                                 </span>
-                                <span className="text-xs text-neutral-500 font-mono">ATS Match</span>
                               </div>
-                              <div className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden border border-neutral-200">
+                              <div className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden">
                                 <div 
-                                  className="h-full bg-neutral-900 rounded-full transition-all duration-500" 
+                                  className="h-full bg-brand-500 rounded-full transition-all duration-500" 
                                   style={{ width: `${Math.min(100, Math.max(10, score))}%` }}
                                 ></div>
                               </div>
@@ -1055,11 +988,11 @@ export default function KanbanBoard({
                               }}
                               disabled={attachingCvAppId === app.id}
                               className="bg-transparent text-neutral-900 font-medium outline-none cursor-pointer w-full text-xs sm:text-sm truncate"
-                              title="Alege CV-ul sau fisierul asociat pentru aceasta aplicatie"
+                              title="Alege CV-ul asociat"
                             >
-                              <option value="">-- Alege CV sau Fisier --</option>
+                              <option value="">Alege CV</option>
                               {cvList.length > 0 && (
-                                <optgroup label="CV-uri Create in Studio">
+                                <optgroup label="CV-uri din Studio">
                                   {cvList.map((cv) => (
                                     <option key={cv.id} value={`CV_${cv.id}`}>
                                       {cv.title}{cv.isPrimary ? ' [Principal]' : ''}
@@ -1068,10 +1001,10 @@ export default function KanbanBoard({
                                 </optgroup>
                               )}
                               {uploadedResumes.length > 0 && (
-                                <optgroup label="Fisiere CV Incarcate">
+                                <optgroup label="Fișiere încărcate">
                                   {uploadedResumes.map((r) => (
                                     <option key={r.id} value={`RESUME_${r.id}`}>
-                                      Fisier: {r.fileName}
+                                      {r.fileName}
                                     </option>
                                   ))}
                                 </optgroup>
@@ -1080,8 +1013,8 @@ export default function KanbanBoard({
                             {app.cvProfileId && onEditCvInStudio && (
                               <button
                                 onClick={() => onEditCvInStudio(app.cvProfileId)}
-                                className="text-neutral-400 hover:text-black p-0.5 cursor-pointer shrink-0"
-                                title="Editeaza in Studio"
+                                className="text-neutral-400 hover:text-brand-600 p-0.5 cursor-pointer shrink-0"
+                                title="Editează în Studio"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
@@ -1094,18 +1027,18 @@ export default function KanbanBoard({
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => handleOpenJobModal(app)}
-                              className="px-3.5 py-2 rounded-xl border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer shadow-2xs group active:scale-95"
-                              title="Vezi fisa completa a jobului"
+                              className="px-3.5 py-2 rounded-xl border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-medium text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer group active:scale-95"
+                              title="Deschide fișa jobului"
                             >
                               <Eye className="w-4 h-4 text-neutral-700 group-hover:scale-110 transition-transform shrink-0" />
-                              <span>Fisa Job</span>
+                              <span>Fișa jobului</span>
                             </button>
 
                             {onOpenCoverLetter && (
                               <button
                                 onClick={() => onOpenCoverLetter(app.id)}
-                                className="p-2 rounded-xl border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 hover:text-black transition shadow-2xs cursor-pointer group active:scale-95"
-                                title="Genereaza Scrisoare de Intentie AI"
+                                className="p-2 rounded-xl border border-neutral-200/90 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 hover:text-black transition cursor-pointer group active:scale-95"
+                                title="Generează scrisoare de intenție"
                               >
                                 <FileSignature className="w-4 h-4 text-neutral-700 group-hover:scale-110 transition-transform" />
                               </button>
@@ -1113,11 +1046,11 @@ export default function KanbanBoard({
 
                             <button
                               onClick={() => {
-                                if (window.confirm(`Sigur doresti sa stergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
+                                if (window.confirm(`Sigur vrei să ștergi jobul ${app.jobTitle} la ${app.companyName}?`)) {
                                   onDeleteApplication && onDeleteApplication(app.id);
                                 }
                               }}
-                              title="Sterge aplicatia"
+                              title="Șterge aplicația"
                               className="p-2 rounded-xl hover:bg-rose-50 text-neutral-300 hover:text-rose-600 border border-transparent hover:border-rose-200 transition cursor-pointer ml-1"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1134,12 +1067,11 @@ export default function KanbanBoard({
           ) : (
             <div className="p-12 text-center text-gray-400 space-y-2">
               <Building2 className="w-8 h-8 text-gray-300 mx-auto" />
-              <p className="font-semibold text-sm text-gray-700">Nicio aplicatie gasita</p>
-              <p className="text-xs text-gray-400">Incearca sa modifici filtrele sau cautarea.</p>
+              <p className="font-medium text-sm text-gray-700">Nicio aplicație găsită</p>
             </div>
           )}
 
-        </div>
+        </Card>
       )}
 
       {/* ========================================================================= */}
@@ -1178,7 +1110,7 @@ export default function KanbanBoard({
         onClose={() => setIsGmailModalOpen(false)}
         onSyncComplete={() => {
           if (onRefreshApplications) onRefreshApplications();
-          setTrackerToast('Sincronizarea cu Gmail a fost finalizata cu succes!');
+          setTrackerToast('Sincronizarea cu Gmail s-a încheiat.');
           setTimeout(() => setTrackerToast(null), 4000);
         }}
         activeUserId={activeUserId}
@@ -1186,7 +1118,7 @@ export default function KanbanBoard({
 
       {/* TOAST FEEDBACK NOTIFICATION */}
       {trackerToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-black text-white px-4 py-3 rounded-2xl shadow-xl border border-gray-800 flex items-center gap-2.5 text-xs font-bold animate-in fade-in slide-in-from-bottom-3 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 bg-neutral-950 text-white px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-medium animate-in fade-in slide-in-from-bottom-3 duration-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{trackerToast}</span>
         </div>

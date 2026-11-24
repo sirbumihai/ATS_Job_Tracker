@@ -10,7 +10,7 @@ import { EASE } from './motion';
 export default function FaqAccordion({ items }) {
   const [openIndex, setOpenIndex] = useState(null);
   const reduced = useReducedMotion();
-  const transition = { duration: reduced ? 0 : 0.35, ease: EASE };
+  const transition = { duration: reduced ? 0 : 0.5, ease: EASE };
 
   return (
     <div className="space-y-4">
@@ -27,7 +27,7 @@ export default function FaqAccordion({ items }) {
                 onClick={() => setOpenIndex(open ? null : idx)}
                 className="w-full flex items-center justify-between gap-4 p-6 text-left cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-neutral-900"
               >
-                <span className="text-base sm:text-lg font-bold text-neutral-900 leading-snug">{faq.q}</span>
+                <span className="font-serif text-lg sm:text-xl text-neutral-950 leading-snug">{faq.q}</span>
                 <motion.span
                   aria-hidden="true"
                   className="text-xl font-mono leading-none text-neutral-400 shrink-0"
@@ -44,7 +44,7 @@ export default function FaqAccordion({ items }) {
                   key="panel"
                   id={`faq-panel-${idx}`}
                   initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
+                  animate={{ height: 'auto', opacity: 1, transition: { ...transition, opacity: { ...transition, delay: reduced ? 0 : 0.1 } } }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={transition}
                   className="overflow-hidden"

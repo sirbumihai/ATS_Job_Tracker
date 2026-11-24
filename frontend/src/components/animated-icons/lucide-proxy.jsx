@@ -164,7 +164,6 @@ export const Award = createAnimatedIcon(RealLucide.Award, 'Award');
 export const BarChart3 = createAnimatedIcon(RealLucide.BarChart3, 'BarChart3');
 export const Bell = createAnimatedIcon(RealLucide.Bell, 'Bell');
 export const BookOpen = createAnimatedIcon(RealLucide.BookOpen, 'BookOpen');
-export const Bookmark = CustomAnimated.BookmarkIcon;
 export const BookmarkCheck = createAnimatedIcon(RealLucide.BookmarkCheck, 'BookmarkCheck');
 export const Bot = createAnimatedIcon(RealLucide.Bot, 'Bot');
 export const Brain = createAnimatedIcon(RealLucide.Brain, 'Brain');

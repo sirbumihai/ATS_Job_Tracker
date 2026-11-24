@@ -60,7 +60,6 @@ app:
   crawler:
     # Platforme excluse din agregare, separate prin virgulă (ex: LINKEDIN,EJOBS)
     disabled-platforms: ${CRAWLER_DISABLED_PLATFORMS:}
-    scraper-timeout-seconds: ${CRAWLER_SCRAPER_TIMEOUT_SECONDS:90}
 
 server:
   port: 8080

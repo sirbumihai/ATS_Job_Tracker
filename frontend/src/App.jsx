@@ -13,62 +13,63 @@ import SkillRoadmapPage from './components/SkillRoadmapPage';
 import LandingPage from './components/LandingPage';
 import FeedbackPage from './components/FeedbackPage';
 import { AuthModal, AddJobModal, UploadResumeModal, AiReportModal } from './components/Modals';
-import { Plus, Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
+import PageHeader from './components/ui/PageHeader';
 
 const TAB_METADATA = {
   tracker: {
-    title: 'Tracker Aplicatii',
-    subtitle: 'Pipeline Kanban & Monitorizare Status Joburi',
+    title: 'Tracker aplicații',
+    subtitle: 'Aplicațiile tale, pe etape',
     category: 'Pipeline'
   },
   job_search: {
-    title: 'Cautare Job-uri',
-    subtitle: 'Agregator Multi-Platforma & Scraping in Timp Real',
-    category: 'Piata IT'
+    title: 'Căutare joburi',
+    subtitle: 'Joburi agregate, cu scor ATS pentru CV-ul tău',
+    category: 'Piața IT'
   },
   market_insights: {
     title: 'Market Insights',
-    subtitle: 'Cerinte Reale & Skill Match Piata IT',
-    category: 'Piata IT'
+    subtitle: 'Ce cere piața IT acum',
+    category: 'Piața IT'
   },
   cv_library: {
-    title: 'CV-urile Mele',
-    subtitle: 'Baza de Profiluri ATS & PDF Upload',
+    title: 'CV-urile mele',
+    subtitle: 'Profilurile tale de CV',
     category: 'Documente'
   },
   cv_studio: {
-    title: 'Studio CV & Match 100%',
-    subtitle: 'Editor Vizual & Generator PDF Vectorial ATS',
+    title: 'Studio CV',
+    subtitle: 'Editează CV-ul și exportă PDF',
     category: 'Optimizare ATS'
   },
   cover_letter: {
-    title: 'Generator Scrisori de Intentie',
-    subtitle: 'Cover Letter Personalizat pe Cerintele Jobului',
+    title: 'Cover Letter',
+    subtitle: 'Scrisă pe cerințele jobului',
     category: 'AI Assistant'
   },
   github_readme: {
-    title: 'GitHub README Studio',
-    subtitle: 'Profil Developer Autentic & Carduri Tehnice',
+    title: 'GitHub README',
+    subtitle: 'Profilul tău de developer',
     category: 'Branding Dev'
   },
   linkedin_optimizer: {
-    title: 'LinkedIn Profile Optimizer',
-    subtitle: 'Import PDF, Replica Desktop & Audit 100/100 All-Star',
+    title: 'LinkedIn Optimizer',
+    subtitle: 'Scorul profilului și pașii următori',
     category: 'LinkedIn'
   },
   skill_roadmap: {
-    title: 'Roadmap & Pregatire Interviuri',
-    subtitle: 'Resurse Gratuite & Banci de Intrebari Tehnice',
-    category: 'Educatie'
+    title: 'Skill Roadmap',
+    subtitle: 'Trasee de învățare și întrebări tehnice',
+    category: 'Educație'
   },
   landing: {
-    title: 'Prezentare Platforma',
-    subtitle: 'Sistem de Accelerare in Cariera & Pregatire Interviuri',
+    title: 'Prezentare',
+    subtitle: 'JobFlow AI',
     category: 'JobFlow AI'
   },
   feedback: {
-    title: 'Feedback & Roadmap',
-    subtitle: 'Vocea Candidatilor & Sugestii de Imbunatatire',
+    title: 'Feedback',
+    subtitle: 'Sugestii și idei de la utilizatori',
     category: 'Comunitate'
   }
 };
@@ -460,8 +461,8 @@ export default function App() {
 
   const currentTabInfo = TAB_METADATA[activeTab] || {
     title: 'JobFlow AI',
-    subtitle: 'Tracker & ATS Studio',
-    category: 'Platforma'
+    subtitle: 'Tracker și studio ATS',
+    category: 'Platformă'
   };
 
   return (
@@ -485,55 +486,37 @@ export default function App() {
         activeTab === 'tracker' ? 'lg:h-screen lg:overflow-hidden' : 'min-h-screen overflow-x-hidden'
       }`}>
         
-        {/* DESKTOP TOP BAR CU TITLU PAGINA SI BREADCRUMB */}
+        {/* DESKTOP TOP BAR CU TITLU PAGINA */}
         {activeTab !== 'landing' && activeTab !== 'feedback' && (
-          <header className="hidden lg:flex items-center justify-between px-6 xl:px-8 py-3 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 shrink-0 sticky top-0 z-20 shadow-2xs">
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-neutral-100 text-neutral-800 border border-neutral-200 font-semibold shadow-2xs">
-                {currentTabInfo.category}
-              </span>
-              <div className="h-4 w-px bg-neutral-200" />
-              <div>
-                <h2 className="text-base font-bold text-neutral-950 tracking-tight leading-none">
-                  {currentTabInfo.title}
-                </h2>
-                <p className="text-xs text-neutral-500 font-medium mt-0.5">
-                  {currentTabInfo.subtitle}
-                </p>
-              </div>
-            </div>
-
-            {/* Quick Actions & User Account Status */}
-            <div className="flex items-center gap-3">
-              {currentUser && (
-                <div className="flex items-center gap-2">
+          <header className="hidden lg:block px-6 xl:px-8 py-3 bg-white/95 backdrop-blur-md border-b border-neutral-200 shrink-0 sticky top-0 z-20">
+            <PageHeader
+              as="h2"
+              title={currentTabInfo.title}
+              subtitle={currentTabInfo.subtitle}
+              actions={currentUser ? (
+                <>
                   {activeTab === 'cv_library' && (
                     <button
                       onClick={() => setShowUploadResumeModal(true)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-black hover:bg-neutral-800 text-white transition-all duration-150 shadow-2xs cursor-pointer active:scale-95"
-                      title="Incarca un CV PDF pentru analiza"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white transition cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5" />
-                      <span>Incarca CV</span>
+                      <span>Încarcă CV</span>
                     </button>
                   )}
-                </div>
-              )}
-
-              {currentUser ? (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-neutral-200 text-neutral-800 shadow-2xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span className="max-w-[160px] truncate">{currentUser.fullName || currentUser.email}</span>
-                </div>
+                  <span className="max-w-[180px] truncate px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 text-neutral-700">
+                    {currentUser.fullName || currentUser.email}
+                  </span>
+                </>
               ) : (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-black text-white shadow-xs hover:bg-neutral-800 transition cursor-pointer active:scale-95"
+                  className="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white transition cursor-pointer"
                 >
-                  <span>Conectare</span>
+                  Conectare
                 </button>
               )}
-            </div>
+            />
           </header>
         )}
 
@@ -643,8 +626,6 @@ export default function App() {
             onNavigateTab={handleTabChange}
             currentUser={currentUser}
             onOpenAuth={() => setShowAuthModal(true)}
-            onOpenUpload={() => setShowUploadResumeModal(true)}
-            onOpenAddJob={() => setShowAddJobModal(true)}
           />
         )}
 
