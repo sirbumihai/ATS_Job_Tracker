@@ -26,7 +26,7 @@ Frontend test commands (from `frontend/`): `npx playwright test e2e/cv-library.s
 - `AtsJobTrackerApplication.main` loads a `.env` file (dotenv-java) into system properties before Spring starts; see `.env.example`.
 - LLM calls go to **Groq** (OpenAI-compatible endpoint) through `service/OpenAiLlmService`, a hand-written `RestClient` wrapper — not Spring AI's ChatClient, despite the Spring AI dependency. Key: `SPRING_AI_GROQ_API_KEY`, model: `SPRING_AI_GROQ_MODEL`. It falls back through a hardcoded list of Groq models on failure and strips `<think>` tags. `isConfigured()` returns false for blank keys or keys containing "dummy"; AI-backed services check it and fall back to deterministic/heuristic output, so the app runs without a key.
 - `VectorEmbeddingService` does not call an embedding model: it builds a 384-dim hashed bag-of-words vector locally.
-- `spring.jpa.hibernate.ddl-auto: validate` — every entity change needs a new Flyway migration in `src/main/resources/db/migration` (`V{n}__description.sql`, next number after the highest existing one). Never edit an applied migration.
+- `spring.jpa.hibernate.ddl-auto: validate` — every entity change needs a new Flyway migration in `src/main/resources/db/migration` (`V{n}__description.sql`, next number after the highest existing one). Never edit an applied migration. `spring.flyway.out-of-order: true` is there only so databases already at V11 also apply `V9_1` (the `newly_discovered` column that V10 indexes but no migration had created); keep it on, and still number new migrations after the highest one. A dev database with hand-added columns hides a missing migration, so after an entity change start the backend once against an empty `pgvector/pgvector:pg16` container.
 
 ## Backend architecture
 

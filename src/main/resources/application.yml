@@ -35,6 +35,9 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    # V9_1 (coloana newly_discovered, indexată de V10) a apărut după V10 și V11: bazele aflate
+    # deja la V11 o aplică în afara ordinii. Nu dezactiva; migrările noi iau numărul următor (V12...).
+    out-of-order: true
 
   security:
     jwt:
