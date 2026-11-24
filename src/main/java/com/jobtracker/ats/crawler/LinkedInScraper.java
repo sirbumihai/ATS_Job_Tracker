@@ -2,33 +2,58 @@ package com.jobtracker.ats.crawler;
 
 import com.jobtracker.ats.dto.UnifiedJobListingDto;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.jobtracker.ats.util.JobNormalizationUtils.*;
 
 /**
- * Scraper optimizat pentru LinkedIn Romania.
- * Rate-limit polite (concurrency controlata, delay jitter anti-429),
- * set extins si eficient de cautari pentru Junior, Graduate si Tester,
- * paginare exacta (offset = page * 10) si retry inteligent la 429.
+ * Scraper pentru LinkedIn România, prin API-ul public de căutare (fără cont).
+ * Fiecare căutare rulează pe propriul Virtual Thread, iar {@link RequestThrottle} dozează cererile
+ * comune către LinkedIn: o rafală la pornire, apoi un ritm constant cât LinkedIn îl acceptă.
+ * O pagină refuzată cu HTTP 429 se reîncearcă după o pauză comună, ca să nu se piardă joburi.
  */
 @Component
 @Slf4j
 public class LinkedInScraper implements JobScraper {
 
-    private static final List<String> LINKEDIN_USER_AGENTS = List.of(
+    static final String PLATFORM = "LINKEDIN";
+    private static final String SEARCH_URL = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search";
+    private static final Pattern JOB_ID_PATTERN = Pattern.compile("(\\d{7,15})");
+    private static final int REQUEST_TIMEOUT_MS = 8_000;
+
+    // API-ul de căutare întoarce câte 10 carduri pe pagină
+    private static final int PAGE_SIZE = 10;
+    private static final int MIN_CARDS_FOR_NEXT_PAGE = 5;
+    private static final int MAX_ATTEMPTS_PER_PAGE = 4;
+
+    // Măsurat (noiembrie 2026): LinkedIn acceptă o rafală de ~15 cereri, apoi răspunde cu 429 la cam una
+    // din 6-8 cereri chiar și la 0,5-1 cereri/s, și mai des peste ~1 cerere/s. Pornim în rafală (4 cereri
+    // simultane, la 250-400 ms una după alta), apoi ținem ~1 cerere la 0,85-1 s: un ritm mai rar nu rărește
+    // 429-urile destul cât să merite, unul mai des le înmulțește și pierde timp în pauze.
+    static final int MAX_PARALLEL_REQUESTS = 4;
+    private static final long BURST_GAP_MS = 250;
+    private static final long STEADY_GAP_MS = 850;
+    private static final long MAX_GAP_MS = 2_000;
+    private static final long GAP_JITTER_MS = 150;
+
+    private static final List<String> USER_AGENTS = List.of(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -36,13 +61,70 @@ public class LinkedInScraper implements JobScraper {
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
     );
 
-    static final String PLATFORM = "LINKEDIN";
-    private static final Pattern JOB_ID_PATTERN = Pattern.compile("(\\d{7,15})");
-
     record SearchQuery(String query, String location, String expFilter, int maxPages) {
-        public SearchQuery(String query, String expFilter, int maxPages) {
+        SearchQuery {
+            location = location != null ? location : "Romania";
+            expFilter = expFilter != null ? expFilter : "";
+        }
+
+        SearchQuery(String query, String expFilter, int maxPages) {
             this(query, "Romania", expFilter, maxPages);
         }
+    }
+
+    // Căutări focusate pe Junior, Graduate și Tester; maxPages = câte pagini de 10 joburi se citesc cel mult
+    static final List<SearchQuery> SEARCH_QUERIES = List.of(
+            // 1. Roluri Junior, Graduate & Companii specifice (fara f_E restrictiv pentru acoperire completa)
+            new SearchQuery("Junior Software Developer Romania", "", 5),
+            new SearchQuery("Graduate Software Engineer", "Bucharest, Romania", "", 5),
+            new SearchQuery("Graduate Software Engineer Romania", "", 4),
+            new SearchQuery("Junior Developer", "Bucharest, Romania", "", 4),
+            new SearchQuery("Junior Java Developer Romania", "", 4),
+            new SearchQuery("Junior Python Developer Romania", "", 4),
+            new SearchQuery("Junior Frontend React Romania", "", 4),
+            new SearchQuery("Junior .NET Developer Romania", "", 4),
+            new SearchQuery("Junior C++ Developer Romania", "", 4),
+            new SearchQuery("Junior DevOps Engineer Romania", "", 3),
+            new SearchQuery("Junior Data Analyst Romania", "", 3),
+            new SearchQuery("Junior Cyber Security Romania", "", 3),
+            new SearchQuery("Bertrandt", "Romania", "", 4),
+            new SearchQuery("Stagii pe Bune", "Romania", "", 4),
+
+            // 2. QA, Tester & Test Automation (solicitate expres)
+            new SearchQuery("Junior Tester Romania", "", 5),
+            new SearchQuery("Software Tester", "Bucharest, Romania", "", 5),
+            new SearchQuery("Software Tester Romania", "", 4),
+            new SearchQuery("Junior QA Automation Romania", "", 4),
+            new SearchQuery("QA Tester", "Bucharest, Romania", "", 4),
+
+            // 3. Internship & Support
+            new SearchQuery("Internship IT Romania", "f_E=1", 4),
+            new SearchQuery("Software Intern Romania", "", 3),
+            new SearchQuery("Junior IT Support Romania", "", 3),
+            new SearchQuery("Technical Support Specialist Romania", "", 3),
+
+            // 4. Middle / Senior IT
+            new SearchQuery("Software Engineer Romania", "f_E=3", 3),
+            new SearchQuery("Java Developer Romania", "f_E=3", 3),
+            new SearchQuery("Senior Software Engineer Romania", "f_E=4", 2)
+    );
+
+    /** Descarcă o pagină de rezultate; separat de scraper, ca testele să poată simula răspunsurile LinkedIn. */
+    @FunctionalInterface
+    interface SearchPageSource {
+        Document fetch(String url, String userAgent) throws IOException;
+    }
+
+    private final SearchPageSource pageSource;
+    private final Supplier<RequestThrottle> throttleFactory;
+
+    public LinkedInScraper() {
+        this(LinkedInScraper::fetchSearchPage, LinkedInScraper::newThrottle);
+    }
+
+    LinkedInScraper(SearchPageSource pageSource, Supplier<RequestThrottle> throttleFactory) {
+        this.pageSource = pageSource;
+        this.throttleFactory = throttleFactory;
     }
 
     @Override
@@ -52,153 +134,110 @@ public class LinkedInScraper implements JobScraper {
 
     @Override
     public void scrape(List<UnifiedJobListingDto> freshList, Set<String> seenDedupKeys, Set<String> knownDbUrls) {
-        long startTime = System.currentTimeMillis();
-
-        // 24 de interogari de cel mai inalt randament, focusate pe Junior, Graduate si Tester
-        List<SearchQuery> searchQueries = List.of(
-                // 1. Roluri Junior, Graduate & Companii specifice (fara f_E restrictiv pentru acoperire completa)
-                new SearchQuery("Junior Software Developer Romania", "", 5),
-                new SearchQuery("Graduate Software Engineer", "Bucharest, Romania", "", 5),
-                new SearchQuery("Graduate Software Engineer Romania", "", 4),
-                new SearchQuery("Junior Developer", "Bucharest, Romania", "", 4),
-                new SearchQuery("Junior Java Developer Romania", "", 4),
-                new SearchQuery("Junior Python Developer Romania", "", 4),
-                new SearchQuery("Junior Frontend React Romania", "", 4),
-                new SearchQuery("Junior .NET Developer Romania", "", 4),
-                new SearchQuery("Junior C++ Developer Romania", "", 4),
-                new SearchQuery("Junior DevOps Engineer Romania", "", 3),
-                new SearchQuery("Junior Data Analyst Romania", "", 3),
-                new SearchQuery("Junior Cyber Security Romania", "", 3),
-                new SearchQuery("Bertrandt", "Romania", "", 4),
-                new SearchQuery("Stagii pe Bune", "Romania", "", 4),
-
-                // 2. QA, Tester & Test Automation (solicitate expres)
-                new SearchQuery("Junior Tester Romania", "", 5),
-                new SearchQuery("Software Tester", "Bucharest, Romania", "", 5),
-                new SearchQuery("Software Tester Romania", "", 4),
-                new SearchQuery("Junior QA Automation Romania", "", 4),
-                new SearchQuery("QA Tester", "Bucharest, Romania", "", 4),
-
-                // 3. Internship & Support
-                new SearchQuery("Internship IT Romania", "f_E=1", 4),
-                new SearchQuery("Software Intern Romania", "", 3),
-                new SearchQuery("Junior IT Support Romania", "", 3),
-                new SearchQuery("Technical Support Specialist Romania", "", 3),
-
-                // 4. Middle / Senior IT
-                new SearchQuery("Software Engineer Romania", "f_E=3", 3),
-                new SearchQuery("Java Developer Romania", "f_E=3", 3),
-                new SearchQuery("Senior Software Engineer Romania", "f_E=4", 2)
-        );
-
-        Set<String> seenJobUrls = ConcurrentHashMap.newKeySet();
-        // Concurrency throttle: 1 request concurent cu pauza jitter pentru a preveni definitiv HTTP 429
-        Semaphore concurrencyThrottle = new Semaphore(1);
-
-        try (ExecutorService virtualExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
-            List<CompletableFuture<Void>> tasks = searchQueries.stream()
-                    .map(sq -> CompletableFuture.runAsync(() -> {
-                        try {
-                            concurrencyThrottle.acquire();
-                            scrapeQuery(sq, freshList, seenDedupKeys, knownDbUrls, seenJobUrls);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        } finally {
-                            concurrencyThrottle.release();
-                        }
-                    }, virtualExecutor))
-                    .toList();
-
-            CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0])).join();
-        } catch (Exception e) {
-            log.warn("[JOB CRAWLER] Eroare in executia LinkedIn: {}", e.getMessage());
-        }
-
-        long duration = System.currentTimeMillis() - startTime;
-        log.info("[JOB CRAWLER] LinkedIn Romania Optimizat: {} joburi reale preluate in {} ms.",
-                seenJobUrls.size(), duration);
+        scrape(SEARCH_QUERIES, freshList, seenDedupKeys, knownDbUrls);
     }
 
-    private void scrapeQuery(SearchQuery sq, List<UnifiedJobListingDto> freshList,
-                            Set<String> seenDedupKeys, Set<String> knownDbUrls, Set<String> seenJobUrls) {
-        String query = sq.query();
-        String location = sq.location() != null ? sq.location() : "Romania";
-        String expFilter = sq.expFilter();
-        int maxPages = sq.maxPages() > 0 ? sq.maxPages() : 3;
+    void scrape(List<SearchQuery> queries, List<UnifiedJobListingDto> freshList,
+                Set<String> seenDedupKeys, Set<String> knownDbUrls) {
+        long startTime = System.currentTimeMillis();
+        int sizeBefore = freshList.size();
+        RequestThrottle throttle = throttleFactory.get();
+        Set<String> seenJobUrls = ConcurrentHashMap.newKeySet();
 
-        for (int page = 0; page < maxPages; page++) {
-            // LinkedIn guest API seeMoreJobPostings returneaza exact 10 carduri per pagina
-            int offset = page * 10;
-            boolean retried = false;
-
-            while (true) {
-                try {
-                    // Polite delay anti-429 cu jitter
-                    long delay = 350 + (long) (Math.random() * 250);
-                    Thread.sleep(delay);
-
-                    String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
-                    String encodedLoc = URLEncoder.encode(location, StandardCharsets.UTF_8);
-                    StringBuilder urlBuilder = new StringBuilder("https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?");
-                    urlBuilder.append("keywords=").append(encodedQuery);
-                    urlBuilder.append("&location=").append(encodedLoc);
-                    urlBuilder.append("&sortBy=DD&f_TPR=r2592000");
-                    if (expFilter != null && !expFilter.isBlank()) {
-                        urlBuilder.append("&").append(expFilter);
-                    }
-                    urlBuilder.append("&start=").append(offset);
-                    String queryUrl = urlBuilder.toString();
-
-                    int uaIdx = Math.abs((query.hashCode() + offset) % LINKEDIN_USER_AGENTS.size());
-                    String ua = LINKEDIN_USER_AGENTS.get(uaIdx);
-
-                    Document doc = Jsoup.connect(queryUrl)
-                            .userAgent(ua)
-                            .header("Accept-Language", "en-US,en;q=0.9,ro;q=0.8")
-                            .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                            .header("Sec-Fetch-Dest", "empty")
-                            .header("Sec-Fetch-Mode", "cors")
-                            .header("Sec-Fetch-Site", "same-origin")
-                            .timeout(8000)
-                            .get();
-
-                    PageResult result = parseResultsPage(doc, sq, freshList, seenDedupKeys, knownDbUrls, seenJobUrls);
-                    if (result.cards() == 0) {
-                        return; // Sfarsit de rezultate pentru acest query
-                    }
-                    if (result.cards() < 5 || (result.newJobs() == 0 && page > 0)) {
-                        return;
-                    }
-                    break; // Pagina curenta a reusit, trecem la pagina urmatoare
-
-                } catch (org.jsoup.HttpStatusException hse) {
-                    if (hse.getStatusCode() == 429) {
-                        if (!retried) {
-                            retried = true;
-                            log.warn("[JOB CRAWLER] LinkedIn rate limit (429) pentru query {}. Pauza racire 2.5s si reincercare...", query);
-                            try { Thread.sleep(2500); } catch (InterruptedException ignored) {}
-                            continue;
-                        } else {
-                            log.warn("[JOB CRAWLER] LinkedIn 429 persistent pentru query {}. Trecere la urmatoarea cautare.", query);
-                            return;
-                        }
-                    } else {
-                        log.warn("[JOB CRAWLER] LinkedIn scrape status {} pentru {}: {}", hse.getStatusCode(), query, hse.getMessage());
-                        return;
-                    }
-                } catch (Exception e) {
-                    log.warn("[JOB CRAWLER] LinkedIn scrape fallback pentru {}: {}", query, e.getMessage());
-                    return;
-                }
+        // Un Virtual Thread per căutare; close() așteaptă să se termine toate
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (SearchQuery sq : queries) {
+                executor.submit(() -> scrapeQuery(sq, throttle, freshList, seenDedupKeys, knownDbUrls, seenJobUrls));
             }
         }
+
+        if (throttle.isBlocked()) {
+            log.warn("[JOB CRAWLER] LinkedIn refuză sau nu mai răspunde la cereri; se păstrează joburile colectate până acum.");
+        }
+        log.info("[JOB CRAWLER] LinkedIn România: {} joburi noi din {} anunțuri parcurse în {} ms.",
+                freshList.size() - sizeBefore, seenJobUrls.size(), System.currentTimeMillis() - startTime);
+    }
+
+    private void scrapeQuery(SearchQuery sq, RequestThrottle throttle, List<UnifiedJobListingDto> freshList,
+                             Set<String> seenDedupKeys, Set<String> knownDbUrls, Set<String> seenJobUrls) {
+        try {
+            for (int page = 0; page < sq.maxPages(); page++) {
+                Document doc = fetchPage(sq, page * PAGE_SIZE, throttle);
+                if (doc == null) return;
+
+                PageResult result = parseResultsPage(doc, sq, freshList, seenDedupKeys, knownDbUrls, seenJobUrls);
+                // Ultima pagină de rezultate sau una fără anunțuri noi: paginile următoare nu mai aduc nimic
+                if (result.cards() < MIN_CARDS_FOR_NEXT_PAGE || (result.newJobs() == 0 && page > 0)) return;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (RuntimeException e) {
+            log.warn("[JOB CRAWLER] LinkedIn: căutarea „{}” s-a oprit: {}", sq.query(), e.getMessage());
+        }
+    }
+
+    // După 429, timeout sau 5xx pagina se reîncearcă; pauza dintre încercări o impune RequestThrottle
+    private Document fetchPage(SearchQuery sq, int offset, RequestThrottle throttle) throws InterruptedException {
+        String url = searchUrl(sq, offset);
+        String userAgent = USER_AGENTS.get(Math.floorMod(sq.query().hashCode() + offset, USER_AGENTS.size()));
+
+        IOException lastError = null;
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS_PER_PAGE; attempt++) {
+            try {
+                return throttle.execute(() -> pageSource.fetch(url, userAgent));
+            } catch (RequestThrottle.BlockedException e) {
+                return null;
+            } catch (HttpStatusException e) {
+                if (e.getStatusCode() != 429 && e.getStatusCode() < 500) {
+                    log.warn("[JOB CRAWLER] LinkedIn status {} pentru „{}” (start={}).", e.getStatusCode(), sq.query(), offset);
+                    return null;
+                }
+                lastError = e;
+            } catch (IOException e) {
+                lastError = e;
+            }
+        }
+        log.warn("[JOB CRAWLER] LinkedIn: „{}” (start={}) a eșuat după {} încercări: {}",
+                sq.query(), offset, MAX_ATTEMPTS_PER_PAGE, lastError.getMessage());
+        return null;
+    }
+
+    static String searchUrl(SearchQuery sq, int offset) {
+        StringBuilder url = new StringBuilder(SEARCH_URL)
+                .append("?keywords=").append(URLEncoder.encode(sq.query(), StandardCharsets.UTF_8))
+                .append("&location=").append(URLEncoder.encode(sq.location(), StandardCharsets.UTF_8))
+                .append("&sortBy=DD&f_TPR=r2592000");
+        if (!sq.expFilter().isBlank()) {
+            url.append('&').append(sq.expFilter());
+        }
+        return url.append("&start=").append(offset).toString();
+    }
+
+    static boolean isRateLimited(IOException e) {
+        return e instanceof HttpStatusException status && status.getStatusCode() == 429;
+    }
+
+    private static RequestThrottle newThrottle() {
+        return new RequestThrottle(MAX_PARALLEL_REQUESTS, BURST_GAP_MS, STEADY_GAP_MS, MAX_GAP_MS, GAP_JITTER_MS,
+                LinkedInScraper::isRateLimited);
+    }
+
+    private static Document fetchSearchPage(String url, String userAgent) throws IOException {
+        return Jsoup.connect(url)
+                .userAgent(userAgent)
+                .header("Accept-Language", "en-US,en;q=0.9,ro;q=0.8")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("Sec-Fetch-Dest", "empty")
+                .header("Sec-Fetch-Mode", "cors")
+                .header("Sec-Fetch-Site", "same-origin")
+                .timeout(REQUEST_TIMEOUT_MS)
+                .get();
     }
 
     record PageResult(int cards, int newJobs) {}
 
     PageResult parseResultsPage(Document doc, SearchQuery sq, List<UnifiedJobListingDto> freshList,
                                 Set<String> seenDedupKeys, Set<String> knownDbUrls, Set<String> seenJobUrls) {
-        String location = sq.location() != null ? sq.location() : "Romania";
         String expFilter = sq.expFilter();
 
         Elements cards = doc.select("li div.base-card");
@@ -234,17 +273,17 @@ public class LinkedInScraper implements JobScraper {
             Element benefitEl = card.selectFirst(".job-posting-benefits__text");
 
             String company = compEl != null ? compEl.text().trim() : null;
-            String loc = locEl != null ? locEl.text().trim() : location;
+            String loc = locEl != null ? locEl.text().trim() : sq.location();
             String postedDate = dateEl != null ? dateEl.text().trim() : null;
             String dtAttr = dateEl != null ? dateEl.attr("datetime") : null;
             String benefitText = benefitEl != null ? benefitEl.text().trim().toLowerCase() : "";
 
             String level = determineExperienceLevel(title, null);
             String tLower = title.toLowerCase();
-            if (level.equals("MID") && expFilter != null && expFilter.contains("f_E=1") &&
+            if (level.equals("MID") && expFilter.contains("f_E=1") &&
                     (tLower.contains("intern") || tLower.contains("stagiu") || tLower.contains("trainee") || tLower.contains("student"))) {
                 level = "INTERNSHIP";
-            } else if (level.equals("MID") && expFilter != null && expFilter.contains("f_E=4") &&
+            } else if (level.equals("MID") && expFilter.contains("f_E=4") &&
                     (tLower.contains("senior") || tLower.contains("lead") || tLower.contains("principal"))) {
                 level = "SENIOR";
             }

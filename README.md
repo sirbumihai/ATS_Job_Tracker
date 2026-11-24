@@ -14,7 +14,7 @@
 ## ✨ Funcționalități
 
 **Căutare și piață**
-* **Agregator de joburi multi-platformă** — scrapere pentru LinkedIn, eJobs, BestJobs, Hipo, DevJob.ro, Juniors.ro, UndeLucram, StagiiPeBune și listele GitHub cu joburi tech pentru juniori. Rulează în paralel pe Virtual Threads (Java 21), cu timeout per platformă, deduplicare între site-uri și crawling diferențial. Refresh automat la pornire și apoi la fiecare oră.
+* **Agregator de joburi multi-platformă** — scrapere pentru LinkedIn, eJobs, BestJobs, Hipo, DevJob.ro, Juniors.ro, UndeLucram, StagiiPeBune și listele GitHub cu joburi tech pentru juniori. Rulează în paralel pe Virtual Threads (Java 21), inclusiv paginile fiecărui site, fără limită de timp per platformă (LinkedIn își dozează singur cererile și reîncearcă după HTTP 429), cu deduplicare între site-uri și crawling diferențial. Refresh automat la pornire și apoi la fiecare oră.
 * **Istoric de modificări pe joburi** — anunțurile trec printr-o tabelă de staging; schimbările de câmpuri sunt salvate, iar joburile vechi sunt marcate ca expirate.
 * **Market Insights** — cerințele reale ale pieței grupate pe domenii, cu frecvența skill-urilor și match-ul cu CV-ul tău.
 * **Daily Job Digest** — selecție zilnică (09:00) de joburi filtrate după scor, locație și nivel junior, trimisă pe Discord sau Telegram (canalul de email e deocamdată doar simulat).

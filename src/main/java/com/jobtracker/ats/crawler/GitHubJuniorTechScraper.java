@@ -14,6 +14,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -95,11 +99,23 @@ public class GitHubJuniorTechScraper implements JobScraper {
 
         int initialSize = freshList.size();
 
+        // Cele trei surse se descarcă în paralel (Virtual Threads) și se parsează în ordinea de mai jos
+        String euJson;
+        String newGradTable;
+        String internTable;
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            Future<String> euDownload = executor.submit(() -> fetchContent(client, EU_OPPORTUNITIES_URL));
+            Future<String> newGradDownload = executor.submit(() -> fetchContent(client, SPEEDY_NEW_GRAD_INTL_URL));
+            Future<String> internDownload = executor.submit(() -> fetchContent(client, SPEEDY_INTERN_INTL_URL));
+            euJson = await(euDownload);
+            newGradTable = await(newGradDownload);
+            internTable = await(internDownload);
+        }
+
         // Sursa 1: European Tech Opportunities 2027 (JSON)
         try {
-            String jsonContent = fetchContent(client, EU_OPPORTUNITIES_URL);
-            if (jsonContent != null && !jsonContent.isBlank()) {
-                parseEuropeanTechJson(jsonContent, freshList, seenDedupKeys, knownDbUrls);
+            if (euJson != null && !euJson.isBlank()) {
+                parseEuropeanTechJson(euJson, freshList, seenDedupKeys, knownDbUrls);
             }
         } catch (Exception e) {
             log.warn("[GITHUB CRAWLER] Eroare la preluarea European Tech Opportunities: {}", e.getMessage());
@@ -107,9 +123,8 @@ public class GitHubJuniorTechScraper implements JobScraper {
 
         // Sursa 2: SpeedyApply New Grad International (Markdown table)
         try {
-            String mdContent = fetchContent(client, SPEEDY_NEW_GRAD_INTL_URL);
-            if (mdContent != null && !mdContent.isBlank()) {
-                parseMarkdownTable(mdContent, "JUNIOR", freshList, seenDedupKeys, knownDbUrls);
+            if (newGradTable != null && !newGradTable.isBlank()) {
+                parseMarkdownTable(newGradTable, "JUNIOR", freshList, seenDedupKeys, knownDbUrls);
             }
         } catch (Exception e) {
             log.warn("[GITHUB CRAWLER] Eroare la preluarea SpeedyApply New Grad Intl: {}", e.getMessage());
@@ -117,9 +132,8 @@ public class GitHubJuniorTechScraper implements JobScraper {
 
         // Sursa 3: SpeedyApply Internships International (Markdown table)
         try {
-            String mdContent = fetchContent(client, SPEEDY_INTERN_INTL_URL);
-            if (mdContent != null && !mdContent.isBlank()) {
-                parseMarkdownTable(mdContent, "INTERNSHIP", freshList, seenDedupKeys, knownDbUrls);
+            if (internTable != null && !internTable.isBlank()) {
+                parseMarkdownTable(internTable, "INTERNSHIP", freshList, seenDedupKeys, knownDbUrls);
             }
         } catch (Exception e) {
             log.warn("[GITHUB CRAWLER] Eroare la preluarea SpeedyApply Intern Intl: {}", e.getMessage());
@@ -127,6 +141,18 @@ public class GitHubJuniorTechScraper implements JobScraper {
 
         int added = freshList.size() - initialSize;
         log.info("[GITHUB CRAWLER] S-au adăugat {} joburi noi verificate (Europa & Worldwide Remote).", added);
+    }
+
+    private static String await(Future<String> download) {
+        try {
+            return download.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (ExecutionException e) {
+            log.warn("[GITHUB CRAWLER] Descărcare eșuată: {}", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+            return null;
+        }
     }
 
     private String fetchContent(HttpClient client, String url) {
